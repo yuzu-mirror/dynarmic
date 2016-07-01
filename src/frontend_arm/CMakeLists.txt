@@ -1,5 +1,7 @@
 set(SRCS
     arm_disassembler.cpp
+    ir/ir.cpp
+    ir_emitter.cpp
     )
 
 set(HEADERS
@@ -9,12 +11,11 @@ set(HEADERS
     decoder/decoder_detail.h
     decoder/thumb1.h
     frontend_arm.h
-    ir/ir.cpp
     ir/ir.h
-    ir_emitter.cpp
+    ir/opcodes.h
     ir_emitter.h
     translate_thumb.h
-    ir/opcodes.h)
+    )
 
 source_group(frontend_arm FILES ${SRCS} ${HEADERS})
 add_library(dynarmic_frontend_arm STATIC ${SRCS} ${HEADERS})

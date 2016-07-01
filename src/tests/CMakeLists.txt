@@ -1,8 +1,9 @@
 set(SRCS
+    arm/fuzz_thumb.cpp
     arm/test_arm_disassembler.cpp
-    main.cpp
     arm/test_thumb_instructions.cpp
-    arm/fuzz_thumb.cpp)
+    main.cpp
+    )
 
 set(HEADERS
     )

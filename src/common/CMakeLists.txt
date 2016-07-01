@@ -1,4 +1,6 @@
 set(SRCS
+    logging/log.cpp
+    memory_util.cpp
     string_util.cpp
     x64/abi.cpp
     x64/cpu_detect.cpp
@@ -6,14 +8,19 @@ set(SRCS
     )
 
 set(HEADERS
+    assert.h
+    bit_set.h
     bit_util.h
+    code_block.h
     common_types.h
+    logging/log.h
+    memory_util.h
     mp.h
     string_util.h
     x64/abi.h
     x64/cpu_detect.h
     x64/emitter.h
-    assert.h logging/log.h logging/log.cpp bit_set.h memory_util.h memory_util.cpp code_block.h)
+    )
 
 source_group(common FILES ${SRCS} ${HEADERS})
 add_library(dynarmic_common STATIC ${SRCS} ${HEADERS})
