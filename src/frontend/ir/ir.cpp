@@ -8,7 +8,7 @@
 #include <map>
 
 #include "common/assert.h"
-#include "frontend_arm/ir/ir.h"
+#include "frontend/ir/ir.h"
 
 namespace Dynarmic {
 namespace IR {

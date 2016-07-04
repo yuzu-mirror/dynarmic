@@ -67,6 +67,11 @@ IREmitter::ResultAndCarry IREmitter::LogicalShiftRight(IR::ValuePtr value_in, IR
     return {result, carry_out};
 }
 
+IREmitter::ResultAndCarry IREmitter::ArithmeticShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in) {
+    auto result = Inst(IR::Opcode::ArithmeticShiftRight, {value_in, shift_amount, carry_in});
+    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+    return {result, carry_out};
+}
 
 IR::ValuePtr IREmitter::Inst(IR::Opcode op, std::initializer_list<IR::ValuePtr> args) {
     auto inst = std::make_shared<IR::Inst>(op);

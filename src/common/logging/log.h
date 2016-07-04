@@ -34,6 +34,7 @@ enum class Class : ClassType {
     Log,
     Common,
     Common_Memory,
+    Core_ARM11,
     Debug,
     Count ///< Total number of logging classes
 };

@@ -5,7 +5,7 @@ project(dynarmic)
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 
 # Compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter -static-libgcc -static-libstdc++")
+add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter -static-libgcc -static-libstdc++)
 
 # Arch detection
 include(CheckSymbolExists)
@@ -56,3 +56,4 @@ enable_testing(true)  # Enables unit-testing.
 
 # Dynarmic project files
 add_subdirectory(src)
+add_subdirectory(tests)

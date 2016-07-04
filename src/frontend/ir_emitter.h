@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "frontend_arm/arm_types.h"
-#include "frontend_arm/ir/ir.h"
-#include "frontend_arm/ir/opcodes.h"
+#include "frontend/arm_types.h"
+#include "frontend/ir/ir.h"
+#include "frontend/ir/opcodes.h"
 
 namespace Dynarmic {
 namespace Arm {
@@ -40,6 +40,7 @@ public:
 
     ResultAndCarry LogicalShiftLeft(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
     ResultAndCarry LogicalShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
+    ResultAndCarry ArithmeticShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
 
 private:
     IR::ValuePtr Inst(IR::Opcode op, std::initializer_list<IR::ValuePtr> args);

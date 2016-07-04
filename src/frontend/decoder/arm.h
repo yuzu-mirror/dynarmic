@@ -16,7 +16,7 @@
 #include <boost/optional.hpp>
 
 #include "common/common_types.h"
-#include "frontend_arm/decoder/decoder_detail.h"
+#include "frontend/decoder/decoder_detail.h"
 
 namespace Dynarmic {
 namespace Arm {

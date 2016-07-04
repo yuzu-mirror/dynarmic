@@ -22,7 +22,7 @@ namespace BackendX64 {
 // Mapping from opcode to Emit* member function.
 const static std::map<IR::Opcode, void (EmitX64::*)(IR::Value*)> emit_fns {
 #define OPCODE(name, type, ...) { IR::Opcode::name, &EmitX64::Emit##name },
-#include "frontend_arm/ir/opcodes.inc"
+#include "frontend/ir/opcodes.inc"
 #undef OPCODE
 };
 
@@ -33,7 +33,7 @@ static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
     return iter == uses.end() ? nullptr : reinterpret_cast<IR::Inst*>(iter->get());
 }
 
-CodePtr EmitX64::Emit(Dynarmic::IR::Block block) {
+CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block block) {
     code->INT3();
     CodePtr code_ptr = code->GetCodePtr();
 
@@ -98,6 +98,8 @@ void EmitX64::EmitGetNFlag(IR::Value* value_) {
 
     X64Reg result = reg_alloc.DefRegister(value);
 
+    // TODO: Flag optimization
+
     code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
     code->SHR(32, R(result), Imm8(31));
 }
@@ -106,6 +108,8 @@ void EmitX64::EmitSetNFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
     X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+
+    // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(31));
     code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 31)));
@@ -117,6 +121,8 @@ void EmitX64::EmitGetZFlag(IR::Value* value_) {
 
     X64Reg result = reg_alloc.DefRegister(value);
 
+    // TODO: Flag optimization
+
     code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
     code->SHR(32, R(result), Imm8(30));
     code->AND(32, R(result), Imm32(1));
@@ -126,6 +132,8 @@ void EmitX64::EmitSetZFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
     X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+
+    // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(30));
     code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 30)));
@@ -137,6 +145,8 @@ void EmitX64::EmitGetCFlag(IR::Value* value_) {
 
     X64Reg result = reg_alloc.DefRegister(value);
 
+    // TODO: Flag optimization
+
     code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
     code->SHR(32, R(result), Imm8(29));
     code->AND(32, R(result), Imm32(1));
@@ -146,6 +156,8 @@ void EmitX64::EmitSetCFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
     X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+
+    // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(29));
     code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 29)));
@@ -157,6 +169,8 @@ void EmitX64::EmitGetVFlag(IR::Value* value_) {
 
     X64Reg result = reg_alloc.DefRegister(value);
 
+    // TODO: Flag optimization
+
     code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
     code->SHR(32, R(result), Imm8(28));
     code->AND(32, R(result), Imm32(1));
@@ -166,6 +180,8 @@ void EmitX64::EmitSetVFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
     X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+
+    // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(28));
     code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 28)));
@@ -179,6 +195,8 @@ void EmitX64::EmitGetCarryFromOp(IR::Value*) {
 void EmitX64::EmitLeastSignificantByte(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
+    // TODO: Flag optimization
+
     reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
 }
 
@@ -187,6 +205,8 @@ void EmitX64::EmitMostSignificantBit(IR::Value* value_) {
 
     X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
 
+    // TODO: Flag optimization
+
     code->SHL(32, R(result), Imm8(31));
 }
 
@@ -194,6 +214,8 @@ void EmitX64::EmitIsZero(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
     X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    // TODO: Flag optimization
 
     code->TEST(32, R(result), R(result));
     code->SETcc(CCFlags::CC_E, R(result));
@@ -303,7 +325,62 @@ void EmitX64::EmitLogicalShiftRight(IR::Value* value_) {
     }
 }
 
+void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+    auto carry_inst = FindUseWithOpcode(value, IR::Opcode::GetCarryFromOp);
+
+    if (!carry_inst) {
+        X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
+        X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+        //X64Reg zero = reg_alloc.ScratchRegister();
+
+        // The 32-bit x64 SAR instruction masks the shift count by 0x1F before performing the shift.
+        // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
+
+        // TODO: Optimize this.
+
+        code->CMP(8, R(shift), Imm8(31));
+        auto Rs_gt31 = code->J_CC(CC_A);
+        // if (Rs & 0xFF <= 31) {
+        code->SAR(32, R(result), R(shift));
+        auto jmp_to_end = code->J();
+        // } else {
+        code->SetJumpTarget(Rs_gt31);
+        code->SAR(32, R(result), Imm8(31)); // Verified.
+        // }
+        code->SetJumpTarget(jmp_to_end);
+    } else {
+        inhibit_emission.insert(carry_inst);
+
+        X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
+        X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+        X64Reg carry = reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst);
+
+        // TODO: Optimize this.
+
+        code->CMP(8, R(shift), Imm8(31));
+        auto Rs_gt31 = code->J_CC(CC_A);
+        // if (Rs & 0xFF == 0) goto end;
+        code->TEST(8, R(shift), R(shift));
+        auto Rs_zero = code->J_CC(CC_Z);
+        // if (Rs & 0xFF <= 31) {
+        code->SAR(32, R(result), R(CL));
+        code->SETcc(CC_C, R(carry));
+        auto jmp_to_end = code->J();
+        // } else if (Rs & 0xFF > 31) {
+        code->SetJumpTarget(Rs_gt31);
+        code->SAR(32, R(result), Imm8(31)); // Verified.
+        code->BT(32, R(result), Imm8(31));
+        code->SETcc(CC_C, R(carry));
+        // }
+        code->SetJumpTarget(jmp_to_end);
+        code->SetJumpTarget(Rs_zero);
+    }
+}
+
 void EmitX64::EmitReturnToDispatch() {
+    // TODO: Update cycle counts
+
     code->JMP(routines->RunCodeReturnAddress(), true);
 }
 

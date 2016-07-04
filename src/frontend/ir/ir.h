@@ -13,8 +13,8 @@
 #include <boost/variant.hpp>
 
 #include "common/common_types.h"
-#include "frontend_arm/arm_types.h"
-#include "frontend_arm/ir/opcodes.h"
+#include "frontend/arm_types.h"
+#include "frontend/ir/opcodes.h"
 
 namespace Dynarmic {
 namespace IR {

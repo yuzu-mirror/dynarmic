@@ -32,7 +32,7 @@ constexpr T Bits(const T value) {
 
 /// Extracts a single bit at bit_position from value of type T.
 template<size_t bit_position, typename T>
-constexpr T Bit(const T value) {
+constexpr bool Bit(const T value) {
     static_assert(bit_position < BitSize<T>(), "bit_position must be smaller than size of T");
 
     return (value >> bit_position) & 1;
@@ -44,8 +44,8 @@ inline T SignExtend(const T value) {
     static_assert(bit_count <= BitSize<T>(), "bit_count larger than bitsize of T");
 
     constexpr T mask = static_cast<T>(1ULL << bit_count) - 1;
-    const T signbit = Bit<bit_count - 1>(value);
-    if (signbit != 0) {
+    const bool signbit = Bit<bit_count - 1, T>(value);
+    if (signbit) {
         return value | ~mask;
     }
     return value;

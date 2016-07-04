@@ -8,8 +8,8 @@
 
 #include "backend_x64/emit_x64.h"
 #include "common/common_types.h"
-#include "frontend_arm/decoder/thumb1.h"
-#include "frontend_arm/translate_thumb.h"
+#include "frontend/decoder/thumb1.h"
+#include "frontend/translate_thumb.h"
 
 struct TinyBlockOfCode : Gen::XCodeBlock {
     TinyBlockOfCode() {
@@ -25,10 +25,10 @@ void RunSingleThumbInstruction(u16 thumb_instruction, Dynarmic::BackendX64::JitS
 
     TinyBlockOfCode block_of_code;
     Dynarmic::BackendX64::Routines routines;
-    Dynarmic::UserCallbacks callbacks;
+    Dynarmic::UserCallbacks callbacks{};
     Dynarmic::BackendX64::EmitX64 emitter(&block_of_code, &routines, callbacks);
 
-    Dynarmic::BackendX64::CodePtr code = emitter.Emit(visitor.ir.block);
+    Dynarmic::BackendX64::CodePtr code = emitter.Emit({0, true, false}, visitor.ir.block);
     routines.RunCode(jit_state_ptr, code, 1);
 }
 

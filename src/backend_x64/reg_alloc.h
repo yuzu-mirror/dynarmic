@@ -11,7 +11,7 @@
 #include "backend_x64/jitstate.h"
 #include "common/common_types.h"
 #include "common/x64/emitter.h"
-#include "frontend_arm/ir/ir.h"
+#include "frontend/ir/ir.h"
 
 namespace Dynarmic {
 namespace BackendX64 {

@@ -14,22 +14,23 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+// TODO: Just turn this into a function that indexes a std::array.
 const static std::map<HostLoc, Gen::X64Reg> hostloc_to_x64 = {
-        { HostLoc::RAX, Gen::RAX },
-        { HostLoc::RBX, Gen::RBX },
-        { HostLoc::RCX, Gen::RCX },
-        { HostLoc::RDX, Gen::RDX },
-        { HostLoc::RSI, Gen::RSI },
-        { HostLoc::RDI, Gen::RDI },
-        { HostLoc::RBP, Gen::RBP },
-        { HostLoc::RSP, Gen::RSP },
-        { HostLoc::R8,  Gen::R8  },
-        { HostLoc::R9,  Gen::R9  },
-        { HostLoc::R10, Gen::R10 },
-        { HostLoc::R11, Gen::R11 },
-        { HostLoc::R12, Gen::R12 },
-        { HostLoc::R13, Gen::R13 },
-        { HostLoc::R14, Gen::R14 },
+    { HostLoc::RAX, Gen::RAX },
+    { HostLoc::RBX, Gen::RBX },
+    { HostLoc::RCX, Gen::RCX },
+    { HostLoc::RDX, Gen::RDX },
+    { HostLoc::RSI, Gen::RSI },
+    { HostLoc::RDI, Gen::RDI },
+    { HostLoc::RBP, Gen::RBP },
+    { HostLoc::RSP, Gen::RSP },
+    { HostLoc::R8,  Gen::R8  },
+    { HostLoc::R9,  Gen::R9  },
+    { HostLoc::R10, Gen::R10 },
+    { HostLoc::R11, Gen::R11 },
+    { HostLoc::R12, Gen::R12 },
+    { HostLoc::R13, Gen::R13 },
+    { HostLoc::R14, Gen::R14 },
 };
 
 static Gen::OpArg SpillToOpArg(HostLoc loc) {

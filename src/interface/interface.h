@@ -6,10 +6,15 @@
 
 #pragma once
 
+#include <memory>
+
 #include "common/common_types.h"
 
 namespace Dynarmic {
 
+class Jit;
+
+/// These function pointers may be inserted into compiled code.
 struct UserCallbacks {
     u8 (*MemoryRead8)(u32 vaddr);
     u16 (*MemoryRead16)(u32 vaddr);
@@ -21,9 +26,62 @@ struct UserCallbacks {
     void (*MemoryWrite32)(u32 vaddr, u32 value);
     void (*MemoryWrite64)(u32 vaddr, u64 value);
 
-    void (*InterpreterFallback)(u32 pc, void* jit_state);
+    bool (*IsReadOnlyMemory)(u32 vaddr);
 
-    bool (*SoftwareInterrupt)(u32 swi);
+    void (*InterpreterFallback)(u32 pc, Jit* jit);
+
+    bool (*CallSVC)(u32 swi);
+};
+
+class Jit final {
+public:
+    explicit Jit(Dynarmic::UserCallbacks callbacks);
+    ~Jit();
+
+    /**
+     * Runs the emulated CPU for about cycle_count cycles.
+     * Cannot be recursively called.
+     * @param cycle_count Estimated number of cycles to run the CPU for.
+     * @returns Actual cycle count.
+     */
+    size_t Run(size_t cycle_count);
+
+    /**
+     * Clears the code cache of all compiled code.
+     * Cannot be called from a callback.
+     * @param poison_memory If true, poisons memory to crash if any stray code pointers are called.
+     */
+    void ClearCache(bool poison_memory = true);
+
+    /**
+     * Stops execution in Jit::Run.
+     * Can only be called from a callback.
+     */
+    void HaltExecution();
+
+    /// View and modify registers.
+    std::array<u32, 16>& Regs();
+    std::array<u32, 16> Regs() const;
+
+    /// View and modify CPSR.
+    u32& Cpsr();
+    u32 Cpsr() const;
+
+    /**
+     * Returns true if Jit::Run was called but hasn't returned yet.
+     * i.e.: We're in a callback.
+     */
+    bool IsExecuting() const {
+        return is_executing;
+    }
+
+private:
+    bool halt_requested = false;
+    bool is_executing = false;
+    Dynarmic::UserCallbacks callbacks;
+
+    struct Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 } // namespace Dynarmic

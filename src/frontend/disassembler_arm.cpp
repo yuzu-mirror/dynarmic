@@ -9,8 +9,8 @@
 
 #include "common/bit_util.h"
 #include "common/string_util.h"
-#include "frontend_arm/arm_types.h"
-#include "frontend_arm/decoder/arm.h"
+#include "frontend/arm_types.h"
+#include "frontend/decoder/arm.h"
 
 namespace Dynarmic {
 namespace Arm {
@@ -512,8 +512,6 @@ public:
     std::string arm_RFE() { return "ice"; }
     std::string arm_SETEND(bool E) { return "ice"; }
     std::string arm_SRS() { return "ice"; }
-
-
 };
 
 std::string DisassembleArm(u32 instruction) {

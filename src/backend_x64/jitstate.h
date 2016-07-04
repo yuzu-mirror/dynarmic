@@ -15,15 +15,15 @@ namespace BackendX64 {
 constexpr size_t SpillCount = 32;
 
 struct JitState {
-    u32 Cpsr;
+    u32 Cpsr = 0;
     std::array<u32, 16> Reg{}; // Current register file.
     // TODO: Mode-specific register sets unimplemented.
 
     std::array<u32, SpillCount> Spill{}; // Spill.
 
     // For internal use (See: Routines::RunCode)
-    u64 save_host_RSP;
-    s64 cycles_remaining;
+    u64 save_host_RSP = 0;
+    s64 cycles_remaining = 0;
 };
 
 using CodePtr = const u8*;

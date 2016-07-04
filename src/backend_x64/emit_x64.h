@@ -11,7 +11,7 @@
 #include "backend_x64/reg_alloc.h"
 #include "backend_x64/routines.h"
 #include "common/x64/emitter.h"
-#include "frontend_arm/ir/ir.h"
+#include "frontend/ir/ir.h"
 #include "interface/interface.h"
 
 namespace Dynarmic {
@@ -21,7 +21,8 @@ class EmitX64 final {
 public:
     EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb) : code(code), reg_alloc(code), routines(routines), cb(cb) {}
 
-    CodePtr Emit(IR::Block ir);
+    CodePtr Emit(Arm::LocationDescriptor descriptor, IR::Block ir);
+    CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor);
 
     void EmitImmU1(IR::Value* value);
     void EmitImmU8(IR::Value* value);
@@ -43,6 +44,7 @@ public:
     void EmitIsZero(IR::Value* value);
     void EmitLogicalShiftLeft(IR::Value* value);
     void EmitLogicalShiftRight(IR::Value* value);
+    void EmitArithmeticShiftRight(IR::Value* value);
 
     void EmitReturnToDispatch();
 
