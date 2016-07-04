@@ -1,7 +1,7 @@
 Dynarmic
 ========
 
-An (eventual) dynamic recompiler for ARM6K. The code is a mess.
+An (eventual) dynamic recompiler for ARMv6K. The code is a mess.
 
 A lot of optimization work can be done (it currently produces bad code, worse than that non-IR JIT).
 
@@ -18,8 +18,7 @@ Plans
 
 ### Medium-term
 
-* Undo strength-reduction (invert some common ARM idioms)
-* Other optimizations
+* [Optimizations](https://gist.github.com/MerryMage/a7411f139cc6e506ea7689ff4579c84b)
 
 ### Long-term
 
