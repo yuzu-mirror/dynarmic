@@ -72,5 +72,13 @@ struct LocationDescriptor {
     }
 };
 
+struct LocationDescriptorHash {
+    size_t operator()(const LocationDescriptor& x) const {
+        return std::hash<u64>()(static_cast<u64>(x.arm_pc)
+                                ^ (static_cast<u64>(x.TFlag) << 32)
+                                ^ (static_cast<u64>(x.EFlag) << 33));
+    }
+};
+
 } // namespace Arm
 } // namespace Dynarmic

@@ -23,9 +23,9 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "tests/skyeye_interpreter/skyeye_common/armstate.h"
-#include "tests/skyeye_interpreter/skyeye_common/vfp/asm_vfp.h"
-#include "tests/skyeye_interpreter/skyeye_common/vfp/vfp.h"
+#include "skyeye_interpreter/skyeye_common/armstate.h"
+#include "skyeye_interpreter/skyeye_common/vfp/asm_vfp.h"
+#include "skyeye_interpreter/skyeye_common/vfp/vfp.h"
 
 void VFPInit(ARMul_State* state)
 {

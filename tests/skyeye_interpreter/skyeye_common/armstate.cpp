@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include "common/logging/log.h"
-#include "tests/skyeye_interpreter/skyeye_common/armstate.h"
-#include "tests/skyeye_interpreter/skyeye_common/vfp/vfp.h"
+#include "skyeye_interpreter/skyeye_common/armstate.h"
+#include "skyeye_interpreter/skyeye_common/vfp/vfp.h"
 
 namespace Common {
 inline u16 swap16(u16 data) {return (data >> 8) | (data << 8);}

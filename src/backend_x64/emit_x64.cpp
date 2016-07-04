@@ -9,6 +9,7 @@
 
 #include "backend_x64/emit_x64.h"
 #include "common/x64/emitter.h"
+#include "frontend/arm_types.h"
 
 // TODO: More optimal use of immediates.
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
@@ -34,6 +35,9 @@ static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
 }
 
 CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block block) {
+    inhibit_emission.clear();
+    reg_alloc.Reset();
+
     code->INT3();
     CodePtr code_ptr = code->GetCodePtr();
 
@@ -46,6 +50,7 @@ CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block bl
         reg_alloc.EndOfAllocScope();
     }
 
+    EmitAddCycles(block.cycle_count);
     EmitReturnToDispatch();
 
     return code_ptr;
@@ -376,6 +381,11 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
         code->SetJumpTarget(jmp_to_end);
         code->SetJumpTarget(Rs_zero);
     }
+}
+
+void EmitX64::EmitAddCycles(size_t cycles) {
+    ASSERT(cycles < std::numeric_limits<u32>::max());
+    code->SUB(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(cycles));
 }
 
 void EmitX64::EmitReturnToDispatch() {

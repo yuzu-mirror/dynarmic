@@ -34,8 +34,8 @@
 
 #include <cstdio>
 #include "common/common_types.h"
-#include "tests/skyeye_interpreter/skyeye_common/armstate.h"
-#include "tests/skyeye_interpreter/skyeye_common/vfp/asm_vfp.h"
+#include "skyeye_interpreter/skyeye_common/armstate.h"
+#include "skyeye_interpreter/skyeye_common/vfp/asm_vfp.h"
 
 #define do_div(n, base) {n/=base;}
 

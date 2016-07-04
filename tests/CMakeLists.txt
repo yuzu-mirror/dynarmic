@@ -1,4 +1,4 @@
-include_directories(.)
+include_directories(. ../src)
 
 set(SRCS
     arm/fuzz_thumb.cpp

@@ -14,6 +14,7 @@ set(SRCS
     frontend/disassembler_arm.cpp
     frontend/ir/ir.cpp
     frontend/ir_emitter.cpp
+    frontend/translate.cpp
     )
 
 set(HEADERS
@@ -43,7 +44,9 @@ set(HEADERS
     frontend/ir/ir.h
     frontend/ir/opcodes.h
     frontend/ir_emitter.h
-    frontend/translate_thumb.h
+    frontend/translate.h
+    frontend/translate_arm.cpp
+    frontend/translate_thumb.cpp
     interface/interface.h
     )
 

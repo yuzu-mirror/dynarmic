@@ -7,6 +7,7 @@
 #pragma once
 
 #include <set>
+#include <unordered_map>
 
 #include "backend_x64/reg_alloc.h"
 #include "backend_x64/routines.h"
@@ -19,10 +20,15 @@ namespace BackendX64 {
 
 class EmitX64 final {
 public:
-    EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb) : code(code), reg_alloc(code), routines(routines), cb(cb) {}
+    EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb)
+            : reg_alloc(code), code(code), routines(routines), cb(cb) {}
 
     CodePtr Emit(Arm::LocationDescriptor descriptor, IR::Block ir);
-    CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor);
+
+    CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor) {
+        auto iter = basic_blocks.find(descriptor);
+        return iter != basic_blocks.end() ? iter->second : nullptr;
+    }
 
     void EmitImmU1(IR::Value* value);
     void EmitImmU8(IR::Value* value);
@@ -46,14 +52,17 @@ public:
     void EmitLogicalShiftRight(IR::Value* value);
     void EmitArithmeticShiftRight(IR::Value* value);
 
+    void EmitAddCycles(size_t cycles);
     void EmitReturnToDispatch();
 
 private:
     std::set<IR::Value*> inhibit_emission;
-    Gen::XEmitter* code;
     RegAlloc reg_alloc;
+
+    Gen::XEmitter* code;
     Routines* routines;
     UserCallbacks cb;
+    std::unordered_map<Arm::LocationDescriptor, CodePtr, Arm::LocationDescriptorHash> basic_blocks;
 };
 
 } // namespace BackendX64

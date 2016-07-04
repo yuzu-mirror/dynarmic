@@ -14,6 +14,7 @@
 #include "common/common_types.h"
 #include "common/scope_exit.h"
 #include "frontend/arm_types.h"
+#include "frontend/translate.h"
 #include "interface/interface.h"
 
 namespace Dynarmic {
@@ -27,12 +28,13 @@ struct BlockOfCode : Gen::XCodeBlock {
 };
 
 struct Jit::Impl {
-    Impl(UserCallbacks callbacks) : emitter(&block_of_code, &routines, callbacks) {}
+    Impl(UserCallbacks callbacks) : emitter(&block_of_code, &routines, callbacks), callbacks(callbacks) {}
 
     JitState jit_state{};
     Routines routines{};
     BlockOfCode block_of_code{};
     EmitX64 emitter;
+    const UserCallbacks callbacks;
 
     size_t Execute(size_t cycle_count) {
         u32 pc = jit_state.Reg[15];
@@ -50,7 +52,7 @@ private:
         if (code_ptr)
             return code_ptr;
 
-        IR::Block ir_block = IR::Block({0, false, false}); // TODO: Do this.
+        IR::Block ir_block = Arm::Translate(descriptor, callbacks.MemoryRead32);
         return emitter.Emit(descriptor, ir_block);
     }
 };

@@ -22,7 +22,7 @@
 
 #include "common/common_types.h"
 #include "interface/interface.h"
-#include "tests/skyeye_interpreter/skyeye_common/arm_regformat.h"
+#include "skyeye_interpreter/skyeye_common/arm_regformat.h"
 
 // Signal levels
 enum {

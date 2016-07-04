@@ -78,6 +78,8 @@ public:
 
     void EndOfAllocScope();
 
+    void Reset();
+
 private:
     HostLoc SelectARegister(std::initializer_list<HostLoc> desired_locations) const;
     std::vector<HostLoc> ValueLocations(IR::Value* value) const;

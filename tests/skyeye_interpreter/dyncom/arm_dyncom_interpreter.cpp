@@ -10,13 +10,13 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "tests/skyeye_interpreter/dyncom/arm_dyncom_dec.h"
-#include "tests/skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
-#include "tests/skyeye_interpreter/dyncom/arm_dyncom_thumb.h"
-#include "tests/skyeye_interpreter/dyncom/arm_dyncom_run.h"
-#include "tests/skyeye_interpreter/skyeye_common/armstate.h"
-#include "tests/skyeye_interpreter/skyeye_common/armsupp.h"
-#include "tests/skyeye_interpreter/skyeye_common/vfp/vfp.h"
+#include "skyeye_interpreter/dyncom/arm_dyncom_dec.h"
+#include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
+#include "skyeye_interpreter/dyncom/arm_dyncom_thumb.h"
+#include "skyeye_interpreter/dyncom/arm_dyncom_run.h"
+#include "skyeye_interpreter/skyeye_common/armstate.h"
+#include "skyeye_interpreter/skyeye_common/armsupp.h"
+#include "skyeye_interpreter/skyeye_common/vfp/vfp.h"
 
 enum {
     COND            = (1 << 0),
@@ -3184,11 +3184,11 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(yield)(unsigned int inst, int index)
 // Floating point VFPv3 structures and instructions
 
 #define VFP_INTERPRETER_STRUCT
-#include "tests/skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp"
+#include "skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_STRUCT
 
 #define VFP_INTERPRETER_TRANS
-#include "tests/skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp"
+#include "skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp"
 #undef VFP_INTERPRETER_TRANS
 
 typedef ARM_INST_PTR (*transop_fp_t)(unsigned int, int);
@@ -6859,7 +6859,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     }
 
     #define VFP_INTERPRETER_IMPL
-    #include "tests/skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp"
+    #include "skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp"
     #undef VFP_INTERPRETER_IMPL
 
     END:

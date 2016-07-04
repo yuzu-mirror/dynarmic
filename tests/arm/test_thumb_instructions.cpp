@@ -6,54 +6,56 @@
 
 #include <catch.hpp>
 
-#include "backend_x64/emit_x64.h"
 #include "common/common_types.h"
-#include "frontend/decoder/thumb1.h"
-#include "frontend/translate_thumb.h"
+#include "interface/interface.h"
 
-struct TinyBlockOfCode : Gen::XCodeBlock {
-    TinyBlockOfCode() {
-        AllocCodeSpace(256);
+std::array<u32, 1024> code_mem{};
+
+u32 MemoryRead32(u32 vaddr) {
+    if (vaddr < code_mem.size() * sizeof(u32)) {
+        return code_mem[vaddr / sizeof(u32)];
     }
-};
+    return vaddr;
+}
 
-void RunSingleThumbInstruction(u16 thumb_instruction, Dynarmic::BackendX64::JitState* jit_state_ptr) {
-    Dynarmic::Arm::TranslatorVisitor visitor;
-    auto decoder = Dynarmic::Arm::DecodeThumb1<Dynarmic::Arm::TranslatorVisitor>(thumb_instruction);
-    REQUIRE(!!decoder);
-    decoder->call(visitor, thumb_instruction);
-
-    TinyBlockOfCode block_of_code;
-    Dynarmic::BackendX64::Routines routines;
-    Dynarmic::UserCallbacks callbacks{};
-    Dynarmic::BackendX64::EmitX64 emitter(&block_of_code, &routines, callbacks);
-
-    Dynarmic::BackendX64::CodePtr code = emitter.Emit({0, true, false}, visitor.ir.block);
-    routines.RunCode(jit_state_ptr, code, 1);
+Dynarmic::UserCallbacks GetUserCallbacks() {
+    Dynarmic::UserCallbacks user_callbacks{};
+    user_callbacks.MemoryRead32 = &MemoryRead32;
+    return user_callbacks;
 }
 
 TEST_CASE( "thumb: lsls r0, r1, #2", "[thumb]" ) {
-    Dynarmic::BackendX64::JitState jit_state;
-    jit_state.Reg[0] = 1;
-    jit_state.Reg[1] = 2;
-    jit_state.Cpsr = 0;
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0x0088; // lsls r0, r1, #2
+    code_mem[1] = 0xDE00; // udf #0
 
-    RunSingleThumbInstruction(0x0088, &jit_state);
+    jit.Regs()[0] = 1;
+    jit.Regs()[1] = 2;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.Cpsr() = 0x00000030; // Thumb, User-mode
 
-    REQUIRE( jit_state.Reg[0] == 8 );
-    REQUIRE( jit_state.Reg[1] == 2 );
-    REQUIRE( jit_state.Cpsr == 0 );
+    jit.Run(1);
+
+    REQUIRE( jit.Regs()[0] == 8 );
+    REQUIRE( jit.Regs()[1] == 2 );
+    REQUIRE( jit.Cpsr() == 0x00000030 );
 }
 
 TEST_CASE( "thumb: lsls r0, r1, #31", "[thumb]" ) {
-    Dynarmic::BackendX64::JitState jit_state;
-    jit_state.Reg[0] = 1;
-    jit_state.Reg[1] = 0xFFFFFFFF;
-    jit_state.Cpsr = 0;
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0x07C8; // lsls r0, r1, #31
+    code_mem[1] = 0xDE00; // udf #0
 
-    RunSingleThumbInstruction(0x07C8, &jit_state);
+    jit.Regs()[0] = 1;
+    jit.Regs()[1] = 0xFFFFFFFF;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.Cpsr() = 0x00000030; // Thumb, User-mode
 
-    REQUIRE( jit_state.Reg[0] == 0x80000000 );
-    REQUIRE( jit_state.Reg[1] == 0xffffffff );
-    REQUIRE( jit_state.Cpsr == 0x20000000 );
+    jit.Run(1);
+
+    REQUIRE( jit.Regs()[0] == 0x80000000 );
+    REQUIRE( jit.Regs()[1] == 0xffffffff );
+    REQUIRE( jit.Cpsr() == 0x20000030 ); // C flag, Thumb, User-mode
 }

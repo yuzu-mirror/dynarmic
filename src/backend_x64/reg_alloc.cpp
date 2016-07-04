@@ -201,5 +201,12 @@ void RegAlloc::EndOfAllocScope() {
             iter.second = nullptr;
 }
 
+void RegAlloc::Reset() {
+    hostloc_to_value.clear();
+    hostloc_state.clear();
+    remaining_uses.clear();
+}
+
+
 } // namespace BackendX64
 } // namespace Dynarmic

@@ -15,7 +15,10 @@ namespace Arm {
 
 class IREmitter {
 public:
-    IR::Block block = Dynarmic::IR::Block({0, false, false});
+    explicit IREmitter(LocationDescriptor descriptor) : block(descriptor), current_location(descriptor) {}
+
+    IR::Block block;
+    LocationDescriptor current_location;
 
     struct ResultAndCarry {
         IR::ValuePtr result;

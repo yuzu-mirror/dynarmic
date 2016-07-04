@@ -43,6 +43,9 @@ private:
                 expect |= 1 << bit_position;
                 mask |= 1 << bit_position;
                 break;
+            default:
+                // Ignore
+                break;
             }
         }
         return std::make_tuple(mask, expect);

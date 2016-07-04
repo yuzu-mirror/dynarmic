@@ -57,9 +57,9 @@
 #include "common/common_types.h"
 #include "common/logging/log.h"
 
-#include "tests/skyeye_interpreter/skyeye_common/vfp/vfp_helper.h"
-#include "tests/skyeye_interpreter/skyeye_common/vfp/asm_vfp.h"
-#include "tests/skyeye_interpreter/skyeye_common/vfp/vfp.h"
+#include "skyeye_interpreter/skyeye_common/vfp/vfp_helper.h"
+#include "skyeye_interpreter/skyeye_common/vfp/asm_vfp.h"
+#include "skyeye_interpreter/skyeye_common/vfp/vfp.h"
 
 static struct vfp_single vfp_single_default_qnan = {
     255,

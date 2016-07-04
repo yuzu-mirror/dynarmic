@@ -161,6 +161,7 @@ public:
 
     Arm::LocationDescriptor location;
     std::list<ValuePtr> instructions;
+    size_t cycle_count = 0;
 };
 
 
