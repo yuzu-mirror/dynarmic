@@ -16,6 +16,7 @@ set(HEADERS
     logging/log.h
     memory_util.h
     mp.h
+    scope_exit.h
     string_util.h
     x64/abi.h
     x64/cpu_detect.h
