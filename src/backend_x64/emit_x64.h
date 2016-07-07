@@ -62,6 +62,8 @@ public:
     void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location);
 
+    void ClearCache();
+
 private:
     std::set<IR::Value*> inhibit_emission;
     RegAlloc reg_alloc;

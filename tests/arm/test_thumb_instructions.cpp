@@ -11,13 +11,13 @@
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
 
-std::array<u16, 1024> code_mem{};
+static std::array<u16, 1024> code_mem{};
 
-u32 MemoryRead32(u32 vaddr);
-void InterpreterFallback(u32 pc, Dynarmic::Jit* jit);
-Dynarmic::UserCallbacks GetUserCallbacks();
+static u32 MemoryRead32(u32 vaddr);
+static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit);
+static Dynarmic::UserCallbacks GetUserCallbacks();
 
-u32 MemoryRead32(u32 vaddr) {
+static u32 MemoryRead32(u32 vaddr) {
     if (vaddr < code_mem.size() * sizeof(u16)) {
         size_t index = vaddr / sizeof(u16);
         return code_mem[index] | (code_mem[index+1] << 16);
@@ -25,7 +25,7 @@ u32 MemoryRead32(u32 vaddr) {
     return vaddr;
 }
 
-void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
+static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
     ARMul_State interp_state{USER32MODE};
     interp_state.user_callbacks = GetUserCallbacks();
     interp_state.NumInstrsToExecute = 1;
@@ -41,7 +41,7 @@ void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
     jit->Cpsr() = interp_state.Cpsr;
 }
 
-Dynarmic::UserCallbacks GetUserCallbacks() {
+static Dynarmic::UserCallbacks GetUserCallbacks() {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.MemoryRead32 = &MemoryRead32;
     user_callbacks.InterpreterFallback = &InterpreterFallback;

@@ -14,7 +14,7 @@ set(SRCS
     skyeye_interpreter/skyeye_common/vfp/vfpdouble.cpp
     skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp
     skyeye_interpreter/skyeye_common/vfp/vfpsingle.cpp
-    )
+    rand_int.h)
 
 set(HEADERS
     skyeye_interpreter/dyncom/arm_dyncom_dec.h

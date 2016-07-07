@@ -458,5 +458,9 @@ void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor init
     ASSERT_MSG(0, "Unimplemented");
 }
 
+void EmitX64::ClearCache() {
+    basic_blocks.clear();
+}
+
 } // namespace BackendX64
 } // namespace Dynarmic

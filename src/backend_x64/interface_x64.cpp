@@ -78,6 +78,14 @@ size_t Jit::Run(size_t cycle_count) {
 
 void Jit::ClearCache(bool poison_memory) {
     ASSERT(!is_executing);
+
+    if (poison_memory) {
+        impl->block_of_code.ClearCodeSpace();
+    } else {
+        impl->block_of_code.ResetCodePtr();
+    }
+
+    impl->emitter.ClearCache();
 }
 
 void Jit::HaltExecution() {
