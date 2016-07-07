@@ -149,6 +149,84 @@ private:
     std::vector<ValueWeakPtr> args;
 };
 
+namespace Term {
+
+struct Invalid {};
+
+/**
+ * This terminal instruction calls the interpreter, starting at `next`.
+ * The interpreter must interpret at least 1 instruction but may choose to interpret more.
+ */
+struct Interpret {
+    explicit Interpret(const Arm::LocationDescriptor& next_) : next(next_) {}
+    Arm::LocationDescriptor next; ///< Location at which interpretation starts.
+};
+
+/**
+ * This terminal instruction returns control to the dispatcher.
+ * The dispatcher will use the value in R15 to determine what comes next.
+ */
+struct ReturnToDispatch {};
+
+/**
+ * This terminal instruction jumps to the basic block described by `next` if we have enough
+ * cycles remaining. If we do not have enough cycles remaining, we return to the
+ * dispatcher, which will return control to the host.
+ */
+struct LinkBlock {
+    explicit LinkBlock(const Arm::LocationDescriptor& next_) : next(next_) {}
+    Arm::LocationDescriptor next; ///< Location descriptor for next block.
+};
+
+/**
+ * This terminal instruction jumps to the basic block described by `next` unconditionally.
+ * This is an optimization and MUST only be emitted when this is guaranteed not to result
+ * in hanging, even in the face of other optimizations. (In practice, this means that only
+ * forward jumps to short-ish blocks would use this instruction.)
+ * A backend that doesn't support this optimization may choose to implement this exactly
+ * as LinkBlock.
+ */
+struct LinkBlockFast {
+    explicit LinkBlockFast(const Arm::LocationDescriptor& next_) : next(next_) {}
+    Arm::LocationDescriptor next; ///< Location descriptor for next block.
+};
+
+/**
+ * This terminal instruction checks the top of the Return Stack Buffer against R15.
+ * If RSB lookup fails, control is returned to the dispatcher.
+ * This is an optimization for faster function calls. A backend that doesn't support
+ * this optimization or doesn't have a RSB may choose to implement this exactly as
+ * ReturnToDispatch.
+ */
+struct PopRSBHint {};
+
+struct If;
+/// A Terminal is the terminal instruction in a MicroBlock.
+using Terminal = boost::variant<
+        Invalid,
+        Interpret,
+        ReturnToDispatch,
+        LinkBlock,
+        LinkBlockFast,
+        PopRSBHint,
+        boost::recursive_wrapper<If>
+>;
+
+/**
+ * This terminal instruction conditionally executes one terminal or another depending
+ * on the run-time state of the ARM flags.
+ */
+struct If {
+    If(Arm::Cond if_, Terminal then_, Terminal else_) : if_(if_), then_(then_), else_(else_) {}
+    Arm::Cond if_;
+    Terminal then_;
+    Terminal else_;
+};
+
+} // namespace Term
+
+using Term::Terminal;
+
 /**
  * A basic block. It consists of zero or more instructions followed by exactly one terminal.
  * Note that this is a linear IR and not a pure tree-based IR: i.e.: there is an ordering to
@@ -161,6 +239,7 @@ public:
 
     Arm::LocationDescriptor location;
     std::list<ValuePtr> instructions;
+    Terminal terminal = Term::Invalid{};
     size_t cycle_count = 0;
 };
 

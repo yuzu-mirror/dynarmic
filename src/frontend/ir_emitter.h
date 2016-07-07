@@ -45,6 +45,8 @@ public:
     ResultAndCarry LogicalShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
     ResultAndCarry ArithmeticShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
 
+    void SetTerm(const IR::Terminal& terminal);
+
 private:
     IR::ValuePtr Inst(IR::Opcode op, std::initializer_list<IR::ValuePtr> args);
     IR::ValuePtr RegRef(Reg reg);

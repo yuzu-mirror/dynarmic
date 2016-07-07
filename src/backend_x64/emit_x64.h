@@ -20,8 +20,8 @@ namespace BackendX64 {
 
 class EmitX64 final {
 public:
-    EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb)
-            : reg_alloc(code), code(code), routines(routines), cb(cb) {}
+    EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb, Jit* jit_interface)
+            : reg_alloc(code), code(code), routines(routines), cb(cb), jit_interface(jit_interface) {}
 
     CodePtr Emit(Arm::LocationDescriptor descriptor, IR::Block ir);
 
@@ -53,7 +53,14 @@ public:
     void EmitArithmeticShiftRight(IR::Value* value);
 
     void EmitAddCycles(size_t cycles);
-    void EmitReturnToDispatch();
+
+    void EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initial_location);
+    void EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationDescriptor initial_location);
+    void EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch terminal, Arm::LocationDescriptor initial_location);
+    void EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location);
+    void EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location);
+    void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, Arm::LocationDescriptor initial_location);
+    void EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location);
 
 private:
     std::set<IR::Value*> inhibit_emission;
@@ -62,6 +69,7 @@ private:
     Gen::XEmitter* code;
     Routines* routines;
     UserCallbacks cb;
+    Jit* jit_interface;
     std::unordered_map<Arm::LocationDescriptor, CodePtr, Arm::LocationDescriptorHash> basic_blocks;
 };
 

@@ -21,9 +21,9 @@ set(HEADERS
     skyeye_interpreter/dyncom/arm_dyncom_interpreter.h
     skyeye_interpreter/dyncom/arm_dyncom_run.h
     skyeye_interpreter/dyncom/arm_dyncom_thumb.h
+    skyeye_interpreter/skyeye_common/arm_regformat.h
     skyeye_interpreter/skyeye_common/armstate.h
     skyeye_interpreter/skyeye_common/armsupp.h
-    skyeye_interpreter/skyeye_common/arm_regformat.h
     skyeye_interpreter/skyeye_common/vfp/asm_vfp.h
     skyeye_interpreter/skyeye_common/vfp/vfp.h
     skyeye_interpreter/skyeye_common/vfp/vfp_helper.h

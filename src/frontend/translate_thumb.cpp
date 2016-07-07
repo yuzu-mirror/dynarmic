@@ -22,6 +22,11 @@ struct TranslatorVisitor final {
 
     IREmitter ir;
 
+    bool TranslateThisInstruction() {
+        ir.SetTerm(IR::Term::Interpret(ir.current_location));
+        return false;
+    }
+
     bool thumb1_LSL_imm(Imm5 imm5, Reg m, Reg d) {
         u8 shift_n = imm5;
         // LSLS <Rd>, <Rm>, #<imm5>
@@ -94,7 +99,7 @@ struct TranslatorVisitor final {
     }
 
     bool thumb1_UDF() {
-        return false;
+        return TranslateThisInstruction();
     }
 };
 
@@ -108,12 +113,13 @@ static std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRea
         first_part >>= 16;
     first_part &= 0xFFFF;
 
-    if ((first_part & 0xF800) != 0xE800 && (first_part & 0xF000) != 0xF000) {
+    if ((first_part & 0xF800) <= 0xE800) {
         // 16-bit thumb instruction
         return std::make_tuple(first_part, ThumbInstSize::Thumb16);
     }
 
     // 32-bit thumb instruction
+    // These always start with 0b11101, 0b11110 or 0b11111.
 
     u32 second_part = (*memory_read_32)((arm_pc+2) & 0xFFFFFFFC);
     if (((arm_pc+2) & 0x2) != 0)
@@ -135,7 +141,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
         std::tie(thumb_instruction, inst_size) = ReadThumbInstruction(arm_pc, memory_read_32);
 
         if (inst_size == ThumbInstSize::Thumb16) {
-            auto decoder = DecodeThumb1<TranslatorVisitor>(static_cast<u16>(thumb_instruction));
+            auto decoder = DecodeThumb16<TranslatorVisitor>(static_cast<u16>(thumb_instruction));
             if (decoder) {
                 should_continue = decoder->call(visitor, static_cast<u16>(thumb_instruction));
             } else {
@@ -151,7 +157,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
             ASSERT_MSG(0, "Unimplemented");
         }
 
-        visitor.ir.current_location.arm_pc += inst_size == ThumbInstSize::Thumb16 ? 2 : 4;
+        visitor.ir.current_location.arm_pc += (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;
         visitor.ir.block.cycle_count++;
     }
 

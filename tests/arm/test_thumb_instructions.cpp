@@ -8,19 +8,43 @@
 
 #include "common/common_types.h"
 #include "interface/interface.h"
+#include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
+#include "skyeye_interpreter/skyeye_common/armstate.h"
 
-std::array<u32, 1024> code_mem{};
+std::array<u16, 1024> code_mem{};
+
+u32 MemoryRead32(u32 vaddr);
+void InterpreterFallback(u32 pc, Dynarmic::Jit* jit);
+Dynarmic::UserCallbacks GetUserCallbacks();
 
 u32 MemoryRead32(u32 vaddr) {
-    if (vaddr < code_mem.size() * sizeof(u32)) {
-        return code_mem[vaddr / sizeof(u32)];
+    if (vaddr < code_mem.size() * sizeof(u16)) {
+        size_t index = vaddr / sizeof(u16);
+        return code_mem[index] | (code_mem[index+1] << 16);
     }
     return vaddr;
+}
+
+void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
+    ARMul_State interp_state{USER32MODE};
+    interp_state.user_callbacks = GetUserCallbacks();
+    interp_state.NumInstrsToExecute = 1;
+
+    interp_state.Reg = jit->Regs();
+    interp_state.Cpsr = jit->Cpsr();
+    interp_state.Reg[15] = pc;
+
+    InterpreterClearCache();
+    InterpreterMainLoop(&interp_state);
+
+    jit->Regs() = interp_state.Reg;
+    jit->Cpsr() = interp_state.Cpsr;
 }
 
 Dynarmic::UserCallbacks GetUserCallbacks() {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.MemoryRead32 = &MemoryRead32;
+    user_callbacks.InterpreterFallback = &InterpreterFallback;
     return user_callbacks;
 }
 
@@ -28,7 +52,7 @@ TEST_CASE( "thumb: lsls r0, r1, #2", "[thumb]" ) {
     Dynarmic::Jit jit{GetUserCallbacks()};
     code_mem.fill({});
     code_mem[0] = 0x0088; // lsls r0, r1, #2
-    code_mem[1] = 0xDE00; // udf #0
+    code_mem[1] = 0xE7FE; // b +#0
 
     jit.Regs()[0] = 1;
     jit.Regs()[1] = 2;
@@ -39,6 +63,7 @@ TEST_CASE( "thumb: lsls r0, r1, #2", "[thumb]" ) {
 
     REQUIRE( jit.Regs()[0] == 8 );
     REQUIRE( jit.Regs()[1] == 2 );
+    REQUIRE( jit.Regs()[15] == 2 );
     REQUIRE( jit.Cpsr() == 0x00000030 );
 }
 
@@ -46,7 +71,7 @@ TEST_CASE( "thumb: lsls r0, r1, #31", "[thumb]" ) {
     Dynarmic::Jit jit{GetUserCallbacks()};
     code_mem.fill({});
     code_mem[0] = 0x07C8; // lsls r0, r1, #31
-    code_mem[1] = 0xDE00; // udf #0
+    code_mem[1] = 0xE7FE; // b +#0
 
     jit.Regs()[0] = 1;
     jit.Regs()[1] = 0xFFFFFFFF;
@@ -57,5 +82,6 @@ TEST_CASE( "thumb: lsls r0, r1, #31", "[thumb]" ) {
 
     REQUIRE( jit.Regs()[0] == 0x80000000 );
     REQUIRE( jit.Regs()[1] == 0xffffffff );
+    REQUIRE( jit.Regs()[15] == 2 );
     REQUIRE( jit.Cpsr() == 0x20000030 ); // C flag, Thumb, User-mode
 }

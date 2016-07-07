@@ -151,7 +151,7 @@ static const std::array<Thumb1Matcher<V>, 7> g_thumb1_instruction_table {{
 }};
 
 template<typename Visitor>
-boost::optional<const Thumb1Matcher<Visitor>&> DecodeThumb1(u16 instruction) {
+boost::optional<const Thumb1Matcher<Visitor>&> DecodeThumb16(u16 instruction) {
     const auto& table = g_thumb1_instruction_table<Visitor>;
     auto matches_instruction = [instruction](const auto& matcher){ return matcher.Matches(instruction); };
 

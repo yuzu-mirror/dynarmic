@@ -28,7 +28,7 @@ struct BlockOfCode : Gen::XCodeBlock {
 };
 
 struct Jit::Impl {
-    Impl(UserCallbacks callbacks) : emitter(&block_of_code, &routines, callbacks), callbacks(callbacks) {}
+    Impl(Jit* jit, UserCallbacks callbacks) : emitter(&block_of_code, &routines, callbacks, jit), callbacks(callbacks) {}
 
     JitState jit_state{};
     Routines routines{};
@@ -57,7 +57,7 @@ private:
     }
 };
 
-Jit::Jit(UserCallbacks callbacks) : callbacks(callbacks), impl(std::make_unique<Impl>(callbacks)) {}
+Jit::Jit(UserCallbacks callbacks) : callbacks(callbacks), impl(std::make_unique<Impl>(this, callbacks)) {}
 
 Jit::~Jit() {}
 

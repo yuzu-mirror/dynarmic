@@ -4,7 +4,8 @@
  * General Public License version 2 or any later version.
  */
 
-#include "ir_emitter.h"
+#include "common/assert.h"
+#include "frontend/ir_emitter.h"
 
 namespace Dynarmic {
 namespace Arm {
@@ -71,6 +72,11 @@ IREmitter::ResultAndCarry IREmitter::ArithmeticShiftRight(IR::ValuePtr value_in,
     auto result = Inst(IR::Opcode::ArithmeticShiftRight, {value_in, shift_amount, carry_in});
     auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
+}
+
+void IREmitter::SetTerm(const IR::Terminal& terminal) {
+    ASSERT_MSG(block.terminal.which() == 0, "Terminal has already been set.");
+    block.terminal = terminal;
 }
 
 IR::ValuePtr IREmitter::Inst(IR::Opcode op, std::initializer_list<IR::ValuePtr> args) {

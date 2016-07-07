@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "backend_x64/emit_x64.h"
+#include "common/x64/abi.h"
 #include "common/x64/emitter.h"
 #include "frontend/arm_types.h"
 
@@ -19,6 +20,14 @@ using namespace Gen;
 
 namespace Dynarmic {
 namespace BackendX64 {
+
+static OpArg MJitStateReg(Arm::Reg reg) {
+    return MDisp(R15, offsetof(JitState, Reg) + sizeof(u32) * static_cast<size_t>(reg));
+}
+
+static OpArg MJitStateCpsr() {
+    return MDisp(R15, offsetof(JitState, Cpsr));
+}
 
 // Mapping from opcode to Emit* member function.
 const static std::map<IR::Opcode, void (EmitX64::*)(IR::Value*)> emit_fns {
@@ -51,7 +60,7 @@ CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block bl
     }
 
     EmitAddCycles(block.cycle_count);
-    EmitReturnToDispatch();
+    EmitTerminal(block.terminal, block.location);
 
     return code_ptr;
 }
@@ -86,7 +95,7 @@ void EmitX64::EmitGetRegister(IR::Value* value_) {
 
     X64Reg result = reg_alloc.DefRegister(value);
 
-    code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Reg) + static_cast<size_t>(regref->value) * sizeof(u32)));
+    code->MOV(32, R(result), MJitStateReg(regref->value));
 }
 
 void EmitX64::EmitSetRegister(IR::Value* value_) {
@@ -95,7 +104,7 @@ void EmitX64::EmitSetRegister(IR::Value* value_) {
 
     X64Reg to_store = reg_alloc.UseRegister(value->GetArg(1).get());
 
-    code->MOV(32, MDisp(R15, offsetof(JitState, Reg) + static_cast<size_t>(regref->value) * sizeof(u32)), R(to_store));
+    code->MOV(32, MJitStateReg(regref->value), R(to_store));
 }
 
 void EmitX64::EmitGetNFlag(IR::Value* value_) {
@@ -105,7 +114,7 @@ void EmitX64::EmitGetNFlag(IR::Value* value_) {
 
     // TODO: Flag optimization
 
-    code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
+    code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(31));
 }
 
@@ -117,8 +126,8 @@ void EmitX64::EmitSetNFlag(IR::Value* value_) {
     // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(31));
-    code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 31)));
-    code->OR(32, MDisp(R15, offsetof(JitState, Cpsr)), R(to_store));
+    code->AND(32, MJitStateCpsr(), Imm32(~static_cast<u32>(1 << 31)));
+    code->OR(32, MJitStateCpsr(), R(to_store));
 }
 
 void EmitX64::EmitGetZFlag(IR::Value* value_) {
@@ -128,7 +137,7 @@ void EmitX64::EmitGetZFlag(IR::Value* value_) {
 
     // TODO: Flag optimization
 
-    code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
+    code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(30));
     code->AND(32, R(result), Imm32(1));
 }
@@ -141,8 +150,8 @@ void EmitX64::EmitSetZFlag(IR::Value* value_) {
     // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(30));
-    code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 30)));
-    code->OR(32, MDisp(R15, offsetof(JitState, Cpsr)), R(to_store));
+    code->AND(32, MJitStateCpsr(), Imm32(~static_cast<u32>(1 << 30)));
+    code->OR(32, MJitStateCpsr(), R(to_store));
 }
 
 void EmitX64::EmitGetCFlag(IR::Value* value_) {
@@ -152,7 +161,7 @@ void EmitX64::EmitGetCFlag(IR::Value* value_) {
 
     // TODO: Flag optimization
 
-    code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
+    code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(29));
     code->AND(32, R(result), Imm32(1));
 }
@@ -165,8 +174,8 @@ void EmitX64::EmitSetCFlag(IR::Value* value_) {
     // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(29));
-    code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 29)));
-    code->OR(32, MDisp(R15, offsetof(JitState, Cpsr)), R(to_store));
+    code->AND(32, MJitStateCpsr(), Imm32(~static_cast<u32>(1 << 29)));
+    code->OR(32, MJitStateCpsr(), R(to_store));
 }
 
 void EmitX64::EmitGetVFlag(IR::Value* value_) {
@@ -176,7 +185,7 @@ void EmitX64::EmitGetVFlag(IR::Value* value_) {
 
     // TODO: Flag optimization
 
-    code->MOV(32, R(result), MDisp(R15, offsetof(JitState, Cpsr)));
+    code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(28));
     code->AND(32, R(result), Imm32(1));
 }
@@ -189,8 +198,8 @@ void EmitX64::EmitSetVFlag(IR::Value* value_) {
     // TODO: Flag optimization
 
     code->SHL(32, R(to_store), Imm8(28));
-    code->AND(32, MDisp(R15, offsetof(JitState, Cpsr)), Imm32(~static_cast<u32>(1 << 28)));
-    code->OR(32, MDisp(R15, offsetof(JitState, Cpsr)), R(to_store));
+    code->AND(32, MJitStateCpsr(), Imm32(~static_cast<u32>(1 << 28)));
+    code->OR(32, MJitStateCpsr(), R(to_store));
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Value*) {
@@ -385,13 +394,68 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
 
 void EmitX64::EmitAddCycles(size_t cycles) {
     ASSERT(cycles < std::numeric_limits<u32>::max());
-    code->SUB(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(cycles));
+    code->SUB(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(static_cast<u32>(cycles)));
 }
 
-void EmitX64::EmitReturnToDispatch() {
-    // TODO: Update cycle counts
+void EmitX64::EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initial_location) {
+    switch (terminal.which()) {
+    case 1:
+        EmitTerminalInterpret(boost::get<IR::Term::Interpret>(terminal), initial_location);
+        return;
+    case 2:
+        EmitTerminalReturnToDispatch(boost::get<IR::Term::ReturnToDispatch>(terminal), initial_location);
+        return;
+    case 3:
+        EmitTerminalLinkBlock(boost::get<IR::Term::LinkBlock>(terminal), initial_location);
+        return;
+    case 4:
+        EmitTerminalLinkBlockFast(boost::get<IR::Term::LinkBlockFast>(terminal), initial_location);
+        return;
+    case 5:
+        EmitTerminalPopRSBHint(boost::get<IR::Term::PopRSBHint>(terminal), initial_location);
+        return;
+    case 6:
+        EmitTerminalIf(boost::get<IR::Term::If>(terminal), initial_location);
+        return;
+    default:
+        ASSERT_MSG(0, "Invalid Terminal. Bad programmer.");
+        return;
+    }
+}
 
+void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationDescriptor initial_location) {
+    ASSERT_MSG(terminal.next.TFlag == initial_location.TFlag, "Unimplemented");
+    ASSERT_MSG(terminal.next.EFlag == initial_location.EFlag, "Unimplemented");
+
+    code->MOV(64, R(ABI_PARAM1), Imm64(terminal.next.arm_pc));
+    code->MOV(64, R(ABI_PARAM2), Imm64(reinterpret_cast<u64>(jit_interface)));
+    code->MOV(32, MJitStateReg(Arm::Reg::PC), R(ABI_PARAM1));
+    code->CALL(reinterpret_cast<void*>(cb.InterpreterFallback));
+    code->JMP(routines->RunCodeReturnAddress(), true); // TODO: Check cycles
+}
+
+void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::LocationDescriptor initial_location) {
     code->JMP(routines->RunCodeReturnAddress(), true);
+}
+
+void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
+    ASSERT_MSG(terminal.next.TFlag == initial_location.TFlag, "Unimplemented");
+    ASSERT_MSG(terminal.next.EFlag == initial_location.EFlag, "Unimplemented");
+
+    code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.arm_pc));
+    code->JMP(routines->RunCodeReturnAddress(), true); // TODO: Check cycles, Properly do a link
+}
+
+void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location) {
+    EmitTerminalLinkBlock(IR::Term::LinkBlock{terminal.next}, initial_location); // TODO: Implement
+}
+
+void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescriptor initial_location) {
+    EmitTerminalReturnToDispatch({}, initial_location);  // TODO: Implement RSB
+}
+
+void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location) {
+    ASSERT_MSG(0, "Unimplemented");
 }
 
 } // namespace BackendX64
