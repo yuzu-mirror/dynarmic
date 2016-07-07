@@ -221,7 +221,7 @@ void EmitX64::EmitMostSignificantBit(IR::Value* value_) {
 
     // TODO: Flag optimization
 
-    code->SHL(32, R(result), Imm8(31));
+    code->SHR(32, R(result), Imm8(31));
 }
 
 void EmitX64::EmitIsZero(IR::Value* value_) {
@@ -312,11 +312,11 @@ void EmitX64::EmitLogicalShiftRight(IR::Value* value_) {
 
         // TODO: Optimize this.
 
-        code->CMP(32, R(shift), Imm8(32));
+        code->CMP(8, R(shift), Imm8(32));
         auto Rs_gt32 = code->J_CC(CC_A);
         auto Rs_eq32 = code->J_CC(CC_E);
         // if (Rs & 0xFF == 0) goto end;
-        code->TEST(32, R(shift), R(shift));
+        code->TEST(8, R(shift), R(shift));
         auto Rs_zero = code->J_CC(CC_Z);
         // if (Rs & 0xFF < 32) {
         code->SHR(32, R(result), R(shift));

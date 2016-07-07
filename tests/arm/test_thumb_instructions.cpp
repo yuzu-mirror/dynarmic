@@ -83,5 +83,5 @@ TEST_CASE( "thumb: lsls r0, r1, #31", "[thumb]" ) {
     REQUIRE( jit.Regs()[0] == 0x80000000 );
     REQUIRE( jit.Regs()[1] == 0xffffffff );
     REQUIRE( jit.Regs()[15] == 2 );
-    REQUIRE( jit.Cpsr() == 0x20000030 ); // C flag, Thumb, User-mode
+    REQUIRE( jit.Cpsr() == 0xA0000030 ); // N, C flags, Thumb, User-mode
 }

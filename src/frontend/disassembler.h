@@ -14,6 +14,7 @@ namespace Dynarmic {
 namespace Arm {
 
 std::string DisassembleArm(u32 instruction);
+std::string DisassembleThumb16(u16 instruction);
 
 } // namespace Arm
 } // namespace Dynarmic

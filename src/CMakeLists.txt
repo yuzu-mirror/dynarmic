@@ -12,6 +12,7 @@ set(SRCS
     common/x64/cpu_detect.cpp
     common/x64/emitter.cpp
     frontend/disassembler_arm.cpp
+    frontend/disassembler_thumb.cpp
     frontend/ir/ir.cpp
     frontend/ir_emitter.cpp
     frontend/translate.cpp
@@ -39,7 +40,7 @@ set(HEADERS
     frontend/decoder/arm.h
     frontend/decoder/decoder_detail.h
     frontend/decoder/thumb1.h
-    frontend/disassembler_arm.h
+    frontend/disassembler.h
     frontend/frontend_arm.h
     frontend/ir/ir.h
     frontend/ir/opcodes.h

@@ -101,7 +101,7 @@ Gen::X64Reg RegAlloc::UseRegister(IR::Value* use_value, std::initializer_list<Ho
         code->MOV(32, Gen::R(hostloc_to_x64.at(new_location)), SpillToOpArg(current_location));
 
         hostloc_state[new_location] = HostLocState::Use;
-        hostloc_to_value[new_location] = use_value;
+        std::swap(hostloc_to_value[new_location], hostloc_to_value[current_location]);
         remaining_uses[use_value]--;
     } else if (HostLocIsRegister(current_location)) {
         ASSERT(hostloc_state[current_location] == HostLocState::Idle);

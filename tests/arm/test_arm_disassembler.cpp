@@ -6,7 +6,7 @@
 
 #include <catch.hpp>
 
-#include "frontend/disassembler_arm.h"
+#include "frontend/disassembler.h"
 
 TEST_CASE( "Disassemble branch instructions", "[arm][disassembler]" ) {
     REQUIRE(Dynarmic::Arm::DisassembleArm(0xEAFFFFFE) == "b +#0");

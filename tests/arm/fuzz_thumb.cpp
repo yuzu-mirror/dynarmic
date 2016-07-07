@@ -4,18 +4,19 @@
  * General Public License version 2 or any later version.
  */
 
+#include <cinttypes>
 #include <cstring>
 
 #include <catch.hpp>
-#include <c++/5.4.0/cinttypes>
 
 #include "common/common_types.h"
+#include "frontend/disassembler.h"
 #include "interface/interface.h"
 #include "rand_int.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
 
-static std::array<u16, 1024> code_mem{};
+static std::array<u16, 3000> code_mem{};
 
 static u32 MemoryRead32(u32 vaddr);
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit);
@@ -137,7 +138,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 
             printf("\nInstruction Listing: \n");
             for (size_t i = 0; i < instruction_count; i++) {
-                printf("%04x\n", code_mem[i]);
+                printf("%s\n", Dynarmic::Arm::DisassembleThumb16(code_mem[i]).c_str());
             }
 
             printf("\nFinal Register Listing: \n");
@@ -151,6 +152,8 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 #endif
             FAIL();
         }
+
+        if (run_number % 10 == 0) printf("%zu\r", run_number);
     }
 }
 
@@ -207,7 +210,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     };
 
     SECTION("short blocks") {
-        FuzzJitThumb(5, 6, 10000, instruction_select);
+        FuzzJitThumb(5, 6, 100, instruction_select);
     }
 
     SECTION("long blocks") {

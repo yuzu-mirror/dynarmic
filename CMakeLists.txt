@@ -5,7 +5,7 @@ project(dynarmic)
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 
 # Compiler flags
-add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter -static-libgcc -static-libstdc++)
+add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter -static -static-libgcc -static-libstdc++)
 
 # Arch detection
 include(CheckSymbolExists)
