@@ -451,6 +451,7 @@ void EmitX64::EmitSubWithCarry(IR::Value* value_) {
                       : X64Reg::INVALID_REG;
 
     // TODO: Consider using LEA.
+    // TODO: Optimize case when result isn't used but flags are (use a CMP instruction instead).
     // Note that x64 CF is inverse of what the ARM carry flag is here.
 
     code->BT(32, R(carry), Imm8(0));

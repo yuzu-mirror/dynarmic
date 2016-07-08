@@ -120,6 +120,16 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+    bool thumb1_CMP_imm(Reg n, Imm8 imm8) {
+        u32 imm32 = imm8 & 0xFF;
+        // CMP <Rn>, #<imm8>
+        auto result = ir.SubWithCarry(ir.GetRegister(n), ir.Imm32(imm32), ir.Imm1(1));
+        ir.SetNFlag(ir.MostSignificantBit(result.result));
+        ir.SetZFlag(ir.IsZero(result.result));
+        ir.SetCFlag(result.carry);
+        ir.SetVFlag(result.overflow);
+        return true;
+    }
 
     bool thumb1_AND_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;

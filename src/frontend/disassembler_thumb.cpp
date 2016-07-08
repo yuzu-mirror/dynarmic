@@ -134,6 +134,10 @@ public:
         return Common::StringFromFormat("movs %s, #%u", RegStr(d), imm8);
     }
 
+    std::string thumb1_CMP_imm(Reg n, Imm8 imm8) {
+        return Common::StringFromFormat("cmp %s, #%u", RegStr(n), imm8);
+    }
+
     std::string thumb1_AND_reg(Reg m, Reg d_n) {
         return Common::StringFromFormat("ands %s, %s", RegStr(d_n), RegStr(m));
     }
