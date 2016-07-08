@@ -56,7 +56,7 @@ private:
 };
 
 template <typename V>
-static const std::array<Thumb1Matcher<V>, 17> g_thumb1_instruction_table {{
+static const std::array<Thumb1Matcher<V>, 18> g_thumb1_instruction_table {{
 
 #define INST(fn, name, bitstring) detail::detail<Thumb1Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -67,11 +67,11 @@ static const std::array<Thumb1Matcher<V>, 17> g_thumb1_instruction_table {{
     { INST(&V::thumb1_ADD_reg_t1,     "ADD (reg, T1)",            "0001100mmmnnnddd") },
     { INST(&V::thumb1_SUB_reg,        "SUB (reg)",                "0001101mmmnnnddd") },
     { INST(&V::thumb1_ADD_imm_t1,     "ADD (imm, T1)",            "0001110vvvnnnddd") },
-    { INST(&V::thumb1_SUB_imm,        "SUB (imm)",                "0001111vvvnnnddd") },
+    { INST(&V::thumb1_SUB_imm_t1,     "SUB (imm, T1)",            "0001111vvvnnnddd") },
     { INST(&V::thumb1_MOV_imm,        "MOV (imm)",                "00100dddvvvvvvvv") },
     { INST(&V::thumb1_CMP_imm,        "CMP (imm)",                "00101nnnvvvvvvvv") },
     { INST(&V::thumb1_ADD_imm_t2,     "ADD (imm, T2)",            "00110dddvvvvvvvv") },
-    //{ INST(&V::thumb1_SUB_ri,         "SUB (ri)",                 "00111dddvvvvvvvv") },
+    { INST(&V::thumb1_SUB_imm_t2,     "SUB (imm, T2)",            "00111dddvvvvvvvv") },
 
      // Data-processing instructions
     { INST(&V::thumb1_AND_reg,        "AND (reg)",                "0100000000mmmddd") },
