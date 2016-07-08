@@ -33,6 +33,7 @@ static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
     // Gets first found use.
     auto uses = inst->GetUses();
     auto iter = std::find_if(uses.begin(), uses.end(), [opcode](const auto& use){ return use->GetOpcode() == opcode; });
+    ASSERT(std::count_if(uses.begin(), uses.end(), [opcode](const auto& use){ return use->GetOpcode() == opcode; }) <= 1);
     return iter == uses.end() ? nullptr : reinterpret_cast<IR::Inst*>(iter->get());
 }
 
@@ -71,8 +72,12 @@ CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block bl
     return code_ptr;
 }
 
-void EmitX64::EmitImmU1(IR::Value*) {
-    ASSERT_MSG(0, "Unimplemented");
+void EmitX64::EmitImmU1(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::ImmU1*>(value_);
+
+    X64Reg result = reg_alloc.DefRegister(value);
+
+    code->MOV(32, R(result), Imm32(value->value));
 }
 
 void EmitX64::EmitImmU8(IR::Value* value_) {
@@ -209,6 +214,10 @@ void EmitX64::EmitSetVFlag(IR::Value* value_) {
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Value*) {
+    ASSERT_MSG(0, "should never happen");
+}
+
+void EmitX64::EmitGetOverflowFromOp(IR::Value*) {
     ASSERT_MSG(0, "should never happen");
 }
 
@@ -395,6 +404,35 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
         // }
         code->SetJumpTarget(jmp_to_end);
         code->SetJumpTarget(Rs_zero);
+    }
+}
+
+void EmitX64::EmitAddWithCarry(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+    auto carry_inst = FindUseWithOpcode(value, IR::Opcode::GetCarryFromOp);
+    auto overflow_inst = FindUseWithOpcode(value, IR::Opcode::GetOverflowFromOp);
+
+    X64Reg addend = reg_alloc.UseRegister(value->GetArg(1).get());
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+    X64Reg carry = carry_inst
+                   ? reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst)
+                   : reg_alloc.UseRegister(value->GetArg(2).get());
+    X64Reg overflow = overflow_inst
+                      ? reg_alloc.DefRegister(overflow_inst)
+                      : X64Reg::INVALID_REG;
+
+    // TODO: Consider using LEA.
+
+    code->BT(32, R(carry), Imm8(0)); // Sets x64 CF appropriately.
+    code->ADC(32, R(result), R(addend));
+
+    if (carry_inst) {
+        inhibit_emission.insert(carry_inst);
+        code->SETcc(Gen::CC_C, R(carry));
+    }
+    if (overflow_inst) {
+        inhibit_emission.insert(overflow_inst);
+        code->SETcc(Gen::CC_O, R(overflow));
     }
 }
 

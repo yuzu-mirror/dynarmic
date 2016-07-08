@@ -100,6 +100,15 @@ private:
     intptr_t tag;
 };
 
+/// Representation of a u1 immediate.
+class ImmU1 final : public Value {
+public:
+    explicit ImmU1(bool value_) : Value(Opcode::ImmU1), value(value_) {}
+    ~ImmU1() override = default;
+
+    const bool value; ///< Literal value to load
+};
+
 /// Representation of a u8 immediate.
 class ImmU8 final : public Value {
 public:

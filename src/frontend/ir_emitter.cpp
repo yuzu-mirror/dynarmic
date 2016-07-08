@@ -14,18 +14,39 @@ void IREmitter::Unimplemented() {
 
 }
 
+IR::ValuePtr IREmitter::Imm1(bool value) {
+    auto imm1 = std::make_shared<IR::ImmU1>(value);
+    AddToBlock(imm1);
+    return imm1;
+}
+
 IR::ValuePtr IREmitter::Imm8(u8 i) {
     auto imm8 = std::make_shared<IR::ImmU8>(i);
     AddToBlock(imm8);
     return imm8;
 }
 
-IR::ValuePtr IREmitter::GetRegister(Dynarmic::Arm::Reg reg) {
+IR::ValuePtr IREmitter::Imm32(u32 i) {
+    auto imm32 = std::make_shared<IR::ImmU32>(i);
+    AddToBlock(imm32);
+    return imm32;
+}
+
+IR::ValuePtr IREmitter::GetRegister(Reg reg) {
+    if (reg == Reg::PC) {
+        u32 offset = current_location.TFlag ? 4 : 8;
+        return Imm32(current_location.arm_pc + offset);
+    }
     return Inst(IR::Opcode::GetRegister, { RegRef(reg) });
 }
 
 void IREmitter::SetRegister(const Reg reg, IR::ValuePtr value) {
     Inst(IR::Opcode::SetRegister, { RegRef(reg), value });
+}
+
+void IREmitter::ALUWritePC(IR::ValuePtr value) {
+    // This behaviour is ARM version-dependent.
+    ASSERT_MSG(false, "Unimplemented");
 }
 
 IR::ValuePtr IREmitter::GetCFlag() {
@@ -42,6 +63,10 @@ void IREmitter::SetZFlag(IR::ValuePtr value) {
 
 void IREmitter::SetCFlag(IR::ValuePtr value) {
     Inst(IR::Opcode::SetCFlag, {value});
+}
+
+void IREmitter::SetVFlag(IR::ValuePtr value) {
+    Inst(IR::Opcode::SetVFlag, {value});
 }
 
 IR::ValuePtr IREmitter::LeastSignificantByte(IR::ValuePtr value) {
@@ -72,6 +97,13 @@ IREmitter::ResultAndCarry IREmitter::ArithmeticShiftRight(IR::ValuePtr value_in,
     auto result = Inst(IR::Opcode::ArithmeticShiftRight, {value_in, shift_amount, carry_in});
     auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
+}
+
+IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in) {
+    auto result = Inst(IR::Opcode::AddWithCarry, {a, b, carry_in});
+    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+    auto overflow = Inst(IR::Opcode::GetOverflowFromOp, {result});
+    return {result, carry_out, overflow};
 }
 
 void IREmitter::SetTerm(const IR::Terminal& terminal) {

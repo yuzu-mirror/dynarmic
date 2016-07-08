@@ -20,6 +20,7 @@ OPCODE(SetVFlag,                T::Void,        T::U1                           
 
 // Pseudo-operation, handled specially at final emit
 OPCODE(GetCarryFromOp,          T::U1,          T::U32                                          )
+OPCODE(GetOverflowFromOp,       T::U1,          T::U32                                          )
 
 // Calculations
 OPCODE(LeastSignificantByte,    T::U8,          T::U32                                          )
@@ -28,3 +29,4 @@ OPCODE(IsZero,                  T::U1,          T::U32                          
 OPCODE(LogicalShiftLeft,        T::U32,         T::U32,         T::U8,          T::U1           )
 OPCODE(LogicalShiftRight,       T::U32,         T::U32,         T::U8,          T::U1           )
 OPCODE(ArithmeticShiftRight,    T::U32,         T::U32,         T::U8,          T::U1           )
+OPCODE(AddWithCarry,            T::U32,         T::U32,         T::U32,         T::U1           )

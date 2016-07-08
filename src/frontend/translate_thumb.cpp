@@ -26,6 +26,10 @@ struct TranslatorVisitor final {
         ir.SetTerm(IR::Term::Interpret(ir.current_location));
         return false;
     }
+    bool UnpredictableInstruction() {
+        ASSERT_MSG(false, "UNPREDICTABLE");
+        return false;
+    }
 
     bool thumb1_LSL_imm(Imm5 imm5, Reg m, Reg d) {
         u8 shift_n = imm5;
@@ -58,6 +62,17 @@ struct TranslatorVisitor final {
         ir.SetNFlag(ir.MostSignificantBit(result.result));
         ir.SetZFlag(ir.IsZero(result.result));
         ir.SetCFlag(result.carry);
+        return true;
+    }
+    bool thumb1_ADD_reg_t1(Reg m, Reg n, Reg d) {
+        // ADDS <Rd>, <Rn>, <Rm>
+        // Note that it is not possible to encode Rd == R15.
+        auto result = ir.AddWithCarry(ir.GetRegister(n), ir.GetRegister(m), ir.Imm1(0));
+        ir.SetRegister(d, result.result);
+        ir.SetNFlag(ir.MostSignificantBit(result.result));
+        ir.SetZFlag(ir.IsZero(result.result));
+        ir.SetCFlag(result.carry);
+        ir.SetVFlag(result.overflow);
         return true;
     }
 
@@ -96,6 +111,25 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result.result));
         ir.SetCFlag(result.carry);
         return true;
+    }
+
+    bool thumb1_ADD_reg_t2(bool d_n_hi, Reg m, Reg d_n_lo) {
+        Reg d_n = d_n_hi ? (d_n_lo + 8) : d_n_lo;
+        Reg d = d_n, n = d_n;
+        if (n == Reg::PC && m == Reg::PC) {
+            return UnpredictableInstruction();
+        }
+        // ADD <Rdn>, <Rm>
+        auto result = ir.AddWithCarry(ir.GetRegister(n), ir.GetRegister(m), ir.Imm1(0));
+        if (d == Reg::PC) {
+            ir.ALUWritePC(result.result);
+            // Return to dispatch as we can't predict what PC is going to be. Stop compilation.
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        } else {
+            ir.SetRegister(d, result.result);
+            return true;
+        }
     }
 
     bool thumb1_UDF() {
