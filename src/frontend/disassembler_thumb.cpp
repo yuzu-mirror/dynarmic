@@ -118,15 +118,15 @@ public:
         return Common::StringFromFormat("adds %s, %s, %s", RegStr(d), RegStr(n), RegStr(m));
     }
 
-    std::string thumb1_LSL_reg(Reg d_n, Reg m) {
+    std::string thumb1_LSL_reg(Reg m, Reg d_n) {
         return Common::StringFromFormat("lsls %s, %s", RegStr(d_n), RegStr(m));
     }
 
-    std::string thumb1_LSR_reg(Reg d_n, Reg m) {
+    std::string thumb1_LSR_reg(Reg m, Reg d_n) {
         return Common::StringFromFormat("lsrs %s, %s", RegStr(d_n), RegStr(m));
     }
 
-    std::string thumb1_ASR_reg(Reg d_n, Reg m) {
+    std::string thumb1_ASR_reg(Reg m, Reg d_n) {
         return Common::StringFromFormat("asrs %s, %s", RegStr(d_n), RegStr(m));
     }
 
