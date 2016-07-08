@@ -53,6 +53,7 @@ public:
     void EmitLogicalShiftRight(IR::Value* value);
     void EmitArithmeticShiftRight(IR::Value* value);
     void EmitAddWithCarry(IR::Value* value);
+    void EmitSubWithCarry(IR::Value* value);
     void EmitAnd(IR::Value* value);
     void EmitEor(IR::Value* value);
 

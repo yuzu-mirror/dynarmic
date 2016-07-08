@@ -75,6 +75,17 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+    bool thumb1_SUB_reg(Reg m, Reg n, Reg d) {
+        // SUBS <Rd>, <Rn>, <Rm>
+        // Note that it is not possible to encode Rd == R15.
+        auto result = ir.SubWithCarry(ir.GetRegister(n), ir.GetRegister(m), ir.Imm1(1));
+        ir.SetRegister(d, result.result);
+        ir.SetNFlag(ir.MostSignificantBit(result.result));
+        ir.SetZFlag(ir.IsZero(result.result));
+        ir.SetCFlag(result.carry);
+        ir.SetVFlag(result.overflow);
+        return true;
+    }
 
     bool thumb1_AND_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;

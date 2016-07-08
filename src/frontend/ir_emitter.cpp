@@ -106,6 +106,14 @@ IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(IR::ValuePtr a, IR:
     return {result, carry_out, overflow};
 }
 
+IREmitter::ResultAndCarryAndOverflow IREmitter::SubWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in) {
+    // This is equivalent to AddWithCarry(a, Not(b), carry_in).
+    auto result = Inst(IR::Opcode::SubWithCarry, {a, b, carry_in});
+    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+    auto overflow = Inst(IR::Opcode::GetOverflowFromOp, {result});
+    return {result, carry_out, overflow};
+}
+
 IR::ValuePtr IREmitter::And(IR::ValuePtr a, IR::ValuePtr b) {
     return Inst(IR::Opcode::And, {a, b});
 }

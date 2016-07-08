@@ -436,6 +436,37 @@ void EmitX64::EmitAddWithCarry(IR::Value* value_) {
     }
 }
 
+void EmitX64::EmitSubWithCarry(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+    auto carry_inst = FindUseWithOpcode(value, IR::Opcode::GetCarryFromOp);
+    auto overflow_inst = FindUseWithOpcode(value, IR::Opcode::GetOverflowFromOp);
+
+    X64Reg addend = reg_alloc.UseRegister(value->GetArg(1).get());
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+    X64Reg carry = carry_inst
+                   ? reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst)
+                   : reg_alloc.UseRegister(value->GetArg(2).get());
+    X64Reg overflow = overflow_inst
+                      ? reg_alloc.DefRegister(overflow_inst)
+                      : X64Reg::INVALID_REG;
+
+    // TODO: Consider using LEA.
+    // Note that x64 CF is inverse of what the ARM carry flag is here.
+
+    code->BT(32, R(carry), Imm8(0));
+    code->CMC();
+    code->SBB(32, R(result), R(addend));
+
+    if (carry_inst) {
+        inhibit_emission.insert(carry_inst);
+        code->SETcc(Gen::CC_NC, R(carry));
+    }
+    if (overflow_inst) {
+        inhibit_emission.insert(overflow_inst);
+        code->SETcc(Gen::CC_O, R(overflow));
+    }
+}
+
 void EmitX64::EmitAnd(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
