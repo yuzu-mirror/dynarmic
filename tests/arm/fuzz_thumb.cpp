@@ -210,7 +210,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     };
 
     SECTION("short blocks") {
-        FuzzJitThumb(5, 6, 100, instruction_select);
+        FuzzJitThumb(5, 6, 300, instruction_select);
     }
 
     SECTION("long blocks") {

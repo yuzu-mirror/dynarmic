@@ -106,6 +106,10 @@ IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(IR::ValuePtr a, IR:
     return {result, carry_out, overflow};
 }
 
+IR::ValuePtr IREmitter::And(IR::ValuePtr a, IR::ValuePtr b) {
+    return Inst(IR::Opcode::And, {a, b});
+}
+
 void IREmitter::SetTerm(const IR::Terminal& terminal) {
     ASSERT_MSG(block.terminal.which() == 0, "Terminal has already been set.");
     block.terminal = terminal;
