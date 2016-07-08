@@ -29,13 +29,6 @@ static OpArg MJitStateCpsr() {
     return MDisp(R15, offsetof(JitState, Cpsr));
 }
 
-// Mapping from opcode to Emit* member function.
-const static std::map<IR::Opcode, void (EmitX64::*)(IR::Value*)> emit_fns {
-#define OPCODE(name, type, ...) { IR::Opcode::name, &EmitX64::Emit##name },
-#include "frontend/ir/opcodes.inc"
-#undef OPCODE
-};
-
 static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
     // Gets first found use.
     auto uses = inst->GetUses();
@@ -50,12 +43,25 @@ CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block bl
     code->INT3();
     CodePtr code_ptr = code->GetCodePtr();
 
-    // Call Emit* member function for each instruction.
     for (const auto& value : block.instructions) {
         if (inhibit_emission.count(value.get()) != 0)
             continue;
 
-        (this->*emit_fns.at(value->GetOpcode()))(value.get());
+        // Call the relevant Emit* member function.
+        switch (value->GetOpcode()) {
+
+#define OPCODE(name, type, ...)                   \
+            case IR::Opcode::name:                \
+                EmitX64::Emit##name(value.get()); \
+                break;
+#include "frontend/ir/opcodes.inc"
+#undef OPCODE
+
+            default:
+                ASSERT_MSG(false, "Invalid opcode %zu", static_cast<size_t>(value->GetOpcode()));
+                break;
+        }
+
         reg_alloc.EndOfAllocScope();
     }
 
