@@ -110,6 +110,16 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+    bool thumb1_MOV_imm(Reg d, Imm8 imm8) {
+        u32 imm32 = imm8 & 0xFF;
+        // MOVS <Rd>, #<imm8>
+        // Rd can never encode R15.
+        auto result = ir.Imm32(imm32);
+        ir.SetRegister(d, result);
+        ir.SetNFlag(ir.MostSignificantBit(result));
+        ir.SetZFlag(ir.IsZero(result));
+        return true;
+    }
 
     bool thumb1_AND_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;
