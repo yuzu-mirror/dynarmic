@@ -445,6 +445,15 @@ void EmitX64::EmitAnd(IR::Value* value_) {
     code->AND(32, R(result), R(andend));
 }
 
+void EmitX64::EmitEor(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    X64Reg eorend = reg_alloc.UseRegister(value->GetArg(1).get());
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->XOR(32, R(result), R(eorend));
+}
+
 void EmitX64::EmitAddCycles(size_t cycles) {
     ASSERT(cycles < std::numeric_limits<u32>::max());
     code->SUB(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(static_cast<u32>(cycles)));

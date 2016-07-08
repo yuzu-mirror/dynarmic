@@ -57,6 +57,7 @@ public:
     ResultAndCarry ArithmeticShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
     ResultAndCarryAndOverflow AddWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in);
     IR::ValuePtr And(IR::ValuePtr a, IR::ValuePtr b);
+    IR::ValuePtr Eor(IR::ValuePtr a, IR::ValuePtr b);
 
     void SetTerm(const IR::Terminal& terminal);
 

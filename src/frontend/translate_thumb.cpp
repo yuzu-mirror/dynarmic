@@ -86,6 +86,16 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+    bool thumb1_EOR_reg(Reg m, Reg d_n) {
+        const Reg d = d_n, n = d_n;
+        // EORS <Rdn>, <Rm>
+        // Note that it is not possible to encode Rdn == R15.
+        auto result = ir.Eor(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+        ir.SetNFlag(ir.MostSignificantBit(result));
+        ir.SetZFlag(ir.IsZero(result));
+        return true;
+    }
     bool thumb1_LSL_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;
         // LSLS <Rdn>, <Rm>

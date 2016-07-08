@@ -122,6 +122,10 @@ public:
         return Common::StringFromFormat("ands %s, %s", RegStr(d_n), RegStr(m));
     }
 
+    std::string thumb1_EOR_reg(Reg m, Reg d_n) {
+        return Common::StringFromFormat("eors %s, %s", RegStr(d_n), RegStr(m));
+    }
+
     std::string thumb1_LSL_reg(Reg m, Reg d_n) {
         return Common::StringFromFormat("lsls %s, %s", RegStr(d_n), RegStr(m));
     }
