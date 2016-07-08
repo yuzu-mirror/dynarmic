@@ -122,7 +122,7 @@ public:
         return Common::StringFromFormat("subs %s, %s, %s", RegStr(d), RegStr(n), RegStr(m));
     }
 
-    std::string thumb1_ADD_imm(Imm3 imm3, Reg n, Reg d) {
+    std::string thumb1_ADD_imm_t1(Imm3 imm3, Reg n, Reg d) {
         return Common::StringFromFormat("adds %s, %s, #%u", RegStr(d), RegStr(n), imm3);
     }
 
@@ -136,6 +136,10 @@ public:
 
     std::string thumb1_CMP_imm(Reg n, Imm8 imm8) {
         return Common::StringFromFormat("cmp %s, #%u", RegStr(n), imm8);
+    }
+
+    std::string thumb1_ADD_imm_t2(Reg d_n, Imm8 imm8) {
+        return Common::StringFromFormat("adds %s, #%u", RegStr(d_n), imm8);
     }
 
     std::string thumb1_AND_reg(Reg m, Reg d_n) {
