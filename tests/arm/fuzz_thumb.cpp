@@ -110,7 +110,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
     for (size_t run_number = 0; run_number < run_count; run_number++) {
         interp.instruction_cache.clear();
         InterpreterClearCache();
-        jit.ClearCache();
+        jit.ClearCache(false);
 
         // Setup initial state
 
@@ -210,10 +210,10 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     };
 
     SECTION("short blocks") {
-        FuzzJitThumb(5, 6, 300, instruction_select);
+        FuzzJitThumb(5, 6, 1000, instruction_select);
     }
 
     SECTION("long blocks") {
-        FuzzJitThumb(1024, 1025, 15, instruction_select);
+        FuzzJitThumb(1024, 1025, 25, instruction_select);
     }
 }
