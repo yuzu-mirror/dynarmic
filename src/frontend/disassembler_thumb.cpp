@@ -122,6 +122,10 @@ public:
         return Common::StringFromFormat("subs %s, %s, %s", RegStr(d), RegStr(n), RegStr(m));
     }
 
+    std::string thumb1_ADD_imm(Imm3 imm3, Reg n, Reg d) {
+        return Common::StringFromFormat("adds %s, %s, #%u", RegStr(d), RegStr(n), imm3);
+    }
+
     std::string thumb1_AND_reg(Reg m, Reg d_n) {
         return Common::StringFromFormat("ands %s, %s", RegStr(d_n), RegStr(m));
     }

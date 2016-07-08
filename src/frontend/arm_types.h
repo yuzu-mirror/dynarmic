@@ -36,6 +36,7 @@ inline Reg operator+(Reg reg, int number) {
     return static_cast<Reg>(new_reg);
 }
 
+using Imm3 = u32;
 using Imm4 = u32;
 using Imm5 = u32;
 using Imm8 = u32;

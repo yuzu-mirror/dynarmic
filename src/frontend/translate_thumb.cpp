@@ -86,6 +86,18 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+    bool thumb1_ADD_imm(Imm3 imm3, Reg n, Reg d) {
+        u32 imm32 = imm3 & 0x7;
+        // ADDS <Rd>, <Rn>, #<imm3>
+        // Rd can never encode R15.
+        auto result = ir.AddWithCarry(ir.GetRegister(n), ir.Imm32(imm32), ir.Imm1(0));
+        ir.SetRegister(d, result.result);
+        ir.SetNFlag(ir.MostSignificantBit(result.result));
+        ir.SetZFlag(ir.IsZero(result.result));
+        ir.SetCFlag(result.carry);
+        ir.SetVFlag(result.overflow);
+        return true;
+    }
 
     bool thumb1_AND_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;
