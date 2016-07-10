@@ -57,6 +57,7 @@ public:
     void EmitSubWithCarry(IR::Value* value);
     void EmitAnd(IR::Value* value);
     void EmitEor(IR::Value* value);
+    void EmitOr(IR::Value* value);
 
     void EmitAddCycles(size_t cycles);
 

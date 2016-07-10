@@ -287,6 +287,16 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+    bool thumb1_ORR_reg(Reg m, Reg d_n) {
+        Reg d = d_n, n = d_n;
+        // ORRS <Rdn>, <Rm>
+        // Rd cannot encode R15.
+        auto result = ir.Or(ir.GetRegister(m), ir.GetRegister(n));
+        ir.SetRegister(d, result);
+        ir.SetNFlag(ir.MostSignificantBit(result));
+        ir.SetZFlag(ir.IsZero(result));
+        return true;
+    }
 
     bool thumb1_ADD_reg_t2(bool d_n_hi, Reg m, Reg d_n_lo) {
         Reg d_n = d_n_hi ? (d_n_lo + 8) : d_n_lo;

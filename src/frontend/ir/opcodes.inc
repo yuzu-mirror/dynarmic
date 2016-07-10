@@ -34,3 +34,4 @@ OPCODE(AddWithCarry,            T::U32,         T::U32,         T::U32,         
 OPCODE(SubWithCarry,            T::U32,         T::U32,         T::U32,         T::U1           )
 OPCODE(And,                     T::U32,         T::U32,         T::U32                          )
 OPCODE(Eor,                     T::U32,         T::U32,         T::U32                          )
+OPCODE(Or,                      T::U32,         T::U32,         T::U32                          )
