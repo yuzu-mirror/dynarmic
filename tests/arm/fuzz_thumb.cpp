@@ -180,8 +180,10 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         InstructionGenerator("001ooxxxxxxxxxxx"), // ADD/SUB/CMP/MOV_imm
         InstructionGenerator("010000ooooxxxxxx"), // Data Processing
         InstructionGenerator("010001000hxxxxxx"), // ADD (high registers)
-        InstructionGenerator("0100010101xxxxxx"), // CMP (high registers)
-        InstructionGenerator("0100010110xxxxxx"), // CMP (high registers)
+        InstructionGenerator("0100010101xxxxxx",  // CMP (high registers)
+                             [](u16 inst){ return Dynarmic::Common::Bits<3, 5>(inst) != 0b111; }), // R15 is UNPREDICTABLE
+        InstructionGenerator("0100010110xxxxxx",  // CMP (high registers)
+                             [](u16 inst){ return Dynarmic::Common::Bits<0, 2>(inst) != 0b111; }), // R15 is UNPREDICTABLE
         InstructionGenerator("010001100hxxxxxx"), // MOV (high registers)
         InstructionGenerator("10110000oxxxxxxx"), // Adjust stack pointer
         InstructionGenerator("10110010ooxxxxxx"), // SXT/UXT

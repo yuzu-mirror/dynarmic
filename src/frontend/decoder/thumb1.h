@@ -56,7 +56,7 @@ private:
 };
 
 template <typename V>
-static const std::array<Thumb1Matcher<V>, 28> g_thumb1_instruction_table {{
+static const std::array<Thumb1Matcher<V>, 29> g_thumb1_instruction_table {{
 
 #define INST(fn, name, bitstring) detail::detail<Thumb1Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -84,7 +84,7 @@ static const std::array<Thumb1Matcher<V>, 28> g_thumb1_instruction_table {{
     { INST(&V::thumb1_ROR_reg,        "ROR (reg)",                "0100000111sssddd") },
     { INST(&V::thumb1_TST_reg,        "TST (reg)",                "0100001000mmmnnn") },
     { INST(&V::thumb1_RSB_imm,        "RSB (imm)",                "0100001001nnnddd") },
-    { INST(&V::thumb1_CMP_reg,        "CMP (reg)",                "0100001010mmmnnn") },
+    { INST(&V::thumb1_CMP_reg_t1,     "CMP (reg, T1)",            "0100001010mmmnnn") },
     { INST(&V::thumb1_CMN_reg,        "CMN (reg)",                "0100001011mmmnnn") },
     { INST(&V::thumb1_ORR_reg,        "ORR (reg)",                "0100001100mmmddd") },
     //{ INST(&V::thumb1_MULS_rr,        "MULS (rr)",                "0100001101mmmddd") },
@@ -93,7 +93,7 @@ static const std::array<Thumb1Matcher<V>, 28> g_thumb1_instruction_table {{
 
     // Special data instructions
     { INST(&V::thumb1_ADD_reg_t2,     "ADD (reg, T2)",            "01000100Dmmmmddd") }, // v4T, Low regs: v6T2
-    //{ INST(&V::thumb1_CMP_high,       "CMP (high)",               "01000101dmmmmddd") }, // v4T
+    { INST(&V::thumb1_CMP_reg_t2,     "CMP (reg, T2)",            "01000101Nmmmmnnn") }, // v4T
     //{ INST(&V::thumb1_MOV_high,       "MOV (high)",               "01000110dmmmmddd") }, // v4T, Low regs: v6
 
     // Store/Load single data item instructions

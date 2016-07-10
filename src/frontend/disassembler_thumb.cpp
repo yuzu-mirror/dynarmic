@@ -187,7 +187,7 @@ public:
         return Common::StringFromFormat("rsbs %s, %s, #0", RegStr(d), RegStr(n));
     }
 
-    std::string thumb1_CMP_reg(Reg m, Reg n) {
+    std::string thumb1_CMP_reg_t1(Reg m, Reg n) {
         return Common::StringFromFormat("cmp %s, %s", RegStr(n), RegStr(m));
     }
 
@@ -210,6 +210,11 @@ public:
     std::string thumb1_ADD_reg_t2(bool d_n_hi, Reg m, Reg d_n_lo) {
         Reg d_n = d_n_hi ? (d_n_lo + 8) : d_n_lo;
         return Common::StringFromFormat("add %s, %s", RegStr(d_n), RegStr(m));
+    }
+
+    std::string thumb1_CMP_reg_t2(bool n_hi, Reg m, Reg n_lo) {
+        Reg n = n_hi ? (n_lo + 8) : n_lo;
+        return Common::StringFromFormat("cmp %s, %s", RegStr(n), RegStr(m));
     }
 
     std::string thumb1_UDF() {

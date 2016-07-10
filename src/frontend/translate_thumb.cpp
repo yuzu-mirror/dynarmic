@@ -269,7 +269,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
-    bool thumb1_CMP_reg(Reg m, Reg n) {
+    bool thumb1_CMP_reg_t1(Reg m, Reg n) {
         // CMP <Rn>, <Rm>
         auto result = ir.SubWithCarry(ir.GetRegister(n), ir.GetRegister(m), ir.Imm1(1));
         ir.SetNFlag(ir.MostSignificantBit(result.result));
@@ -334,6 +334,22 @@ struct TranslatorVisitor final {
             ir.SetRegister(d, result.result);
             return true;
         }
+    }
+
+    bool thumb1_CMP_reg_t2(bool n_hi, Reg m, Reg n_lo) {
+        Reg n = n_hi ? (n_lo + 8) : n_lo;
+        if (n < Reg::R8 && m < Reg::R8) {
+            return UnpredictableInstruction();
+        } else if (n == Reg::PC || m == Reg::PC) {
+            return UnpredictableInstruction();
+        }
+        // CMP <Rn>, <Rm>
+        auto result = ir.SubWithCarry(ir.GetRegister(n), ir.GetRegister(m), ir.Imm1(1));
+        ir.SetNFlag(ir.MostSignificantBit(result.result));
+        ir.SetZFlag(ir.IsZero(result.result));
+        ir.SetCFlag(result.carry);
+        ir.SetVFlag(result.overflow);
+        return true;
     }
 
     bool thumb1_UDF() {
