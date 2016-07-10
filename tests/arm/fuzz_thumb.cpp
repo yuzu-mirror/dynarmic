@@ -8,6 +8,7 @@
 #include <cstring>
 
 #include <catch.hpp>
+#include <common/bit_util.h>
 
 #include "common/common_types.h"
 #include "frontend/disassembler.h"
@@ -66,28 +67,40 @@ static Dynarmic::UserCallbacks GetUserCallbacks() {
     return user_callbacks;
 }
 
-static std::pair<u16, u16> FromBitString16(const char* str) {
-    REQUIRE(strlen(str) == 16);
+struct InstructionGenerator final {
+public:
+    InstructionGenerator(const char* format, std::function<bool(u16)> is_valid = [](u16){ return true; }) : is_valid(is_valid) {
+        REQUIRE(strlen(format) == 16);
 
-    u16 bits = 0;
-    u16 mask = 0;
-    for (int i = 0; i < 16; i++) {
-        const u16 bit = 1 << (15 - i);
-        switch (str[i]) {
-            case '0':
-                mask |= bit;
-                break;
-            case '1':
-                bits |= bit;
-                mask |= bit;
-                break;
-            default:
-                // Do nothing
-                break;
+        for (int i = 0; i < 16; i++) {
+            const u16 bit = 1 << (15 - i);
+            switch (format[i]) {
+                case '0':
+                    mask |= bit;
+                    break;
+                case '1':
+                    bits |= bit;
+                    mask |= bit;
+                    break;
+                default:
+                    // Do nothing
+                    break;
+            }
         }
     }
-    return { bits, mask };
-}
+    u16 Generate() const {
+        u16 inst;
+        do {
+            u16 random = RandInt<u16>(0, 0xFFFF);
+            inst = bits | (random & ~mask);
+        } while (!is_valid(inst));
+        return inst;
+    }
+private:
+    u16 bits = 0;
+    u16 mask = 0;
+    std::function<bool(u16)> is_valid;
+};
 
 static bool DoesBehaviorMatch(const ARMul_State& interp, const Dynarmic::Jit& jit) {
     const auto interp_regs = interp.Reg;
@@ -158,55 +171,37 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 }
 
 TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
-    const std::array<std::pair<u16, u16>, 16> instructions = {{
-        FromBitString16("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
-        FromBitString16("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
-        FromBitString16("00010xxxxxxxxxxx"), // ASR <Rd>, <Rm>, #<imm5>
-        FromBitString16("000110oxxxxxxxxx"), // ADD/SUB_reg
-        FromBitString16("000111oxxxxxxxxx"), // ADD/SUB_imm
-        FromBitString16("001ooxxxxxxxxxxx"), // ADD/SUB/CMP/MOV_imm
-        FromBitString16("010000ooooxxxxxx"), // Data Processing
-        FromBitString16("010001000hxxxxxx"), // ADD (high registers)
-        FromBitString16("010001010hxxxxxx"), // CMP (high registers)
-        FromBitString16("01000101h0xxxxxx"), // CMP (high registers)
-        FromBitString16("010001100hxxxxxx"), // MOV (high registers)
-        FromBitString16("10110000oxxxxxxx"), // Adjust stack pointer
-        FromBitString16("10110010ooxxxxxx"), // SXT/UXT
-        FromBitString16("1011101000xxxxxx"), // REV
-        FromBitString16("1011101001xxxxxx"), // REV16
-        FromBitString16("1011101011xxxxxx"), // REVSH
-        //FromBitString16("01001xxxxxxxxxxx"), // LDR Rd, [PC, #]
-        //FromBitString16("0101oooxxxxxxxxx"), // LDR/STR Rd, [Rn, Rm]
-        //FromBitString16("011xxxxxxxxxxxxx"), // LDR(B)/STR(B) Rd, [Rn, #]
-        //FromBitString16("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
-        //FromBitString16("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
-        //FromBitString16("1011x100xxxxxxxx"), // PUSH/POP (R = 0)
-        //FromBitString16("1100xxxxxxxxxxxx"), // STMIA/LDMIA
-        //FromBitString16("101101100101x000"), // SETEND
+    const std::array<InstructionGenerator, 16> instructions = {{
+        InstructionGenerator("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
+        InstructionGenerator("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
+        InstructionGenerator("00010xxxxxxxxxxx"), // ASR <Rd>, <Rm>, #<imm5>
+        InstructionGenerator("000110oxxxxxxxxx"), // ADD/SUB_reg
+        InstructionGenerator("000111oxxxxxxxxx"), // ADD/SUB_imm
+        InstructionGenerator("001ooxxxxxxxxxxx"), // ADD/SUB/CMP/MOV_imm
+        InstructionGenerator("010000ooooxxxxxx"), // Data Processing
+        InstructionGenerator("010001000hxxxxxx"), // ADD (high registers)
+        InstructionGenerator("0100010101xxxxxx"), // CMP (high registers)
+        InstructionGenerator("0100010110xxxxxx"), // CMP (high registers)
+        InstructionGenerator("010001100hxxxxxx"), // MOV (high registers)
+        InstructionGenerator("10110000oxxxxxxx"), // Adjust stack pointer
+        InstructionGenerator("10110010ooxxxxxx"), // SXT/UXT
+        InstructionGenerator("1011101000xxxxxx"), // REV
+        InstructionGenerator("1011101001xxxxxx"), // REV16
+        InstructionGenerator("1011101011xxxxxx"), // REVSH
+        //InstructionGenerator("01001xxxxxxxxxxx"), // LDR Rd, [PC, #]
+        //InstructionGenerator("0101oooxxxxxxxxx"), // LDR/STR Rd, [Rn, Rm]
+        //InstructionGenerator("011xxxxxxxxxxxxx"), // LDR(B)/STR(B) Rd, [Rn, #]
+        //InstructionGenerator("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
+        //InstructionGenerator("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
+        //InstructionGenerator("1011x100xxxxxxxx"), // PUSH/POP (R = 0)
+        //InstructionGenerator("1100xxxxxxxxxxxx"), // STMIA/LDMIA
+        //InstructionGenerator("101101100101x000"), // SETEND
     }};
 
     auto instruction_select = [&]() -> u16 {
         size_t inst_index = RandInt<size_t>(0, instructions.size() - 1);
 
-        if (inst_index == 22) {
-            u16 L = RandInt<u16>(0, 1);
-            u16 Rn = RandInt<u16>(0, 7);
-            u16 reg_list = RandInt<u16>(1, 0xFF);
-            if (!L && (reg_list & (1 << Rn))) {
-                reg_list &= ~((1 << Rn) - 1);
-                if (reg_list == 0) reg_list = 0x80;
-            }
-            u16 random = (L << 11) | (Rn << 8) | reg_list;
-            return instructions[inst_index].first | (random &~instructions[inst_index].second);
-        } else if (inst_index == 21) {
-            u16 L = RandInt<u16>(0, 1);
-            u16 reg_list = RandInt<u16>(1, 0xFF);
-            u16 random = (L << 11) | reg_list;
-            return instructions[inst_index].first | (random &~instructions[inst_index].second);
-        } else {
-            u16 random = RandInt<u16>(0, 0xFFFF);
-            return instructions[inst_index].first | (random &~instructions[inst_index].second);
-        }
+        return instructions[inst_index].Generate();
     };
 
     SECTION("short blocks") {
