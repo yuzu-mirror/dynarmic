@@ -307,6 +307,15 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+    bool thumb1_MVN_reg(Reg m, Reg d) {
+        // MVNS <Rd>, <Rm>
+        // Rd cannot encode R15.
+        auto result = ir.Not(ir.GetRegister(m));
+        ir.SetRegister(d, result);
+        ir.SetNFlag(ir.MostSignificantBit(result));
+        ir.SetZFlag(ir.IsZero(result));
+        return true;
+    }
 
     bool thumb1_ADD_reg_t2(bool d_n_hi, Reg m, Reg d_n_lo) {
         Reg d_n = d_n_hi ? (d_n_lo + 8) : d_n_lo;

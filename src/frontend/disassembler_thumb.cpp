@@ -203,6 +203,10 @@ public:
         return Common::StringFromFormat("bics %s, %s", RegStr(d_n), RegStr(m));
     }
 
+    std::string thumb1_MVN_reg(Reg m, Reg d) {
+        return Common::StringFromFormat("mvns %s, %s", RegStr(d), RegStr(m));
+    }
+
     std::string thumb1_ADD_reg_t2(bool d_n_hi, Reg m, Reg d_n_lo) {
         Reg d_n = d_n_hi ? (d_n_lo + 8) : d_n_lo;
         return Common::StringFromFormat("add %s, %s", RegStr(d_n), RegStr(m));
