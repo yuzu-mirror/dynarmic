@@ -407,6 +407,45 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
     }
 }
 
+void EmitX64::EmitRotateRight(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+    auto carry_inst = FindUseWithOpcode(value, IR::Opcode::GetCarryFromOp);
+
+    if (!carry_inst) {
+        X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
+        X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+        // x64 ROR instruction does (shift & 0x1F) for us.
+        code->ROR(32, R(result), R(shift));
+    } else {
+        inhibit_emission.insert(carry_inst);
+
+        X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
+        X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+        X64Reg carry = reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst);
+
+        // TODO: Optimize
+
+        // if (Rs & 0xFF == 0) goto end;
+        code->TEST(8, R(shift), R(shift));
+        auto Rs_zero = code->J_CC(CC_Z);
+
+        code->AND(32, R(shift), Imm8(0x1F));
+        auto zero_1F = code->J_CC(CC_Z);
+        // if (Rs & 0x1F != 0) {
+        code->ROR(32, R(result), R(shift));
+        code->SETcc(CC_C, R(carry));
+        auto jmp_to_end = code->J();
+        // } else {
+        code->SetJumpTarget(zero_1F);
+        code->BT(32, R(result), Imm8(31));
+        code->SETcc(CC_C, R(carry));
+        // }
+        code->SetJumpTarget(jmp_to_end);
+        code->SetJumpTarget(Rs_zero);
+    }
+}
+
 void EmitX64::EmitAddWithCarry(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
     auto carry_inst = FindUseWithOpcode(value, IR::Opcode::GetCarryFromOp);

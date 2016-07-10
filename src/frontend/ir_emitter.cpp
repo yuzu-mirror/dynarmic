@@ -99,6 +99,12 @@ IREmitter::ResultAndCarry IREmitter::ArithmeticShiftRight(IR::ValuePtr value_in,
     return {result, carry_out};
 }
 
+IREmitter::ResultAndCarry IREmitter::RotateRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in) {
+    auto result = Inst(IR::Opcode::RotateRight, {value_in, shift_amount, carry_in});
+    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+    return {result, carry_out};
+}
+
 IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in) {
     auto result = Inst(IR::Opcode::AddWithCarry, {a, b, carry_in});
     auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
