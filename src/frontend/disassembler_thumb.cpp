@@ -182,6 +182,11 @@ public:
         return Common::StringFromFormat("tst %s, %s", RegStr(n), RegStr(m));
     }
 
+    std::string thumb1_RSB_imm(Reg n, Reg d) {
+        // Pre-UAL syntax: NEGS <Rd>, <Rn>
+        return Common::StringFromFormat("rsbs %s, %s, #0", RegStr(d), RegStr(n));
+    }
+
     std::string thumb1_ADD_reg_t2(bool d_n_hi, Reg m, Reg d_n_lo) {
         Reg d_n = d_n_hi ? (d_n_lo + 8) : d_n_lo;
         return Common::StringFromFormat("add %s, %s", RegStr(d_n), RegStr(m));
