@@ -217,6 +217,11 @@ public:
         return Common::StringFromFormat("cmp %s, %s", RegStr(n), RegStr(m));
     }
 
+    std::string thumb1_MOV_reg(bool d_hi, Reg m, Reg d_lo) {
+        Reg d = d_hi ? (d_lo + 8) : d_lo;
+        return Common::StringFromFormat("mov %s, %s", RegStr(d), RegStr(m));
+    }
+
     std::string thumb1_UDF() {
         return Common::StringFromFormat("udf");
     }

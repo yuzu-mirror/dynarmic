@@ -351,6 +351,19 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+    bool thumb1_MOV_reg(bool d_hi, Reg m, Reg d_lo) {
+        Reg d = d_hi ? (d_lo + 8) : d_lo;
+        // MOV <Rd>, <Rm>
+        auto result = ir.GetRegister(m);
+        if (d == Reg::PC) {
+            ir.ALUWritePC(result);
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        } else {
+            ir.SetRegister(d, result);
+            return true;
+        }
+    }
 
     bool thumb1_UDF() {
         return TranslateThisInstruction();
