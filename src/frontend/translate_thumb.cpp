@@ -251,6 +251,13 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result.carry);
         return true;
     }
+    bool thumb1_TST_reg(Reg m, Reg n) {
+        // TST <Rn>, <Rm>
+        auto result = ir.And(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetNFlag(ir.MostSignificantBit(result));
+        ir.SetZFlag(ir.IsZero(result));
+        return true;
+    }
 
     bool thumb1_ADD_reg_t2(bool d_n_hi, Reg m, Reg d_n_lo) {
         Reg d_n = d_n_hi ? (d_n_lo + 8) : d_n_lo;
