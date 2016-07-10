@@ -17,18 +17,62 @@
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
 
-static std::array<u16, 3000> code_mem{};
+struct WriteRecord {
+    size_t size;
+    u32 address;
+    u64 data;
+};
 
+bool operator==(const WriteRecord& a, const WriteRecord& b) {
+    return std::tie(a.size, a.address, a.data) == std::tie(b.size, b.address, b.data);
+}
+
+static std::array<u16, 3000> code_mem{};
+static std::vector<WriteRecord> write_records;
+
+static bool IsReadOnlyMemory(u32 vaddr);
+static u8 MemoryRead8(u32 vaddr);
+static u16 MemoryRead16(u32 vaddr);
 static u32 MemoryRead32(u32 vaddr);
+static u64 MemoryRead64(u32 vaddr);
+static void MemoryWrite8(u32 vaddr, u8 value);
+static void MemoryWrite16(u32 vaddr, u16 value);
+static void MemoryWrite32(u32 vaddr, u32 value);
+static void MemoryWrite64(u32 vaddr, u64 value);
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit);
 static Dynarmic::UserCallbacks GetUserCallbacks();
 
+static bool IsReadOnlyMemory(u32 vaddr) {
+    return vaddr < code_mem.size();
+}
+static u8 MemoryRead8(u32 vaddr) {
+    return static_cast<u8>(vaddr);
+}
+static u16 MemoryRead16(u32 vaddr) {
+    return static_cast<u16>(vaddr);
+}
 static u32 MemoryRead32(u32 vaddr) {
     if (vaddr < code_mem.size() * sizeof(u16)) {
         size_t index = vaddr / sizeof(u16);
         return code_mem[index] | (code_mem[index+1] << 16);
     }
     return vaddr;
+}
+static u64 MemoryRead64(u32 vaddr) {
+    return vaddr;
+}
+
+static void MemoryWrite8(u32 vaddr, u8 value){
+    write_records.push_back({8, vaddr, value});
+}
+static void MemoryWrite16(u32 vaddr, u16 value){
+    write_records.push_back({16, vaddr, value});
+}
+static void MemoryWrite32(u32 vaddr, u32 value){
+    write_records.push_back({32, vaddr, value});
+}
+static void MemoryWrite64(u32 vaddr, u64 value){
+    write_records.push_back({64, vaddr, value});
 }
 
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
@@ -53,17 +97,17 @@ static void Fail() {
 
 static Dynarmic::UserCallbacks GetUserCallbacks() {
     Dynarmic::UserCallbacks user_callbacks{};
-    user_callbacks.MemoryRead32 = &MemoryRead32;
     user_callbacks.InterpreterFallback = &InterpreterFallback;
     user_callbacks.CallSVC = (bool (*)(u32)) &Fail;
-    user_callbacks.IsReadOnlyMemory = (bool (*)(u32)) &Fail;
-    user_callbacks.MemoryRead8 = (u8 (*)(u32)) &Fail;
-    user_callbacks.MemoryRead16 = (u16 (*)(u32)) &Fail;
-    user_callbacks.MemoryRead64 = (u64 (*)(u32)) &Fail;
-    user_callbacks.MemoryWrite8 = (void (*)(u32, u8)) &Fail;
-    user_callbacks.MemoryWrite16 = (void (*)(u32, u16)) &Fail;
-    user_callbacks.MemoryWrite32 = (void (*)(u32, u32)) &Fail;
-    user_callbacks.MemoryWrite64 = (void (*)(u32, u64)) &Fail;
+    user_callbacks.IsReadOnlyMemory = &IsReadOnlyMemory;
+    user_callbacks.MemoryRead8 = &MemoryRead8;
+    user_callbacks.MemoryRead16 = &MemoryRead16;
+    user_callbacks.MemoryRead32 = &MemoryRead32;
+    user_callbacks.MemoryRead64 = &MemoryRead64;
+    user_callbacks.MemoryWrite8 = &MemoryWrite8;
+    user_callbacks.MemoryWrite16 = &MemoryWrite16;
+    user_callbacks.MemoryWrite32 = &MemoryWrite32;
+    user_callbacks.MemoryWrite64 = &MemoryWrite64;
     return user_callbacks;
 }
 
@@ -102,12 +146,13 @@ private:
     std::function<bool(u16)> is_valid;
 };
 
-static bool DoesBehaviorMatch(const ARMul_State& interp, const Dynarmic::Jit& jit) {
+static bool DoesBehaviorMatch(const ARMul_State& interp, const Dynarmic::Jit& jit, const std::vector<WriteRecord>& interp_write_records, const std::vector<WriteRecord>& jit_write_records) {
     const auto interp_regs = interp.Reg;
     const auto jit_regs = jit.Regs();
 
     return std::equal(interp_regs.begin(), interp_regs.end(), jit_regs.begin(), jit_regs.end())
-           && interp.Cpsr == jit.Cpsr();
+            && interp.Cpsr == jit.Cpsr()
+            && interp_write_records == jit_write_records;
 }
 
 
@@ -139,14 +184,18 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
         std::generate_n(code_mem.begin(), instruction_count, instruction_generator);
 
         // Run interpreter
+        write_records.clear();
         interp.NumInstrsToExecute = instructions_to_execute_count;
         InterpreterMainLoop(&interp);
+        auto interp_write_records = write_records;
 
         // Run jit
+        write_records.clear();
         jit.Run(instructions_to_execute_count);
+        auto jit_write_records = write_records;
 
         // Compare
-        if (!DoesBehaviorMatch(interp, jit)) {
+        if (!DoesBehaviorMatch(interp, jit, interp_write_records, jit_write_records)) {
             printf("Failed at execution number %zu\n", run_number);
 
             printf("\nInstruction Listing: \n");
@@ -171,7 +220,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 }
 
 TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
-    const std::array<InstructionGenerator, 16> instructions = {{
+    const std::array<InstructionGenerator, 23> instructions = {{
         InstructionGenerator("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
         InstructionGenerator("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
         InstructionGenerator("00010xxxxxxxxxxx"), // ASR <Rd>, <Rm>, #<imm5>
@@ -190,13 +239,13 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         InstructionGenerator("1011101000xxxxxx"), // REV
         InstructionGenerator("1011101001xxxxxx"), // REV16
         InstructionGenerator("1011101011xxxxxx"), // REVSH
-        //InstructionGenerator("01001xxxxxxxxxxx"), // LDR Rd, [PC, #]
-        //InstructionGenerator("0101oooxxxxxxxxx"), // LDR/STR Rd, [Rn, Rm]
-        //InstructionGenerator("011xxxxxxxxxxxxx"), // LDR(B)/STR(B) Rd, [Rn, #]
-        //InstructionGenerator("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
-        //InstructionGenerator("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
-        //InstructionGenerator("1011x100xxxxxxxx"), // PUSH/POP (R = 0)
-        //InstructionGenerator("1100xxxxxxxxxxxx"), // STMIA/LDMIA
+        InstructionGenerator("01001xxxxxxxxxxx"), // LDR Rd, [PC, #]
+        InstructionGenerator("0101oooxxxxxxxxx"), // LDR/STR Rd, [Rn, Rm]
+        InstructionGenerator("011xxxxxxxxxxxxx"), // LDR(B)/STR(B) Rd, [Rn, #]
+        InstructionGenerator("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
+        InstructionGenerator("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
+        InstructionGenerator("1011x100xxxxxxxx"), // PUSH/POP (R = 0)
+        InstructionGenerator("1100xxxxxxxxxxxx"), // STMIA/LDMIA
         //InstructionGenerator("101101100101x000"), // SETEND
     }};
 
@@ -207,7 +256,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     };
 
     SECTION("short blocks") {
-        FuzzJitThumb(5, 6, 1000, instruction_select);
+        FuzzJitThumb(5, 6, 3000, instruction_select);
     }
 
     SECTION("long blocks") {
