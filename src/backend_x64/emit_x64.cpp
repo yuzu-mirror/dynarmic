@@ -534,6 +534,14 @@ void EmitX64::EmitOr(IR::Value* value_) {
     code->OR(32, R(result), R(orend));
 }
 
+void EmitX64::EmitNot(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->NOT(32, R(result));
+}
+
 void EmitX64::EmitAddCycles(size_t cycles) {
     ASSERT(cycles < std::numeric_limits<u32>::max());
     code->SUB(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(static_cast<u32>(cycles)));

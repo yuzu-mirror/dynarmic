@@ -56,7 +56,7 @@ private:
 };
 
 template <typename V>
-static const std::array<Thumb1Matcher<V>, 26> g_thumb1_instruction_table {{
+static const std::array<Thumb1Matcher<V>, 27> g_thumb1_instruction_table {{
 
 #define INST(fn, name, bitstring) detail::detail<Thumb1Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -88,7 +88,7 @@ static const std::array<Thumb1Matcher<V>, 26> g_thumb1_instruction_table {{
     { INST(&V::thumb1_CMN_reg,        "CMN (reg)",                "0100001011mmmnnn") },
     { INST(&V::thumb1_ORR_reg,        "ORR (reg)",                "0100001100mmmddd") },
     //{ INST(&V::thumb1_MULS_rr,        "MULS (rr)",                "0100001101mmmddd") },
-    //{ INST(&V::thumb1_BICS_rr,        "BICS (rr)",                "0100001110mmmddd") },
+    { INST(&V::thumb1_BIC_reg,        "BIC (reg)",                "0100001110mmmddd") },
     //{ INST(&V::thumb1_MVNS_rr,        "MVNS (rr)",                "0100001111mmmddd") },
 
     // Special data instructions

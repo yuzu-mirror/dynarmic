@@ -61,6 +61,7 @@ public:
     IR::ValuePtr And(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Eor(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Or(IR::ValuePtr a, IR::ValuePtr b);
+    IR::ValuePtr Not(IR::ValuePtr a);
 
     void SetTerm(const IR::Terminal& terminal);
 

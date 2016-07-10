@@ -132,6 +132,10 @@ IR::ValuePtr IREmitter::Or(IR::ValuePtr a, IR::ValuePtr b) {
     return Inst(IR::Opcode::Or, {a, b});
 }
 
+IR::ValuePtr IREmitter::Not(IR::ValuePtr a) {
+    return Inst(IR::Opcode::Not, {a});
+}
+
 void IREmitter::SetTerm(const IR::Terminal& terminal) {
     ASSERT_MSG(block.terminal.which() == 0, "Terminal has already been set.");
     block.terminal = terminal;
