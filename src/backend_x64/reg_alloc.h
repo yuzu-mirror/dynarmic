@@ -74,6 +74,9 @@ public:
     /// Early-def, Late-use, single-use
     Gen::X64Reg ScratchRegister(std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
 
+    /// Late-def for result register, Early-use for all arguments, Each value is placed into registers according to host ABI.
+    void HostCall(IR::Value* result_def = nullptr, IR::Value* arg0_use = nullptr, IR::Value* arg1_use = nullptr, IR::Value* arg2_use = nullptr, IR::Value* arg3_use = nullptr);
+
     // TODO: Values in host flags
 
     void EndOfAllocScope();

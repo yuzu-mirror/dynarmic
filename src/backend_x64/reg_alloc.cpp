@@ -133,6 +133,41 @@ Gen::X64Reg RegAlloc::ScratchRegister(std::initializer_list<HostLoc> desired_loc
     return hostloc_to_x64.at(location);
 }
 
+void RegAlloc::HostCall(IR::Value* result_def, IR::Value* arg0_use, IR::Value* arg1_use, IR::Value* arg2_use, IR::Value* arg3_use) {
+    constexpr HostLoc AbiReturn = HostLoc::RAX;
+#ifdef _WIN32
+    constexpr std::array<HostLoc, 4> AbiArgs = { HostLoc::RCX, HostLoc::RDX, HostLoc::R8, HostLoc::R9 };
+    /// Caller-saved registers other than AbiReturn or AbiArgs
+    constexpr std::array<HostLoc, 2> OtherCallerSave = { HostLoc::R10, HostLoc::R11 };
+#else
+    constexpr std::array<HostLoc, 4> AbiArgs = { HostLoc::RDI, HostLoc::RSI, HostLoc::RDX, HostLoc::RCX };
+    /// Caller-saved registers other than AbiReturn or AbiArgs
+    constexpr std::array<HostLoc, 4> OtherCallerSave = { HostLoc::R8, HostLoc::R9, HostLoc::R10, HostLoc::R11 };
+#endif
+
+    const std::array<IR::Value*, 4> args = {arg0_use, arg1_use, arg2_use, arg3_use};
+
+    // TODO: This works but almost certainly leads to suboptimal generated code.
+
+    for (HostLoc caller_save : OtherCallerSave) {
+        ScratchRegister({caller_save});
+    }
+
+    if (result_def) {
+        DefRegister(result_def, {AbiReturn});
+    } else {
+        ScratchRegister({AbiReturn});
+    }
+
+    for (size_t i = 0; i < AbiArgs.size(); i++) {
+        if (args[i]) {
+            UseRegister(args[i], {AbiArgs[i]});
+        } else {
+            ScratchRegister({AbiArgs[i]});
+        }
+    }
+}
+
 HostLoc RegAlloc::SelectARegister(std::initializer_list<HostLoc> desired_locations) const {
     std::vector<HostLoc> candidates = desired_locations;
 
@@ -206,7 +241,6 @@ void RegAlloc::Reset() {
     hostloc_state.clear();
     remaining_uses.clear();
 }
-
 
 } // namespace BackendX64
 } // namespace Dynarmic
