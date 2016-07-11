@@ -59,6 +59,14 @@ public:
     void EmitEor(IR::Value* value);
     void EmitOr(IR::Value* value);
     void EmitNot(IR::Value* value);
+    void EmitReadMemory8(IR::Value* value);
+    void EmitReadMemory16(IR::Value* value);
+    void EmitReadMemory32(IR::Value* value);
+    void EmitReadMemory64(IR::Value* value);
+    void EmitWriteMemory8(IR::Value* value);
+    void EmitWriteMemory16(IR::Value* value);
+    void EmitWriteMemory32(IR::Value* value);
+    void EmitWriteMemory64(IR::Value* value);
 
     void EmitAddCycles(size_t cycles);
 

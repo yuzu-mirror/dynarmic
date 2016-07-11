@@ -69,6 +69,8 @@ CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block bl
     EmitAddCycles(block.cycle_count);
     EmitTerminal(block.terminal, block.location);
 
+    reg_alloc.AssertNoMoreUses();
+
     return code_ptr;
 }
 
@@ -276,6 +278,8 @@ void EmitX64::EmitLogicalShiftLeft(IR::Value* value_) {
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg carry = reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst);
 
+        reg_alloc.DecrementRemainingUses(value);
+
         // TODO: Optimize this.
 
         code->CMP(8, R(shift), Imm8(32));
@@ -324,6 +328,8 @@ void EmitX64::EmitLogicalShiftRight(IR::Value* value_) {
         X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg carry = reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst);
+
+        reg_alloc.DecrementRemainingUses(value);
 
         // TODO: Optimize this.
 
@@ -385,6 +391,8 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg carry = reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst);
 
+        reg_alloc.DecrementRemainingUses(value);
+
         // TODO: Optimize this.
 
         code->CMP(8, R(shift), Imm8(31));
@@ -423,6 +431,8 @@ void EmitX64::EmitRotateRight(IR::Value* value_) {
         X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg carry = reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst);
+
+        reg_alloc.DecrementRemainingUses(value);
 
         // TODO: Optimize
 
@@ -467,10 +477,12 @@ void EmitX64::EmitAddWithCarry(IR::Value* value_) {
 
     if (carry_inst) {
         inhibit_emission.insert(carry_inst);
+        reg_alloc.DecrementRemainingUses(value);
         code->SETcc(Gen::CC_C, R(carry));
     }
     if (overflow_inst) {
         inhibit_emission.insert(overflow_inst);
+        reg_alloc.DecrementRemainingUses(value);
         code->SETcc(Gen::CC_O, R(overflow));
     }
 }
@@ -499,10 +511,12 @@ void EmitX64::EmitSubWithCarry(IR::Value* value_) {
 
     if (carry_inst) {
         inhibit_emission.insert(carry_inst);
+        reg_alloc.DecrementRemainingUses(value);
         code->SETcc(Gen::CC_NC, R(carry));
     }
     if (overflow_inst) {
         inhibit_emission.insert(overflow_inst);
+        reg_alloc.DecrementRemainingUses(value);
         code->SETcc(Gen::CC_O, R(overflow));
     }
 }
@@ -541,6 +555,71 @@ void EmitX64::EmitNot(IR::Value* value_) {
 
     code->NOT(32, R(result));
 }
+
+void EmitX64::EmitReadMemory8(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(value, value->GetArg(0).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryRead8));
+}
+
+void EmitX64::EmitReadMemory16(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(value, value->GetArg(0).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryRead16));
+}
+
+void EmitX64::EmitReadMemory32(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(value, value->GetArg(0).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryRead32));
+}
+
+void EmitX64::EmitReadMemory64(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(value, value->GetArg(0).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryRead64));
+}
+
+void EmitX64::EmitWriteMemory8(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite8));
+}
+
+void EmitX64::EmitWriteMemory16(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite16));
+}
+
+void EmitX64::EmitWriteMemory32(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite32));
+}
+
+void EmitX64::EmitWriteMemory64(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
+
+    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite64));
+}
+
 
 void EmitX64::EmitAddCycles(size_t cycles) {
     ASSERT(cycles < std::numeric_limits<u32>::max());

@@ -36,3 +36,13 @@ OPCODE(And,                     T::U32,         T::U32,         T::U32          
 OPCODE(Eor,                     T::U32,         T::U32,         T::U32                          )
 OPCODE(Or,                      T::U32,         T::U32,         T::U32                          )
 OPCODE(Not,                     T::U32,         T::U32                                          )
+
+// Memory access
+OPCODE(ReadMemory8,             T::U8,          T::U32                                          )
+OPCODE(ReadMemory16,            T::U16,         T::U32                                          )
+OPCODE(ReadMemory32,            T::U32,         T::U32                                          )
+OPCODE(ReadMemory64,            T::U64,         T::U32                                          )
+OPCODE(WriteMemory8,            T::Void,        T::U32,         T::U8                           )
+OPCODE(WriteMemory16,           T::Void,        T::U32,         T::U16                          )
+OPCODE(WriteMemory32,           T::Void,        T::U32,         T::U32                          )
+OPCODE(WriteMemory64,           T::Void,        T::U32,         T::U64                          )

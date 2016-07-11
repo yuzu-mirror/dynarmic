@@ -365,6 +365,26 @@ struct TranslatorVisitor final {
         }
     }
 
+    bool thumb1_LDR_literal(Reg t, Imm8 imm8) {
+        u32 imm32 = imm8 << 2;
+        // LDR <Rt>, <label>
+        // Rt cannot encode R15.
+        u32 address = ir.AlignPC(4) + imm32;
+        auto data = ir.ReadMemory32(ir.Imm32(address));
+        ir.SetRegister(t, data);
+        return true;
+    }
+
+    bool thumb1_LDR_imm_t1(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5 << 2;
+        // LDR <Rt>, [<Rn>, #<imm>}
+        // Rt cannot encode R15.
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.ReadMemory32(address);
+        ir.SetRegister(t, data);
+        return true;
+    }
+
     bool thumb1_UDF() {
         return TranslateThisInstruction();
     }

@@ -14,6 +14,16 @@ void IREmitter::Unimplemented() {
 
 }
 
+u32 IREmitter::PC() {
+    u32 offset = current_location.TFlag ? 4 : 8;
+    return current_location.arm_pc + offset;
+}
+
+u32 IREmitter::AlignPC(size_t alignment) {
+    u32 pc = PC();
+    return static_cast<u32>(pc - pc % alignment);
+}
+
 IR::ValuePtr IREmitter::Imm1(bool value) {
     auto imm1 = std::make_shared<IR::ImmU1>(value);
     AddToBlock(imm1);
@@ -34,13 +44,13 @@ IR::ValuePtr IREmitter::Imm32(u32 i) {
 
 IR::ValuePtr IREmitter::GetRegister(Reg reg) {
     if (reg == Reg::PC) {
-        u32 offset = current_location.TFlag ? 4 : 8;
-        return Imm32(current_location.arm_pc + offset);
+        return Imm32(PC());
     }
     return Inst(IR::Opcode::GetRegister, { RegRef(reg) });
 }
 
 void IREmitter::SetRegister(const Reg reg, IR::ValuePtr value) {
+    ASSERT(reg != Reg::PC);
     Inst(IR::Opcode::SetRegister, { RegRef(reg), value });
 }
 
@@ -112,6 +122,10 @@ IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(IR::ValuePtr a, IR:
     return {result, carry_out, overflow};
 }
 
+IR::ValuePtr IREmitter::Add(IR::ValuePtr a, IR::ValuePtr b) {
+    return Inst(IR::Opcode::AddWithCarry, {a, b, Imm1(0)});
+}
+
 IREmitter::ResultAndCarryAndOverflow IREmitter::SubWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in) {
     // This is equivalent to AddWithCarry(a, Not(b), carry_in).
     auto result = Inst(IR::Opcode::SubWithCarry, {a, b, carry_in});
@@ -135,6 +149,39 @@ IR::ValuePtr IREmitter::Or(IR::ValuePtr a, IR::ValuePtr b) {
 IR::ValuePtr IREmitter::Not(IR::ValuePtr a) {
     return Inst(IR::Opcode::Not, {a});
 }
+
+IR::ValuePtr IREmitter::ReadMemory8(IR::ValuePtr vaddr) {
+    return Inst(IR::Opcode::ReadMemory8, {vaddr});
+}
+
+IR::ValuePtr IREmitter::ReadMemory16(IR::ValuePtr vaddr) {
+    return Inst(IR::Opcode::ReadMemory16, {vaddr});
+}
+
+IR::ValuePtr IREmitter::ReadMemory32(IR::ValuePtr vaddr) {
+    return Inst(IR::Opcode::ReadMemory32, {vaddr});
+}
+
+IR::ValuePtr IREmitter::ReadMemory64(IR::ValuePtr vaddr) {
+    return Inst(IR::Opcode::ReadMemory64, {vaddr});
+}
+
+void IREmitter::WriteMemory8(IR::ValuePtr vaddr, IR::ValuePtr value) {
+    Inst(IR::Opcode::WriteMemory8, {vaddr, value});
+}
+
+void IREmitter::WriteMemory16(IR::ValuePtr vaddr, IR::ValuePtr value) {
+    Inst(IR::Opcode::WriteMemory16, {vaddr, value});
+}
+
+void IREmitter::WriteMemory32(IR::ValuePtr vaddr, IR::ValuePtr value) {
+    Inst(IR::Opcode::WriteMemory32, {vaddr, value});
+}
+
+void IREmitter::WriteMemory64(IR::ValuePtr vaddr, IR::ValuePtr value) {
+    Inst(IR::Opcode::WriteMemory64, {vaddr, value});
+}
+
 
 void IREmitter::SetTerm(const IR::Terminal& terminal) {
     ASSERT_MSG(block.terminal.which() == 0, "Terminal has already been set.");

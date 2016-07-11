@@ -222,6 +222,16 @@ public:
         return Common::StringFromFormat("mov %s, %s", RegStr(d), RegStr(m));
     }
 
+    std::string thumb1_LDR_literal(Reg t, Imm8 imm8) {
+        u32 imm32 = imm8 << 2;
+        return Common::StringFromFormat("ldr %s, [pc, #%u]", RegStr(t), imm32);
+    }
+
+    std::string thumb1_LDR_imm_t1(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5 << 2;
+        return Common::StringFromFormat("ldr %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
+    }
+
     std::string thumb1_UDF() {
         return Common::StringFromFormat("udf");
     }

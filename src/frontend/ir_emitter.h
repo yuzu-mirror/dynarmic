@@ -32,6 +32,8 @@ public:
     };
 
     void Unimplemented();
+    u32 PC();
+    u32 AlignPC(size_t alignment);
 
     IR::ValuePtr Imm1(bool value);
     IR::ValuePtr Imm8(u8 value);
@@ -57,11 +59,21 @@ public:
     ResultAndCarry ArithmeticShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
     ResultAndCarry RotateRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
     ResultAndCarryAndOverflow AddWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in);
+    IR::ValuePtr Add(IR::ValuePtr a, IR::ValuePtr b);
     ResultAndCarryAndOverflow SubWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in);
     IR::ValuePtr And(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Eor(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Or(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Not(IR::ValuePtr a);
+
+    IR::ValuePtr ReadMemory8(IR::ValuePtr vaddr);
+    IR::ValuePtr ReadMemory16(IR::ValuePtr vaddr);
+    IR::ValuePtr ReadMemory32(IR::ValuePtr vaddr);
+    IR::ValuePtr ReadMemory64(IR::ValuePtr vaddr);
+    void WriteMemory8(IR::ValuePtr vaddr, IR::ValuePtr value);
+    void WriteMemory16(IR::ValuePtr vaddr, IR::ValuePtr value);
+    void WriteMemory32(IR::ValuePtr vaddr, IR::ValuePtr value);
+    void WriteMemory64(IR::ValuePtr vaddr, IR::ValuePtr value);
 
     void SetTerm(const IR::Terminal& terminal);
 

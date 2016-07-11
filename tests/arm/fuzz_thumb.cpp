@@ -203,6 +203,11 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
                 printf("%s\n", Dynarmic::Arm::DisassembleThumb16(code_mem[i]).c_str());
             }
 
+            printf("\nInitial Register Listing: \n");
+            for (int i = 0; i <= 15; i++) {
+                printf("%4i: %08x\n", i, initial_regs[i]);
+            }
+
             printf("\nFinal Register Listing: \n");
             for (int i = 0; i <= 15; i++) {
                 printf("%4i: %08x %08x %s\n", i, interp.Reg[i], jit.Regs()[i], interp.Reg[i] != jit.Regs()[i] ? "*" : "");
@@ -255,10 +260,14 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         return instructions[inst_index].Generate();
     };
 
+    SECTION("single instructions") {
+        FuzzJitThumb(1, 2, 10000, instruction_select);
+    }
+
     SECTION("short blocks") {
         FuzzJitThumb(5, 6, 3000, instruction_select);
     }
-
+    
     SECTION("long blocks") {
         FuzzJitThumb(1024, 1025, 25, instruction_select);
     }

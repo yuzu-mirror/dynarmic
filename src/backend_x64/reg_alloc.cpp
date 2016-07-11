@@ -236,6 +236,16 @@ void RegAlloc::EndOfAllocScope() {
             iter.second = nullptr;
 }
 
+void RegAlloc::DecrementRemainingUses(IR::Value* value) {
+    ASSERT_MSG(remaining_uses.find(value) != remaining_uses.end(), "value does not exist");
+    ASSERT_MSG(remaining_uses[value] > 0, "value doesn't have any remaining uses");
+    remaining_uses[value]--;
+}
+
+void RegAlloc::AssertNoMoreUses() {
+    ASSERT(std::all_of(hostloc_to_value.begin(), hostloc_to_value.end(), [](const auto& pair){ return !pair.second; }));
+}
+
 void RegAlloc::Reset() {
     hostloc_to_value.clear();
     hostloc_state.clear();

@@ -79,7 +79,11 @@ public:
 
     // TODO: Values in host flags
 
+    void DecrementRemainingUses(IR::Value* value);
+
     void EndOfAllocScope();
+
+    void AssertNoMoreUses();
 
     void Reset();
 
