@@ -50,6 +50,7 @@ public:
     void SetCFlag(IR::ValuePtr value);
     void SetVFlag(IR::ValuePtr value);
 
+    IR::ValuePtr LeastSignificantHalf(IR::ValuePtr value);
     IR::ValuePtr LeastSignificantByte(IR::ValuePtr value);
     IR::ValuePtr MostSignificantBit(IR::ValuePtr value);
     IR::ValuePtr IsZero(IR::ValuePtr value);

@@ -56,7 +56,7 @@ private:
 };
 
 template <typename V>
-static const std::array<Thumb1Matcher<V>, 32> g_thumb1_instruction_table {{
+static const std::array<Thumb1Matcher<V>, 35> g_thumb1_instruction_table {{
 
 #define INST(fn, name, bitstring) detail::detail<Thumb1Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -98,9 +98,9 @@ static const std::array<Thumb1Matcher<V>, 32> g_thumb1_instruction_table {{
 
     // Store/Load single data item instructions
     { INST(&V::thumb1_LDR_literal,    "LDR (literal)",            "01001tttvvvvvvvv") },
-    //{ INST(&V::thumb1_STR_rrr,        "STR (rrr)",                "0101000mmmnnnddd") },
-    //{ INST(&V::thumb1_STRH_rrr,       "STRH (rrr)",               "0101001mmmnnnddd") },
-    //{ INST(&V::thumb1_STRB_rrr,       "STRB (rrr)",               "0101010mmmnnnddd") },
+    { INST(&V::thumb1_STR_reg,        "STR (reg)",                "0101000mmmnnnttt") },
+    { INST(&V::thumb1_STRH_reg,       "STRH (reg)",               "0101001mmmnnnttt") },
+    { INST(&V::thumb1_STRB_reg,       "STRB (reg)",               "0101010mmmnnnttt") },
     //{ INST(&V::thumb1_LDRSB_rrr,      "LDRSB (rrr)",              "0101011mmmnnnddd") },
     //{ INST(&V::thumb1_LDR_rrr,        "LDR (rrr)",                "0101100mmmnnnddd") },
     //{ INST(&V::thumb1_LDRH_rrr,       "LDRH (rrr)",               "0101101mmmnnnddd") },

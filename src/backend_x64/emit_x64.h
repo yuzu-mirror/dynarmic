@@ -46,6 +46,7 @@ public:
     void EmitSetVFlag(IR::Value* value);
     void EmitGetCarryFromOp(IR::Value* value);
     void EmitGetOverflowFromOp(IR::Value* value);
+    void EmitLeastSignificantHalf(IR::Value* value);
     void EmitLeastSignificantByte(IR::Value* value);
     void EmitMostSignificantBit(IR::Value* value);
     void EmitIsZero(IR::Value* value);

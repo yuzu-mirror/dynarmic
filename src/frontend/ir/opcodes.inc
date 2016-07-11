@@ -23,6 +23,7 @@ OPCODE(GetCarryFromOp,          T::U1,          T::U32                          
 OPCODE(GetOverflowFromOp,       T::U1,          T::U32                                          )
 
 // Calculations
+OPCODE(LeastSignificantHalf,    T::U16,         T::U32                                          )
 OPCODE(LeastSignificantByte,    T::U8,          T::U32                                          )
 OPCODE(MostSignificantBit,      T::U1,          T::U32                                          )
 OPCODE(IsZero,                  T::U1,          T::U32                                          )

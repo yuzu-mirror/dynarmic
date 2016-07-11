@@ -227,6 +227,18 @@ public:
         return Common::StringFromFormat("ldr %s, [pc, #%u]", RegStr(t), imm32);
     }
 
+    std::string thumb1_STR_reg(Reg m, Reg n, Reg t) {
+        return Common::StringFromFormat("str %s, [%s, %s]", RegStr(t), RegStr(n), RegStr(m));
+    }
+
+    std::string thumb1_STRH_reg(Reg m, Reg n, Reg t) {
+        return Common::StringFromFormat("strh %s, [%s, %s]", RegStr(t), RegStr(n), RegStr(m));
+    }
+
+    std::string thumb1_STRB_reg(Reg m, Reg n, Reg t) {
+        return Common::StringFromFormat("strb %s, [%s, %s]", RegStr(t), RegStr(n), RegStr(m));
+    }
+
     std::string thumb1_LDR_imm_t1(Imm5 imm5, Reg n, Reg t) {
         u32 imm32 = imm5 << 2;
         return Common::StringFromFormat("ldr %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);

@@ -223,10 +223,18 @@ void EmitX64::EmitGetOverflowFromOp(IR::Value*) {
     ASSERT_MSG(0, "should never happen");
 }
 
+void EmitX64::EmitLeastSignificantHalf(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    // TODO: Optimize
+
+    reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+}
+
 void EmitX64::EmitLeastSignificantByte(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
-    // TODO: Flag optimization
+    // TODO: Optimize
 
     reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
 }

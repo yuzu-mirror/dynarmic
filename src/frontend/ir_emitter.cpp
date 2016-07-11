@@ -79,6 +79,10 @@ void IREmitter::SetVFlag(IR::ValuePtr value) {
     Inst(IR::Opcode::SetVFlag, {value});
 }
 
+IR::ValuePtr IREmitter::LeastSignificantHalf(IR::ValuePtr value) {
+    return Inst(IR::Opcode::LeastSignificantHalf, {value});
+}
+
 IR::ValuePtr IREmitter::LeastSignificantByte(IR::ValuePtr value) {
     return Inst(IR::Opcode::LeastSignificantByte, {value});
 }
