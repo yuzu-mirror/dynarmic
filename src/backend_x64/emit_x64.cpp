@@ -37,12 +37,13 @@ static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
     return iter == uses.end() ? nullptr : reinterpret_cast<IR::Inst*>(iter->get());
 }
 
-CodePtr EmitX64::Emit(Arm::LocationDescriptor descriptor, Dynarmic::IR::Block block) {
+CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block block) {
     inhibit_emission.clear();
     reg_alloc.Reset();
 
     code->INT3();
     CodePtr code_ptr = code->GetCodePtr();
+    basic_blocks[descriptor] = code_ptr;
 
     for (const auto& value : block.instructions) {
         if (inhibit_emission.count(value.get()) != 0)
@@ -213,6 +214,38 @@ void EmitX64::EmitSetVFlag(IR::Value* value_) {
     code->SHL(32, R(to_store), Imm8(28));
     code->AND(32, MJitStateCpsr(), Imm32(~static_cast<u32>(1 << 28)));
     code->OR(32, MJitStateCpsr(), R(to_store));
+}
+
+void EmitX64::EmitBXWritePC(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    X64Reg new_pc = reg_alloc.UseRegister(value->GetArg(0).get());
+    X64Reg tmp = reg_alloc.ScratchRegister();
+    X64Reg cpsr = reg_alloc.ScratchRegister();
+
+    // Note: new_pc<1:0> == '10' is UNPREDICTABLE
+
+    // Alternative implementations
+#if 0
+    code->MOV(32, R(tmp), MJitStateCpsr());
+    code->MOV(32, R(cpsr), R(tmp));
+    code->OR(32, R(tmp), Imm32(1 << 5));
+    code->AND(32, R(cpsr), Imm32(~(1 << 5)));
+    code->BTR(32, R(new_pc), Imm8(0));
+    code->CMOVcc(32, cpsr, R(tmp), CC_C);
+    code->MOV(32, MJitStateReg(Arm::Reg::PC), R(new_pc));
+    code->MOV(32, MJitStateCpsr(), R(cpsr));
+#else
+    code->MOV(32, R(tmp), R(new_pc));
+    code->AND(32, R(tmp), Imm8(1));
+    code->AND(32, R(new_pc), Imm32(0xFFFFFFFE));
+    code->MOV(32, R(cpsr), MJitStateCpsr());
+    code->SHL(32, R(tmp), Imm8(5));
+    code->AND(32, R(cpsr), Imm32(~(1 << 5)));
+    code->OR(32, R(cpsr), R(tmp));
+    code->MOV(32, MJitStateReg(Arm::Reg::PC), R(new_pc));
+    code->MOV(32, MJitStateCpsr(), R(cpsr));
+#endif
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Value*) {

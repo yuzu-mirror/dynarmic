@@ -23,7 +23,7 @@ public:
     EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb, Jit* jit_interface)
             : reg_alloc(code), code(code), routines(routines), cb(cb), jit_interface(jit_interface) {}
 
-    CodePtr Emit(Arm::LocationDescriptor descriptor, IR::Block ir);
+    CodePtr Emit(const Arm::LocationDescriptor descriptor, IR::Block ir);
 
     CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor) {
         auto iter = basic_blocks.find(descriptor);
@@ -44,6 +44,7 @@ public:
     void EmitSetCFlag(IR::Value* value);
     void EmitGetVFlag(IR::Value* value);
     void EmitSetVFlag(IR::Value* value);
+    void EmitBXWritePC(IR::Value* value);
     void EmitGetCarryFromOp(IR::Value* value);
     void EmitGetOverflowFromOp(IR::Value* value);
     void EmitLeastSignificantHalf(IR::Value* value);

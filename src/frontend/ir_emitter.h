@@ -43,6 +43,7 @@ public:
     void SetRegister(const Reg dest_reg, IR::ValuePtr value);
 
     void ALUWritePC(IR::ValuePtr value);
+    void LoadWritePC(IR::ValuePtr value);
 
     IR::ValuePtr GetCFlag();
     void SetNFlag(IR::ValuePtr value);
