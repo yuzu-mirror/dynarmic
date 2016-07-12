@@ -9,6 +9,7 @@
 
 #include <catch.hpp>
 #include <common/bit_util.h>
+#include <common/bit_set.h>
 
 #include "common/common_types.h"
 #include "frontend/disassembler.h"
@@ -86,6 +87,9 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
 
     InterpreterClearCache();
     InterpreterMainLoop(&interp_state);
+
+    bool T = Dynarmic::Common::Bit<5>(interp_state.Cpsr);
+    interp_state.Reg[15] &= T ? 0xFFFFFFFE : 0xFFFFFFFC;
 
     jit->Regs() = interp_state.Reg;
     jit->Cpsr() = interp_state.Cpsr;
@@ -188,6 +192,10 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
         interp.NumInstrsToExecute = instructions_to_execute_count;
         InterpreterMainLoop(&interp);
         auto interp_write_records = write_records;
+        {
+            bool T = Dynarmic::Common::Bit<5>(interp.Cpsr);
+            interp.Reg[15] &= T ? 0xFFFFFFFE : 0xFFFFFFFC;
+        }
 
         // Run jit
         write_records.clear();
@@ -271,4 +279,32 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     SECTION("long blocks") {
         FuzzJitThumb(1024, 1025, 25, instruction_select);
     }
+}
+
+TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
+    const std::array<InstructionGenerator, 7> instructions = {{
+        InstructionGenerator("01000111xmmmm000",  // BLX/BX
+                             [](u16 inst){
+                                 u32 Rm = Dynarmic::Common::Bits<3, 6>(inst);
+                                 return Rm != 15;
+                             }),
+        InstructionGenerator("1010oxxxxxxxxxxx"), // add to pc/sp
+        InstructionGenerator("11100xxxxxxxxxxx"), // B
+        InstructionGenerator("01000100h0xxxxxx"), // ADD (high registers)
+        InstructionGenerator("01000110h0xxxxxx"), // MOV (high registers)
+        InstructionGenerator("1101ccccxxxxxxxx",  // B<cond>
+                             [](u16 inst){
+                                 u32 c = Dynarmic::Common::Bits<9, 12>(inst);
+                                 return c < 0b1110; // Don't want SWI or undefined instructions.
+                             }),
+        InstructionGenerator("10110110011x0xxx"), // CPS
+    }};
+
+    auto instruction_select = [&]() -> u16 {
+        size_t inst_index = RandInt<size_t>(0, instructions.size() - 1);
+
+        return instructions[inst_index].Generate();
+    };
+
+    FuzzJitThumb(1, 1, 10000, instruction_select);
 }
