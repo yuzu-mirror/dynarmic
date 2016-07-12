@@ -1,10 +1,12 @@
 include_directories(. ../src)
 
 set(SRCS
+    arm/fuzz_arm.cpp
     arm/fuzz_thumb.cpp
     arm/test_arm_disassembler.cpp
     arm/test_thumb_instructions.cpp
     main.cpp
+    rand_int.h
     skyeye_interpreter/dyncom/arm_dyncom_dec.cpp
     skyeye_interpreter/dyncom/arm_dyncom_interpreter.cpp
     skyeye_interpreter/dyncom/arm_dyncom_thumb.cpp
@@ -14,7 +16,7 @@ set(SRCS
     skyeye_interpreter/skyeye_common/vfp/vfpdouble.cpp
     skyeye_interpreter/skyeye_common/vfp/vfpinstr.cpp
     skyeye_interpreter/skyeye_common/vfp/vfpsingle.cpp
-    rand_int.h)
+    )
 
 set(HEADERS
     skyeye_interpreter/dyncom/arm_dyncom_dec.h

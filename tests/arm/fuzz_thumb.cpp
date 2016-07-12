@@ -23,7 +23,7 @@ struct WriteRecord {
     u64 data;
 };
 
-bool operator==(const WriteRecord& a, const WriteRecord& b) {
+static bool operator==(const WriteRecord& a, const WriteRecord& b) {
     return std::tie(a.size, a.address, a.data) == std::tie(b.size, b.address, b.data);
 }
 
