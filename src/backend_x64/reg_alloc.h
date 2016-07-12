@@ -43,7 +43,7 @@ inline bool HostLocIsSpill(HostLoc reg) {
     return reg >= HostLoc::FirstSpill && reg <= HostLocSpill(SpillCount - 1);
 }
 
-constexpr std::initializer_list<HostLoc> hostloc_any_register = {
+const std::initializer_list<HostLoc> hostloc_any_register = {
     HostLoc::RAX,
     HostLoc::RBX,
     HostLoc::RCX,

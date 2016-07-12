@@ -666,7 +666,10 @@ struct arm_inst {
     unsigned int idx;
     unsigned int cond;
     int br;
-    __extension__ char component[0];
+#ifdef __GNUC__
+    __extension__
+#endif
+    char component[0];
 };
 
 struct generic_arm_inst {

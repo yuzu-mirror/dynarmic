@@ -602,7 +602,7 @@ void EmitX64::EmitReadMemory8(IR::Value* value_) {
 
     reg_alloc.HostCall(value, value->GetArg(0).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryRead8));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryRead8));
 }
 
 void EmitX64::EmitReadMemory16(IR::Value* value_) {
@@ -610,7 +610,7 @@ void EmitX64::EmitReadMemory16(IR::Value* value_) {
 
     reg_alloc.HostCall(value, value->GetArg(0).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryRead16));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryRead16));
 }
 
 void EmitX64::EmitReadMemory32(IR::Value* value_) {
@@ -618,7 +618,7 @@ void EmitX64::EmitReadMemory32(IR::Value* value_) {
 
     reg_alloc.HostCall(value, value->GetArg(0).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryRead32));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryRead32));
 }
 
 void EmitX64::EmitReadMemory64(IR::Value* value_) {
@@ -626,7 +626,7 @@ void EmitX64::EmitReadMemory64(IR::Value* value_) {
 
     reg_alloc.HostCall(value, value->GetArg(0).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryRead64));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryRead64));
 }
 
 void EmitX64::EmitWriteMemory8(IR::Value* value_) {
@@ -634,7 +634,7 @@ void EmitX64::EmitWriteMemory8(IR::Value* value_) {
 
     reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite8));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryWrite8));
 }
 
 void EmitX64::EmitWriteMemory16(IR::Value* value_) {
@@ -642,7 +642,7 @@ void EmitX64::EmitWriteMemory16(IR::Value* value_) {
 
     reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite16));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryWrite16));
 }
 
 void EmitX64::EmitWriteMemory32(IR::Value* value_) {
@@ -650,7 +650,7 @@ void EmitX64::EmitWriteMemory32(IR::Value* value_) {
 
     reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite32));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryWrite32));
 }
 
 void EmitX64::EmitWriteMemory64(IR::Value* value_) {
@@ -658,7 +658,7 @@ void EmitX64::EmitWriteMemory64(IR::Value* value_) {
 
     reg_alloc.HostCall(nullptr, value->GetArg(0).get(), value->GetArg(1).get());
 
-    code->CALL(reinterpret_cast<void*>(cb.MemoryWrite64));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryWrite64));
 }
 
 
@@ -701,7 +701,7 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
     code->MOV(64, R(ABI_PARAM2), Imm64(reinterpret_cast<u64>(jit_interface)));
     code->MOV(32, MJitStateReg(Arm::Reg::PC), R(ABI_PARAM1));
     code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
-    code->CALL(reinterpret_cast<void*>(cb.InterpreterFallback));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.InterpreterFallback));
     code->JMP(routines->RunCodeReturnAddress(), true); // TODO: Check cycles
 }
 

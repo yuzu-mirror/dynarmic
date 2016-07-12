@@ -1,11 +1,18 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.4.1)
 project(dynarmic)
 
 # Dynarmic project options
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 
 # Compiler flags
-add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter -static -static-libgcc -static-libstdc++)
+if (NOT MSVC)
+    add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter)
+    if (ARCHITECTURE_x86_64)
+        add_compile_options(-msse4.1)
+    endif()
+else()
+    add_compile_options(/W3 /MP /Zi /Zo /EHsc)
+endif()
 
 # Arch detection
 include(CheckSymbolExists)

@@ -11,7 +11,15 @@
 namespace Dynarmic {
 namespace Common {
 
-std::string StringFromFormat(const char* format, ...) __attribute__((format(gnu_printf, 1, 2)));
+std::string StringFromFormat(
+#ifdef _MSC_VER
+    _Printf_format_string_
+#endif
+    const char* format, ...)
+#ifdef __GNUC__
+    __attribute__((format(gnu_printf, 1, 2)))
+#endif
+    ;
 
 } // namespace Common
 } // namespace Dynarmic

@@ -6,10 +6,11 @@
 
 #include <cinttypes>
 #include <cstring>
+#include <functional>
 
 #include <catch.hpp>
-#include <common/bit_util.h>
 
+#include "common/bit_util.h"
 #include "common/common_types.h"
 #include "frontend/disassembler.h"
 #include "interface/interface.h"
@@ -217,7 +218,7 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
             printf("CPSR: %08x %08x %s\n", interp.Cpsr, jit.Cpsr(), interp.Cpsr != jit.Cpsr() ? "*" : "");
 
 #ifdef _MSC_VER
-            DebugBreak();
+            __debugbreak();
 #endif
             FAIL();
         }
