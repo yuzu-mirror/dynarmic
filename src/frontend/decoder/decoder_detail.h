@@ -19,9 +19,9 @@ namespace detail {
 
 /**
  * Helper functions for the decoders.
- * @tparam MatcherT The type of the matcher. (ARM: ArmMatcher, Thumb1: Thumb1Matcher)
- * @tparam InstructionT The type that represents an instruction. (ARM: u32, Thumb1: u16)
- * @tparam instruction_bit_size Bit-size for an instruction. (ARM: 32, Thumb1: 16)
+ * @tparam MatcherT The type of the matcher. (ARM: ArmMatcher, Thumb16: Thumb16Matcher)
+ * @tparam InstructionT The type that represents an instruction. (ARM: u32, Thumb16: u16)
+ * @tparam instruction_bit_size Bit-size for an instruction. (ARM: 32, Thumb16: 16)
  */
 template<template<typename> class MatcherT, typename InstructionT, size_t instruction_bit_size>
 struct detail {

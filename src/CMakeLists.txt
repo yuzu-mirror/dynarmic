@@ -39,7 +39,7 @@ set(HEADERS
     frontend/arm_types.h
     frontend/decoder/arm.h
     frontend/decoder/decoder_detail.h
-    frontend/decoder/thumb1.h
+    frontend/decoder/thumb16.h
     frontend/disassembler.h
     frontend/frontend_arm.h
     frontend/ir/ir.h
