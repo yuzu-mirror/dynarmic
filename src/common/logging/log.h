@@ -46,7 +46,7 @@ void LogMessage(Class log_class, Level log_level,
         _Printf_format_string_
 #endif
                 const char* format, ...)
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__clang__)
         __attribute__((format(gnu_printf, 6, 7)))
 #endif
 ;

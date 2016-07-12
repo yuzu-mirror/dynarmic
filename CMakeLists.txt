@@ -6,7 +6,7 @@ option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 
 # Compiler flags
 if (NOT MSVC)
-    add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter)
+    add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter -Wno-missing-braces)
     if (ARCHITECTURE_x86_64)
         add_compile_options(-msse4.1)
     endif()

@@ -35,7 +35,7 @@ CodePtr Routines::RunCodeReturnAddress() const {
 }
 
 void Routines::GenRunCode() {
-    run_code = reinterpret_cast<RunCodeFuncType>(this->GetCodePtr());
+    run_code = reinterpret_cast<RunCodeFuncType>(const_cast<u8*>(this->GetCodePtr()));
 
     // This serves two purposes:
     // 1. It saves all the registers we as a callee need to save.

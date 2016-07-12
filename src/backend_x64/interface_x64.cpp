@@ -57,7 +57,7 @@ private:
     }
 };
 
-Jit::Jit(UserCallbacks callbacks) : callbacks(callbacks), impl(std::make_unique<Impl>(this, callbacks)) {}
+Jit::Jit(UserCallbacks callbacks) : impl(std::make_unique<Impl>(this, callbacks)) {}
 
 Jit::~Jit() {}
 

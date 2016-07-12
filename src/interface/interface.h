@@ -78,7 +78,6 @@ public:
 private:
     bool halt_requested = false;
     bool is_executing = false;
-    Dynarmic::UserCallbacks callbacks;
 
     struct Impl;
     std::unique_ptr<Impl> impl;
