@@ -702,11 +702,11 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
     code->MOV(32, MJitStateReg(Arm::Reg::PC), R(ABI_PARAM1));
     code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.InterpreterFallback));
-    code->JMP(routines->RunCodeReturnAddress(), true); // TODO: Check cycles
+    routines->GenReturnFromRunCode(code); // TODO: Check cycles
 }
 
 void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::LocationDescriptor initial_location) {
-    code->JMP(routines->RunCodeReturnAddress(), true);
+    routines->GenReturnFromRunCode(code);
 }
 
 void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
@@ -714,7 +714,7 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
     ASSERT_MSG(terminal.next.EFlag == initial_location.EFlag, "Unimplemented");
 
     code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.arm_pc));
-    code->JMP(routines->RunCodeReturnAddress(), true); // TODO: Check cycles, Properly do a link
+    routines->GenReturnFromRunCode(code); // TODO: Check cycles, Properly do a link
 }
 
 void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location) {

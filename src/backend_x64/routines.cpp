@@ -19,7 +19,6 @@ Routines::Routines() {
     AllocCodeSpace(1024);
 
     GenRunCode();
-    GenReturnFromRunCode();
 }
 
 size_t Routines::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const {
@@ -28,10 +27,6 @@ size_t Routines::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles
     jit_state->cycles_remaining = cycles_to_run;
     run_code(jit_state, basic_block);
     return cycles_to_run - jit_state->cycles_remaining; // Return number of cycles actually run.
-}
-
-CodePtr Routines::RunCodeReturnAddress() const {
-    return return_from_run_code;
 }
 
 void Routines::GenRunCode() {
@@ -49,12 +44,10 @@ void Routines::GenRunCode() {
     JMPptr(R(ABI_PARAM2));
 }
 
-void Routines::GenReturnFromRunCode() {
-    return_from_run_code = this->GetCodePtr();
-
-    MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
-    ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
-    RET();
+void Routines::GenReturnFromRunCode(XEmitter* code) const {
+    code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
+    code->ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
+    code->RET();
 }
 
 } // namespace BackendX64

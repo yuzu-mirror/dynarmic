@@ -18,15 +18,12 @@ public:
     Routines();
 
     size_t RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const;
-    CodePtr RunCodeReturnAddress() const;
+    void GenReturnFromRunCode(Gen::XEmitter* code) const;
 
 private:
     using RunCodeFuncType = void(*)(JitState*, CodePtr);
     RunCodeFuncType run_code;
     void GenRunCode();
-
-    CodePtr return_from_run_code;
-    void GenReturnFromRunCode();
 };
 
 } // namespace BackendX64
