@@ -468,7 +468,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
             } else {
                 should_continue = visitor.thumb2_UDF();
             }*/
-            ASSERT_MSG(0, "Unimplemented");
+            should_continue = visitor.TranslateThisInstruction();
         }
 
         visitor.ir.current_location.arm_pc += (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;
