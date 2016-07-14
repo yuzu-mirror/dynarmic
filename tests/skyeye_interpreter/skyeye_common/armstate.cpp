@@ -3,7 +3,7 @@
 // Refer to the license.txt file included.
 
 #include <algorithm>
-#include "common/logging/log.h"
+#include "common/assert.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
 #include "skyeye_interpreter/skyeye_common/vfp/vfp.h"
 
@@ -440,7 +440,7 @@ u32 ARMul_State::ReadCP15Register(u32 crn, u32 opcode_1, u32 crm, u32 opcode_2) 
         }
     }
 
-    LOG_ERROR(Core_ARM11, "MRC CRn=%u, CRm=%u, OP1=%u OP2=%u is not implemented. Returning zero.", crn, crm, opcode_1, opcode_2);
+    ASSERT_MSG(false, "MRC CRn=%u, CRm=%u, OP1=%u OP2=%u is not implemented. Returning zero.", crn, crm, opcode_1, opcode_2);
     return 0;
 }
 

@@ -5,7 +5,6 @@ set(SRCS
     backend_x64/interface_x64.cpp
     backend_x64/reg_alloc.cpp
     backend_x64/routines.cpp
-    common/logging/log.cpp
     common/memory_util.cpp
     common/string_util.cpp
     common/x64/abi.cpp
@@ -28,7 +27,6 @@ set(HEADERS
     common/bit_util.h
     common/code_block.h
     common/common_types.h
-    common/logging/log.h
     common/memory_util.h
     common/mp.h
     common/scope_exit.h

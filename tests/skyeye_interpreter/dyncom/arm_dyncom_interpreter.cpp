@@ -7,8 +7,8 @@
 #include <algorithm>
 #include <cstdio>
 
+#include "common/assert.h"
 #include "common/common_types.h"
-#include "common/logging/log.h"
 
 #include "skyeye_interpreter/dyncom/arm_dyncom_dec.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
@@ -245,7 +245,7 @@ struct ldst_inst {
     unsigned int inst;
     get_addr_fp_t get_addr;
 };
-#define DEBUG_MSG LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
+#define DEBUG_MSG //LOG_DEBUG(Core_ARM11, "inst is %x", inst); CITRA_IGNORE_EXIT(0)
 
 #define LnSWoUB(s)   glue(LnSWoUB, s)
 #define MLnS(s)      glue(MLnS, s)
@@ -1131,7 +1131,7 @@ static inline void *AllocBuffer(unsigned int size) {
     int start = top;
     top += size;
     if (top > CACHE_BUFFER_SIZE) {
-        LOG_ERROR(Core_ARM11, "inst_buf is full");
+        ASSERT_MSG(false, "inst_buf is full");
         CITRA_IGNORE_EXIT(-1);
     }
     return (void *)&inst_buf[start];
@@ -1383,7 +1383,7 @@ static ARM_INST_PTR INTERPRETER_TRANSLATE(cdp)(unsigned int inst, int index) {
     inst_cream->opcode_1 = BITS(inst, 20, 23);
     inst_cream->inst = inst;
 
-    LOG_TRACE(Core_ARM11, "inst %x index %x", inst, index);
+    //LOG_TRACE(Core_ARM11, "inst %x index %x", inst, index);
     return inst_base;
 }
 static ARM_INST_PTR INTERPRETER_TRANSLATE(clrex)(unsigned int inst, int index)
@@ -3424,7 +3424,7 @@ static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_ins
                 inst_index = table_length - 4;
                 *ptr_inst_base = arm_instruction_trans[inst_index](tinstr, inst_index);
             } else {
-                LOG_ERROR(Core_ARM11, "thumb decoder error");
+                ASSERT_MSG(false, "thumb decoder error");
             }
             break;
         case 28:
@@ -3480,8 +3480,8 @@ static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, cons
 
     int idx;
     if (DecodeARMInstruction(inst, &idx) == ARMDecodeStatus::FAILURE) {
-        LOG_ERROR(Core_ARM11, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr, "", inst);
-        LOG_ERROR(Core_ARM11, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
+        ASSERT_MSG(false, "Decode failure.\tPC : [0x%x]\tInstruction : %s [%x]", phys_addr, "", inst);
+        ASSERT_MSG(false, "cpsr=0x%x, cpu->TFlag=%d, r15=0x%x", cpu->Cpsr, cpu->TFlag, cpu->Reg[15]);
         CITRA_IGNORE_EXIT(-1);
     }
     inst_base = arm_instruction_trans[idx](inst, idx);
@@ -4002,8 +4002,8 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     BKPT_INST:
     {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-            bkpt_inst* const inst_cream = (bkpt_inst*)inst_base->component;
-            LOG_DEBUG(Core_ARM11, "Breakpoint instruction hit. Immediate: 0x%08X", inst_cream->imm);
+            //bkpt_inst* const inst_cream = (bkpt_inst*)inst_base->component;
+            //LOG_DEBUG(Core_ARM11, "Breakpoint instruction hit. Immediate: 0x%08X", inst_cream->imm);
         }
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(bkpt_inst));
@@ -4576,7 +4576,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             mcr_inst* inst_cream = (mcr_inst*)inst_base->component;
 
-            unsigned int inst = inst_cream->inst;
+            //unsigned int inst = inst_cream->inst;
             if (inst_cream->Rd == 15) {
                 DEBUG_MSG;
             } else {
@@ -4597,7 +4597,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
 
-            LOG_ERROR(Core_ARM11, "MCRR executed | Coprocessor: %u, CRm %u, opc1: %u, Rt: %u, Rt2: %u",
+            ASSERT_MSG(false, "MCRR executed | Coprocessor: %u, CRm %u, opc1: %u, Rt: %u, Rt2: %u",
                       inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt, inst_cream->rt2);
         }
 
@@ -4683,7 +4683,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
             mcrr_inst* const inst_cream = (mcrr_inst*)inst_base->component;
 
-            LOG_ERROR(Core_ARM11, "MRRC executed | Coprocessor: %u, CRm %u, opc1: %u, Rt: %u, Rt2: %u",
+            ASSERT_MSG(false, "MRRC executed | Coprocessor: %u, CRm %u, opc1: %u, Rt: %u, Rt2: %u",
                       inst_cream->cp_num, inst_cream->crm, inst_cream->opcode_1, inst_cream->rt, inst_cream->rt2);
         }
 
@@ -5326,7 +5326,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
         else
             cpu->Cpsr &= ~(1 << 9);
 
-        LOG_WARNING(Core_ARM11, "SETEND %s executed", big_endian ? "BE" : "LE");
+        //LOG_WARNING(Core_ARM11, "SETEND %s executed", big_endian ? "BE" : "LE");
 
         cpu->Reg[15] += cpu->GetInstructionSize();
         INC_PC(sizeof(setend_inst));
@@ -5338,7 +5338,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         // Stubbed, as SEV is a hint instruction.
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-            LOG_TRACE(Core_ARM11, "SEV executed.");
+            //LOG_TRACE(Core_ARM11, "SEV executed.");
         }
 
         cpu->Reg[15] += cpu->GetInstructionSize();
@@ -6826,7 +6826,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         // Stubbed, as WFE is a hint instruction.
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-            LOG_TRACE(Core_ARM11, "WFE executed.");
+            //LOG_TRACE(Core_ARM11, "WFE executed.");
         }
 
         cpu->Reg[15] += cpu->GetInstructionSize();
@@ -6839,7 +6839,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         // Stubbed, as WFI is a hint instruction.
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-            LOG_TRACE(Core_ARM11, "WFI executed.");
+            //LOG_TRACE(Core_ARM11, "WFI executed.");
         }
 
         cpu->Reg[15] += cpu->GetInstructionSize();
@@ -6852,7 +6852,7 @@ unsigned InterpreterMainLoop(ARMul_State* cpu) {
     {
         // Stubbed, as YIELD is a hint instruction.
         if (inst_base->cond == ConditionCode::AL || CondPassed(cpu, inst_base->cond)) {
-            LOG_TRACE(Core_ARM11, "YIELD executed.");
+            //LOG_TRACE(Core_ARM11, "YIELD executed.");
         }
 
         cpu->Reg[15] += cpu->GetInstructionSize();

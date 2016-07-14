@@ -19,7 +19,6 @@
 #include <cstring>
 
 #include "common/assert.h"
-#include "common/logging/log.h"
 #include "common/memory_util.h"
 
 #include "abi.h"
@@ -1316,7 +1315,7 @@ void XEmitter::XOR (int bits, const OpArg& a1, const OpArg& a2) {CheckFlags(); W
 void XEmitter::MOV (int bits, const OpArg& a1, const OpArg& a2)
 {
     if (a1.IsSimpleReg() && a2.IsSimpleReg() && a1.GetSimpleReg() == a2.GetSimpleReg())
-        LOG_ERROR(Common, "Redundant MOV @ %p - bug in JIT?", code);
+        ASSERT_MSG(false, "Redundant MOV @ %p - bug in JIT?", code);
     WriteNormalOp(this, bits, nrmMOV, a1, a2);
 }
 void XEmitter::TEST(int bits, const OpArg& a1, const OpArg& a2) {CheckFlags(); WriteNormalOp(this, bits, nrmTEST, a1, a2);}

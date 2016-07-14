@@ -4,9 +4,8 @@
 
 #pragma once
 
+#include <cstdio>
 #include <cstdlib>
-
-#include "common/logging/log.h"
 
 // For asserts we'd like to keep all the junk executed when an assert happens away from the
 // important code in the function. One way of doing this is to put all the relevant code inside a
@@ -28,13 +27,13 @@ static void assert_noinline_call(const Fn& fn) {
 
 #define ASSERT(_a_) \
     do if (!(_a_)) { assert_noinline_call([] { \
-        LOG_CRITICAL(Debug, "Assertion Failed!"); \
+        fprintf(stderr, "Assertion Failed!\n" #_a_); \
         throw ""; \
     }); } while (0)
 
 #define ASSERT_MSG(_a_, ...) \
     do if (!(_a_)) { assert_noinline_call([&] { \
-        LOG_CRITICAL(Debug, "Assertion Failed!\n" __VA_ARGS__); \
+        fprintf(stderr, "Assertion Failed!\n" #_a_ "\n" __VA_ARGS__); \
         throw ""; \
     }); } while (0)
 

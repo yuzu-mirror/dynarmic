@@ -15,8 +15,6 @@
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. */
 
-#include "common/logging/log.h"
-
 #include "skyeye_interpreter/skyeye_common/arm_regformat.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
 #include "skyeye_interpreter/skyeye_common/armsupp.h"
