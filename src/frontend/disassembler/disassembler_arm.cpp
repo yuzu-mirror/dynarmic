@@ -521,7 +521,7 @@ public:
 std::string DisassembleArm(u32 instruction) {
     DisassemblerVisitor visitor;
     auto decoder = DecodeArm<DisassemblerVisitor>(instruction);
-    return !decoder ? "UNKNOWN" : decoder->call(visitor, instruction);
+    return !decoder ? Common::StringFromFormat("UNKNOWN: %x", instruction) : decoder->call(visitor, instruction);
 }
 
 } // namespace Arm

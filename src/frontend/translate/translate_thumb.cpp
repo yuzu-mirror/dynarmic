@@ -24,7 +24,7 @@ struct ThumbTranslatorVisitor final {
 
     IREmitter ir;
 
-    bool TranslateThisInstruction() {
+    bool InterpretThisInstruction() {
         ir.SetTerm(IR::Term::Interpret(ir.current_location));
         return false;
     }
@@ -441,7 +441,7 @@ struct ThumbTranslatorVisitor final {
     }
 
     bool thumb16_UDF() {
-        return TranslateThisInstruction();
+        return InterpretThisInstruction();
     }
 
     bool thumb16_SVC(Imm8 imm8) {
@@ -505,7 +505,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
             } else {
                 should_continue = visitor.thumb32_UDF();
             }*/
-            should_continue = visitor.TranslateThisInstruction();
+            should_continue = visitor.InterpretThisInstruction();
         }
 
         visitor.ir.current_location.arm_pc += (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;

@@ -88,6 +88,9 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
     InterpreterClearCache();
     InterpreterMainLoop(&interp_state);
 
+    bool T = Dynarmic::Common::Bit<5>(interp_state.Cpsr);
+    interp_state.Reg[15] &= T ? 0xFFFFFFFE : 0xFFFFFFFC;
+
     jit->Regs() = interp_state.Reg;
     jit->Cpsr() = interp_state.Cpsr;
 }
@@ -159,7 +162,7 @@ static bool DoesBehaviorMatch(const ARMul_State& interp, const Dynarmic::Jit& ji
 }
 
 
-void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_execute_count, const size_t run_count, const std::function<u16()> instruction_generator) {
+void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_execute_count, const size_t run_count, const std::function<u32()> instruction_generator) {
     // Prepare memory
     code_mem.fill(0xEAFFFFFE); // b +#0
 
@@ -191,6 +194,10 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
         interp.NumInstrsToExecute = instructions_to_execute_count;
         InterpreterMainLoop(&interp);
         auto interp_write_records = write_records;
+        {
+            bool T = Dynarmic::Common::Bit<5>(interp.Cpsr);
+            interp.Reg[15] &= T ? 0xFFFFFFFE : 0xFFFFFFFC;
+        }
 
         // Run jit
         write_records.clear();
@@ -340,7 +347,7 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
     };
 
     SECTION("short blocks") {
-        FuzzJitArm(5, 6, 5000, instruction_select(/*Rd_can_be_r15=*/false));
+        FuzzJitArm(5, 6, 10000, instruction_select(/*Rd_can_be_r15=*/false));
     }
 
     SECTION("long blocks") {
