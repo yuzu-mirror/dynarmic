@@ -8,7 +8,7 @@
 
 #include "frontend/disassembler.h"
 
-TEST_CASE( "Disassemble branch instructions", "[arm][disassembler]" ) {
+TEST_CASE( "Disassemble branch instructions", "[arm][disassembler][!hide]" ) {
     REQUIRE(Dynarmic::Arm::DisassembleArm(0xEAFFFFFE) == "b +#0");
     REQUIRE(Dynarmic::Arm::DisassembleArm(0xEB000008) == "bl +#40");
     REQUIRE(Dynarmic::Arm::DisassembleArm(0xFBFFFFFE) == "blx +#2");
@@ -19,6 +19,6 @@ TEST_CASE( "Disassemble branch instructions", "[arm][disassembler]" ) {
     REQUIRE(Dynarmic::Arm::DisassembleArm(0x012FFF29) == "bxjeq r9");
 }
 
-TEST_CASE( "Disassemble data processing instructions", "[arm][disassembler]" ) {
+TEST_CASE( "Disassemble data processing instructions", "[arm][disassembler][!hide]" ) {
     REQUIRE(Dynarmic::Arm::DisassembleArm(0xE2853004) == "add r3, r5, #4");
 }

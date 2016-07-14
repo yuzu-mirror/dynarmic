@@ -15,8 +15,10 @@
 namespace Dynarmic {
 namespace Arm {
 
-struct TranslatorVisitor final {
-    explicit TranslatorVisitor(LocationDescriptor descriptor) : ir(descriptor) {
+namespace {
+
+struct ThumbTranslatorVisitor final {
+    explicit ThumbTranslatorVisitor(LocationDescriptor descriptor) : ir(descriptor) {
         ASSERT_MSG(descriptor.TFlag, "The processor must be in Thumb mode");
     }
 
@@ -26,6 +28,7 @@ struct TranslatorVisitor final {
         ir.SetTerm(IR::Term::Interpret(ir.current_location));
         return false;
     }
+
     bool UnpredictableInstruction() {
         ASSERT_MSG(false, "UNPREDICTABLE");
         return false;
@@ -42,6 +45,7 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result.carry);
         return true;
     }
+
     bool thumb16_LSR_imm(Imm5 imm5, Reg m, Reg d) {
         u8 shift_n = imm5 != 0 ? imm5 : 32;
         // LSRS <Rd>, <Rm>, #<imm5>
@@ -53,6 +57,7 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result.carry);
         return true;
     }
+
     bool thumb16_ASR_imm(Imm5 imm5, Reg m, Reg d) {
         u8 shift_n = imm5 != 0 ? imm5 : 32;
         // ASRS <Rd>, <Rm>, #<imm5>
@@ -64,6 +69,7 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result.carry);
         return true;
     }
+
     bool thumb16_ADD_reg_t1(Reg m, Reg n, Reg d) {
         // ADDS <Rd>, <Rn>, <Rm>
         // Note that it is not possible to encode Rd == R15.
@@ -75,6 +81,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_SUB_reg(Reg m, Reg n, Reg d) {
         // SUBS <Rd>, <Rn>, <Rm>
         // Note that it is not possible to encode Rd == R15.
@@ -86,6 +93,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_ADD_imm_t1(Imm3 imm3, Reg n, Reg d) {
         u32 imm32 = imm3 & 0x7;
         // ADDS <Rd>, <Rn>, #<imm3>
@@ -98,6 +106,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_SUB_imm_t1(Imm3 imm3, Reg n, Reg d) {
         u32 imm32 = imm3 & 0x7;
         // SUBS <Rd>, <Rn>, #<imm3>
@@ -110,6 +119,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_MOV_imm(Reg d, Imm8 imm8) {
         u32 imm32 = imm8 & 0xFF;
         // MOVS <Rd>, #<imm8>
@@ -120,6 +130,7 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+
     bool thumb16_CMP_imm(Reg n, Imm8 imm8) {
         u32 imm32 = imm8 & 0xFF;
         // CMP <Rn>, #<imm8>
@@ -130,6 +141,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_ADD_imm_t2(Reg d_n, Imm8 imm8) {
         u32 imm32 = imm8 & 0xFF;
         Reg d = d_n, n = d_n;
@@ -143,6 +155,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_SUB_imm_t2(Reg d_n, Imm8 imm8) {
         u32 imm32 = imm8 & 0xFF;
         Reg d = d_n, n = d_n;
@@ -167,6 +180,7 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+
     bool thumb16_EOR_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;
         // EORS <Rdn>, <Rm>
@@ -177,6 +191,7 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+
     bool thumb16_LSL_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;
         // LSLS <Rdn>, <Rm>
@@ -189,6 +204,7 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result_carry.carry);
         return true;
     }
+
     bool thumb16_LSR_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;
         // LSRS <Rdn>, <Rm>
@@ -201,6 +217,7 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result.carry);
         return true;
     }
+
     bool thumb16_ASR_reg(Reg m, Reg d_n) {
         const Reg d = d_n, n = d_n;
         // ASRS <Rdn>, <Rm>
@@ -213,6 +230,7 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result.carry);
         return true;
     }
+
     bool thumb16_ADC_reg(Reg m, Reg d_n) {
         Reg d = d_n, n = d_n;
         // ADCS <Rdn>, <Rm>
@@ -226,6 +244,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_SBC_reg(Reg m, Reg d_n) {
         Reg d = d_n, n = d_n;
         // SBCS <Rdn>, <Rm>
@@ -239,6 +258,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_ROR_reg(Reg m, Reg d_n) {
         Reg d = d_n, n = d_n;
         // RORS <Rdn>, <Rm>
@@ -251,6 +271,7 @@ struct TranslatorVisitor final {
         ir.SetCFlag(result.carry);
         return true;
     }
+
     bool thumb16_TST_reg(Reg m, Reg n) {
         // TST <Rn>, <Rm>
         auto result = ir.And(ir.GetRegister(n), ir.GetRegister(m));
@@ -258,6 +279,7 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+
     bool thumb16_RSB_imm(Reg n, Reg d) {
         // RSBS <Rd>, <Rn>, #0
         // Rd can never encode R15.
@@ -269,6 +291,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_CMP_reg_t1(Reg m, Reg n) {
         // CMP <Rn>, <Rm>
         auto result = ir.SubWithCarry(ir.GetRegister(n), ir.GetRegister(m), ir.Imm1(1));
@@ -278,6 +301,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_CMN_reg(Reg m, Reg n) {
         // CMN <Rn>, <Rm>
         auto result = ir.AddWithCarry(ir.GetRegister(n), ir.GetRegister(m), ir.Imm1(0));
@@ -287,6 +311,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_ORR_reg(Reg m, Reg d_n) {
         Reg d = d_n, n = d_n;
         // ORRS <Rdn>, <Rm>
@@ -297,6 +322,7 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+
     bool thumb16_BIC_reg(Reg m, Reg d_n) {
         Reg d = d_n, n = d_n;
         // BICS <Rdn>, <Rm>
@@ -307,6 +333,7 @@ struct TranslatorVisitor final {
         ir.SetZFlag(ir.IsZero(result));
         return true;
     }
+
     bool thumb16_MVN_reg(Reg m, Reg d) {
         // MVNS <Rd>, <Rm>
         // Rd cannot encode R15.
@@ -351,6 +378,7 @@ struct TranslatorVisitor final {
         ir.SetVFlag(result.overflow);
         return true;
     }
+
     bool thumb16_MOV_reg(bool d_hi, Reg m, Reg d_lo) {
         Reg d = d_hi ? (d_lo + 8) : d_lo;
         // MOV <Rd>, <Rm>
@@ -435,16 +463,18 @@ static std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRea
     // 32-bit thumb instruction
     // These always start with 0b11101, 0b11110 or 0b11111.
 
-    u32 second_part = (*memory_read_32)((arm_pc+2) & 0xFFFFFFFC);
-    if (((arm_pc+2) & 0x2) != 0)
+    u32 second_part = (*memory_read_32)((arm_pc + 2) & 0xFFFFFFFC);
+    if (((arm_pc + 2) & 0x2) != 0)
         second_part >>= 16;
     second_part &= 0xFFFF;
 
     return std::make_tuple(static_cast<u32>((first_part << 16) | second_part), ThumbInstSize::Thumb32);
 }
 
+} // local namespace
+
 IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
-    TranslatorVisitor visitor{descriptor};
+    ThumbTranslatorVisitor visitor{descriptor};
 
     bool should_continue = true;
     while (should_continue) {
@@ -455,14 +485,14 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
         std::tie(thumb_instruction, inst_size) = ReadThumbInstruction(arm_pc, memory_read_32);
 
         if (inst_size == ThumbInstSize::Thumb16) {
-            auto decoder = DecodeThumb16<TranslatorVisitor>(static_cast<u16>(thumb_instruction));
+            auto decoder = DecodeThumb16<ThumbTranslatorVisitor>(static_cast<u16>(thumb_instruction));
             if (decoder) {
                 should_continue = decoder->call(visitor, static_cast<u16>(thumb_instruction));
             } else {
                 should_continue = visitor.thumb16_UDF();
             }
         } else {
-            /*auto decoder = DecodeThumb32<TranslatorVisitor>(thumb_instruction);
+            /*auto decoder = DecodeThumb32<ThumbTranslatorVisitor>(thumb_instruction);
             if (decoder) {
                 should_continue = decoder->call(visitor, thumb_instruction);
             } else {
