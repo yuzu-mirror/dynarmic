@@ -60,16 +60,15 @@ enum class SignExtendRotation {
 };
 
 struct LocationDescriptor {
-    LocationDescriptor(u32 arm_pc, bool TFlag, bool EFlag, Cond cond = Cond::AL)
-            : arm_pc(arm_pc), TFlag(TFlag), EFlag(EFlag), cond(cond) {}
+    LocationDescriptor(u32 arm_pc, bool TFlag, bool EFlag)
+            : arm_pc(arm_pc), TFlag(TFlag), EFlag(EFlag) {}
 
     u32 arm_pc;
     bool TFlag; ///< Thumb / ARM
     bool EFlag; ///< Big / Little Endian
-    Cond cond;
 
     bool operator == (const LocationDescriptor& o) const {
-        return std::tie(arm_pc, TFlag, EFlag, cond) == std::tie(o.arm_pc, o.TFlag, o.EFlag, o.cond);
+        return std::tie(arm_pc, TFlag, EFlag) == std::tie(o.arm_pc, o.TFlag, o.EFlag);
     }
 };
 

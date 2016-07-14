@@ -11,6 +11,7 @@
 #include <vector>
 
 #include <boost/variant.hpp>
+#include <boost/optional.hpp>
 
 #include "common/common_types.h"
 #include "frontend/arm_types.h"
@@ -246,9 +247,19 @@ class Block final {
 public:
     explicit Block(const Arm::LocationDescriptor& location) : location(location) {}
 
+    /// Description of the starting location of this block
     Arm::LocationDescriptor location;
+    /// Conditional to pass in order to execute this block
+    Arm::Cond cond = Arm::Cond::AL;
+    /// Block to execute next if `cond` did not pass.
+    boost::optional<Arm::LocationDescriptor> cond_failed = {};
+
+    /// List of instructions in this block.
     std::list<ValuePtr> instructions;
+    /// Terminal instruction of this block.
     Terminal terminal = Term::Invalid{};
+
+    /// Number of cycles this block takes to execute.
     size_t cycle_count = 0;
 };
 

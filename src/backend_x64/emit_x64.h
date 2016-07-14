@@ -30,6 +30,10 @@ public:
         return iter != basic_blocks.end() ? iter->second : nullptr;
     }
 
+    void ClearCache();
+
+private:
+    // Microinstruction emitters
     void EmitImmU1(IR::Value* value);
     void EmitImmU8(IR::Value* value);
     void EmitImmU32(IR::Value* value);
@@ -70,8 +74,13 @@ public:
     void EmitWriteMemory32(IR::Value* value);
     void EmitWriteMemory64(IR::Value* value);
 
+    // Helpers
     void EmitAddCycles(size_t cycles);
+    void EmitCondPrelude(Arm::Cond cond,
+                         boost::optional<Arm::LocationDescriptor> cond_failed,
+                         Arm::LocationDescriptor current_location);
 
+    // Terminal instruction emitters
     void EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch terminal, Arm::LocationDescriptor initial_location);
@@ -80,12 +89,11 @@ public:
     void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location);
 
-    void ClearCache();
-
-private:
+    // Per-block state
     std::set<IR::Value*> inhibit_emission;
     RegAlloc reg_alloc;
 
+    // State
     Gen::XEmitter* code;
     Routines* routines;
     UserCallbacks cb;
