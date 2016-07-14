@@ -49,6 +49,7 @@ private:
     void EmitGetVFlag(IR::Value* value);
     void EmitSetVFlag(IR::Value* value);
     void EmitBXWritePC(IR::Value* value);
+    void EmitCallSupervisor(IR::Value* value);
     void EmitGetCarryFromOp(IR::Value* value);
     void EmitGetOverflowFromOp(IR::Value* value);
     void EmitLeastSignificantHalf(IR::Value* value);

@@ -59,7 +59,7 @@ private:
 };
 
 template <typename V>
-static const std::array<ArmMatcher<V>, 1> g_arm_instruction_table = {
+static const std::array<ArmMatcher<V>, 2> g_arm_instruction_table = {
 
 #define INST(fn, name, bitstring) detail::detail<ArmMatcher, u32, 32>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -139,7 +139,7 @@ static const std::array<ArmMatcher<V>, 1> g_arm_instruction_table = {
 
     // Exception Generating instructions
     //INST(&V::arm_BKPT,        "BKPT",                "cccc00010010vvvvvvvvvvvv0111vvvv"), // v5
-    //INST(&V::arm_SVC,         "SVC",                 "cccc1111vvvvvvvvvvvvvvvvvvvvvvvv"), // all
+    INST(&V::arm_SVC,         "SVC",                 "cccc1111vvvvvvvvvvvvvvvvvvvvvvvv"), // all
     INST(&V::arm_UDF,         "UDF",                 "111001111111------------1111----"), // all
 
     // Extension instructions

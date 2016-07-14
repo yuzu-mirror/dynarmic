@@ -326,8 +326,12 @@ public:
 
     // Exception generation instructions
     std::string arm_BKPT(Cond cond, Imm12 imm12, Imm4 imm4) { return "ice"; }
-    std::string arm_SVC(Cond cond, Imm24 imm24) { return "ice"; }
-    std::string arm_UDF() { return "ice"; }
+    std::string arm_SVC(Cond cond, Imm24 imm24) {
+        return Common::StringFromFormat("svc%s #%u", CondStr(cond), imm24);
+    }
+    std::string arm_UDF() {
+        return Common::StringFromFormat("udf");
+    }
 
     // Extension functions
     std::string arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }

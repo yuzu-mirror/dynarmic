@@ -72,6 +72,10 @@ void IREmitter::LoadWritePC(IR::ValuePtr value) {
     Inst(IR::Opcode::BXWritePC, {value});
 }
 
+void IREmitter::CallSupervisor(IR::ValuePtr value) {
+    Inst(IR::Opcode::CallSupervisor, {value});
+}
+
 IR::ValuePtr IREmitter::GetCFlag() {
     return Inst(IR::Opcode::GetCFlag, {});
 }

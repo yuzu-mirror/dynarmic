@@ -250,6 +250,15 @@ void EmitX64::EmitBXWritePC(IR::Value* value_) {
 #endif
 }
 
+void EmitX64::EmitCallSupervisor(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    auto imm32 = value->GetArg(0).get();
+    reg_alloc.HostCall(nullptr, imm32);
+
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.CallSVC));
+}
+
 void EmitX64::EmitGetCarryFromOp(IR::Value*) {
     ASSERT_MSG(0, "should never happen");
 }

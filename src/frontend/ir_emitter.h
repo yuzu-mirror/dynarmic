@@ -44,6 +44,7 @@ public:
 
     void ALUWritePC(IR::ValuePtr value);
     void LoadWritePC(IR::ValuePtr value);
+    void CallSupervisor(IR::ValuePtr value);
 
     IR::ValuePtr GetCFlag();
     void SetNFlag(IR::ValuePtr value);

@@ -18,6 +18,7 @@ OPCODE(SetCFlag,                T::Void,        T::U1                           
 OPCODE(GetVFlag,                T::U1,                                                          )
 OPCODE(SetVFlag,                T::Void,        T::U1                                           )
 OPCODE(BXWritePC,               T::Void,        T::U32                                          )
+OPCODE(CallSupervisor,          T::Void,        T::U32                                          )
 
 // Pseudo-operation, handled specially at final emit
 OPCODE(GetCarryFromOp,          T::U1,          T::U32                                          )
