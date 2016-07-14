@@ -408,23 +408,17 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
     if (!carry_inst) {
         X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
-        //X64Reg zero = reg_alloc.ScratchRegister();
+        X64Reg const31 = reg_alloc.ScratchRegister();
 
         // The 32-bit x64 SAR instruction masks the shift count by 0x1F before performing the shift.
-        // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
+        // ARM differs from the behaviour: It does not mask the count.
 
-        // TODO: Optimize this.
-
-        code->CMP(8, R(shift), Imm8(31));
-        auto Rs_gt31 = code->J_CC(CC_A);
-        // if (Rs & 0xFF <= 31) {
+        // We note that all shift values above 31 have the same behaviour as 31 does, so we saturate `shift` to 31.
+        code->MOV(32, R(const31), Imm32(31));
+        code->MOVZX(32, 8, shift, R(shift));
+        code->CMP(32, R(shift), Imm32(31));
+        code->CMOVcc(32, shift, R(const31), CC_L);
         code->SAR(32, R(result), R(shift));
-        auto jmp_to_end = code->J();
-        // } else {
-        code->SetJumpTarget(Rs_gt31);
-        code->SAR(32, R(result), Imm8(31)); // Verified.
-        // }
-        code->SetJumpTarget(jmp_to_end);
     } else {
         inhibit_emission.insert(carry_inst);
 
