@@ -56,7 +56,7 @@ private:
 };
 
 template <typename V>
-const std::array<Thumb16Matcher<V>, 35> g_thumb16_instruction_table = {
+const std::array<Thumb16Matcher<V>, 36> g_thumb16_instruction_table = {
 
 #define INST(fn, name, bitstring) detail::detail<Thumb16Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -140,7 +140,7 @@ const std::array<Thumb16Matcher<V>, 35> g_thumb16_instruction_table = {
     //INST(&V::thumb16_BX,             "BX (reg)",                 "010001110mmmm000"), // v4T
     //INST(&V::thumb16_BLX,            "BLX (reg)",                "010001111mmmm000"), // v5T
     INST(&V::thumb16_UDF,            "UDF",                      "11011110--------"),
-    //INST(&V::thumb16_SWI,            "SWI",                      "11011111xxxxxxxx"),
+    INST(&V::thumb16_SVC,            "SVC",                      "11011111xxxxxxxx"),
     //INST(&V::thumb16_B_cond,         "B (cond)",                 "1101ccccxxxxxxxx"),
     //INST(&V::thumb16_B_imm,          "B (imm)",                  "11100xxxxxxxxxxx"),
     //INST(&V::thumb16_BLX_suffix,     "BLX (imm, suffix)",        "11101xxxxxxxxxx0"),

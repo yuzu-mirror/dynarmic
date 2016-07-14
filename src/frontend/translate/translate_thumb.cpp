@@ -443,6 +443,13 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_UDF() {
         return TranslateThisInstruction();
     }
+
+    bool thumb16_SVC(Imm8 imm8) {
+        u32 imm32 = imm8;
+        // SVC #<imm8>
+        ir.CallSupervisor(ir.Imm32(imm32));
+        return false;
+    }
 };
 
 enum class ThumbInstSize {

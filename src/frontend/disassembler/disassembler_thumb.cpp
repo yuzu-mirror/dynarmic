@@ -247,6 +247,10 @@ public:
     std::string thumb16_UDF() {
         return Common::StringFromFormat("udf");
     }
+
+    std::string thumb16_SVC(Imm8 imm8) {
+        return Common::StringFromFormat("svc #%u", imm8);
+    }
 };
 
 std::string DisassembleThumb16(u16 instruction) {
