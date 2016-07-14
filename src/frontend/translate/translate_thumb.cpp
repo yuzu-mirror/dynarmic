@@ -9,8 +9,8 @@
 #include "common/assert.h"
 #include "frontend/arm_types.h"
 #include "frontend/decoder/thumb16.h"
-#include "frontend/ir_emitter.h"
-#include "frontend/translate.h"
+#include "frontend/ir/ir_emitter.h"
+#include "translate.h"
 
 namespace Dynarmic {
 namespace Arm {

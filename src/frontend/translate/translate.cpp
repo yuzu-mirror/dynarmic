@@ -6,7 +6,7 @@
 
 #include "frontend/arm_types.h"
 #include "frontend/ir/ir.h"
-#include "frontend/translate.h"
+#include "translate.h"
 
 namespace Dynarmic {
 namespace Arm {

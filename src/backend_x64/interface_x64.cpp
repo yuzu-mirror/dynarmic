@@ -14,7 +14,7 @@
 #include "common/common_types.h"
 #include "common/scope_exit.h"
 #include "frontend/arm_types.h"
-#include "frontend/translate.h"
+#include "frontend/translate/translate.h"
 #include "interface/interface.h"
 
 namespace Dynarmic {

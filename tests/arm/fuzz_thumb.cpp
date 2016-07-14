@@ -12,7 +12,7 @@
 
 #include "common/bit_util.h"
 #include "common/common_types.h"
-#include "frontend/disassembler.h"
+#include "frontend/disassembler/disassembler.h"
 #include "interface/interface.h"
 #include "rand_int.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
