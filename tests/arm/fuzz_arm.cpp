@@ -219,6 +219,7 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
             }
 
             printf("\nFinal Register Listing: \n");
+            printf("      interp   jit\n");
             for (int i = 0; i <= 15; i++) {
                 printf("%4i: %08x %08x %s\n", i, interp.Reg[i], jit.Regs()[i], interp.Reg[i] != jit.Regs()[i] ? "*" : "");
             }

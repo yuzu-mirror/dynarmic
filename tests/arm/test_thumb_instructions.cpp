@@ -85,3 +85,21 @@ TEST_CASE( "thumb: lsls r0, r1, #31", "[thumb]" ) {
     REQUIRE( jit.Regs()[15] == 2 );
     REQUIRE( jit.Cpsr() == 0xA0000030 ); // N, C flags, Thumb, User-mode
 }
+
+TEST_CASE( "thumb: revsh r4, r3", "[thumb]" ) {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xBADC; // revsh r4, r3
+    code_mem[1] = 0xE7FE; // b +#0
+
+    jit.Regs()[3] = 0x12345678;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.Cpsr() = 0x00000030; // Thumb, User-mode
+
+    jit.Run(1);
+
+    REQUIRE( jit.Regs()[3] == 0x12345678 );
+    REQUIRE( jit.Regs()[4] == 0x00007856 );
+    REQUIRE( jit.Regs()[15] == 2 );
+    REQUIRE( jit.Cpsr() == 0x00000030 ); // Thumb, User-mode
+}
