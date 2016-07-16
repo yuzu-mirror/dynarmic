@@ -39,6 +39,12 @@ OPCODE(And,                     T::U32,         T::U32,         T::U32          
 OPCODE(Eor,                     T::U32,         T::U32,         T::U32                          )
 OPCODE(Or,                      T::U32,         T::U32,         T::U32                          )
 OPCODE(Not,                     T::U32,         T::U32                                          )
+OPCODE(SignExtendHalfToWord,    T::U32,         T::U16                                          )
+OPCODE(SignExtendByteToWord,    T::U32,         T::U8                                           )
+OPCODE(ZeroExtendHalfToWord,    T::U32,         T::U16                                          )
+OPCODE(ZeroExtendByteToWord,    T::U32,         T::U8                                           )
+OPCODE(ByteReverseWord,         T::U32,         T::U32                                          )
+OPCODE(ByteReverseHalf,         T::U16,         T::U16                                          )
 
 // Memory access
 OPCODE(ReadMemory8,             T::U8,          T::U32                                          )

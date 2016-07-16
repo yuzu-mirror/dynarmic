@@ -440,6 +440,68 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    bool thumb16_SXTH(Reg m, Reg d) {
+        // SXTH <Rd>, <Rm>
+        // Rd cannot encode R15.
+        auto half = ir.LeastSignificantHalf(ir.GetRegister(m));
+        ir.SetRegister(d, ir.SignExtendHalfToWord(half));
+        return true;
+    }
+
+    bool thumb16_SXTB(Reg m, Reg d) {
+        // SXTB <Rd>, <Rm>
+        // Rd cannot encode R15.
+        auto byte = ir.LeastSignificantByte(ir.GetRegister(m));
+        ir.SetRegister(d, ir.SignExtendByteToWord(byte));
+        return true;
+    }
+
+    bool thumb16_UXTH(Reg m, Reg d) {
+        // UXTH <Rd>, <Rm>
+        // Rd cannot encode R15.
+        auto half = ir.LeastSignificantHalf(ir.GetRegister(m));
+        ir.SetRegister(d, ir.ZeroExtendHalfToWord(half));
+        return true;
+    }
+
+    bool thumb16_UXTB(Reg m, Reg d) {
+        // UXTB <Rd>, <Rm>
+        // Rd cannot encode R15.
+        auto byte = ir.LeastSignificantByte(ir.GetRegister(m));
+        ir.SetRegister(d, ir.ZeroExtendByteToWord(byte));
+        return true;
+    }
+
+    bool thumb16_REV(Reg m, Reg d) {
+        // REV <Rd>, <Rm>
+        // Rd cannot encode R15.
+        ir.SetRegister(d, ir.ByteReverseWord(ir.GetRegister(m)));
+        return true;
+    }
+
+    bool thumb16_REV16(Reg m, Reg d) {
+        // REV16 <Rd>, <Rm>
+        // Rd cannot encode R15.
+        // TODO: Consider optimizing
+        auto Rm = ir.GetRegister(m);
+        auto upper_half = ir.LeastSignificantHalf(ir.LogicalShiftRight(Rm, ir.Imm8(16), ir.Imm1(0)).result);
+        auto lower_half = ir.LeastSignificantHalf(Rm);
+        auto rev_upper_half = ir.ZeroExtendHalfToWord(ir.ByteReverseHalf(upper_half));
+        auto rev_lower_half = ir.ZeroExtendHalfToWord(ir.ByteReverseHalf(lower_half));
+        auto result = ir.Or(ir.LogicalShiftLeft(rev_upper_half, ir.Imm8(16), ir.Imm1(0)).result,
+                            rev_lower_half);
+        ir.SetRegister(d, result);
+        return true;
+    }
+
+    bool thumb16_REVSH(Reg m, Reg d) {
+        // REVSH <Rd>, <Rm>
+        // Rd cannot encode R15.
+        auto rev_half = ir.ByteReverseHalf(ir.LeastSignificantHalf(ir.GetRegister(m)));
+        ir.SetRegister(d, ir.SignExtendHalfToWord(rev_half));
+        return true;
+    }
+
     bool thumb16_UDF() {
         return InterpretThisInstruction();
     }

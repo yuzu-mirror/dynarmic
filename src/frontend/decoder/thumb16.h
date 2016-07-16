@@ -56,7 +56,7 @@ private:
 };
 
 template <typename V>
-const std::array<Thumb16Matcher<V>, 36> g_thumb16_instruction_table = {
+const std::array<Thumb16Matcher<V>, 43> g_thumb16_instruction_table = {
 
 #define INST(fn, name, bitstring) detail::detail<Thumb16Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -119,17 +119,17 @@ const std::array<Thumb16Matcher<V>, 36> g_thumb16_instruction_table = {
     // Miscellaneous 16-bit instructions
     //INST(&V::thumb16_ADD_spsp,       "ADD (imm to SP)",          "101100000vvvvvvv"), // v4T
     //INST(&V::thumb16_SUB_spsp,       "SUB (imm from SP)",        "101100001vvvvvvv"), // v4T
-    //INST(&V::thumb16_SXTH,           "SXTH",                     "1011001000mmmddd"), // v6
-    //INST(&V::thumb16_SXTB,           "SXTB",                     "1011001001mmmddd"), // v6
-    //INST(&V::thumb16_UXTH,           "UXTH",                     "1011001010mmmddd"), // v6
-    //INST(&V::thumb16_UXTB,           "UXTB",                     "1011001011mmmddd"), // v6
+    INST(&V::thumb16_SXTH,           "SXTH",                     "1011001000mmmddd"), // v6
+    INST(&V::thumb16_SXTB,           "SXTB",                     "1011001001mmmddd"), // v6
+    INST(&V::thumb16_UXTH,           "UXTH",                     "1011001010mmmddd"), // v6
+    INST(&V::thumb16_UXTB,           "UXTB",                     "1011001011mmmddd"), // v6
     //INST(&V::thumb16_PUSH,           "PUSH",                     "1011010rxxxxxxxx"), // v4T
     //INST(&V::thumb16_POP,            "POP",                      "1011110rxxxxxxxx"), // v4T
     //INST(&V::thumb16_SETEND,         "SETEND",                   "101101100101x000"), // v6
     //INST(&V::thumb16_CPS,            "CPS",                      "10110110011m0aif"), // v6
-    //INST(&V::thumb16_REV,            "REV",                      "1011101000nnnddd"), // v6
-    //INST(&V::thumb16_REV16,          "REV16",                    "1011101001nnnddd"), // v6
-    //INST(&V::thumb16_REVSH,          "REVSH",                    "1011101011nnnddd"), // v6
+    INST(&V::thumb16_REV,            "REV",                      "1011101000mmmddd"), // v6
+    INST(&V::thumb16_REV16,          "REV16",                    "1011101001mmmddd"), // v6
+    INST(&V::thumb16_REVSH,          "REVSH",                    "1011101011mmmddd"), // v6
     //INST(&V::thumb16_BKPT,           "BKPT",                     "10111110xxxxxxxx"), // v5
 
     // Store/Load multiple registers

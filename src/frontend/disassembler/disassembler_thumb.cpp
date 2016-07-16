@@ -244,6 +244,34 @@ public:
         return Common::StringFromFormat("ldr %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
     }
 
+    std::string thumb16_SXTH(Reg m, Reg d) {
+        return Common::StringFromFormat("sxth %s, %s", RegStr(d), RegStr(m));
+    }
+
+    std::string thumb16_SXTB(Reg m, Reg d) {
+        return Common::StringFromFormat("sxtb %s, %s", RegStr(d), RegStr(m));
+    }
+
+    std::string thumb16_UXTH(Reg m, Reg d) {
+        return Common::StringFromFormat("uxth %s, %s", RegStr(d), RegStr(m));
+    }
+
+    std::string thumb16_UXTB(Reg m, Reg d) {
+        return Common::StringFromFormat("uxtb %s, %s", RegStr(d), RegStr(m));
+    }
+
+    std::string thumb16_REV(Reg m, Reg d) {
+        return Common::StringFromFormat("rev %s, %s", RegStr(d), RegStr(m));
+    }
+
+    std::string thumb16_REV16(Reg m, Reg d) {
+        return Common::StringFromFormat("rev16 %s, %s", RegStr(d), RegStr(m));
+    }
+
+    std::string thumb16_REVSH(Reg m, Reg d) {
+        return Common::StringFromFormat("revsh %s, %s", RegStr(d), RegStr(m));
+    }
+
     std::string thumb16_UDF() {
         return Common::StringFromFormat("udf");
     }

@@ -171,6 +171,31 @@ IR::ValuePtr IREmitter::Not(IR::ValuePtr a) {
     return Inst(IR::Opcode::Not, {a});
 }
 
+IR::ValuePtr IREmitter::SignExtendHalfToWord(IR::ValuePtr a) {
+    return Inst(IR::Opcode::SignExtendHalfToWord, {a});
+}
+
+IR::ValuePtr IREmitter::SignExtendByteToWord(IR::ValuePtr a) {
+    return Inst(IR::Opcode::SignExtendByteToWord, {a});
+}
+
+IR::ValuePtr IREmitter::ZeroExtendHalfToWord(IR::ValuePtr a) {
+    return Inst(IR::Opcode::ZeroExtendHalfToWord, {a});
+}
+
+IR::ValuePtr IREmitter::ZeroExtendByteToWord(IR::ValuePtr a) {
+    return Inst(IR::Opcode::ZeroExtendByteToWord, {a});
+}
+
+IR::ValuePtr IREmitter::ByteReverseWord(IR::ValuePtr a) {
+    return Inst(IR::Opcode::ByteReverseWord, {a});
+}
+
+IR::ValuePtr IREmitter::ByteReverseHalf(IR::ValuePtr a) {
+    return Inst(IR::Opcode::ByteReverseHalf, {a});
+}
+
+
 IR::ValuePtr IREmitter::ReadMemory8(IR::ValuePtr vaddr) {
     return Inst(IR::Opcode::ReadMemory8, {vaddr});
 }

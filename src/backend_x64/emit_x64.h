@@ -66,6 +66,12 @@ private:
     void EmitEor(IR::Value* value);
     void EmitOr(IR::Value* value);
     void EmitNot(IR::Value* value);
+    void EmitSignExtendHalfToWord(IR::Value* value);
+    void EmitSignExtendByteToWord(IR::Value* value);
+    void EmitZeroExtendHalfToWord(IR::Value* value);
+    void EmitZeroExtendByteToWord(IR::Value* value);
+    void EmitByteReverseWord(IR::Value* value);
+    void EmitByteReverseHalf(IR::Value* value);
     void EmitReadMemory8(IR::Value* value);
     void EmitReadMemory16(IR::Value* value);
     void EmitReadMemory32(IR::Value* value);

@@ -68,6 +68,12 @@ public:
     IR::ValuePtr Eor(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Or(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Not(IR::ValuePtr a);
+    IR::ValuePtr SignExtendHalfToWord(IR::ValuePtr a);
+    IR::ValuePtr SignExtendByteToWord(IR::ValuePtr a);
+    IR::ValuePtr ZeroExtendHalfToWord(IR::ValuePtr a);
+    IR::ValuePtr ZeroExtendByteToWord(IR::ValuePtr a);
+    IR::ValuePtr ByteReverseWord(IR::ValuePtr a);
+    IR::ValuePtr ByteReverseHalf(IR::ValuePtr a);
 
     IR::ValuePtr ReadMemory8(IR::ValuePtr vaddr);
     IR::ValuePtr ReadMemory16(IR::ValuePtr vaddr);

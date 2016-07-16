@@ -602,6 +602,59 @@ void EmitX64::EmitNot(IR::Value* value_) {
     code->NOT(32, R(result));
 }
 
+void EmitX64::EmitSignExtendHalfToWord(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    // TODO: Remove unnecessary mov that may occur here
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->MOVSX(32, 16, result, R(result));
+}
+
+void EmitX64::EmitSignExtendByteToWord(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    // TODO: Remove unnecessary mov that may occur here
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->MOVSX(32, 8, result, R(result));
+}
+
+void EmitX64::EmitZeroExtendHalfToWord(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    // TODO: Remove unnecessary mov that may occur here
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->MOVZX(32, 16, result, R(result));
+}
+
+void EmitX64::EmitZeroExtendByteToWord(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    // TODO: Remove unnecessary mov that may occur here
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->MOVZX(32, 8, result, R(result));
+}
+
+void EmitX64::EmitByteReverseWord(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->BSWAP(32, result);
+}
+
+void EmitX64::EmitByteReverseHalf(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->ROL(16, R(result), Imm8(8));
+}
+
+
 void EmitX64::EmitReadMemory8(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
