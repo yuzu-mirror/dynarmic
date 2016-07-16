@@ -293,15 +293,22 @@ ThumbDecodeStatus TranslateThumbInstruction(u32 addr, u32 instr, u32* ainstr, u3
                     | (BIT(tinstr, 4) << 18); // enable bit
             }
         } else if ((tinstr & 0x0F00) == 0x0a00) {
-            static const u32 subset[3] = {
+            static const u32 subset[4] = {
                 0xE6BF0F30, // REV
                 0xE6BF0FB0, // REV16
+                0,          // undefined
                 0xE6FF0FB0, // REVSH
             };
 
-            *ainstr = subset[BITS(tinstr, 6, 7)] // base
-                | (BITS(tinstr, 0, 2) << 12)     // Rd
-                | BITS(tinstr, 3, 5);            // Rm
+            size_t subset_index = BITS(tinstr, 6, 7);
+
+            if (subset_index == 2) {
+                valid = ThumbDecodeStatus::UNDEFINED;
+            } else {
+                *ainstr = subset[subset_index]             // base
+                          | (BITS(tinstr, 0, 2) << 12)     // Rd
+                          | BITS(tinstr, 3, 5);            // Rm
+            }
         } else {
             static const u32 subset[4] = {
                 0xE92D0000, // STMDB sp!,{rlist}
