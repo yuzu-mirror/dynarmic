@@ -280,6 +280,32 @@ struct ArmTranslatorVisitor final {
     bool arm_UDF() {
         return InterpretThisInstruction();
     }
+
+    bool arm_REV(Cond cond, Reg d, Reg m) {
+        // REV<c> <Rd>, <Rm>
+        ASSERT(d != Reg::PC && m != Reg::PC);
+
+        if (ConditionPassed(cond)) {
+            auto result = ir.ByteReverseWord(ir.GetRegister(m));
+            ir.SetRegister(d, result);
+        }
+        return true;
+    }
+
+    bool arm_REV16(Cond cond, Reg d, Reg m) {
+        return InterpretThisInstruction();
+    }
+
+    bool arm_REVSH(Cond cond, Reg d, Reg m) {
+        // REVSH<c> <Rd>, <Rm>
+        ASSERT(d != Reg::PC && m != Reg::PC);
+
+        if (ConditionPassed(cond)) {
+            auto rev_half = ir.ByteReverseHalf(ir.LeastSignificantHalf(ir.GetRegister(m)));
+            ir.SetRegister(d, ir.SignExtendHalfToWord(rev_half));
+        }
+        return true;
+    }
 };
 
 } // local namespace

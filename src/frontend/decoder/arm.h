@@ -59,7 +59,7 @@ private:
 };
 
 template <typename V>
-static const std::array<ArmMatcher<V>, 4> g_arm_instruction_table = {
+static const std::array<ArmMatcher<V>, 6> g_arm_instruction_table = {
 
 #define INST(fn, name, bitstring) detail::detail<ArmMatcher, u32, 32>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -235,9 +235,9 @@ static const std::array<ArmMatcher<V>, 4> g_arm_instruction_table = {
     //INST(&V::arm_PKHTB,       "PKHTB",               "cccc01101000nnnnddddvvvvv101mmmm"), // v6K
 
     // Reversal instructions
-    //INST(&V::arm_REV,         "REV",                 "cccc011010111111dddd11110011mmmm"), // v6
+    INST(&V::arm_REV,         "REV",                 "cccc011010111111dddd11110011mmmm"), // v6
     //INST(&V::arm_REV16,       "REV16",               "cccc011010111111dddd11111011mmmm"), // v6
-    //INST(&V::arm_REVSH,       "REVSH",               "cccc011011111111dddd11111011mmmm"), // v6
+    INST(&V::arm_REVSH,       "REVSH",               "cccc011011111111dddd11111011mmmm"), // v6
 
     // Saturation instructions
     //INST(&V::arm_SSAT,        "SSAT",                "cccc0110101vvvvvddddvvvvvr01nnnn"), // v6
