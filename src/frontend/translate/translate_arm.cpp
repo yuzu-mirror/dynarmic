@@ -156,9 +156,20 @@ struct ArmTranslatorVisitor final {
     bool arm_CMN_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Reg m) {
         return InterpretThisInstruction();
     }
+
     bool arm_CMP_imm(Cond cond, Reg n, int rotate, Imm8 imm8) {
-        return InterpretThisInstruction();
+        u32 imm32 = ArmExpandImm(rotate, imm8);
+        // CMP<c> <Rn>, #<imm>
+        if (ConditionPassed(cond)) {
+            auto result = ir.AddWithCarry(ir.GetRegister(n), ir.Imm32(~imm32), ir.Imm1(true));
+            ir.SetNFlag(ir.MostSignificantBit(result.result));
+            ir.SetZFlag(ir.IsZero(result.result));
+            ir.SetCFlag(result.carry);
+            ir.SetVFlag(result.overflow);
+        }
+        return true;
     }
+
     bool arm_CMP_reg(Cond cond, Reg n, Imm5 imm5, ShiftType shift, Reg m) {
         return InterpretThisInstruction();
     }
