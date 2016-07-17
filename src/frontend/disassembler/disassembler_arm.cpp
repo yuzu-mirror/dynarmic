@@ -405,9 +405,15 @@ public:
     std::string arm_PKHTB(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) { return "ice"; }
 
     // Reversal instructions
-    std::string arm_REV(Cond cond, Reg d, Reg m) { return "ice"; }
-    std::string arm_REV16(Cond cond, Reg d, Reg m) { return "ice"; }
-    std::string arm_REVSH(Cond cond, Reg d, Reg m) { return "ice"; }
+    std::string arm_REV(Cond cond, Reg d, Reg m) {
+        return Common::StringFromFormat("rev%s %s, %s", CondStr(cond), RegStr(d), RegStr(m));
+    }
+    std::string arm_REV16(Cond cond, Reg d, Reg m) {
+        return Common::StringFromFormat("rev16%s %s, %s", CondStr(cond), RegStr(d), RegStr(m));
+    }
+    std::string arm_REVSH(Cond cond, Reg d, Reg m) {
+        return Common::StringFromFormat("revsh%s %s, %s", CondStr(cond), RegStr(d), RegStr(m));
+    }
 
     // Saturation instructions
     std::string arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) { return "ice"; }
