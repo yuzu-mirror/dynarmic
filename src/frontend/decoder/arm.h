@@ -59,7 +59,7 @@ private:
 };
 
 template <typename V>
-static const std::array<ArmMatcher<V>, 3> g_arm_instruction_table = {
+static const std::array<ArmMatcher<V>, 4> g_arm_instruction_table = {
 
 #define INST(fn, name, bitstring) detail::detail<ArmMatcher, u32, 32>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -103,7 +103,7 @@ static const std::array<ArmMatcher<V>, 3> g_arm_instruction_table = {
     //INST(&V::arm_CMN_imm,     "CMN (imm)",           "cccc00110111nnnn0000rrrrvvvvvvvv"), // all
     //INST(&V::arm_CMN_reg,     "CMN (reg)",           "cccc00010111nnnn0000vvvvvrr0mmmm"), // all
     //INST(&V::arm_CMN_rsr,     "CMN (rsr)",           "cccc00010111nnnn0000ssss0rr1mmmm"), // all
-    //INST(&V::arm_CMP_imm,     "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv"), // all
+    INST(&V::arm_CMP_imm,     "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv"), // all
     //INST(&V::arm_CMP_reg,     "CMP (reg)",           "cccc00010101nnnn0000vvvvvrr0mmmm"), // all
     //INST(&V::arm_CMP_rsr,     "CMP (rsr)",           "cccc00010101nnnn0000ssss0rr1mmmm"), // all
     //INST(&V::arm_EOR_imm,     "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv"), // all
