@@ -222,32 +222,29 @@ void EmitX64::EmitBXWritePC(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
     X64Reg new_pc = reg_alloc.UseRegister(value->GetArg(0).get());
-    X64Reg tmp = reg_alloc.ScratchRegister();
-    X64Reg cpsr = reg_alloc.ScratchRegister();
+    X64Reg tmp1 = reg_alloc.ScratchRegister();
+    X64Reg tmp2 = reg_alloc.ScratchRegister();
 
-    // Note: new_pc<1:0> == '10' is UNPREDICTABLE
+    // Pseudocode:
+    // if (new_pc & 1) {
+    //    new_pc &= 0xFFFFFFFE;
+    //    cpsr.T = true;
+    // } else {
+    //    new_pc &= 0xFFFFFFFC;
+    //    cpsr.T = false;
+    // }
 
-    // Alternative implementations
-#if 0
-    code->MOV(32, R(tmp), MJitStateCpsr());
-    code->MOV(32, R(cpsr), R(tmp));
-    code->OR(32, R(tmp), Imm32(1 << 5));
-    code->AND(32, R(cpsr), Imm32(~(1 << 5)));
-    code->BTR(32, R(new_pc), Imm8(0));
-    code->CMOVcc(32, cpsr, R(tmp), CC_C);
+    code->MOV(32, R(tmp1), MJitStateCpsr());
+    code->MOV(32, R(tmp2), R(tmp1));
+    code->AND(32, R(tmp2), Imm32(~(1 << 5)));      // CPSR.T = 0
+    code->OR(32, R(tmp1), Imm32(1 << 5));          // CPSR.T = 1
+    code->TEST(8, R(new_pc), Imm8(1));
+    code->CMOVcc(32, tmp1, R(tmp2), CC_E);         // CPSR.T = pc & 1
+    code->MOV(32, MJitStateCpsr(), R(tmp1));
+    code->LEA(32, tmp2, MComplex(new_pc, new_pc, 1, 0));
+    code->OR(32, R(tmp2), Imm32(0xFFFFFFFC));      // tmp2 = pc & 1 ? 0xFFFFFFFE : 0xFFFFFFFC
+    code->AND(32, R(new_pc), R(tmp2));
     code->MOV(32, MJitStateReg(Arm::Reg::PC), R(new_pc));
-    code->MOV(32, MJitStateCpsr(), R(cpsr));
-#else
-    code->MOV(32, R(tmp), R(new_pc));
-    code->AND(32, R(tmp), Imm8(1));
-    code->AND(32, R(new_pc), Imm32(0xFFFFFFFE));
-    code->MOV(32, R(cpsr), MJitStateCpsr());
-    code->SHL(32, R(tmp), Imm8(5));
-    code->AND(32, R(cpsr), Imm32(~(1 << 5)));
-    code->OR(32, R(cpsr), R(tmp));
-    code->MOV(32, MJitStateReg(Arm::Reg::PC), R(new_pc));
-    code->MOV(32, MJitStateCpsr(), R(cpsr));
-#endif
 }
 
 void EmitX64::EmitCallSupervisor(IR::Value* value_) {
