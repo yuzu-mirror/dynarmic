@@ -366,29 +366,44 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
         return Dynarmic::Common::Bits<0, 3>(instr) != 0b1111 && Dynarmic::Common::Bits<12, 15>(instr) != 0b1111;
     };
 
-    const std::array<InstructionGenerator, 3> reg_instructions = {
+    const std::array<InstructionGenerator, 3> rev_instructions = {
         {
-            InstructionGenerator("cccc011010111111dddd11110011mmmm", is_valid),
-            InstructionGenerator("cccc011010111111dddd11111011mmmm", is_valid),
-            InstructionGenerator("cccc011011111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("0000011010111111dddd11110011mmmm", is_valid),
+            InstructionGenerator("0000011010111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("0000011011111111dddd11111011mmmm", is_valid),
         }
     };
 
     SECTION("REV tests") {
-        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
-            return reg_instructions[0].Generate();
+        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return rev_instructions[0].Generate() | (cond << 28);
         });
     }
 
     SECTION("REV16 tests") {
-        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
-            return reg_instructions[1].Generate();
+        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return rev_instructions[1].Generate() | (cond << 28);
         });
     }
 
     SECTION("REVSH tests") {
-        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
-            return reg_instructions[2].Generate();
+        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return rev_instructions[2].Generate() | (cond << 28);
         });
     }
 }
