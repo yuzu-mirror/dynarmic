@@ -298,6 +298,24 @@ public:
         return ret;
     }
 
+    std::string thumb16_POP(bool P, RegList reg_list) {
+        if (P)
+            reg_list |= 1 << 15;
+
+        std::string ret = "PUSH ";
+        bool first_reg = true;
+        for (size_t i = 0; i < 16; i++) {
+            if (Common::Bit(i, reg_list)) {
+                if (!first_reg)
+                    ret += ", ";
+                ret += RegStr(static_cast<Reg>(i));
+                first_reg = false;
+            }
+        }
+
+        return ret;
+    }
+
     std::string thumb16_REV(Reg m, Reg d) {
         return Common::StringFromFormat("rev %s, %s", RegStr(d), RegStr(m));
     }

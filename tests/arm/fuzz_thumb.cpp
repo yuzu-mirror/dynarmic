@@ -163,7 +163,6 @@ static bool DoesBehaviorMatch(const ARMul_State& interp, const Dynarmic::Jit& ji
             && interp_write_records == jit_write_records;
 }
 
-
 void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_execute_count, const size_t run_count, const std::function<u16()> instruction_generator) {
     // Prepare memory
     code_mem.fill(0xE7FE); // b +#0
@@ -274,7 +273,8 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         ThumbInstGen("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
         ThumbInstGen("10110100xxxxxxxx",  // PUSH (R = 0)
                      [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
-        ThumbInstGen("10111100xxxxxxxx"), // POP (R = 0)
+        ThumbInstGen("10111100xxxxxxxx", // POP (R = 0)
+                     [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
         ThumbInstGen("1100xxxxxxxxxxxx"), // STMIA/LDMIA
         //ThumbInstGen("101101100101x000"), // SETEND
     }};

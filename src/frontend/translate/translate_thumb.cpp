@@ -515,17 +515,38 @@ struct ThumbTranslatorVisitor final {
         }
         // PUSH <reg_list>
         // reg_list cannot encode for R15.
-        u32 num_bytes_to_push = static_cast<u32>(4 * Common::BitCount(reg_list));
+        const u32 num_bytes_to_push = static_cast<u32>(4 * Common::BitCount(reg_list));
         const auto final_address = ir.Sub(ir.GetRegister(Reg::SP), ir.Imm32(num_bytes_to_push));
         auto address = final_address;
         for (size_t i = 0; i < 16; i++) {
             if (Common::Bit(i, reg_list)) {
+                // TODO: Deal with alignment
                 auto Ri = ir.GetRegister(static_cast<Reg>(i));
                 ir.WriteMemory32(address, Ri);
                 address = ir.Add(address, ir.Imm32(4));
             }
         }
         ir.SetRegister(Reg::SP, final_address);
+        // TODO(optimization): Possible location for an RSB push.
+        return true;
+    }
+
+    bool thumb16_POP(bool P, RegList reg_list) {
+        if (P) reg_list |= 1 << 15;
+        if (Common::BitCount(reg_list) < 1) {
+            return UnpredictableInstruction();
+        }
+        // POP <reg_list>
+        auto address = ir.GetRegister(Reg::SP);
+        for (size_t i = 0; i < 15; i++) {
+            if (Common::Bit(i, reg_list)) {
+                // TODO: Deal with alignment
+                auto data = ir.ReadMemory32(address);
+                ir.SetRegister(static_cast<Reg>(i), data);
+                address = ir.Add(address, ir.Imm32(4));
+            }
+        }
+        ir.SetRegister(Reg::SP, address);
         // TODO(optimization): Possible location for an RSB push.
         return true;
     }
