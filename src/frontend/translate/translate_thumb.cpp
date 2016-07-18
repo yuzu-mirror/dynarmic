@@ -476,12 +476,42 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    bool thumb16_STR_imm_t1(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5 << 2;
+        // STR <Rt>, [<Rn>, #<imm>]
+        // Rt cannot encode R15.
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.GetRegister(t);
+        ir.WriteMemory32(address, data);
+        return true;
+    }
+
     bool thumb16_LDR_imm_t1(Imm5 imm5, Reg n, Reg t) {
         u32 imm32 = imm5 << 2;
-        // LDR <Rt>, [<Rn>, #<imm>}
+        // LDR <Rt>, [<Rn>, #<imm>]
         // Rt cannot encode R15.
         auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
         auto data = ir.ReadMemory32(address);
+        ir.SetRegister(t, data);
+        return true;
+    }
+
+    bool thumb16_STRB_imm(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5;
+        // STRB <Rt>, [<Rn>, #<imm>]
+        // Rt cannot encode R15.
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.LeastSignificantByte(ir.GetRegister(t));
+        ir.WriteMemory8(address, data);
+        return true;
+    }
+
+    bool thumb16_LDRB_imm(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5;
+        // LDRB <Rt>, [<Rn>, #<imm>]
+        // Rt cannot encode R15.
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(address));
         ir.SetRegister(t, data);
         return true;
     }
@@ -500,6 +530,28 @@ struct ThumbTranslatorVisitor final {
         // LDRH <Rt>, [<Rn>, #<imm5>]
         auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
         auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(address));
+        ir.SetRegister(t, data);
+        return true;
+    }
+
+    bool thumb16_STR_imm_t2(Reg t, Imm5 imm5) {
+        u32 imm32 = imm5 << 2;
+        Reg n = Reg::SP;
+        // STR <Rt>, [<Rn>, #<imm>]
+        // Rt cannot encode R15.
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.GetRegister(t);
+        ir.WriteMemory32(address, data);
+        return true;
+    }
+
+    bool thumb16_LDR_imm_t2(Reg t, Imm5 imm5) {
+        u32 imm32 = imm5 << 2;
+        Reg n = Reg::SP;
+        // LDR <Rt>, [<Rn>, #<imm>]
+        // Rt cannot encode R15.
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.ReadMemory32(address);
         ir.SetRegister(t, data);
         return true;
     }

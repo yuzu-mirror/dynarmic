@@ -259,9 +259,24 @@ public:
         return Common::StringFromFormat("ldrsh %s, [%s, %s]", RegStr(t), RegStr(n), RegStr(m));
     }
 
+    std::string thumb16_STR_imm_t1(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5 << 2;
+        return Common::StringFromFormat("str %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
+    }
+
     std::string thumb16_LDR_imm_t1(Imm5 imm5, Reg n, Reg t) {
         u32 imm32 = imm5 << 2;
         return Common::StringFromFormat("ldr %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
+    }
+
+    std::string thumb16_STRB_imm(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5;
+        return Common::StringFromFormat("strb %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
+    }
+
+    std::string thumb16_LDRB_imm(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5;
+        return Common::StringFromFormat("ldrb %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
     }
 
     std::string thumb16_STRH_imm(Imm5 imm5, Reg n, Reg t) {
@@ -272,6 +287,16 @@ public:
     std::string thumb16_LDRH_imm(Imm5 imm5, Reg n, Reg t) {
         u32 imm32 = imm5 << 1;
         return Common::StringFromFormat("ldrh %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
+    }
+
+    std::string thumb16_STR_imm_t2(Reg t, Imm5 imm5) {
+        u32 imm32 = imm5 << 2;
+        return Common::StringFromFormat("str %s, [sp, #%u]", RegStr(t), imm32);
+    }
+
+    std::string thumb16_LDR_imm_t2(Reg t, Imm5 imm5) {
+        u32 imm32 = imm5 << 2;
+        return Common::StringFromFormat("ldr %s, [sp, #%u]", RegStr(t), imm32);
     }
 
     std::string thumb16_ADR(Reg d, Imm8 imm8) {
