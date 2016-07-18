@@ -271,9 +271,9 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         ThumbInstGen("011xxxxxxxxxxxxx"), // LDR(B)/STR(B) Rd, [Rn, #]
         ThumbInstGen("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
         ThumbInstGen("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
-        ThumbInstGen("10110100xxxxxxxx",  // PUSH (R = 0)
+        ThumbInstGen("1011010xxxxxxxxx",  // PUSH
                      [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
-        ThumbInstGen("10111100xxxxxxxx", // POP (R = 0)
+        ThumbInstGen("10111100xxxxxxxx",  // POP (P = 0)
                      [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
         ThumbInstGen("1100xxxxxxxxxxxx"), // STMIA/LDMIA
         //ThumbInstGen("101101100101x000"), // SETEND
@@ -294,12 +294,12 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     }
 
     SECTION("long blocks") {
-        FuzzJitThumb(1024, 1025, 25, instruction_select);
+        FuzzJitThumb(1024, 1025, 2, instruction_select);
     }
 }
 
 TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
-    const std::array<ThumbInstGen, 7> instructions = {{
+    const std::array<ThumbInstGen, 8> instructions = {{
         ThumbInstGen("01000111xmmmm000",  // BLX/BX
                      [](u16 inst){
                          u32 Rm = Dynarmic::Common::Bits<3, 6>(inst);
@@ -315,6 +315,7 @@ TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
                          return c < 0b1110; // Don't want SWI or undefined instructions.
                      }),
         ThumbInstGen("10110110011x0xxx"), // CPS
+        ThumbInstGen("10111101xxxxxxxx"), // POP (R = 1)
     }};
 
     auto instruction_select = [&]() -> u16 {

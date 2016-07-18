@@ -137,8 +137,8 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
         //INST(&V::thumb16_BKPT,           "BKPT",                     "10111110xxxxxxxx"), // v5
 
         // Store/Load multiple registers
-        //INST(&V::thumb16_STMIA,          "STMIA",                    "11000nnnxxxxxxxx"),
-        //INST(&V::thumb16_LDMIA,          "LDMIA",                    "11001nnnxxxxxxxx"),
+        INST(&V::thumb16_STMIA,          "STMIA",                    "11000nnnxxxxxxxx"),
+        INST(&V::thumb16_LDMIA,          "LDMIA",                    "11001nnnxxxxxxxx"),
 
         // Branch instructions
         //INST(&V::thumb16_BX,             "BX (reg)",                 "010001110mmmm000"), // v4T

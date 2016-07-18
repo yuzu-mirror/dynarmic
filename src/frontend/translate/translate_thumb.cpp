@@ -661,9 +661,18 @@ struct ThumbTranslatorVisitor final {
                 address = ir.Add(address, ir.Imm32(4));
             }
         }
-        ir.SetRegister(Reg::SP, address);
-        // TODO(optimization): Possible location for an RSB push.
-        return true;
+        if (Common::Bit<15>(reg_list)) {
+            // TODO(optimization): Possible location for an RSB pop.
+            auto data = ir.ReadMemory32(address);
+            ir.LoadWritePC(data);
+            address = ir.Add(address, ir.Imm32(4));
+            ir.SetRegister(Reg::SP, address);
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        } else {
+            ir.SetRegister(Reg::SP, address);
+            return true;
+        }
     }
 
     bool thumb16_REV(Reg m, Reg d) {
@@ -693,6 +702,37 @@ struct ThumbTranslatorVisitor final {
         // Rd cannot encode R15.
         auto rev_half = ir.ByteReverseHalf(ir.LeastSignificantHalf(ir.GetRegister(m)));
         ir.SetRegister(d, ir.SignExtendHalfToWord(rev_half));
+        return true;
+    }
+
+    bool thumb16_STMIA(Reg n, RegList reg_list) {
+        // STM <Rn>!, <reg_list>
+        auto address = ir.GetRegister(n);
+        for (size_t i = 0; i < 8; i++) {
+            if (Common::Bit(i, reg_list)) {
+                auto Ri = ir.GetRegister(static_cast<Reg>(i));
+                ir.WriteMemory32(address, Ri);
+                address = ir.Add(address, ir.Imm32(4));
+            }
+        }
+        ir.SetRegister(n, address);
+        return true;
+    }
+
+    bool thumb16_LDMIA(Reg n, RegList reg_list) {
+        bool write_back = !Dynarmic::Common::Bit(static_cast<size_t>(n), reg_list);
+        // STM <Rn>!, <reg_list>
+        auto address = ir.GetRegister(n);
+        for (size_t i = 0; i < 8; i++) {
+            if (Common::Bit(i, reg_list)) {
+                auto data = ir.ReadMemory32(address);
+                ir.SetRegister(static_cast<Reg>(i), data);
+                address = ir.Add(address, ir.Imm32(4));
+            }
+        }
+        if (write_back) {
+            ir.SetRegister(n, address);
+        }
         return true;
     }
 
