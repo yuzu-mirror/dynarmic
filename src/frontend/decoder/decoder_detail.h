@@ -98,6 +98,10 @@ private:
     template<typename FnT, FnT fn>
     struct VisitorCaller;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4800)
+#endif
     template<typename Visitor, typename ...Args, typename CallRetT, CallRetT (Visitor::*fn)(Args...)>
     struct VisitorCaller<CallRetT(Visitor::*)(Args...), fn> {
         template<size_t ...iota>
@@ -110,6 +114,9 @@ private:
             };
         }
     };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 public:
     /**

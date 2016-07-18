@@ -527,7 +527,7 @@ enum class ThumbInstSize {
     Thumb16, Thumb32
 };
 
-static std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRead32FuncType memory_read_32) {
+std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRead32FuncType memory_read_32) {
     u32 first_part = (*memory_read_32)(arm_pc & 0xFFFFFFFC);
     if ((arm_pc & 0x2) != 0)
         first_part >>= 16;

@@ -10,6 +10,11 @@
 
 #include "common/common_types.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4554)
+#endif
+
 namespace Dynarmic {
 namespace Common {
 
@@ -35,7 +40,7 @@ template<size_t bit_position, typename T>
 constexpr bool Bit(const T value) {
     static_assert(bit_position < BitSize<T>(), "bit_position must be smaller than size of T");
 
-    return (value >> bit_position) & 1;
+    return ((value >> bit_position) & 1) != 0;
 }
 
 /// Sign-extends a value that has NBits bits to the full bitwidth of type T.
@@ -53,3 +58,7 @@ inline T SignExtend(const T value) {
 
 } // namespace Common
 } // namespace Dynarmic
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

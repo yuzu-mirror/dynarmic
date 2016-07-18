@@ -662,6 +662,9 @@ static void LnSWoUB(ScaledRegisterOffset)(ARMul_State* cpu, unsigned int inst, u
     virt_addr = addr;
 }
 
+#ifdef _MSC_VER
+#pragma warning(disable:4200)
+#endif
 struct arm_inst {
     unsigned int idx;
     unsigned int cond;

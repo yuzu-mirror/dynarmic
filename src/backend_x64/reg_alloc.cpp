@@ -37,7 +37,7 @@ static Gen::OpArg SpillToOpArg(HostLoc loc) {
     ASSERT(HostLocIsSpill(loc));
 
     size_t i = static_cast<size_t>(loc) - static_cast<size_t>(HostLoc::FirstSpill);
-    return Gen::MDisp(Gen::R15, offsetof(JitState, Spill) + i * sizeof(u32));
+    return Gen::MDisp(Gen::R15, static_cast<int>(offsetof(JitState, Spill) + i * sizeof(u32)));
 }
 
 Gen::X64Reg RegAlloc::DefRegister(IR::Value* def_value, std::initializer_list<HostLoc> desired_locations) {

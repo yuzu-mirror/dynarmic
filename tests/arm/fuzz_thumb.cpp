@@ -189,7 +189,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 
         // Run interpreter
         write_records.clear();
-        interp.NumInstrsToExecute = instructions_to_execute_count;
+        interp.NumInstrsToExecute = static_cast<unsigned>(instructions_to_execute_count);
         InterpreterMainLoop(&interp);
         auto interp_write_records = write_records;
         {
@@ -199,7 +199,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 
         // Run jit
         write_records.clear();
-        jit.Run(instructions_to_execute_count);
+        jit.Run(static_cast<unsigned>(instructions_to_execute_count));
         auto jit_write_records = write_records;
 
         // Compare

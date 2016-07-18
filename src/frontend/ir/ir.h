@@ -81,7 +81,7 @@ public:
 protected:
     friend class Inst;
 
-    Value(Opcode op_) : op(op_) {}
+    explicit Value(Opcode op_) : op(op_) {}
 
     void AddUse(ValuePtr owner);
     void RemoveUse(ValuePtr owner);
@@ -98,7 +98,7 @@ private:
     };
     std::list<Use> uses;
 
-    intptr_t tag;
+    intptr_t tag = 0;
 };
 
 /// Representation of a u1 immediate.

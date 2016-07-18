@@ -80,13 +80,13 @@ struct ArmTranslatorVisitor final {
         return true;
     }
 
-    u32 rotr(u32 x, int shift) {
+    static u32 rotr(u32 x, int shift) {
         shift &= 31;
         if (!shift) return x;
         return (x >> shift) | (x << (32 - shift));
     }
 
-    u32 ArmExpandImm(int rotate, Imm8 imm8) {
+    static u32 ArmExpandImm(int rotate, Imm8 imm8) {
         return rotr(static_cast<u32>(imm8), rotate*2);
     }
 

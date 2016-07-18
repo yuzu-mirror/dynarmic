@@ -10,7 +10,7 @@
 namespace Common {
 inline u16 swap16(u16 data) {return (data >> 8) | (data << 8);}
 inline u32 swap32(u32 data) {return (swap16(data) << 16) | swap16(data >> 16);}
-inline u64 swap64(u64 data) {return ((u64)swap32(data) << 32) | swap32(data >> 32);}
+inline u64 swap64(u64 data) {return ((u64)swap32((u32)data) << 32) | (u64)swap32(data >> 32);}
 }
 
 ARMul_State::ARMul_State(PrivilegeMode initial_mode)

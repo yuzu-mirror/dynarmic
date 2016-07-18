@@ -22,7 +22,8 @@ Routines::Routines() {
 }
 
 size_t Routines::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const {
-    ASSERT(cycles_to_run <= std::numeric_limits<decltype(jit_state->cycles_remaining)>::max());
+    constexpr size_t max_cycles_to_run = static_cast<size_t>(std::numeric_limits<decltype(jit_state->cycles_remaining)>::max());
+    ASSERT(cycles_to_run <= max_cycles_to_run);
 
     jit_state->cycles_remaining = cycles_to_run;
     run_code(jit_state, basic_block);

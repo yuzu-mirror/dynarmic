@@ -31,7 +31,7 @@ set(HEADERS
     skyeye_interpreter/skyeye_common/vfp/vfp_helper.h
     )
 
-source_group(dynarmic_tests FILES ${SRCS} ${HEADERS})
+create_directory_groups(${SRCS} ${HEADERS})
 add_executable(dynarmic_tests ${SRCS})
 target_link_libraries(dynarmic_tests dynarmic)
 set_target_properties(dynarmic_tests PROPERTIES LINKER_LANGUAGE CXX)

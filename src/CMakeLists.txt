@@ -48,6 +48,6 @@ set(HEADERS
     interface/interface.h
     )
 
-source_group(dynarmic FILES ${SRCS} ${HEADERS})
+create_directory_groups(${SRCS} ${HEADERS})
 add_library(dynarmic STATIC ${SRCS} ${HEADERS})
 set_target_properties(dynarmic PROPERTIES LINKER_LANGUAGE CXX)
