@@ -789,7 +789,7 @@ struct ThumbTranslatorVisitor final {
     }
 
     bool thumb32_BL_imm(Imm11 hi, Imm11 lo) {
-        s32 imm32 = Common::SignExtend<32, s32>((hi << 12) | (lo << 1));
+        s32 imm32 = Common::SignExtend<23, s32>((hi << 12) | (lo << 1));
         // BL <label>
         ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.arm_pc + 4) | 1));
         auto new_location = ir.current_location;
@@ -799,7 +799,7 @@ struct ThumbTranslatorVisitor final {
     }
 
     bool thumb32_BLX_imm(Imm11 hi, Imm11 lo) {
-        s32 imm32 = Common::SignExtend<32, s32>((hi << 12) | (lo << 1));
+        s32 imm32 = Common::SignExtend<23, s32>((hi << 12) | (lo << 1));
         if ((lo & 1) != 0) {
             return UnpredictableInstruction();
         }

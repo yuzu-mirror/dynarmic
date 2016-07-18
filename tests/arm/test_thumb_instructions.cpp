@@ -152,3 +152,19 @@ TEST_CASE( "thumb: bl +#234584", "[thumb]" ) {
     REQUIRE( jit.Regs()[15] == 0x39458 );
     REQUIRE( jit.Cpsr() == 0x00000030 ); // Thumb, User-mode
 }
+
+TEST_CASE( "thumb: bl -#42", "[thumb]" ) {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xF7FF; code_mem[1] = 0xFFE9; // bl -#42
+    code_mem[2] = 0xE7FE; // b +#0
+
+    jit.Regs()[15] = 0; // PC = 0
+    jit.Cpsr() = 0x00000030; // Thumb, User-mode
+
+    jit.Run(1);
+
+    REQUIRE( jit.Regs()[14] == (0x4 | 1) );
+    REQUIRE( jit.Regs()[15] == 0xFFFFFFD6 );
+    REQUIRE( jit.Cpsr() == 0x00000030 ); // Thumb, User-mode
+}
