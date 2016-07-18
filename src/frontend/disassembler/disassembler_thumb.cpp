@@ -244,6 +244,11 @@ public:
         return Common::StringFromFormat("ldr %s, [%s, #%u]", RegStr(t), RegStr(n), imm32);
     }
 
+    std::string thumb16_ADR(Reg d, Imm8 imm8) {
+        u32 imm32 = imm8 << 2;
+        return Common::StringFromFormat("adr %s, +#%u", RegStr(d), imm32);
+    }
+
     std::string thumb16_SXTH(Reg m, Reg d) {
         return Common::StringFromFormat("sxth %s, %s", RegStr(d), RegStr(m));
     }

@@ -9,7 +9,7 @@
 #include "frontend/decoder/arm.h"
 #include "frontend/ir/ir.h"
 #include "frontend/ir/ir_emitter.h"
-#include "translate.h"
+#include "frontend/translate/translate.h"
 
 namespace Dynarmic {
 namespace Arm {

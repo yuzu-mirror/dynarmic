@@ -56,7 +56,7 @@ private:
 };
 
 template <typename V>
-const std::array<Thumb16Matcher<V>, 43> g_thumb16_instruction_table = {
+const std::array<Thumb16Matcher<V>, 44> g_thumb16_instruction_table = {
 
 #define INST(fn, name, bitstring) detail::detail<Thumb16Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
 
@@ -113,7 +113,7 @@ const std::array<Thumb16Matcher<V>, 43> g_thumb16_instruction_table = {
     //INST(&V::thumb16_LDR_sp,         "LDR (SP)",                 "10011dddvvvvvvvv"),
 
     // Generate relative address instruction
-    //INST(&V::thumb16_ADR,            "ADR",                      "10100dddvvvvvvvv"),
+    INST(&V::thumb16_ADR,            "ADR",                      "10100dddvvvvvvvv"),
     //INST(&V::thumb16_ADD_sp,         "ADD (relative to SP)",     "10101dddvvvvvvvv"),
 
     // Miscellaneous 16-bit instructions

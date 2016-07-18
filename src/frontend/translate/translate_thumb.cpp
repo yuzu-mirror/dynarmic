@@ -10,7 +10,7 @@
 #include "frontend/arm_types.h"
 #include "frontend/decoder/thumb16.h"
 #include "frontend/ir/ir_emitter.h"
-#include "translate.h"
+#include "frontend/translate/translate.h"
 
 namespace Dynarmic {
 namespace Arm {
@@ -437,6 +437,15 @@ struct ThumbTranslatorVisitor final {
         auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
         auto data = ir.ReadMemory32(address);
         ir.SetRegister(t, data);
+        return true;
+    }
+
+    bool thumb16_ADR(Reg d, Imm8 imm8) {
+        u32 imm32 = imm8 << 2;
+        // ADR <Rd>, <label>
+        // Rd cannot encode R15.
+        auto result = ir.Imm32(ir.AlignPC(4) + imm32);
+        ir.SetRegister(d, result);
         return true;
     }
 
