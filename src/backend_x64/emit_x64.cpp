@@ -922,10 +922,16 @@ void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::Loca
 }
 
 void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
-    ASSERT_MSG(terminal.next.TFlag == initial_location.TFlag, "Unimplemented");
     ASSERT_MSG(terminal.next.EFlag == initial_location.EFlag, "Unimplemented");
 
     code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.arm_pc));
+    if (terminal.next.TFlag != initial_location.TFlag) {
+        if (terminal.next.TFlag) {
+            code->OR(32, MJitStateCpsr(), Imm32(1 << 5));
+        } else {
+            code->AND(32, MJitStateCpsr(), Imm32(~(1 << 5)));
+        }
+    }
     routines->GenReturnFromRunCode(code); // TODO: Check cycles, Properly do a link
 }
 

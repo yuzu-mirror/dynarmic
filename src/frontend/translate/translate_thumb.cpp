@@ -10,6 +10,7 @@
 #include "common/bit_util.h"
 #include "frontend/arm_types.h"
 #include "frontend/decoder/thumb16.h"
+#include "frontend/decoder/thumb32.h"
 #include "frontend/ir/ir_emitter.h"
 #include "frontend/translate/translate.h"
 
@@ -786,6 +787,34 @@ struct ThumbTranslatorVisitor final {
         ir.SetTerm(IR::Term::LinkBlock{next_location});
         return false;
     }
+
+    bool thumb32_BL_imm(Imm11 hi, Imm11 lo) {
+        s32 imm32 = Common::SignExtend<32, s32>((hi << 12) | (lo << 1));
+        // BL <label>
+        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.arm_pc + 4) | 1));
+        auto new_location = ir.current_location;
+        new_location.arm_pc = ir.PC() + imm32;
+        ir.SetTerm(IR::Term::LinkBlock{new_location});
+        return false;
+    }
+
+    bool thumb32_BLX_imm(Imm11 hi, Imm11 lo) {
+        s32 imm32 = Common::SignExtend<32, s32>((hi << 12) | (lo << 1));
+        if ((lo & 1) != 0) {
+            return UnpredictableInstruction();
+        }
+        // BLX <label>
+        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.arm_pc + 4) | 1));
+        auto new_location = ir.current_location;
+        new_location.arm_pc = ir.AlignPC(4) + imm32;
+        new_location.TFlag = false;
+        ir.SetTerm(IR::Term::LinkBlock{new_location});
+        return false;
+    }
+
+    bool thumb32_UDF() {
+        return thumb16_UDF();
+    }
 };
 
 enum class ThumbInstSize {
@@ -835,13 +864,12 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
                 should_continue = visitor.thumb16_UDF();
             }
         } else {
-            /*auto decoder = DecodeThumb32<ThumbTranslatorVisitor>(thumb_instruction);
+            auto decoder = DecodeThumb32<ThumbTranslatorVisitor>(thumb_instruction);
             if (decoder) {
                 should_continue = decoder->call(visitor, thumb_instruction);
             } else {
                 should_continue = visitor.thumb32_UDF();
-            }*/
-            should_continue = visitor.InterpretThisInstruction();
+            }
         }
 
         visitor.ir.current_location.arm_pc += (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;

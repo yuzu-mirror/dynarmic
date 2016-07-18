@@ -120,3 +120,35 @@ TEST_CASE( "thumb: ldr r3, [r3, #28]", "[thumb]" ) {
     REQUIRE( jit.Regs()[15] == 2 );
     REQUIRE( jit.Cpsr() == 0x00000030 ); // Thumb, User-mode
 }
+
+TEST_CASE( "thumb: blx +#67712", "[thumb]" ) {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xF010; code_mem[1] = 0xEC3E; // blx +#67712
+    code_mem[2] = 0xE7FE; // b +#0
+
+    jit.Regs()[15] = 0; // PC = 0
+    jit.Cpsr() = 0x00000030; // Thumb, User-mode
+
+    jit.Run(1);
+
+    REQUIRE( jit.Regs()[14] == (0x4 | 1) );
+    REQUIRE( jit.Regs()[15] == 0x10880 );
+    REQUIRE( jit.Cpsr() == 0x00000010 ); // User-mode
+}
+
+TEST_CASE( "thumb: bl +#234584", "[thumb]" ) {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xF039; code_mem[1] = 0xFA2A; // bl +#234584
+    code_mem[2] = 0xE7FE; // b +#0
+
+    jit.Regs()[15] = 0; // PC = 0
+    jit.Cpsr() = 0x00000030; // Thumb, User-mode
+
+    jit.Run(1);
+
+    REQUIRE( jit.Regs()[14] == (0x4 | 1) );
+    REQUIRE( jit.Regs()[15] == 0x39458 );
+    REQUIRE( jit.Cpsr() == 0x00000030 ); // Thumb, User-mode
+}
