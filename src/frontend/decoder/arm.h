@@ -211,8 +211,8 @@ boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
         //INST(&V::arm_STRH_reg,    "STRH (reg)",          "cccc000pu0w0nnnndddd00001011mmmm"),
         //INST(&V::arm_STRHT,       "STRHT (A1)",          "----0000-110------------1011----"),
         //INST(&V::arm_STRHT,       "STRHT (A2)",          "----0000-010--------00001011----"),
-        //INST(&V::arm_STRT,        "STRT (A1)",           "----0100-010--------------------"),
-        //INST(&V::arm_STRT,        "STRT (A2)",           "----0110-010---------------0----"),
+        //INST(&V::arm_STRT,        "STRT (A1)",           "cccc0100u010nnnnttttvvvvvvvvvvvv"),
+        //INST(&V::arm_STRT,        "STRT (A2)",           "cccc0110u010nnnnttttvvvvvrr0mmmm"),
 
         // Load/Store Multiple instructions
         //INST(&V::arm_LDM,         "LDM",                 "cccc100pu0w1nnnnxxxxxxxxxxxxxxxx"), // all
