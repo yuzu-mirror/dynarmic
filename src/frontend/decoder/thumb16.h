@@ -141,12 +141,12 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
         INST(&V::thumb16_LDMIA,          "LDMIA",                    "11001nnnxxxxxxxx"),
 
         // Branch instructions
-        //INST(&V::thumb16_BX,             "BX (reg)",                 "010001110mmmm000"), // v4T
-        //INST(&V::thumb16_BLX,            "BLX (reg)",                "010001111mmmm000"), // v5T
+        INST(&V::thumb16_BX,             "BX",                       "010001110mmmm000"), // v4T
+        INST(&V::thumb16_BLX_reg,        "BLX (reg)",                "010001111mmmm000"), // v5T
         INST(&V::thumb16_UDF,            "UDF",                      "11011110--------"),
         INST(&V::thumb16_SVC,            "SVC",                      "11011111xxxxxxxx"),
-        //INST(&V::thumb16_B_cond,         "B (cond)",                 "1101ccccxxxxxxxx"),
-        //INST(&V::thumb16_B_imm,          "B (imm)",                  "11100xxxxxxxxxxx"),
+        INST(&V::thumb16_B_t1,           "B (T1)",                   "1101ccccvvvvvvvv"),
+        INST(&V::thumb16_B_t2,           "B (T2)",                   "11100vvvvvvvvvvv"),
         //INST(&V::thumb16_BLX_suffix,     "BLX (imm, suffix)",        "11101xxxxxxxxxx0"),
         //INST(&V::thumb16_BLX_prefix,     "BL/BLX (imm, prefix)",     "11110xxxxxxxxxxx"),
         //INST(&V::thumb16_BL_suffix,      "BL (imm, suffix)",         "11111xxxxxxxxxxx"),
@@ -156,8 +156,6 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
     };
 
     const auto matches_instruction = [instruction](const auto& matcher){ return matcher.Matches(instruction); };
-
-    assert(std::count_if(table.begin(), table.end(), matches_instruction) <= 1);
 
     auto iter = std::find_if(table.begin(), table.end(), matches_instruction);
     return iter != table.end() ? boost::make_optional<const Thumb16Matcher<V>&>(*iter) : boost::none;

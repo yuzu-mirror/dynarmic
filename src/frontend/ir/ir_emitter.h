@@ -43,6 +43,8 @@ public:
     void SetRegister(const Reg dest_reg, IR::ValuePtr value);
 
     void ALUWritePC(IR::ValuePtr value);
+    void BranchWritePC(IR::ValuePtr value);
+    void BXWritePC(IR::ValuePtr value);
     void LoadWritePC(IR::ValuePtr value);
     void CallSupervisor(IR::ValuePtr value);
 

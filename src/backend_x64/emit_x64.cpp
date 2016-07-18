@@ -722,6 +722,144 @@ void EmitX64::EmitAddCycles(size_t cycles) {
     code->SUB(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(static_cast<u32>(cycles)));
 }
 
+static CCFlags EmitCond(Gen::XEmitter* code, Arm::Cond cond) {
+    // TODO: This code is a quick copy-paste-and-quickly-modify job from a previous JIT. Clean this up.
+
+    auto NFlag = [code](X64Reg reg){
+        code->MOV(32, R(reg), MJitStateCpsr());
+        code->SHR(32, R(reg), Imm8(31));
+        code->AND(32, R(reg), Imm32(1));
+    };
+
+    auto ZFlag = [code](X64Reg reg){
+        code->MOV(32, R(reg), MJitStateCpsr());
+        code->SHR(32, R(reg), Imm8(30));
+        code->AND(32, R(reg), Imm32(1));
+    };
+
+    auto CFlag = [code](X64Reg reg){
+        code->MOV(32, R(reg), MJitStateCpsr());
+        code->SHR(32, R(reg), Imm8(29));
+        code->AND(32, R(reg), Imm32(1));
+    };
+
+    auto VFlag = [code](X64Reg reg){
+        code->MOV(32, R(reg), MJitStateCpsr());
+        code->SHR(32, R(reg), Imm8(28));
+        code->AND(32, R(reg), Imm32(1));
+    };
+
+    CCFlags cc;
+
+    switch (cond) {
+        case Arm::Cond::EQ: //z
+            ZFlag(RAX);
+            code->CMP(8, R(RAX), Imm8(0));
+            cc = CC_NE;
+            break;
+        case Arm::Cond::NE: //!z
+            ZFlag(RAX);
+            code->CMP(8, R(RAX), Imm8(0));
+            cc = CC_E;
+            break;
+        case Arm::Cond::CS: //c
+            CFlag(RBX);
+            code->CMP(8, R(RBX), Imm8(0));
+            cc = CC_NE;
+            break;
+        case Arm::Cond::CC: //!c
+            CFlag(RBX);
+            code->CMP(8, R(RBX), Imm8(0));
+            cc = CC_E;
+            break;
+        case Arm::Cond::MI: //n
+            NFlag(RCX);
+            code->CMP(8, R(RCX), Imm8(0));
+            cc = CC_NE;
+            break;
+        case Arm::Cond::PL: //!n
+            NFlag(RCX);
+            code->CMP(8, R(RCX), Imm8(0));
+            cc = CC_E;
+            break;
+        case Arm::Cond::VS: //v
+            VFlag(RDX);
+            code->CMP(8, R(RDX), Imm8(0));
+            cc = CC_NE;
+            break;
+        case Arm::Cond::VC: //!v
+            VFlag(RDX);
+            code->CMP(8, R(RDX), Imm8(0));
+            cc = CC_E;
+            break;
+        case Arm::Cond::HI: { //c & !z
+            const X64Reg tmp = RSI;
+            ZFlag(RAX);
+            code->MOVZX(64, 8, tmp, R(RAX));
+            CFlag(RBX);
+            code->CMP(8, R(RBX), R(tmp));
+            cc = CC_A;
+            break;
+        }
+        case Arm::Cond::LS: { //!c | z
+            const X64Reg tmp = RSI;
+            ZFlag(RAX);
+            code->MOVZX(64, 8, tmp, R(RAX));
+            CFlag(RBX);
+            code->CMP(8, R(RBX), R(tmp));
+            cc = CC_BE;
+            break;
+        }
+        case Arm::Cond::GE: { // n == v
+            const X64Reg tmp = RSI;
+            VFlag(RDX);
+            code->MOVZX(64, 8, tmp, R(RDX));
+            NFlag(RCX);
+            code->CMP(8, R(RCX), R(tmp));
+            cc = CC_E;
+            break;
+        }
+        case Arm::Cond::LT: { // n != v
+            const X64Reg tmp = RSI;
+            VFlag(RDX);
+            code->MOVZX(64, 8, tmp, R(RDX));
+            NFlag(RCX);
+            code->CMP(8, R(RCX), R(tmp));
+            cc = CC_NE;
+            break;
+        }
+        case Arm::Cond::GT: { // !z & (n == v)
+            const X64Reg tmp = RSI;
+            NFlag(RCX);
+            code->MOVZX(64, 8, tmp, R(RCX));
+            VFlag(RDX);
+            code->XOR(8, R(tmp), R(RDX));
+            ZFlag(RAX);
+            code->OR(8, R(tmp), R(RAX));
+            code->TEST(8, R(tmp), R(tmp));
+            cc = CC_Z;
+            break;
+        }
+        case Arm::Cond::LE: { // z | (n != v)
+            X64Reg tmp = RSI;
+            NFlag(RCX);
+            code->MOVZX(64, 8, tmp, R(RCX));
+            VFlag(RDX);
+            code->XOR(8, R(tmp), R(RDX));
+            ZFlag(RAX);
+            code->OR(8, R(tmp), R(RAX));
+            code->TEST(8, R(tmp), R(tmp));
+            cc = CC_NZ;
+            break;
+        }
+        default:
+            ASSERT_MSG(0, "Unknown cond %zu", static_cast<size_t>(cond));
+            break;
+    }
+
+    return cc;
+}
+
 void EmitX64::EmitCondPrelude(Arm::Cond cond,
                               boost::optional<Arm::LocationDescriptor> cond_failed,
                               Arm::LocationDescriptor initial_location) {
@@ -732,142 +870,10 @@ void EmitX64::EmitCondPrelude(Arm::Cond cond,
 
     ASSERT(cond_failed.is_initialized());
 
-    // TODO: This code is a quick copy-paste-and-quickly-modify job from a previous JIT. Clean this up.
-
-    auto NFlag = [this](X64Reg reg){
-        this->code->MOV(32, R(reg), MJitStateCpsr());
-        this->code->SHR(32, R(reg), Imm8(31));
-        this->code->AND(32, R(reg), Imm32(1));
-    };
-
-    auto ZFlag = [this](X64Reg reg){
-        this->code->MOV(32, R(reg), MJitStateCpsr());
-        this->code->SHR(32, R(reg), Imm8(30));
-        this->code->AND(32, R(reg), Imm32(1));
-    };
-
-    auto CFlag = [this](X64Reg reg){
-        this->code->MOV(32, R(reg), MJitStateCpsr());
-        this->code->SHR(32, R(reg), Imm8(29));
-        this->code->AND(32, R(reg), Imm32(1));
-    };
-
-    auto VFlag = [this](X64Reg reg){
-        this->code->MOV(32, R(reg), MJitStateCpsr());
-        this->code->SHR(32, R(reg), Imm8(28));
-        this->code->AND(32, R(reg), Imm32(1));
-    };
-
-    CCFlags cc;
-
-    switch (cond) {
-    case Arm::Cond::EQ: //z
-        ZFlag(RAX);
-        code->CMP(8, R(RAX), Imm8(0));
-        cc = CC_NE;
-        break;
-    case Arm::Cond::NE: //!z
-        ZFlag(RAX);
-        code->CMP(8, R(RAX), Imm8(0));
-        cc = CC_E;
-        break;
-    case Arm::Cond::CS: //c
-        CFlag(RBX);
-        code->CMP(8, R(RBX), Imm8(0));
-        cc = CC_NE;
-        break;
-    case Arm::Cond::CC: //!c
-        CFlag(RBX);
-        code->CMP(8, R(RBX), Imm8(0));
-        cc = CC_E;
-        break;
-    case Arm::Cond::MI: //n
-        NFlag(RCX);
-        code->CMP(8, R(RCX), Imm8(0));
-        cc = CC_NE;
-        break;
-    case Arm::Cond::PL: //!n
-        NFlag(RCX);
-        code->CMP(8, R(RCX), Imm8(0));
-        cc = CC_E;
-        break;
-    case Arm::Cond::VS: //v
-        VFlag(RDX);
-        code->CMP(8, R(RDX), Imm8(0));
-        cc = CC_NE;
-        break;
-    case Arm::Cond::VC: //!v
-        VFlag(RDX);
-        code->CMP(8, R(RDX), Imm8(0));
-        cc = CC_E;
-        break;
-    case Arm::Cond::HI: { //c & !z
-        const X64Reg tmp = RSI;
-        ZFlag(RAX);
-        code->MOVZX(64, 8, tmp, R(RAX));
-        CFlag(RBX);
-        code->CMP(8, R(RBX), R(tmp));
-        cc = CC_A;
-        break;
-    }
-    case Arm::Cond::LS: { //!c | z
-        const X64Reg tmp = RSI;
-        ZFlag(RAX);
-        code->MOVZX(64, 8, tmp, R(RAX));
-        CFlag(RBX);
-        code->CMP(8, R(RBX), R(tmp));
-        cc = CC_BE;
-        break;
-    }
-    case Arm::Cond::GE: { // n == v
-        const X64Reg tmp = RSI;
-        VFlag(RDX);
-        code->MOVZX(64, 8, tmp, R(RDX));
-        NFlag(RCX);
-        code->CMP(8, R(RCX), R(tmp));
-        cc = CC_E;
-        break;
-    }
-    case Arm::Cond::LT: { // n != v
-        const X64Reg tmp = RSI;
-        VFlag(RDX);
-        code->MOVZX(64, 8, tmp, R(RDX));
-        NFlag(RCX);
-        code->CMP(8, R(RCX), R(tmp));
-        cc = CC_NE;
-        break;
-    }
-    case Arm::Cond::GT: { // !z & (n == v)
-        const X64Reg tmp = RSI;
-        NFlag(RCX);
-        code->MOVZX(64, 8, tmp, R(RCX));
-        VFlag(RDX);
-        code->XOR(8, R(tmp), R(RDX));
-        ZFlag(RAX);
-        code->OR(8, R(tmp), R(RAX));
-        code->TEST(8, R(tmp), R(tmp));
-        cc = CC_Z;
-        break;
-    }
-    case Arm::Cond::LE: { // z | (n != v)
-        X64Reg tmp = RSI;
-        NFlag(RCX);
-        code->MOVZX(64, 8, tmp, R(RCX));
-        VFlag(RDX);
-        code->XOR(8, R(tmp), R(RDX));
-        ZFlag(RAX);
-        code->OR(8, R(tmp), R(RAX));
-        code->TEST(8, R(tmp), R(tmp));
-        cc = CC_NZ;
-        break;
-    }
-    default:
-        ASSERT_MSG(0, "Unknown cond %zu", static_cast<size_t>(cond));
-        break;
-    }
+    CCFlags cc = EmitCond(code, cond);
 
     // TODO: Improve, maybe.
-    auto fixup = code->J_CC(cc, true);
+    auto fixup = code->J_CC(cc);
     EmitAddCycles(1); // TODO: Proper cycle count
     EmitTerminalLinkBlock(IR::Term::LinkBlock{cond_failed.get()}, initial_location);
     code->SetJumpTarget(fixup);
@@ -932,7 +938,11 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescript
 }
 
 void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location) {
-    ASSERT_MSG(0, "Unimplemented");
+    CCFlags cc = EmitCond(code, terminal.if_);
+    auto fixup = code->J_CC(cc);
+    EmitTerminal(terminal.else_, initial_location);
+    code->SetJumpTarget(fixup);
+    EmitTerminal(terminal.then_, initial_location);
 }
 
 void EmitX64::ClearCache() {

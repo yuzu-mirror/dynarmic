@@ -57,6 +57,10 @@ void IREmitter::SetRegister(const Reg reg, IR::ValuePtr value) {
 void IREmitter::ALUWritePC(IR::ValuePtr value) {
     // This behaviour is ARM version-dependent.
     // The below implementation is for ARMv6k
+    BranchWritePC(value);
+}
+
+void IREmitter::BranchWritePC(IR::ValuePtr value) {
     if (!current_location.TFlag) {
         auto new_pc = And(value, Imm32(0xFFFFFFFC));
         Inst(IR::Opcode::SetRegister, { RegRef(Reg::PC), new_pc });
@@ -66,10 +70,14 @@ void IREmitter::ALUWritePC(IR::ValuePtr value) {
     }
 }
 
+void IREmitter::BXWritePC(IR::ValuePtr value) {
+    Inst(IR::Opcode::BXWritePC, {value});
+}
+
 void IREmitter::LoadWritePC(IR::ValuePtr value) {
     // This behaviour is ARM version-dependent.
     // The below implementation is for ARMv6k
-    Inst(IR::Opcode::BXWritePC, {value});
+    BXWritePC(value);
 }
 
 void IREmitter::CallSupervisor(IR::ValuePtr value) {

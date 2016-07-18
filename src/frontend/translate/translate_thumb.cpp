@@ -740,10 +740,50 @@ struct ThumbTranslatorVisitor final {
         return InterpretThisInstruction();
     }
 
+    bool thumb16_BX(Reg m) {
+        // BX <Rm>
+        ir.BXWritePC(ir.GetRegister(m));
+        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        return false;
+    }
+
+    bool thumb16_BLX_reg(Reg m) {
+        // BLX <Rm>
+        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.arm_pc + 2) | 1));
+        ir.BXWritePC(ir.GetRegister(m));
+        // TODO(optimization): Possible push RSB location
+        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        return false;
+    }
+
     bool thumb16_SVC(Imm8 imm8) {
         u32 imm32 = imm8;
         // SVC #<imm8>
         ir.CallSupervisor(ir.Imm32(imm32));
+        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        return false;
+    }
+
+    bool thumb16_B_t1(Cond cond, Imm8 imm8) {
+        s32 imm32 = Common::SignExtend<9, s32>(imm8 << 1) + 4;
+        if (cond == Cond::AL) {
+            return thumb16_UDF();
+        }
+        // B<cond> <label>
+        auto then_location = ir.current_location;
+        then_location.arm_pc += imm32;
+        auto else_location = ir.current_location;
+        else_location.arm_pc += 2;
+        ir.SetTerm(IR::Term::If{cond, IR::Term::LinkBlock{then_location}, IR::Term::LinkBlock{else_location}});
+        return false;
+    }
+
+    bool thumb16_B_t2(Imm11 imm11) {
+        s32 imm32 = Common::SignExtend<12, s32>(imm11 << 1) + 4;
+        // B <label>
+        auto next_location = ir.current_location;
+        next_location.arm_pc += imm32;
+        ir.SetTerm(IR::Term::LinkBlock{next_location});
         return false;
     }
 };

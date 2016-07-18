@@ -380,6 +380,13 @@ public:
         return Common::StringFromFormat("ldm %s%s, %s", RegStr(n), write_back ? "!" : "", RegListStr(reg_list).c_str());
     }
 
+    std::string thumb16_BX(Reg m) {
+        return Common::StringFromFormat("bx %s", RegStr(m));
+    }
+
+    std::string thumb16_BLX_reg(Reg m) {
+        return Common::StringFromFormat("blx %s", RegStr(m));
+    }
 
     std::string thumb16_UDF() {
         return Common::StringFromFormat("udf");
@@ -387,6 +394,16 @@ public:
 
     std::string thumb16_SVC(Imm8 imm8) {
         return Common::StringFromFormat("svc #%u", imm8);
+    }
+
+    std::string thumb16_B_t1(Cond cond, Imm8 imm8) {
+        s32 imm32 = Common::SignExtend<9, s32>(imm8 << 1) + 4;
+        return Common::StringFromFormat("b%s %s#%u", CondStr(cond), SignStr(imm32), abs(imm32));
+    }
+
+    std::string thumb16_B_t2(Imm11 imm11) {
+        s32 imm32 = Common::SignExtend<12, s32>(imm11 << 1) + 4;
+        return Common::StringFromFormat("b %s#%u", SignStr(imm32), abs(imm32));
     }
 };
 
