@@ -249,6 +249,21 @@ public:
         return Common::StringFromFormat("adr %s, +#%u", RegStr(d), imm32);
     }
 
+    std::string thumb16_ADD_sp_t1(Reg d, Imm8 imm8) {
+        u32 imm32 = imm8 << 2;
+        return Common::StringFromFormat("add %s, sp, #%u", RegStr(d), imm32);
+    }
+
+    std::string thumb16_ADD_sp_t2(Imm7 imm7) {
+        u32 imm32 = imm7 << 2;
+        return Common::StringFromFormat("add sp, sp, #%u", imm32);
+    }
+
+    std::string thumb16_SUB_sp(Imm7 imm7) {
+        u32 imm32 = imm7 << 2;
+        return Common::StringFromFormat("sub sp, sp, #%u", imm32);
+    }
+
     std::string thumb16_SXTH(Reg m, Reg d) {
         return Common::StringFromFormat("sxth %s, %s", RegStr(d), RegStr(m));
     }

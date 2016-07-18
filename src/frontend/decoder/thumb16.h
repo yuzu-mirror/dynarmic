@@ -113,13 +113,13 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
         //INST(&V::thumb16_STR_sp,         "STR (SP)",                 "10010dddvvvvvvvv"),
         //INST(&V::thumb16_LDR_sp,         "LDR (SP)",                 "10011dddvvvvvvvv"),
 
-        // Generate relative address instruction
+        // Generate relative address instructions
         INST(&V::thumb16_ADR,            "ADR",                      "10100dddvvvvvvvv"),
-        //INST(&V::thumb16_ADD_sp,         "ADD (relative to SP)",     "10101dddvvvvvvvv"),
+        INST(&V::thumb16_ADD_sp_t1,      "ADD (SP plus imm, T1)",    "10101dddvvvvvvvv"),
+        INST(&V::thumb16_ADD_sp_t2,      "ADD (SP plus imm, T2)",    "101100000vvvvvvv"), // v4T
+        INST(&V::thumb16_SUB_sp,         "SUB (SP minus imm)",       "101100001vvvvvvv"), // v4T
 
         // Miscellaneous 16-bit instructions
-        //INST(&V::thumb16_ADD_spsp,       "ADD (imm to SP)",          "101100000vvvvvvv"), // v4T
-        //INST(&V::thumb16_SUB_spsp,       "SUB (imm from SP)",        "101100001vvvvvvv"), // v4T
         INST(&V::thumb16_SXTH,           "SXTH",                     "1011001000mmmddd"), // v6
         INST(&V::thumb16_SXTB,           "SXTB",                     "1011001001mmmddd"), // v6
         INST(&V::thumb16_UXTH,           "UXTH",                     "1011001010mmmddd"), // v6

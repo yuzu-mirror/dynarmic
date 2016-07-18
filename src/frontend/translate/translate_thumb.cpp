@@ -449,6 +449,32 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    bool thumb16_ADD_sp_t1(Reg d, Imm8 imm8) {
+        u32 imm32 = imm8 << 2;
+        // ADD <Rd>, SP, #<imm>
+        auto result = ir.AddWithCarry(ir.GetRegister(Reg::SP), ir.Imm32(imm32), ir.Imm1(0));
+        ir.SetRegister(d, result.result);
+        return true;
+    }
+
+    bool thumb16_ADD_sp_t2(Imm7 imm7) {
+        u32 imm32 = imm7 << 2;
+        Reg d = Reg::SP;
+        // ADD SP, SP, #<imm>
+        auto result = ir.AddWithCarry(ir.GetRegister(Reg::SP), ir.Imm32(imm32), ir.Imm1(0));
+        ir.SetRegister(d, result.result);
+        return true;
+    }
+
+    bool thumb16_SUB_sp(Imm7 imm7) {
+        u32 imm32 = imm7 << 2;
+        Reg d = Reg::SP;
+        // SUB SP, SP, #<imm>
+        auto result = ir.SubWithCarry(ir.GetRegister(Reg::SP), ir.Imm32(imm32), ir.Imm1(1));
+        ir.SetRegister(d, result.result);
+        return true;
+    }
+
     bool thumb16_SXTH(Reg m, Reg d) {
         // SXTH <Rd>, <Rm>
         // Rd cannot encode R15.

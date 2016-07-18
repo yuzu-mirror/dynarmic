@@ -39,6 +39,7 @@ inline Reg operator+(Reg reg, int number) {
 using Imm3 = u32;
 using Imm4 = u32;
 using Imm5 = u32;
+using Imm7 = u32;
 using Imm8 = u32;
 using Imm11 = u32;
 using Imm12 = u32;
