@@ -327,8 +327,8 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
                     if (Rd == 15) S = false;
                     u32 Rn = RandInt<u32>(0, 15);
                     u32 shifter_operand = RandInt<u32>(0, 0xFFF);
-                    u32
-                    assemble_randoms = (shifter_operand << 0) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
+                    u32 assemble_randoms =
+                            (shifter_operand << 0) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
                     return instruction.Bits() | (assemble_randoms & ~instruction.Mask());
                 }
                 case 2: {
@@ -357,5 +357,38 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
 
     SECTION("R15") {
         FuzzJitArm(1, 1, 10000, instruction_select(/*Rd_can_be_r15=*/true));
+    }
+}
+
+TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
+    const auto is_valid = [](u32 instr) -> bool {
+        // R15 is UNPREDICTABLE
+        return Dynarmic::Common::Bits<0, 3>(instr) != 0b1111 && Dynarmic::Common::Bits<12, 15>(instr) != 0b1111;
+    };
+
+    const std::array<InstructionGenerator, 3> reg_instructions = {
+        {
+            InstructionGenerator("cccc011010111111dddd11110011mmmm", is_valid),
+            InstructionGenerator("cccc011010111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("cccc011011111111dddd11111011mmmm", is_valid),
+        }
+    };
+
+    SECTION("REV tests") {
+        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
+            return reg_instructions[0].Generate();
+        });
+    }
+
+    SECTION("REV16 tests") {
+        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
+            return reg_instructions[1].Generate();
+        });
+    }
+
+    SECTION("REVSH tests") {
+        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
+            return reg_instructions[2].Generate();
+        });
     }
 }
