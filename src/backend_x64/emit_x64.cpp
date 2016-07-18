@@ -37,7 +37,7 @@ static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
     return iter == uses.end() ? nullptr : reinterpret_cast<IR::Inst*>(iter->get());
 }
 
-CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block block) {
+CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, const Dynarmic::IR::Block& block) {
     inhibit_emission.clear();
     reg_alloc.Reset();
 

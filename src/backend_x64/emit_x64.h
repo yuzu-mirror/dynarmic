@@ -23,7 +23,7 @@ public:
     EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb, Jit* jit_interface)
             : reg_alloc(code), code(code), routines(routines), cb(cb), jit_interface(jit_interface) {}
 
-    CodePtr Emit(const Arm::LocationDescriptor descriptor, IR::Block ir);
+    CodePtr Emit(const Arm::LocationDescriptor descriptor, const IR::Block& ir);
 
     CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor) {
         auto iter = basic_blocks.find(descriptor);
