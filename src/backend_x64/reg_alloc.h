@@ -71,6 +71,8 @@ public:
     Gen::X64Reg UseDefRegister(IR::Value* use_value, IR::Value* def_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
     /// Early-use
     Gen::X64Reg UseRegister(IR::Value* use_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    /// Early-use, Destroyed
+    Gen::X64Reg UseScratchRegister(IR::Value* use_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
     /// Early-def, Late-use, single-use
     Gen::X64Reg ScratchRegister(std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
 

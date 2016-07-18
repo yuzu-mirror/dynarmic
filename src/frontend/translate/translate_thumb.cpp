@@ -7,6 +7,7 @@
 #include <tuple>
 
 #include "common/assert.h"
+#include "common/bit_util.h"
 #include "frontend/arm_types.h"
 #include "frontend/decoder/thumb16.h"
 #include "frontend/ir/ir_emitter.h"
@@ -504,6 +505,28 @@ struct ThumbTranslatorVisitor final {
         // Rd cannot encode R15.
         auto byte = ir.LeastSignificantByte(ir.GetRegister(m));
         ir.SetRegister(d, ir.ZeroExtendByteToWord(byte));
+        return true;
+    }
+
+    bool thumb16_PUSH(bool M, RegList reg_list) {
+        if (M) reg_list |= 1 << 14;
+        if (Common::BitCount(reg_list) < 1) {
+            return UnpredictableInstruction();
+        }
+        // PUSH <reg_list>
+        // reg_list cannot encode for R15.
+        u32 num_bytes_to_push = static_cast<u32>(4 * Common::BitCount(reg_list));
+        const auto final_address = ir.Sub(ir.GetRegister(Reg::SP), ir.Imm32(num_bytes_to_push));
+        auto address = final_address;
+        for (size_t i = 0; i < 16; i++) {
+            if (Common::Bit(i, reg_list)) {
+                auto Ri = ir.GetRegister(static_cast<Reg>(i));
+                ir.WriteMemory32(address, Ri);
+                address = ir.Add(address, ir.Imm32(4));
+            }
+        }
+        ir.SetRegister(Reg::SP, final_address);
+        // TODO(optimization): Possible location for an RSB push.
         return true;
     }
 

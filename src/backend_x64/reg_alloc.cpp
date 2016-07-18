@@ -106,7 +106,7 @@ Gen::X64Reg RegAlloc::UseRegister(IR::Value* use_value, std::initializer_list<Ho
     } else if (HostLocIsRegister(current_location)) {
         ASSERT(hostloc_state[current_location] == HostLocState::Idle);
 
-        code->XCHG(32, Gen::R(hostloc_to_x64.at(current_location)), Gen::R(hostloc_to_x64.at(new_location)));
+        code->XCHG(32, Gen::R(hostloc_to_x64.at(new_location)), Gen::R(hostloc_to_x64.at(current_location)));
 
         hostloc_state[new_location] = HostLocState::Use;
         std::swap(hostloc_to_value[new_location], hostloc_to_value[current_location]);
@@ -117,6 +117,43 @@ Gen::X64Reg RegAlloc::UseRegister(IR::Value* use_value, std::initializer_list<Ho
 
     return hostloc_to_x64.at(new_location);
 }
+
+Gen::X64Reg RegAlloc::UseScratchRegister(IR::Value* use_value, std::initializer_list<HostLoc> desired_locations) {
+    ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
+    ASSERT_MSG(remaining_uses.find(use_value) != remaining_uses.end(), "use_value has not been defined");
+    ASSERT_MSG(!ValueLocations(use_value).empty(), "use_value has not been defined");
+    ASSERT_MSG(remaining_uses[use_value] != 0, "use_value ran out of uses. (Use-d an IR::Value* too many times)");
+
+    HostLoc current_location = ValueLocations(use_value).front();
+    HostLoc new_location = SelectARegister(desired_locations);
+
+    if (HostLocIsSpill(current_location)) {
+        if (IsRegisterOccupied(new_location)) {
+            SpillRegister(new_location);
+        }
+
+        code->MOV(32, Gen::R(hostloc_to_x64.at(new_location)), SpillToOpArg(current_location));
+
+        hostloc_state[new_location] = HostLocState::Scratch;
+        remaining_uses[use_value]--;
+    } else if (HostLocIsRegister(current_location)) {
+        ASSERT(hostloc_state[current_location] == HostLocState::Idle);
+
+        if (IsRegisterOccupied(new_location)) {
+            SpillRegister(new_location);
+        }
+
+        code->MOV(32, Gen::R(hostloc_to_x64.at(new_location)), Gen::R(hostloc_to_x64.at(current_location)));
+
+        hostloc_state[new_location] = HostLocState::Scratch;
+        remaining_uses[use_value]--;
+    } else {
+        ASSERT_MSG(0, "Invalid current_location");
+    }
+
+    return hostloc_to_x64.at(new_location);
+}
+
 
 Gen::X64Reg RegAlloc::ScratchRegister(std::initializer_list<HostLoc> desired_locations) {
     ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
@@ -161,7 +198,7 @@ void RegAlloc::HostCall(IR::Value* result_def, IR::Value* arg0_use, IR::Value* a
 
     for (size_t i = 0; i < AbiArgs.size(); i++) {
         if (args[i]) {
-            UseRegister(args[i], {AbiArgs[i]});
+            UseScratchRegister(args[i], {AbiArgs[i]});
         } else {
             ScratchRegister({AbiArgs[i]});
         }

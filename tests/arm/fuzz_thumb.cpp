@@ -115,9 +115,9 @@ static Dynarmic::UserCallbacks GetUserCallbacks() {
     return user_callbacks;
 }
 
-struct InstructionGenerator final {
+struct ThumbInstGen final {
 public:
-    InstructionGenerator(const char* format, std::function<bool(u16)> is_valid = [](u16){ return true; }) : is_valid(is_valid) {
+    ThumbInstGen(const char* format, std::function<bool(u16)> is_valid = [](u16){ return true; }) : is_valid(is_valid) {
         REQUIRE(strlen(format) == 16);
 
         for (int i = 0; i < 16; i++) {
@@ -138,10 +138,14 @@ public:
     }
     u16 Generate() const {
         u16 inst;
+
         do {
             u16 random = RandInt<u16>(0, 0xFFFF);
             inst = bits | (random & ~mask);
         } while (!is_valid(inst));
+
+        ASSERT((inst & mask) == bits);
+
         return inst;
     }
 private:
@@ -223,6 +227,16 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
             }
             printf("CPSR: %08x %08x %s\n", interp.Cpsr, jit.Cpsr(), interp.Cpsr != jit.Cpsr() ? "*" : "");
 
+            printf("\nInterp Write Records:\n");
+            for (auto& record : interp_write_records) {
+                printf("%zu [%x] = %llx\n", record.size, record.address, record.data);
+            }
+
+            printf("\nJIT Write Records:\n");
+            for (auto& record : jit_write_records) {
+                printf("%zu [%x] = %llx\n", record.size, record.address, record.data);
+            }
+
 #ifdef _MSC_VER
             __debugbreak();
 #endif
@@ -234,33 +248,35 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 }
 
 TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
-    const std::array<InstructionGenerator, 23> instructions = {{
-        InstructionGenerator("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
-        InstructionGenerator("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
-        InstructionGenerator("00010xxxxxxxxxxx"), // ASR <Rd>, <Rm>, #<imm5>
-        InstructionGenerator("000110oxxxxxxxxx"), // ADD/SUB_reg
-        InstructionGenerator("000111oxxxxxxxxx"), // ADD/SUB_imm
-        InstructionGenerator("001ooxxxxxxxxxxx"), // ADD/SUB/CMP/MOV_imm
-        InstructionGenerator("010000ooooxxxxxx"), // Data Processing
-        InstructionGenerator("010001000hxxxxxx"), // ADD (high registers)
-        InstructionGenerator("0100010101xxxxxx",  // CMP (high registers)
-                             [](u16 inst){ return Dynarmic::Common::Bits<3, 5>(inst) != 0b111; }), // R15 is UNPREDICTABLE
-        InstructionGenerator("0100010110xxxxxx",  // CMP (high registers)
-                             [](u16 inst){ return Dynarmic::Common::Bits<0, 2>(inst) != 0b111; }), // R15 is UNPREDICTABLE
-        InstructionGenerator("010001100hxxxxxx"), // MOV (high registers)
-        InstructionGenerator("10110000oxxxxxxx"), // Adjust stack pointer
-        InstructionGenerator("10110010ooxxxxxx"), // SXT/UXT
-        InstructionGenerator("1011101000xxxxxx"), // REV
-        InstructionGenerator("1011101001xxxxxx"), // REV16
-        InstructionGenerator("1011101011xxxxxx"), // REVSH
-        InstructionGenerator("01001xxxxxxxxxxx"), // LDR Rd, [PC, #]
-        InstructionGenerator("0101oooxxxxxxxxx"), // LDR/STR Rd, [Rn, Rm]
-        InstructionGenerator("011xxxxxxxxxxxxx"), // LDR(B)/STR(B) Rd, [Rn, #]
-        InstructionGenerator("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
-        InstructionGenerator("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
-        InstructionGenerator("1011x100xxxxxxxx"), // PUSH/POP (R = 0)
-        InstructionGenerator("1100xxxxxxxxxxxx"), // STMIA/LDMIA
-        //InstructionGenerator("101101100101x000"), // SETEND
+    const std::array<ThumbInstGen, 24> instructions = {{
+        ThumbInstGen("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
+        ThumbInstGen("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
+        ThumbInstGen("00010xxxxxxxxxxx"), // ASR <Rd>, <Rm>, #<imm5>
+        ThumbInstGen("000110oxxxxxxxxx"), // ADD/SUB_reg
+        ThumbInstGen("000111oxxxxxxxxx"), // ADD/SUB_imm
+        ThumbInstGen("001ooxxxxxxxxxxx"), // ADD/SUB/CMP/MOV_imm
+        ThumbInstGen("010000ooooxxxxxx"), // Data Processing
+        ThumbInstGen("010001000hxxxxxx"), // ADD (high registers)
+        ThumbInstGen("0100010101xxxxxx",  // CMP (high registers)
+                     [](u16 inst){ return Dynarmic::Common::Bits<3, 5>(inst) != 0b111; }), // R15 is UNPREDICTABLE
+        ThumbInstGen("0100010110xxxxxx",  // CMP (high registers)
+                     [](u16 inst){ return Dynarmic::Common::Bits<0, 2>(inst) != 0b111; }), // R15 is UNPREDICTABLE
+        ThumbInstGen("010001100hxxxxxx"), // MOV (high registers)
+        ThumbInstGen("10110000oxxxxxxx"), // Adjust stack pointer
+        ThumbInstGen("10110010ooxxxxxx"), // SXT/UXT
+        ThumbInstGen("1011101000xxxxxx"), // REV
+        ThumbInstGen("1011101001xxxxxx"), // REV16
+        ThumbInstGen("1011101011xxxxxx"), // REVSH
+        ThumbInstGen("01001xxxxxxxxxxx"), // LDR Rd, [PC, #]
+        ThumbInstGen("0101oooxxxxxxxxx"), // LDR/STR Rd, [Rn, Rm]
+        ThumbInstGen("011xxxxxxxxxxxxx"), // LDR(B)/STR(B) Rd, [Rn, #]
+        ThumbInstGen("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
+        ThumbInstGen("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
+        ThumbInstGen("10110100xxxxxxxx",  // PUSH (R = 0)
+                     [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
+        ThumbInstGen("10111100xxxxxxxx"), // POP (R = 0)
+        ThumbInstGen("1100xxxxxxxxxxxx"), // STMIA/LDMIA
+        //ThumbInstGen("101101100101x000"), // SETEND
     }};
 
     auto instruction_select = [&]() -> u16 {
@@ -283,22 +299,22 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
 }
 
 TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
-    const std::array<InstructionGenerator, 7> instructions = {{
-        InstructionGenerator("01000111xmmmm000",  // BLX/BX
-                             [](u16 inst){
-                                 u32 Rm = Dynarmic::Common::Bits<3, 6>(inst);
-                                 return Rm != 15;
-                             }),
-        InstructionGenerator("1010oxxxxxxxxxxx"), // add to pc/sp
-        InstructionGenerator("11100xxxxxxxxxxx"), // B
-        InstructionGenerator("01000100h0xxxxxx"), // ADD (high registers)
-        InstructionGenerator("01000110h0xxxxxx"), // MOV (high registers)
-        InstructionGenerator("1101ccccxxxxxxxx",  // B<cond>
-                             [](u16 inst){
-                                 u32 c = Dynarmic::Common::Bits<9, 12>(inst);
-                                 return c < 0b1110; // Don't want SWI or undefined instructions.
-                             }),
-        InstructionGenerator("10110110011x0xxx"), // CPS
+    const std::array<ThumbInstGen, 7> instructions = {{
+        ThumbInstGen("01000111xmmmm000",  // BLX/BX
+                     [](u16 inst){
+                         u32 Rm = Dynarmic::Common::Bits<3, 6>(inst);
+                         return Rm != 15;
+                     }),
+        ThumbInstGen("1010oxxxxxxxxxxx"), // add to pc/sp
+        ThumbInstGen("11100xxxxxxxxxxx"), // B
+        ThumbInstGen("01000100h0xxxxxx"), // ADD (high registers)
+        ThumbInstGen("01000110h0xxxxxx"), // MOV (high registers)
+        ThumbInstGen("1101ccccxxxxxxxx",  // B<cond>
+                     [](u16 inst){
+                         u32 c = Dynarmic::Common::Bits<9, 12>(inst);
+                         return c < 0b1110; // Don't want SWI or undefined instructions.
+                     }),
+        ThumbInstGen("10110110011x0xxx"), // CPS
     }};
 
     auto instruction_select = [&]() -> u16 {

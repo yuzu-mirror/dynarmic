@@ -8,11 +8,11 @@
 
 #include <climits>
 
+#include "common/assert.h"
 #include "common/common_types.h"
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4554)
+#include <intrin.h>
 #endif
 
 namespace Dynarmic {
@@ -35,6 +35,10 @@ constexpr T Bits(const T value) {
     return (value >> begin_bit) & ((1 << (end_bit - begin_bit + 1)) - 1);
 }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4554)
+#endif
 /// Extracts a single bit at bit_position from value of type T.
 template<size_t bit_position, typename T>
 constexpr bool Bit(const T value) {
@@ -42,6 +46,17 @@ constexpr bool Bit(const T value) {
 
     return ((value >> bit_position) & 1) != 0;
 }
+
+/// Extracts a single bit at bit_position from value of type T.
+template<typename T>
+constexpr bool Bit(size_t bit_position, const T value) {
+    ASSERT_MSG(bit_position < BitSize<T>(), "bit_position must be smaller than size of T");
+
+    return ((value >> bit_position) & 1) != 0;
+}
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 /// Sign-extends a value that has NBits bits to the full bitwidth of type T.
 template<size_t bit_count, typename T>
@@ -56,9 +71,13 @@ inline T SignExtend(const T value) {
     return value;
 }
 
+inline size_t BitCount(u32 value) {
+#ifdef _MSC_VER
+    return __popcnt(value);
+#else
+    return __builtin_popcount(value);
+#endif
+}
+
 } // namespace Common
 } // namespace Dynarmic
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif

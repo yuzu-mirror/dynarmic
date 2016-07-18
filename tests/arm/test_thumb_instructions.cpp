@@ -103,3 +103,20 @@ TEST_CASE( "thumb: revsh r4, r3", "[thumb]" ) {
     REQUIRE( jit.Regs()[15] == 2 );
     REQUIRE( jit.Cpsr() == 0x00000030 ); // Thumb, User-mode
 }
+
+TEST_CASE( "thumb: ldr r3, [r3, #28]", "[thumb]" ) {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0x69DB; // ldr r3, [r3, #28]
+    code_mem[1] = 0xE7FE; // b +#0
+
+    jit.Regs()[3] = 0x12345678;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.Cpsr() = 0x00000030; // Thumb, User-mode
+
+    jit.Run(1);
+
+    REQUIRE( jit.Regs()[3] == 0x12345694 );
+    REQUIRE( jit.Regs()[15] == 2 );
+    REQUIRE( jit.Cpsr() == 0x00000030 ); // Thumb, User-mode
+}

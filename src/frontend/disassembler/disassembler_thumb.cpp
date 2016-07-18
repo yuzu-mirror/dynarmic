@@ -280,6 +280,24 @@ public:
         return Common::StringFromFormat("uxtb %s, %s", RegStr(d), RegStr(m));
     }
 
+    std::string thumb16_PUSH(bool M, RegList reg_list) {
+        if (M)
+            reg_list |= 1 << 14;
+
+        std::string ret = "PUSH ";
+        bool first_reg = true;
+        for (size_t i = 0; i < 16; i++) {
+            if (Common::Bit(i, reg_list)) {
+                if (!first_reg)
+                    ret += ", ";
+                ret += RegStr(static_cast<Reg>(i));
+                first_reg = false;
+            }
+        }
+
+        return ret;
+    }
+
     std::string thumb16_REV(Reg m, Reg d) {
         return Common::StringFromFormat("rev %s, %s", RegStr(d), RegStr(m));
     }

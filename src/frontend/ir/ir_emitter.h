@@ -64,6 +64,7 @@ public:
     ResultAndCarryAndOverflow AddWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in);
     IR::ValuePtr Add(IR::ValuePtr a, IR::ValuePtr b);
     ResultAndCarryAndOverflow SubWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in);
+    IR::ValuePtr Sub(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr And(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Eor(IR::ValuePtr a, IR::ValuePtr b);
     IR::ValuePtr Or(IR::ValuePtr a, IR::ValuePtr b);
