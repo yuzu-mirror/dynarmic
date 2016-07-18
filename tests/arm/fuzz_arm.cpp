@@ -557,4 +557,8 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
         });
     }
 
+    SECTION("Write to PC") {
+        // TODO
+        FAIL();
+    }
 }
