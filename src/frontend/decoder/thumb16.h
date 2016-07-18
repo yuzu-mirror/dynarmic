@@ -108,8 +108,8 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
         INST(&V::thumb16_LDRB_reg,       "LDRB (reg)",               "0101110mmmnnnttt"),
         INST(&V::thumb16_LDRSH_reg,      "LDRSH (reg)",              "0101111mmmnnnttt"),
         INST(&V::thumb16_LDR_imm_t1,     "LDR (imm, T1)",            "01101vvvvvnnnttt"),
-        //INST(&V::thumb16_STRH_imm,       "STRH (imm)",               "10000vvvvvnnnttt"),
-        //INST(&V::thumb16_LDRH_imm,       "LDRH (imm)",               "10001vvvvvnnnttt"),
+        INST(&V::thumb16_STRH_imm,       "STRH (imm)",               "10000vvvvvnnnttt"),
+        INST(&V::thumb16_LDRH_imm,       "LDRH (imm)",               "10001vvvvvnnnttt"),
         //INST(&V::thumb16_STR_sp,         "STR (SP)",                 "10010dddvvvvvvvv"),
         //INST(&V::thumb16_LDR_sp,         "LDR (SP)",                 "10011dddvvvvvvvv"),
 

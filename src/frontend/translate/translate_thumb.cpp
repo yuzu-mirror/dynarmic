@@ -486,6 +486,24 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    bool thumb16_STRH_imm(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5 << 1;
+        // STRH <Rt>, [<Rn>, #<imm5>]
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.LeastSignificantHalf(ir.GetRegister(t));
+        ir.WriteMemory16(address, data);
+        return true;
+    }
+
+    bool thumb16_LDRH_imm(Imm5 imm5, Reg n, Reg t) {
+        u32 imm32 = imm5 << 1;
+        // LDRH <Rt>, [<Rn>, #<imm5>]
+        auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm32));
+        auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(address));
+        ir.SetRegister(t, data);
+        return true;
+    }
+
     bool thumb16_ADR(Reg d, Imm8 imm8) {
         u32 imm32 = imm8 << 2;
         // ADR <Rd>, <label>
