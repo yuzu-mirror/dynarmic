@@ -72,6 +72,7 @@ private:
     void EmitZeroExtendByteToWord(IR::Value* value);
     void EmitByteReverseWord(IR::Value* value);
     void EmitByteReverseHalf(IR::Value* value);
+    void EmitByteReverseDual(IR::Value* value);
     void EmitReadMemory8(IR::Value* value);
     void EmitReadMemory16(IR::Value* value);
     void EmitReadMemory32(IR::Value* value);

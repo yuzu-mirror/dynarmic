@@ -359,6 +359,10 @@ public:
         return "pop " + RegListStr(reg_list);
     }
 
+    std::string thumb16_SETEND(bool E) {
+        return Common::StringFromFormat("setend %s", E ? "BE" : "LE");
+    }
+
     std::string thumb16_REV(Reg m, Reg d) {
         return Common::StringFromFormat("rev %s, %s", RegStr(d), RegStr(m));
     }

@@ -247,7 +247,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 }
 
 TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
-    const std::array<ThumbInstGen, 24> instructions = {{
+    const std::array<ThumbInstGen, 25> instructions = {{
         ThumbInstGen("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
         ThumbInstGen("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
         ThumbInstGen("00010xxxxxxxxxxx"), // ASR <Rd>, <Rm>, #<imm5>
@@ -276,7 +276,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         ThumbInstGen("10111100xxxxxxxx",  // POP (P = 0)
                      [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
         ThumbInstGen("1100xxxxxxxxxxxx"), // STMIA/LDMIA
-        //ThumbInstGen("101101100101x000"), // SETEND
+        ThumbInstGen("101101100101x000"), // SETEND
     }};
 
     auto instruction_select = [&]() -> u16 {

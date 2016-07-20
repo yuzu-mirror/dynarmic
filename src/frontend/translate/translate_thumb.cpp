@@ -676,6 +676,18 @@ struct ThumbTranslatorVisitor final {
         }
     }
 
+    bool thumb16_SETEND(bool E) {
+        // SETEND <endianness>
+        if (E == ir.current_location.EFlag) {
+            return true;
+        }
+        auto next_location = ir.current_location;
+        next_location.arm_pc += 2;
+        next_location.EFlag = E;
+        ir.SetTerm(IR::Term::LinkBlock{next_location});
+        return false;
+    }
+
     bool thumb16_REV(Reg m, Reg d) {
         // REV <Rd>, <Rm>
         // Rd cannot encode R15.

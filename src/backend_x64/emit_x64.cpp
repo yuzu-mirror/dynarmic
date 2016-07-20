@@ -651,6 +651,13 @@ void EmitX64::EmitByteReverseHalf(IR::Value* value_) {
     code->ROL(16, R(result), Imm8(8));
 }
 
+void EmitX64::EmitByteReverseDual(IR::Value* value_) {
+    auto value = reinterpret_cast<IR::Inst*>(value_);
+
+    X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+
+    code->BSWAP(64, result);
+}
 
 void EmitX64::EmitReadMemory8(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
@@ -922,14 +929,19 @@ void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::Loca
 }
 
 void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
-    ASSERT_MSG(terminal.next.EFlag == initial_location.EFlag, "Unimplemented");
-
     code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.arm_pc));
     if (terminal.next.TFlag != initial_location.TFlag) {
         if (terminal.next.TFlag) {
             code->OR(32, MJitStateCpsr(), Imm32(1 << 5));
         } else {
             code->AND(32, MJitStateCpsr(), Imm32(~(1 << 5)));
+        }
+    }
+    if (terminal.next.EFlag != initial_location.EFlag) {
+        if (terminal.next.EFlag) {
+            code->OR(32, MJitStateCpsr(), Imm32(1 << 9));
+        } else {
+            code->AND(32, MJitStateCpsr(), Imm32(~(1 << 9)));
         }
     }
     routines->GenReturnFromRunCode(code); // TODO: Check cycles, Properly do a link

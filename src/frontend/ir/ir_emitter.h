@@ -77,6 +77,7 @@ public:
     IR::ValuePtr ZeroExtendByteToWord(IR::ValuePtr a);
     IR::ValuePtr ByteReverseWord(IR::ValuePtr a);
     IR::ValuePtr ByteReverseHalf(IR::ValuePtr a);
+    IR::ValuePtr ByteReverseDual(IR::ValuePtr a);
 
     IR::ValuePtr ReadMemory8(IR::ValuePtr vaddr);
     IR::ValuePtr ReadMemory16(IR::ValuePtr vaddr);

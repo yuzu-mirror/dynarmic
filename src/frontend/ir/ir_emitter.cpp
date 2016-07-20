@@ -207,21 +207,27 @@ IR::ValuePtr IREmitter::ByteReverseHalf(IR::ValuePtr a) {
     return Inst(IR::Opcode::ByteReverseHalf, {a});
 }
 
+IR::ValuePtr IREmitter::ByteReverseDual(IR::ValuePtr a) {
+    return Inst(IR::Opcode::ByteReverseDual, {a});
+}
 
 IR::ValuePtr IREmitter::ReadMemory8(IR::ValuePtr vaddr) {
     return Inst(IR::Opcode::ReadMemory8, {vaddr});
 }
 
 IR::ValuePtr IREmitter::ReadMemory16(IR::ValuePtr vaddr) {
-    return Inst(IR::Opcode::ReadMemory16, {vaddr});
+    auto value = Inst(IR::Opcode::ReadMemory16, {vaddr});
+    return current_location.EFlag ? ByteReverseHalf(value) : value;
 }
 
 IR::ValuePtr IREmitter::ReadMemory32(IR::ValuePtr vaddr) {
-    return Inst(IR::Opcode::ReadMemory32, {vaddr});
+    auto value = Inst(IR::Opcode::ReadMemory32, {vaddr});
+    return current_location.EFlag ? ByteReverseWord(value) : value;
 }
 
 IR::ValuePtr IREmitter::ReadMemory64(IR::ValuePtr vaddr) {
-    return Inst(IR::Opcode::ReadMemory64, {vaddr});
+    auto value = Inst(IR::Opcode::ReadMemory64, {vaddr});
+    return current_location.EFlag ? ByteReverseDual(value) : value;
 }
 
 void IREmitter::WriteMemory8(IR::ValuePtr vaddr, IR::ValuePtr value) {
@@ -229,17 +235,25 @@ void IREmitter::WriteMemory8(IR::ValuePtr vaddr, IR::ValuePtr value) {
 }
 
 void IREmitter::WriteMemory16(IR::ValuePtr vaddr, IR::ValuePtr value) {
+    if (current_location.EFlag) {
+        value = ByteReverseHalf(value);
+    }
     Inst(IR::Opcode::WriteMemory16, {vaddr, value});
 }
 
 void IREmitter::WriteMemory32(IR::ValuePtr vaddr, IR::ValuePtr value) {
+    if (current_location.EFlag) {
+        value = ByteReverseWord(value);
+    }
     Inst(IR::Opcode::WriteMemory32, {vaddr, value});
 }
 
 void IREmitter::WriteMemory64(IR::ValuePtr vaddr, IR::ValuePtr value) {
+    if (current_location.EFlag) {
+        value = ByteReverseDual(value);
+    }
     Inst(IR::Opcode::WriteMemory64, {vaddr, value});
 }
-
 
 void IREmitter::SetTerm(const IR::Terminal& terminal) {
     ASSERT_MSG(block.terminal.which() == 0, "Terminal has already been set.");
