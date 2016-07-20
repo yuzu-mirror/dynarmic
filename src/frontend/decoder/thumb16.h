@@ -147,9 +147,6 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
         INST(&V::thumb16_SVC,            "SVC",                      "11011111xxxxxxxx"),
         INST(&V::thumb16_B_t1,           "B (T1)",                   "1101ccccvvvvvvvv"),
         INST(&V::thumb16_B_t2,           "B (T2)",                   "11100vvvvvvvvvvv"),
-        //INST(&V::thumb16_BLX_suffix,     "BLX (imm, suffix)",        "11101xxxxxxxxxx0"),
-        //INST(&V::thumb16_BLX_prefix,     "BL/BLX (imm, prefix)",     "11110xxxxxxxxxxx"),
-        //INST(&V::thumb16_BL_suffix,      "BL (imm, suffix)",         "11111xxxxxxxxxxx"),
 
 #undef INST
 
