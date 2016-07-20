@@ -366,29 +366,199 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
         return Dynarmic::Common::Bits<0, 3>(instr) != 0b1111 && Dynarmic::Common::Bits<12, 15>(instr) != 0b1111;
     };
 
-    const std::array<InstructionGenerator, 3> reg_instructions = {
+    const std::array<InstructionGenerator, 3> rev_instructions = {
         {
-            InstructionGenerator("cccc011010111111dddd11110011mmmm", is_valid),
-            InstructionGenerator("cccc011010111111dddd11111011mmmm", is_valid),
-            InstructionGenerator("cccc011011111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("0000011010111111dddd11110011mmmm", is_valid),
+            InstructionGenerator("0000011010111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("0000011011111111dddd11111011mmmm", is_valid),
         }
     };
 
     SECTION("REV tests") {
-        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
-            return reg_instructions[0].Generate();
+        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return rev_instructions[0].Generate() | (cond << 28);
         });
     }
 
     SECTION("REV16 tests") {
-        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
-            return reg_instructions[1].Generate();
+        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return rev_instructions[1].Generate() | (cond << 28);
         });
     }
 
     SECTION("REVSH tests") {
-        FuzzJitArm(1, 1, 10000, [&reg_instructions]() -> u32 {
-            return reg_instructions[2].Generate();
+        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return rev_instructions[2].Generate() | (cond << 28);
         });
+    }
+}
+
+TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
+    auto forbid_r15 = [](u32 inst) -> bool {
+        return Dynarmic::Common::Bits<12, 15>(inst) != 0b1111;
+    };
+
+    auto forbid_r14_and_r15 = [](u32 inst) -> bool {
+        return Dynarmic::Common::Bits<13, 15>(inst) != 0b111;
+    };
+
+    const std::array<InstructionGenerator, 4> doubleword_instructions = {
+        {
+            // Load
+            InstructionGenerator("0000000pu1w0nnnnddd0vvvv1101vvvv", forbid_r14_and_r15),
+            InstructionGenerator("0000000pu0w0nnnnddd000001101mmmm", forbid_r14_and_r15),
+
+            // Store
+            InstructionGenerator("0000000pu1w0nnnnddd0vvvv1111vvvv", forbid_r14_and_r15),
+            InstructionGenerator("0000000pu0w0nnnnddd000001111mmmm", forbid_r14_and_r15),
+        }
+    };
+
+    const std::array<InstructionGenerator, 8> word_instructions = {
+        {
+            // Load
+            InstructionGenerator("0000010pu0w1nnnnddddvvvvvvvvvvvv", forbid_r15),
+            InstructionGenerator("0000011pu0w1nnnnddddvvvvvrr0mmmm", forbid_r15),
+            InstructionGenerator("00000100u011nnnnttttmmmmmmmmmmmm", forbid_r15),
+            InstructionGenerator("00000110u011nnnnttttvvvvvrr0mmmm", forbid_r15),
+
+            // Store
+            InstructionGenerator("0000010pu0w0nnnnddddvvvvvvvvvvvv", forbid_r15),
+            InstructionGenerator("0000011pu0w0nnnnddddvvvvvrr0mmmm", forbid_r15),
+            InstructionGenerator("00000100u010nnnnttttvvvvvvvvvvvv", forbid_r15),
+            InstructionGenerator("00000110u010nnnnttttvvvvvrr0mmmm", forbid_r15),
+        }
+    };
+
+    const std::array<InstructionGenerator, 6> halfword_instructions = {
+        {
+            // Load
+            InstructionGenerator("0000000pu1w1nnnnddddvvvv1011vvvv", forbid_r15),
+            InstructionGenerator("0000000pu0w1nnnndddd00001011mmmm", forbid_r15),
+            // InstructionGenerator("----0000-111------------1011----"), // LDRHT (A1) Not available in ARMv6K
+            // InstructionGenerator("----0000-011--------00001011----"), // LDRHT (A2) Not available in ARMv6K
+            InstructionGenerator("0000000pu1w1nnnnddddvvvv1111vvvv", forbid_r15),
+            InstructionGenerator("0000000pu0w1nnnndddd00001111mmmm", forbid_r15),
+            // InstructionGenerator("----0000-111------------1111----"), // LDRSHT (A1) Not available in ARMv6K
+            // InstructionGenerator("----0000-011--------00001111----"), // LDRSHT (A2) Not available in ARMv6K
+
+
+            // Store
+            InstructionGenerator("0000000pu1w0nnnnddddvvvv1011vvvv", forbid_r15),
+            InstructionGenerator("0000000pu0w0nnnndddd00001011mmmm", forbid_r15),
+            // InstructionGenerator("----0000-110------------1011----"), // STRHT (A1) Not available in ARMv6K
+            // InstructionGenerator("----0000-010--------00001011----"), // STRHT (A2) Not available in ARMv6K
+        }
+    };
+
+    const std::array<InstructionGenerator, 10> byte_instructions = {
+        {
+            // Load
+            InstructionGenerator("0000010pu1w1nnnnddddvvvvvvvvvvvv", forbid_r15),
+            InstructionGenerator("0000011pu1w1nnnnddddvvvvvrr0mmmm", forbid_r15),
+            InstructionGenerator("00000100u111nnnnttttvvvvvvvvvvvv", forbid_r15),
+            InstructionGenerator("00000110u111nnnnttttvvvvvrr0mmmm", forbid_r15),
+            InstructionGenerator("0000000pu1w1nnnnddddvvvv1101vvvv", forbid_r15),
+            InstructionGenerator("0000000pu0w1nnnndddd00001101mmmm", forbid_r15),
+            // InstructionGenerator("----0000-111------------1101----"), // LDRSBT (A1) Not available in ARMv6K
+            // InstructionGenerator("----0000-011--------00001101----"), // LDRSBT (A2) Not available in ARMv6K
+
+
+            // Store
+            InstructionGenerator("0000010pu1w0nnnnddddvvvvvvvvvvvv", forbid_r15),
+            InstructionGenerator("0000011pu1w0nnnnddddvvvvvrr0mmmm", forbid_r15),
+            InstructionGenerator("00000100u110nnnnttttvvvvvvvvvvvv", forbid_r15),
+            InstructionGenerator("00000110u110nnnnttttvvvvvrr0mmmm", forbid_r15),
+        }
+    };
+
+    SECTION("Doubleword tests") {
+        FuzzJitArm(1, 1, 10000, [&doubleword_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+
+            return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate() | (cond << 28);
+        });
+    }
+
+    SECTION("Word tests") {
+        FuzzJitArm(1, 1, 10000, [&word_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate() | (cond << 28);
+        });
+    }
+
+    SECTION("Halfword tests") {
+        FuzzJitArm(1, 1, 10000, [&halfword_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate() | (cond << 28);
+        });
+    }
+
+    SECTION("Byte tests") {
+        FuzzJitArm(1, 1, 10000, [&byte_instructions]() -> u32 {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+            return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate() | (cond << 28);
+        });
+    }
+
+    SECTION("Mixed tests") {
+        FuzzJitArm(10, 10, 10000, [&]() -> u32 {
+            size_t selection = RandInt<size_t>(0, 3);
+
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
+
+            switch (selection) {
+            case 0:
+                return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate() | (cond << 28);
+            case 1:
+                return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate() | (cond << 28);
+            case 2:
+                return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate() | (cond << 28);
+            case 3:
+                return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate() | (cond << 28);
+            }
+
+            return 0;
+        });
+    }
+
+    SECTION("Write to PC") {
+        // TODO
+        FAIL();
     }
 }

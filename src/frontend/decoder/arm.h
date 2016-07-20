@@ -181,8 +181,8 @@ boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
         //INST(&V::arm_LDR_reg,     "LDR (reg)",           "cccc011pu0w1nnnnddddvvvvvrr0mmmm"),
         //INST(&V::arm_LDRB_imm,    "LDRB (imm)",          "cccc010pu1w1nnnnddddvvvvvvvvvvvv"),
         //INST(&V::arm_LDRB_reg,    "LDRB (reg)",          "cccc011pu1w1nnnnddddvvvvvrr0mmmm"),
-        //INST(&V::arm_LDRBT,       "LDRBT (A1)",          "----0100-111--------------------"),
-        //INST(&V::arm_LDRBT,       "LDRBT (A2)",          "----0110-111---------------0----"),
+        //INST(&V::arm_LDRBT,       "LDRBT (A1)",          "cccc0100u111nnnnttttvvvvvvvvvvvv"),
+        //INST(&V::arm_LDRBT,       "LDRBT (A2)",          "cccc0110u111nnnnttttvvvvvrr0mmmm"),
         //INST(&V::arm_LDRD_imm,    "LDRD (imm)",          "cccc000pu1w0nnnnddddvvvv1101vvvv"), // v5E
         //INST(&V::arm_LDRD_reg,    "LDRD (reg)",          "cccc000pu0w0nnnndddd00001101mmmm"), // v5E
         //INST(&V::arm_LDRH_imm,    "LDRH (imm)",          "cccc000pu1w1nnnnddddvvvv1011vvvv"),
@@ -197,22 +197,22 @@ boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
         //INST(&V::arm_LDRSH_reg,   "LDRSH (reg)",         "cccc000pu0w1nnnndddd00001111mmmm"),
         //INST(&V::arm_LDRSHT,      "LDRSHT (A1)",         "----0000-111------------1111----"),
         //INST(&V::arm_LDRSHT,      "LDRSHT (A2)",         "----0000-011--------00001111----"),
-        //INST(&V::arm_LDRT,        "LDRT (A1)",           "----0100-011--------------------"),
-        //INST(&V::arm_LDRT,        "LDRT (A2)",           "----0110-011---------------0----"),
+        //INST(&V::arm_LDRT,        "LDRT (A1)",           "cccc0100u011nnnnttttvvvvvvvvvvvv"),
+        //INST(&V::arm_LDRT,        "LDRT (A2)",           "cccc0110u011nnnnttttvvvvvrr0mmmm"),
         //INST(&V::arm_STR_imm,     "STR (imm)",           "cccc010pu0w0nnnnddddvvvvvvvvvvvv"),
         //INST(&V::arm_STR_reg,     "STR (reg)",           "cccc011pu0w0nnnnddddvvvvvrr0mmmm"),
         //INST(&V::arm_STRB_imm,    "STRB (imm)",          "cccc010pu1w0nnnnddddvvvvvvvvvvvv"),
         //INST(&V::arm_STRB_reg,    "STRB (reg)",          "cccc011pu1w0nnnnddddvvvvvrr0mmmm"),
-        //INST(&V::arm_STRBT,       "STRBT (A1)",          "----0100-110--------------------"),
-        //INST(&V::arm_STRBT,       "STRBT (A2)",          "----0110-110---------------0----"),
+        //INST(&V::arm_STRBT,       "STRBT (A1)",          "cccc0100u110nnnnttttvvvvvvvvvvvv"),
+        //INST(&V::arm_STRBT,       "STRBT (A2)",          "cccc0110u110nnnnttttvvvvvrr0mmmm"),
         //INST(&V::arm_STRD_imm,    "STRD (imm)",          "cccc000pu1w0nnnnddddvvvv1111vvvv"), // v5E
         //INST(&V::arm_STRD_reg,    "STRD (reg)",          "cccc000pu0w0nnnndddd00001111mmmm"), // v5E
         //INST(&V::arm_STRH_imm,    "STRH (imm)",          "cccc000pu1w0nnnnddddvvvv1011vvvv"),
         //INST(&V::arm_STRH_reg,    "STRH (reg)",          "cccc000pu0w0nnnndddd00001011mmmm"),
         //INST(&V::arm_STRHT,       "STRHT (A1)",          "----0000-110------------1011----"),
         //INST(&V::arm_STRHT,       "STRHT (A2)",          "----0000-010--------00001011----"),
-        //INST(&V::arm_STRT,        "STRT (A1)",           "----0100-010--------------------"),
-        //INST(&V::arm_STRT,        "STRT (A2)",           "----0110-010---------------0----"),
+        //INST(&V::arm_STRT,        "STRT (A1)",           "cccc0100u010nnnnttttvvvvvvvvvvvv"),
+        //INST(&V::arm_STRT,        "STRT (A2)",           "cccc0110u010nnnnttttvvvvvrr0mmmm"),
 
         // Load/Store Multiple instructions
         //INST(&V::arm_LDM,         "LDM",                 "cccc100pu0w1nnnnxxxxxxxxxxxxxxxx"), // all
