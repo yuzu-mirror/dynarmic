@@ -15,6 +15,11 @@ set(SRCS
     frontend/ir/ir.cpp
     frontend/ir/ir_emitter.cpp
     frontend/translate/translate.cpp
+    frontend/translate/translate_arm.cpp
+    frontend/translate/translate_thumb.cpp
+    ir_opt/dead_code_elimination_pass.cpp
+    ir_opt/get_set_elimination_pass.cpp
+    ir_opt/verification_pass.cpp
     )
 
 set(HEADERS
@@ -44,9 +49,8 @@ set(HEADERS
     frontend/ir/ir_emitter.h
     frontend/ir/opcodes.h
     frontend/translate/translate.h
-    frontend/translate/translate_arm.cpp
-    frontend/translate/translate_thumb.cpp
     interface/interface.h
+    ir_opt/passes.h
     )
 
 create_directory_groups(${SRCS} ${HEADERS})

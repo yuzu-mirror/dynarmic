@@ -17,89 +17,9 @@ namespace Arm {
 
 class DisassemblerVisitor {
 public:
-    const char* CondStr(Cond cond) {
-        switch (cond) {
-            case Cond::EQ:
-                return "eq";
-            case Cond::NE:
-                return "ne";
-            case Cond::CS:
-                return "cs";
-            case Cond::CC:
-                return "cc";
-            case Cond::MI:
-                return "mi";
-            case Cond::PL:
-                return "pl";
-            case Cond::VS:
-                return "vs";
-            case Cond::VC:
-                return "vc";
-            case Cond::HI:
-                return "hi";
-            case Cond::LS:
-                return "ls";
-            case Cond::GE:
-                return "ge";
-            case Cond::LT:
-                return "lt";
-            case Cond::GT:
-                return "gt";
-            case Cond::LE:
-                return "le";
-            case Cond::AL:
-                return "";
-            case Cond::NV:
-                break;
-        }
-        assert(false);
-        return "<internal error>";
-    }
-
     template<typename T>
     const char* SignStr(T value) {
         return value >= 0 ? "+" : "-";
-    }
-
-    const char* RegStr(Reg reg) {
-        switch (reg) {
-            case Reg::R0:
-                return "r0";
-            case Reg::R1:
-                return "r1";
-            case Reg::R2:
-                return "r2";
-            case Reg::R3:
-                return "r3";
-            case Reg::R4:
-                return "r4";
-            case Reg::R5:
-                return "r5";
-            case Reg::R6:
-                return "r6";
-            case Reg::R7:
-                return "r7";
-            case Reg::R8:
-                return "r8";
-            case Reg::R9:
-                return "r9";
-            case Reg::R10:
-                return "r10";
-            case Reg::R11:
-                return "r11";
-            case Reg::R12:
-                return "r12";
-            case Reg::R13:
-                return "sp";
-            case Reg::R14:
-                return "lr";
-            case Reg::R15:
-                return "pc";
-            case Reg::INVALID_REG:
-                break;
-        }
-        assert(false);
-        return "<internal error>";
     }
 
     u32 rotr(u32 x, int shift) {
@@ -134,13 +54,13 @@ public:
     std::string RsrStr(Reg s, ShiftType shift, Reg m) {
         switch (shift){
             case ShiftType::LSL:
-                return Common::StringFromFormat("%s, LSL %s", RegStr(m), RegStr(s));
+                return Common::StringFromFormat("%s, LSL %s", RegToString(m), RegToString(s));
             case ShiftType::LSR:
-                return Common::StringFromFormat("%s, LSR %s", RegStr(m), RegStr(s));
+                return Common::StringFromFormat("%s, LSR %s", RegToString(m), RegToString(s));
             case ShiftType::ASR:
-                return Common::StringFromFormat("%s, ASR %s", RegStr(m), RegStr(s));
+                return Common::StringFromFormat("%s, ASR %s", RegToString(m), RegToString(s));
             case ShiftType::ROR:
-                return Common::StringFromFormat("%s, ROR %s", RegStr(m), RegStr(s));
+                return Common::StringFromFormat("%s, ROR %s", RegToString(m), RegToString(s));
         }
         assert(false);
         return "<internal error>";
@@ -149,24 +69,24 @@ public:
     // Branch instructions
     std::string arm_B(Cond cond, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8;
-        return Common::StringFromFormat("b%s %s#%i", CondStr(cond), SignStr(offset), abs(offset));
+        return Common::StringFromFormat("b%s %s#%i", CondToString(cond), SignStr(offset), abs(offset));
     }
     std::string arm_BL(Cond cond, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8;
-        return Common::StringFromFormat("bl%s %s#%i", CondStr(cond), SignStr(offset), abs(offset));
+        return Common::StringFromFormat("bl%s %s#%i", CondToString(cond), SignStr(offset), abs(offset));
     }
     std::string arm_BLX_imm(bool H, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8 + (H ? 2 : 0);
         return Common::StringFromFormat("blx %s#%i", SignStr(offset), abs(offset));
     }
     std::string arm_BLX_reg(Cond cond, Reg m) {
-        return Common::StringFromFormat("blx%s %s", CondStr(cond), RegStr(m));
+        return Common::StringFromFormat("blx%s %s", CondToString(cond), RegToString(m));
     }
     std::string arm_BX(Cond cond, Reg m) {
-        return Common::StringFromFormat("bx%s %s", CondStr(cond), RegStr(m));
+        return Common::StringFromFormat("bx%s %s", CondToString(cond), RegToString(m));
     }
     std::string arm_BXJ(Cond cond, Reg m) {
-        return Common::StringFromFormat("bxj%s %s", CondStr(cond), RegStr(m));
+        return Common::StringFromFormat("bxj%s %s", CondToString(cond), RegToString(m));
     }
 
     // Coprocessor instructions
@@ -180,154 +100,154 @@ public:
 
     // Data processing instructions
     std::string arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("adc%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("adc%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_ADC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("adc%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("adc%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_ADC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("adc%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("adc%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_ADD_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("add%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("add%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_ADD_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("add%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("add%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_ADD_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("add%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("add%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_AND_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("and%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("and%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_AND_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("and%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("and%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_AND_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("and%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("and%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_BIC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("bic%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("bic%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_BIC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("bic%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("bic%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_BIC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("bic%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("bic%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_CMN_imm(Cond cond, Reg n, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("cmn%s %s, #%i", CondStr(cond), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("cmn%s %s, #%i", CondToString(cond), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_CMN_reg(Cond cond, Reg n, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("cmn%s %s, %s%s", CondStr(cond), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("cmn%s %s, %s%s", CondToString(cond), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_CMN_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("cmn%s %s, %s", CondStr(cond), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("cmn%s %s, %s", CondToString(cond), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_CMP_imm(Cond cond, Reg n, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("cmp%s %s, #%i", CondStr(cond), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("cmp%s %s, #%i", CondToString(cond), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_CMP_reg(Cond cond, Reg n, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("cmp%s %s, %s%s", CondStr(cond), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("cmp%s %s, %s%s", CondToString(cond), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_CMP_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("cmp%s %s, %s", CondStr(cond), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("cmp%s %s, %s", CondToString(cond), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_EOR_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("eor%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("eor%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_EOR_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("eor%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("eor%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_EOR_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("eor%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("eor%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_MOV_imm(Cond cond, bool S, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("mov%s%s %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("mov%s%s %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), ArmExpandImm(rotate, imm8));
     }
     std::string arm_MOV_reg(Cond cond, bool S, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("mov%s%s %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("mov%s%s %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_MOV_rsr(Cond cond, bool S, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("mov%s%s %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("mov%s%s %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RsrStr(s, shift, m).c_str());
     }
     std::string arm_MVN_imm(Cond cond, bool S, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("mvn%s%s %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("mvn%s%s %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), ArmExpandImm(rotate, imm8));
     }
     std::string arm_MVN_reg(Cond cond, bool S, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("mvn%s%s %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("mvn%s%s %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_MVN_rsr(Cond cond, bool S, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("mvn%s%s %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("mvn%s%s %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RsrStr(s, shift, m).c_str());
     }
     std::string arm_ORR_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("orr%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("orr%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_ORR_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("orr%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("orr%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_ORR_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("orr%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("orr%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_RSB_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("rsb%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("rsb%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_RSB_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("rsb%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("rsb%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_RSB_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("rsb%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("rsb%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_RSC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("rsc%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("rsc%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_RSC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("rsc%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("rsc%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_RSC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("rsc%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("rsc%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_SBC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("sbc%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("sbc%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_SBC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("sbc%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("sbc%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_SBC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("sbc%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("sbc%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_SUB_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("sub%s%s %s, %s, #%i", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("sub%s%s %s, %s, #%i", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_SUB_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("sub%s%s %s, %s, %s%s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("sub%s%s %s, %s, %s%s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_SUB_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("sub%s%s %s, %s, %s", CondStr(cond), S ? "s" : "", RegStr(d), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("sub%s%s %s, %s, %s", CondToString(cond), S ? "s" : "", RegToString(d), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_TEQ_imm(Cond cond, Reg n, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("teq%s %s, #%i", CondStr(cond), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("teq%s %s, #%i", CondToString(cond), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_TEQ_reg(Cond cond, Reg n, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("teq%s %s, %s%s", CondStr(cond), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("teq%s %s, %s%s", CondToString(cond), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_TEQ_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("teq%s %s, %s", CondStr(cond), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("teq%s %s, %s", CondToString(cond), RegToString(n), RsrStr(s, shift, m).c_str());
     }
     std::string arm_TST_imm(Cond cond, Reg n, int rotate, Imm8 imm8) {
-        return Common::StringFromFormat("tst%s %s, #%i", CondStr(cond), RegStr(n), ArmExpandImm(rotate, imm8));
+        return Common::StringFromFormat("tst%s %s, #%i", CondToString(cond), RegToString(n), ArmExpandImm(rotate, imm8));
     }
     std::string arm_TST_reg(Cond cond, Reg n, Imm5 imm5, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("tst%s %s, %s%s", CondStr(cond), RegStr(n), RegStr(m), ShiftStr(shift, imm5).c_str());
+        return Common::StringFromFormat("tst%s %s, %s%s", CondToString(cond), RegToString(n), RegToString(m), ShiftStr(shift, imm5).c_str());
     }
     std::string arm_TST_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Reg m) {
-        return Common::StringFromFormat("tst%s %s, %s", CondStr(cond), RegStr(n), RsrStr(s, shift, m).c_str());
+        return Common::StringFromFormat("tst%s %s, %s", CondToString(cond), RegToString(n), RsrStr(s, shift, m).c_str());
     }
 
     // Exception generation instructions
     std::string arm_BKPT(Cond cond, Imm12 imm12, Imm4 imm4) { return "ice"; }
     std::string arm_SVC(Cond cond, Imm24 imm24) {
-        return Common::StringFromFormat("svc%s #%u", CondStr(cond), imm24);
+        return Common::StringFromFormat("svc%s #%u", CondToString(cond), imm24);
     }
     std::string arm_UDF() {
         return Common::StringFromFormat("udf");
@@ -406,13 +326,13 @@ public:
 
     // Reversal instructions
     std::string arm_REV(Cond cond, Reg d, Reg m) {
-        return Common::StringFromFormat("rev%s %s, %s", CondStr(cond), RegStr(d), RegStr(m));
+        return Common::StringFromFormat("rev%s %s, %s", CondToString(cond), RegToString(d), RegToString(m));
     }
     std::string arm_REV16(Cond cond, Reg d, Reg m) {
-        return Common::StringFromFormat("rev16%s %s, %s", CondStr(cond), RegStr(d), RegStr(m));
+        return Common::StringFromFormat("rev16%s %s, %s", CondToString(cond), RegToString(d), RegToString(m));
     }
     std::string arm_REVSH(Cond cond, Reg d, Reg m) {
-        return Common::StringFromFormat("revsh%s %s, %s", CondStr(cond), RegStr(d), RegStr(m));
+        return Common::StringFromFormat("revsh%s %s, %s", CondToString(cond), RegToString(d), RegToString(m));
     }
 
     // Saturation instructions

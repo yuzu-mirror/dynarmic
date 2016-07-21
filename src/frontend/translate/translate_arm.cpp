@@ -161,7 +161,7 @@ struct ArmTranslatorVisitor final {
         u32 imm32 = ArmExpandImm(rotate, imm8);
         // CMP<c> <Rn>, #<imm>
         if (ConditionPassed(cond)) {
-            auto result = ir.AddWithCarry(ir.GetRegister(n), ir.Imm32(~imm32), ir.Imm1(true));
+            auto result = ir.SubWithCarry(ir.GetRegister(n), ir.Imm32(imm32), ir.Imm1(1));
             ir.SetNFlag(ir.MostSignificantBit(result.result));
             ir.SetZFlag(ir.IsZero(result.result));
             ir.SetCFlag(result.carry);

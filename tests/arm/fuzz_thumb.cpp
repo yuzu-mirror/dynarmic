@@ -18,6 +18,9 @@
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
 
+#include "frontend/translate/translate.h"
+#include "ir_opt/passes.h"
+
 struct WriteRecord {
     size_t size;
     u32 address;
@@ -236,6 +239,12 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
                 printf("%zu [%x] = %llx\n", record.size, record.address, record.data);
             }
 
+            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, true, false}, MemoryRead32);
+            Dynarmic::Optimization::GetSetElimination(ir_block);
+            Dynarmic::Optimization::DeadCodeElimination(ir_block);
+            Dynarmic::Optimization::VerificationPass(ir_block);
+            printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
+
 #ifdef _MSC_VER
             __debugbreak();
 #endif
@@ -294,7 +303,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
     }
 
     SECTION("long blocks") {
-        FuzzJitThumb(1024, 1025, 2, instruction_select);
+        FuzzJitThumb(1024, 1025, 10, instruction_select);
     }
 }
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <array>
 #include <cassert>
 #include <tuple>
 #include <type_traits>
@@ -18,6 +19,13 @@ namespace Arm {
 enum class Cond {
     EQ, NE, CS, CC, MI, PL, VS, VC, HI, LS, GE, LT, GT, LE, AL, NV
 };
+
+inline const char* CondToString(Cond cond, bool explicit_al = false) {
+    constexpr std::array<const char*, 15> cond_strs = {
+        "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc", "hi", "ls", "ge", "lt", "gt", "le", "al"
+    };
+    return (!explicit_al && cond == Cond::AL) ? "" : cond_strs.at(static_cast<size_t>(cond));
+}
 
 enum class Reg {
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15,
@@ -34,6 +42,13 @@ inline Reg operator+(Reg reg, int number) {
     assert(new_reg >= 0 && new_reg <= 15);
 
     return static_cast<Reg>(new_reg);
+}
+
+inline const char* RegToString(Reg reg) {
+    constexpr std::array<const char*, 16> reg_strs = {
+        "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc"
+    };
+    return reg_strs.at(static_cast<size_t>(reg));
 }
 
 using Imm3 = u32;

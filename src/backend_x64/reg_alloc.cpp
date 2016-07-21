@@ -141,9 +141,12 @@ Gen::X64Reg RegAlloc::UseScratchRegister(IR::Value* use_value, std::initializer_
 
         if (IsRegisterOccupied(new_location)) {
             SpillRegister(new_location);
+            if (current_location != new_location) {
+                code->MOV(32, Gen::R(hostloc_to_x64.at(new_location)), Gen::R(hostloc_to_x64.at(current_location)));
+            }
+        } else {
+            code->MOV(32, Gen::R(hostloc_to_x64.at(new_location)), Gen::R(hostloc_to_x64.at(current_location)));
         }
-
-        code->MOV(32, Gen::R(hostloc_to_x64.at(new_location)), Gen::R(hostloc_to_x64.at(current_location)));
 
         hostloc_state[new_location] = HostLocState::Scratch;
         remaining_uses[use_value]--;
@@ -203,6 +206,9 @@ void RegAlloc::HostCall(IR::Value* result_def, IR::Value* arg0_use, IR::Value* a
             ScratchRegister({AbiArgs[i]});
         }
     }
+
+    ScratchRegister({HostLoc::RSP});
+    code->MOV(64, Gen::R(Gen::RSP), Gen::MDisp(Gen::R15, offsetof(JitState, save_host_RSP)));
 }
 
 HostLoc RegAlloc::SelectARegister(std::initializer_list<HostLoc> desired_locations) const {

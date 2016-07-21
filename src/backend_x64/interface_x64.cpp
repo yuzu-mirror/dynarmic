@@ -16,6 +16,7 @@
 #include "frontend/arm_types.h"
 #include "frontend/translate/translate.h"
 #include "interface/interface.h"
+#include "ir_opt/passes.h"
 
 namespace Dynarmic {
 
@@ -53,6 +54,9 @@ private:
             return code_ptr;
 
         IR::Block ir_block = Arm::Translate(descriptor, callbacks.MemoryRead32);
+        Optimization::GetSetElimination(ir_block);
+        Optimization::DeadCodeElimination(ir_block);
+        Optimization::VerificationPass(ir_block);
         return emitter.Emit(descriptor, ir_block);
     }
 };

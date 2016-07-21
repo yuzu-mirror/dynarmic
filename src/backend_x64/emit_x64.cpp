@@ -137,7 +137,7 @@ void EmitX64::EmitGetNFlag(IR::Value* value_) {
 void EmitX64::EmitSetNFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
-    X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+    X64Reg to_store = reg_alloc.UseScratchRegister(value->GetArg(0).get());
 
     // TODO: Flag optimization
 
@@ -161,7 +161,7 @@ void EmitX64::EmitGetZFlag(IR::Value* value_) {
 void EmitX64::EmitSetZFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
-    X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+    X64Reg to_store = reg_alloc.UseScratchRegister(value->GetArg(0).get());
 
     // TODO: Flag optimization
 
@@ -185,7 +185,7 @@ void EmitX64::EmitGetCFlag(IR::Value* value_) {
 void EmitX64::EmitSetCFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
-    X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+    X64Reg to_store = reg_alloc.UseScratchRegister(value->GetArg(0).get());
 
     // TODO: Flag optimization
 
@@ -209,7 +209,7 @@ void EmitX64::EmitGetVFlag(IR::Value* value_) {
 void EmitX64::EmitSetVFlag(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
-    X64Reg to_store = reg_alloc.UseRegister(value->GetArg(0).get());
+    X64Reg to_store = reg_alloc.UseScratchRegister(value->GetArg(0).get());
 
     // TODO: Flag optimization
 
@@ -221,7 +221,7 @@ void EmitX64::EmitSetVFlag(IR::Value* value_) {
 void EmitX64::EmitBXWritePC(IR::Value* value_) {
     auto value = reinterpret_cast<IR::Inst*>(value_);
 
-    X64Reg new_pc = reg_alloc.UseRegister(value->GetArg(0).get());
+    X64Reg new_pc = reg_alloc.UseScratchRegister(value->GetArg(0).get());
     X64Reg tmp1 = reg_alloc.ScratchRegister();
     X64Reg tmp2 = reg_alloc.ScratchRegister();
 
@@ -312,6 +312,7 @@ void EmitX64::EmitLogicalShiftLeft(IR::Value* value_) {
         X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg zero = reg_alloc.ScratchRegister();
+        reg_alloc.DecrementRemainingUses(value->GetArg(2).get());
 
         // The 32-bit x64 SHL instruction masks the shift count by 0x1F before performing the shift.
         // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -363,6 +364,7 @@ void EmitX64::EmitLogicalShiftRight(IR::Value* value_) {
         X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg zero = reg_alloc.ScratchRegister();
+        reg_alloc.DecrementRemainingUses(value->GetArg(2).get());
 
         // The 32-bit x64 SHR instruction masks the shift count by 0x1F before performing the shift.
         // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -414,9 +416,10 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
     auto carry_inst = FindUseWithOpcode(value, IR::Opcode::GetCarryFromOp);
 
     if (!carry_inst) {
-        X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
+        X64Reg shift = reg_alloc.UseScratchRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg const31 = reg_alloc.ScratchRegister();
+        reg_alloc.DecrementRemainingUses(value->GetArg(2).get());
 
         // The 32-bit x64 SAR instruction masks the shift count by 0x1F before performing the shift.
         // ARM differs from the behaviour: It does not mask the count.
@@ -425,7 +428,7 @@ void EmitX64::EmitArithmeticShiftRight(IR::Value* value_) {
         code->MOV(32, R(const31), Imm32(31));
         code->MOVZX(32, 8, shift, R(shift));
         code->CMP(32, R(shift), Imm32(31));
-        code->CMOVcc(32, shift, R(const31), CC_L);
+        code->CMOVcc(32, shift, R(const31), CC_G);
         code->SAR(32, R(result), R(shift));
     } else {
         inhibit_emission.insert(carry_inst);
@@ -465,13 +468,14 @@ void EmitX64::EmitRotateRight(IR::Value* value_) {
     if (!carry_inst) {
         X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
+        reg_alloc.DecrementRemainingUses(value->GetArg(2).get());
 
         // x64 ROR instruction does (shift & 0x1F) for us.
         code->ROR(32, R(result), R(shift));
     } else {
         inhibit_emission.insert(carry_inst);
 
-        X64Reg shift = reg_alloc.UseRegister(value->GetArg(1).get(), {HostLoc::RCX});
+        X64Reg shift = reg_alloc.UseScratchRegister(value->GetArg(1).get(), {HostLoc::RCX});
         X64Reg result = reg_alloc.UseDefRegister(value->GetArg(0).get(), value);
         X64Reg carry = reg_alloc.UseDefRegister(value->GetArg(2).get(), carry_inst);
 

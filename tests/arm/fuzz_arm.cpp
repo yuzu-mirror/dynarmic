@@ -9,6 +9,9 @@
 #include <functional>
 
 #include <catch.hpp>
+#include <frontend/ir/ir.h>
+#include <ir_opt/passes.h>
+#include <frontend/translate/translate.h>
 
 #include "common/bit_util.h"
 #include "common/common_types.h"
@@ -235,6 +238,66 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
     }
 }
 
+TEST_CASE( "arm: Optimization Failure (Randomized test case)", "[arm]" ) {
+    // This was a randomized test-case that was failing.
+    //
+    // IR produced for location {12, !T, !E} was:
+    // %0     = GetRegister r1
+    // %1     = SubWithCarry %0, #0x3e80000, #1
+    // %2     = GetCarryFromOp %1
+    // %3     = GetOverflowFromOp %1
+    // %4     = MostSignificantBit %1
+    //          SetNFlag %4
+    // %6     = IsZero %1
+    //          SetZFlag %6
+    //          SetCFlag %2
+    //          SetVFlag %3
+    // %10    = GetRegister r5
+    // %11    = AddWithCarry %10, #0x8a00, %2
+    //          SetRegister r4, %11
+    //
+    // The reference to %2 in instruction %11 was the issue, because instruction %8
+    // told the register allocator it was a Use but then modified the value.
+    // Changing the EmitSet*Flag instruction to declare their arguments as UseScratch
+    // solved this bug.
+
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xe35f0cd9; // cmp pc, #55552
+    code_mem[1] = 0xe11c0474; // tst r12, r4, ror r4
+    code_mem[2] = 0xe1a006a7; // mov r0, r7, lsr #13
+    code_mem[3] = 0xe35107fa; // cmp r1, #0x3E80000
+    code_mem[4] = 0xe2a54c8a; // adc r4, r5, #35328
+    code_mem[5] = 0xeafffffe; // b +#0
+
+    jit.Regs() = {
+            0x6973b6bb, 0x267ea626, 0x69debf49, 0x8f976895, 0x4ecd2d0d, 0xcf89b8c7, 0xb6713f85, 0x15e2aa5,
+            0xcd14336a, 0xafca0f3e, 0xace2efd9, 0x68fb82cd, 0x775447c0, 0xc9e1f8cd, 0xebe0e626, 0x0
+    };
+    jit.Cpsr() = 0x000001d0; // User-mode
+
+    jit.Run(6);
+
+    REQUIRE( jit.Regs()[0] == 0x00000af1 );
+    REQUIRE( jit.Regs()[1] == 0x267ea626 );
+    REQUIRE( jit.Regs()[2] == 0x69debf49 );
+    REQUIRE( jit.Regs()[3] == 0x8f976895 );
+    REQUIRE( jit.Regs()[4] == 0xcf8a42c8 );
+    REQUIRE( jit.Regs()[5] == 0xcf89b8c7 );
+    REQUIRE( jit.Regs()[6] == 0xb6713f85 );
+    REQUIRE( jit.Regs()[7] == 0x015e2aa5 );
+    REQUIRE( jit.Regs()[8] == 0xcd14336a );
+    REQUIRE( jit.Regs()[9] == 0xafca0f3e );
+    REQUIRE( jit.Regs()[10] == 0xace2efd9 );
+    REQUIRE( jit.Regs()[11] == 0x68fb82cd );
+    REQUIRE( jit.Regs()[12] == 0x775447c0 );
+    REQUIRE( jit.Regs()[13] == 0xc9e1f8cd );
+    REQUIRE( jit.Regs()[14] == 0xebe0e626 );
+    REQUIRE( jit.Regs()[15] == 0x00000014 );
+    REQUIRE( jit.Cpsr() == 0x200001d0 );
+}
+
+
 TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
     const std::array<InstructionGenerator, 16> imm_instructions = {
             {
@@ -346,6 +409,10 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
             return 0;
         };
     };
+
+    SECTION("single instructions") {
+        FuzzJitArm(1, 2, 10000, instruction_select(/*Rd_can_be_r15=*/false));
+    }
 
     SECTION("short blocks") {
         FuzzJitArm(5, 6, 10000, instruction_select(/*Rd_can_be_r15=*/false));

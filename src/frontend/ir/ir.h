@@ -75,6 +75,11 @@ public:
 
     std::vector<ValuePtr> GetUses() const;
 
+    /// Prepare this Value for removal from the instruction stream.
+    virtual void Invalidate() {}
+    /// Assert that this Value is valid.
+    virtual void AssertValid();
+
     intptr_t GetTag() const { return tag; }
     void SetTag(intptr_t tag_) { tag = tag_; }
 
@@ -151,7 +156,8 @@ public:
     /// Get argument number `index`.
     ValuePtr GetArg(size_t index) const;
 
-    void AssertValid();
+    void Invalidate() override;
+    void AssertValid() override;
 protected:
     void ReplaceUseOfXWithY(ValuePtr x, ValuePtr y) override;
 
@@ -263,6 +269,8 @@ public:
     size_t cycle_count = 0;
 };
 
+/// Returns a string representation of the contents of block. Intended for debugging.
+std::string DumpBlock(const IR::Block& block);
 
 } // namespace IR
 } // namespace Dynarmic
