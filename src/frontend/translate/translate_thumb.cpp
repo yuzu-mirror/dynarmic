@@ -888,7 +888,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
         visitor.ir.block.cycle_count++;
     }
 
-    return visitor.ir.block;
+    return std::move(visitor.ir.block);
 }
 
 } // namespace Arm

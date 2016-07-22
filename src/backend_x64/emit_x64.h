@@ -23,7 +23,7 @@ public:
     EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb, Jit* jit_interface)
             : reg_alloc(code), code(code), routines(routines), cb(cb), jit_interface(jit_interface) {}
 
-    CodePtr Emit(const Arm::LocationDescriptor descriptor, const IR::Block& ir);
+    CodePtr Emit(const Arm::LocationDescriptor descriptor, IR::Block& ir);
 
     CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor) {
         auto iter = basic_blocks.find(descriptor);
@@ -34,53 +34,49 @@ public:
 
 private:
     // Microinstruction emitters
-    void EmitImmU1(IR::Value* value);
-    void EmitImmU8(IR::Value* value);
-    void EmitImmU32(IR::Value* value);
-    void EmitImmRegRef(IR::Value* value);
-    void EmitGetRegister(IR::Value* value);
-    void EmitSetRegister(IR::Value* value);
-    void EmitGetNFlag(IR::Value* value);
-    void EmitSetNFlag(IR::Value* value);
-    void EmitGetZFlag(IR::Value* value);
-    void EmitSetZFlag(IR::Value* value);
-    void EmitGetCFlag(IR::Value* value);
-    void EmitSetCFlag(IR::Value* value);
-    void EmitGetVFlag(IR::Value* value);
-    void EmitSetVFlag(IR::Value* value);
-    void EmitBXWritePC(IR::Value* value);
-    void EmitCallSupervisor(IR::Value* value);
-    void EmitGetCarryFromOp(IR::Value* value);
-    void EmitGetOverflowFromOp(IR::Value* value);
-    void EmitLeastSignificantHalf(IR::Value* value);
-    void EmitLeastSignificantByte(IR::Value* value);
-    void EmitMostSignificantBit(IR::Value* value);
-    void EmitIsZero(IR::Value* value);
-    void EmitLogicalShiftLeft(IR::Value* value);
-    void EmitLogicalShiftRight(IR::Value* value);
-    void EmitArithmeticShiftRight(IR::Value* value);
-    void EmitRotateRight(IR::Value* value);
-    void EmitAddWithCarry(IR::Value* value);
-    void EmitSubWithCarry(IR::Value* value);
-    void EmitAnd(IR::Value* value);
-    void EmitEor(IR::Value* value);
-    void EmitOr(IR::Value* value);
-    void EmitNot(IR::Value* value);
-    void EmitSignExtendHalfToWord(IR::Value* value);
-    void EmitSignExtendByteToWord(IR::Value* value);
-    void EmitZeroExtendHalfToWord(IR::Value* value);
-    void EmitZeroExtendByteToWord(IR::Value* value);
-    void EmitByteReverseWord(IR::Value* value);
-    void EmitByteReverseHalf(IR::Value* value);
-    void EmitByteReverseDual(IR::Value* value);
-    void EmitReadMemory8(IR::Value* value);
-    void EmitReadMemory16(IR::Value* value);
-    void EmitReadMemory32(IR::Value* value);
-    void EmitReadMemory64(IR::Value* value);
-    void EmitWriteMemory8(IR::Value* value);
-    void EmitWriteMemory16(IR::Value* value);
-    void EmitWriteMemory32(IR::Value* value);
-    void EmitWriteMemory64(IR::Value* value);
+    void EmitGetRegister(IR::Block& block, IR::Inst* inst);
+    void EmitSetRegister(IR::Block& block, IR::Inst* inst);
+    void EmitGetNFlag(IR::Block& block, IR::Inst* inst);
+    void EmitSetNFlag(IR::Block& block, IR::Inst* inst);
+    void EmitGetZFlag(IR::Block& block, IR::Inst* inst);
+    void EmitSetZFlag(IR::Block& block, IR::Inst* inst);
+    void EmitGetCFlag(IR::Block& block, IR::Inst* inst);
+    void EmitSetCFlag(IR::Block& block, IR::Inst* inst);
+    void EmitGetVFlag(IR::Block& block, IR::Inst* inst);
+    void EmitSetVFlag(IR::Block& block, IR::Inst* inst);
+    void EmitBXWritePC(IR::Block& block, IR::Inst* inst);
+    void EmitCallSupervisor(IR::Block& block, IR::Inst* inst);
+    void EmitGetCarryFromOp(IR::Block& block, IR::Inst* inst);
+    void EmitGetOverflowFromOp(IR::Block& block, IR::Inst* inst);
+    void EmitLeastSignificantHalf(IR::Block& block, IR::Inst* inst);
+    void EmitLeastSignificantByte(IR::Block& block, IR::Inst* inst);
+    void EmitMostSignificantBit(IR::Block& block, IR::Inst* inst);
+    void EmitIsZero(IR::Block& block, IR::Inst* inst);
+    void EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst);
+    void EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst);
+    void EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst);
+    void EmitRotateRight(IR::Block& block, IR::Inst* inst);
+    void EmitAddWithCarry(IR::Block& block, IR::Inst* inst);
+    void EmitSubWithCarry(IR::Block& block, IR::Inst* inst);
+    void EmitAnd(IR::Block& block, IR::Inst* inst);
+    void EmitEor(IR::Block& block, IR::Inst* inst);
+    void EmitOr(IR::Block& block, IR::Inst* inst);
+    void EmitNot(IR::Block& block, IR::Inst* inst);
+    void EmitSignExtendHalfToWord(IR::Block& block, IR::Inst* inst);
+    void EmitSignExtendByteToWord(IR::Block& block, IR::Inst* inst);
+    void EmitZeroExtendHalfToWord(IR::Block& block, IR::Inst* inst);
+    void EmitZeroExtendByteToWord(IR::Block& block, IR::Inst* inst);
+    void EmitByteReverseWord(IR::Block& block, IR::Inst* inst);
+    void EmitByteReverseHalf(IR::Block& block, IR::Inst* inst);
+    void EmitByteReverseDual(IR::Block& block, IR::Inst* inst);
+    void EmitReadMemory8(IR::Block& block, IR::Inst* inst);
+    void EmitReadMemory16(IR::Block& block, IR::Inst* inst);
+    void EmitReadMemory32(IR::Block& block, IR::Inst* inst);
+    void EmitReadMemory64(IR::Block& block, IR::Inst* inst);
+    void EmitWriteMemory8(IR::Block& block, IR::Inst* inst);
+    void EmitWriteMemory16(IR::Block& block, IR::Inst* inst);
+    void EmitWriteMemory32(IR::Block& block, IR::Inst* inst);
+    void EmitWriteMemory64(IR::Block& block, IR::Inst* inst);
 
     // Helpers
     void EmitAddCycles(size_t cycles);

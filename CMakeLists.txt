@@ -7,11 +7,13 @@ option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 # Compiler flags
 if (NOT MSVC)
     add_compile_options(--std=c++14 -Wall -Werror -Wextra -pedantic -Wfatal-errors -Wno-unused-parameter -Wno-missing-braces)
+    add_compile_options(-DBOOST_SYSTEM_NO_DEPRECATED)
     if (ARCHITECTURE_x86_64)
         add_compile_options(-msse4.1)
     endif()
 else()
     add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
+    add_compile_options(/DBOOST_SYSTEM_NO_DEPRECATED)
 endif()
 
 # This function should be passed a list of all files in a target. It will automatically generate

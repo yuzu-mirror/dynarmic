@@ -17,10 +17,13 @@ namespace Dynarmic {
 namespace BackendX64 {
 
 enum class HostLoc {
-    RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP, R8, R9, R10, R11, R12, R13, R14,
+    // Ordering of the registers is intentional. See also: HostLocToX64.
+    RAX, RCX, RDX, RBX, RSP, RBP, RSI, RDI, R8, R9, R10, R11, R12, R13, R14,
     CF, PF, AF, ZF, SF, OF,
     FirstSpill,
 };
+
+constexpr size_t HostLocCount = static_cast<size_t>(HostLoc::FirstSpill) + SpillCount;
 
 enum class HostLocState {
     Idle, Def, Use, Scratch
@@ -66,22 +69,26 @@ public:
     RegAlloc(Gen::XEmitter* code) : code(code) {}
 
     /// Late-def
-    Gen::X64Reg DefRegister(IR::Value* def_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg DefRegister(IR::Inst* def_inst, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
     /// Early-use, Late-def
-    Gen::X64Reg UseDefRegister(IR::Value* use_value, IR::Value* def_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg UseDefRegister(IR::Value use_value, IR::Inst* def_inst, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
     /// Early-use
-    Gen::X64Reg UseRegister(IR::Value* use_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg UseRegister(IR::Value use_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg UseRegister(IR::Inst* use_inst, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
     /// Early-use, Destroyed
-    Gen::X64Reg UseScratchRegister(IR::Value* use_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg UseScratchRegister(IR::Value use_value, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg UseScratchRegister(IR::Inst* use_inst, std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
     /// Early-def, Late-use, single-use
     Gen::X64Reg ScratchRegister(std::initializer_list<HostLoc> desired_locations = hostloc_any_register);
+    Gen::X64Reg LoadImmediateIntoRegister(IR::Value imm, Gen::X64Reg reg);
 
     /// Late-def for result register, Early-use for all arguments, Each value is placed into registers according to host ABI.
-    void HostCall(IR::Value* result_def = nullptr, IR::Value* arg0_use = nullptr, IR::Value* arg1_use = nullptr, IR::Value* arg2_use = nullptr, IR::Value* arg3_use = nullptr);
+    void HostCall(IR::Inst* result_def = nullptr, IR::Value arg0_use = {}, IR::Value arg1_use = {}, IR::Value arg2_use = {}, IR::Value arg3_use = {});
 
     // TODO: Values in host flags
 
-    void DecrementRemainingUses(IR::Value* value);
+    void DecrementRemainingUses(IR::Inst* value);
 
     void EndOfAllocScope();
 
@@ -91,7 +98,7 @@ public:
 
 private:
     HostLoc SelectARegister(std::initializer_list<HostLoc> desired_locations) const;
-    std::vector<HostLoc> ValueLocations(IR::Value* value) const;
+    std::vector<HostLoc> ValueLocations(IR::Inst* value) const;
     bool IsRegisterOccupied(HostLoc loc) const;
     bool IsRegisterAllocated(HostLoc loc) const;
 
@@ -100,10 +107,9 @@ private:
 
     Gen::XEmitter* code = nullptr;
 
-    using mapping_map_t = std::map<HostLoc, IR::Value*>;
-    mapping_map_t hostloc_to_value;
-    std::map<HostLoc, HostLocState> hostloc_state;
-    std::map<IR::Value*, size_t> remaining_uses;
+    using mapping_map_t = std::array<IR::Inst*, HostLocCount>;
+    mapping_map_t hostloc_to_inst;
+    std::array<HostLocState, HostLocCount> hostloc_state;
 };
 
 } // namespace BackendX64

@@ -52,94 +52,69 @@ const char* GetNameOf(Opcode op) {
 
 // Value class member definitions
 
-void Value::ReplaceUsesWith(ValuePtr replacement) {
-    while (!uses.empty()) {
-        auto use = uses.front();
-        use.use_owner.lock()->ReplaceUseOfXWithY(use.value.lock(), replacement);
-    }
-}
-
-std::vector<ValuePtr> Value::GetUses() const {
-    std::vector<ValuePtr> result(uses.size());
-    std::transform(uses.begin(), uses.end(), result.begin(), [](const auto& use){ return use.use_owner.lock(); });
-    return result;
-}
-
-void Value::AddUse(ValuePtr owner) {
-    // There can be multiple uses from the same owner.
-    uses.push_back({ shared_from_this(), owner });
-}
-
-void Value::RemoveUse(ValuePtr owner) {
-    // Remove only one use.
-    auto iter = std::find_if(uses.begin(), uses.end(), [&owner](auto use) { return use.use_owner.lock() == owner; });
-    ASSERT_MSG(iter != uses.end(), "RemoveUse without associated AddUse. Bug in use management code.");
-    uses.erase(iter);
-}
-
-void Value::ReplaceUseOfXWithY(ValuePtr x, ValuePtr y) {
-    // This should never be called. Use management is incorrect if this is ever called.
-    ASSERT_MSG(false, "This Value type doesn't use any values. Bug in use management code.");
-}
-
-void Value::AssertValid() {
-    ASSERT(std::all_of(uses.begin(), uses.end(), [](const auto& use) { return !use.use_owner.expired(); }));
+Type Value::GetType() const {
+    return IsImmediate() ? type : inner.inst->GetType();
 }
 
 // Inst class member definitions
 
-Inst::Inst(Opcode op_) : Value(op_) {
-    args.resize(GetNumArgsOf(op));
+Value Inst::GetArg(size_t index) const {
+    DEBUG_ASSERT(index < GetNumArgsOf(op));
+    DEBUG_ASSERT(!args[index].IsEmpty());
+
+    return args[index];
 }
 
-void Inst::SetArg(size_t index, ValuePtr value) {
-    auto this_ = shared_from_this();
+void Inst::SetArg(size_t index, Value value) {
+    DEBUG_ASSERT(index < GetNumArgsOf(op));
+    DEBUG_ASSERT(value.GetType() == GetArgTypeOf(op, index));
 
-    if (auto prev_value = args.at(index).lock()) {
-        prev_value->RemoveUse(this_);
+    if (!args[index].IsImmediate()) {
+        UndoUse(args[index]);
+    }
+    if (!value.IsImmediate()) {
+        Use(value);
     }
 
-    ASSERT(value->GetType() == GetArgTypeOf(op, index));
-    args.at(index) = value;
-
-    value->AddUse(this_);
-}
-
-ValuePtr Inst::GetArg(size_t index) const {
-    ASSERT_MSG(!args.at(index).expired(), "This should never happen. All Values should be owned by a MicroBlock.");
-    return args.at(index).lock();
+    args[index] = value;
 }
 
 void Inst::Invalidate() {
-    AssertValid();
-    ASSERT(!HasUses());
-
-    auto this_ = shared_from_this();
-    for (auto& arg : args) {
-        arg.lock()->RemoveUse(this_);
-    }
-}
-
-void Inst::AssertValid() {
-    ASSERT(std::all_of(args.begin(), args.end(), [](const auto& arg) { return !arg.expired(); }));
-    Value::AssertValid();
-}
-
-void Inst::ReplaceUseOfXWithY(ValuePtr x, ValuePtr y) {
-    bool has_use = false;
-    auto this_ = shared_from_this();
-
-    // Note that there may be multiple uses of x.
-    for (auto& arg : args) {
-        if (arg.lock() == x) {
-            arg = y;
-            has_use = true;
-            x->RemoveUse(this_);
-            y->AddUse(this_);
+    for (auto& value : args) {
+        if (!value.IsImmediate()) {
+            UndoUse(value);
         }
     }
+}
 
-    ASSERT_MSG(has_use, "This Inst doesn't have x. Bug in use management code.");
+void Inst::Use(Value& value) {
+    value.GetInst()->use_count++;
+
+    switch (op){
+        case Opcode::GetCarryFromOp:
+            value.GetInst()->carry_inst = this;
+            break;
+        case Opcode::GetOverflowFromOp:
+            value.GetInst()->overflow_inst = this;
+            break;
+        default:
+            break;
+    }
+}
+
+void Inst::UndoUse(Value& value) {
+    value.GetInst()->use_count--;
+
+    switch (op){
+        case Opcode::GetCarryFromOp:
+            value.GetInst()->carry_inst = nullptr;
+            break;
+        case Opcode::GetOverflowFromOp:
+            value.GetInst()->overflow_inst = nullptr;
+            break;
+        default:
+            break;
+    }
 }
 
 std::string DumpBlock(const IR::Block& block) {
@@ -160,65 +135,48 @@ std::string DumpBlock(const IR::Block& block) {
     }
     ret += "\n";
 
-    std::map<IR::Value*, size_t> value_to_index;
+    std::map<const IR::Inst*, size_t> inst_to_index;
     size_t index = 0;
 
-    const auto arg_to_string = [&value_to_index](IR::ValuePtr arg) -> std::string {
-        if (!arg) {
+    const auto arg_to_string = [&inst_to_index](const IR::Value& arg) -> std::string {
+        if (arg.IsEmpty()) {
             return "<null>";
+        } else if (!arg.IsImmediate()) {
+            return Common::StringFromFormat("%%%zu", inst_to_index.at(arg.GetInst()));
         }
-        switch (arg->GetOpcode()) {
-            case Opcode::ImmU1: {
-                auto inst = reinterpret_cast<ImmU1*>(arg.get());
-                return Common::StringFromFormat("#%s", inst->value ? "1" : "0");
-            }
-            case Opcode::ImmU8: {
-                auto inst = reinterpret_cast<ImmU8*>(arg.get());
-                return Common::StringFromFormat("#%u", inst->value);
-            }
-            case Opcode::ImmU32: {
-                auto inst = reinterpret_cast<ImmU32*>(arg.get());
-                return Common::StringFromFormat("#%#x", inst->value);
-            }
-            case Opcode::ImmRegRef: {
-                auto inst = reinterpret_cast<ImmRegRef*>(arg.get());
-                return Arm::RegToString(inst->value);
-            }
-            default: {
-                return Common::StringFromFormat("%%%zu", value_to_index.at(arg.get()));
-            }
+        switch (arg.GetType()) {
+            case Type::U1:
+                return Common::StringFromFormat("#%s", arg.GetU1() ? "1" : "0");
+            case Type::U8:
+                return Common::StringFromFormat("#%u", arg.GetU8());
+            case Type::U32:
+                return Common::StringFromFormat("#%#x", arg.GetU32());
+            case Type::RegRef:
+                return Arm::RegToString(arg.GetRegRef());
+            default:
+                return "<unknown immediate type>";
         }
     };
 
-    for (const auto& inst_ptr : block.instructions) {
-        const Opcode op = inst_ptr->GetOpcode();
-        switch (op) {
-            case Opcode::ImmU1:
-            case Opcode::ImmU8:
-            case Opcode::ImmU32:
-            case Opcode::ImmRegRef:
-                break;
-            default: {
-                if (GetTypeOf(op) != Type::Void) {
-                    ret += Common::StringFromFormat("%%%-5zu = ", index);
-                } else {
-                    ret += "         "; // '%00000 = ' -> 1 + 5 + 3 = 9 spaces
-                }
+    for (auto inst = block.instructions.begin(); inst != block.instructions.end(); ++inst) {
+        const Opcode op = inst->GetOpcode();
 
-                ret += GetNameOf(op);
-
-                const size_t arg_count = GetNumArgsOf(op);
-                const auto inst = reinterpret_cast<Inst*>(inst_ptr.get());
-                for (size_t arg_index = 0; arg_index < arg_count; arg_index++) {
-                    ret += arg_index != 0 ? ", " : " ";
-                    ret += arg_to_string(inst->GetArg(arg_index));
-                }
-
-                ret += "\n";
-                value_to_index[inst_ptr.get()] = index++;
-                break;
-            }
+        if (GetTypeOf(op) != Type::Void) {
+            ret += Common::StringFromFormat("%%%-5zu = ", index);
+        } else {
+            ret += "         "; // '%00000 = ' -> 1 + 5 + 3 = 9 spaces
         }
+
+        ret += GetNameOf(op);
+
+        const size_t arg_count = GetNumArgsOf(op);
+        for (size_t arg_index = 0; arg_index < arg_count; arg_index++) {
+            ret += arg_index != 0 ? ", " : " ";
+            ret += arg_to_string(inst->GetArg(arg_index));
+        }
+
+        ret += "\n";
+        inst_to_index.at(&*inst) = index++;
     }
 
     return ret;

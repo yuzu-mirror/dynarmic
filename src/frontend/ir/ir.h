@@ -10,9 +10,12 @@
 #include <memory>
 #include <vector>
 
-#include <boost/variant.hpp>
+#include <boost/pool/pool.hpp>
+#include <boost/intrusive/list.hpp>
 #include <boost/optional.hpp>
+#include <boost/variant.hpp>
 
+#include "common/assert.h"
 #include "common/common_types.h"
 #include "frontend/arm_types.h"
 #include "frontend/ir/opcodes.h"
@@ -47,22 +50,91 @@ const char* GetNameOf(Opcode op);
 
 // Type declarations
 
-/// Base class for microinstructions to derive from.
+/**
+ * A representation of a microinstruction. A single ARM/Thumb instruction may be
+ * converted into zero or more microinstructions.
+ */
 
-class Value;
-using ValuePtr = std::shared_ptr<Value>;
-using ValueWeakPtr = std::weak_ptr<Value>;
+struct Value;
+class Inst;
 
-class Value : public std::enable_shared_from_this<Value> {
+struct Value final {
 public:
-    virtual ~Value() = default;
+    Value() : type(Type::Void) {}
 
-    bool HasUses() const { return !uses.empty(); }
-    bool HasOneUse() const { return uses.size() == 1; }
-    bool HasManyUses() const { return uses.size() > 1; }
+    explicit Value(Inst* value) : type(Type::Opaque) {
+        inner.inst = value;
+    }
 
-    /// Replace all uses of this Value with `replacement`.
-    void ReplaceUsesWith(ValuePtr replacement);
+    explicit Value(Arm::Reg value) : type(Type::RegRef) {
+        inner.imm_regref = value;
+    }
+
+    explicit Value(bool value) : type(Type::U1) {
+        inner.imm_u1 = value;
+    }
+
+    explicit Value(u8 value) : type(Type::U8) {
+        inner.imm_u8 = value;
+    }
+
+    explicit Value(u32 value) : type(Type::U32) {
+        inner.imm_u32 = value;
+    }
+
+    bool IsEmpty() const {
+        return type == Type::Void;
+    }
+
+    bool IsImmediate() const {
+        return type != Type::Opaque;
+    }
+
+    Type GetType() const;
+
+    Inst* GetInst() const {
+        DEBUG_ASSERT(type == Type::Opaque);
+        return inner.inst;
+    }
+
+    Arm::Reg GetRegRef() const {
+        DEBUG_ASSERT(type == Type::RegRef);
+        return inner.imm_regref;
+    }
+
+    bool GetU1() const {
+        DEBUG_ASSERT(type == Type::U1);
+        return inner.imm_u1;
+    }
+
+    u8 GetU8() const {
+        DEBUG_ASSERT(type == Type::U8);
+        return inner.imm_u8;
+    }
+
+    u32 GetU32() const {
+        DEBUG_ASSERT(type == Type::U32);
+        return inner.imm_u32;
+    }
+
+private:
+    Type type;
+
+    union {
+        Inst* inst; // type == Type::Opaque
+        Arm::Reg imm_regref;
+        bool imm_u1;
+        u8 imm_u8;
+        u32 imm_u32;
+    } inner;
+};
+
+using InstListLinkMode = boost::intrusive::link_mode<boost::intrusive::normal_link>;
+class Inst final : public boost::intrusive::list_base_hook<InstListLinkMode> {
+public:
+    Inst(Opcode op) : op(op) {}
+
+    bool HasUses() const { return use_count > 0; }
 
     /// Get the microop this microinstruction represents.
     Opcode GetOpcode() const { return op; }
@@ -70,99 +142,22 @@ public:
     Type GetType() const { return GetTypeOf(op); }
     /// Get the number of arguments this instruction has.
     size_t NumArgs() const { return GetNumArgsOf(op); }
-    /// Get the number of uses this instruction has.
-    size_t NumUses() const { return uses.size(); }
 
-    std::vector<ValuePtr> GetUses() const;
+    Value GetArg(size_t index) const;
+    void SetArg(size_t index, Value value);
 
-    /// Prepare this Value for removal from the instruction stream.
-    virtual void Invalidate() {}
-    /// Assert that this Value is valid.
-    virtual void AssertValid();
+    void Invalidate();
 
-    intptr_t GetTag() const { return tag; }
-    void SetTag(intptr_t tag_) { tag = tag_; }
-
-protected:
-    friend class Inst;
-
-    explicit Value(Opcode op_) : op(op_) {}
-
-    void AddUse(ValuePtr owner);
-    void RemoveUse(ValuePtr owner);
-    virtual void ReplaceUseOfXWithY(ValuePtr x, ValuePtr y);
+    size_t use_count = 0;
+    Inst* carry_inst = nullptr;
+    Inst* overflow_inst = nullptr;
 
 private:
+    void Use(Value& value);
+    void UndoUse(Value& value);
+
     Opcode op;
-
-    struct Use {
-        /// The instruction which is being used.
-        ValueWeakPtr value;
-        /// The instruction which is using `value`.
-        ValueWeakPtr use_owner;
-    };
-    std::list<Use> uses;
-
-    intptr_t tag = 0;
-};
-
-/// Representation of a u1 immediate.
-class ImmU1 final : public Value {
-public:
-    explicit ImmU1(bool value_) : Value(Opcode::ImmU1), value(value_) {}
-    ~ImmU1() override = default;
-
-    const bool value; ///< Literal value to load
-};
-
-/// Representation of a u8 immediate.
-class ImmU8 final : public Value {
-public:
-    explicit ImmU8(u8 value_) : Value(Opcode::ImmU8), value(value_) {}
-    ~ImmU8() override = default;
-
-    const u8 value; ///< Literal value to load
-};
-
-/// Representation of a u32 immediate.
-class ImmU32 final : public Value {
-public:
-    explicit ImmU32(u32 value_) : Value(Opcode::ImmU32), value(value_) {}
-    ~ImmU32() override = default;
-
-    const u32 value; ///< Literal value to load
-};
-
-/// Representation of a GPR reference.
-class ImmRegRef final : public Value {
-public:
-    explicit ImmRegRef(Arm::Reg value_) : Value(Opcode::ImmRegRef), value(value_) {}
-    ~ImmRegRef() override = default;
-
-    const Arm::Reg value; ///< Literal value to load
-};
-
-/**
- * A representation of a microinstruction. A single ARM/Thumb instruction may be
- * converted into zero or more microinstructions.
- */
-class Inst final : public Value {
-public:
-    explicit Inst(Opcode op);
-    ~Inst() override = default;
-
-    /// Set argument number `index` to `value`.
-    void SetArg(size_t index, ValuePtr value);
-    /// Get argument number `index`.
-    ValuePtr GetArg(size_t index) const;
-
-    void Invalidate() override;
-    void AssertValid() override;
-protected:
-    void ReplaceUseOfXWithY(ValuePtr x, ValuePtr y) override;
-
-private:
-    std::vector<ValueWeakPtr> args;
+    std::array<Value, 3> args;
 };
 
 namespace Term {
@@ -261,7 +256,9 @@ public:
     boost::optional<Arm::LocationDescriptor> cond_failed = {};
 
     /// List of instructions in this block.
-    std::list<ValuePtr> instructions;
+    boost::intrusive::list<Inst, InstListLinkMode> instructions;
+    /// Memory pool for instruction list
+    std::unique_ptr<boost::pool<>> instruction_alloc_pool = std::make_unique<boost::pool<>>(sizeof(Inst));
     /// Terminal instruction of this block.
     Terminal terminal = Term::Invalid{};
 

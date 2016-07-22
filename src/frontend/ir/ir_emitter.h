@@ -21,79 +21,77 @@ public:
     LocationDescriptor current_location;
 
     struct ResultAndCarry {
-        IR::ValuePtr result;
-        IR::ValuePtr carry;
+        IR::Value result;
+        IR::Value carry;
     };
 
     struct ResultAndCarryAndOverflow {
-        IR::ValuePtr result;
-        IR::ValuePtr carry;
-        IR::ValuePtr overflow;
+        IR::Value result;
+        IR::Value carry;
+        IR::Value overflow;
     };
 
     void Unimplemented();
     u32 PC();
     u32 AlignPC(size_t alignment);
 
-    IR::ValuePtr Imm1(bool value);
-    IR::ValuePtr Imm8(u8 value);
-    IR::ValuePtr Imm32(u32 value);
+    IR::Value Imm1(bool value);
+    IR::Value Imm8(u8 value);
+    IR::Value Imm32(u32 value);
 
-    IR::ValuePtr GetRegister(Reg source_reg);
-    void SetRegister(const Reg dest_reg, IR::ValuePtr value);
+    IR::Value GetRegister(Reg source_reg);
+    void SetRegister(const Reg dest_reg, const IR::Value& value);
 
-    void ALUWritePC(IR::ValuePtr value);
-    void BranchWritePC(IR::ValuePtr value);
-    void BXWritePC(IR::ValuePtr value);
-    void LoadWritePC(IR::ValuePtr value);
-    void CallSupervisor(IR::ValuePtr value);
+    void ALUWritePC(const IR::Value& value);
+    void BranchWritePC(const IR::Value& value);
+    void BXWritePC(const IR::Value& value);
+    void LoadWritePC(const IR::Value& value);
+    void CallSupervisor(const IR::Value& value);
 
-    IR::ValuePtr GetCFlag();
-    void SetNFlag(IR::ValuePtr value);
-    void SetZFlag(IR::ValuePtr value);
-    void SetCFlag(IR::ValuePtr value);
-    void SetVFlag(IR::ValuePtr value);
+    IR::Value GetCFlag();
+    void SetNFlag(const IR::Value& value);
+    void SetZFlag(const IR::Value& value);
+    void SetCFlag(const IR::Value& value);
+    void SetVFlag(const IR::Value& value);
 
-    IR::ValuePtr LeastSignificantHalf(IR::ValuePtr value);
-    IR::ValuePtr LeastSignificantByte(IR::ValuePtr value);
-    IR::ValuePtr MostSignificantBit(IR::ValuePtr value);
-    IR::ValuePtr IsZero(IR::ValuePtr value);
+    IR::Value LeastSignificantHalf(const IR::Value& value);
+    IR::Value LeastSignificantByte(const IR::Value& value);
+    IR::Value MostSignificantBit(const IR::Value& value);
+    IR::Value IsZero(const IR::Value& value);
 
-    ResultAndCarry LogicalShiftLeft(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
-    ResultAndCarry LogicalShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
-    ResultAndCarry ArithmeticShiftRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
-    ResultAndCarry RotateRight(IR::ValuePtr value_in, IR::ValuePtr shift_amount, IR::ValuePtr carry_in);
-    ResultAndCarryAndOverflow AddWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in);
-    IR::ValuePtr Add(IR::ValuePtr a, IR::ValuePtr b);
-    ResultAndCarryAndOverflow SubWithCarry(IR::ValuePtr a, IR::ValuePtr b, IR::ValuePtr carry_in);
-    IR::ValuePtr Sub(IR::ValuePtr a, IR::ValuePtr b);
-    IR::ValuePtr And(IR::ValuePtr a, IR::ValuePtr b);
-    IR::ValuePtr Eor(IR::ValuePtr a, IR::ValuePtr b);
-    IR::ValuePtr Or(IR::ValuePtr a, IR::ValuePtr b);
-    IR::ValuePtr Not(IR::ValuePtr a);
-    IR::ValuePtr SignExtendHalfToWord(IR::ValuePtr a);
-    IR::ValuePtr SignExtendByteToWord(IR::ValuePtr a);
-    IR::ValuePtr ZeroExtendHalfToWord(IR::ValuePtr a);
-    IR::ValuePtr ZeroExtendByteToWord(IR::ValuePtr a);
-    IR::ValuePtr ByteReverseWord(IR::ValuePtr a);
-    IR::ValuePtr ByteReverseHalf(IR::ValuePtr a);
-    IR::ValuePtr ByteReverseDual(IR::ValuePtr a);
+    ResultAndCarry LogicalShiftLeft(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
+    ResultAndCarry LogicalShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
+    ResultAndCarry ArithmeticShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
+    ResultAndCarry RotateRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
+    ResultAndCarryAndOverflow AddWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
+    IR::Value Add(const IR::Value& a, const IR::Value& b);
+    ResultAndCarryAndOverflow SubWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
+    IR::Value Sub(const IR::Value& a, const IR::Value& b);
+    IR::Value And(const IR::Value& a, const IR::Value& b);
+    IR::Value Eor(const IR::Value& a, const IR::Value& b);
+    IR::Value Or(const IR::Value& a, const IR::Value& b);
+    IR::Value Not(const IR::Value& a);
+    IR::Value SignExtendHalfToWord(const IR::Value& a);
+    IR::Value SignExtendByteToWord(const IR::Value& a);
+    IR::Value ZeroExtendHalfToWord(const IR::Value& a);
+    IR::Value ZeroExtendByteToWord(const IR::Value& a);
+    IR::Value ByteReverseWord(const IR::Value& a);
+    IR::Value ByteReverseHalf(const IR::Value& a);
+    IR::Value ByteReverseDual(const IR::Value& a);
 
-    IR::ValuePtr ReadMemory8(IR::ValuePtr vaddr);
-    IR::ValuePtr ReadMemory16(IR::ValuePtr vaddr);
-    IR::ValuePtr ReadMemory32(IR::ValuePtr vaddr);
-    IR::ValuePtr ReadMemory64(IR::ValuePtr vaddr);
-    void WriteMemory8(IR::ValuePtr vaddr, IR::ValuePtr value);
-    void WriteMemory16(IR::ValuePtr vaddr, IR::ValuePtr value);
-    void WriteMemory32(IR::ValuePtr vaddr, IR::ValuePtr value);
-    void WriteMemory64(IR::ValuePtr vaddr, IR::ValuePtr value);
+    IR::Value ReadMemory8(const IR::Value& vaddr);
+    IR::Value ReadMemory16(const IR::Value& vaddr);
+    IR::Value ReadMemory32(const IR::Value& vaddr);
+    IR::Value ReadMemory64(const IR::Value& vaddr);
+    void WriteMemory8(const IR::Value& vaddr, const IR::Value& value);
+    void WriteMemory16(const IR::Value& vaddr, const IR::Value& value);
+    void WriteMemory32(const IR::Value& vaddr, const IR::Value& value);
+    void WriteMemory64(const IR::Value& vaddr, const IR::Value& value);
 
     void SetTerm(const IR::Terminal& terminal);
 
 private:
-    IR::ValuePtr Inst(IR::Opcode op, std::initializer_list<IR::ValuePtr> args);
-    IR::ValuePtr RegRef(Reg reg);
-    void AddToBlock(IR::ValuePtr value);
+    IR::Value Inst(IR::Opcode op, std::initializer_list<IR::Value> args);
 };
 
 } // namespace Arm

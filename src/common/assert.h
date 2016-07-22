@@ -45,7 +45,7 @@ static void assert_noinline_call(const Fn& fn) {
 #define DEBUG_ASSERT_MSG(_a_, ...) ASSERT_MSG(_a_, __VA_ARGS__)
 #else // not debug
 #define DEBUG_ASSERT(_a_)
-#define DEBUG_ASSERT_MSG(_a_, _desc_, ...)
+#define DEBUG_ASSERT_MSG(_a_, ...)
 #endif
 
 #define UNIMPLEMENTED() DEBUG_ASSERT_MSG(false, "Unimplemented code!")

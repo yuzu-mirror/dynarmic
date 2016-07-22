@@ -12,9 +12,11 @@ namespace Dynarmic {
 namespace Optimization {
 
 void VerificationPass(const IR::Block& block) {
+#if 0
     for (const auto& inst : block.instructions) {
         inst->AssertValid();
     }
+#endif
 }
 
 } // namespace Optimization

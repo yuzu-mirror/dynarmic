@@ -340,7 +340,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
         visitor.ir.block.cond_failed = { visitor.ir.current_location };
     }
 
-    return visitor.ir.block;
+    return std::move(visitor.ir.block);
 }
 
 } // namespace Arm

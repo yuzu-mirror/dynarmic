@@ -12,6 +12,7 @@ namespace Dynarmic {
 namespace Optimization {
 
 void GetSetElimination(IR::Block& block) {
+#if 0
     using Iterator = decltype(block.instructions.begin());
     struct RegisterInfo {
         IR::ValuePtr register_value = nullptr;
@@ -102,6 +103,7 @@ void GetSetElimination(IR::Block& block) {
                 break;
         }
     }
+#endif
 }
 
 } // namespace Optimization

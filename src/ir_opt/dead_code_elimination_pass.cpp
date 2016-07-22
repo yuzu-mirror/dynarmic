@@ -26,8 +26,8 @@ void DeadCodeElimination(IR::Block& block) {
     auto iter = block.instructions.end();
     do {
         --iter;
-        if (!(*iter)->HasUses() && is_side_effect_free((*iter)->GetOpcode())) {
-            (*iter)->Invalidate();
+        if (!iter->HasUses() && is_side_effect_free(iter->GetOpcode())) {
+            iter->Invalidate();
             iter = block.instructions.erase(iter);
         }
     } while (iter != block.instructions.begin());
