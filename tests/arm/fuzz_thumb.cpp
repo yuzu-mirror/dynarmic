@@ -231,12 +231,12 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 
             printf("\nInterp Write Records:\n");
             for (auto& record : interp_write_records) {
-                printf("%zu [%x] = %llx\n", record.size, record.address, record.data);
+                printf("%zu [%x] = %" PRIu64 "\n", record.size, record.address, record.data);
             }
 
             printf("\nJIT Write Records:\n");
             for (auto& record : jit_write_records) {
-                printf("%zu [%x] = %llx\n", record.size, record.address, record.data);
+                printf("%zu [%x] = %" PRIu64 "\n", record.size, record.address, record.data);
             }
 
             Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, true, false, 0}, MemoryRead32);

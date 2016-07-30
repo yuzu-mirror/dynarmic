@@ -82,7 +82,7 @@ static CPUCaps Detect() {
         caps.vendor = CPUVendor::OTHER;
 
     // Set reasonable default brand string even if brand string not available
-    strcpy_s(caps.cpu_string, sizeof(caps.cpu_string), caps.brand_string);
+    strncpy(caps.cpu_string, caps.brand_string, sizeof(caps.cpu_string));
 
     // Detect family and other miscellaneous features
     if (max_std_fn >= 1) {

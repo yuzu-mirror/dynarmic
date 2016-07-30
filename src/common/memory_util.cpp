@@ -11,6 +11,7 @@
     #include "common/string_util.h"
 #else
     #include <cstdlib>
+    #include <cstring>
     #include <sys/mman.h>
 #endif
 
