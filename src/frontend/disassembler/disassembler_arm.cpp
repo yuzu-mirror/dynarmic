@@ -54,13 +54,13 @@ public:
     std::string RsrStr(Reg s, ShiftType shift, Reg m) {
         switch (shift){
             case ShiftType::LSL:
-                return Common::StringFromFormat("%s, LSL %s", RegToString(m), RegToString(s));
+                return Common::StringFromFormat("%s, lsl %s", RegToString(m), RegToString(s));
             case ShiftType::LSR:
-                return Common::StringFromFormat("%s, LSR %s", RegToString(m), RegToString(s));
+                return Common::StringFromFormat("%s, lsr %s", RegToString(m), RegToString(s));
             case ShiftType::ASR:
-                return Common::StringFromFormat("%s, ASR %s", RegToString(m), RegToString(s));
+                return Common::StringFromFormat("%s, asr %s", RegToString(m), RegToString(s));
             case ShiftType::ROR:
-                return Common::StringFromFormat("%s, ROR %s", RegToString(m), RegToString(s));
+                return Common::StringFromFormat("%s, ror %s", RegToString(m), RegToString(s));
         }
         assert(false);
         return "<internal error>";
