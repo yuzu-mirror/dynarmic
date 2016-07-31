@@ -7,6 +7,7 @@
 #include <cinttypes>
 #include <cstring>
 #include <functional>
+#include <signal.h>
 
 #include <catch.hpp>
 #include <frontend/ir/ir.h>
@@ -236,6 +237,8 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
 #ifdef _MSC_VER
             __debugbreak();
+#else
+            raise(SIGTRAP);
 #endif
             FAIL();
         }
