@@ -138,6 +138,12 @@ IREmitter::ResultAndCarry IREmitter::RotateRight(const IR::Value& value_in, cons
     return {result, carry_out};
 }
 
+IREmitter::ResultAndCarry IREmitter::RotateRightExtended(const IR::Value& value_in, const IR::Value& carry_in) {
+    auto result = Inst(IR::Opcode::RotateRightExtended, {value_in, carry_in});
+    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+    return {result, carry_out};
+}
+
 IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in) {
     auto result = Inst(IR::Opcode::AddWithCarry, {a, b, carry_in});
     auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});

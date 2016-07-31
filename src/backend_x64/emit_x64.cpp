@@ -636,6 +636,24 @@ void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitRotateRightExtended(IR::Block& block, IR::Inst* inst) {
+    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    X64Reg carry = carry_inst
+                    ? reg_alloc.UseDefRegister(inst->GetArg(1), carry_inst, any_gpr)
+                    : reg_alloc.UseRegister(inst->GetArg(1), any_gpr);
+
+    code->BT(32, R(carry), Imm8(0));
+    code->RCR(32, R(result), Imm8(1));
+
+    if (carry_inst) {
+        EraseInstruction(block, carry_inst);
+        reg_alloc.DecrementRemainingUses(inst);
+        code->SETcc(CC_C, R(carry));
+    }
+}
+
 static X64Reg DoCarry(RegAlloc& reg_alloc, const IR::Value& carry_in, IR::Inst* carry_out) {
     if (carry_in.IsImmediate()) {
         return carry_out ? reg_alloc.DefRegister(carry_out, any_gpr) : INVALID_REG;

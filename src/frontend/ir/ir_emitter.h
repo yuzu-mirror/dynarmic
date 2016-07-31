@@ -63,6 +63,7 @@ public:
     ResultAndCarry LogicalShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
     ResultAndCarry ArithmeticShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
     ResultAndCarry RotateRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
+    ResultAndCarry RotateRightExtended(const IR::Value& value_in, const IR::Value& carry_in);
     ResultAndCarryAndOverflow AddWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
     IR::Value Add(const IR::Value& a, const IR::Value& b);
     ResultAndCarryAndOverflow SubWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
