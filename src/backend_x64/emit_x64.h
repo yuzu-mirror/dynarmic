@@ -34,50 +34,9 @@ public:
 
 private:
     // Microinstruction emitters
-    void EmitIdentity(IR::Block& block, IR::Inst* inst);
-    void EmitGetRegister(IR::Block& block, IR::Inst* inst);
-    void EmitSetRegister(IR::Block& block, IR::Inst* inst);
-    void EmitGetNFlag(IR::Block& block, IR::Inst* inst);
-    void EmitSetNFlag(IR::Block& block, IR::Inst* inst);
-    void EmitGetZFlag(IR::Block& block, IR::Inst* inst);
-    void EmitSetZFlag(IR::Block& block, IR::Inst* inst);
-    void EmitGetCFlag(IR::Block& block, IR::Inst* inst);
-    void EmitSetCFlag(IR::Block& block, IR::Inst* inst);
-    void EmitGetVFlag(IR::Block& block, IR::Inst* inst);
-    void EmitSetVFlag(IR::Block& block, IR::Inst* inst);
-    void EmitBXWritePC(IR::Block& block, IR::Inst* inst);
-    void EmitCallSupervisor(IR::Block& block, IR::Inst* inst);
-    void EmitGetCarryFromOp(IR::Block& block, IR::Inst* inst);
-    void EmitGetOverflowFromOp(IR::Block& block, IR::Inst* inst);
-    void EmitLeastSignificantHalf(IR::Block& block, IR::Inst* inst);
-    void EmitLeastSignificantByte(IR::Block& block, IR::Inst* inst);
-    void EmitMostSignificantBit(IR::Block& block, IR::Inst* inst);
-    void EmitIsZero(IR::Block& block, IR::Inst* inst);
-    void EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst);
-    void EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst);
-    void EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst);
-    void EmitRotateRight(IR::Block& block, IR::Inst* inst);
-    void EmitAddWithCarry(IR::Block& block, IR::Inst* inst);
-    void EmitSubWithCarry(IR::Block& block, IR::Inst* inst);
-    void EmitAnd(IR::Block& block, IR::Inst* inst);
-    void EmitEor(IR::Block& block, IR::Inst* inst);
-    void EmitOr(IR::Block& block, IR::Inst* inst);
-    void EmitNot(IR::Block& block, IR::Inst* inst);
-    void EmitSignExtendHalfToWord(IR::Block& block, IR::Inst* inst);
-    void EmitSignExtendByteToWord(IR::Block& block, IR::Inst* inst);
-    void EmitZeroExtendHalfToWord(IR::Block& block, IR::Inst* inst);
-    void EmitZeroExtendByteToWord(IR::Block& block, IR::Inst* inst);
-    void EmitByteReverseWord(IR::Block& block, IR::Inst* inst);
-    void EmitByteReverseHalf(IR::Block& block, IR::Inst* inst);
-    void EmitByteReverseDual(IR::Block& block, IR::Inst* inst);
-    void EmitReadMemory8(IR::Block& block, IR::Inst* inst);
-    void EmitReadMemory16(IR::Block& block, IR::Inst* inst);
-    void EmitReadMemory32(IR::Block& block, IR::Inst* inst);
-    void EmitReadMemory64(IR::Block& block, IR::Inst* inst);
-    void EmitWriteMemory8(IR::Block& block, IR::Inst* inst);
-    void EmitWriteMemory16(IR::Block& block, IR::Inst* inst);
-    void EmitWriteMemory32(IR::Block& block, IR::Inst* inst);
-    void EmitWriteMemory64(IR::Block& block, IR::Inst* inst);
+#define OPCODE(name, type, ...) void Emit##name(IR::Block& block, IR::Inst* inst);
+#include "frontend/ir/opcodes.inc"
+#undef OPCODE
 
     // Helpers
     void EmitAddCycles(size_t cycles);
