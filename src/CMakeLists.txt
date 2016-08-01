@@ -16,6 +16,9 @@ set(SRCS
     frontend/ir/ir_emitter.cpp
     frontend/translate/translate.cpp
     frontend/translate/translate_arm.cpp
+    frontend/translate/translate_arm/data_processing.cpp
+    frontend/translate/translate_arm/exception_generating.cpp
+    frontend/translate/translate_arm/reversal.cpp
     frontend/translate/translate_thumb.cpp
     ir_opt/dead_code_elimination_pass.cpp
     ir_opt/get_set_elimination_pass.cpp
@@ -49,6 +52,7 @@ set(HEADERS
     frontend/ir/ir_emitter.h
     frontend/ir/opcodes.h
     frontend/translate/translate.h
+    frontend/translate/translate_arm/translate_arm.h
     interface/interface.h
     ir_opt/passes.h
     )
