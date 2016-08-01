@@ -15,7 +15,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
 IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32);
 
 IR::Block Translate(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
-    return (descriptor.TFlag ? TranslateThumb : TranslateArm)(descriptor, memory_read_32);
+    return (descriptor.TFlag() ? TranslateThumb : TranslateArm)(descriptor, memory_read_32);
 }
 
 } // namespace Arm

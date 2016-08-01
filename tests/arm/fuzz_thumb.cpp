@@ -239,7 +239,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
                 printf("%zu [%x] = %llx\n", record.size, record.address, record.data);
             }
 
-            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, true, false}, MemoryRead32);
+            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, true, false, 0}, MemoryRead32);
             Dynarmic::Optimization::GetSetElimination(ir_block);
             Dynarmic::Optimization::DeadCodeElimination(ir_block);
             Dynarmic::Optimization::VerificationPass(ir_block);

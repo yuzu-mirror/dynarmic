@@ -42,7 +42,7 @@ struct Jit::Impl {
         bool TFlag = Common::Bit<5>(jit_state.Cpsr);
         bool EFlag = Common::Bit<9>(jit_state.Cpsr);
 
-        Arm::LocationDescriptor descriptor{pc, TFlag, EFlag};
+        Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.Fpscr};
 
         CodePtr code_ptr = GetBasicBlock(descriptor);
         return routines.RunCode(&jit_state, code_ptr, cycle_count);

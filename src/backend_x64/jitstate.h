@@ -19,6 +19,8 @@ struct JitState {
     std::array<u32, 16> Reg{}; // Current register file.
     // TODO: Mode-specific register sets unimplemented.
 
+    u32 Fpscr = 0;
+
     std::array<u32, SpillCount> Spill{}; // Spill.
 
     // For internal use (See: Routines::RunCode)

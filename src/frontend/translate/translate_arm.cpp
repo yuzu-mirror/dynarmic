@@ -27,7 +27,7 @@ enum class ConditionalState {
 
 struct ArmTranslatorVisitor final {
     explicit ArmTranslatorVisitor(LocationDescriptor descriptor) : ir(descriptor) {
-        ASSERT_MSG(!descriptor.TFlag, "The processor must be in Arm mode");
+        ASSERT_MSG(!descriptor.TFlag(), "The processor must be in Arm mode");
     }
 
     IREmitter ir;
@@ -44,8 +44,7 @@ struct ArmTranslatorVisitor final {
     }
 
     bool LinkToNextInstruction() {
-        auto next_location = ir.current_location;
-        next_location.arm_pc += 4;
+        auto next_location = ir.current_location.AdvancePC(4);
         ir.SetTerm(IR::Term::LinkBlock{next_location});
         return false;
     }
@@ -315,7 +314,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
 
     bool should_continue = true;
     while (should_continue && visitor.cond_state == ConditionalState::None) {
-        const u32 arm_pc = visitor.ir.current_location.arm_pc;
+        const u32 arm_pc = visitor.ir.current_location.PC();
         const u32 arm_instruction = (*memory_read_32)(arm_pc);
 
         const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction);
@@ -329,7 +328,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
             break;
         }
 
-        visitor.ir.current_location.arm_pc += 4;
+        visitor.ir.current_location = visitor.ir.current_location.AdvancePC(4);
         visitor.ir.block.cycle_count++;
     }
 

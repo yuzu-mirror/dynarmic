@@ -21,7 +21,7 @@ namespace {
 
 struct ThumbTranslatorVisitor final {
     explicit ThumbTranslatorVisitor(LocationDescriptor descriptor) : ir(descriptor) {
-        ASSERT_MSG(descriptor.TFlag, "The processor must be in Thumb mode");
+        ASSERT_MSG(descriptor.TFlag(), "The processor must be in Thumb mode");
     }
 
     IREmitter ir;
@@ -678,13 +678,10 @@ struct ThumbTranslatorVisitor final {
 
     bool thumb16_SETEND(bool E) {
         // SETEND <endianness>
-        if (E == ir.current_location.EFlag) {
+        if (E == ir.current_location.EFlag()) {
             return true;
         }
-        auto next_location = ir.current_location;
-        next_location.arm_pc += 2;
-        next_location.EFlag = E;
-        ir.SetTerm(IR::Term::LinkBlock{next_location});
+        ir.SetTerm(IR::Term::LinkBlock{ir.current_location.AdvancePC(2).SetEFlag(E)});
         return false;
     }
 
@@ -762,7 +759,7 @@ struct ThumbTranslatorVisitor final {
 
     bool thumb16_BLX_reg(Reg m) {
         // BLX <Rm>
-        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.arm_pc + 2) | 1));
+        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 2) | 1));
         ir.BXWritePC(ir.GetRegister(m));
         // TODO(optimization): Possible push RSB location
         ir.SetTerm(IR::Term::ReturnToDispatch{});
@@ -783,10 +780,8 @@ struct ThumbTranslatorVisitor final {
             return thumb16_UDF();
         }
         // B<cond> <label>
-        auto then_location = ir.current_location;
-        then_location.arm_pc += imm32;
-        auto else_location = ir.current_location;
-        else_location.arm_pc += 2;
+        auto then_location = ir.current_location.AdvancePC(imm32);
+        auto else_location = ir.current_location.AdvancePC(2);
         ir.SetTerm(IR::Term::If{cond, IR::Term::LinkBlock{then_location}, IR::Term::LinkBlock{else_location}});
         return false;
     }
@@ -794,18 +789,16 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_B_t2(Imm11 imm11) {
         s32 imm32 = Common::SignExtend<12, s32>(imm11 << 1) + 4;
         // B <label>
-        auto next_location = ir.current_location;
-        next_location.arm_pc += imm32;
+        auto next_location = ir.current_location.AdvancePC(imm32);
         ir.SetTerm(IR::Term::LinkBlock{next_location});
         return false;
     }
 
     bool thumb32_BL_imm(Imm11 hi, Imm11 lo) {
-        s32 imm32 = Common::SignExtend<23, s32>((hi << 12) | (lo << 1));
+        s32 imm32 = Common::SignExtend<23, s32>((hi << 12) | (lo << 1)) + 4;
         // BL <label>
-        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.arm_pc + 4) | 1));
-        auto new_location = ir.current_location;
-        new_location.arm_pc = ir.PC() + imm32;
+        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 4) | 1));
+        auto new_location = ir.current_location.AdvancePC(imm32);
         ir.SetTerm(IR::Term::LinkBlock{new_location});
         return false;
     }
@@ -816,10 +809,10 @@ struct ThumbTranslatorVisitor final {
             return UnpredictableInstruction();
         }
         // BLX <label>
-        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.arm_pc + 4) | 1));
-        auto new_location = ir.current_location;
-        new_location.arm_pc = ir.AlignPC(4) + imm32;
-        new_location.TFlag = false;
+        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 4) | 1));
+        auto new_location = ir.current_location
+                              .SetPC(ir.AlignPC(4) + imm32)
+                              .SetTFlag(false);
         ir.SetTerm(IR::Term::LinkBlock{new_location});
         return false;
     }
@@ -862,7 +855,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
 
     bool should_continue = true;
     while (should_continue) {
-        const u32 arm_pc = visitor.ir.current_location.arm_pc;
+        const u32 arm_pc = visitor.ir.current_location.PC();
 
         u32 thumb_instruction;
         ThumbInstSize inst_size;
@@ -884,7 +877,8 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
             }
         }
 
-        visitor.ir.current_location.arm_pc += (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;
+        s32 advance_pc = (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;
+        visitor.ir.current_location = visitor.ir.current_location.AdvancePC(advance_pc);
         visitor.ir.block.cycle_count++;
     }
 

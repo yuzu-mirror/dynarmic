@@ -15,8 +15,8 @@ void IREmitter::Unimplemented() {
 }
 
 u32 IREmitter::PC() {
-    u32 offset = current_location.TFlag ? 4 : 8;
-    return current_location.arm_pc + offset;
+    u32 offset = current_location.TFlag() ? 4 : 8;
+    return current_location.PC() + offset;
 }
 
 u32 IREmitter::AlignPC(size_t alignment) {
@@ -55,7 +55,7 @@ void IREmitter::ALUWritePC(const IR::Value& value) {
 }
 
 void IREmitter::BranchWritePC(const IR::Value& value) {
-    if (!current_location.TFlag) {
+    if (!current_location.TFlag()) {
         auto new_pc = And(value, Imm32(0xFFFFFFFC));
         Inst(IR::Opcode::SetRegister, { IR::Value(Reg::PC), new_pc });
     } else {
@@ -211,17 +211,17 @@ IR::Value IREmitter::ReadMemory8(const IR::Value& vaddr) {
 
 IR::Value IREmitter::ReadMemory16(const IR::Value& vaddr) {
     auto value = Inst(IR::Opcode::ReadMemory16, {vaddr});
-    return current_location.EFlag ? ByteReverseHalf(value) : value;
+    return current_location.EFlag() ? ByteReverseHalf(value) : value;
 }
 
 IR::Value IREmitter::ReadMemory32(const IR::Value& vaddr) {
     auto value = Inst(IR::Opcode::ReadMemory32, {vaddr});
-    return current_location.EFlag ? ByteReverseWord(value) : value;
+    return current_location.EFlag() ? ByteReverseWord(value) : value;
 }
 
 IR::Value IREmitter::ReadMemory64(const IR::Value& vaddr) {
     auto value = Inst(IR::Opcode::ReadMemory64, {vaddr});
-    return current_location.EFlag ? ByteReverseDual(value) : value;
+    return current_location.EFlag() ? ByteReverseDual(value) : value;
 }
 
 void IREmitter::WriteMemory8(const IR::Value& vaddr, const IR::Value& value) {
@@ -229,7 +229,7 @@ void IREmitter::WriteMemory8(const IR::Value& vaddr, const IR::Value& value) {
 }
 
 void IREmitter::WriteMemory16(const IR::Value& vaddr, const IR::Value& value) {
-    if (current_location.EFlag) {
+    if (current_location.EFlag()) {
         auto v = ByteReverseHalf(value);
         Inst(IR::Opcode::WriteMemory16, {vaddr, v});
     } else {
@@ -238,7 +238,7 @@ void IREmitter::WriteMemory16(const IR::Value& vaddr, const IR::Value& value) {
 }
 
 void IREmitter::WriteMemory32(const IR::Value& vaddr, const IR::Value& value) {
-    if (current_location.EFlag) {
+    if (current_location.EFlag()) {
         auto v = ByteReverseWord(value);
         Inst(IR::Opcode::WriteMemory32, {vaddr, v});
     } else {
@@ -247,7 +247,7 @@ void IREmitter::WriteMemory32(const IR::Value& vaddr, const IR::Value& value) {
 }
 
 void IREmitter::WriteMemory64(const IR::Value& vaddr, const IR::Value& value) {
-    if (current_location.EFlag) {
+    if (current_location.EFlag()) {
         auto v = ByteReverseDual(value);
         Inst(IR::Opcode::WriteMemory64, {vaddr, v});
     } else {

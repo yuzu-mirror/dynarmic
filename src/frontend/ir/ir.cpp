@@ -133,10 +133,11 @@ std::string DumpBlock(const IR::Block& block) {
     std::string ret;
 
     const auto loc_to_string = [](Arm::LocationDescriptor loc) -> std::string {
-        return Common::StringFromFormat("{%u,%s,%s}",
-                                        loc.arm_pc,
-                                        loc.TFlag ? "T" : "!T",
-                                        loc.EFlag ? "E" : "!E");
+        return Common::StringFromFormat("{%u,%s,%s,%u}",
+                                        loc.PC(),
+                                        loc.TFlag() ? "T" : "!T",
+                                        loc.EFlag() ? "E" : "!E",
+                                        loc.FPSCR());
     };
 
     ret += Common::StringFromFormat("Block: location=%s\n", loc_to_string(block.location).c_str());

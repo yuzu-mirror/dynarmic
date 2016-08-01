@@ -76,23 +76,53 @@ enum class SignExtendRotation {
 };
 
 struct LocationDescriptor {
-    LocationDescriptor(u32 arm_pc, bool TFlag, bool EFlag)
-            : arm_pc(arm_pc), TFlag(TFlag), EFlag(EFlag) {}
+    static constexpr u32 FPSCR_MASK = 0x3F79F9F;
 
-    u32 arm_pc;
-    bool TFlag; ///< Thumb / ARM
-    bool EFlag; ///< Big / Little Endian
+    LocationDescriptor(u32 arm_pc, bool tflag, bool eflag, u32 fpscr)
+            : arm_pc(arm_pc), tflag(tflag), eflag(eflag), fpscr(fpscr & FPSCR_MASK) {}
+
+    u32 PC() const { return arm_pc; }
+    bool TFlag() const { return tflag; }
+    bool EFlag() const { return eflag; }
+    u32 FPSCR() const { return fpscr; }
 
     bool operator == (const LocationDescriptor& o) const {
-        return std::tie(arm_pc, TFlag, EFlag) == std::tie(o.arm_pc, o.TFlag, o.EFlag);
+        return std::tie(arm_pc, tflag, eflag, fpscr) == std::tie(o.arm_pc, o.tflag, o.eflag, o.fpscr);
     }
+
+    LocationDescriptor SetPC(u32 new_arm_pc) const {
+        return LocationDescriptor(new_arm_pc, tflag, eflag, fpscr);
+    }
+
+    LocationDescriptor AdvancePC(s32 amount) const {
+        return LocationDescriptor(arm_pc + amount, tflag, eflag, fpscr);
+    }
+
+    LocationDescriptor SetTFlag(bool new_tflag) const {
+        return LocationDescriptor(arm_pc, new_tflag, eflag, fpscr);
+    }
+
+    LocationDescriptor SetEFlag(bool new_eflag) const {
+        return LocationDescriptor(arm_pc, tflag, new_eflag, fpscr);
+    }
+
+    LocationDescriptor SetFPSCR(u32 new_fpscr) const {
+        return LocationDescriptor(arm_pc, tflag, eflag, new_fpscr & FPSCR_MASK);
+    }
+
+private:
+    u32 arm_pc;
+    bool tflag; ///< Thumb / ARM
+    bool eflag; ///< Big / Little Endian
+    u32 fpscr;  ///< Floating point status control register
 };
 
 struct LocationDescriptorHash {
     size_t operator()(const LocationDescriptor& x) const {
-        return std::hash<u64>()(static_cast<u64>(x.arm_pc)
-                                ^ (static_cast<u64>(x.TFlag) << 32)
-                                ^ (static_cast<u64>(x.EFlag) << 33));
+        return std::hash<u64>()(static_cast<u64>(x.PC())
+                                ^ static_cast<u64>(x.TFlag())
+                                ^ (static_cast<u64>(x.EFlag()) << 1)
+                                ^ (static_cast<u64>(x.FPSCR()) << 32));
     }
 };
 

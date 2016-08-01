@@ -1066,10 +1066,10 @@ void EmitX64::EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initia
 }
 
 void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationDescriptor initial_location) {
-    ASSERT_MSG(terminal.next.TFlag == initial_location.TFlag, "Unimplemented");
-    ASSERT_MSG(terminal.next.EFlag == initial_location.EFlag, "Unimplemented");
+    ASSERT_MSG(terminal.next.TFlag() == initial_location.TFlag(), "Unimplemented");
+    ASSERT_MSG(terminal.next.EFlag() == initial_location.EFlag(), "Unimplemented");
 
-    code->MOV(64, R(ABI_PARAM1), Imm64(terminal.next.arm_pc));
+    code->MOV(64, R(ABI_PARAM1), Imm64(terminal.next.PC()));
     code->MOV(64, R(ABI_PARAM2), Imm64(reinterpret_cast<u64>(jit_interface)));
     code->MOV(32, MJitStateReg(Arm::Reg::PC), R(ABI_PARAM1));
     code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
@@ -1082,16 +1082,16 @@ void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::Loca
 }
 
 void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
-    code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.arm_pc));
-    if (terminal.next.TFlag != initial_location.TFlag) {
-        if (terminal.next.TFlag) {
+    code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.PC()));
+    if (terminal.next.TFlag() != initial_location.TFlag()) {
+        if (terminal.next.TFlag()) {
             code->OR(32, MJitStateCpsr(), Imm32(1 << 5));
         } else {
             code->AND(32, MJitStateCpsr(), Imm32(~(1 << 5)));
         }
     }
-    if (terminal.next.EFlag != initial_location.EFlag) {
-        if (terminal.next.EFlag) {
+    if (terminal.next.EFlag() != initial_location.EFlag()) {
+        if (terminal.next.EFlag()) {
             code->OR(32, MJitStateCpsr(), Imm32(1 << 9));
         } else {
             code->AND(32, MJitStateCpsr(), Imm32(~(1 << 9)));
