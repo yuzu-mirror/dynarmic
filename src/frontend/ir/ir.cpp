@@ -189,7 +189,7 @@ std::string DumpBlock(const IR::Block& block) {
         }
 
         ret += "\n";
-        inst_to_index.at(&*inst) = index++;
+        inst_to_index[&*inst] = index++;
     }
 
     return ret;
