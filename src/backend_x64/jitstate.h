@@ -21,7 +21,7 @@ struct JitState {
 
     u32 Fpscr = 0;
 
-    std::array<u32, SpillCount> Spill{}; // Spill.
+    std::array<u64, SpillCount> Spill{}; // Spill.
 
     // For internal use (See: Routines::RunCode)
     u64 save_host_RSP = 0;

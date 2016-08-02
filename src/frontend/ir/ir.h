@@ -41,6 +41,8 @@ enum class Type {
     U16     = 1 << 5,
     U32     = 1 << 6,
     U64     = 1 << 7,
+    F32     = 1 << 8,
+    F64     = 1 << 9,
 };
 
 Type GetTypeOf(Opcode op);

@@ -89,12 +89,12 @@ CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Bl
 
 void EmitX64::EmitIdentity(IR::Block& block, IR::Inst* inst) {
     // TODO: Possible unnecessary mov here.
-    reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 }
 
 void EmitX64::EmitGetRegister(IR::Block&, IR::Inst* inst) {
     Arm::Reg reg = inst->GetArg(0).GetRegRef();
-    X64Reg result = reg_alloc.DefRegister(inst);
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
     code->MOV(32, R(result), MJitStateReg(reg));
 }
 
@@ -104,13 +104,13 @@ void EmitX64::EmitSetRegister(IR::Block&, IR::Inst* inst) {
     if (arg.IsImmediate()) {
         code->MOV(32, MJitStateReg(reg), Imm32(arg.GetU32()));
     } else {
-        X64Reg to_store = reg_alloc.UseRegister(arg.GetInst());
+        X64Reg to_store = reg_alloc.UseRegister(arg.GetInst(), any_gpr);
         code->MOV(32, MJitStateReg(reg), R(to_store));
     }
 }
 
 void EmitX64::EmitGetNFlag(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.DefRegister(inst);
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
     code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(31));
 }
@@ -126,7 +126,7 @@ void EmitX64::EmitSetNFlag(IR::Block&, IR::Inst* inst) {
             code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
         }
     } else {
-        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst());
+        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst(), any_gpr);
 
         code->SHL(32, R(to_store), Imm8(flag_bit));
         code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
@@ -135,7 +135,7 @@ void EmitX64::EmitSetNFlag(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitGetZFlag(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.DefRegister(inst);
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
     code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(30));
     code->AND(32, R(result), Imm32(1));
@@ -152,7 +152,7 @@ void EmitX64::EmitSetZFlag(IR::Block&, IR::Inst* inst) {
             code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
         }
     } else {
-        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst());
+        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst(), any_gpr);
 
         code->SHL(32, R(to_store), Imm8(flag_bit));
         code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
@@ -161,7 +161,7 @@ void EmitX64::EmitSetZFlag(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitGetCFlag(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.DefRegister(inst);
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
     code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(29));
     code->AND(32, R(result), Imm32(1));
@@ -178,7 +178,7 @@ void EmitX64::EmitSetCFlag(IR::Block&, IR::Inst* inst) {
             code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
         }
     } else {
-        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst());
+        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst(), any_gpr);
 
         code->SHL(32, R(to_store), Imm8(flag_bit));
         code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
@@ -187,7 +187,7 @@ void EmitX64::EmitSetCFlag(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitGetVFlag(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.DefRegister(inst);
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
     code->MOV(32, R(result), MJitStateCpsr());
     code->SHR(32, R(result), Imm8(28));
     code->AND(32, R(result), Imm32(1));
@@ -204,7 +204,7 @@ void EmitX64::EmitSetVFlag(IR::Block&, IR::Inst* inst) {
             code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
         }
     } else {
-        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst());
+        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst(), any_gpr);
 
         code->SHL(32, R(to_store), Imm8(flag_bit));
         code->AND(32, MJitStateCpsr(), Imm32(~flag_mask));
@@ -237,9 +237,9 @@ void EmitX64::EmitBXWritePC(IR::Block&, IR::Inst* inst) {
             code->AND(32, MJitStateCpsr(), Imm32(~T_bit));
         }
     } else {
-        X64Reg new_pc = reg_alloc.UseScratchRegister(arg.GetInst());
-        X64Reg tmp1 = reg_alloc.ScratchRegister();
-        X64Reg tmp2 = reg_alloc.ScratchRegister();
+        X64Reg new_pc = reg_alloc.UseScratchRegister(arg.GetInst(), any_gpr);
+        X64Reg tmp1 = reg_alloc.ScratchRegister(any_gpr);
+        X64Reg tmp2 = reg_alloc.ScratchRegister(any_gpr);
 
         code->MOV(32, R(tmp1), MJitStateCpsr());
         code->MOV(32, R(tmp2), R(tmp1));
@@ -274,17 +274,17 @@ void EmitX64::EmitGetOverflowFromOp(IR::Block&, IR::Inst*) {
 void EmitX64::EmitLeastSignificantHalf(IR::Block&, IR::Inst* inst) {
     // TODO: Optimize
 
-    reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 }
 
 void EmitX64::EmitLeastSignificantByte(IR::Block&, IR::Inst* inst) {
     // TODO: Optimize
 
-    reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 }
 
 void EmitX64::EmitMostSignificantBit(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     // TODO: Flag optimization
 
@@ -292,7 +292,7 @@ void EmitX64::EmitMostSignificantBit(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitIsZero(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     // TODO: Flag optimization
 
@@ -315,7 +315,7 @@ void EmitX64::EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst) {
         auto shift_arg = inst->GetArg(1);
 
         if (shift_arg.IsImmediate()) {
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
             u8 shift = shift_arg.GetU8();
 
             if (shift <= 31) {
@@ -325,8 +325,8 @@ void EmitX64::EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst) {
             }
         } else {
             X64Reg shift = reg_alloc.UseRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg zero = reg_alloc.ScratchRegister();
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg zero = reg_alloc.ScratchRegister(any_gpr);
 
             // The 32-bit x64 SHL instruction masks the shift count by 0x1F before performing the shift.
             // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -344,8 +344,8 @@ void EmitX64::EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst) {
 
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetU8();
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -363,8 +363,8 @@ void EmitX64::EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst) {
             }
         } else {
             X64Reg shift = reg_alloc.UseRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             // TODO: Optimize this.
 
@@ -405,7 +405,7 @@ void EmitX64::EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst) {
         auto shift_arg = inst->GetArg(1);
 
         if (shift_arg.IsImmediate()) {
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
             u8 shift = shift_arg.GetU8();
 
             if (shift <= 31) {
@@ -415,8 +415,8 @@ void EmitX64::EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst) {
             }
         } else {
             X64Reg shift = reg_alloc.UseRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg zero = reg_alloc.ScratchRegister();
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg zero = reg_alloc.ScratchRegister(any_gpr);
 
             // The 32-bit x64 SHR instruction masks the shift count by 0x1F before performing the shift.
             // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -434,8 +434,8 @@ void EmitX64::EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst) {
 
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetU8();
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -452,8 +452,8 @@ void EmitX64::EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst) {
             }
         } else {
             X64Reg shift = reg_alloc.UseRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             // TODO: Optimize this.
 
@@ -498,13 +498,13 @@ void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
 
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetU8();
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
             code->SAR(32, R(result), Imm8(shift < 31 ? shift : 31));
         } else {
             X64Reg shift = reg_alloc.UseScratchRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg const31 = reg_alloc.ScratchRegister();
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg const31 = reg_alloc.ScratchRegister(any_gpr);
 
             // The 32-bit x64 SAR instruction masks the shift count by 0x1F before performing the shift.
             // ARM differs from the behaviour: It does not mask the count.
@@ -524,8 +524,8 @@ void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
 
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetU8();
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -539,8 +539,8 @@ void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
             }
         } else {
             X64Reg shift = reg_alloc.UseRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             // TODO: Optimize this.
 
@@ -578,12 +578,12 @@ void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
 
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetU8();
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
             code->ROR(32, R(result), Imm8(shift & 0x1F));
         } else {
             X64Reg shift = reg_alloc.UseRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
             // x64 ROR instruction does (shift & 0x1F) for us.
             code->ROR(32, R(result), R(shift));
@@ -596,8 +596,8 @@ void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
 
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetU8();
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -610,8 +610,8 @@ void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
             }
         } else {
             X64Reg shift = reg_alloc.UseScratchRegister(shift_arg.GetInst(), {HostLoc::RCX});
-            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
-            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst);
+            X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+            X64Reg carry = reg_alloc.UseDefRegister(inst->GetArg(2), carry_inst, any_gpr);
 
             // TODO: Optimize
 
@@ -638,10 +638,10 @@ void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
 
 static X64Reg DoCarry(RegAlloc& reg_alloc, const IR::Value& carry_in, IR::Inst* carry_out) {
     if (carry_in.IsImmediate()) {
-        return carry_out ? reg_alloc.DefRegister(carry_out) : INVALID_REG;
+        return carry_out ? reg_alloc.DefRegister(carry_out, any_gpr) : INVALID_REG;
     } else {
         IR::Inst* in = carry_in.GetInst();
-        return carry_out ? reg_alloc.UseDefRegister(in, carry_out) : reg_alloc.UseRegister(in);
+        return carry_out ? reg_alloc.UseDefRegister(in, carry_out, any_gpr) : reg_alloc.UseRegister(in, any_gpr);
     }
 }
 
@@ -653,15 +653,15 @@ void EmitX64::EmitAddWithCarry(IR::Block& block, IR::Inst* inst) {
     IR::Value b = inst->GetArg(1);
     IR::Value carry_in = inst->GetArg(2);
 
-    X64Reg result = reg_alloc.UseDefRegister(a, inst);
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
     X64Reg carry = DoCarry(reg_alloc, carry_in, carry_inst);
-    X64Reg overflow = overflow_inst ? reg_alloc.DefRegister(overflow_inst) : INVALID_REG;
+    X64Reg overflow = overflow_inst ? reg_alloc.DefRegister(overflow_inst, any_gpr) : INVALID_REG;
 
     // TODO: Consider using LEA.
 
     OpArg op_arg = b.IsImmediate()
                     ? Imm32(b.GetU32())
-                    : R(reg_alloc.UseRegister(b.GetInst()));
+                    : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
 
     if (carry_in.IsImmediate()) {
         if (carry_in.GetU1()) {
@@ -695,9 +695,9 @@ void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
     IR::Value b = inst->GetArg(1);
     IR::Value carry_in = inst->GetArg(2);
 
-    X64Reg result = reg_alloc.UseDefRegister(a, inst);
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
     X64Reg carry = DoCarry(reg_alloc, carry_in, carry_inst);
-    X64Reg overflow = overflow_inst ? reg_alloc.DefRegister(overflow_inst) : INVALID_REG;
+    X64Reg overflow = overflow_inst ? reg_alloc.DefRegister(overflow_inst, any_gpr) : INVALID_REG;
 
     // TODO: Consider using LEA.
     // TODO: Optimize CMP case.
@@ -705,7 +705,7 @@ void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
 
     OpArg op_arg = b.IsImmediate()
                    ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst()));
+                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
 
     if (carry_in.IsImmediate()) {
         if (carry_in.GetU1()) {
@@ -736,10 +736,10 @@ void EmitX64::EmitAnd(IR::Block&, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
 
-    X64Reg result = reg_alloc.UseDefRegister(a, inst);
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
     OpArg op_arg = b.IsImmediate()
                    ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst()));
+                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
 
     code->AND(32, R(result), op_arg);
 }
@@ -748,10 +748,10 @@ void EmitX64::EmitEor(IR::Block&, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
 
-    X64Reg result = reg_alloc.UseDefRegister(a, inst);
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
     OpArg op_arg = b.IsImmediate()
                    ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst()));
+                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
 
     code->XOR(32, R(result), op_arg);
 }
@@ -760,10 +760,10 @@ void EmitX64::EmitOr(IR::Block&, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
 
-    X64Reg result = reg_alloc.UseDefRegister(a, inst);
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
     OpArg op_arg = b.IsImmediate()
                    ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst()));
+                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
 
     code->OR(32, R(result), op_arg);
 }
@@ -772,11 +772,11 @@ void EmitX64::EmitNot(IR::Block&, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
 
     if (a.IsImmediate()) {
-        X64Reg result = reg_alloc.DefRegister(inst);
+        X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
 
         code->MOV(32, R(result), Imm32(~a.GetU32()));
     } else {
-        X64Reg result = reg_alloc.UseDefRegister(a.GetInst(), inst);
+        X64Reg result = reg_alloc.UseDefRegister(a.GetInst(), inst, any_gpr);
 
         code->NOT(32, R(result));
     }
@@ -784,46 +784,46 @@ void EmitX64::EmitNot(IR::Block&, IR::Inst* inst) {
 
 void EmitX64::EmitSignExtendHalfToWord(IR::Block&, IR::Inst* inst) {
     // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->MOVSX(32, 16, result, R(result));
 }
 
 void EmitX64::EmitSignExtendByteToWord(IR::Block&, IR::Inst* inst) {
     // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->MOVSX(32, 8, result, R(result));
 }
 
 void EmitX64::EmitZeroExtendHalfToWord(IR::Block&, IR::Inst* inst) {
     // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->MOVZX(32, 16, result, R(result));
 }
 
 void EmitX64::EmitZeroExtendByteToWord(IR::Block&, IR::Inst* inst) {
     // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->MOVZX(32, 8, result, R(result));
 }
 
 void EmitX64::EmitByteReverseWord(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->BSWAP(32, result);
 }
 
 void EmitX64::EmitByteReverseHalf(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->ROL(16, R(result), Imm8(8));
 }
 
 void EmitX64::EmitByteReverseDual(IR::Block&, IR::Inst* inst) {
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->BSWAP(64, result);
 }
