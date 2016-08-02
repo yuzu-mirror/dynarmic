@@ -60,6 +60,7 @@ struct ArmTranslatorVisitor final {
 
     IREmitter::ResultAndCarry EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in);
     IREmitter::ResultAndCarry EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in);
+    IR::Value SignZeroExtendRor(Reg m, SignExtendRotation rotate);
 
     // Data processing instructions
     bool arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8);

@@ -143,18 +143,18 @@ boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
         INST(&V::arm_UDF,         "UDF",                 "111001111111------------1111----"), // all
 
         // Extension instructions
-        //INST(&V::arm_SXTB,        "SXTB",                "cccc011010101111ddddrr000111mmmm"), // v6
-        //INST(&V::arm_SXTB16,      "SXTB16",              "cccc011010001111ddddrr000111mmmm"), // v6
-        //INST(&V::arm_SXTH,        "SXTH",                "cccc011010111111ddddrr000111mmmm"), // v6
-        //INST(&V::arm_SXTAB,       "SXTAB",               "cccc01101010nnnnddddrr000111mmmm"), // v6
-        //INST(&V::arm_SXTAB16,     "SXTAB16",             "cccc01101000nnnnddddrr000111mmmm"), // v6
-        //INST(&V::arm_SXTAH,       "SXTAH",               "cccc01101011nnnnddddrr000111mmmm"), // v6
-        //INST(&V::arm_UXTB,        "UXTB",                "cccc011011101111ddddrr000111mmmm"), // v6
-        //INST(&V::arm_UXTB16,      "UXTB16",              "cccc011011001111ddddrr000111mmmm"), // v6
-        //INST(&V::arm_UXTH,        "UXTH",                "cccc011011111111ddddrr000111mmmm"), // v6
-        //INST(&V::arm_UXTAB,       "UXTAB",               "cccc01101110nnnnddddrr000111mmmm"), // v6
-        //INST(&V::arm_UXTAB16,     "UXTAB16",             "cccc01101100nnnnddddrr000111mmmm"), // v6
-        //INST(&V::arm_UXTAH,       "UXTAH",               "cccc01101111nnnnddddrr000111mmmm"), // v6
+        INST(&V::arm_SXTB,        "SXTB",                "cccc011010101111ddddrr000111mmmm"), // v6
+        INST(&V::arm_SXTB16,      "SXTB16",              "cccc011010001111ddddrr000111mmmm"), // v6
+        INST(&V::arm_SXTH,        "SXTH",                "cccc011010111111ddddrr000111mmmm"), // v6
+        INST(&V::arm_SXTAB,       "SXTAB",               "cccc01101010nnnnddddrr000111mmmm"), // v6
+        INST(&V::arm_SXTAB16,     "SXTAB16",             "cccc01101000nnnnddddrr000111mmmm"), // v6
+        INST(&V::arm_SXTAH,       "SXTAH",               "cccc01101011nnnnddddrr000111mmmm"), // v6
+        INST(&V::arm_UXTB,        "UXTB",                "cccc011011101111ddddrr000111mmmm"), // v6
+        INST(&V::arm_UXTB16,      "UXTB16",              "cccc011011001111ddddrr000111mmmm"), // v6
+        INST(&V::arm_UXTH,        "UXTH",                "cccc011011111111ddddrr000111mmmm"), // v6
+        INST(&V::arm_UXTAB,       "UXTAB",               "cccc01101110nnnnddddrr000111mmmm"), // v6
+        INST(&V::arm_UXTAB16,     "UXTAB16",             "cccc01101100nnnnddddrr000111mmmm"), // v6
+        INST(&V::arm_UXTAH,       "UXTAH",               "cccc01101111nnnnddddrr000111mmmm"), // v6
 
         // Hint instructions
         //INST(&V::arm_PLD,         "PLD",                 "111101---101----1111------------"), // v5E
@@ -236,7 +236,7 @@ boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
 
         // Reversal instructions
         INST(&V::arm_REV,         "REV",                 "cccc011010111111dddd11110011mmmm"), // v6
-        //INST(&V::arm_REV16,       "REV16",               "cccc011010111111dddd11111011mmmm"), // v6
+        INST(&V::arm_REV16,       "REV16",               "cccc011010111111dddd11111011mmmm"), // v6
         INST(&V::arm_REVSH,       "REVSH",               "cccc011011111111dddd11111011mmmm"), // v6
 
         // Saturation instructions

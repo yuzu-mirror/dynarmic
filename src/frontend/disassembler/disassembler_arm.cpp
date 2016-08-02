@@ -66,6 +66,21 @@ public:
         return "<internal error>";
     }
 
+    std::string RorStr(Reg m, SignExtendRotation rotate) {
+        switch (rotate) {
+            case SignExtendRotation::ROR_0:
+                return RegToString(m);
+            case SignExtendRotation::ROR_8:
+                return Common::StringFromFormat("%s, ror #8", RegToString(m));
+            case SignExtendRotation::ROR_16:
+                return Common::StringFromFormat("%s, ror #16", RegToString(m));
+            case SignExtendRotation::ROR_24:
+                return Common::StringFromFormat("%s, ror #24", RegToString(m));
+        }
+        assert(false);
+        return "<internal error>";
+    }
+
     // Branch instructions
     std::string arm_B(Cond cond, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8;
@@ -245,7 +260,9 @@ public:
     }
 
     // Exception generation instructions
-    std::string arm_BKPT(Cond cond, Imm12 imm12, Imm4 imm4) { return "ice"; }
+    std::string arm_BKPT(Cond cond, Imm12 imm12, Imm4 imm4) {
+        return Common::StringFromFormat("bkpt #%hu", imm12 << 4 | imm4);
+    }
     std::string arm_SVC(Cond cond, Imm24 imm24) {
         return Common::StringFromFormat("svc%s #%u", CondToString(cond), imm24);
     }
@@ -254,18 +271,42 @@ public:
     }
 
     // Extension functions
-    std::string arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
-    std::string arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) { return "ice"; }
+    std::string arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("sxtab%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RorStr(m, rotate).c_str());
+    }
+    std::string arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("sxtab16%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RorStr(m, rotate).c_str());
+    }
+    std::string arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("sxtah%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RorStr(m, rotate).c_str());
+    }
+    std::string arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("sxtb%s %s, %s", CondToString(cond), RegToString(d), RorStr(m, rotate).c_str());
+    }
+    std::string arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("sxtb16%s %s, %s", CondToString(cond), RegToString(d), RorStr(m, rotate).c_str());
+    }
+    std::string arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("sxth%s %s, %s", CondToString(cond), RegToString(d), RorStr(m, rotate).c_str());
+    }
+    std::string arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("uxtab%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RorStr(m, rotate).c_str());
+    }
+    std::string arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("uxtab16%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RorStr(m, rotate).c_str());
+    }
+    std::string arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("uxtah%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RorStr(m, rotate).c_str());
+    }
+    std::string arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("uxtb%s %s, %s", CondToString(cond), RegToString(d), RorStr(m, rotate).c_str());
+    }
+    std::string arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("uxtb16%s %s, %s", CondToString(cond), RegToString(d), RorStr(m, rotate).c_str());
+    }
+    std::string arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+        return Common::StringFromFormat("uxth%s %s, %s", CondToString(cond), RegToString(d), RorStr(m, rotate).c_str());
+    }
 
     // Hint instructions
     std::string arm_PLD() { return "<unimplemented>"; }
@@ -313,7 +354,7 @@ public:
 
     // Miscellaneous instructions
     std::string arm_CLZ(Cond cond, Reg d, Reg m) { return "ice"; }
-    std::string arm_NOP() { return "ice"; }
+    std::string arm_NOP() { return "nop"; }
     std::string arm_SEL(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
 
     // Unsigned sum of absolute difference functions
