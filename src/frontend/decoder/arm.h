@@ -66,9 +66,9 @@ boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
         // Branch instructions
         //INST(&V::arm_BLX_imm,     "BLX (imm)",           "1111101hvvvvvvvvvvvvvvvvvvvvvvvv"), // v5
         //INST(&V::arm_BLX_reg,     "BLX (reg)",           "cccc000100101111111111110011mmmm"), // v5
-        //INST(&V::arm_B,           "B",                   "cccc1010vvvvvvvvvvvvvvvvvvvvvvvv"), // all
-        //INST(&V::arm_BL,          "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv"), // all
-        //INST(&V::arm_BX,          "BX",                  "cccc000100101111111111110001mmmm"), // v4T
+        INST(&V::arm_B,           "B",                   "cccc1010vvvvvvvvvvvvvvvvvvvvvvvv"), // all
+        INST(&V::arm_BL,          "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv"), // all
+        INST(&V::arm_BX,          "BX",                  "cccc000100101111111111110001mmmm"), // v4T
         //INST(&V::arm_BXJ,         "BXJ",                 "cccc000100101111111111110010mmmm"), // v5J
 
         // Coprocessor instructions
