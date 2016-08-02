@@ -98,13 +98,182 @@ struct ArmTranslatorVisitor final {
     bool arm_SVC(Cond cond, Imm24 imm24);
     bool arm_UDF();
 
+    // Extension instructions
+    bool arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
+    bool arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
+
+    // Load/Store instructions
+    bool arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
+    bool arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
+    bool arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
+    bool arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
+    bool arm_LDRBT();
+    bool arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_LDRHT();
+    bool arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_LDRSBT();
+    bool arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_LDRSHT();
+    bool arm_LDRT();
+    bool arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
+    bool arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
+    bool arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
+    bool arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
+    bool arm_STRBT();
+    bool arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
+    bool arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
+    bool arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_STRHT();
+    bool arm_STRT();
+
+    // Load/Store multiple instructions
+    bool arm_LDM(Cond cond, bool P, bool U, bool W, Reg n, RegList list);
+    bool arm_LDM_usr();
+    bool arm_LDM_eret();
+    bool arm_STM(Cond cond, bool P, bool U, bool W, Reg n, RegList list);
+    bool arm_STM_usr();
+
+    // Miscellaneous instructions
+    bool arm_CLZ(Cond cond, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_NOP() { return InterpretThisInstruction(); }
+    bool arm_SEL(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+
+    // Unsigned sum of absolute difference functions
+    bool arm_USAD8(Cond cond, Reg d, Reg m, Reg n) { return InterpretThisInstruction(); }
+    bool arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) { return InterpretThisInstruction(); }
+
+    // Packing instructions
+    bool arm_PKHBT(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) { return InterpretThisInstruction(); }
+    bool arm_PKHTB(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) { return InterpretThisInstruction(); }
+
     // Reversal instructions
     bool arm_REV(Cond cond, Reg d, Reg m);
     bool arm_REV16(Cond cond, Reg d, Reg m);
     bool arm_REVSH(Cond cond, Reg d, Reg m);
 
-    // Floating-point three-register data processing instructions
-    bool vfp2_VADD(Cond cond, bool D, bool sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm);
+    // Saturation instructions
+    bool arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) { return InterpretThisInstruction(); }
+    bool arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) { return InterpretThisInstruction(); }
+    bool arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) { return InterpretThisInstruction(); }
+    bool arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) { return InterpretThisInstruction(); }
+
+    // Multiply (Normal) instructions
+    bool arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n);
+    bool arm_MUL(Cond cond, bool S, Reg d, Reg m, Reg n);
+
+    // Multiply (Long) instructions
+    bool arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n);
+    bool arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n);
+    bool arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n);
+    bool arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n);
+    bool arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n);
+
+    // Multiply (Halfword) instructions
+    bool arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, bool N, Reg n);
+    bool arm_SMLAxy(Cond cond, Reg d, Reg a, Reg m, bool M, bool N, Reg n);
+    bool arm_SMULxy(Cond cond, Reg d, Reg m, bool M, bool N, Reg n);
+
+    // Multiply (word by halfword) instructions
+    bool arm_SMLAWy(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n);
+    bool arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n);
+
+    // Multiply (Most significant word) instructions
+    bool arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n);
+    bool arm_SMMLS(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n);
+    bool arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n);
+
+    // Multiply (Dual) instructions
+    bool arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n);
+    bool arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n);
+    bool arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n);
+    bool arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n);
+    bool arm_SMUAD(Cond cond, Reg d, Reg m, bool M, Reg n);
+    bool arm_SMUSD(Cond cond, Reg d, Reg m, bool M, Reg n);
+
+    // Parallel Add/Subtract (Modulo arithmetic) instructions
+    bool arm_SADD8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SADD16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SASX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SSAX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SSUB8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SSUB16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UADD8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UADD16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UASX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_USAX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_USUB8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_USUB16(Cond cond, Reg n, Reg d, Reg m);
+
+    // Parallel Add/Subtract (Saturating) instructions
+    bool arm_QADD8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QADD16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QASX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QSAX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QSUB8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QSUB16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UQADD8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UQADD16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UQASX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UQSAX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UQSUB8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UQSUB16(Cond cond, Reg n, Reg d, Reg m);
+
+    // Parallel Add/Subtract (Halving) instructions
+    bool arm_SHADD8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SHADD16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SHASX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SHSAX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SHSUB8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SHSUB16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UHADD8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UHADD16(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UHASX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UHSAX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UHSUB8(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_UHSUB16(Cond cond, Reg n, Reg d, Reg m);
+
+    // Saturated Add/Subtract instructions
+    bool arm_QADD(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_QSUB(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_QDADD(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+
+    // Synchronization Primitive instructions
+    bool arm_CLREX() { return InterpretThisInstruction(); }
+    bool arm_LDREX(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
+    bool arm_LDREXB(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
+    bool arm_LDREXD(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
+    bool arm_LDREXH(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
+    bool arm_STREX(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_STREXB(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_STREXD(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_STREXH(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_SWP(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_SWPB(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+
+    // Status register access instructions
+    bool arm_CPS() { return InterpretThisInstruction(); }
+    bool arm_MRS() { return InterpretThisInstruction(); }
+    bool arm_MSR() { return InterpretThisInstruction(); }
+    bool arm_RFE() { return InterpretThisInstruction(); }
+    bool arm_SETEND(bool E) { return InterpretThisInstruction(); }
+    bool arm_SRS() { return InterpretThisInstruction(); }
 };
 
 } // namespace Arm

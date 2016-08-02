@@ -18,6 +18,10 @@ set(SRCS
     frontend/translate/translate_arm.cpp
     frontend/translate/translate_arm/data_processing.cpp
     frontend/translate/translate_arm/exception_generating.cpp
+    frontend/translate/translate_arm/extension.cpp
+    frontend/translate/translate_arm/load_store.cpp
+    frontend/translate/translate_arm/multiply.cpp
+    frontend/translate/translate_arm/parallel.cpp
     frontend/translate/translate_arm/reversal.cpp
     frontend/translate/translate_thumb.cpp
     ir_opt/dead_code_elimination_pass.cpp
