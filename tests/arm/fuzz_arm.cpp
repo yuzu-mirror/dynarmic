@@ -228,6 +228,12 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
             }
             printf("CPSR: %08x %08x %s\n", interp.Cpsr, jit.Cpsr(), interp.Cpsr != jit.Cpsr() ? "*" : "");
 
+            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, false, false, 0}, &MemoryRead32);
+            Dynarmic::Optimization::GetSetElimination(ir_block);
+            Dynarmic::Optimization::DeadCodeElimination(ir_block);
+            Dynarmic::Optimization::VerificationPass(ir_block);
+            printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
+
 #ifdef _MSC_VER
             __debugbreak();
 #endif
