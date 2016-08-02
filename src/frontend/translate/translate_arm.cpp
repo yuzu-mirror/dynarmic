@@ -93,5 +93,50 @@ bool ArmTranslatorVisitor::LinkToNextInstruction() {
     return false;
 }
 
+IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in) {
+    IREmitter::ResultAndCarry result_and_carry;
+    switch (type)
+    {
+        case ShiftType::LSL:
+            result_and_carry = ir.LogicalShiftLeft(value, ir.Imm8(imm5), carry_in);
+            break;
+        case ShiftType::LSR:
+            imm5 = imm5 ? imm5 : 32;
+            result_and_carry = ir.LogicalShiftRight(value, ir.Imm8(imm5), carry_in);
+            break;
+        case ShiftType::ASR:
+            imm5 = imm5 ? imm5 : 32;
+            result_and_carry = ir.ArithmeticShiftRight(value, ir.Imm8(imm5), carry_in);
+            break;
+        case ShiftType::ROR:
+            if (imm5)
+                result_and_carry = ir.RotateRight(value, ir.Imm8(imm5), carry_in);
+            else
+                result_and_carry = ir.RotateRightExtended(value, carry_in);
+            break;
+    }
+    return result_and_carry;
+}
+
+IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in) {
+    IREmitter::ResultAndCarry result_and_carry;
+    switch (type)
+    {
+        case ShiftType::LSL:
+            result_and_carry = ir.LogicalShiftLeft(value, amount, carry_in);
+            break;
+        case ShiftType::LSR:
+            result_and_carry = ir.LogicalShiftRight(value, amount, carry_in);
+            break;
+        case ShiftType::ASR:
+            result_and_carry = ir.ArithmeticShiftRight(value, amount, carry_in);
+            break;
+        case ShiftType::ROR:
+            result_and_carry = ir.RotateRight(value, amount, carry_in);
+            break;
+    }
+    return result_and_carry;
+}
+
 } // namespace Arm
 } // namespace Dynarmic

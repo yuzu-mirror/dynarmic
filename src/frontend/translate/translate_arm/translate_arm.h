@@ -43,6 +43,24 @@ struct ArmTranslatorVisitor final {
         return rotr(static_cast<u32>(imm8), rotate*2);
     }
 
+    struct ImmAndCarry {
+        u32 imm32;
+        IR::Value carry;
+    };
+
+    ImmAndCarry ArmExpandImm_C(int rotate, u32 imm8, IR::Value carry_in) {
+        u32 imm32 = imm8;
+        auto carry_out = carry_in;
+        if (rotate) {
+            imm32 = rotr(imm8, rotate * 2);
+            carry_out = ir.Imm1(imm32 >> 31 == 1);
+        }
+        return {imm32, carry_out};
+    }
+
+    IREmitter::ResultAndCarry EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in);
+    IREmitter::ResultAndCarry EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in);
+
     // Data processing instructions
     bool arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8);
     bool arm_ADC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
