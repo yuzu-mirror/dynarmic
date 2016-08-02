@@ -34,6 +34,7 @@ public:
 
 private:
     // Microinstruction emitters
+    void EmitIdentity(IR::Block& block, IR::Inst* inst);
     void EmitGetRegister(IR::Block& block, IR::Inst* inst);
     void EmitSetRegister(IR::Block& block, IR::Inst* inst);
     void EmitGetNFlag(IR::Block& block, IR::Inst* inst);

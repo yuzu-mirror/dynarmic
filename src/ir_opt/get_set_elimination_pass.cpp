@@ -12,10 +12,9 @@ namespace Dynarmic {
 namespace Optimization {
 
 void GetSetElimination(IR::Block& block) {
-#if 0
     using Iterator = decltype(block.instructions.begin());
     struct RegisterInfo {
-        IR::ValuePtr register_value = nullptr;
+        IR::Value register_value;
         bool set_instruction_present = false;
         Iterator last_set_instruction;
     };
@@ -25,9 +24,9 @@ void GetSetElimination(IR::Block& block) {
     RegisterInfo c_info;
     RegisterInfo v_info;
 
-    const auto do_set = [&block](RegisterInfo& info, IR::ValuePtr value, Iterator set_inst) {
+    const auto do_set = [&block](RegisterInfo& info, IR::Value value, Iterator set_inst) {
         if (info.set_instruction_present) {
-            (*info.last_set_instruction)->Invalidate();
+            info.last_set_instruction->Invalidate();
             block.instructions.erase(info.last_set_instruction);
         }
 
@@ -37,73 +36,66 @@ void GetSetElimination(IR::Block& block) {
     };
 
     const auto do_get = [](RegisterInfo& info, Iterator get_inst) {
-        if (!info.register_value) {
-            info.register_value = *get_inst;
+        if (info.register_value.IsEmpty()) {
+            info.register_value = IR::Value(&*get_inst);
             return;
         }
-        (*get_inst)->ReplaceUsesWith(info.register_value);
+        get_inst->ReplaceUsesWith(info.register_value);
     };
 
-    for (auto iter = block.instructions.begin(); iter != block.instructions.end(); ++iter) {
-        switch ((*iter)->GetOpcode()) {
+    for (auto inst = block.instructions.begin(); inst != block.instructions.end(); ++inst) {
+        switch (inst->GetOpcode()) {
             case IR::Opcode::SetRegister: {
-                auto inst = reinterpret_cast<IR::Inst*>((*iter).get());
-                Arm::Reg reg = reinterpret_cast<IR::ImmRegRef*>(inst->GetArg(0).get())->value;
+                Arm::Reg reg = inst->GetArg(0).GetRegRef();
                 if (reg == Arm::Reg::PC)
                     break;
                 size_t reg_index = static_cast<size_t>(reg);
-                do_set(reg_info[reg_index], inst->GetArg(1), iter);
+                do_set(reg_info[reg_index], inst->GetArg(1), inst);
                 break;
             }
             case IR::Opcode::GetRegister: {
-                auto inst = reinterpret_cast<IR::Inst*>((*iter).get());
-                Arm::Reg reg = reinterpret_cast<IR::ImmRegRef*>(inst->GetArg(0).get())->value;
+                Arm::Reg reg = inst->GetArg(0).GetRegRef();
                 ASSERT(reg != Arm::Reg::PC);
                 size_t reg_index = static_cast<size_t>(reg);
-                do_get(reg_info[reg_index], iter);
+                do_get(reg_info[reg_index], inst);
                 break;
             }
             case IR::Opcode::SetNFlag: {
-                auto inst = reinterpret_cast<IR::Inst*>((*iter).get());
-                do_set(n_info, inst->GetArg(0), iter);
+                do_set(n_info, inst->GetArg(0), inst);
                 break;
             }
             case IR::Opcode::GetNFlag: {
-                do_get(n_info, iter);
+                do_get(n_info, inst);
                 break;
             }
             case IR::Opcode::SetZFlag: {
-                auto inst = reinterpret_cast<IR::Inst*>((*iter).get());
-                do_set(z_info, inst->GetArg(0), iter);
+                do_set(z_info, inst->GetArg(0), inst);
                 break;
             }
             case IR::Opcode::GetZFlag: {
-                do_get(z_info, iter);
+                do_get(z_info, inst);
                 break;
             }
             case IR::Opcode::SetCFlag: {
-                auto inst = reinterpret_cast<IR::Inst*>((*iter).get());
-                do_set(c_info, inst->GetArg(0), iter);
+                do_set(c_info, inst->GetArg(0), inst);
                 break;
             }
             case IR::Opcode::GetCFlag: {
-                do_get(c_info, iter);
+                do_get(c_info, inst);
                 break;
             }
             case IR::Opcode::SetVFlag: {
-                auto inst = reinterpret_cast<IR::Inst*>((*iter).get());
-                do_set(v_info, inst->GetArg(0), iter);
+                do_set(v_info, inst->GetArg(0), inst);
                 break;
             }
             case IR::Opcode::GetVFlag: {
-                do_get(v_info, iter);
+                do_get(v_info, inst);
                 break;
             }
             default:
                 break;
         }
     }
-#endif
 }
 
 } // namespace Optimization

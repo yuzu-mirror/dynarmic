@@ -87,6 +87,18 @@ void Inst::Invalidate() {
     }
 }
 
+void Inst::ReplaceUsesWith(Value& replacement) {
+    Invalidate();
+
+    op = Opcode::Identity;
+
+    if (!replacement.IsImmediate()) {
+        Use(replacement);
+    }
+
+    args[0] = replacement;
+}
+
 void Inst::Use(Value& value) {
     value.GetInst()->use_count++;
 

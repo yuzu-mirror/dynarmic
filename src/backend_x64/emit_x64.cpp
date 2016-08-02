@@ -87,6 +87,11 @@ CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Bl
     return code_ptr;
 }
 
+void EmitX64::EmitIdentity(IR::Block& block, IR::Inst* inst) {
+    // TODO: Possible unnecessary mov here.
+    reg_alloc.UseDefRegister(inst->GetArg(0), inst);
+}
+
 void EmitX64::EmitGetRegister(IR::Block&, IR::Inst* inst) {
     Arm::Reg reg = inst->GetArg(0).GetRegRef();
     X64Reg result = reg_alloc.DefRegister(inst);

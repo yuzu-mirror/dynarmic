@@ -148,6 +148,8 @@ public:
 
     void Invalidate();
 
+    void ReplaceUsesWith(Value& replacement);
+
     size_t use_count = 0;
     Inst* carry_inst = nullptr;
     Inst* overflow_inst = nullptr;
