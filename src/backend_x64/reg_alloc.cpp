@@ -39,7 +39,7 @@ Gen::X64Reg RegAlloc::DefRegister(IR::Inst* def_inst, HostLocList desired_locati
     }
 
     // Update state
-    LocInfo(location) = {def_inst, HostLocState::Def};
+    LocInfo(location) = HostLocInfo{def_inst, HostLocState::Def};
     return HostLocToX64(location);
 }
 

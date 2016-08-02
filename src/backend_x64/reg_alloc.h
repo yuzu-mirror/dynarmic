@@ -141,6 +141,8 @@ private:
     Gen::XEmitter* code = nullptr;
 
     struct HostLocInfo {
+        HostLocInfo() = default;
+        HostLocInfo(IR::Inst* value, HostLocState state) : value(value), state(state) {}
         IR::Inst* value = nullptr;
         HostLocState state = HostLocState::Idle;
         IR::Type GetType() const {
