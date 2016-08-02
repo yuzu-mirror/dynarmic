@@ -497,10 +497,10 @@ void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
         auto shift_arg = inst->GetArg(1);
 
         if (shift_arg.IsImmediate()) {
-            u32 shift = shift_arg.GetU8();
+            u8 shift = shift_arg.GetU8();
             X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
 
-            code->SAR(32, R(result), Imm32(shift < 31 ? shift : 31));
+            code->SAR(32, R(result), Imm8(shift < 31 ? shift : 31));
         } else {
             X64Reg shift = reg_alloc.UseScratchRegister(shift_arg.GetInst(), {HostLoc::RCX});
             X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst);
