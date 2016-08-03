@@ -9,12 +9,66 @@
 namespace Dynarmic {
 namespace Arm {
 
+static IR::Value GetAddressingMode(IREmitter& ir, bool P, bool U, bool W, Reg n, IR::Value index) {
+    IR::Value address;
+    if (P) {
+        // Pre-indexed addressing
+        if (n == Reg::PC && index.IsImmediate()) {
+            address = U ? ir.Imm32(ir.AlignPC(4) + index.GetU32()) : ir.Imm32(ir.AlignPC(4) - index.GetU32());
+        } else {
+            address = U ? ir.Add(ir.GetRegister(n), index) : ir.Sub(ir.GetRegister(n), index);
+        }
+
+        // Wrote calculated address back to the base register
+        if (W) {
+            ir.SetRegister(n, address);
+        }
+    } else {
+        // Post-indexed addressing
+        address = (n == Reg::PC) ? ir.Imm32(ir.AlignPC(4)) : ir.GetRegister(n);
+
+        if (U) {
+            ir.SetRegister(n, ir.Add(ir.GetRegister(n), index));
+        } else {
+            ir.SetRegister(n, ir.Sub(ir.GetRegister(n), index));
+        }
+
+        // TODO(bunnei): Handle W=1 mode, which in this scenario does an unprivileged (User mode) access.
+    }
+    return address;
+}
+
 bool ArmTranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto data = ir.ReadMemory32(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12)));
+
+        if (d == Reg::PC) {
+            ir.BXWritePC(data);
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
+        const auto data = ir.ReadMemory32(GetAddressingMode(ir, P, U, W, n, shifted.result));
+
+        if (d == Reg::PC) {
+            ir.BXWritePC(data);
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) {
