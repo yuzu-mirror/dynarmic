@@ -16,6 +16,7 @@ set(SRCS
     frontend/ir/ir_emitter.cpp
     frontend/translate/translate.cpp
     frontend/translate/translate_arm.cpp
+    frontend/translate/translate_arm/branch.cpp
     frontend/translate/translate_arm/data_processing.cpp
     frontend/translate/translate_arm/exception_generating.cpp
     frontend/translate/translate_arm/extension.cpp

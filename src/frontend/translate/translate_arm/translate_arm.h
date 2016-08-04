@@ -62,6 +62,14 @@ struct ArmTranslatorVisitor final {
     IREmitter::ResultAndCarry EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in);
     IR::Value SignZeroExtendRor(Reg m, SignExtendRotation rotate);
 
+    // Branch instructions
+    bool arm_B(Cond cond, Imm24 imm24);
+    bool arm_BL(Cond cond, Imm24 imm24);
+    bool arm_BLX_imm(Cond cond, Imm24 imm24);
+    bool arm_BLX_reg(Cond cond, Reg m);
+    bool arm_BX(Cond cond, Reg m);
+    bool arm_BXJ(Cond cond, Reg m);
+
     // Data processing instructions
     bool arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8);
     bool arm_ADC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
