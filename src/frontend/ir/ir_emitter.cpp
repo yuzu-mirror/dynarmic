@@ -98,6 +98,19 @@ void IREmitter::SetVFlag(const IR::Value& value) {
     Inst(IR::Opcode::SetVFlag, {value});
 }
 
+IR::Value IREmitter::Pack2x32To1x64(const IR::Value& lo, const IR::Value& hi)
+{
+    return Inst(IR::Opcode::Pack2x32To1x64, {lo, hi});
+}
+
+IR::Value IREmitter::LeastSignificantWord(const IR::Value& value) {
+    return Inst(IR::Opcode::LeastSignificantWord, {value});
+}
+
+IR::Value IREmitter::MostSignificantWord(const IR::Value& value) {
+    return Inst(IR::Opcode::MostSignificantWord, {value});
+}
+
 IR::Value IREmitter::LeastSignificantHalf(const IR::Value& value) {
     return Inst(IR::Opcode::LeastSignificantHalf, {value});
 }
@@ -112,6 +125,10 @@ IR::Value IREmitter::MostSignificantBit(const IR::Value& value) {
 
 IR::Value IREmitter::IsZero(const IR::Value& value) {
     return Inst(IR::Opcode::IsZero, {value});
+}
+
+IR::Value IREmitter::IsZero64(const IR::Value& value) {
+    return Inst(IR::Opcode::IsZero64, {value});
 }
 
 IREmitter::ResultAndCarry IREmitter::LogicalShiftLeft(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in) {
@@ -155,6 +172,10 @@ IR::Value IREmitter::Add(const IR::Value& a, const IR::Value& b) {
     return Inst(IR::Opcode::AddWithCarry, {a, b, Imm1(0)});
 }
 
+IR::Value IREmitter::Add64(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::Add64, {a, b});
+}
+
 IREmitter::ResultAndCarryAndOverflow IREmitter::SubWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in) {
     // This is equivalent to AddWithCarry(a, Not(b), carry_in).
     auto result = Inst(IR::Opcode::SubWithCarry, {a, b, carry_in});
@@ -165,6 +186,28 @@ IREmitter::ResultAndCarryAndOverflow IREmitter::SubWithCarry(const IR::Value& a,
 
 IR::Value IREmitter::Sub(const IR::Value& a, const IR::Value& b) {
     return Inst(IR::Opcode::SubWithCarry, {a, b, Imm1(1)});
+}
+
+IR::Value IREmitter::Mul(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::Mul, {a, b});
+}
+
+IR::Value IREmitter::Mul64(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::Mul64, {a, b});
+}
+
+IR::Value IREmitter::SignedMulHi(const IR::Value& a, const IR::Value& b) {
+    auto a64 = ZeroExtendWordToLong(a);
+    auto b64 = ZeroExtendWordToLong(b);
+    auto product64 = Mul64(a64, b64);
+    return LogicalShiftRight(product64, Imm8(32), Imm8(0)).result;
+}
+
+IR::Value IREmitter::UnsignedMulHi(const IR::Value& a, const IR::Value& b) {
+    auto a64 = SignExtendWordToLong(a);
+    auto b64 = SignExtendWordToLong(b);
+    auto product64 = Mul64(a64, b64);
+    return LogicalShiftRight(product64, Imm8(32), Imm8(0)).result;
 }
 
 IR::Value IREmitter::And(const IR::Value& a, const IR::Value& b) {
@@ -183,12 +226,20 @@ IR::Value IREmitter::Not(const IR::Value& a) {
     return Inst(IR::Opcode::Not, {a});
 }
 
+IR::Value IREmitter::SignExtendWordToLong(const IR::Value& a) {
+    return Inst(IR::Opcode::SignExtendWordToLong, {a});
+}
+
 IR::Value IREmitter::SignExtendHalfToWord(const IR::Value& a) {
     return Inst(IR::Opcode::SignExtendHalfToWord, {a});
 }
 
 IR::Value IREmitter::SignExtendByteToWord(const IR::Value& a) {
     return Inst(IR::Opcode::SignExtendByteToWord, {a});
+}
+
+IR::Value IREmitter::ZeroExtendWordToLong(const IR::Value& a) {
+    return Inst(IR::Opcode::ZeroExtendWordToLong, {a});
 }
 
 IR::Value IREmitter::ZeroExtendHalfToWord(const IR::Value& a) {

@@ -54,10 +54,14 @@ public:
     void SetCFlag(const IR::Value& value);
     void SetVFlag(const IR::Value& value);
 
+    IR::Value Pack2x32To1x64(const IR::Value& lo, const IR::Value& hi);
+    IR::Value LeastSignificantWord(const IR::Value& value);
+    IR::Value MostSignificantWord(const IR::Value& value);
     IR::Value LeastSignificantHalf(const IR::Value& value);
     IR::Value LeastSignificantByte(const IR::Value& value);
     IR::Value MostSignificantBit(const IR::Value& value);
     IR::Value IsZero(const IR::Value& value);
+    IR::Value IsZero64(const IR::Value& value);
 
     ResultAndCarry LogicalShiftLeft(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
     ResultAndCarry LogicalShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
@@ -66,14 +70,21 @@ public:
     ResultAndCarry RotateRightExtended(const IR::Value& value_in, const IR::Value& carry_in);
     ResultAndCarryAndOverflow AddWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
     IR::Value Add(const IR::Value& a, const IR::Value& b);
+    IR::Value Add64(const IR::Value& a, const IR::Value& b);
     ResultAndCarryAndOverflow SubWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
     IR::Value Sub(const IR::Value& a, const IR::Value& b);
+    IR::Value Mul(const IR::Value& a, const IR::Value& b);
+    IR::Value Mul64(const IR::Value& a, const IR::Value& b);
+    IR::Value SignedMulHi(const IR::Value& a, const IR::Value& b);
+    IR::Value UnsignedMulHi(const IR::Value& a, const IR::Value& b);
     IR::Value And(const IR::Value& a, const IR::Value& b);
     IR::Value Eor(const IR::Value& a, const IR::Value& b);
     IR::Value Or(const IR::Value& a, const IR::Value& b);
     IR::Value Not(const IR::Value& a);
+    IR::Value SignExtendWordToLong(const IR::Value& a);
     IR::Value SignExtendHalfToWord(const IR::Value& a);
     IR::Value SignExtendByteToWord(const IR::Value& a);
+    IR::Value ZeroExtendWordToLong(const IR::Value& a);
     IR::Value ZeroExtendHalfToWord(const IR::Value& a);
     IR::Value ZeroExtendByteToWord(const IR::Value& a);
     IR::Value ByteReverseWord(const IR::Value& a);
