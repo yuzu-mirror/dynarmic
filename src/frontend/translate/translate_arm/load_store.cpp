@@ -132,11 +132,22 @@ bool ArmTranslatorVisitor::arm_LDRT() {
 }
 
 bool ArmTranslatorVisitor::arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12));
+        ir.WriteMemory32(address, ir.GetRegister(d));
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
+        const auto address = GetAddressingMode(ir, P, U, W, n, shifted.result);
+        ir.WriteMemory32(address, ir.GetRegister(d));
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) {
