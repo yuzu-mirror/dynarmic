@@ -92,7 +92,7 @@ Gen::X64Reg RegAlloc::UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, Hos
     if (IsLastUse(use_inst)) {
         HostLoc current_location = *ValueLocation(use_inst);
         auto& loc_info = LocInfo(current_location);
-        if (!loc_info.IsIdle()) {
+        if (loc_info.IsIdle()) {
             loc_info.is_being_used = true;
             loc_info.def = def_inst;
             DEBUG_ASSERT(loc_info.IsUseDef());
