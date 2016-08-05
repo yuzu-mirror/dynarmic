@@ -671,6 +671,47 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
 }
 */
 
+TEST_CASE("Fuzz ARM extension instructions", "[JitX64]") {
+    const auto is_valid = [](u32 instr) -> bool {
+        // R15 as Rd or Rm is UNPREDICTABLE
+        return Dynarmic::Common::Bits<0, 3>(instr) != 0b1111 && Dynarmic::Common::Bits<12, 15>(instr) != 0b1111;
+    };
+
+    const std::array<InstructionGenerator, 6> signed_instructions = {
+        {
+            InstructionGenerator("cccc011010101111ddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc011010001111ddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc011010111111ddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc01101010nnnnddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc01101000nnnnddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc01101011nnnnddddrr000111mmmm", is_valid),
+        }
+    };
+
+    const std::array<InstructionGenerator, 6> unsigned_instructions = {
+        {
+            InstructionGenerator("cccc011011101111ddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc011011001111ddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc011011111111ddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc01101110nnnnddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc01101100nnnnddddrr000111mmmm", is_valid),
+            InstructionGenerator("cccc01101111nnnnddddrr000111mmmm", is_valid),
+        }
+    };
+
+    SECTION("Signed extension") {
+        FuzzJitArm(1, 1, 10000, [&signed_instructions]() -> u32 {
+            return signed_instructions[RandInt<size_t>(0, signed_instructions.size() - 1)].Generate();
+        });
+    }
+
+    SECTION("Unsigned extension") {
+        FuzzJitArm(1, 1, 10000, [&unsigned_instructions]() -> u32 {
+            return unsigned_instructions[RandInt<size_t>(0, unsigned_instructions.size() - 1)].Generate();
+        });
+    }
+}
+
 TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
     auto validate_d_m_n = [](u32 inst) -> bool {
         return Dynarmic::Common::Bits<16, 19>(inst) != 15 &&
