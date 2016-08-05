@@ -246,15 +246,15 @@ boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
         //INST(&V::arm_USAT16,      "USAT16",              "cccc01101110vvvvdddd11110011nnnn"), // v6
 
         // Multiply (Normal) instructions
-        //INST(&V::arm_MLA,         "MLA",                 "cccc0000001Sddddaaaammmm1001nnnn"), // v2
-        //INST(&V::arm_MUL,         "MUL",                 "cccc0000000Sdddd0000mmmm1001nnnn"), // v2
+        INST(&V::arm_MLA,         "MLA",                 "cccc0000001Sddddaaaammmm1001nnnn"), // v2
+        INST(&V::arm_MUL,         "MUL",                 "cccc0000000Sdddd0000mmmm1001nnnn"), // v2
 
         // Multiply (Long) instructions
-        //INST(&V::arm_SMLAL,       "SMLAL",               "cccc0000111Sddddaaaammmm1001nnnn"), // v3M
-        //INST(&V::arm_SMULL,       "SMULL",               "cccc0000110Sddddaaaammmm1001nnnn"), // v3M
-        //INST(&V::arm_UMAAL,       "UMAAL",               "cccc00000100ddddaaaammmm1001nnnn"), // v6
-        //INST(&V::arm_UMLAL,       "UMLAL",               "cccc0000101Sddddaaaammmm1001nnnn"), // v3M
-        //INST(&V::arm_UMULL,       "UMULL",               "cccc0000100Sddddaaaammmm1001nnnn"), // v3M
+        INST(&V::arm_SMLAL,       "SMLAL",               "cccc0000111Sddddaaaammmm1001nnnn"), // v3M
+        INST(&V::arm_SMULL,       "SMULL",               "cccc0000110Sddddaaaammmm1001nnnn"), // v3M
+        INST(&V::arm_UMAAL,       "UMAAL",               "cccc00000100ddddaaaammmm1001nnnn"), // v6
+        INST(&V::arm_UMLAL,       "UMLAL",               "cccc0000101Sddddaaaammmm1001nnnn"), // v3M
+        INST(&V::arm_UMULL,       "UMULL",               "cccc0000100Sddddaaaammmm1001nnnn"), // v3M
 
         // Multiply (Halfword) instructions
         //INST(&V::arm_SMLALxy,     "SMLALXY",             "cccc00010100ddddaaaammmm1xy0nnnn"), // v5xP

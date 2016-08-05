@@ -601,3 +601,38 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
     }
 }
 */
+
+TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
+    auto validate_d_m_n = [](u32 inst) -> bool {
+        return Dynarmic::Common::Bits<16, 19>(inst) != 15 &&
+               Dynarmic::Common::Bits<8, 11>(inst) != 15 &&
+               Dynarmic::Common::Bits<0, 3>(inst) != 15;
+    };
+    auto validate_d_a_m_n = [&](u32 inst) -> bool {
+        return validate_d_m_n(inst) &&
+               Dynarmic::Common::Bits<12, 15>(inst) != 15;
+    };
+    auto validate_h_l_m_n = [&](u32 inst) -> bool {
+        return validate_d_a_m_n(inst) &&
+               Dynarmic::Common::Bits<12, 15>(inst) != Dynarmic::Common::Bits<16, 19>(inst);
+    };
+
+    const std::array<InstructionGenerator, 7> instructions = {
+            {
+                    InstructionGenerator("cccc0000001Sddddaaaammmm1001nnnn", validate_d_a_m_n), // MLA
+                    InstructionGenerator("cccc0000000Sdddd0000mmmm1001nnnn", validate_d_m_n),   // MUL
+
+                    InstructionGenerator("cccc0000111Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMLAL
+                    InstructionGenerator("cccc0000110Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMULL
+                    InstructionGenerator("cccc00000100ddddaaaammmm1001nnnn", validate_h_l_m_n), // UMAAL
+                    InstructionGenerator("cccc0000101Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMLAL
+                    InstructionGenerator("cccc0000100Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMULL
+            }
+    };
+
+    SECTION("Multiply") {
+        FuzzJitArm(2, 2, 10000, [&]() -> u32 {
+            return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+        });
+    }
+}
