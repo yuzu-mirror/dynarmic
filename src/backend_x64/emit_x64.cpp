@@ -281,7 +281,8 @@ void EmitX64::EmitPack2x32To1x64(IR::Block&, IR::Inst* inst) {
 
 void EmitX64::EmitLeastSignificantWord(IR::Block&, IR::Inst* inst) {
     // TODO: Optimize
-    reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    auto u64 = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    code->MOVZX(64, 32, u64, R(u64));
 }
 
 void EmitX64::EmitMostSignificantWord(IR::Block&, IR::Inst* inst) {
