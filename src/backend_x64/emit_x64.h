@@ -23,11 +23,15 @@ public:
     EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb, Jit* jit_interface)
             : reg_alloc(code), code(code), routines(routines), cb(cb), jit_interface(jit_interface) {}
 
-    CodePtr Emit(const Arm::LocationDescriptor descriptor, IR::Block& ir);
+    struct BlockDescriptor {
+        CodePtr code_ptr;
+        size_t size;
+    };
+    BlockDescriptor* Emit(const Arm::LocationDescriptor descriptor, IR::Block& ir);
 
-    CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor) {
+    BlockDescriptor* GetBasicBlock(Arm::LocationDescriptor descriptor) {
         auto iter = basic_blocks.find(descriptor);
-        return iter != basic_blocks.end() ? iter->second : nullptr;
+        return iter != basic_blocks.end() ? &iter->second : nullptr;
     }
 
     void ClearCache();
@@ -62,7 +66,7 @@ private:
     Routines* routines;
     UserCallbacks cb;
     Jit* jit_interface;
-    std::unordered_map<Arm::LocationDescriptor, CodePtr, Arm::LocationDescriptorHash> basic_blocks;
+    std::unordered_map<Arm::LocationDescriptor, BlockDescriptor, Arm::LocationDescriptorHash> basic_blocks;
 };
 
 } // namespace BackendX64

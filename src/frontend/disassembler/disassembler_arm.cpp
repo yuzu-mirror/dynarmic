@@ -383,15 +383,29 @@ public:
     std::string arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) { return "ice"; }
 
     // Multiply (Normal) instructions
-    std::string arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n) { return "ice"; }
-    std::string arm_MUL(Cond cond, bool S, Reg d, Reg m, Reg n) { return "ice"; }
+    std::string arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n) {
+        return Common::StringFromFormat("mla%s%s %s, %s, %s, %s", S ? "s" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
+    std::string arm_MUL(Cond cond, bool S, Reg d, Reg m, Reg n) {
+        return Common::StringFromFormat("mul%s%s %s, %s, %s", S ? "s" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
 
     // Multiply (Long) instructions
-    std::string arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) { return "ice"; }
-    std::string arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) { return "ice"; }
-    std::string arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n) { return "ice"; }
-    std::string arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) { return "ice"; }
-    std::string arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) { return "ice"; }
+    std::string arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+        return Common::StringFromFormat("smlal%s%s %s, %s, %s, %s", S ? "s" : "", CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
+    std::string arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+        return Common::StringFromFormat("smull%s%s %s, %s, %s, %s", S ? "s" : "", CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
+    std::string arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n) {
+        return Common::StringFromFormat("umaal%s %s, %s, %s, %s", CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
+    std::string arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+        return Common::StringFromFormat("umlal%s%s %s, %s, %s, %s", S ? "s" : "", CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
+    std::string arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+        return Common::StringFromFormat("umull%s%s %s, %s, %s, %s", S ? "s" : "", CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
 
     // Multiply (Halfword) instructions
     std::string arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, bool N, Reg n) { return "ice"; }

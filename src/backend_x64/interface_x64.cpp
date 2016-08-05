@@ -6,6 +6,11 @@
 
 #include <memory>
 
+#ifdef DYNARMIC_USE_LLVM
+#include <llvm-c/Disassembler.h>
+#include <llvm-c/Target.h>
+#endif
+
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
 #include "backend_x64/routines.h"
@@ -13,6 +18,7 @@
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "common/scope_exit.h"
+#include "common/string_util.h"
 #include "frontend/arm_types.h"
 #include "frontend/translate/translate.h"
 #include "interface/interface.h"
@@ -44,14 +50,52 @@ struct Jit::Impl {
 
         Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.Fpscr};
 
-        CodePtr code_ptr = GetBasicBlock(descriptor);
+        CodePtr code_ptr = GetBasicBlock(descriptor)->code_ptr;
         return routines.RunCode(&jit_state, code_ptr, cycle_count);
     }
+
+    std::string Disassemble(Arm::LocationDescriptor descriptor) {
+        auto block = GetBasicBlock(descriptor);
+        std::string result = Common::StringFromFormat("address: %p\nsize: %zu bytes\n", block->code_ptr, block->size);
+
+#ifdef DYNARMIC_USE_LLVM
+        CodePtr end = block->code_ptr + block->size;
+        size_t remaining = block->size;
+
+        LLVMInitializeX86TargetInfo();
+        LLVMInitializeX86TargetMC();
+        LLVMInitializeX86Disassembler();
+        LLVMDisasmContextRef llvm_ctx = LLVMCreateDisasm("x86_64", nullptr, 0, nullptr, nullptr);
+        LLVMSetDisasmOptions(llvm_ctx, LLVMDisassembler_Option_AsmPrinterVariant);
+
+        for (CodePtr pos = block->code_ptr; pos < end;) {
+            char buffer[80];
+            size_t inst_size = LLVMDisasmInstruction(llvm_ctx, const_cast<u8*>(pos), remaining, (u64)pos, buffer, sizeof(buffer));
+            assert(inst_size);
+            for (CodePtr i = pos; i < pos + inst_size; i++)
+                result.append(Common::StringFromFormat("%02x ", *i));
+            for (size_t i = inst_size; i < 10; i++)
+                result.append("   ");
+            result.append(buffer);
+            result.append("\n");
+
+            pos += inst_size;
+            remaining -= inst_size;
+        }
+
+        LLVMDisasmDispose(llvm_ctx);
+#else
+        result.append("(recompile with DYNARMIC_USE_LLVM=ON to disassemble the generated x86_64 code)\n");
+#endif
+
+        return result;
+    }
+
 private:
-    CodePtr GetBasicBlock(Arm::LocationDescriptor descriptor) {
-        CodePtr code_ptr = emitter.GetBasicBlock(descriptor);
-        if (code_ptr)
-            return code_ptr;
+    EmitX64::BlockDescriptor* GetBasicBlock(Arm::LocationDescriptor descriptor) {
+        auto block = emitter.GetBasicBlock(descriptor);
+        if (block)
+            return block;
 
         IR::Block ir_block = Arm::Translate(descriptor, callbacks.MemoryRead32);
         Optimization::GetSetElimination(ir_block);
@@ -111,6 +155,10 @@ u32& Jit::Cpsr() {
 }
 u32 Jit::Cpsr() const {
     return impl->jit_state.Cpsr;
+}
+
+std::string Jit::Disassemble(Arm::LocationDescriptor descriptor) {
+    return impl->Disassemble(descriptor);
 }
 
 } // namespace Dynarmic

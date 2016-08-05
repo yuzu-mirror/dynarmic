@@ -48,13 +48,13 @@ static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
     block.instructions.erase(block.instructions.iterator_to(*inst));
 }
 
-CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block& block) {
+EmitX64::BlockDescriptor* EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block& block) {
     inhibit_emission.clear();
     reg_alloc.Reset();
 
     code->INT3();
     CodePtr code_ptr = code->GetCodePtr();
-    basic_blocks[descriptor] = code_ptr;
+    basic_blocks[descriptor].code_ptr = code_ptr;
 
     EmitCondPrelude(block.cond, block.cond_failed, block.location);
 
@@ -84,7 +84,8 @@ CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Bl
 
     reg_alloc.AssertNoMoreUses();
 
-    return code_ptr;
+    basic_blocks[descriptor].size = code->GetCodePtr() - code_ptr;
+    return &basic_blocks[descriptor];
 }
 
 void EmitX64::EmitBreakpoint(IR::Block&, IR::Inst*) {
@@ -276,6 +277,24 @@ void EmitX64::EmitGetOverflowFromOp(IR::Block&, IR::Inst*) {
     ASSERT_MSG(0, "should never happen");
 }
 
+void EmitX64::EmitPack2x32To1x64(IR::Block&, IR::Inst* inst) {
+    auto lo = reg_alloc.UseRegister(inst->GetArg(0), any_gpr);
+    auto hi = reg_alloc.UseDefRegister(inst->GetArg(1), inst, any_gpr);
+    code->SHL(64, R(hi), Imm8(32));
+    code->OR(64, R(hi), R(lo));
+}
+
+void EmitX64::EmitLeastSignificantWord(IR::Block&, IR::Inst* inst) {
+    // TODO: Optimize
+    auto u64 = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    code->MOVZX(64, 32, u64, R(u64));
+}
+
+void EmitX64::EmitMostSignificantWord(IR::Block&, IR::Inst* inst) {
+    auto u64 = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    code->SHR(64, R(u64), Imm8(32));
+}
+
 void EmitX64::EmitLeastSignificantHalf(IR::Block&, IR::Inst* inst) {
     reg_alloc.RegisterAddDef(inst, inst->GetArg(0));
 }
@@ -298,6 +317,16 @@ void EmitX64::EmitIsZero(IR::Block&, IR::Inst* inst) {
     // TODO: Flag optimization
 
     code->TEST(32, R(result), R(result));
+    code->SETcc(CCFlags::CC_E, R(result));
+    code->MOVZX(32, 8, result, R(result));
+}
+
+void EmitX64::EmitIsZero64(IR::Block&, IR::Inst* inst) {
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+
+    // TODO: Flag optimization
+
+    code->TEST(64, R(result), R(result));
     code->SETcc(CCFlags::CC_E, R(result));
     code->MOVZX(32, 8, result, R(result));
 }
@@ -704,6 +733,16 @@ void EmitX64::EmitAddWithCarry(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitAdd64(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
+    OpArg op_arg = R(reg_alloc.UseRegister(b, any_gpr));
+
+    code->ADD(64, R(result), op_arg);
+}
+
 void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
     auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
     auto overflow_inst = FindUseWithOpcode(inst, IR::Opcode::GetOverflowFromOp);
@@ -745,6 +784,28 @@ void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
         reg_alloc.DecrementRemainingUses(inst);
         code->SETcc(Gen::CC_O, R(overflow));
     }
+}
+
+void EmitX64::EmitMul(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+    if (a.IsImmediate())
+        std::swap(a, b);
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
+    if (b.IsImmediate()) {
+        code->IMUL(32, result, R(result), Imm32(b.GetU32()));
+    } else {
+        OpArg op_arg = R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
+        code->IMUL(32, result, op_arg);
+    }
+}
+
+void EmitX64::EmitMul64(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
+    OpArg op_arg = R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
+    code->IMUL(64, result, op_arg);
 }
 
 void EmitX64::EmitAnd(IR::Block&, IR::Inst* inst) {
@@ -791,6 +852,13 @@ void EmitX64::EmitNot(IR::Block&, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitSignExtendWordToLong(IR::Block&, IR::Inst* inst) {
+    // TODO: Remove unnecessary mov that may occur here
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+
+    code->MOVSX(64, 32, result, R(result));
+}
+
 void EmitX64::EmitSignExtendHalfToWord(IR::Block&, IR::Inst* inst) {
     OpArg source;
     X64Reg result;
@@ -805,6 +873,13 @@ void EmitX64::EmitSignExtendByteToWord(IR::Block&, IR::Inst* inst) {
     std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
 
     code->MOVSX(32, 8, result, source);
+}
+
+void EmitX64::EmitZeroExtendWordToLong(IR::Block&, IR::Inst* inst) {
+    // TODO: Remove unnecessary mov that may occur here
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+
+    code->MOVZX(64, 32, result, R(result));
 }
 
 void EmitX64::EmitZeroExtendHalfToWord(IR::Block&, IR::Inst* inst) {

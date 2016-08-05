@@ -614,15 +614,70 @@ bool ArmTranslatorVisitor::arm_ORR_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, S
 }
 
 bool ArmTranslatorVisitor::arm_RSB_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        u32 imm32 = ArmExpandImm(rotate, imm8);
+        auto result = ir.SubWithCarry(ir.Imm32(imm32), ir.GetRegister(n), ir.Imm1(1));
+        if (d == Reg::PC) {
+            ASSERT(!S);
+            ir.ALUWritePC(result.result);
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+        ir.SetRegister(d, result.result);
+        if (S) {
+            ir.SetNFlag(ir.MostSignificantBit(result.result));
+            ir.SetZFlag(ir.IsZero(result.result));
+            ir.SetCFlag(result.carry);
+            ir.SetVFlag(result.overflow);
+        }
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_RSB_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
+        auto result = ir.SubWithCarry(shifted.result, ir.GetRegister(n), ir.Imm1(1));
+        if (d == Reg::PC) {
+            ASSERT(!S);
+            ir.ALUWritePC(result.result);
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+        ir.SetRegister(d, result.result);
+        if (S) {
+            ir.SetNFlag(ir.MostSignificantBit(result.result));
+            ir.SetZFlag(ir.IsZero(result.result));
+            ir.SetCFlag(result.carry);
+            ir.SetVFlag(result.overflow);
+        }
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_RSB_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    return InterpretThisInstruction();
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
+        auto carry_in = ir.GetCFlag();
+        auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
+        auto result = ir.SubWithCarry(shifted.result, ir.GetRegister(n), ir.Imm1(1));
+        if (d == Reg::PC) {
+            ASSERT(!S);
+            ir.ALUWritePC(result.result);
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+        ir.SetRegister(d, result.result);
+        if (S) {
+            ir.SetNFlag(ir.MostSignificantBit(result.result));
+            ir.SetZFlag(ir.IsZero(result.result));
+            ir.SetCFlag(result.carry);
+            ir.SetVFlag(result.overflow);
+        }
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_RSC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {

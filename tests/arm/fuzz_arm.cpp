@@ -7,17 +7,18 @@
 #include <cinttypes>
 #include <cstring>
 #include <functional>
-#include <signal.h>
 
+#include <signal.h>
 #include <catch.hpp>
-#include <frontend/ir/ir.h>
-#include <ir_opt/passes.h>
-#include <frontend/translate/translate.h>
 
 #include "common/bit_util.h"
 #include "common/common_types.h"
+#include "frontend/arm_types.h"
 #include "frontend/disassembler/disassembler.h"
+#include "frontend/ir/ir.h"
+#include "frontend/translate/translate.h"
 #include "interface/interface.h"
+#include "ir_opt/passes.h"
 #include "rand_int.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
@@ -140,12 +141,23 @@ public:
             }
         }
     }
-    u32 Generate() const {
+    u32 Generate(bool condition = true) const {
         u32 inst;
         do {
-            u32 random = RandInt<u32>(0, 0xFFFF);
+            u32 random = RandInt<u32>(0, 0xFFFFFFFF);
+            if (condition)
+                random &= ~(0xF << 28);
             inst = bits | (random & ~mask);
         } while (!is_valid(inst));
+
+        if (condition) {
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1)
+                inst |= RandInt(0x0, 0xD) << 28;
+            else
+                inst |= 0xE << 28;
+        }
+
         return inst;
     }
     u32 Bits() { return bits; }
@@ -219,21 +231,26 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
             printf("\nInitial Register Listing: \n");
             for (int i = 0; i <= 15; i++) {
-                printf("%4i: %08x\n", i, initial_regs[i]);
+                auto reg = Dynarmic::Arm::RegToString(static_cast<Dynarmic::Arm::Reg>(i));
+                printf("%4s: %08x\n", reg, initial_regs[i]);
             }
 
             printf("\nFinal Register Listing: \n");
             printf("      interp   jit\n");
             for (int i = 0; i <= 15; i++) {
-                printf("%4i: %08x %08x %s\n", i, interp.Reg[i], jit.Regs()[i], interp.Reg[i] != jit.Regs()[i] ? "*" : "");
+                auto reg = Dynarmic::Arm::RegToString(static_cast<Dynarmic::Arm::Reg>(i));
+                printf("%4s: %08x %08x %s\n", reg, interp.Reg[i], jit.Regs()[i], interp.Reg[i] != jit.Regs()[i] ? "*" : "");
             }
             printf("CPSR: %08x %08x %s\n", interp.Cpsr, jit.Cpsr(), interp.Cpsr != jit.Cpsr() ? "*" : "");
 
-            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, false, false, 0}, &MemoryRead32);
+            Dynarmic::Arm::LocationDescriptor descriptor = {0, false, false, 0};
+            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate(descriptor, &MemoryRead32);
             Dynarmic::Optimization::GetSetElimination(ir_block);
             Dynarmic::Optimization::DeadCodeElimination(ir_block);
             Dynarmic::Optimization::VerificationPass(ir_block);
             printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
+
+            printf("\n\nx86_64:\n%s", jit.Disassemble(descriptor).c_str());
 
 #ifdef _MSC_VER
             __debugbreak();
@@ -444,46 +461,20 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
 
     const std::array<InstructionGenerator, 3> rev_instructions = {
         {
-            InstructionGenerator("0000011010111111dddd11110011mmmm", is_valid),
-            InstructionGenerator("0000011010111111dddd11111011mmmm", is_valid),
-            InstructionGenerator("0000011011111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("cccc011010111111dddd11110011mmmm", is_valid),
+            InstructionGenerator("cccc011010111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("cccc011011111111dddd11111011mmmm", is_valid),
         }
     };
 
-    SECTION("REV tests") {
+    SECTION("Reverse tests") {
         FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return rev_instructions[0].Generate() | (cond << 28);
-        });
-    }
-
-    SECTION("REV16 tests") {
-        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return rev_instructions[1].Generate() | (cond << 28);
-        });
-    }
-
-    SECTION("REVSH tests") {
-        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return rev_instructions[2].Generate() | (cond << 28);
+            return rev_instructions[RandInt<size_t>(0, rev_instructions.size() - 1)].Generate();
         });
     }
 }
 
+/*
 TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
     auto forbid_r15 = [](u32 inst) -> bool {
         return Dynarmic::Common::Bits<12, 15>(inst) != 0b1111;
@@ -565,68 +556,39 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
 
     SECTION("Doubleword tests") {
         FuzzJitArm(1, 1, 10000, [&doubleword_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-
-            return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate() | (cond << 28);
+            return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Word tests") {
         FuzzJitArm(1, 1, 10000, [&word_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate() | (cond << 28);
+            return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Halfword tests") {
         FuzzJitArm(1, 1, 10000, [&halfword_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate() | (cond << 28);
+            return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Byte tests") {
         FuzzJitArm(1, 1, 10000, [&byte_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate() | (cond << 28);
+            return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Mixed tests") {
         FuzzJitArm(10, 10, 10000, [&]() -> u32 {
-            size_t selection = RandInt<size_t>(0, 3);
-
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-
-            switch (selection) {
+            switch (RandInt(0, 3)) {
             case 0:
-                return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate() | (cond << 28);
+                return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate();
             case 1:
-                return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate() | (cond << 28);
+                return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate();
             case 2:
-                return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate() | (cond << 28);
+                return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate();
             case 3:
-                return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate() | (cond << 28);
+                return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate();
             }
 
             return 0;
@@ -636,5 +598,41 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
     SECTION("Write to PC") {
         // TODO
         FAIL();
+    }
+}
+*/
+
+TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
+    auto validate_d_m_n = [](u32 inst) -> bool {
+        return Dynarmic::Common::Bits<16, 19>(inst) != 15 &&
+               Dynarmic::Common::Bits<8, 11>(inst) != 15 &&
+               Dynarmic::Common::Bits<0, 3>(inst) != 15;
+    };
+    auto validate_d_a_m_n = [&](u32 inst) -> bool {
+        return validate_d_m_n(inst) &&
+               Dynarmic::Common::Bits<12, 15>(inst) != 15;
+    };
+    auto validate_h_l_m_n = [&](u32 inst) -> bool {
+        return validate_d_a_m_n(inst) &&
+               Dynarmic::Common::Bits<12, 15>(inst) != Dynarmic::Common::Bits<16, 19>(inst);
+    };
+
+    const std::array<InstructionGenerator, 7> instructions = {
+            {
+                    InstructionGenerator("cccc0000001Sddddaaaammmm1001nnnn", validate_d_a_m_n), // MLA
+                    InstructionGenerator("cccc0000000Sdddd0000mmmm1001nnnn", validate_d_m_n),   // MUL
+
+                    InstructionGenerator("cccc0000111Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMLAL
+                    InstructionGenerator("cccc0000110Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMULL
+                    InstructionGenerator("cccc00000100ddddaaaammmm1001nnnn", validate_h_l_m_n), // UMAAL
+                    InstructionGenerator("cccc0000101Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMLAL
+                    InstructionGenerator("cccc0000100Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMULL
+            }
+    };
+
+    SECTION("Multiply") {
+        FuzzJitArm(2, 2, 10000, [&]() -> u32 {
+            return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+        });
     }
 }

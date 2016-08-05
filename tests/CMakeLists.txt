@@ -33,5 +33,5 @@ set(HEADERS
 
 create_directory_groups(${SRCS} ${HEADERS})
 add_executable(dynarmic_tests ${SRCS})
-target_link_libraries(dynarmic_tests dynarmic)
+target_link_libraries(dynarmic_tests dynarmic ${llvm_libs})
 set_target_properties(dynarmic_tests PROPERTIES LINKER_LANGUAGE CXX)
