@@ -8,7 +8,6 @@
 #include <cstring>
 #include <functional>
 
-#include <signal.h>
 #include <catch.hpp>
 
 #include "common/bit_util.h"
@@ -22,6 +21,10 @@
 #include "rand_int.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
+
+#ifdef __unix__
+#include <signal.h>
+#endif
 
 struct WriteRecord {
     size_t size;
@@ -254,7 +257,8 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
 #ifdef _MSC_VER
             __debugbreak();
-#else
+#endif
+#ifdef __unix__
             raise(SIGTRAP);
 #endif
             FAIL();
