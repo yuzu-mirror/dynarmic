@@ -40,12 +40,12 @@ static void assert_noinline_call(const Fn& fn) {
 #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
 #define UNREACHABLE_MSG(...) ASSERT_MSG(false, __VA_ARGS__)
 
-#ifdef _DEBUG
-#define DEBUG_ASSERT(_a_) ASSERT(_a_)
-#define DEBUG_ASSERT_MSG(_a_, ...) ASSERT_MSG(_a_, __VA_ARGS__)
-#else // not debug
+#ifdef NDEBUG
 #define DEBUG_ASSERT(_a_)
 #define DEBUG_ASSERT_MSG(_a_, ...)
+#else // debug
+#define DEBUG_ASSERT(_a_) ASSERT(_a_)
+#define DEBUG_ASSERT_MSG(_a_, ...) ASSERT_MSG(_a_, __VA_ARGS__)
 #endif
 
 #define UNIMPLEMENTED() DEBUG_ASSERT_MSG(false, "Unimplemented code!")
