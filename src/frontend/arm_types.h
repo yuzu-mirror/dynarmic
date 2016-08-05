@@ -51,6 +51,17 @@ inline const char* RegToString(Reg reg) {
     return reg_strs.at(static_cast<size_t>(reg));
 }
 
+enum class ExtReg {
+    S0, S1, S2, S3, S4, S5, S6, S7,
+    S8, S9, S10, S11, S12, S13, S14, S15,
+    S16, S17, S18, S19, S20, S21, S22, S23,
+    S24, S25, S26, S27, S28, S29, S30, S31,
+    D0, D1, D2, D3, D4, D5, D6, D7,
+    D8, D9, D10, D11, D12, D13, D14, D15,
+    D16, D17, D18, D19, D20, D21, D22, D23,
+    D24, D25, D26, D27, D28, D29, D30, D31,
+};
+
 using Imm3 = u32;
 using Imm4 = u32;
 using Imm5 = u32;

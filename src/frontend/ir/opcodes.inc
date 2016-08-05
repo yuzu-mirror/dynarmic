@@ -5,7 +5,11 @@ OPCODE(Breakpoint,              T::Void,                                        
 
 // ARM Context getters/setters
 OPCODE(GetRegister,             T::U32,         T::RegRef                                       )
+OPCODE(GetExtendedRegister32,   T::F32,         T::ExtRegRef                                    )
+OPCODE(GetExtendedRegister64,   T::F64,         T::ExtRegRef                                    )
 OPCODE(SetRegister,             T::Void,        T::RegRef,      T::U32                          )
+OPCODE(SetExtendedRegister32,   T::Void,        T::ExtRegRef,   T::F32                          )
+OPCODE(SetExtendedRegister64,   T::Void,        T::ExtRegRef,   T::F64                          )
 OPCODE(GetNFlag,                T::U1,                                                          )
 OPCODE(SetNFlag,                T::Void,        T::U1                                           )
 OPCODE(GetZFlag,                T::U1,                                                          )

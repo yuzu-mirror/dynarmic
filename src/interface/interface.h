@@ -63,10 +63,16 @@ public:
     /// View and modify registers.
     std::array<u32, 16>& Regs();
     std::array<u32, 16> Regs() const;
+    std::array<u32, 64>& ExtRegs();
+    std::array<u32, 64> ExtRegs() const;
 
     /// View and modify CPSR.
     u32& Cpsr();
     u32 Cpsr() const;
+
+    /// View and modify FPSCR.
+    u32 Fpscr() const;
+    void SetFpscr(u32 value) const;
 
     /**
      * Returns true if Jit::Run was called but hasn't returned yet.

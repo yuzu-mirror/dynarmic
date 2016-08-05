@@ -33,16 +33,17 @@ namespace IR {
 // A basic block is represented as an IR::Block.
 
 enum class Type {
-    Void    = 1 << 0,
-    RegRef  = 1 << 1,
-    Opaque  = 1 << 2,
-    U1      = 1 << 3,
-    U8      = 1 << 4,
-    U16     = 1 << 5,
-    U32     = 1 << 6,
-    U64     = 1 << 7,
-    F32     = 1 << 8,
-    F64     = 1 << 9,
+    Void      = 1 << 0,
+    RegRef    = 1 << 1,
+    ExtRegRef = 1 << 2,
+    Opaque    = 1 << 3,
+    U1        = 1 << 4,
+    U8        = 1 << 5,
+    U16       = 1 << 6,
+    U32       = 1 << 7,
+    U64       = 1 << 8,
+    F32       = 1 << 9,
+    F64       = 1 << 10,
 };
 
 Type GetTypeOf(Opcode op);
@@ -72,6 +73,10 @@ public:
         inner.imm_regref = value;
     }
 
+    explicit Value(Arm::ExtReg value) : type(Type::ExtRegRef) {
+        inner.imm_extregref = value;
+    }
+
     explicit Value(bool value) : type(Type::U1) {
         inner.imm_u1 = value;
     }
@@ -90,6 +95,7 @@ public:
 
     Inst* GetInst() const;
     Arm::Reg GetRegRef() const;
+    Arm::ExtReg GetExtRegRef() const;
     bool GetU1() const;
     u8 GetU8() const;
     u32 GetU32() const;
@@ -100,6 +106,7 @@ private:
     union {
         Inst* inst; // type == Type::Opaque
         Arm::Reg imm_regref;
+        Arm::ExtReg imm_extregref;
         bool imm_u1;
         u8 imm_u8;
         u32 imm_u32;

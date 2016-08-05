@@ -90,6 +90,7 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
     interp_state.NumInstrsToExecute = 1;
 
     interp_state.Reg = jit->Regs();
+    interp_state.ExtReg = jit->ExtRegs();
     interp_state.Cpsr = jit->Cpsr();
     interp_state.Reg[15] = pc;
 
@@ -100,6 +101,7 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
     interp_state.Reg[15] &= T ? 0xFFFFFFFE : 0xFFFFFFFC;
 
     jit->Regs() = interp_state.Reg;
+    jit->ExtRegs() = interp_state.ExtReg;
     jit->Cpsr() = interp_state.Cpsr;
 }
 

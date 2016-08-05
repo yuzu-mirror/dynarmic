@@ -78,6 +78,11 @@ Arm::Reg Value::GetRegRef() const {
     return inner.imm_regref;
 }
 
+Arm::ExtReg Value::GetExtRegRef() const {
+    DEBUG_ASSERT(type == Type::ExtRegRef);
+    return inner.imm_extregref;
+}
+
 Inst* Value::GetInst() const {
     DEBUG_ASSERT(type == Type::Opaque);
     return inner.inst;

@@ -41,12 +41,17 @@ void Routines::GenRunCode() {
 
     MOV(64, R(R15), R(ABI_PARAM1));
     MOV(64, MDisp(R15, offsetof(JitState, save_host_RSP)), R(RSP));
+    STMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
+    LDMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
 
     JMPptr(R(ABI_PARAM2));
 }
 
 void Routines::GenReturnFromRunCode(XEmitter* code) const {
+    code->STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
+    code->LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
     code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
+
     code->ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
     code->RET();
 }

@@ -43,9 +43,29 @@ IR::Value IREmitter::GetRegister(Reg reg) {
     return Inst(IR::Opcode::GetRegister, { IR::Value(reg) });
 }
 
+IR::Value IREmitter::GetExtendedRegister(ExtReg reg) {
+    if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
+        return Inst(IR::Opcode::GetExtendedRegister32, {IR::Value(reg)});
+    } else if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
+        return Inst(IR::Opcode::GetExtendedRegister64, {IR::Value(reg)});
+    } else {
+        ASSERT_MSG(false, "Invalid reg.");
+    }
+}
+
 void IREmitter::SetRegister(const Reg reg, const IR::Value& value) {
     ASSERT(reg != Reg::PC);
     Inst(IR::Opcode::SetRegister, { IR::Value(reg), value });
+}
+
+void IREmitter::SetExtendedRegister(const ExtReg reg, const IR::Value& value) {
+    if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
+        Inst(IR::Opcode::SetExtendedRegister32, {IR::Value(reg), value});
+    } else if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
+        Inst(IR::Opcode::SetExtendedRegister64, {IR::Value(reg), value});
+    } else {
+        ASSERT_MSG(false, "Invalid reg.");
+    }
 }
 
 void IREmitter::ALUWritePC(const IR::Value& value) {

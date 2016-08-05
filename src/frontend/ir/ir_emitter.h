@@ -40,7 +40,9 @@ public:
     IR::Value Imm32(u32 value);
 
     IR::Value GetRegister(Reg source_reg);
+    IR::Value GetExtendedRegister(ExtReg source_reg);
     void SetRegister(const Reg dest_reg, const IR::Value& value);
+    void SetExtendedRegister(const ExtReg dest_reg, const IR::Value& value);
 
     void ALUWritePC(const IR::Value& value);
     void BranchWritePC(const IR::Value& value);

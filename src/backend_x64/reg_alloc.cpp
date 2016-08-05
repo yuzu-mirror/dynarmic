@@ -111,9 +111,14 @@ Gen::X64Reg RegAlloc::UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, Hos
         }
     }
 
-    Gen::X64Reg use_reg = UseRegister(use_inst, any_gpr);
+    bool is_floating_point = use_inst->GetType() == IR::Type::F32 || use_inst->GetType() == IR::Type::F64;
+    Gen::X64Reg use_reg = UseRegister(use_inst, is_floating_point ? any_xmm : any_gpr);
     Gen::X64Reg def_reg = DefRegister(def_inst, desired_locations);
-    code->MOV(64, Gen::R(def_reg), Gen::R(use_reg));
+    if (is_floating_point) {
+        code->MOVAPD(def_reg, Gen::R(use_reg));
+    } else {
+        code->MOV(64, Gen::R(def_reg), Gen::R(use_reg));
+    }
     return def_reg;
 }
 

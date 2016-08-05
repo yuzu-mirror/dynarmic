@@ -26,6 +26,18 @@ static OpArg MJitStateReg(Arm::Reg reg) {
     return MDisp(R15, offsetof(JitState, Reg) + sizeof(u32) * static_cast<size_t>(reg));
 }
 
+static OpArg MJitStateExtReg(Arm::ExtReg reg) {
+    if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
+        size_t index = static_cast<size_t>(reg) - static_cast<size_t>(Arm::ExtReg::S0);
+        return MDisp(R15, int(offsetof(JitState, ExtReg) + sizeof(u32) * index));
+    }
+    if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
+        size_t index = static_cast<size_t>(reg) - static_cast<size_t>(Arm::ExtReg::D0);
+        return MDisp(R15, int(offsetof(JitState, ExtReg) + sizeof(u64) * index));
+    }
+    ASSERT_MSG(false, "Should never happen.");
+}
+
 static OpArg MJitStateCpsr() {
     return MDisp(R15, offsetof(JitState, Cpsr));
 }
@@ -104,6 +116,20 @@ void EmitX64::EmitGetRegister(IR::Block&, IR::Inst* inst) {
     code->MOV(32, R(result), MJitStateReg(reg));
 }
 
+void EmitX64::EmitGetExtendedRegister32(IR::Block& block, IR::Inst* inst) {
+    Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+    ASSERT(reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31);
+    X64Reg result = reg_alloc.DefRegister(inst, any_xmm);
+    code->MOVSS(result, MJitStateExtReg(reg));
+}
+
+void EmitX64::EmitGetExtendedRegister64(IR::Block&, IR::Inst* inst) {
+    Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+    ASSERT(reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31);
+    X64Reg result = reg_alloc.DefRegister(inst, any_xmm);
+    code->MOVSD(result, MJitStateExtReg(reg));
+}
+
 void EmitX64::EmitSetRegister(IR::Block&, IR::Inst* inst) {
     Arm::Reg reg = inst->GetArg(0).GetRegRef();
     IR::Value arg = inst->GetArg(1);
@@ -113,6 +139,20 @@ void EmitX64::EmitSetRegister(IR::Block&, IR::Inst* inst) {
         X64Reg to_store = reg_alloc.UseRegister(arg.GetInst(), any_gpr);
         code->MOV(32, MJitStateReg(reg), R(to_store));
     }
+}
+
+void EmitX64::EmitSetExtendedRegister32(IR::Block&, IR::Inst* inst) {
+    Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+    ASSERT(reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31);
+    X64Reg source = reg_alloc.UseRegister(inst->GetArg(1), any_xmm);
+    code->MOVSS(MJitStateExtReg(reg), source);
+}
+
+void EmitX64::EmitSetExtendedRegister64(IR::Block&, IR::Inst* inst) {
+    Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+    ASSERT(reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31);
+    X64Reg source = reg_alloc.UseRegister(inst->GetArg(1), any_xmm);
+    code->MOVSD(MJitStateExtReg(reg), source);
 }
 
 void EmitX64::EmitGetNFlag(IR::Block&, IR::Inst* inst) {
@@ -1128,7 +1168,7 @@ void EmitX64::EmitCondPrelude(Arm::Cond cond,
     CCFlags cc = EmitCond(code, cond);
 
     // TODO: Improve, maybe.
-    auto fixup = code->J_CC(cc);
+    auto fixup = code->J_CC(cc, true);
     EmitAddCycles(1); // TODO: Proper cycle count
     EmitTerminalLinkBlock(IR::Term::LinkBlock{cond_failed.get()}, initial_location);
     code->SetJumpTarget(fixup);
@@ -1205,7 +1245,7 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescript
 
 void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location) {
     CCFlags cc = EmitCond(code, terminal.if_);
-    auto fixup = code->J_CC(cc);
+    auto fixup = code->J_CC(cc, true);
     EmitTerminal(terminal.else_, initial_location);
     code->SetJumpTarget(fixup);
     EmitTerminal(terminal.then_, initial_location);

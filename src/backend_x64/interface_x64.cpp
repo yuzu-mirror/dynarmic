@@ -48,7 +48,7 @@ struct Jit::Impl {
         bool TFlag = Common::Bit<5>(jit_state.Cpsr);
         bool EFlag = Common::Bit<9>(jit_state.Cpsr);
 
-        Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.Fpscr};
+        Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.guest_FPSCR_flags};
 
         CodePtr code_ptr = GetBasicBlock(descriptor)->code_ptr;
         return routines.RunCode(&jit_state, code_ptr, cycle_count);
@@ -150,11 +150,28 @@ std::array<u32, 16> Jit::Regs() const {
     return impl->jit_state.Reg;
 }
 
+std::array<u32, 64>& Jit::ExtRegs() {
+    return impl->jit_state.ExtReg;
+}
+
+std::array<u32, 64> Jit::ExtRegs() const {
+    return impl->jit_state.ExtReg;
+}
+
 u32& Jit::Cpsr() {
     return impl->jit_state.Cpsr;
 }
+
 u32 Jit::Cpsr() const {
     return impl->jit_state.Cpsr;
+}
+
+u32 Jit::Fpscr() const {
+    return impl->jit_state.Fpscr();
+}
+
+void Jit::SetFpscr(u32 value) const {
+    return impl->jit_state.SetFpscr(value);
 }
 
 std::string Jit::Disassemble(Arm::LocationDescriptor descriptor) {

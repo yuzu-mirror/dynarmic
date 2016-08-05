@@ -3,6 +3,7 @@ include_directories(.)
 set(SRCS
     backend_x64/emit_x64.cpp
     backend_x64/interface_x64.cpp
+    backend_x64/jitstate.cpp
     backend_x64/reg_alloc.cpp
     backend_x64/routines.cpp
     common/memory_util.cpp
