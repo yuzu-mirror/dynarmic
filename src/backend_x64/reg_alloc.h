@@ -101,18 +101,20 @@ public:
 
     /// Late-def
     Gen::X64Reg DefRegister(IR::Inst* def_inst, HostLocList desired_locations);
+    void RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst);
     /// Early-use, Late-def
     Gen::X64Reg UseDefRegister(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations);
     Gen::X64Reg UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, HostLocList desired_locations);
+    std::tuple<Gen::OpArg, Gen::X64Reg> UseDefOpArg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations);
     /// Early-use
     Gen::X64Reg UseRegister(IR::Value use_value, HostLocList desired_locations);
     Gen::X64Reg UseRegister(IR::Inst* use_inst, HostLocList desired_locations);
+    Gen::OpArg UseOpArg(IR::Value use_value, HostLocList desired_locations);
     /// Early-use, Destroyed
     Gen::X64Reg UseScratchRegister(IR::Value use_value, HostLocList desired_locations);
     Gen::X64Reg UseScratchRegister(IR::Inst* use_inst, HostLocList desired_locations);
     /// Early-def, Late-use, single-use
     Gen::X64Reg ScratchRegister(HostLocList desired_locations);
-    Gen::X64Reg LoadImmediateIntoRegister(IR::Value imm, Gen::X64Reg reg);
 
     /// Late-def for result register, Early-use for all arguments, Each value is placed into registers according to host ABI.
     void HostCall(IR::Inst* result_def = nullptr, IR::Value arg0_use = {}, IR::Value arg1_use = {}, IR::Value arg2_use = {}, IR::Value arg3_use = {});
@@ -129,24 +131,41 @@ public:
 
 private:
     HostLoc SelectARegister(HostLocList desired_locations) const;
-    std::vector<HostLoc> ValueLocations(IR::Inst* value) const;
+    boost::optional<HostLoc> ValueLocation(IR::Inst* value) const;
     bool IsRegisterOccupied(HostLoc loc) const;
     bool IsRegisterAllocated(HostLoc loc) const;
+    bool IsLastUse(IR::Inst* inst) const;
+
+    std::tuple<HostLoc, bool> UseHostLoc(IR::Inst* use_inst, HostLocList desired_locations);
 
     void EmitMove(HostLoc to, HostLoc from);
     void EmitExchange(HostLoc a, HostLoc b);
+    Gen::X64Reg LoadImmediateIntoRegister(IR::Value imm, Gen::X64Reg reg);
+
     void SpillRegister(HostLoc loc);
     HostLoc FindFreeSpill() const;
 
     Gen::XEmitter* code = nullptr;
 
     struct HostLocInfo {
-        HostLocInfo() = default;
-        HostLocInfo(IR::Inst* value, HostLocState state) : value(value), state(state) {}
-        IR::Inst* value = nullptr;
-        HostLocState state = HostLocState::Idle;
-        IR::Type GetType() const {
-            return value ? value->GetType() : IR::Type::Void;
+        std::vector<IR::Inst*> values; // early value
+        IR::Inst* def = nullptr; // late value
+        bool is_being_used = false;
+
+        bool IsIdle() const {
+            return !is_being_used;
+        }
+        bool IsScratch() const {
+            return is_being_used && !def && values.empty();
+        }
+        bool IsUse() const {
+            return is_being_used && !def && !values.empty();
+        }
+        bool IsDef() const {
+            return is_being_used && def && values.empty();
+        }
+        bool IsUseDef() const {
+            return is_being_used && def && !values.empty();
         }
     };
     std::array<HostLocInfo, HostLocCount> hostloc_info;
