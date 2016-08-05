@@ -278,14 +278,14 @@ void EmitX64::EmitGetOverflowFromOp(IR::Block&, IR::Inst*) {
 }
 
 void EmitX64::EmitPack2x32To1x64(IR::Block&, IR::Inst* inst) {
-    OpArg hi;
+    OpArg lo;
     X64Reg result;
-    std::tie(hi, result) = reg_alloc.UseDefOpArg(inst->GetArg(1), inst, any_gpr);
-    OpArg lo = reg_alloc.UseOpArg(inst->GetArg(0), any_gpr);
+    std::tie(lo, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    X64Reg hi = reg_alloc.UseScratchRegister(inst->GetArg(1), any_gpr);
 
-    code->MOVZX(64, 32, result, hi);
-    code->SHL(64, R(result), Imm8(32));
-    code->OR(64, R(result), lo);
+    code->SHL(64, R(hi), Imm8(32));
+    code->MOVZX(64, 32, result, lo);
+    code->OR(64, R(result), R(hi));
 }
 
 void EmitX64::EmitLeastSignificantWord(IR::Block&, IR::Inst* inst) {
