@@ -144,7 +144,7 @@ public:
     u32 Generate() const {
         u32 inst;
         do {
-            u32 random = RandInt<u32>(0, 0xFFFF);
+            u32 random = RandInt<u32>(0, 0xFFFFFFFF);
             inst = bits | (random & ~mask);
         } while (!is_valid(inst));
         return inst;
