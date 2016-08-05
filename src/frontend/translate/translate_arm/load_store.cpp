@@ -184,11 +184,23 @@ bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n
 }
 
 bool ArmTranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
+        const auto value = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
+        ir.WriteMemory16(address, value);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto address = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
+        const auto value = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
+        ir.WriteMemory16(address, value);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRHT() {
