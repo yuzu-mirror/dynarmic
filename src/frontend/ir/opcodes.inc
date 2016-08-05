@@ -1,6 +1,7 @@
 //     opcode name,             return type,    arg1 type,      arg2 type,      arg3 type,      ...
 
 OPCODE(Identity,                T::Opaque,      T::Opaque                                       )
+OPCODE(Breakpoint,              T::Void,                                                        )
 
 // ARM Context getters/setters
 OPCODE(GetRegister,             T::U32,         T::RegRef                                       )

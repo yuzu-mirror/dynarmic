@@ -89,6 +89,8 @@ public:
     void WriteMemory32(const IR::Value& vaddr, const IR::Value& value);
     void WriteMemory64(const IR::Value& vaddr, const IR::Value& value);
 
+    void Breakpoint();
+
     void SetTerm(const IR::Terminal& terminal);
 
 private:

@@ -261,6 +261,10 @@ void IREmitter::WriteMemory64(const IR::Value& vaddr, const IR::Value& value) {
     }
 }
 
+void IREmitter::Breakpoint() {
+    Inst(IR::Opcode::Breakpoint, {});
+}
+
 void IREmitter::SetTerm(const IR::Terminal& terminal) {
     ASSERT_MSG(block.terminal.which() == 0, "Terminal has already been set.");
     block.terminal = terminal;
