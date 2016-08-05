@@ -109,11 +109,79 @@ bool ArmTranslatorVisitor::arm_LDRBT() {
 }
 
 bool ArmTranslatorVisitor::arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
+        const auto address_b = ir.Add(address_a, ir.Imm32(4));
+        auto data_a = ir.ReadMemory32(address_a);
+        auto data_b = ir.ReadMemory32(address_b);
+
+        switch(d) {
+        case Reg::PC:
+            data_a = ir.Add(data_a, ir.Imm32(4));
+            break;
+        case Reg::LR:
+            data_b = ir.Add(data_b, ir.Imm32(4));
+            break;
+        }
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(data_a);
+        } else {
+            ir.SetRegister(d, data_a);
+        }
+
+        const Reg reg_b = static_cast<Reg>(std::min(d + 1, Reg::R15));
+        if (reg_b == Reg::PC) {
+            ir.ALUWritePC(data_b);
+        } else {
+            ir.SetRegister(reg_b, data_b);
+        }
+
+        if (d == Reg::PC || reg_b == Reg::PC) {
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
+        const auto address_b = ir.Add(address_a, ir.Imm32(4));
+        auto data_a = ir.ReadMemory32(address_a);
+        auto data_b = ir.ReadMemory32(address_b);
+
+        switch(d) {
+        case Reg::PC:
+            data_a = ir.Add(data_a, ir.Imm32(4));
+            break;
+        case Reg::LR:
+            data_b = ir.Add(data_b, ir.Imm32(4));
+            break;
+        }
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(data_a);
+        } else {
+            ir.SetRegister(d, data_a);
+        }
+
+        const Reg reg_b = static_cast<Reg>(std::min(d + 1, Reg::R15));
+        if (reg_b == Reg::PC) {
+            ir.ALUWritePC(data_b);
+        } else {
+            ir.SetRegister(reg_b, data_b);
+        }
+
+        if (d == Reg::PC || reg_b == Reg::PC) {
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
