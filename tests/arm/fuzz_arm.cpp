@@ -490,6 +490,7 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
     }
 }
 
+/*
 TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
     auto forbid_r15 = [](u32 inst) -> bool {
         return Dynarmic::Common::Bits<12, 15>(inst) != 0b1111;
@@ -644,3 +645,4 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
         FAIL();
     }
 }
+*/
