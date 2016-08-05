@@ -72,11 +72,36 @@ bool ArmTranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n,
 }
 
 bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto data = ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12)));
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
+        const auto data = ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, shifted.result));
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRBT() {
