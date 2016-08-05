@@ -373,8 +373,12 @@ public:
     std::string arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) { return "ice"; }
 
     // Packing instructions
-    std::string arm_PKHBT(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) { return "ice"; }
-    std::string arm_PKHTB(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) { return "ice"; }
+    std::string arm_PKHBT(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) {
+        return Common::StringFromFormat("pkhbt%s %s, %s, %s%s", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), ShiftStr(ShiftType::LSL, imm5).c_str());
+    }
+    std::string arm_PKHTB(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) {
+        return Common::StringFromFormat("pkhtb%s %s, %s, %s%s", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), ShiftStr(ShiftType::ASR, imm5).c_str());
+    }
 
     // Reversal instructions
     std::string arm_REV(Cond cond, Reg d, Reg m) {
@@ -428,9 +432,15 @@ public:
     std::string arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) { return "ice"; }
 
     // Multiply (Most significant word) instructions
-    std::string arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) { return "ice"; }
-    std::string arm_SMMLS(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) { return "ice"; }
-    std::string arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n) { return "ice"; }
+    std::string arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
+        return Common::StringFromFormat("smmla%s%s %s, %s, %s, %s", R ? "r" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
+    std::string arm_SMMLS(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
+        return Common::StringFromFormat("smmls%s%s %s, %s, %s, %s", R ? "r" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
+    std::string arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n) {
+        return Common::StringFromFormat("smmul%s%s %s, %s, %s", R ? "r" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
 
     // Multiply (Dual) instructions
     std::string arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) { return "ice"; }
