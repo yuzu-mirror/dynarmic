@@ -81,8 +81,18 @@ static CPUCaps Detect() {
     else
         caps.vendor = CPUVendor::OTHER;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+
     // Set reasonable default brand string even if brand string not available
     strncpy(caps.cpu_string, caps.brand_string, sizeof(caps.cpu_string));
+    caps.cpu_string[sizeof(caps.cpu_string) - 1] = '\0';
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
     // Detect family and other miscellaneous features
     if (max_std_fn >= 1) {
