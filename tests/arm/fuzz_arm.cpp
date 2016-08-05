@@ -141,12 +141,23 @@ public:
             }
         }
     }
-    u32 Generate() const {
+    u32 Generate(bool condition = true) const {
         u32 inst;
         do {
             u32 random = RandInt<u32>(0, 0xFFFFFFFF);
+            if (condition)
+                random &= ~(0xF << 28);
             inst = bits | (random & ~mask);
         } while (!is_valid(inst));
+
+        if (condition) {
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1)
+                inst |= RandInt(0x0, 0xD) << 28;
+            else
+                inst |= 0xE << 28;
+        }
+
         return inst;
     }
     u32 Bits() { return bits; }
@@ -450,42 +461,15 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
 
     const std::array<InstructionGenerator, 3> rev_instructions = {
         {
-            InstructionGenerator("0000011010111111dddd11110011mmmm", is_valid),
-            InstructionGenerator("0000011010111111dddd11111011mmmm", is_valid),
-            InstructionGenerator("0000011011111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("cccc011010111111dddd11110011mmmm", is_valid),
+            InstructionGenerator("cccc011010111111dddd11111011mmmm", is_valid),
+            InstructionGenerator("cccc011011111111dddd11111011mmmm", is_valid),
         }
     };
 
-    SECTION("REV tests") {
+    SECTION("Reverse tests") {
         FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return rev_instructions[0].Generate() | (cond << 28);
-        });
-    }
-
-    SECTION("REV16 tests") {
-        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return rev_instructions[1].Generate() | (cond << 28);
-        });
-    }
-
-    SECTION("REVSH tests") {
-        FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return rev_instructions[2].Generate() | (cond << 28);
+            return rev_instructions[RandInt<size_t>(0, rev_instructions.size() - 1)].Generate();
         });
     }
 }
@@ -572,68 +556,39 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
 
     SECTION("Doubleword tests") {
         FuzzJitArm(1, 1, 10000, [&doubleword_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-
-            return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate() | (cond << 28);
+            return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Word tests") {
         FuzzJitArm(1, 1, 10000, [&word_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate() | (cond << 28);
+            return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Halfword tests") {
         FuzzJitArm(1, 1, 10000, [&halfword_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate() | (cond << 28);
+            return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Byte tests") {
         FuzzJitArm(1, 1, 10000, [&byte_instructions]() -> u32 {
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-            return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate() | (cond << 28);
+            return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate();
         });
     }
 
     SECTION("Mixed tests") {
         FuzzJitArm(10, 10, 10000, [&]() -> u32 {
-            size_t selection = RandInt<size_t>(0, 3);
-
-            u32 cond = 0xE;
-            // Have a one-in-twenty-five chance of actually having a cond.
-            if (RandInt(1, 25) == 1) {
-                cond = RandInt<u32>(0x0, 0xD);
-            }
-
-            switch (selection) {
+            switch (RandInt(0, 3)) {
             case 0:
-                return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate() | (cond << 28);
+                return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate();
             case 1:
-                return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate() | (cond << 28);
+                return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate();
             case 2:
-                return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate() | (cond << 28);
+                return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate();
             case 3:
-                return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate() | (cond << 28);
+                return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate();
             }
 
             return 0;
