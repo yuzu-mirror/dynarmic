@@ -52,8 +52,56 @@ const char* GetNameOf(Opcode op) {
 
 // Value class member definitions
 
+bool Value::IsImmediate() const {
+    if (type == Type::Opaque)
+        return inner.inst->GetOpcode() == Opcode::Identity ? inner.inst->GetArg(0).IsImmediate() : false;
+    return true;
+}
+
+bool Value::IsEmpty() const {
+    return type == Type::Void;
+}
+
 Type Value::GetType() const {
-    return IsImmediate() ? type : inner.inst->GetType();
+    if (type == Type::Opaque) {
+        if (inner.inst->GetOpcode() == Opcode::Identity) {
+            return inner.inst->GetArg(0).GetType();
+        } else {
+            return inner.inst->GetType();
+        }
+    }
+    return type;
+}
+
+Arm::Reg Value::GetRegRef() const {
+    DEBUG_ASSERT(type == Type::RegRef);
+    return inner.imm_regref;
+}
+
+Inst* Value::GetInst() const {
+    DEBUG_ASSERT(type == Type::Opaque);
+    return inner.inst;
+}
+
+bool Value::GetU1() const {
+    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+        return inner.inst->GetArg(0).GetU1();
+    DEBUG_ASSERT(type == Type::U1);
+    return inner.imm_u1;
+}
+
+u8 Value::GetU8() const {
+    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+        return inner.inst->GetArg(0).GetU8();
+    DEBUG_ASSERT(type == Type::U8);
+    return inner.imm_u8;
+}
+
+u32 Value::GetU32() const {
+    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+        return inner.inst->GetArg(0).GetU32();
+    DEBUG_ASSERT(type == Type::U32);
+    return inner.imm_u32;
 }
 
 // Inst class member definitions

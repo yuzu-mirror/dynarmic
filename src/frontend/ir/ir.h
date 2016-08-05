@@ -84,40 +84,15 @@ public:
         inner.imm_u32 = value;
     }
 
-    bool IsEmpty() const {
-        return type == Type::Void;
-    }
-
-    bool IsImmediate() const {
-        return type != Type::Opaque;
-    }
-
+    bool IsEmpty() const;
+    bool IsImmediate() const;
     Type GetType() const;
 
-    Inst* GetInst() const {
-        DEBUG_ASSERT(type == Type::Opaque);
-        return inner.inst;
-    }
-
-    Arm::Reg GetRegRef() const {
-        DEBUG_ASSERT(type == Type::RegRef);
-        return inner.imm_regref;
-    }
-
-    bool GetU1() const {
-        DEBUG_ASSERT(type == Type::U1);
-        return inner.imm_u1;
-    }
-
-    u8 GetU8() const {
-        DEBUG_ASSERT(type == Type::U8);
-        return inner.imm_u8;
-    }
-
-    u32 GetU32() const {
-        DEBUG_ASSERT(type == Type::U32);
-        return inner.imm_u32;
-    }
+    Inst* GetInst() const;
+    Arm::Reg GetRegRef() const;
+    bool GetU1() const;
+    u8 GetU8() const;
+    u32 GetU32() const;
 
 private:
     Type type;
