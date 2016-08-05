@@ -3,6 +3,7 @@ project(dynarmic)
 
 # Dynarmic project options
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
+option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
 
 # Compiler flags
 if (NOT MSVC)
@@ -80,6 +81,14 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Include Catch
 include_directories(externals/catch)
 enable_testing(true)  # Enables unit-testing.
+
+# Include LLVM
+if (DYNARMIC_USE_LLVM)
+    find_package(LLVM REQUIRED CONFIG)
+    include_directories(${LLVM_INCLUDE_DIRS})
+    add_definitions(-DDYNARMIC_USE_LLVM ${LLVM_DEFINITIONS})
+    llvm_map_components_to_libnames(llvm_libs x86desc x86disassembler)
+endif()
 
 # Dynarmic project files
 add_subdirectory(src)

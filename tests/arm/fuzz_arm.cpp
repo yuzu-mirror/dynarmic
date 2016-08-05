@@ -7,17 +7,18 @@
 #include <cinttypes>
 #include <cstring>
 #include <functional>
-#include <signal.h>
 
+#include <signal.h>
 #include <catch.hpp>
-#include <frontend/ir/ir.h>
-#include <ir_opt/passes.h>
-#include <frontend/translate/translate.h>
 
 #include "common/bit_util.h"
 #include "common/common_types.h"
+#include "frontend/arm_types.h"
 #include "frontend/disassembler/disassembler.h"
+#include "frontend/ir/ir.h"
+#include "frontend/translate/translate.h"
 #include "interface/interface.h"
+#include "ir_opt/passes.h"
 #include "rand_int.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
@@ -219,21 +220,26 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
             printf("\nInitial Register Listing: \n");
             for (int i = 0; i <= 15; i++) {
-                printf("%4i: %08x\n", i, initial_regs[i]);
+                auto reg = Dynarmic::Arm::RegToString(static_cast<Dynarmic::Arm::Reg>(i));
+                printf("%4s: %08x\n", reg, initial_regs[i]);
             }
 
             printf("\nFinal Register Listing: \n");
             printf("      interp   jit\n");
             for (int i = 0; i <= 15; i++) {
-                printf("%4i: %08x %08x %s\n", i, interp.Reg[i], jit.Regs()[i], interp.Reg[i] != jit.Regs()[i] ? "*" : "");
+                auto reg = Dynarmic::Arm::RegToString(static_cast<Dynarmic::Arm::Reg>(i));
+                printf("%4s: %08x %08x %s\n", reg, interp.Reg[i], jit.Regs()[i], interp.Reg[i] != jit.Regs()[i] ? "*" : "");
             }
             printf("CPSR: %08x %08x %s\n", interp.Cpsr, jit.Cpsr(), interp.Cpsr != jit.Cpsr() ? "*" : "");
 
-            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, false, false, 0}, &MemoryRead32);
+            Dynarmic::Arm::LocationDescriptor descriptor = {0, false, false, 0};
+            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate(descriptor, &MemoryRead32);
             Dynarmic::Optimization::GetSetElimination(ir_block);
             Dynarmic::Optimization::DeadCodeElimination(ir_block);
             Dynarmic::Optimization::VerificationPass(ir_block);
             printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
+
+            printf("\n\nx86_64:\n%s", jit.Disassemble(descriptor).c_str());
 
 #ifdef _MSC_VER
             __debugbreak();

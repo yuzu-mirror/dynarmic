@@ -8,6 +8,7 @@
 
 #include <memory>
 
+#include "frontend/arm_types.h"
 #include "common/common_types.h"
 
 namespace Dynarmic {
@@ -74,6 +75,8 @@ public:
     bool IsExecuting() const {
         return is_executing;
     }
+
+    std::string Disassemble(Arm::LocationDescriptor descriptor);
 
 private:
     bool halt_requested = false;

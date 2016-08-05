@@ -48,13 +48,13 @@ static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
     block.instructions.erase(block.instructions.iterator_to(*inst));
 }
 
-CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block& block) {
+EmitX64::BlockDescriptor* EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block& block) {
     inhibit_emission.clear();
     reg_alloc.Reset();
 
     code->INT3();
     CodePtr code_ptr = code->GetCodePtr();
-    basic_blocks[descriptor] = code_ptr;
+    basic_blocks[descriptor].code_ptr = code_ptr;
 
     EmitCondPrelude(block.cond, block.cond_failed, block.location);
 
@@ -84,7 +84,8 @@ CodePtr EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Bl
 
     reg_alloc.AssertNoMoreUses();
 
-    return code_ptr;
+    basic_blocks[descriptor].size = code->GetCodePtr() - code_ptr;
+    return &basic_blocks[descriptor];
 }
 
 void EmitX64::EmitIdentity(IR::Block& block, IR::Inst* inst) {
