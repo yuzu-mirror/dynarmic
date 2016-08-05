@@ -92,8 +92,9 @@ void EmitX64::EmitBreakpoint(IR::Block&, IR::Inst*) {
 }
 
 void EmitX64::EmitIdentity(IR::Block& block, IR::Inst* inst) {
-    // TODO: Possible unnecessary mov here.
-    reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    if (!inst->GetArg(0).IsImmediate()) {
+        reg_alloc.RegisterAddDef(inst, inst->GetArg(0));
+    }
 }
 
 void EmitX64::EmitGetRegister(IR::Block&, IR::Inst* inst) {
@@ -276,15 +277,11 @@ void EmitX64::EmitGetOverflowFromOp(IR::Block&, IR::Inst*) {
 }
 
 void EmitX64::EmitLeastSignificantHalf(IR::Block&, IR::Inst* inst) {
-    // TODO: Optimize
-
-    reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    reg_alloc.RegisterAddDef(inst, inst->GetArg(0));
 }
 
 void EmitX64::EmitLeastSignificantByte(IR::Block&, IR::Inst* inst) {
-    // TODO: Optimize
-
-    reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    reg_alloc.RegisterAddDef(inst, inst->GetArg(0));
 }
 
 void EmitX64::EmitMostSignificantBit(IR::Block&, IR::Inst* inst) {
@@ -681,9 +678,7 @@ void EmitX64::EmitAddWithCarry(IR::Block& block, IR::Inst* inst) {
 
     // TODO: Consider using LEA.
 
-    OpArg op_arg = b.IsImmediate()
-                    ? Imm32(b.GetU32())
-                    : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
+    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
 
     if (carry_in.IsImmediate()) {
         if (carry_in.GetU1()) {
@@ -725,9 +720,7 @@ void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
     // TODO: Optimize CMP case.
     // Note that x64 CF is inverse of what the ARM carry flag is here.
 
-    OpArg op_arg = b.IsImmediate()
-                   ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
+    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
 
     if (carry_in.IsImmediate()) {
         if (carry_in.GetU1()) {
@@ -759,9 +752,7 @@ void EmitX64::EmitAnd(IR::Block&, IR::Inst* inst) {
     IR::Value b = inst->GetArg(1);
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
-    OpArg op_arg = b.IsImmediate()
-                   ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
+    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
 
     code->AND(32, R(result), op_arg);
 }
@@ -771,9 +762,7 @@ void EmitX64::EmitEor(IR::Block&, IR::Inst* inst) {
     IR::Value b = inst->GetArg(1);
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
-    OpArg op_arg = b.IsImmediate()
-                   ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
+    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
 
     code->XOR(32, R(result), op_arg);
 }
@@ -783,9 +772,7 @@ void EmitX64::EmitOr(IR::Block&, IR::Inst* inst) {
     IR::Value b = inst->GetArg(1);
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
-    OpArg op_arg = b.IsImmediate()
-                   ? Imm32(b.GetU32())
-                   : R(reg_alloc.UseRegister(b.GetInst(), any_gpr));
+    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
 
     code->OR(32, R(result), op_arg);
 }
@@ -805,31 +792,35 @@ void EmitX64::EmitNot(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitSignExtendHalfToWord(IR::Block&, IR::Inst* inst) {
-    // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    OpArg source;
+    X64Reg result;
+    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
 
-    code->MOVSX(32, 16, result, R(result));
+    code->MOVSX(32, 16, result, source);
 }
 
 void EmitX64::EmitSignExtendByteToWord(IR::Block&, IR::Inst* inst) {
-    // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    OpArg source;
+    X64Reg result;
+    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
 
-    code->MOVSX(32, 8, result, R(result));
+    code->MOVSX(32, 8, result, source);
 }
 
 void EmitX64::EmitZeroExtendHalfToWord(IR::Block&, IR::Inst* inst) {
-    // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    OpArg source;
+    X64Reg result;
+    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
 
-    code->MOVZX(32, 16, result, R(result));
+    code->MOVZX(32, 16, result, source);
 }
 
 void EmitX64::EmitZeroExtendByteToWord(IR::Block&, IR::Inst* inst) {
-    // TODO: Remove unnecessary mov that may occur here
-    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+    OpArg source;
+    X64Reg result;
+    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
 
-    code->MOVZX(32, 8, result, R(result));
+    code->MOVZX(32, 8, result, source);
 }
 
 void EmitX64::EmitByteReverseWord(IR::Block&, IR::Inst* inst) {
