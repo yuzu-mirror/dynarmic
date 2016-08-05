@@ -176,11 +176,31 @@ bool ArmTranslatorVisitor::arm_STRBT() {
 }
 
 bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
+        const auto address_b = ir.Add(address_a, ir.Imm32(4));
+        const auto value_a = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
+        const Reg reg_b = static_cast<Reg>(std::min(d + 1, Reg::R15));
+        const auto value_b = (reg_b == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(reg_b);
+        ir.WriteMemory32(address_a, value_a);
+        ir.WriteMemory32(address_b, value_b);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
+        const auto address_b = ir.Add(address_a, ir.Imm32(4));
+        const auto value_a = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
+        const Reg reg_b = static_cast<Reg>(std::min(d + 1, Reg::R15));
+        const auto value_b = (reg_b == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(reg_b);
+        ir.WriteMemory32(address_a, value_a);
+        ir.WriteMemory32(address_b, value_b);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
