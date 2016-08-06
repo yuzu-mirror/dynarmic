@@ -727,7 +727,7 @@ TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
                Dynarmic::Common::Bits<12, 15>(inst) != Dynarmic::Common::Bits<16, 19>(inst);
     };
 
-    const std::array<InstructionGenerator, 7> instructions = {
+    const std::array<InstructionGenerator, 10> instructions = {
             {
                     InstructionGenerator("cccc0000001Sddddaaaammmm1001nnnn", validate_d_a_m_n), // MLA
                     InstructionGenerator("cccc0000000Sdddd0000mmmm1001nnnn", validate_d_m_n),   // MUL
@@ -737,6 +737,24 @@ TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
                     InstructionGenerator("cccc00000100ddddaaaammmm1001nnnn", validate_h_l_m_n), // UMAAL
                     InstructionGenerator("cccc0000101Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMLAL
                     InstructionGenerator("cccc0000100Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMULL
+
+                    //InstructionGenerator("cccc00010100ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLALxy
+                    //InstructionGenerator("cccc00010000ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLAxy
+                    //InstructionGenerator("cccc00010110dddd0000mmmm1xy0nnnn", validate_d_m_n),   // SMULxy
+
+                    //InstructionGenerator("cccc00010010ddddaaaammmm1y00nnnn", validate_d_a_m_n), // SMLAWy
+                    //InstructionGenerator("cccc00010010dddd0000mmmm1y10nnnn", validate_d_m_n),   // SMULWy
+
+                    InstructionGenerator("cccc01110101dddd1111mmmm00R1nnnn", validate_d_m_n),   // SMMUL
+                    InstructionGenerator("cccc01110101ddddaaaammmm00R1nnnn", validate_d_a_m_n), // SMMLA
+                    InstructionGenerator("cccc01110101ddddaaaammmm11R1nnnn", validate_d_a_m_n), // SMMLS
+
+                    //InstructionGenerator("cccc01110000ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLAD
+                    //InstructionGenerator("cccc01110100ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLALD
+                    //InstructionGenerator("cccc01110000ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSD
+                    //InstructionGenerator("cccc01110100ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSLD
+                    //InstructionGenerator("cccc01110000dddd1111mmmm00M1nnnn", validate_d_m_n),   // SMUAD
+                    //InstructionGenerator("cccc01110000dddd1111mmmm01M1nnnn", validate_d_m_n),   // SMUSD
             }
     };
 

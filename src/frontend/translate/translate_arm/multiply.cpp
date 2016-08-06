@@ -171,15 +171,53 @@ bool ArmTranslatorVisitor::arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) {
 
 // Multiply (Most significant word) instructions
 bool ArmTranslatorVisitor::arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC /* no check for a */)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n64 = ir.SignExtendWordToLong(ir.GetRegister(n));
+        auto m64 = ir.SignExtendWordToLong(ir.GetRegister(m));
+        auto a64 = ir.Pack2x32To1x64(ir.Imm32(0), ir.GetRegister(a));
+        auto temp = ir.Add64(a64, ir.Mul64(n64, m64));
+        auto result_carry = ir.MostSignificantWord(temp);
+        auto result = result_carry.result;
+        if (R)
+            result = ir.AddWithCarry(result, ir.Imm32(0), result_carry.carry).result;
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMMLS(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n64 = ir.SignExtendWordToLong(ir.GetRegister(n));
+        auto m64 = ir.SignExtendWordToLong(ir.GetRegister(m));
+        auto a64 = ir.Pack2x32To1x64(ir.Imm32(0), ir.GetRegister(a));
+        auto temp = ir.Sub64(a64, ir.Mul64(n64, m64));
+        auto result_carry = ir.MostSignificantWord(temp);
+        auto result = result_carry.result;
+        if (R)
+            result = ir.AddWithCarry(result, ir.Imm32(0), result_carry.carry).result;
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n64 = ir.SignExtendWordToLong(ir.GetRegister(n));
+        auto m64 = ir.SignExtendWordToLong(ir.GetRegister(m));
+        auto product = ir.Mul64(n64, m64);
+        auto result_carry = ir.MostSignificantWord(product);
+        auto result = result_carry.result;
+        if (R)
+            result = ir.AddWithCarry(result, ir.Imm32(0), result_carry.carry).result;
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 
