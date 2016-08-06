@@ -410,7 +410,7 @@ void RegAlloc::EmitMove(HostLoc to, HostLoc from) {
     if (HostLocIsXMM(to) && HostLocIsSpill(from)) {
         code->MOVSD(HostLocToX64(to), SpillToOpArg(from));
     } else if (HostLocIsSpill(to) && HostLocIsXMM(from)) {
-        code->MOVSD(HostLocToX64(to), SpillToOpArg(from));
+        code->MOVSD(SpillToOpArg(to), HostLocToX64(from));
     } else if (HostLocIsXMM(to) && HostLocIsXMM(from)) {
         code->MOVAPS(HostLocToX64(to), Gen::R(HostLocToX64(from)));
     } else if (HostLocIsGPR(to) && HostLocIsSpill(from)) {
