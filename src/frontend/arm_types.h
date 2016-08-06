@@ -99,6 +99,8 @@ struct LocationDescriptor {
     u32 FPSCR() const { return fpscr; }
     bool FPSCR_FTZ() const { return Common::Bit<24>(fpscr); }
     bool FPSCR_DN() const { return Common::Bit<25>(fpscr); }
+    u32 FPSCR_Len() const { return Common::Bits<16, 18>(fpscr) + 1; }
+    u32 FPSCR_Stride() const { return Common::Bits<20, 21>(fpscr) + 1; }
 
     bool operator == (const LocationDescriptor& o) const {
         return std::tie(arm_pc, tflag, eflag, fpscr) == std::tie(o.arm_pc, o.tflag, o.eflag, o.fpscr);

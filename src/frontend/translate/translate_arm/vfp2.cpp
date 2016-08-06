@@ -18,7 +18,9 @@ static ExtReg ToExtReg(bool sz, size_t base, bool bit) {
 }
 
 bool ArmTranslatorVisitor::vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    // TODO: if (FSPCR.len || FPSCR.stride) return InterpretThisInstruction();
+    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
+
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
