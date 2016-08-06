@@ -248,6 +248,16 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
             }
             printf("CPSR: %08x %08x %s\n", interp.Cpsr, jit.Cpsr(), interp.Cpsr != jit.Cpsr() ? "*" : "");
 
+            printf("\nInterp Write Records:\n");
+            for (auto& record : interp_write_records) {
+                printf("%zu [%x] = %llx" PRIu64 "\n", record.size, record.address, record.data);
+            }
+
+            printf("\nJIT Write Records:\n");
+            for (auto& record : jit_write_records) {
+                printf("%zu [%x] = %llx" PRIu64 "\n", record.size, record.address, record.data);
+            }
+
             Dynarmic::Arm::LocationDescriptor descriptor = {0, false, false, 0};
             Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate(descriptor, &MemoryRead32);
             Dynarmic::Optimization::GetSetElimination(ir_block);
