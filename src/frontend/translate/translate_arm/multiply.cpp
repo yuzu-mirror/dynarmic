@@ -52,7 +52,7 @@ bool ArmTranslatorVisitor::arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         auto addend = ir.Pack2x32To1x64(ir.GetRegister(dLo), ir.GetRegister(dHi));
         auto result = ir.Add64(product, addend);
         auto lo = ir.LeastSignificantWord(result);
-        auto hi = ir.MostSignificantWord(result);
+        auto hi = ir.MostSignificantWord(result).result;
         ir.SetRegister(dLo, lo);
         ir.SetRegister(dHi, hi);
         if (S) {
@@ -73,7 +73,7 @@ bool ArmTranslatorVisitor::arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         auto m64 = ir.SignExtendWordToLong(ir.GetRegister(m));
         auto result = ir.Mul64(n64, m64);
         auto lo = ir.LeastSignificantWord(result);
-        auto hi = ir.MostSignificantWord(result);
+        auto hi = ir.MostSignificantWord(result).result;
         ir.SetRegister(dLo, lo);
         ir.SetRegister(dHi, hi);
         if (S) {
@@ -96,7 +96,7 @@ bool ArmTranslatorVisitor::arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n) 
         auto m64 = ir.ZeroExtendWordToLong(ir.GetRegister(m));
         auto result = ir.Add64(ir.Add64(ir.Mul64(n64, m64), hi64), lo64);
         ir.SetRegister(dLo, ir.LeastSignificantWord(result));
-        ir.SetRegister(dHi, ir.MostSignificantWord(result));
+        ir.SetRegister(dHi, ir.MostSignificantWord(result).result);
     }
     return true;
 }
@@ -112,7 +112,7 @@ bool ArmTranslatorVisitor::arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         auto m64 = ir.ZeroExtendWordToLong(ir.GetRegister(m));
         auto result = ir.Add64(ir.Mul64(n64, m64), addend);
         auto lo = ir.LeastSignificantWord(result);
-        auto hi = ir.MostSignificantWord(result);
+        auto hi = ir.MostSignificantWord(result).result;
         ir.SetRegister(dLo, lo);
         ir.SetRegister(dHi, hi);
         if (S) {
@@ -133,7 +133,7 @@ bool ArmTranslatorVisitor::arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         auto m64 = ir.ZeroExtendWordToLong(ir.GetRegister(m));
         auto result = ir.Mul64(n64, m64);
         auto lo = ir.LeastSignificantWord(result);
-        auto hi = ir.MostSignificantWord(result);
+        auto hi = ir.MostSignificantWord(result).result;
         ir.SetRegister(dLo, lo);
         ir.SetRegister(dHi, hi);
         if (S) {

@@ -339,9 +339,19 @@ void EmitX64::EmitLeastSignificantWord(IR::Block&, IR::Inst* inst) {
     reg_alloc.RegisterAddDef(inst, inst->GetArg(0));
 }
 
-void EmitX64::EmitMostSignificantWord(IR::Block&, IR::Inst* inst) {
-    auto u64 = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
-    code->SHR(64, R(u64), Imm8(32));
+void EmitX64::EmitMostSignificantWord(IR::Block& block, IR::Inst* inst) {
+    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+    auto result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+
+    code->SHR(64, R(result), Imm8(32));
+
+    if (carry_inst) {
+        EraseInstruction(block, carry_inst);
+        reg_alloc.DecrementRemainingUses(inst);
+        X64Reg carry = reg_alloc.DefRegister(carry_inst, any_gpr);
+
+        code->SETcc(CC_C, R(carry));
+    }
 }
 
 void EmitX64::EmitLeastSignificantHalf(IR::Block&, IR::Inst* inst) {

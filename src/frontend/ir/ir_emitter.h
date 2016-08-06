@@ -58,7 +58,7 @@ public:
 
     IR::Value Pack2x32To1x64(const IR::Value& lo, const IR::Value& hi);
     IR::Value LeastSignificantWord(const IR::Value& value);
-    IR::Value MostSignificantWord(const IR::Value& value);
+    ResultAndCarry MostSignificantWord(const IR::Value& value);
     IR::Value LeastSignificantHalf(const IR::Value& value);
     IR::Value LeastSignificantByte(const IR::Value& value);
     IR::Value MostSignificantBit(const IR::Value& value);

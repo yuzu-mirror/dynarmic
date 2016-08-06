@@ -127,8 +127,10 @@ IR::Value IREmitter::LeastSignificantWord(const IR::Value& value) {
     return Inst(IR::Opcode::LeastSignificantWord, {value});
 }
 
-IR::Value IREmitter::MostSignificantWord(const IR::Value& value) {
-    return Inst(IR::Opcode::MostSignificantWord, {value});
+IREmitter::ResultAndCarry IREmitter::MostSignificantWord(const IR::Value& value) {
+    auto result = Inst(IR::Opcode::MostSignificantWord, {value});
+    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+    return {result, carry_out};
 }
 
 IR::Value IREmitter::LeastSignificantHalf(const IR::Value& value) {
