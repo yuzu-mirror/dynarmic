@@ -77,8 +77,6 @@ public:
     IR::Value Sub(const IR::Value& a, const IR::Value& b);
     IR::Value Mul(const IR::Value& a, const IR::Value& b);
     IR::Value Mul64(const IR::Value& a, const IR::Value& b);
-    IR::Value SignedMulHi(const IR::Value& a, const IR::Value& b);
-    IR::Value UnsignedMulHi(const IR::Value& a, const IR::Value& b);
     IR::Value And(const IR::Value& a, const IR::Value& b);
     IR::Value Eor(const IR::Value& a, const IR::Value& b);
     IR::Value Or(const IR::Value& a, const IR::Value& b);

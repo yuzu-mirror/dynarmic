@@ -216,20 +216,6 @@ IR::Value IREmitter::Mul64(const IR::Value& a, const IR::Value& b) {
     return Inst(IR::Opcode::Mul64, {a, b});
 }
 
-IR::Value IREmitter::SignedMulHi(const IR::Value& a, const IR::Value& b) {
-    auto a64 = ZeroExtendWordToLong(a);
-    auto b64 = ZeroExtendWordToLong(b);
-    auto product64 = Mul64(a64, b64);
-    return LogicalShiftRight(product64, Imm8(32), Imm8(0)).result;
-}
-
-IR::Value IREmitter::UnsignedMulHi(const IR::Value& a, const IR::Value& b) {
-    auto a64 = SignExtendWordToLong(a);
-    auto b64 = SignExtendWordToLong(b);
-    auto product64 = Mul64(a64, b64);
-    return LogicalShiftRight(product64, Imm8(32), Imm8(0)).result;
-}
-
 IR::Value IREmitter::And(const IR::Value& a, const IR::Value& b) {
     return Inst(IR::Opcode::And, {a, b});
 }
