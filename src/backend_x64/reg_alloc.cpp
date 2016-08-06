@@ -33,7 +33,14 @@ static Gen::OpArg ImmediateToOpArg(const IR::Value& imm) {
 static Gen::X64Reg HostLocToX64(HostLoc loc) {
     DEBUG_ASSERT(HostLocIsRegister(loc));
     // HostLoc is ordered such that the numbers line up.
-    return static_cast<Gen::X64Reg>(loc);
+    if (HostLocIsGPR(loc)) {
+        return static_cast<Gen::X64Reg>(loc);
+    }
+    if (HostLocIsXMM(loc)) {
+        return static_cast<Gen::X64Reg>(size_t(loc) - size_t(HostLoc::XMM0));
+    }
+    ASSERT_MSG(false, "This should never happen.");
+    return Gen::INVALID_REG;
 }
 
 static Gen::OpArg SpillToOpArg(HostLoc loc) {
