@@ -320,7 +320,13 @@ void EmitX64::EmitGetOverflowFromOp(IR::Block&, IR::Inst*) {
 void EmitX64::EmitPack2x32To1x64(IR::Block&, IR::Inst* inst) {
     OpArg lo;
     X64Reg result;
-    std::tie(lo, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    if (inst->GetArg(0).IsImmediate()) {
+        // TODO: Optimize
+        result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+        lo = Gen::R(result);
+    } else {
+        std::tie(lo, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    }
     X64Reg hi = reg_alloc.UseScratchRegister(inst->GetArg(1), any_gpr);
 
     code->SHL(64, R(hi), Imm8(32));
@@ -900,7 +906,13 @@ void EmitX64::EmitNot(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitSignExtendWordToLong(IR::Block&, IR::Inst* inst) {
     OpArg source;
     X64Reg result;
-    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    if (inst->GetArg(0).IsImmediate()) {
+        // TODO: Optimize
+        result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+        source = Gen::R(result);
+    } else {
+        std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    }
 
     code->MOVSX(64, 32, result, source);
 }
@@ -908,7 +920,13 @@ void EmitX64::EmitSignExtendWordToLong(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitSignExtendHalfToWord(IR::Block&, IR::Inst* inst) {
     OpArg source;
     X64Reg result;
-    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    if (inst->GetArg(0).IsImmediate()) {
+        // TODO: Optimize
+        result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+        source = Gen::R(result);
+    } else {
+        std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    }
 
     code->MOVSX(32, 16, result, source);
 }
@@ -916,7 +934,13 @@ void EmitX64::EmitSignExtendHalfToWord(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitSignExtendByteToWord(IR::Block&, IR::Inst* inst) {
     OpArg source;
     X64Reg result;
-    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    if (inst->GetArg(0).IsImmediate()) {
+        // TODO: Optimize
+        result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+        source = Gen::R(result);
+    } else {
+        std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    }
 
     code->MOVSX(32, 8, result, source);
 }
@@ -924,7 +948,13 @@ void EmitX64::EmitSignExtendByteToWord(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitZeroExtendWordToLong(IR::Block&, IR::Inst* inst) {
     OpArg source;
     X64Reg result;
-    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    if (inst->GetArg(0).IsImmediate()) {
+        // TODO: Optimize
+        result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+        source = Gen::R(result);
+    } else {
+        std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    }
 
     code->MOVZX(64, 32, result, source);
 }
@@ -932,7 +962,13 @@ void EmitX64::EmitZeroExtendWordToLong(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitZeroExtendHalfToWord(IR::Block&, IR::Inst* inst) {
     OpArg source;
     X64Reg result;
-    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    if (inst->GetArg(0).IsImmediate()) {
+        // TODO: Optimize
+        result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+        source = Gen::R(result);
+    } else {
+        std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    }
 
     code->MOVZX(32, 16, result, source);
 }
@@ -940,7 +976,13 @@ void EmitX64::EmitZeroExtendHalfToWord(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitZeroExtendByteToWord(IR::Block&, IR::Inst* inst) {
     OpArg source;
     X64Reg result;
-    std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    if (inst->GetArg(0).IsImmediate()) {
+        // TODO: Optimize
+        result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+        source = Gen::R(result);
+    } else {
+        std::tie(source, result) = reg_alloc.UseDefOpArg(inst->GetArg(0), inst, any_gpr);
+    }
 
     code->MOVZX(32, 8, result, source);
 }
