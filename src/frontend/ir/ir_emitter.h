@@ -55,6 +55,7 @@ public:
     void SetZFlag(const IR::Value& value);
     void SetCFlag(const IR::Value& value);
     void SetVFlag(const IR::Value& value);
+    void OrQFlag(const IR::Value& value);
 
     IR::Value Pack2x32To1x64(const IR::Value& lo, const IR::Value& hi);
     IR::Value LeastSignificantWord(const IR::Value& value);

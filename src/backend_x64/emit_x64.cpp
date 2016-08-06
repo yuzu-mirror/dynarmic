@@ -260,6 +260,21 @@ void EmitX64::EmitSetVFlag(IR::Block&, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitOrQFlag(IR::Block&, IR::Inst* inst) {
+    constexpr size_t flag_bit = 27;
+    constexpr u32 flag_mask = 1u << flag_bit;
+    IR::Value arg = inst->GetArg(0);
+    if (arg.IsImmediate()) {
+        if (arg.GetU1())
+            code->OR(32, MJitStateCpsr(), Imm32(flag_mask));
+    } else {
+        X64Reg to_store = reg_alloc.UseScratchRegister(arg.GetInst(), any_gpr);
+
+        code->SHL(32, R(to_store), Imm8(flag_bit));
+        code->OR(32, MJitStateCpsr(), R(to_store));
+    }
+}
+
 void EmitX64::EmitBXWritePC(IR::Block&, IR::Inst* inst) {
     const u32 T_bit = 1 << 5;
     auto arg = inst->GetArg(0);

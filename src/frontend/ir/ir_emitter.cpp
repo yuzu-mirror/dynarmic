@@ -118,6 +118,10 @@ void IREmitter::SetVFlag(const IR::Value& value) {
     Inst(IR::Opcode::SetVFlag, {value});
 }
 
+void IREmitter::OrQFlag(const IR::Value& value) {
+    Inst(IR::Opcode::OrQFlag, {value});
+}
+
 IR::Value IREmitter::Pack2x32To1x64(const IR::Value& lo, const IR::Value& hi)
 {
     return Inst(IR::Opcode::Pack2x32To1x64, {lo, hi});
