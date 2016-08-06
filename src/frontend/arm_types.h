@@ -11,6 +11,7 @@
 #include <tuple>
 #include <type_traits>
 
+#include "common/bit_util.h"
 #include "common/common_types.h"
 
 namespace Dynarmic {
@@ -96,6 +97,8 @@ struct LocationDescriptor {
     bool TFlag() const { return tflag; }
     bool EFlag() const { return eflag; }
     u32 FPSCR() const { return fpscr; }
+    bool FPSCR_FTZ() const { return Common::Bit<24>(fpscr); }
+    bool FPSCR_DN() const { return Common::Bit<25>(fpscr); }
 
     bool operator == (const LocationDescriptor& o) const {
         return std::tie(arm_pc, tflag, eflag, fpscr) == std::tie(o.arm_pc, o.tflag, o.eflag, o.fpscr);

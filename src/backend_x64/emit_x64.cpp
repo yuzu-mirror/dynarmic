@@ -119,6 +119,7 @@ void EmitX64::EmitGetRegister(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitGetExtendedRegister32(IR::Block& block, IR::Inst* inst) {
     Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
     ASSERT(reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31);
+
     X64Reg result = reg_alloc.DefRegister(inst, any_xmm);
     code->MOVSS(result, MJitStateExtReg(reg));
 }
@@ -1003,6 +1004,108 @@ void EmitX64::EmitByteReverseDual(IR::Block&, IR::Inst* inst) {
     X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
 
     code->BSWAP(64, result);
+}
+
+static void DenormalsAreZero32(XEmitter* code, X64Reg xmm_value, X64Reg gpr_scratch) {
+    // We need to report back whether we've found a denormal on input.
+    // SSE doesn't do this for us when SSE's DAZ is enabled.
+    code->MOVD_xmm(R(gpr_scratch), xmm_value);
+    code->AND(32, R(gpr_scratch), Imm32(0x7FFFFFFF));
+    code->SUB(32, R(gpr_scratch), Imm32(1));
+    code->CMP(32, R(gpr_scratch), Imm32(0x007FFFFE));
+    auto fixup = code->J_CC(CC_A);
+    code->PXOR(xmm_value, R(xmm_value));
+    code->MOV(32, MDisp(R15, offsetof(JitState, FPSCR_IDC)), Imm32(1 << 7));
+    code->SetJumpTarget(fixup);
+}
+
+static void DenormalsAreZero64(XEmitter* code, Routines* routines, X64Reg xmm_value, X64Reg gpr_scratch) {
+    code->MOVQ_xmm(R(gpr_scratch), xmm_value);
+    code->AND(64, R(gpr_scratch), routines->MFloatNonSignMask64());
+    code->SUB(64, R(gpr_scratch), Imm32(1));
+    code->CMP(64, R(gpr_scratch), routines->MFloatPenultimatePositiveDenormal64());
+    auto fixup = code->J_CC(CC_A);
+    code->PXOR(xmm_value, R(xmm_value));
+    code->MOV(32, MDisp(R15, offsetof(JitState, FPSCR_IDC)), Imm32(1 << 7));
+    code->SetJumpTarget(fixup);
+}
+
+static void FlushToZero32(XEmitter* code, X64Reg xmm_value, X64Reg gpr_scratch) {
+    code->MOVD_xmm(R(gpr_scratch), xmm_value);
+    code->AND(32, R(gpr_scratch), Imm32(0x7FFFFFFF));
+    code->SUB(32, R(gpr_scratch), Imm32(1));
+    code->CMP(32, R(gpr_scratch), Imm32(0x007FFFFE));
+    auto fixup = code->J_CC(CC_A);
+    code->PXOR(xmm_value, R(xmm_value));
+    code->MOV(32, MDisp(R15, offsetof(JitState, FPSCR_UFC)), Imm32(1 << 3));
+    code->SetJumpTarget(fixup);
+}
+
+static void FlushToZero64(XEmitter* code, Routines* routines, X64Reg xmm_value, X64Reg gpr_scratch) {
+    code->MOVQ_xmm(R(gpr_scratch), xmm_value);
+    code->AND(64, R(gpr_scratch), routines->MFloatNonSignMask64());
+    code->SUB(64, R(gpr_scratch), Imm32(1));
+    code->CMP(64, R(gpr_scratch), routines->MFloatPenultimatePositiveDenormal64());
+    auto fixup = code->J_CC(CC_A);
+    code->PXOR(xmm_value, R(xmm_value));
+    code->MOV(32, MDisp(R15, offsetof(JitState, FPSCR_UFC)), Imm32(1 << 3));
+    code->SetJumpTarget(fixup);
+}
+
+static void DefaultNaN32(XEmitter* code, Routines* routines, X64Reg xmm_value) {
+    code->UCOMISS(xmm_value, R(xmm_value));
+    auto fixup = code->J_CC(CC_NP);
+    code->MOVAPS(xmm_value, routines->MFloatNaN32());
+    code->SetJumpTarget(fixup);
+}
+
+static void DefaultNaN64(XEmitter* code, Routines* routines, X64Reg xmm_value) {
+    code->UCOMISD(xmm_value, R(xmm_value));
+    auto fixup = code->J_CC(CC_NP);
+    code->MOVAPS(xmm_value, routines->MFloatNaN64());
+    code->SetJumpTarget(fixup);
+}
+
+void EmitX64::EmitFPAdd32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+    X64Reg operand = reg_alloc.UseRegister(b, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero32(code, result, gpr_scratch);
+        DenormalsAreZero32(code, operand, gpr_scratch);
+    }
+    code->ADDSS(result, R(operand));
+    if (block.location.FPSCR_FTZ()) {
+        FlushToZero32(code, result, gpr_scratch);
+    }
+    if (block.location.FPSCR_DN()) {
+        DefaultNaN32(code, routines, result);
+    }
+}
+
+void EmitX64::EmitFPAdd64(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+    X64Reg operand = reg_alloc.UseRegister(b, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero64(code, routines, result, gpr_scratch);
+        DenormalsAreZero64(code, routines, operand, gpr_scratch);
+    }
+    code->ADDSD(result, R(operand));
+    if (block.location.FPSCR_FTZ()) {
+        FlushToZero64(code, routines, result, gpr_scratch);
+    }
+    if (block.location.FPSCR_DN()) {
+        DefaultNaN64(code, routines, result);
+    }
 }
 
 void EmitX64::EmitReadMemory8(IR::Block&, IR::Inst* inst) {

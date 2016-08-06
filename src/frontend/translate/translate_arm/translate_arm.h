@@ -317,6 +317,9 @@ struct ArmTranslatorVisitor final {
     bool arm_RFE() { return InterpretThisInstruction(); }
     bool arm_SETEND(bool E) { return InterpretThisInstruction(); }
     bool arm_SRS() { return InterpretThisInstruction(); }
+
+    // Floating-point three-register data processing instructions
+    bool vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
 };
 
 } // namespace Arm

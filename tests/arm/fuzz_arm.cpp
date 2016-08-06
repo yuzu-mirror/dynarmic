@@ -174,14 +174,12 @@ private:
 };
 
 static bool DoesBehaviorMatch(const ARMul_State& interp, const Dynarmic::Jit& jit, const std::vector<WriteRecord>& interp_write_records, const std::vector<WriteRecord>& jit_write_records) {
-    const auto interp_regs = interp.Reg;
-    const auto jit_regs = jit.Regs();
-
-    return std::equal(interp_regs.begin(), interp_regs.end(), jit_regs.begin(), jit_regs.end())
+    return interp.Reg == jit.Regs()
+           && interp.ExtReg == jit.ExtRegs()
            && interp.Cpsr == jit.Cpsr()
+           && interp.VFP[VFP_FPSCR] == jit.Fpscr()
            && interp_write_records == jit_write_records;
 }
-
 
 void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_execute_count, const size_t run_count, const std::function<u32()> instruction_generator) {
     // Prepare memory
@@ -199,14 +197,25 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
         // Setup initial state
 
+        u32 initial_cpsr = 0x000001D0;
+
         std::array<u32, 16> initial_regs;
         std::generate_n(initial_regs.begin(), 15, []{ return RandInt<u32>(0, 0xFFFFFFFF); });
         initial_regs[15] = 0;
 
-        interp.Cpsr = 0x000001D0;
+        std::array<u32, 64> initial_extregs;
+        std::generate_n(initial_extregs.begin(), 64, []{ return RandInt<u32>(0, 0xFFFFFFFF); });
+
+        u32 initial_fpscr = RandInt<u32>(0x0, 0x1) << 24;
+
+        interp.Cpsr = initial_cpsr;
         interp.Reg = initial_regs;
-        jit.Cpsr() = 0x000001D0;
+        interp.ExtReg = initial_extregs;
+        interp.VFP[VFP_FPSCR] = initial_fpscr;
+        jit.Cpsr() = initial_cpsr;
         jit.Regs() = initial_regs;
+        jit.ExtRegs() = initial_extregs;
+        jit.SetFpscr(initial_fpscr);
 
         std::generate_n(code_mem.begin(), instruction_count, instruction_generator);
 
@@ -239,6 +248,11 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
                 auto reg = Dynarmic::Arm::RegToString(static_cast<Dynarmic::Arm::Reg>(i));
                 printf("%4s: %08x\n", reg, initial_regs[i]);
             }
+            printf("CPSR: %08x\n", initial_cpsr);
+            printf("FPSCR:%08x\n", initial_fpscr);
+            for (int i = 0; i <= 63; i++) {
+                printf("S%3i: %08x\n", i, initial_extregs[i]);
+            }
 
             printf("\nFinal Register Listing: \n");
             printf("      interp   jit\n");
@@ -247,6 +261,10 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
                 printf("%4s: %08x %08x %s\n", reg, interp.Reg[i], jit.Regs()[i], interp.Reg[i] != jit.Regs()[i] ? "*" : "");
             }
             printf("CPSR: %08x %08x %s\n", interp.Cpsr, jit.Cpsr(), interp.Cpsr != jit.Cpsr() ? "*" : "");
+            printf("FPSCR:%08x %08x %s\n", interp.VFP[VFP_FPSCR], jit.Fpscr(), interp.VFP[VFP_FPSCR] != jit.Fpscr() ? "*" : "");
+            for (int i = 0; i <= 63; i++) {
+                printf("S%3i: %08x %08x %s\n", i, interp.ExtReg[i], jit.ExtRegs()[i], interp.ExtReg[i] != jit.ExtRegs()[i] ? "*" : "");
+            }
 
             printf("\nInterp Write Records:\n");
             for (auto& record : interp_write_records) {

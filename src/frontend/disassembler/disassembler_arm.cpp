@@ -11,6 +11,7 @@
 #include "common/string_util.h"
 #include "frontend/arm_types.h"
 #include "frontend/decoder/arm.h"
+#include "frontend/decoder/vfp2.h"
 
 namespace Dynarmic {
 namespace Arm {
@@ -79,6 +80,16 @@ public:
         }
         assert(false);
         return "<internal error>";
+    }
+
+    std::string FPRegStr(bool dp_operation, size_t base, bool bit) {
+        size_t reg_num;
+        if (dp_operation) {
+            reg_num = base + (bit ? 16 : 0);
+        } else {
+            reg_num = (base << 1) + (bit ? 1 : 0);
+        }
+        return Common::StringFromFormat("%c%zu", dp_operation ? 'd' : 's', reg_num);
     }
 
     // Branch instructions
@@ -497,12 +508,22 @@ public:
     std::string arm_RFE() { return "ice"; }
     std::string arm_SETEND(bool E) { return "ice"; }
     std::string arm_SRS() { return "ice"; }
+
+    // Floating point arithmetic instructions
+    std::string vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+        return Common::StringFromFormat("vadd%s.%s %s, %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vn, N).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
 };
 
 std::string DisassembleArm(u32 instruction) {
     DisassemblerVisitor visitor;
-    auto decoder = DecodeArm<DisassemblerVisitor>(instruction);
-    return !decoder ? Common::StringFromFormat("UNKNOWN: %x", instruction) : decoder->call(visitor, instruction);
+    if (auto vfp_decoder = DecodeVFP2<DisassemblerVisitor>(instruction)) {
+        return vfp_decoder->call(visitor, instruction);
+    } else if (auto decoder = DecodeArm<DisassemblerVisitor>(instruction)) {
+        return decoder->call(visitor, instruction);
+    } else {
+        return Common::StringFromFormat("UNKNOWN: %x", instruction);
+    }
 }
 
 } // namespace Arm

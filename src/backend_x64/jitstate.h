@@ -30,6 +30,8 @@ struct JitState {
     u64 save_host_RSP = 0;
     s64 cycles_remaining = 0;
 
+    u32 FPSCR_IDC = 0;
+    u32 FPSCR_UFC = 0;
     u32 guest_FPSCR_flags = 0;
     u32 old_FPSCR = 0;
     u32 Fpscr() const;

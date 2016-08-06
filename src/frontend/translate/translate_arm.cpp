@@ -7,6 +7,7 @@
 #include "common/assert.h"
 #include "frontend/arm_types.h"
 #include "frontend/decoder/arm.h"
+#include "frontend/decoder/vfp2.h"
 #include "frontend/ir/ir.h"
 #include "frontend/translate/translate.h"
 #include "frontend/translate/translate_arm/translate_arm.h"
@@ -22,8 +23,9 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
         const u32 arm_pc = visitor.ir.current_location.PC();
         const u32 arm_instruction = (*memory_read_32)(arm_pc);
 
-        const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction);
-        if (decoder) {
+        if (auto vfp_decoder = DecodeVFP2<ArmTranslatorVisitor>(arm_instruction)) {
+            should_continue = vfp_decoder->call(visitor, arm_instruction);
+        } else if (auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction)) {
             should_continue = decoder->call(visitor, arm_instruction);
         } else {
             should_continue = visitor.arm_UDF();
