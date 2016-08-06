@@ -11,6 +11,7 @@
 #include <cassert>
 #include <tuple>
 
+#include "common/assert.h"
 #include "common/mp.h"
 
 namespace Dynarmic {
@@ -79,13 +80,13 @@ private:
                     arg_index++;
                 }
 
-                assert(arg_index < N);
+                ASSERT(arg_index < N);
                 masks[arg_index] |= 1 << bit_position;
                 shifts[arg_index] = bit_position;
             }
         }
 
-        assert(std::all_of(masks.begin(), masks.end(), [](auto m){ return m != 0; }));
+        ASSERT(std::all_of(masks.begin(), masks.end(), [](auto m){ return m != 0; }));
 
         return std::make_tuple(masks, shifts);
     }
@@ -95,20 +96,21 @@ private:
      * the provided arg_masks and arg_shifts. The Visitor member function to call is provided as a
      * template argument.
      */
-    template<typename FnT, FnT fn>
+    template<typename FnT>
     struct VisitorCaller;
 
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
 #endif
-    template<typename Visitor, typename ...Args, typename CallRetT, CallRetT (Visitor::*fn)(Args...)>
-    struct VisitorCaller<CallRetT(Visitor::*)(Args...), fn> {
+    template<typename Visitor, typename ...Args, typename CallRetT>
+    struct VisitorCaller<CallRetT(Visitor::*)(Args...)> {
         template<size_t ...iota>
         static auto Make(std::integer_sequence<size_t, iota...>,
+                         CallRetT (Visitor::* const fn)(Args...),
                          const std::array<InstructionT, sizeof...(iota)> arg_masks,
                          const std::array<size_t, sizeof...(iota)> arg_shifts) {
-            return [arg_masks, arg_shifts](Visitor& v, InstructionT instruction) {
+            return [fn, arg_masks, arg_shifts](Visitor& v, InstructionT instruction) {
                 (void)instruction;
                 return (v.*fn)(static_cast<Args>((instruction & arg_masks[iota]) >> arg_shifts[iota])...);
             };
@@ -123,15 +125,15 @@ public:
      * Creates a matcher that can match and parse instructions based on bitstring.
      * See also: GetMaskAndExpect and GetArgInfo for format of bitstring.
      */
-    template<typename FnT, FnT fn>
-    static auto GetMatcher(const char* const name, const char* const bitstring) {
-        using Visitor = typename mp::MemFnInfo<FnT, fn>::class_type;
-        constexpr size_t args_count = mp::MemFnInfo<FnT, fn>::args_count;
+    template<typename FnT>
+    static auto GetMatcher(FnT fn, const char* const name, const char* const bitstring) {
+        using Visitor = typename mp::MemFnInfo<FnT>::class_type;
+        constexpr size_t args_count = mp::MemFnInfo<FnT>::args_count;
         using Iota = std::make_index_sequence<args_count>;
 
         const auto mask_and_expect = GetMaskAndExpect(bitstring);
         const auto arg_info = GetArgInfo<args_count>(bitstring);
-        const auto proxy_fn = VisitorCaller<FnT, fn>::Make(Iota(), std::get<0>(arg_info), std::get<1>(arg_info));
+        const auto proxy_fn = VisitorCaller<FnT>::Make(Iota(), fn, std::get<0>(arg_info), std::get<1>(arg_info));
 
         return MatcherT<Visitor>(name, std::get<0>(mask_and_expect), std::get<1>(mask_and_expect), proxy_fn);
     }

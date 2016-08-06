@@ -20,7 +20,7 @@ namespace Arm {
 
 template <typename Visitor>
 struct Thumb16Matcher {
-    using CallRetT = typename mp::MemFnInfo<decltype(&Visitor::thumb16_UDF), &Visitor::thumb16_UDF>::return_type;
+    using CallRetT = typename mp::MemFnInfo<decltype(&Visitor::thumb16_UDF)>::return_type;
 
     Thumb16Matcher(const char* const name, u16 mask, u16 expect, std::function<CallRetT(Visitor&, u16)> fn)
             : name(name), mask(mask), expect(expect), fn(fn) {}
@@ -59,7 +59,7 @@ template<typename V>
 boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
     const static std::vector<Thumb16Matcher<V>> table = {
 
-#define INST(fn, name, bitstring) detail::detail<Thumb16Matcher, u16, 16>::GetMatcher<decltype(fn), fn>(name, bitstring)
+#define INST(fn, name, bitstring) detail::detail<Thumb16Matcher, u16, 16>::GetMatcher<decltype(fn)>(fn, name, bitstring)
 
         // Shift (immediate), add, subtract, move and compare instructions
         INST(&V::thumb16_LSL_imm,        "LSL (imm)",                "00000vvvvvmmmddd"),

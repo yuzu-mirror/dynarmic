@@ -70,6 +70,15 @@ struct ArmTranslatorVisitor final {
     bool arm_BX(Cond cond, Reg m);
     bool arm_BXJ(Cond cond, Reg m);
 
+    // Coprocessor instructions
+    bool arm_CDP() { return InterpretThisInstruction(); }
+    bool arm_LDC() { return InterpretThisInstruction(); }
+    bool arm_MCR() { return InterpretThisInstruction(); }
+    bool arm_MCRR() { return InterpretThisInstruction(); }
+    bool arm_MRC() { return InterpretThisInstruction(); }
+    bool arm_MRRC() { return InterpretThisInstruction(); }
+    bool arm_STC() { return InterpretThisInstruction(); }
+
     // Data processing instructions
     bool arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8);
     bool arm_ADC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
@@ -138,6 +147,13 @@ struct ArmTranslatorVisitor final {
     bool arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
     bool arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
     bool arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
+
+    // Hint instructions
+    bool arm_PLD() { return InterpretThisInstruction(); }
+    bool arm_SEV() { return InterpretThisInstruction(); }
+    bool arm_WFE() { return InterpretThisInstruction(); }
+    bool arm_WFI() { return InterpretThisInstruction(); }
+    bool arm_YIELD() { return InterpretThisInstruction(); }
 
     // Load/Store instructions
     bool arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);

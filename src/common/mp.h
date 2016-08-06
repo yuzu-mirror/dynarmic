@@ -11,12 +11,12 @@
 namespace Dynarmic {
 namespace mp {
 
-template<typename MemFnT, MemFnT fn>
+template<typename MemFnT>
 struct MemFnInfo;
 
 /// This struct provides information about a member function pointer.
-template<typename T, typename ReturnT, typename ...Args, ReturnT (T::*fn)(Args...)>
-struct MemFnInfo<ReturnT (T::*)(Args...), fn> {
+template<typename T, typename ReturnT, typename ...Args>
+struct MemFnInfo<ReturnT (T::*)(Args...)> {
     using class_type = T;
     using return_type = ReturnT;
     static constexpr size_t args_count = sizeof...(Args);

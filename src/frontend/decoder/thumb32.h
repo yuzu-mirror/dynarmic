@@ -20,7 +20,7 @@ namespace Arm {
 
 template <typename Visitor>
 struct Thumb32Matcher {
-    using CallRetT = typename mp::MemFnInfo<decltype(&Visitor::thumb32_UDF), &Visitor::thumb32_UDF>::return_type;
+    using CallRetT = typename mp::MemFnInfo<decltype(&Visitor::thumb32_UDF)>::return_type;
 
     Thumb32Matcher(const char* const name, u32 mask, u32 expect, std::function<CallRetT(Visitor&, u32)> fn)
             : name(name), mask(mask), expect(expect), fn(fn) {}
@@ -59,7 +59,7 @@ template<typename V>
 boost::optional<const Thumb32Matcher<V>&> DecodeThumb32(u32 instruction) {
     const static std::vector<Thumb32Matcher<V>> table = {
 
-#define INST(fn, name, bitstring) detail::detail<Thumb32Matcher, u32, 32>::GetMatcher<decltype(fn), fn>(name, bitstring)
+#define INST(fn, name, bitstring) detail::detail<Thumb32Matcher, u32, 32>::GetMatcher<decltype(fn)>(fn, name, bitstring)
 
         // Branch instructions
         INST(&V::thumb32_BL_imm,         "BL (imm)",                 "11110vvvvvvvvvvv11111vvvvvvvvvvv"), // v4T
