@@ -357,6 +357,41 @@ TEST_CASE( "arm: Optimization Failure (Randomized test case)", "[arm]" ) {
     REQUIRE( jit.Cpsr() == 0x200001d0 );
 }
 
+struct VfpTest {
+    u32 initial_fpscr;
+    u32 a;
+    u32 b;
+    u32 result;
+    u32 final_fpscr;
+};
+
+TEST_CASE("vfp: vadd", "[vfp]") {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xee323a01; // vadd.f32 s6, s4, s2
+    code_mem[1] = 0xeafffffe; // b +#0
+
+    std::vector<VfpTest> tests {
+#include "vadd.vfp_tests.inc"
+    };
+
+    for (const auto& test : tests) {
+        jit.Regs()[15] = 0;
+        jit.Cpsr() = 0x000001d0;
+        jit.ExtRegs()[4] = test.a;
+        jit.ExtRegs()[2] = test.b;
+        jit.SetFpscr(test.initial_fpscr);
+
+        jit.Run(2);
+
+        REQUIRE( jit.Regs()[15] == 4 );
+        REQUIRE( jit.Cpsr() == 0x000001d0 );
+        REQUIRE( jit.ExtRegs()[6] == test.result );
+        REQUIRE( jit.ExtRegs()[4] == test.a );
+        REQUIRE( jit.ExtRegs()[2] == test.b );
+        REQUIRE( jit.Fpscr() == test.final_fpscr );
+    }
+}
 
 TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
     const std::array<InstructionGenerator, 16> imm_instructions = {
