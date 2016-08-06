@@ -42,6 +42,7 @@ OPCODE(RotateRightExtended,     T::U32,         T::U32,         T::U1           
 OPCODE(AddWithCarry,            T::U32,         T::U32,         T::U32,         T::U1           )
 OPCODE(SubWithCarry,            T::U32,         T::U32,         T::U32,         T::U1           )
 OPCODE(Add64,                   T::U64,         T::U64,         T::U64                          )
+OPCODE(Sub64,                   T::U64,         T::U64,         T::U64                          )
 OPCODE(Mul,                     T::U32,         T::U32,         T::U32                          )
 OPCODE(Mul64,                   T::U64,         T::U64,         T::U64                          )
 OPCODE(And,                     T::U32,         T::U32,         T::U32                          )

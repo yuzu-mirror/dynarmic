@@ -210,6 +210,10 @@ IR::Value IREmitter::Sub(const IR::Value& a, const IR::Value& b) {
     return Inst(IR::Opcode::SubWithCarry, {a, b, Imm1(1)});
 }
 
+IR::Value IREmitter::Sub64(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::Sub64, {a, b});
+}
+
 IR::Value IREmitter::Mul(const IR::Value& a, const IR::Value& b) {
     return Inst(IR::Opcode::Mul, {a, b});
 }

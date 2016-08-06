@@ -845,6 +845,16 @@ void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitSub64(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
+    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
+
+    code->SUB(64, R(result), op_arg);
+}
+
 void EmitX64::EmitMul(IR::Block&, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);

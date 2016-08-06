@@ -75,6 +75,7 @@ public:
     IR::Value Add64(const IR::Value& a, const IR::Value& b);
     ResultAndCarryAndOverflow SubWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
     IR::Value Sub(const IR::Value& a, const IR::Value& b);
+    IR::Value Sub64(const IR::Value& a, const IR::Value& b);
     IR::Value Mul(const IR::Value& a, const IR::Value& b);
     IR::Value Mul64(const IR::Value& a, const IR::Value& b);
     IR::Value And(const IR::Value& a, const IR::Value& b);
