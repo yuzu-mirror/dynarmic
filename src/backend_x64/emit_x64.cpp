@@ -307,7 +307,11 @@ void EmitX64::EmitCallSupervisor(IR::Block&, IR::Inst* inst) {
 
     reg_alloc.HostCall(nullptr, imm32);
 
+    code->STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
+    code->LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.CallSVC));
+    code->STMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
+    code->LDMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Block&, IR::Inst*) {

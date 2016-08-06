@@ -90,7 +90,7 @@ void JitState::SetFpscr(u32 FPSCR) {
     guest_MXCSR = 0;
 
     // Exception masks / enables
-    guest_MXCSR |= 0b1111110000000; // mask all
+    guest_MXCSR |= 0x00001f80; // mask all
     //guest_MXCSR |= (~FPSCR >> 1) & 0b0000010000000;  // IM = ~IOE
     //guest_MXCSR |= (~FPSCR >> 7) & 0b0000100000000;  // DM = ~IDE
     //guest_MXCSR |= (~FPSCR     ) & 0b1111000000000;  // PM, UM, OM, ZM = ~IXE, ~UFE, ~OFE, ~DZE
