@@ -10,13 +10,11 @@ if (NOT MSVC)
     add_compile_options(--std=c++14)
     add_compile_options(-Wall -Werror -Wextra -pedantic -pedantic-errors -Wfatal-errors
                         -Wno-unused-parameter -Wno-missing-braces)
-    add_compile_options(-DBOOST_SYSTEM_NO_DEPRECATED -DBOOST_POOL_NO_MT)
     if (ARCHITECTURE_x86_64)
         add_compile_options(-msse4.1)
     endif()
 else()
     add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
-    add_compile_options(/DBOOST_SYSTEM_NO_DEPRECATED /DBOOST_POOL_NO_MT)
 endif()
 
 # This function should be passed a list of all files in a target. It will automatically generate

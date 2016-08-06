@@ -6,6 +6,7 @@ set(SRCS
     backend_x64/jitstate.cpp
     backend_x64/reg_alloc.cpp
     backend_x64/routines.cpp
+    common/memory_pool.cpp
     common/memory_util.cpp
     common/string_util.cpp
     common/x64/abi.cpp
@@ -42,6 +43,7 @@ set(HEADERS
     common/bit_util.h
     common/code_block.h
     common/common_types.h
+    common/memory_pool.h
     common/memory_util.h
     common/mp.h
     common/scope_exit.h

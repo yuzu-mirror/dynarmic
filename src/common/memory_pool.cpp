@@ -1,0 +1,44 @@
+/* This file is part of the dynarmic project.
+ * Copyright (c) 2016 MerryMage
+ * This software may be used and distributed according to the terms of the GNU
+ * General Public License version 2 or any later version.
+ */
+
+#include <cstdlib>
+
+#include "common/memory_pool.h"
+
+namespace Dynarmic {
+namespace Common {
+
+Pool::Pool(size_t object_size, size_t initial_pool_size) : object_size(object_size), slab_size(initial_pool_size) {
+    current_slab = (char*)std::malloc(object_size * slab_size);
+    current_ptr = current_slab;
+    remaining = slab_size;
+}
+
+Pool::~Pool() {
+    std::free(current_slab);
+
+    for (char* slab : slabs) {
+        std::free(slab);
+    }
+}
+
+void* Pool::Alloc() {
+    if (remaining == 0) {
+        slabs.emplace_back(current_slab);
+        current_slab = (char*)std::malloc(object_size * slab_size);
+        current_ptr = current_slab;
+        remaining = slab_size;
+    }
+
+    void* ret = (void*)current_ptr;
+    current_ptr += object_size;
+    remaining--;
+
+    return ret;
+}
+
+} // namespace Common
+} // namespace Dynarmic

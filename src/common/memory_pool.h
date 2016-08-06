@@ -1,0 +1,36 @@
+/* This file is part of the dynarmic project.
+ * Copyright (c) 2016 MerryMage
+ * This software may be used and distributed according to the terms of the GNU
+ * General Public License version 2 or any later version.
+ */
+
+#pragma once
+
+#include <vector>
+
+#include "common/common_types.h"
+
+namespace Dynarmic {
+namespace Common {
+
+class Pool {
+public:
+    Pool(size_t object_size, size_t initial_pool_size);
+    ~Pool();
+
+    Pool(Pool&) = delete;
+    Pool(Pool&&) = delete;
+
+    void* Alloc();
+
+private:
+    size_t object_size;
+    size_t slab_size;
+    char* current_slab;
+    char* current_ptr;
+    size_t remaining;
+    std::vector<char*> slabs;
+};
+
+} // namespace Common
+} // namespace Dynarmic

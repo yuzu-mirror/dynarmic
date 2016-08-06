@@ -352,7 +352,7 @@ void IREmitter::SetTerm(const IR::Terminal& terminal) {
 }
 
 IR::Value IREmitter::Inst(IR::Opcode op, std::initializer_list<IR::Value> args) {
-    IR::Inst* inst = new(block.instruction_alloc_pool->malloc()) IR::Inst(op);
+    IR::Inst* inst = new(block.instruction_alloc_pool->Alloc()) IR::Inst(op);
     DEBUG_ASSERT(args.size() == inst->NumArgs());
 
     std::for_each(args.begin(), args.end(), [&inst, op, index = size_t(0)](const auto& v) mutable {

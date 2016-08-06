@@ -10,13 +10,13 @@
 #include <memory>
 #include <vector>
 
-#include <boost/pool/pool.hpp>
 #include <boost/intrusive/list.hpp>
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
 
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "common/memory_pool.h"
 #include "frontend/arm_types.h"
 #include "frontend/ir/opcodes.h"
 
@@ -244,7 +244,7 @@ public:
     /// List of instructions in this block.
     boost::intrusive::list<Inst, InstListLinkMode> instructions;
     /// Memory pool for instruction list
-    std::unique_ptr<boost::pool<>> instruction_alloc_pool = std::make_unique<boost::pool<>>(sizeof(Inst));
+    std::unique_ptr<Common::Pool> instruction_alloc_pool = std::make_unique<Common::Pool>(sizeof(Inst), 4096);
     /// Terminal instruction of this block.
     Terminal terminal = Term::Invalid{};
 
