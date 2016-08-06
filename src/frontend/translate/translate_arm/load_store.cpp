@@ -73,7 +73,7 @@ bool ArmTranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n,
 
 bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) {
     if (ConditionPassed(cond)) {
-        const auto data = ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12)));
+        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12))));
 
         if (d == Reg::PC) {
             ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
@@ -90,7 +90,7 @@ bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n
 bool ArmTranslatorVisitor::arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) {
     if (ConditionPassed(cond)) {
         const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
-        const auto data = ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, shifted.result));
+        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, shifted.result)));
 
         if (d == Reg::PC) {
             ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
@@ -186,7 +186,7 @@ bool ArmTranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n
 
 bool ArmTranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
     if (ConditionPassed(cond)) {
-        const auto data = ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b)));
+        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b))));
 
         if (d == Reg::PC) {
             ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
@@ -202,7 +202,7 @@ bool ArmTranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n
 
 bool ArmTranslatorVisitor::arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) {
     if (ConditionPassed(cond)) {
-        const auto data = ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m)));
+        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m))));
 
         if (d == Reg::PC) {
             ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
@@ -271,7 +271,7 @@ bool ArmTranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n
     if (ConditionPassed(cond)) {
         const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12));
         const auto value = (d == Reg::PC) ? ir.Imm8(ir.PC() - 8) : ir.GetRegister(d);
-        ir.WriteMemory8(address, value);
+        ir.WriteMemory8(address, ir.LeastSignificantByte(value));
     }
 
     return true;
@@ -282,7 +282,7 @@ bool ArmTranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n
         const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
         const auto address = GetAddressingMode(ir, P, U, W, n, shifted.result);
         const auto value = (d == Reg::PC) ? ir.Imm8(ir.PC() - 8) : ir.GetRegister(d);
-        ir.WriteMemory8(address, value);
+        ir.WriteMemory8(address, ir.LeastSignificantByte(value));
     }
 
     return true;
@@ -324,7 +324,7 @@ bool ArmTranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n
     if (ConditionPassed(cond)) {
         const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
         const auto value = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
-        ir.WriteMemory16(address, value);
+        ir.WriteMemory16(address, ir.LeastSignificantHalf(value));
     }
 
     return true;
@@ -334,7 +334,7 @@ bool ArmTranslatorVisitor::arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n
     if (ConditionPassed(cond)) {
         const auto address = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
         const auto value = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
-        ir.WriteMemory16(address, value);
+        ir.WriteMemory16(address, ir.LeastSignificantHalf(value));
     }
 
     return true;
