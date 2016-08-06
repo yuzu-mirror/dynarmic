@@ -485,7 +485,11 @@ std::tuple<HostLoc, bool> RegAlloc::UseHostLoc(IR::Inst* use_inst, HostLocList d
 
 Gen::X64Reg RegAlloc::LoadImmediateIntoRegister(IR::Value imm, Gen::X64Reg reg) {
     ASSERT_MSG(imm.IsImmediate(), "imm is not an immediate");
-    code->MOV(32, Gen::R(reg), ImmediateToOpArg(imm));
+    Gen::OpArg op_arg = ImmediateToOpArg(imm);
+    if (op_arg.GetImmValue() == 0)
+        code->XOR(32, Gen::R(reg), Gen::R(reg));
+    else
+        code->MOV(32, Gen::R(reg), op_arg);
     return reg;
 }
 
