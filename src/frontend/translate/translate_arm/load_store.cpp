@@ -115,12 +115,14 @@ bool ArmTranslatorVisitor::arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n
         auto data_a = ir.ReadMemory32(address_a);
         auto data_b = ir.ReadMemory32(address_b);
 
-        switch(d) {
+        switch (d) {
         case Reg::PC:
             data_a = ir.Add(data_a, ir.Imm32(4));
             break;
         case Reg::LR:
             data_b = ir.Add(data_b, ir.Imm32(4));
+            break;
+        default:
             break;
         }
 
@@ -153,12 +155,14 @@ bool ArmTranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n
         auto data_a = ir.ReadMemory32(address_a);
         auto data_b = ir.ReadMemory32(address_b);
 
-        switch(d) {
+        switch (d) {
         case Reg::PC:
             data_a = ir.Add(data_a, ir.Imm32(4));
             break;
         case Reg::LR:
             data_b = ir.Add(data_b, ir.Imm32(4));
+            break;
+        default:
             break;
         }
 
