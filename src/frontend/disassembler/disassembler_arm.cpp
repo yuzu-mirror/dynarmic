@@ -364,13 +364,23 @@ public:
     std::string arm_STM_usr() { return "ice"; }
 
     // Miscellaneous instructions
-    std::string arm_CLZ(Cond cond, Reg d, Reg m) { return "ice"; }
-    std::string arm_NOP() { return "nop"; }
-    std::string arm_SEL(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_CLZ(Cond cond, Reg d, Reg m) {
+        return Common::StringFromFormat("clz%s %s, %s", CondToString(cond), RegToString(d), RegToString(m));
+    }
+    std::string arm_NOP() {
+        return "nop";
+    }
+    std::string arm_SEL(Cond cond, Reg n, Reg d, Reg m) {
+        return Common::StringFromFormat("sel%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
 
     // Unsigned sum of absolute difference functions
-    std::string arm_USAD8(Cond cond, Reg d, Reg m, Reg n) { return "ice"; }
-    std::string arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) { return "ice"; }
+    std::string arm_USAD8(Cond cond, Reg d, Reg m, Reg n) {
+        return Common::StringFromFormat("usad8%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
+    std::string arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) {
+        return Common::StringFromFormat("usad8a%s %s, %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
 
     // Packing instructions
     std::string arm_PKHBT(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) {
@@ -392,10 +402,18 @@ public:
     }
 
     // Saturation instructions
-    std::string arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) { return "ice"; }
-    std::string arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) { return "ice"; }
-    std::string arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) { return "ice"; }
-    std::string arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) { return "ice"; }
+    std::string arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
+        return Common::StringFromFormat("ssat%s %s, #%u, %s%s", CondToString(cond), RegToString(d), sat_imm + 1, RegToString(n), ShiftStr(ShiftType(sh << 1), imm5).c_str());
+    }
+    std::string arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
+        return Common::StringFromFormat("ssat16%s %s, #%u, %s", CondToString(cond), RegToString(d), sat_imm + 1, RegToString(n));
+    }
+    std::string arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
+        return Common::StringFromFormat("usat%s %s, #%u, %s%s", CondToString(cond), RegToString(d), sat_imm, RegToString(n), ShiftStr(ShiftType(sh << 1), imm5).c_str());
+    }
+    std::string arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
+        return Common::StringFromFormat("usat16%s %s, #%u, %s", CondToString(cond), RegToString(d), sat_imm, RegToString(n));
+    }
 
     // Multiply (Normal) instructions
     std::string arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n) {
@@ -423,13 +441,23 @@ public:
     }
 
     // Multiply (Halfword) instructions
-    std::string arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, bool N, Reg n) { return "ice"; }
-    std::string arm_SMLAxy(Cond cond, Reg d, Reg a, Reg m, bool M, bool N, Reg n) { return "ice"; }
-    std::string arm_SMULxy(Cond cond, Reg d, Reg m, bool M, bool N, Reg n) { return "ice"; }
+    std::string arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, bool N, Reg n) {
+        return Common::StringFromFormat("smlal%c%c%s %s, %s, %s, %s", N ? 't' : 'b', M ? 't' : 'b', CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
+    std::string arm_SMLAxy(Cond cond, Reg d, Reg a, Reg m, bool M, bool N, Reg n) {
+        return Common::StringFromFormat("smla%c%c%s %s, %s, %s, %s", N ? 't' : 'b', M ? 't' : 'b', CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
+    std::string arm_SMULxy(Cond cond, Reg d, Reg m, bool M, bool N, Reg n) {
+        return Common::StringFromFormat("smul%c%c%s %s, %s, %s", N ? 't' : 'b', M ? 't' : 'b', CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
 
     // Multiply (word by halfword) instructions
-    std::string arm_SMLAWy(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) { return "ice"; }
-    std::string arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) { return "ice"; }
+    std::string arm_SMLAWy(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smlaw%c%s %s, %s, %s, %s", M ? 't' : 'b', CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
+    std::string arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smulw%c%s %s, %s, %s", M ? 't' : 'b', CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
 
     // Multiply (Most significant word) instructions
     std::string arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
@@ -443,12 +471,24 @@ public:
     }
 
     // Multiply (Dual) instructions
-    std::string arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) { return "ice"; }
-    std::string arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) { return "ice"; }
-    std::string arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) { return "ice"; }
-    std::string arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) { return "ice"; }
-    std::string arm_SMUAD(Cond cond, Reg d, Reg m, bool M, Reg n) { return "ice"; }
-    std::string arm_SMUSD(Cond cond, Reg d, Reg m, bool M, Reg n) { return "ice"; }
+    std::string arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smlad%s%s %s, %s, %s, %s", M ? "x" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
+    std::string arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smlald%s%s %s, %s, %s, %s", M ? "x" : "", CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
+    std::string arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smlsd%s%s %s, %s, %s, %s", M ? "x" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m), RegToString(a));
+    }
+    std::string arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smlsld%s%s %s, %s, %s, %s", M ? "x" : "", CondToString(cond), RegToString(dLo), RegToString(dHi), RegToString(n), RegToString(m));
+    }
+    std::string arm_SMUAD(Cond cond, Reg d, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smuad%s%s %s, %s, %s", M ? "x" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
+    std::string arm_SMUSD(Cond cond, Reg d, Reg m, bool M, Reg n) {
+        return Common::StringFromFormat("smusd%s%s %s, %s, %s", M ? "x" : "", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
 
     // Parallel Add/Subtract (Modulo arithmetic) instructions
     std::string arm_SADD8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
