@@ -54,7 +54,7 @@ struct Jit::Impl {
         return routines.RunCode(&jit_state, code_ptr, cycle_count);
     }
 
-    std::string Disassemble(Arm::LocationDescriptor descriptor) {
+    std::string Disassemble(const Arm::LocationDescriptor& descriptor) {
         auto block = GetBasicBlock(descriptor);
         std::string result = Common::StringFromFormat("address: %p\nsize: %zu bytes\n", block->code_ptr, block->size);
 
@@ -174,7 +174,7 @@ void Jit::SetFpscr(u32 value) const {
     return impl->jit_state.SetFpscr(value);
 }
 
-std::string Jit::Disassemble(Arm::LocationDescriptor descriptor) {
+std::string Jit::Disassemble(const Arm::LocationDescriptor& descriptor) {
     return impl->Disassemble(descriptor);
 }
 

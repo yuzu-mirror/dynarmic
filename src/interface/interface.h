@@ -8,10 +8,13 @@
 
 #include <memory>
 
-#include "frontend/arm_types.h"
 #include "common/common_types.h"
 
 namespace Dynarmic {
+
+namespace Arm {
+struct LocationDescriptor;
+}
 
 class Jit;
 
@@ -82,7 +85,7 @@ public:
         return is_executing;
     }
 
-    std::string Disassemble(Arm::LocationDescriptor descriptor);
+    std::string Disassemble(const Arm::LocationDescriptor& descriptor);
 
 private:
     bool halt_requested = false;
