@@ -353,7 +353,7 @@ IR::Value IREmitter::Inst(IR::Opcode op, std::initializer_list<IR::Value> args) 
         index++;
     });
 
-    block.instructions.push_back(*inst);
+    block.instructions.Append(*inst);
     return IR::Value(inst);
 }
 

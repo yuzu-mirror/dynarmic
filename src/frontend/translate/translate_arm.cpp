@@ -68,7 +68,7 @@ bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
 
     // non-AL cond
 
-    if (!ir.block.instructions.empty()) {
+    if (!ir.block.instructions.IsEmpty()) {
         // We've already emitted instructions. Quit for now, we'll make a new block here later.
         cond_state = ConditionalState::Break;
         ir.SetTerm(IR::Term::LinkBlock{ir.current_location});

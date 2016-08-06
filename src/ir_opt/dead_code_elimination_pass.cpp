@@ -19,7 +19,7 @@ void DeadCodeElimination(IR::Block& block) {
     // We iterate over the instructions in reverse order.
     // This is because removing an instruction reduces the number of uses for earlier instructions.
 
-    if (block.instructions.empty()) {
+    if (block.instructions.IsEmpty()) {
         return;
     }
 

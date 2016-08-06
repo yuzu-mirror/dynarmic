@@ -43,6 +43,7 @@ set(HEADERS
     common/bit_util.h
     common/code_block.h
     common/common_types.h
+    common/intrusive_list.h
     common/memory_pool.h
     common/memory_util.h
     common/mp.h

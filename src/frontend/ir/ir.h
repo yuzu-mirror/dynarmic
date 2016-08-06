@@ -10,12 +10,12 @@
 #include <memory>
 #include <vector>
 
-#include <boost/intrusive/list.hpp>
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
 
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "common/intrusive_list.h"
 #include "common/memory_pool.h"
 #include "frontend/arm_types.h"
 #include "frontend/ir/opcodes.h"
@@ -113,8 +113,7 @@ private:
     } inner;
 };
 
-using InstListLinkMode = boost::intrusive::link_mode<boost::intrusive::normal_link>;
-class Inst final : public boost::intrusive::list_base_hook<InstListLinkMode> {
+class Inst final : public Common::IntrusiveListNode<Inst> {
 public:
     Inst(Opcode op) : op(op) {}
 
@@ -242,7 +241,7 @@ public:
     boost::optional<Arm::LocationDescriptor> cond_failed = {};
 
     /// List of instructions in this block.
-    boost::intrusive::list<Inst, InstListLinkMode> instructions;
+    Common::IntrusiveList<Inst> instructions;
     /// Memory pool for instruction list
     std::unique_ptr<Common::Pool> instruction_alloc_pool = std::make_unique<Common::Pool>(sizeof(Inst), 4096);
     /// Terminal instruction of this block.
