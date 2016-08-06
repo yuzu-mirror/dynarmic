@@ -19,8 +19,34 @@ public:
 
     size_t RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const;
     void GenReturnFromRunCode(Gen::XEmitter* code) const;
+    Gen::OpArg MFloatNegativeZero32() const {
+        return Gen::M(const_FloatNegativeZero32);
+    }
+    Gen::OpArg MFloatNaN32() const {
+        return Gen::M(const_FloatNaN32);
+    }
+    Gen::OpArg MFloatNegativeZero64() const {
+        return Gen::M(const_FloatNegativeZero64);
+    }
+    Gen::OpArg MFloatNaN64() const {
+        return Gen::M(const_FloatNaN64);
+    }
+    Gen::OpArg MFloatNonSignMask64() const {
+        return Gen::M(const_FloatNonSignMask64);
+    }
+    Gen::OpArg MFloatPenultimatePositiveDenormal64() const {
+        return Gen::M(const_FloatPenultimatePositiveDenormal64);
+    }
 
 private:
+    const u8* const_FloatNegativeZero32;
+    const u8* const_FloatNaN32;
+    const u8* const_FloatNegativeZero64;
+    const u8* const_FloatNaN64;
+    const u8* const_FloatNonSignMask64;
+    const u8* const_FloatPenultimatePositiveDenormal64;
+    void GenConstants();
+
     using RunCodeFuncType = void(*)(JitState*, CodePtr);
     RunCodeFuncType run_code;
     void GenRunCode();

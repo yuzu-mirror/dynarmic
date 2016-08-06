@@ -18,6 +18,7 @@ namespace BackendX64 {
 Routines::Routines() {
     AllocCodeSpace(1024);
 
+    GenConstants();
     GenRunCode();
 }
 
@@ -28,6 +29,22 @@ size_t Routines::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles
     jit_state->cycles_remaining = cycles_to_run;
     run_code(jit_state, basic_block);
     return cycles_to_run - jit_state->cycles_remaining; // Return number of cycles actually run.
+}
+
+void Routines::GenConstants() {
+    const_FloatNegativeZero32 = AlignCode16();
+    Write32(0x80000000u);
+    const_FloatNaN32 = AlignCode16();
+    Write32(0x7fc00000u);
+    const_FloatNegativeZero64 = AlignCode16();
+    Write64(0x8000000000000000u);
+    const_FloatNaN64 = AlignCode16();
+    Write64(0x7ff8000000000000u);
+    const_FloatNonSignMask64 = AlignCode16();
+    Write64(0x7fffffffffffffffu);
+    const_FloatPenultimatePositiveDenormal64 = AlignCode16();
+    Write64(0x000ffffffffffffeu);
+    AlignCode16();
 }
 
 void Routines::GenRunCode() {
