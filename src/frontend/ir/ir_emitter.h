@@ -96,8 +96,12 @@ public:
     IR::Value FPAbs64(const IR::Value& a);
     IR::Value FPAdd32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
     IR::Value FPAdd64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
+    IR::Value FPDiv32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
+    IR::Value FPDiv64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
     IR::Value FPMul32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
     IR::Value FPMul64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
+    IR::Value FPNeg32(const IR::Value& a);
+    IR::Value FPNeg64(const IR::Value& a);
     IR::Value FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
     IR::Value FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
 

@@ -572,6 +572,14 @@ public:
         return Common::StringFromFormat("vsub%s.%s %s, %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vn, N).c_str(), FPRegStr(sz, Vm, M).c_str());
     }
 
+    std::string vfp2_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+        return Common::StringFromFormat("vnmul%s.%s %s, %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vn, N).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
+
+    std::string vfp2_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+        return Common::StringFromFormat("vdiv%s.%s %s, %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vn, N).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
+
     std::string vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return Common::StringFromFormat("vadd%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
     }

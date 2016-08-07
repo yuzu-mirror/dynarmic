@@ -1148,12 +1148,36 @@ void EmitX64::EmitFPAbs64(IR::Block&, IR::Inst* inst) {
     code->PAND(result, routines->MFloatNonSignMask64());
 }
 
+void EmitX64::EmitFPNeg32(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+
+    code->PXOR(result, routines->MFloatNegativeZero32());
+}
+
+void EmitX64::EmitFPNeg64(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+
+    code->PXOR(result, routines->MFloatNegativeZero64());
+}
+
 void EmitX64::EmitFPAdd32(IR::Block& block, IR::Inst* inst) {
     FPOp32(code, routines, reg_alloc, block, inst, &XEmitter::ADDSS);
 }
 
 void EmitX64::EmitFPAdd64(IR::Block& block, IR::Inst* inst) {
     FPOp64(code, routines, reg_alloc, block, inst, &XEmitter::ADDSD);
+}
+
+void EmitX64::EmitFPDiv32(IR::Block& block, IR::Inst* inst) {
+    FPOp32(code, routines, reg_alloc, block, inst, &XEmitter::DIVSS);
+}
+
+void EmitX64::EmitFPDiv64(IR::Block& block, IR::Inst* inst) {
+    FPOp64(code, routines, reg_alloc, block, inst, &XEmitter::DIVSD);
 }
 
 void EmitX64::EmitFPMul32(IR::Block& block, IR::Inst* inst) {
