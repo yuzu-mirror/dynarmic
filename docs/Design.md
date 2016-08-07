@@ -30,7 +30,7 @@ memory location and memory reader callback and returns a basic block of IR.
 * The IR can be found under `src/frontend/ir/`.
 * Optimization is not implemented yet.
 * Emission is done by `EmitX64` which can be found in `src/backend_x64/emit_x64.{h,cpp}`.
-* Execution is performed by calling `Routines::RunCode` in `src/backend_x64/routines.{h,cpp}`.
+* Execution is performed by calling `BlockOfCode::RunCode` in `src/backend_x64/routines.{h,cpp}`.
  
 ## Decoder
 

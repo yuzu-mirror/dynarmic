@@ -11,9 +11,9 @@
 #include <llvm-c/Target.h>
 #endif
 
+#include "backend_x64/block_of_code.h"
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
-#include "backend_x64/routines.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
@@ -28,17 +28,10 @@ namespace Dynarmic {
 
 using namespace BackendX64;
 
-struct BlockOfCode : Gen::XCodeBlock {
-    BlockOfCode() {
-        AllocCodeSpace(128 * 1024 * 1024);
-    }
-};
-
 struct Jit::Impl {
-    Impl(Jit* jit, UserCallbacks callbacks) : emitter(&block_of_code, &routines, callbacks, jit), callbacks(callbacks) {}
+    Impl(Jit* jit, UserCallbacks callbacks) : emitter(&block_of_code, callbacks, jit), callbacks(callbacks) {}
 
     JitState jit_state{};
-    Routines routines{};
     BlockOfCode block_of_code{};
     EmitX64 emitter;
     const UserCallbacks callbacks;
@@ -51,7 +44,7 @@ struct Jit::Impl {
         Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.guest_FPSCR_flags};
 
         CodePtr code_ptr = GetBasicBlock(descriptor)->code_ptr;
-        return routines.RunCode(&jit_state, code_ptr, cycle_count);
+        return block_of_code.RunCode(&jit_state, code_ptr, cycle_count);
     }
 
     std::string Disassemble(const Arm::LocationDescriptor& descriptor) {
@@ -126,13 +119,7 @@ size_t Jit::Run(size_t cycle_count) {
 
 void Jit::ClearCache(bool poison_memory) {
     ASSERT(!is_executing);
-
-    if (poison_memory) {
-        impl->block_of_code.ClearCodeSpace();
-    } else {
-        impl->block_of_code.ResetCodePtr();
-    }
-
+    impl->block_of_code.ClearCache(poison_memory);
     impl->emitter.ClearCache();
 }
 

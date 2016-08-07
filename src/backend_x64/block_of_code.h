@@ -13,12 +13,15 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
-class Routines final : private Gen::XCodeBlock {
+class BlockOfCode final : public Gen::XCodeBlock {
 public:
-    Routines();
+    BlockOfCode();
+
+    void ClearCache(bool poison_memory);
 
     size_t RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const;
-    void GenReturnFromRunCode(Gen::XEmitter* code) const;
+    void ReturnFromRunCode();
+
     Gen::OpArg MFloatNegativeZero32() const {
         return Gen::M(const_FloatNegativeZero32);
     }

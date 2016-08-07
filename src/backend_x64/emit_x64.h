@@ -9,8 +9,8 @@
 #include <set>
 #include <unordered_map>
 
+#include "backend_x64/block_of_code.h"
 #include "backend_x64/reg_alloc.h"
-#include "backend_x64/routines.h"
 #include "common/x64/emitter.h"
 #include "frontend/ir/ir.h"
 #include "interface/interface.h"
@@ -20,8 +20,8 @@ namespace BackendX64 {
 
 class EmitX64 final {
 public:
-    EmitX64(Gen::XEmitter* code, Routines* routines, UserCallbacks cb, Jit* jit_interface)
-            : reg_alloc(code), code(code), routines(routines), cb(cb), jit_interface(jit_interface) {}
+    EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface)
+            : reg_alloc(code), code(code), cb(cb), jit_interface(jit_interface) {}
 
     struct BlockDescriptor {
         CodePtr code_ptr;
@@ -62,8 +62,7 @@ private:
     RegAlloc reg_alloc;
 
     // State
-    Gen::XEmitter* code;
-    Routines* routines;
+    BlockOfCode* code;
     UserCallbacks cb;
     Jit* jit_interface;
     std::unordered_map<Arm::LocationDescriptor, BlockDescriptor, Arm::LocationDescriptorHash> basic_blocks;

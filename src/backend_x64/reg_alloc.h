@@ -8,6 +8,7 @@
 
 #include <map>
 
+#include "backend_x64/block_of_code.h"
 #include "backend_x64/jitstate.h"
 #include "common/common_types.h"
 #include "common/x64/emitter.h"
@@ -97,7 +98,7 @@ const HostLocList any_xmm = {
 
 class RegAlloc final {
 public:
-    RegAlloc(Gen::XEmitter* code) : code(code) {}
+    RegAlloc(BlockOfCode* code) : code(code) {}
 
     /// Late-def
     Gen::X64Reg DefRegister(IR::Inst* def_inst, HostLocList desired_locations);
@@ -145,7 +146,7 @@ private:
     void SpillRegister(HostLoc loc);
     HostLoc FindFreeSpill() const;
 
-    Gen::XEmitter* code = nullptr;
+    BlockOfCode* code = nullptr;
 
     struct HostLocInfo {
         std::vector<IR::Inst*> values; // early value

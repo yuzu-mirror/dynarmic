@@ -1,11 +1,11 @@
 include_directories(.)
 
 set(SRCS
+    backend_x64/block_of_code.cpp
     backend_x64/emit_x64.cpp
     backend_x64/interface_x64.cpp
     backend_x64/jitstate.cpp
     backend_x64/reg_alloc.cpp
-    backend_x64/routines.cpp
     common/memory_pool.cpp
     common/memory_util.cpp
     common/string_util.cpp
@@ -34,10 +34,10 @@ set(SRCS
     )
 
 set(HEADERS
+    backend_x64/block_of_code.h
     backend_x64/emit_x64.h
     backend_x64/jitstate.h
     backend_x64/reg_alloc.h
-    backend_x64/routines.h
     common/assert.h
     common/bit_set.h
     common/bit_util.h

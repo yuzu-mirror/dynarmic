@@ -1030,7 +1030,7 @@ void EmitX64::EmitByteReverseDual(IR::Block&, IR::Inst* inst) {
     code->BSWAP(64, result);
 }
 
-static void DenormalsAreZero32(XEmitter* code, X64Reg xmm_value, X64Reg gpr_scratch) {
+static void DenormalsAreZero32(BlockOfCode* code, X64Reg xmm_value, X64Reg gpr_scratch) {
     // We need to report back whether we've found a denormal on input.
     // SSE doesn't do this for us when SSE's DAZ is enabled.
     code->MOVD_xmm(R(gpr_scratch), xmm_value);
@@ -1043,18 +1043,18 @@ static void DenormalsAreZero32(XEmitter* code, X64Reg xmm_value, X64Reg gpr_scra
     code->SetJumpTarget(fixup);
 }
 
-static void DenormalsAreZero64(XEmitter* code, Routines* routines, X64Reg xmm_value, X64Reg gpr_scratch) {
+static void DenormalsAreZero64(BlockOfCode* code, X64Reg xmm_value, X64Reg gpr_scratch) {
     code->MOVQ_xmm(R(gpr_scratch), xmm_value);
-    code->AND(64, R(gpr_scratch), routines->MFloatNonSignMask64());
+    code->AND(64, R(gpr_scratch), code->MFloatNonSignMask64());
     code->SUB(64, R(gpr_scratch), Imm32(1));
-    code->CMP(64, R(gpr_scratch), routines->MFloatPenultimatePositiveDenormal64());
+    code->CMP(64, R(gpr_scratch), code->MFloatPenultimatePositiveDenormal64());
     auto fixup = code->J_CC(CC_A);
     code->PXOR(xmm_value, R(xmm_value));
     code->MOV(32, MDisp(R15, offsetof(JitState, FPSCR_IDC)), Imm32(1 << 7));
     code->SetJumpTarget(fixup);
 }
 
-static void FlushToZero32(XEmitter* code, X64Reg xmm_value, X64Reg gpr_scratch) {
+static void FlushToZero32(BlockOfCode* code, X64Reg xmm_value, X64Reg gpr_scratch) {
     code->MOVD_xmm(R(gpr_scratch), xmm_value);
     code->AND(32, R(gpr_scratch), Imm32(0x7FFFFFFF));
     code->SUB(32, R(gpr_scratch), Imm32(1));
@@ -1065,32 +1065,32 @@ static void FlushToZero32(XEmitter* code, X64Reg xmm_value, X64Reg gpr_scratch) 
     code->SetJumpTarget(fixup);
 }
 
-static void FlushToZero64(XEmitter* code, Routines* routines, X64Reg xmm_value, X64Reg gpr_scratch) {
+static void FlushToZero64(BlockOfCode* code, X64Reg xmm_value, X64Reg gpr_scratch) {
     code->MOVQ_xmm(R(gpr_scratch), xmm_value);
-    code->AND(64, R(gpr_scratch), routines->MFloatNonSignMask64());
+    code->AND(64, R(gpr_scratch), code->MFloatNonSignMask64());
     code->SUB(64, R(gpr_scratch), Imm32(1));
-    code->CMP(64, R(gpr_scratch), routines->MFloatPenultimatePositiveDenormal64());
+    code->CMP(64, R(gpr_scratch), code->MFloatPenultimatePositiveDenormal64());
     auto fixup = code->J_CC(CC_A);
     code->PXOR(xmm_value, R(xmm_value));
     code->MOV(32, MDisp(R15, offsetof(JitState, FPSCR_UFC)), Imm32(1 << 3));
     code->SetJumpTarget(fixup);
 }
 
-static void DefaultNaN32(XEmitter* code, Routines* routines, X64Reg xmm_value) {
+static void DefaultNaN32(BlockOfCode* code, X64Reg xmm_value) {
     code->UCOMISS(xmm_value, R(xmm_value));
     auto fixup = code->J_CC(CC_NP);
-    code->MOVAPS(xmm_value, routines->MFloatNaN32());
+    code->MOVAPS(xmm_value, code->MFloatNaN32());
     code->SetJumpTarget(fixup);
 }
 
-static void DefaultNaN64(XEmitter* code, Routines* routines, X64Reg xmm_value) {
+static void DefaultNaN64(BlockOfCode* code, X64Reg xmm_value) {
     code->UCOMISD(xmm_value, R(xmm_value));
     auto fixup = code->J_CC(CC_NP);
-    code->MOVAPS(xmm_value, routines->MFloatNaN64());
+    code->MOVAPS(xmm_value, code->MFloatNaN64());
     code->SetJumpTarget(fixup);
 }
 
-static void FPThreeOp32(XEmitter* code, Routines* routines, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
+static void FPThreeOp32(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
 
@@ -1107,11 +1107,11 @@ static void FPThreeOp32(XEmitter* code, Routines* routines, RegAlloc& reg_alloc,
         FlushToZero32(code, result, gpr_scratch);
     }
     if (block.location.FPSCR_DN()) {
-        DefaultNaN32(code, routines, result);
+        DefaultNaN32(code, result);
     }
 }
 
-static void FPThreeOp64(XEmitter* code, Routines* routines, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
+static void FPThreeOp64(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
 
@@ -1120,19 +1120,19 @@ static void FPThreeOp64(XEmitter* code, Routines* routines, RegAlloc& reg_alloc,
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
     if (block.location.FPSCR_FTZ()) {
-        DenormalsAreZero64(code, routines, result, gpr_scratch);
-        DenormalsAreZero64(code, routines, operand, gpr_scratch);
+        DenormalsAreZero64(code, result, gpr_scratch);
+        DenormalsAreZero64(code, operand, gpr_scratch);
     }
     (code->*fn)(result, R(operand));
     if (block.location.FPSCR_FTZ()) {
-        FlushToZero64(code, routines, result, gpr_scratch);
+        FlushToZero64(code, result, gpr_scratch);
     }
     if (block.location.FPSCR_DN()) {
-        DefaultNaN64(code, routines, result);
+        DefaultNaN64(code, result);
     }
 }
 
-static void FPTwoOp32(XEmitter* code, Routines* routines, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
+static void FPTwoOp32(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
     IR::Value a = inst->GetArg(0);
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
@@ -1146,25 +1146,25 @@ static void FPTwoOp32(XEmitter* code, Routines* routines, RegAlloc& reg_alloc, I
         FlushToZero32(code, result, gpr_scratch);
     }
     if (block.location.FPSCR_DN()) {
-        DefaultNaN32(code, routines, result);
+        DefaultNaN32(code, result);
     }
 }
 
-static void FPTwoOp64(XEmitter* code, Routines* routines, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
+static void FPTwoOp64(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
     IR::Value a = inst->GetArg(0);
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
     if (block.location.FPSCR_FTZ()) {
-        DenormalsAreZero64(code, routines, result, gpr_scratch);
+        DenormalsAreZero64(code, result, gpr_scratch);
     }
     (code->*fn)(result, R(result));
     if (block.location.FPSCR_FTZ()) {
-        FlushToZero64(code, routines, result, gpr_scratch);
+        FlushToZero64(code, result, gpr_scratch);
     }
     if (block.location.FPSCR_DN()) {
-        DefaultNaN64(code, routines, result);
+        DefaultNaN64(code, result);
     }
 }
 
@@ -1173,7 +1173,7 @@ void EmitX64::EmitFPAbs32(IR::Block&, IR::Inst* inst) {
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
 
-    code->PAND(result, routines->MFloatNonSignMask32());
+    code->PAND(result, code->MFloatNonSignMask32());
 }
 
 void EmitX64::EmitFPAbs64(IR::Block&, IR::Inst* inst) {
@@ -1181,7 +1181,7 @@ void EmitX64::EmitFPAbs64(IR::Block&, IR::Inst* inst) {
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
 
-    code->PAND(result, routines->MFloatNonSignMask64());
+    code->PAND(result, code->MFloatNonSignMask64());
 }
 
 void EmitX64::EmitFPNeg32(IR::Block&, IR::Inst* inst) {
@@ -1189,7 +1189,7 @@ void EmitX64::EmitFPNeg32(IR::Block&, IR::Inst* inst) {
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
 
-    code->PXOR(result, routines->MFloatNegativeZero32());
+    code->PXOR(result, code->MFloatNegativeZero32());
 }
 
 void EmitX64::EmitFPNeg64(IR::Block&, IR::Inst* inst) {
@@ -1197,47 +1197,47 @@ void EmitX64::EmitFPNeg64(IR::Block&, IR::Inst* inst) {
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
 
-    code->PXOR(result, routines->MFloatNegativeZero64());
+    code->PXOR(result, code->MFloatNegativeZero64());
 }
 
 void EmitX64::EmitFPAdd32(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp32(code, routines, reg_alloc, block, inst, &XEmitter::ADDSS);
+    FPThreeOp32(code, reg_alloc, block, inst, &XEmitter::ADDSS);
 }
 
 void EmitX64::EmitFPAdd64(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp64(code, routines, reg_alloc, block, inst, &XEmitter::ADDSD);
+    FPThreeOp64(code, reg_alloc, block, inst, &XEmitter::ADDSD);
 }
 
 void EmitX64::EmitFPDiv32(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp32(code, routines, reg_alloc, block, inst, &XEmitter::DIVSS);
+    FPThreeOp32(code, reg_alloc, block, inst, &XEmitter::DIVSS);
 }
 
 void EmitX64::EmitFPDiv64(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp64(code, routines, reg_alloc, block, inst, &XEmitter::DIVSD);
+    FPThreeOp64(code, reg_alloc, block, inst, &XEmitter::DIVSD);
 }
 
 void EmitX64::EmitFPMul32(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp32(code, routines, reg_alloc, block, inst, &XEmitter::MULSS);
+    FPThreeOp32(code, reg_alloc, block, inst, &XEmitter::MULSS);
 }
 
 void EmitX64::EmitFPMul64(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp64(code, routines, reg_alloc, block, inst, &XEmitter::MULSD);
+    FPThreeOp64(code, reg_alloc, block, inst, &XEmitter::MULSD);
 }
 
 void EmitX64::EmitFPSqrt32(IR::Block& block, IR::Inst* inst) {
-    FPTwoOp32(code, routines, reg_alloc, block, inst, &XEmitter::SQRTSS);
+    FPTwoOp32(code, reg_alloc, block, inst, &XEmitter::SQRTSS);
 }
 
 void EmitX64::EmitFPSqrt64(IR::Block& block, IR::Inst* inst) {
-    FPTwoOp64(code, routines, reg_alloc, block, inst, &XEmitter::SQRTSD);
+    FPTwoOp64(code, reg_alloc, block, inst, &XEmitter::SQRTSD);
 }
 
 void EmitX64::EmitFPSub32(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp32(code, routines, reg_alloc, block, inst, &XEmitter::SUBSS);
+    FPThreeOp32(code, reg_alloc, block, inst, &XEmitter::SUBSS);
 }
 
 void EmitX64::EmitFPSub64(IR::Block& block, IR::Inst* inst) {
-    FPThreeOp64(code, routines, reg_alloc, block, inst, &XEmitter::SUBSD);
+    FPThreeOp64(code, reg_alloc, block, inst, &XEmitter::SUBSD);
 }
 
 void EmitX64::EmitReadMemory8(IR::Block&, IR::Inst* inst) {
@@ -1294,7 +1294,7 @@ void EmitX64::EmitAddCycles(size_t cycles) {
     code->SUB(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(static_cast<u32>(cycles)));
 }
 
-static CCFlags EmitCond(Gen::XEmitter* code, Arm::Cond cond) {
+static CCFlags EmitCond(BlockOfCode* code, Arm::Cond cond) {
     // TODO: This code is a quick copy-paste-and-quickly-modify job from a previous JIT. Clean this up.
 
     auto NFlag = [code](X64Reg reg){
@@ -1486,11 +1486,11 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
     code->MOV(32, MJitStateReg(Arm::Reg::PC), R(ABI_PARAM1));
     code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.InterpreterFallback));
-    routines->GenReturnFromRunCode(code); // TODO: Check cycles
+    code->ReturnFromRunCode(); // TODO: Check cycles
 }
 
 void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::LocationDescriptor initial_location) {
-    routines->GenReturnFromRunCode(code);
+    code->ReturnFromRunCode();
 }
 
 void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
@@ -1509,7 +1509,7 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
             code->AND(32, MJitStateCpsr(), Imm32(~(1 << 9)));
         }
     }
-    routines->GenReturnFromRunCode(code); // TODO: Check cycles, Properly do a link
+    code->ReturnFromRunCode(); // TODO: Check cycles, Properly do a link
 }
 
 void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location) {

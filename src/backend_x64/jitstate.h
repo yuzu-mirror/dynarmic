@@ -24,7 +24,7 @@ struct JitState {
 
     std::array<u64, SpillCount> Spill{}; // Spill.
 
-    // For internal use (See: Routines::RunCode)
+    // For internal use (See: BlockOfCode::RunCode)
     u32 guest_MXCSR = 0x00001f80;
     u32 save_host_MXCSR = 0;
     u64 save_host_RSP = 0;

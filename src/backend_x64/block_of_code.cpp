@@ -6,8 +6,8 @@
 
 #include <limits>
 
+#include "backend_x64/block_of_code.h"
 #include "backend_x64/jitstate.h"
-#include "backend_x64/routines.h"
 #include "common/x64/abi.h"
 
 using namespace Gen;
@@ -15,14 +15,23 @@ using namespace Gen;
 namespace Dynarmic {
 namespace BackendX64 {
 
-Routines::Routines() {
-    AllocCodeSpace(1024);
+BlockOfCode::BlockOfCode() {
+    AllocCodeSpace(128 * 1024 * 1024);
+    ClearCache(false);
+}
+
+void BlockOfCode::ClearCache(bool poison_memory) {
+    if (poison_memory) {
+        ClearCodeSpace();
+    } else {
+        ResetCodePtr();
+    }
 
     GenConstants();
     GenRunCode();
 }
 
-size_t Routines::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const {
+size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const {
     constexpr size_t max_cycles_to_run = static_cast<size_t>(std::numeric_limits<decltype(jit_state->cycles_remaining)>::max());
     ASSERT(cycles_to_run <= max_cycles_to_run);
 
@@ -31,7 +40,16 @@ size_t Routines::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles
     return cycles_to_run - jit_state->cycles_remaining; // Return number of cycles actually run.
 }
 
-void Routines::GenConstants() {
+void BlockOfCode::ReturnFromRunCode() {
+    STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
+    LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
+    MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
+
+    ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
+    RET();
+}
+
+void BlockOfCode::GenConstants() {
     const_FloatNegativeZero32 = AlignCode16();
     Write32(0x80000000u);
     const_FloatNaN32 = AlignCode16();
@@ -49,8 +67,8 @@ void Routines::GenConstants() {
     AlignCode16();
 }
 
-void Routines::GenRunCode() {
-    run_code = reinterpret_cast<RunCodeFuncType>(const_cast<u8*>(this->GetCodePtr()));
+void BlockOfCode::GenRunCode() {
+    run_code = reinterpret_cast<RunCodeFuncType>(const_cast<u8*>(GetCodePtr()));
 
     // This serves two purposes:
     // 1. It saves all the registers we as a callee need to save.
@@ -64,15 +82,6 @@ void Routines::GenRunCode() {
     LDMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
 
     JMPptr(R(ABI_PARAM2));
-}
-
-void Routines::GenReturnFromRunCode(XEmitter* code) const {
-    code->STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
-    code->LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
-    code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
-
-    code->ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
-    code->RET();
 }
 
 } // namespace BackendX64
