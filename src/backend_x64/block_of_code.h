@@ -20,7 +20,10 @@ public:
     void ClearCache(bool poison_memory);
 
     size_t RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const;
-    void ReturnFromRunCode();
+    void ReturnFromRunCode(bool MXCSR_switch = true);
+
+    void SwitchMxcsrOnEntry();
+    void SwitchMxcsrOnExit();
 
     Gen::OpArg MFloatNegativeZero32() const {
         return Gen::M(const_FloatNegativeZero32);

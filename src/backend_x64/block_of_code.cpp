@@ -40,11 +40,11 @@ size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cyc
     return cycles_to_run - jit_state->cycles_remaining; // Return number of cycles actually run.
 }
 
-void BlockOfCode::ReturnFromRunCode() {
-    STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
-    LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
-    MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
+void BlockOfCode::ReturnFromRunCode(bool MXCSR_switch) {
+    if (MXCSR_switch)
+        SwitchMxcsrOnExit();
 
+    MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
     ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
     RET();
 }
@@ -78,10 +78,18 @@ void BlockOfCode::GenRunCode() {
 
     MOV(64, R(R15), R(ABI_PARAM1));
     MOV(64, MDisp(R15, offsetof(JitState, save_host_RSP)), R(RSP));
+    SwitchMxcsrOnEntry();
+    JMPptr(R(ABI_PARAM2));
+}
+
+void BlockOfCode::SwitchMxcsrOnEntry() {
     STMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
     LDMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
+}
 
-    JMPptr(R(ABI_PARAM2));
+void BlockOfCode::SwitchMxcsrOnExit() {
+    STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
+    LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
 }
 
 } // namespace BackendX64

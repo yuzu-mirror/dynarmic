@@ -308,11 +308,9 @@ void EmitX64::EmitCallSupervisor(IR::Block&, IR::Inst* inst) {
 
     reg_alloc.HostCall(nullptr, imm32);
 
-    code->STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
-    code->LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
+    code->SwitchMxcsrOnExit();
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.CallSVC));
-    code->STMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
-    code->LDMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
+    code->SwitchMxcsrOnEntry();
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Block&, IR::Inst*) {
@@ -1514,8 +1512,9 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
     code->MOV(64, R(ABI_PARAM2), Imm64(reinterpret_cast<u64>(jit_interface)));
     code->MOV(32, MJitStateReg(Arm::Reg::PC), R(ABI_PARAM1));
     code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
+    code->SwitchMxcsrOnExit();
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.InterpreterFallback));
-    code->ReturnFromRunCode(); // TODO: Check cycles
+    code->ReturnFromRunCode(false); // TODO: Check cycles
 }
 
 void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::LocationDescriptor initial_location) {
