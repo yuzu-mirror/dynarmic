@@ -194,7 +194,7 @@ struct ArmTranslatorVisitor final {
 
     // Miscellaneous instructions
     bool arm_CLZ(Cond cond, Reg d, Reg m) { return InterpretThisInstruction(); }
-    bool arm_NOP() { return InterpretThisInstruction(); }
+    bool arm_NOP() { return true; }
     bool arm_SEL(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
 
     // Unsigned sum of absolute difference functions
