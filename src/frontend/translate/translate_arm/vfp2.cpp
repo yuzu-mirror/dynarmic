@@ -209,5 +209,22 @@ bool ArmTranslatorVisitor::vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool
     return true;
 }
 
+bool ArmTranslatorVisitor::vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
+
+    ExtReg d = ToExtReg(sz, Vd, D);
+    ExtReg m = ToExtReg(sz, Vm, M);
+    // VNEG.{F32,F64} <{S,D}d>, <{S,D}m>
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(m);
+        auto result = sz
+                      ? ir.FPNeg64(a)
+                      : ir.FPNeg32(a);
+        ir.SetExtendedRegister(d, result);
+    }
+    return true;
+}
+
 } // namespace Arm
 } // namespace Dynarmic

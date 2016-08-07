@@ -599,6 +599,10 @@ public:
     std::string vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return Common::StringFromFormat("vadd%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
     }
+
+    std::string vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+        return Common::StringFromFormat("vneg%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
 };
 
 std::string DisassembleArm(u32 instruction) {
