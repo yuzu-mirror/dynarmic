@@ -1522,15 +1522,6 @@ void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::Loca
 }
 
 void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
-    BlockDescriptor* next_bb = GetBasicBlock(terminal.next);
-    patch_jmp_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
-    if (next_bb) {
-        code->J_CC(CC_G, next_bb->code_ptr, true);
-    } else {
-        code->NOP(6); // Leave enough space for a jg instruction.
-    }
-
-    code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.PC()));
     if (terminal.next.TFlag() != initial_location.TFlag()) {
         if (terminal.next.TFlag()) {
             code->OR(32, MJitStateCpsr(), Imm32(1 << 5));
@@ -1545,6 +1536,17 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
             code->AND(32, MJitStateCpsr(), Imm32(~(1 << 9)));
         }
     }
+
+    code->CMP(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(0));
+
+    BlockDescriptor* next_bb = GetBasicBlock(terminal.next);
+    patch_jmp_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
+    if (next_bb) {
+        code->J_CC(CC_G, next_bb->code_ptr, true);
+    } else {
+        code->NOP(6); // Leave enough space for a jg instruction.
+    }
+    code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.PC()));
     code->ReturnFromRunCode(); // TODO: Check cycles, Properly do a link
 }
 
