@@ -64,6 +64,8 @@ OPCODE(FPAbs32,                 T::F32,         T::F32                          
 OPCODE(FPAbs64,                 T::F64,         T::F64                                          )
 OPCODE(FPAdd32,                 T::F32,         T::F32,         T::F32                          )
 OPCODE(FPAdd64,                 T::F64,         T::F64,         T::F64                          )
+OPCODE(FPMul32,                 T::F32,         T::F32,         T::F32                          )
+OPCODE(FPMul64,                 T::F64,         T::F64,         T::F64                          )
 OPCODE(FPSub32,                 T::F32,         T::F32,         T::F32                          )
 OPCODE(FPSub64,                 T::F64,         T::F64,         T::F64                          )
 

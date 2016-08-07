@@ -292,6 +292,16 @@ IR::Value IREmitter::FPAdd64(const IR::Value& a, const IR::Value& b, bool fpscr_
     return Inst(IR::Opcode::FPAdd64, {a, b});
 }
 
+IR::Value IREmitter::FPMul32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPMul32, {a, b});
+}
+
+IR::Value IREmitter::FPMul64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPMul64, {a, b});
+}
+
 IR::Value IREmitter::FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
     return Inst(IR::Opcode::FPSub32, {a, b});
