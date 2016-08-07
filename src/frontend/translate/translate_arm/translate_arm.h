@@ -149,11 +149,11 @@ struct ArmTranslatorVisitor final {
     bool arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
 
     // Hint instructions
-    bool arm_PLD() { return InterpretThisInstruction(); }
-    bool arm_SEV() { return InterpretThisInstruction(); }
-    bool arm_WFE() { return InterpretThisInstruction(); }
-    bool arm_WFI() { return InterpretThisInstruction(); }
-    bool arm_YIELD() { return InterpretThisInstruction(); }
+    bool arm_PLD() { return true; }
+    bool arm_SEV() { return true; }
+    bool arm_WFE() { return true; }
+    bool arm_WFI() { return true; }
+    bool arm_YIELD() { return true; }
 
     // Load/Store instructions
     bool arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
