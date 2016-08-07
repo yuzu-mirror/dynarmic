@@ -65,7 +65,7 @@ EmitX64::BlockDescriptor* EmitX64::Emit(const Arm::LocationDescriptor descriptor
     reg_alloc.Reset();
 
     code->INT3();
-    CodePtr code_ptr = code->GetCodePtr();
+    const CodePtr code_ptr = code->GetCodePtr();
     basic_blocks[descriptor].code_ptr = code_ptr;
 
     EmitCondPrelude(block.cond, block.cond_failed, block.location);
@@ -96,6 +96,7 @@ EmitX64::BlockDescriptor* EmitX64::Emit(const Arm::LocationDescriptor descriptor
 
     reg_alloc.AssertNoMoreUses();
 
+    Patch(descriptor, code_ptr);
     basic_blocks[descriptor].size = code->GetCodePtr() - code_ptr;
     return &basic_blocks[descriptor];
 }
@@ -1522,6 +1523,14 @@ void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::Loca
 }
 
 void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
+    BlockDescriptor* next_bb = GetBasicBlock(terminal.next);
+    patch_jmp_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
+    if (next_bb) {
+        code->J_CC(CC_G, next_bb->code_ptr, true);
+    } else {
+        code->NOP(6); // Leave enough space for a jg instruction.
+    }
+
     code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.PC()));
     if (terminal.next.TFlag() != initial_location.TFlag()) {
         if (terminal.next.TFlag()) {
@@ -1556,8 +1565,21 @@ void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor init
     EmitTerminal(terminal.then_, initial_location);
 }
 
+void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
+    u8* const save_code_ptr = code->GetWritableCodePtr();
+
+    for (CodePtr location : patch_jmp_locations[desc]) {
+        code->SetCodePtr(const_cast<u8*>(location));
+        code->J_CC(CC_G, bb, true);
+        ASSERT(code->GetCodePtr() - location == 6);
+    }
+
+    code->SetCodePtr(save_code_ptr);
+}
+
 void EmitX64::ClearCache() {
     basic_blocks.clear();
+    patch_jmp_locations.clear();
 }
 
 } // namespace BackendX64

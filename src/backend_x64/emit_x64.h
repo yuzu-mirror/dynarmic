@@ -56,6 +56,7 @@ private:
     void EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location);
+    void Patch(Arm::LocationDescriptor desc, CodePtr bb);
 
     // Per-block state
     std::set<IR::Value*> inhibit_emission;
@@ -66,6 +67,7 @@ private:
     UserCallbacks cb;
     Jit* jit_interface;
     std::unordered_map<Arm::LocationDescriptor, BlockDescriptor, Arm::LocationDescriptorHash> basic_blocks;
+    std::unordered_map<Arm::LocationDescriptor, std::vector<CodePtr>, Arm::LocationDescriptorHash> patch_jmp_locations;
 };
 
 } // namespace BackendX64
