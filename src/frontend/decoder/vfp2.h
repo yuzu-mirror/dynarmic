@@ -64,10 +64,10 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     // cccc1110________----101-__-0----
 
     // Floating-point three-register data processing instructions
-    // VMLA
-    // VMLS
-    // VNMLA
-    // VNMLS
+    INST(&V::vfp2_VMLA,       "VMLA",                "cccc11100D00nnnndddd101zN0M0mmmm"),
+    INST(&V::vfp2_VMLS,       "VMLS",                "cccc11100D00nnnndddd101zN1M0mmmm"),
+    INST(&V::vfp2_VNMLS,      "VNMLS",               "cccc11100D01nnnndddd101zN0M0mmmm"),
+    INST(&V::vfp2_VNMLA,      "VNMLA",               "cccc11100D01nnnndddd101zN1M0mmmm"),
     INST(&V::vfp2_VMUL,       "VMUL",                "cccc11100D10nnnndddd101zN0M0mmmm"),
     INST(&V::vfp2_VNMUL,      "VNMUL",               "cccc11100D10nnnndddd101zN1M0mmmm"),
     INST(&V::vfp2_VADD,       "VADD",                "cccc11100D11nnnndddd101zN0M0mmmm"),
@@ -98,6 +98,9 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
 #undef INST
 
     };
+
+    if ((instruction & 0xF0000000) == 0xF0000000)
+        return boost::none; // Don't try matching any unconditional instructions.
 
     const auto matches_instruction = [instruction](const auto& matcher){ return matcher.Matches(instruction); };
 
