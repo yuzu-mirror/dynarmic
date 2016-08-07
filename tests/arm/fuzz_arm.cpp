@@ -167,8 +167,8 @@ public:
 
         return inst;
     }
-    u32 Bits() { return bits; }
-    u32 Mask() { return mask; }
+    u32 Bits() const { return bits; }
+    u32 Mask() const { return mask; }
 private:
     u32 bits = 0;
     u32 mask = 0;
@@ -432,68 +432,62 @@ TEST_CASE("VFP: VMOV (reg), VLDR", "[JitX64][vfp]") {
 }
 
 TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
-    const std::array<InstructionGenerator, 16> imm_instructions = {
-            {
-                    InstructionGenerator("cccc0010101Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0010100Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0010000Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0011110Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc00110111nnnn0000rrrrvvvvvvvv"),
-                    InstructionGenerator("cccc00110101nnnn0000rrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0010001Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0011101S0000ddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0011111S0000ddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0011100Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0010011Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0010111Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0010110Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc0010010Snnnnddddrrrrvvvvvvvv"),
-                    InstructionGenerator("cccc00110011nnnn0000rrrrvvvvvvvv"),
-                    InstructionGenerator("cccc00110001nnnn0000rrrrvvvvvvvv"),
-            }
-    };
+    const std::array<InstructionGenerator, 16> imm_instructions = {{
+        InstructionGenerator("cccc0010101Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0010100Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0010000Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0011110Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc00110111nnnn0000rrrrvvvvvvvv"),
+        InstructionGenerator("cccc00110101nnnn0000rrrrvvvvvvvv"),
+        InstructionGenerator("cccc0010001Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0011101S0000ddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0011111S0000ddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0011100Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0010011Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0010111Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0010110Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc0010010Snnnnddddrrrrvvvvvvvv"),
+        InstructionGenerator("cccc00110011nnnn0000rrrrvvvvvvvv"),
+        InstructionGenerator("cccc00110001nnnn0000rrrrvvvvvvvv"),
+    }};
 
-    const std::array<InstructionGenerator, 16> reg_instructions = {
-            {
-                    InstructionGenerator("cccc0000101Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0000100Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0000000Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0001110Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc00010111nnnn0000vvvvvrr0mmmm"),
-                    InstructionGenerator("cccc00010101nnnn0000vvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0000001Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0001101S0000ddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0001111S0000ddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0001100Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0000011Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0000111Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0000110Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc0000010Snnnnddddvvvvvrr0mmmm"),
-                    InstructionGenerator("cccc00010011nnnn0000vvvvvrr0mmmm"),
-                    InstructionGenerator("cccc00010001nnnn0000vvvvvrr0mmmm"),
-            }
-    };
+    const std::array<InstructionGenerator, 16> reg_instructions = {{
+        InstructionGenerator("cccc0000101Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0000100Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0000000Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0001110Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc00010111nnnn0000vvvvvrr0mmmm"),
+        InstructionGenerator("cccc00010101nnnn0000vvvvvrr0mmmm"),
+        InstructionGenerator("cccc0000001Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0001101S0000ddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0001111S0000ddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0001100Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0000011Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0000111Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0000110Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc0000010Snnnnddddvvvvvrr0mmmm"),
+        InstructionGenerator("cccc00010011nnnn0000vvvvvrr0mmmm"),
+        InstructionGenerator("cccc00010001nnnn0000vvvvvrr0mmmm"),
+    }};
 
-    const std::array<InstructionGenerator, 16> rsr_instructions = {
-            {
-                    InstructionGenerator("cccc0000101Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0000100Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0000000Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0001110Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc00010111nnnn0000ssss0rr1mmmm"),
-                    InstructionGenerator("cccc00010101nnnn0000ssss0rr1mmmm"),
-                    InstructionGenerator("cccc0000001Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0001101S0000ddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0001111S0000ddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0001100Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0000011Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0000111Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0000110Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc0000010Snnnnddddssss0rr1mmmm"),
-                    InstructionGenerator("cccc00010011nnnn0000ssss0rr1mmmm"),
-                    InstructionGenerator("cccc00010001nnnn0000ssss0rr1mmmm"),
-            }
-    };
+    const std::array<InstructionGenerator, 16> rsr_instructions = {{
+        InstructionGenerator("cccc0000101Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0000100Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0000000Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0001110Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc00010111nnnn0000ssss0rr1mmmm"),
+        InstructionGenerator("cccc00010101nnnn0000ssss0rr1mmmm"),
+        InstructionGenerator("cccc0000001Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0001101S0000ddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0001111S0000ddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0001100Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0000011Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0000111Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0000110Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc0000010Snnnnddddssss0rr1mmmm"),
+        InstructionGenerator("cccc00010011nnnn0000ssss0rr1mmmm"),
+        InstructionGenerator("cccc00010001nnnn0000ssss0rr1mmmm"),
+    }};
 
     auto instruction_select = [&](bool Rd_can_be_r15) -> auto {
         return [&, Rd_can_be_r15]() -> u32 {
@@ -560,6 +554,150 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
     }
 }
 
+TEST_CASE("Fuzz ARM load/store instructions (byte, half-word, word)", "[JitX64]") {
+    const std::array<InstructionGenerator, 17> instructions = {{
+        InstructionGenerator("cccc010pu0w1nnnnddddvvvvvvvvvvvv"), // LDR_imm
+        InstructionGenerator("cccc011pu0w1nnnnddddvvvvvrr0mmmm"), // LDR_reg
+        InstructionGenerator("cccc010pu1w1nnnnddddvvvvvvvvvvvv"), // LDRB_imm
+        InstructionGenerator("cccc011pu1w1nnnnddddvvvvvrr0mmmm"), // LDRB_reg
+        InstructionGenerator("cccc010pu0w0nnnnddddvvvvvvvvvvvv"), // STR_imm
+        InstructionGenerator("cccc011pu0w0nnnnddddvvvvvrr0mmmm"), // STR_reg
+        InstructionGenerator("cccc010pu1w0nnnnddddvvvvvvvvvvvv"), // STRB_imm
+        InstructionGenerator("cccc011pu1w0nnnnddddvvvvvrr0mmmm"), // STRB_reg
+        InstructionGenerator("cccc000pu1w1nnnnddddvvvv1011vvvv"), // LDRH_imm
+        InstructionGenerator("cccc000pu0w1nnnndddd00001011mmmm"), // LDRH_reg
+        InstructionGenerator("cccc000pu1w1nnnnddddvvvv1101vvvv"), // LDRSB_imm
+        InstructionGenerator("cccc000pu0w1nnnndddd00001101mmmm"), // LDRSB_reg
+        InstructionGenerator("cccc000pu1w1nnnnddddvvvv1111vvvv"), // LDRSH_imm
+        InstructionGenerator("cccc000pu0w1nnnndddd00001111mmmm"), // LDRSH_reg
+        InstructionGenerator("cccc000pu1w0nnnnddddvvvv1011vvvv"), // STRH_imm
+        InstructionGenerator("cccc000pu0w0nnnndddd00001011mmmm"), // STRH_reg
+        InstructionGenerator("1111000100000001000000e000000000"), // SETEND
+    }};
+
+    auto instruction_select = [&]() -> u32 {
+        size_t inst_index = RandInt<size_t>(0, instructions.size() - 1);
+
+        u32 cond = 0xE;
+        // Have a one-in-twenty-five chance of actually having a cond.
+        if (RandInt(1, 25) == 1) {
+            cond = RandInt<u32>(0x0, 0xD);
+        }
+
+        u32 Rn = RandInt<u32>(0, 14);
+        u32 Rd = RandInt<u32>(0, 14);
+        u32 W = 0;
+        u32 P = RandInt<u32>(0, 1);
+        if (P) W = RandInt<u32>(0, 1);
+        u32 U = RandInt<u32>(0, 1);
+        u32 rand = RandInt<u32>(0, 0xFF);
+        u32 Rm = RandInt<u32>(0, 14);
+
+        if (W) {
+            while (Rn == Rd) {
+                Rn = RandInt<u32>(0, 14);
+                Rd = RandInt<u32>(0, 14);
+            }
+        }
+
+        u32 assemble_randoms = (Rm << 0) | (rand << 4) | (Rd << 12) | (Rn << 16) | (W << 21) | (U << 23) | (P << 24) | (cond << 28);
+
+        return instructions[inst_index].Bits() | (assemble_randoms & (~instructions[inst_index].Mask()));
+    };
+
+    SECTION("short blocks") {
+        FuzzJitArm(5, 6, 10000, instruction_select);
+    }
+}
+
+TEST_CASE("Fuzz ARM load/store instructions (double-word)", "[JitX64]") {
+    const std::array<InstructionGenerator, 4> instructions = {{
+        InstructionGenerator("cccc000pu1w0nnnnddddvvvv1101vvvv"), // LDRD_imm
+        InstructionGenerator("cccc000pu0w0nnnndddd00001101mmmm"), // LDRD_reg
+        InstructionGenerator("cccc000pu1w0nnnnddddvvvv1111vvvv"), // STRD_imm
+        InstructionGenerator("cccc000pu0w0nnnndddd00001111mmmm"), // STRD_reg
+    }};
+
+    auto instruction_select = [&]() -> u32 {
+        size_t inst_index = RandInt<size_t>(0, instructions.size() - 1);
+
+        u32 cond = 0xE;
+        // Have a one-in-twenty-five chance of actually having a cond.
+        if (RandInt(1, 25) == 1) {
+            cond = RandInt<u32>(0x0, 0xD);
+        }
+
+        u32 Rn = RandInt<u32>(0, 6) * 2;
+        u32 Rd = RandInt<u32>(0, 6) * 2;
+        u32 W = 0;
+        u32 P = RandInt<u32>(0, 1);
+        if (P) W = RandInt<u32>(0, 1);
+        u32 U = RandInt<u32>(0, 1);
+        u32 rand = RandInt<u32>(0, 0xF);
+        u32 Rm = RandInt<u32>(0, 14);
+
+        if (W) {
+            while (Rn == Rd) {
+                Rn = RandInt<u32>(0, 6) * 2;
+                Rd = RandInt<u32>(0, 6) * 2;
+            }
+        }
+
+        while (Rm == Rd || Rm == Rd + 1) {
+            Rm = RandInt<u32>(0, 14);
+        }
+
+        u32 assemble_randoms = (Rm << 0) | (rand << 4) | (Rd << 12) | (Rn << 16) | (W << 21) | (U << 23) | (P << 24) | (cond << 28);
+
+        return instructions[inst_index].Bits() | (assemble_randoms & (~instructions[inst_index].Mask()));
+    };
+
+    SECTION("short blocks") {
+        FuzzJitArm(5, 6, 10000, instruction_select);
+    }
+}
+
+TEST_CASE("Fuzz ARM load/store multiple instructions", "[JitX64]") {
+    const std::array<InstructionGenerator, 2> instructions = {{
+        InstructionGenerator("cccc100pu0w1nnnnxxxxxxxxxxxxxxxx"), // LDM
+        InstructionGenerator("cccc100pu0w0nnnnxxxxxxxxxxxxxxxx"), // STM
+    }};
+
+    auto instruction_select = [&]() -> u32 {
+        size_t inst_index = RandInt<size_t>(0, instructions.size() - 1);
+
+        u32 cond = 0xE;
+        // Have a one-in-twenty-five chance of actually having a cond.
+        if (RandInt(1, 25) == 1) {
+            cond = RandInt<u32>(0x0, 0xD);
+        }
+
+        u32 reg_list = RandInt<u32>(1, 0xFFFF);
+        u32 Rn = RandInt<u32>(0, 14);
+        u32 flags = RandInt<u32>(0, 0xF);
+
+        while (true) {
+            if (inst_index == 1 && (flags & 2)) {
+                if (reg_list & (1 << Rn))
+                    reg_list &= ~((1 << Rn) - 1);
+            } else if (inst_index == 0 && (flags & 2)) {
+                reg_list &= ~(1 << Rn);
+            }
+
+            if (reg_list)
+                break;
+
+            reg_list = RandInt<u32>(1, 0xFFFF);
+        }
+
+        u32 assemble_randoms = (reg_list << 0) | (Rn << 16) | (flags << 24) | (cond << 28);
+
+        return instructions[inst_index].Bits() | (assemble_randoms & (~instructions[inst_index].Mask()));
+    };
+
+    FuzzJitArm(1, 1, 10000, instruction_select);
+}
+
 TEST_CASE("Fuzz ARM branch instructions", "[JitX64]") {
     const std::array<InstructionGenerator, 6> instructions = {{
         InstructionGenerator("1111101hvvvvvvvvvvvvvvvvvvvvvvvv"),
@@ -581,13 +719,11 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
         return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111;
     };
 
-    const std::array<InstructionGenerator, 3> rev_instructions = {
-        {
-            InstructionGenerator("cccc011010111111dddd11110011mmmm", is_valid),
-            InstructionGenerator("cccc011010111111dddd11111011mmmm", is_valid),
-            InstructionGenerator("cccc011011111111dddd11111011mmmm", is_valid),
-        }
-    };
+    const std::array<InstructionGenerator, 3> rev_instructions = {{
+        InstructionGenerator("cccc011010111111dddd11110011mmmm", is_valid),
+        InstructionGenerator("cccc011010111111dddd11111011mmmm", is_valid),
+        InstructionGenerator("cccc011011111111dddd11111011mmmm", is_valid),
+    }};
 
     SECTION("Reverse tests") {
         FuzzJitArm(1, 1, 10000, [&rev_instructions]() -> u32 {
@@ -596,133 +732,7 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
     }
 }
 
-/*
-TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
-    auto forbid_r15 = [](u32 inst) -> bool {
-        return Bits<12, 15>(inst) != 0b1111;
-    };
 
-    auto forbid_r14_and_r15 = [](u32 inst) -> bool {
-        return Bits<13, 15>(inst) != 0b111;
-    };
-
-    const std::array<InstructionGenerator, 4> doubleword_instructions = {
-        {
-            // Load
-            InstructionGenerator("0000000pu1w0nnnnddd0vvvv1101vvvv", forbid_r14_and_r15),
-            InstructionGenerator("0000000pu0w0nnnnddd000001101mmmm", forbid_r14_and_r15),
-
-            // Store
-            InstructionGenerator("0000000pu1w0nnnnddd0vvvv1111vvvv", forbid_r14_and_r15),
-            InstructionGenerator("0000000pu0w0nnnnddd000001111mmmm", forbid_r14_and_r15),
-        }
-    };
-
-    const std::array<InstructionGenerator, 8> word_instructions = {
-        {
-            // Load
-            InstructionGenerator("0000010pu0w1nnnnddddvvvvvvvvvvvv", forbid_r15),
-            InstructionGenerator("0000011pu0w1nnnnddddvvvvvrr0mmmm", forbid_r15),
-            InstructionGenerator("00000100u011nnnnttttmmmmmmmmmmmm", forbid_r15),
-            InstructionGenerator("00000110u011nnnnttttvvvvvrr0mmmm", forbid_r15),
-
-            // Store
-            InstructionGenerator("0000010pu0w0nnnnddddvvvvvvvvvvvv", forbid_r15),
-            InstructionGenerator("0000011pu0w0nnnnddddvvvvvrr0mmmm", forbid_r15),
-            InstructionGenerator("00000100u010nnnnttttvvvvvvvvvvvv", forbid_r15),
-            InstructionGenerator("00000110u010nnnnttttvvvvvrr0mmmm", forbid_r15),
-        }
-    };
-
-    const std::array<InstructionGenerator, 6> halfword_instructions = {
-        {
-            // Load
-            InstructionGenerator("0000000pu1w1nnnnddddvvvv1011vvvv", forbid_r15),
-            InstructionGenerator("0000000pu0w1nnnndddd00001011mmmm", forbid_r15),
-            // InstructionGenerator("----0000-111------------1011----"), // LDRHT (A1) Not available in ARMv6K
-            // InstructionGenerator("----0000-011--------00001011----"), // LDRHT (A2) Not available in ARMv6K
-            InstructionGenerator("0000000pu1w1nnnnddddvvvv1111vvvv", forbid_r15),
-            InstructionGenerator("0000000pu0w1nnnndddd00001111mmmm", forbid_r15),
-            // InstructionGenerator("----0000-111------------1111----"), // LDRSHT (A1) Not available in ARMv6K
-            // InstructionGenerator("----0000-011--------00001111----"), // LDRSHT (A2) Not available in ARMv6K
-
-
-            // Store
-            InstructionGenerator("0000000pu1w0nnnnddddvvvv1011vvvv", forbid_r15),
-            InstructionGenerator("0000000pu0w0nnnndddd00001011mmmm", forbid_r15),
-            // InstructionGenerator("----0000-110------------1011----"), // STRHT (A1) Not available in ARMv6K
-            // InstructionGenerator("----0000-010--------00001011----"), // STRHT (A2) Not available in ARMv6K
-        }
-    };
-
-    const std::array<InstructionGenerator, 10> byte_instructions = {
-        {
-            // Load
-            InstructionGenerator("0000010pu1w1nnnnddddvvvvvvvvvvvv", forbid_r15),
-            InstructionGenerator("0000011pu1w1nnnnddddvvvvvrr0mmmm", forbid_r15),
-            InstructionGenerator("00000100u111nnnnttttvvvvvvvvvvvv", forbid_r15),
-            InstructionGenerator("00000110u111nnnnttttvvvvvrr0mmmm", forbid_r15),
-            InstructionGenerator("0000000pu1w1nnnnddddvvvv1101vvvv", forbid_r15),
-            InstructionGenerator("0000000pu0w1nnnndddd00001101mmmm", forbid_r15),
-            // InstructionGenerator("----0000-111------------1101----"), // LDRSBT (A1) Not available in ARMv6K
-            // InstructionGenerator("----0000-011--------00001101----"), // LDRSBT (A2) Not available in ARMv6K
-
-
-            // Store
-            InstructionGenerator("0000010pu1w0nnnnddddvvvvvvvvvvvv", forbid_r15),
-            InstructionGenerator("0000011pu1w0nnnnddddvvvvvrr0mmmm", forbid_r15),
-            InstructionGenerator("00000100u110nnnnttttvvvvvvvvvvvv", forbid_r15),
-            InstructionGenerator("00000110u110nnnnttttvvvvvrr0mmmm", forbid_r15),
-        }
-    };
-
-    SECTION("Doubleword tests") {
-        FuzzJitArm(1, 1, 10000, [&doubleword_instructions]() -> u32 {
-            return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate();
-        });
-    }
-
-    SECTION("Word tests") {
-        FuzzJitArm(1, 1, 10000, [&word_instructions]() -> u32 {
-            return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate();
-        });
-    }
-
-    SECTION("Halfword tests") {
-        FuzzJitArm(1, 1, 10000, [&halfword_instructions]() -> u32 {
-            return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate();
-        });
-    }
-
-    SECTION("Byte tests") {
-        FuzzJitArm(1, 1, 10000, [&byte_instructions]() -> u32 {
-            return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate();
-        });
-    }
-
-    SECTION("Mixed tests") {
-        FuzzJitArm(10, 10, 10000, [&]() -> u32 {
-            switch (RandInt(0, 3)) {
-            case 0:
-                return doubleword_instructions[RandInt<size_t>(0, doubleword_instructions.size() - 1)].Generate();
-            case 1:
-                return word_instructions[RandInt<size_t>(0, word_instructions.size() - 1)].Generate();
-            case 2:
-                return halfword_instructions[RandInt<size_t>(0, halfword_instructions.size() - 1)].Generate();
-            case 3:
-                return byte_instructions[RandInt<size_t>(0, byte_instructions.size() - 1)].Generate();
-            }
-
-            return 0;
-        });
-    }
-
-    SECTION("Write to PC") {
-        // TODO
-        FAIL();
-    }
-}
-*/
 
 TEST_CASE("Fuzz ARM extension instructions", "[JitX64]") {
     const auto is_valid = [](u32 instr) -> bool {
@@ -730,27 +740,23 @@ TEST_CASE("Fuzz ARM extension instructions", "[JitX64]") {
         return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111;
     };
 
-    const std::array<InstructionGenerator, 6> signed_instructions = {
-        {
-            InstructionGenerator("cccc011010101111ddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc011010001111ddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc011010111111ddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc01101010nnnnddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc01101000nnnnddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc01101011nnnnddddrr000111mmmm", is_valid),
-        }
-    };
+    const std::array<InstructionGenerator, 6> signed_instructions = {{
+        InstructionGenerator("cccc011010101111ddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc011010001111ddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc011010111111ddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc01101010nnnnddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc01101000nnnnddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc01101011nnnnddddrr000111mmmm", is_valid),
+    }};
 
-    const std::array<InstructionGenerator, 6> unsigned_instructions = {
-        {
-            InstructionGenerator("cccc011011101111ddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc011011001111ddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc011011111111ddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc01101110nnnnddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc01101100nnnnddddrr000111mmmm", is_valid),
-            InstructionGenerator("cccc01101111nnnnddddrr000111mmmm", is_valid),
-        }
-    };
+    const std::array<InstructionGenerator, 6> unsigned_instructions = {{
+        InstructionGenerator("cccc011011101111ddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc011011001111ddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc011011111111ddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc01101110nnnnddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc01101100nnnnddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc01101111nnnnddddrr000111mmmm", is_valid),
+    }};
 
     SECTION("Signed extension") {
         FuzzJitArm(1, 1, 10000, [&signed_instructions]() -> u32 {
@@ -780,36 +786,34 @@ TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
                Bits<12, 15>(inst) != Bits<16, 19>(inst);
     };
 
-    const std::array<InstructionGenerator, 10> instructions = {
-            {
-                    InstructionGenerator("cccc0000001Sddddaaaammmm1001nnnn", validate_d_a_m_n), // MLA
-                    InstructionGenerator("cccc0000000Sdddd0000mmmm1001nnnn", validate_d_m_n),   // MUL
+    const std::array<InstructionGenerator, 10> instructions = {{
+        InstructionGenerator("cccc0000001Sddddaaaammmm1001nnnn", validate_d_a_m_n), // MLA
+        InstructionGenerator("cccc0000000Sdddd0000mmmm1001nnnn", validate_d_m_n),   // MUL
 
-                    InstructionGenerator("cccc0000111Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMLAL
-                    InstructionGenerator("cccc0000110Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMULL
-                    InstructionGenerator("cccc00000100ddddaaaammmm1001nnnn", validate_h_l_m_n), // UMAAL
-                    InstructionGenerator("cccc0000101Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMLAL
-                    InstructionGenerator("cccc0000100Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMULL
+        InstructionGenerator("cccc0000111Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMLAL
+        InstructionGenerator("cccc0000110Sddddaaaammmm1001nnnn", validate_h_l_m_n), // SMULL
+        InstructionGenerator("cccc00000100ddddaaaammmm1001nnnn", validate_h_l_m_n), // UMAAL
+        InstructionGenerator("cccc0000101Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMLAL
+        InstructionGenerator("cccc0000100Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMULL
 
-                    //InstructionGenerator("cccc00010100ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLALxy
-                    //InstructionGenerator("cccc00010000ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLAxy
-                    //InstructionGenerator("cccc00010110dddd0000mmmm1xy0nnnn", validate_d_m_n),   // SMULxy
+        //InstructionGenerator("cccc00010100ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLALxy
+        //InstructionGenerator("cccc00010000ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLAxy
+        //InstructionGenerator("cccc00010110dddd0000mmmm1xy0nnnn", validate_d_m_n),   // SMULxy
 
-                    //InstructionGenerator("cccc00010010ddddaaaammmm1y00nnnn", validate_d_a_m_n), // SMLAWy
-                    //InstructionGenerator("cccc00010010dddd0000mmmm1y10nnnn", validate_d_m_n),   // SMULWy
+        //InstructionGenerator("cccc00010010ddddaaaammmm1y00nnnn", validate_d_a_m_n), // SMLAWy
+        //InstructionGenerator("cccc00010010dddd0000mmmm1y10nnnn", validate_d_m_n),   // SMULWy
 
-                    InstructionGenerator("cccc01110101dddd1111mmmm00R1nnnn", validate_d_m_n),   // SMMUL
-                    InstructionGenerator("cccc01110101ddddaaaammmm00R1nnnn", validate_d_a_m_n), // SMMLA
-                    InstructionGenerator("cccc01110101ddddaaaammmm11R1nnnn", validate_d_a_m_n), // SMMLS
+        InstructionGenerator("cccc01110101dddd1111mmmm00R1nnnn", validate_d_m_n),   // SMMUL
+        InstructionGenerator("cccc01110101ddddaaaammmm00R1nnnn", validate_d_a_m_n), // SMMLA
+        InstructionGenerator("cccc01110101ddddaaaammmm11R1nnnn", validate_d_a_m_n), // SMMLS
 
-                    //InstructionGenerator("cccc01110000ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLAD
-                    //InstructionGenerator("cccc01110100ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLALD
-                    //InstructionGenerator("cccc01110000ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSD
-                    //InstructionGenerator("cccc01110100ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSLD
-                    //InstructionGenerator("cccc01110000dddd1111mmmm00M1nnnn", validate_d_m_n),   // SMUAD
-                    //InstructionGenerator("cccc01110000dddd1111mmmm01M1nnnn", validate_d_m_n),   // SMUSD
-            }
-    };
+        //InstructionGenerator("cccc01110000ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLAD
+        //InstructionGenerator("cccc01110100ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLALD
+        //InstructionGenerator("cccc01110000ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSD
+        //InstructionGenerator("cccc01110100ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSLD
+        //InstructionGenerator("cccc01110000dddd1111mmmm00M1nnnn", validate_d_m_n),   // SMUAD
+        //InstructionGenerator("cccc01110000dddd1111mmmm01M1nnnn", validate_d_m_n),   // SMUSD
+    }};
 
     SECTION("Multiply") {
         FuzzJitArm(2, 2, 10000, [&]() -> u32 {
