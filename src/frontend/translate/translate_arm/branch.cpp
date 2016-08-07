@@ -44,6 +44,8 @@ bool ArmTranslatorVisitor::arm_BLX_imm(bool H, Imm24 imm24) {
 }
 
 bool ArmTranslatorVisitor::arm_BLX_reg(Cond cond, Reg m) {
+    if (m == Reg::PC)
+        return UnpredictableInstruction();
     // BLX <Rm>
     if (ConditionPassed(cond)) {
         ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));

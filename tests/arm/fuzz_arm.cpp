@@ -563,7 +563,8 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
 TEST_CASE("Fuzz ARM branch instructions", "[JitX64]") {
     const std::array<InstructionGenerator, 6> instructions = {{
         InstructionGenerator("1111101hvvvvvvvvvvvvvvvvvvvvvvvv"),
-        InstructionGenerator("cccc000100101111111111110011mmmm"),
+        InstructionGenerator("cccc000100101111111111110011mmmm",
+                             [](u32 instr) { return Bits<0, 3>(instr) != 0b1111; }), // R15 is UNPREDICTABLE
         InstructionGenerator("cccc1010vvvvvvvvvvvvvvvvvvvvvvvv"),
         InstructionGenerator("cccc1011vvvvvvvvvvvvvvvvvvvvvvvv"),
         InstructionGenerator("cccc000100101111111111110001mmmm"),
