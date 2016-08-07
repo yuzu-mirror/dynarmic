@@ -314,6 +314,11 @@ void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1
         }
     }
 
+    // Flush all xmm registers
+    for (auto xmm : any_xmm) {
+        ScratchRegister({xmm});
+    }
+
     ScratchRegister({HostLoc::RSP});
     code->MOV(64, Gen::R(Gen::RSP), Gen::MDisp(Gen::R15, offsetof(JitState, save_host_RSP)));
 }
