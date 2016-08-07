@@ -37,6 +37,7 @@ OPCODE(IsZero,                  T::U1,          T::U32                          
 OPCODE(IsZero64,                T::U1,          T::U64                                          )
 OPCODE(LogicalShiftLeft,        T::U32,         T::U32,         T::U8,          T::U1           )
 OPCODE(LogicalShiftRight,       T::U32,         T::U32,         T::U8,          T::U1           )
+OPCODE(LogicalShiftRight64,     T::U64,         T::U64,         T::U8                           )
 OPCODE(ArithmeticShiftRight,    T::U32,         T::U32,         T::U8,          T::U1           )
 OPCODE(RotateRight,             T::U32,         T::U32,         T::U8,          T::U1           )
 OPCODE(RotateRightExtended,     T::U32,         T::U32,         T::U1                           )

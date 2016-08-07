@@ -169,6 +169,10 @@ IREmitter::ResultAndCarry IREmitter::LogicalShiftRight(const IR::Value& value_in
     return {result, carry_out};
 }
 
+IR::Value IREmitter::LogicalShiftRight64(const IR::Value& value_in, const IR::Value& shift_amount) {
+    return Inst(IR::Opcode::LogicalShiftRight64, {value_in, shift_amount});
+}
+
 IREmitter::ResultAndCarry IREmitter::ArithmeticShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in) {
     auto result = Inst(IR::Opcode::ArithmeticShiftRight, {value_in, shift_amount, carry_in});
     auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});

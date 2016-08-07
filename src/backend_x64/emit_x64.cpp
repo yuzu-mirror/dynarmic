@@ -592,6 +592,17 @@ void EmitX64::EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitLogicalShiftRight64(IR::Block& block, IR::Inst* inst) {
+    X64Reg result = reg_alloc.UseDefRegister(inst->GetArg(0), inst, any_gpr);
+
+    auto shift_arg = inst->GetArg(1);
+    ASSERT_MSG(shift_arg.IsImmediate(), "variable 64 bit shifts are not implemented");
+    u8 shift = shift_arg.GetU8();
+    ASSERT_MSG(shift < 64, "shift width clamping is not implemented");
+
+    code->SHR(64, R(result), Imm8(shift));
+}
+
 void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
     auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
 
