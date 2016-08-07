@@ -17,8 +17,10 @@ bool ArmTranslatorVisitor::arm_SVC(Cond cond, Imm24 imm24) {
     u32 imm32 = imm24;
     // SVC<c> #<imm24>
     if (ConditionPassed(cond)) {
+        ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
         ir.CallSupervisor(ir.Imm32(imm32));
-        return LinkToNextInstruction();
+        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        return false;
     }
     return true;
 }

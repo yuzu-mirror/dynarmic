@@ -769,6 +769,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_SVC(Imm8 imm8) {
         u32 imm32 = imm8;
         // SVC #<imm8>
+        ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 2));
         ir.CallSupervisor(ir.Imm32(imm32));
         ir.SetTerm(IR::Term::ReturnToDispatch{});
         return false;
