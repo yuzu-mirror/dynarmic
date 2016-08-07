@@ -36,6 +36,25 @@ bool ArmTranslatorVisitor::vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bo
     return true;
 }
 
+bool ArmTranslatorVisitor::vfp2_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
+
+    ExtReg d = ToExtReg(sz, Vd, D);
+    ExtReg n = ToExtReg(sz, Vn, N);
+    ExtReg m = ToExtReg(sz, Vm, M);
+    // VSUB.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(n);
+        auto b = ir.GetExtendedRegister(m);
+        auto result = sz
+                      ? ir.FPSub64(a, b, true)
+                      : ir.FPSub32(a, b, true);
+        ir.SetExtendedRegister(d, result);
+    }
+    return true;
+}
+
 bool ArmTranslatorVisitor::vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
     if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions

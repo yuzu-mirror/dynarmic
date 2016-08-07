@@ -96,6 +96,8 @@ public:
     IR::Value FPAbs64(const IR::Value& a);
     IR::Value FPAdd32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
     IR::Value FPAdd64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
+    IR::Value FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
+    IR::Value FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
 
     IR::Value ReadMemory8(const IR::Value& vaddr);
     IR::Value ReadMemory16(const IR::Value& vaddr);

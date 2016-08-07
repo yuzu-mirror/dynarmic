@@ -64,6 +64,8 @@ OPCODE(FPAbs32,                 T::F32,         T::F32                          
 OPCODE(FPAbs64,                 T::F64,         T::F64                                          )
 OPCODE(FPAdd32,                 T::F32,         T::F32,         T::F32                          )
 OPCODE(FPAdd64,                 T::F64,         T::F64,         T::F64                          )
+OPCODE(FPSub32,                 T::F32,         T::F32,         T::F32                          )
+OPCODE(FPSub64,                 T::F64,         T::F64,         T::F64                          )
 
 // Memory access
 OPCODE(ReadMemory8,             T::U8,          T::U32                                          )

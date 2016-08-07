@@ -71,7 +71,7 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     // VNMUL
     // VMUL
     INST(&V::vfp2_VADD,       "VADD",                "cccc11100D11nnnndddd101zN0M0mmmm"),
-    // VSUB
+    INST(&V::vfp2_VSUB,       "VSUB",                "cccc11100D11nnnndddd101zN1M0mmmm"),
     // VDIV
 
     // Floating-point other instructions

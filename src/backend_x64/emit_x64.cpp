@@ -1148,6 +1148,48 @@ void EmitX64::EmitFPAdd64(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitFPSub32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+    X64Reg operand = reg_alloc.UseRegister(b, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero32(code, result, gpr_scratch);
+        DenormalsAreZero32(code, operand, gpr_scratch);
+    }
+    code->SUBSS(result, R(operand));
+    if (block.location.FPSCR_FTZ()) {
+        FlushToZero32(code, result, gpr_scratch);
+    }
+    if (block.location.FPSCR_DN()) {
+        DefaultNaN32(code, routines, result);
+    }
+}
+
+void EmitX64::EmitFPSub64(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+    X64Reg operand = reg_alloc.UseRegister(b, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero64(code, routines, result, gpr_scratch);
+        DenormalsAreZero64(code, routines, operand, gpr_scratch);
+    }
+    code->SUBSD(result, R(operand));
+    if (block.location.FPSCR_FTZ()) {
+        FlushToZero64(code, routines, result, gpr_scratch);
+    }
+    if (block.location.FPSCR_DN()) {
+        DefaultNaN64(code, routines, result);
+    }
+}
+
 void EmitX64::EmitReadMemory8(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(inst, inst->GetArg(0));
 
