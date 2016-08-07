@@ -1168,6 +1168,34 @@ static void FPTwoOp64(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, 
     }
 }
 
+void EmitX64::EmitTransferFromFP32(IR::Block& block, IR::Inst* inst) {
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
+    X64Reg source = reg_alloc.UseRegister(inst->GetArg(0), any_xmm);
+    // TODO: Eliminate this.
+    code->MOVD_xmm(R(result), source);
+}
+
+void EmitX64::EmitTransferFromFP64(IR::Block& block, IR::Inst* inst) {
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
+    X64Reg source = reg_alloc.UseRegister(inst->GetArg(0), any_xmm);
+    // TODO: Eliminate this.
+    code->MOVQ_xmm(R(result), source);
+}
+
+void EmitX64::EmitTransferToFP32(IR::Block& block, IR::Inst* inst) {
+    X64Reg result = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg source = reg_alloc.UseRegister(inst->GetArg(0), any_gpr);
+    // TODO: Eliminate this.
+    code->MOVD_xmm(result, R(source));
+}
+
+void EmitX64::EmitTransferToFP64(IR::Block& block, IR::Inst* inst) {
+    X64Reg result = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg source = reg_alloc.UseRegister(inst->GetArg(0), any_gpr);
+    // TODO: Eliminate this.
+    code->MOVQ_xmm(result, R(source));
+}
+
 void EmitX64::EmitFPAbs32(IR::Block&, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
 

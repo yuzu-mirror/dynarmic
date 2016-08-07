@@ -92,6 +92,10 @@ public:
     IR::Value ByteReverseHalf(const IR::Value& a);
     IR::Value ByteReverseDual(const IR::Value& a);
 
+    IR::Value TransferToFP32(const IR::Value& a);
+    IR::Value TransferToFP64(const IR::Value& a);
+    IR::Value TransferFromFP32(const IR::Value& a);
+    IR::Value TransferFromFP64(const IR::Value& a);
     IR::Value FPAbs32(const IR::Value& a);
     IR::Value FPAbs64(const IR::Value& a);
     IR::Value FPAdd32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);

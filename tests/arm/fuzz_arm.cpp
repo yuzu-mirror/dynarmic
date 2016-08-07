@@ -26,6 +26,8 @@
 #include <signal.h>
 #endif
 
+using Dynarmic::Common::Bits;
+
 struct WriteRecord {
     size_t size;
     u32 address;
@@ -393,6 +395,30 @@ TEST_CASE("vfp: vadd", "[vfp]") {
     }
 }
 
+TEST_CASE("VFP: VMOV", "[JitX64][vfp]") {
+    const auto is_valid = [](u32 instr) -> bool {
+        return Bits<0, 6>(instr) != 0b111111
+                && Bits<12, 15>(instr) != 0b1111
+                && Bits<16, 19>(instr) != 0b1111
+                && Bits<12, 15>(instr) != Bits<16, 19>(instr);
+    };
+
+    const std::array<InstructionGenerator, 8> instructions = {{
+        InstructionGenerator("cccc11100000ddddtttt1011D0010000", is_valid),
+        InstructionGenerator("cccc11100001nnnntttt1011N0010000", is_valid),
+        InstructionGenerator("cccc11100000nnnntttt1010N0010000", is_valid),
+        InstructionGenerator("cccc11100001nnnntttt1010N0010000", is_valid),
+        InstructionGenerator("cccc11000100uuuutttt101000M1mmmm", is_valid),
+        InstructionGenerator("cccc11000101uuuutttt101000M1mmmm", is_valid),
+        InstructionGenerator("cccc11000100uuuutttt101100M1mmmm", is_valid),
+        InstructionGenerator("cccc11000101uuuutttt101100M1mmmm", is_valid),
+    }};
+
+    FuzzJitArm(1, 1, 10000, [&instructions]() -> u32 {
+        return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+    });
+}
+
 TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
     const std::array<InstructionGenerator, 16> imm_instructions = {
             {
@@ -525,7 +551,7 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
 TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
     const auto is_valid = [](u32 instr) -> bool {
         // R15 is UNPREDICTABLE
-        return Dynarmic::Common::Bits<0, 3>(instr) != 0b1111 && Dynarmic::Common::Bits<12, 15>(instr) != 0b1111;
+        return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111;
     };
 
     const std::array<InstructionGenerator, 3> rev_instructions = {
@@ -546,11 +572,11 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
 /*
 TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
     auto forbid_r15 = [](u32 inst) -> bool {
-        return Dynarmic::Common::Bits<12, 15>(inst) != 0b1111;
+        return Bits<12, 15>(inst) != 0b1111;
     };
 
     auto forbid_r14_and_r15 = [](u32 inst) -> bool {
-        return Dynarmic::Common::Bits<13, 15>(inst) != 0b111;
+        return Bits<13, 15>(inst) != 0b111;
     };
 
     const std::array<InstructionGenerator, 4> doubleword_instructions = {
@@ -674,7 +700,7 @@ TEST_CASE("Fuzz ARM Load/Store instructions", "[JitX64]") {
 TEST_CASE("Fuzz ARM extension instructions", "[JitX64]") {
     const auto is_valid = [](u32 instr) -> bool {
         // R15 as Rd or Rm is UNPREDICTABLE
-        return Dynarmic::Common::Bits<0, 3>(instr) != 0b1111 && Dynarmic::Common::Bits<12, 15>(instr) != 0b1111;
+        return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111;
     };
 
     const std::array<InstructionGenerator, 6> signed_instructions = {
@@ -714,17 +740,17 @@ TEST_CASE("Fuzz ARM extension instructions", "[JitX64]") {
 
 TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
     auto validate_d_m_n = [](u32 inst) -> bool {
-        return Dynarmic::Common::Bits<16, 19>(inst) != 15 &&
-               Dynarmic::Common::Bits<8, 11>(inst) != 15 &&
-               Dynarmic::Common::Bits<0, 3>(inst) != 15;
+        return Bits<16, 19>(inst) != 15 &&
+               Bits<8, 11>(inst) != 15 &&
+               Bits<0, 3>(inst) != 15;
     };
     auto validate_d_a_m_n = [&](u32 inst) -> bool {
         return validate_d_m_n(inst) &&
-               Dynarmic::Common::Bits<12, 15>(inst) != 15;
+               Bits<12, 15>(inst) != 15;
     };
     auto validate_h_l_m_n = [&](u32 inst) -> bool {
         return validate_d_a_m_n(inst) &&
-               Dynarmic::Common::Bits<12, 15>(inst) != Dynarmic::Common::Bits<16, 19>(inst);
+               Bits<12, 15>(inst) != Bits<16, 19>(inst);
     };
 
     const std::array<InstructionGenerator, 10> instructions = {

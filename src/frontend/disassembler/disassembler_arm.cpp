@@ -92,6 +92,16 @@ public:
         return Common::StringFromFormat("%c%zu", dp_operation ? 'd' : 's', reg_num);
     }
 
+    std::string FPNextRegStr(bool dp_operation, size_t base, bool bit) {
+        size_t reg_num;
+        if (dp_operation) {
+            reg_num = base + (bit ? 16 : 0);
+        } else {
+            reg_num = (base << 1) + (bit ? 1 : 0);
+        }
+        return Common::StringFromFormat("%c%zu", dp_operation ? 'd' : 's', reg_num + 1);
+    }
+
     // Branch instructions
     std::string arm_B(Cond cond, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8;
@@ -594,6 +604,42 @@ public:
 
     std::string vfp2_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return Common::StringFromFormat("vdiv%s.%s %s, %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vn, N).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
+
+    std::string vfp2_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D){
+        return Common::StringFromFormat("vmov%s.32 %s, %s", CondToString(cond), FPRegStr(true, Vd, D).c_str(), RegToString(t));
+    }
+
+    std::string vfp2_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N){
+        return Common::StringFromFormat("vmov%s.32 %s, %s", CondToString(cond), RegToString(t), FPRegStr(true, Vn, N).c_str());
+    }
+
+    std::string vfp2_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N){
+        return Common::StringFromFormat("vmov%s.32 %s, %s", CondToString(cond), FPRegStr(false, Vn, N).c_str(), RegToString(t));
+    }
+
+    std::string vfp2_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N){
+        return Common::StringFromFormat("vmov%s.32 %s, %s", CondToString(cond), RegToString(t), FPRegStr(false, Vn, N).c_str());
+    }
+
+    std::string vfp2_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+        return Common::StringFromFormat("vmov%s %s, %s, %s, %s", CondToString(cond), FPRegStr(false, Vm, M).c_str(), FPNextRegStr(false, Vm, M).c_str(), RegToString(t), RegToString(t2));
+    }
+
+    std::string vfp2_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+        return Common::StringFromFormat("vmov%s %s, %s, %s, %s", CondToString(cond), RegToString(t), RegToString(t2), FPRegStr(false, Vm, M).c_str(), FPNextRegStr(false, Vm, M).c_str());
+    }
+
+    std::string vfp2_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+        return Common::StringFromFormat("vmov%s %s, %s, %s", CondToString(cond), FPRegStr(true, Vm, M).c_str(), RegToString(t), RegToString(t2));
+    }
+
+    std::string vfp2_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+        return Common::StringFromFormat("vmov%s %s, %s, %s", CondToString(cond), RegToString(t), RegToString(t2), FPRegStr(true, Vm, M).c_str());
+    }
+
+    std::string vfp2_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm){
+        return Common::StringFromFormat("vmov%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
     }
 
     std::string vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {

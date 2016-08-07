@@ -329,6 +329,17 @@ struct ArmTranslatorVisitor final {
     bool vfp2_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
     bool vfp2_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
 
+    // Floating-point move instructions
+    bool vfp2_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D);
+    bool vfp2_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N);
+    bool vfp2_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N);
+    bool vfp2_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N);
+    bool vfp2_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp2_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp2_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp2_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp2_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+
     // Floating-point misc instructions
     bool vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);

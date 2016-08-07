@@ -243,10 +243,14 @@ Gen::X64Reg RegAlloc::UseScratchRegister(IR::Inst* use_inst, HostLocList desired
         DEBUG_ASSERT(LocInfo(new_location).IsScratch());
         return HostLocToX64(new_location);
     } else if (HostLocIsRegister(current_location)) {
-        ASSERT(LocInfo(current_location).IsIdle());
+        ASSERT(LocInfo(current_location).IsIdle()
+                || LocInfo(current_location).IsUse()
+                || LocInfo(current_location).IsUseDef());
 
         if (current_location != new_location) {
             EmitMove(new_location, current_location);
+        } else {
+            ASSERT(LocInfo(current_location).IsIdle());
         }
 
         LocInfo(new_location).is_being_used = true;

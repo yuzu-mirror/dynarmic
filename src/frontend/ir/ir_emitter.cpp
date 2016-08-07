@@ -274,6 +274,22 @@ IR::Value IREmitter::ByteReverseDual(const IR::Value& a) {
     return Inst(IR::Opcode::ByteReverseDual, {a});
 }
 
+IR::Value IREmitter::TransferToFP32(const IR::Value& a) {
+    return Inst(IR::Opcode::TransferToFP32, {a});
+}
+
+IR::Value IREmitter::TransferToFP64(const IR::Value& a) {
+    return Inst(IR::Opcode::TransferToFP64, {a});
+}
+
+IR::Value IREmitter::TransferFromFP32(const IR::Value& a) {
+    return Inst(IR::Opcode::TransferFromFP32, {a});
+}
+
+IR::Value IREmitter::TransferFromFP64(const IR::Value& a) {
+    return Inst(IR::Opcode::TransferFromFP64, {a});
+}
+
 IR::Value IREmitter::FPAbs32(const IR::Value& a) {
     return Inst(IR::Opcode::FPAbs32, {a});
 }

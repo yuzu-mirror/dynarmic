@@ -7,10 +7,10 @@
 #pragma once
 
 #include <array>
-#include <cassert>
 #include <tuple>
 #include <type_traits>
 
+#include "common/ASSERT.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
 
@@ -37,10 +37,10 @@ enum class Reg {
 };
 
 inline Reg operator+(Reg reg, int number) {
-    assert(reg != Reg::INVALID_REG);
+    ASSERT(reg != Reg::INVALID_REG);
 
     int new_reg = static_cast<int>(reg) + number;
-    assert(new_reg >= 0 && new_reg <= 15);
+    ASSERT(new_reg >= 0 && new_reg <= 15);
 
     return static_cast<Reg>(new_reg);
 }
@@ -62,6 +62,15 @@ enum class ExtReg {
     D16, D17, D18, D19, D20, D21, D22, D23,
     D24, D25, D26, D27, D28, D29, D30, D31,
 };
+
+inline ExtReg operator+(ExtReg reg, int number) {
+    ExtReg new_reg = static_cast<ExtReg>(static_cast<int>(reg) + number);
+
+    ASSERT((reg >= ExtReg::S0 && reg <= ExtReg::S31 && new_reg >= ExtReg::S0 && new_reg <= ExtReg::S31)
+           || (reg >= ExtReg::D0 && reg <= ExtReg::D31 && new_reg >= ExtReg::D0 && new_reg <= ExtReg::D31));
+
+    return new_reg;
+}
 
 using Imm3 = u32;
 using Imm4 = u32;

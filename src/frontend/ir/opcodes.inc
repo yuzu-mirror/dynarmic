@@ -60,6 +60,10 @@ OPCODE(ByteReverseHalf,         T::U16,         T::U16                          
 OPCODE(ByteReverseDual,         T::U64,         T::U64                                          )
 
 // Floating-point
+OPCODE(TransferToFP32,          T::F32,         T::U32                                          )
+OPCODE(TransferToFP64,          T::F64,         T::U64                                          )
+OPCODE(TransferFromFP32,        T::U32,         T::F32                                          )
+OPCODE(TransferFromFP64,        T::U64,         T::F64                                          )
 OPCODE(FPAbs32,                 T::F32,         T::F32                                          )
 OPCODE(FPAbs64,                 T::F64,         T::F64                                          )
 OPCODE(FPAdd32,                 T::F32,         T::F32,         T::F32                          )
