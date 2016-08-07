@@ -560,6 +560,20 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
     }
 }
 
+TEST_CASE("Fuzz ARM branch instructions", "[JitX64]") {
+    const std::array<InstructionGenerator, 6> instructions = {{
+        InstructionGenerator("1111101hvvvvvvvvvvvvvvvvvvvvvvvv"),
+        InstructionGenerator("cccc000100101111111111110011mmmm"),
+        InstructionGenerator("cccc1010vvvvvvvvvvvvvvvvvvvvvvvv"),
+        InstructionGenerator("cccc1011vvvvvvvvvvvvvvvvvvvvvvvv"),
+        InstructionGenerator("cccc000100101111111111110001mmmm"),
+        InstructionGenerator("cccc000100101111111111110010mmmm"),
+    }};
+    FuzzJitArm(1, 1, 10000, [&instructions]() -> u32 {
+        return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+    });
+}
+
 TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
     const auto is_valid = [](u32 instr) -> bool {
         // R15 is UNPREDICTABLE

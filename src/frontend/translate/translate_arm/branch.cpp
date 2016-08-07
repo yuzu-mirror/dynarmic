@@ -11,12 +11,10 @@
 namespace Dynarmic {
 namespace Arm {
 
-bool ArmTranslatorVisitor::arm_B(Cond cond, Imm24 imm24)
-{
-    s32 imm32 = Common::SignExtend<26, s32>(imm24 << 2) + 8;
-    // B <cond> <label>
-    if (ConditionPassed(cond))
-    {
+bool ArmTranslatorVisitor::arm_B(Cond cond, Imm24 imm24) {
+    u32 imm32 = Common::SignExtend<26, u32>(imm24 << 2) + 8;
+    // B <label>
+    if (ConditionPassed(cond)) {
         auto new_location = ir.current_location.AdvancePC(imm32);
         ir.SetTerm(IR::Term::LinkBlock{ new_location });
         return false;
@@ -24,12 +22,10 @@ bool ArmTranslatorVisitor::arm_B(Cond cond, Imm24 imm24)
     return true;
 }
 
-bool ArmTranslatorVisitor::arm_BL(Cond cond, Imm24 imm24)
-{
-    s32 imm32 = Common::SignExtend<26, s32>(imm24 << 2) + 8;
-    // BL <cond> <label>
-    if (ConditionPassed(cond))
-    {
+bool ArmTranslatorVisitor::arm_BL(Cond cond, Imm24 imm24) {
+    u32 imm32 = Common::SignExtend<26, u32>(imm24 << 2) + 8;
+    // BL <label>
+    if (ConditionPassed(cond)) {
         ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
         auto new_location = ir.current_location.AdvancePC(imm32);
         ir.SetTerm(IR::Term::LinkBlock{ new_location });
@@ -38,17 +34,28 @@ bool ArmTranslatorVisitor::arm_BL(Cond cond, Imm24 imm24)
     return true;
 }
 
-bool ArmTranslatorVisitor::arm_BLX_imm(Cond cond, Imm24 imm24)
-{
-    return InterpretThisInstruction();
+bool ArmTranslatorVisitor::arm_BLX_imm(bool H, Imm24 imm24) {
+    u32 imm32 = Common::SignExtend<26, u32>((imm24 << 2)) + (H ? 2 : 0) + 8;
+    // BLX <label>
+    ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
+    auto new_location = ir.current_location.AdvancePC(imm32).SetTFlag(true);
+    ir.SetTerm(IR::Term::LinkBlock{ new_location });
+    return false;
 }
 
 bool ArmTranslatorVisitor::arm_BLX_reg(Cond cond, Reg m) {
-    return InterpretThisInstruction();
+    // BLX <Rm>
+    if (ConditionPassed(cond)) {
+        ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
+        ir.BXWritePC(ir.GetRegister(m));
+        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        return false;
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_BX(Cond cond, Reg m) {
-    // BX <cond> <Rm>
+    // BX <Rm>
     if (ConditionPassed(cond)) {
         ir.BXWritePC(ir.GetRegister(m));
         ir.SetTerm(IR::Term::ReturnToDispatch{});
@@ -58,7 +65,8 @@ bool ArmTranslatorVisitor::arm_BX(Cond cond, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_BXJ(Cond cond, Reg m) {
-    return InterpretThisInstruction();
+    // Jazelle not supported
+    return arm_BX(cond, m);
 }
 
 } // namespace Arm

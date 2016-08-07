@@ -65,7 +65,7 @@ struct ArmTranslatorVisitor final {
     // Branch instructions
     bool arm_B(Cond cond, Imm24 imm24);
     bool arm_BL(Cond cond, Imm24 imm24);
-    bool arm_BLX_imm(Cond cond, Imm24 imm24);
+    bool arm_BLX_imm(bool H, Imm24 imm24);
     bool arm_BLX_reg(Cond cond, Reg m);
     bool arm_BX(Cond cond, Reg m);
     bool arm_BXJ(Cond cond, Reg m);

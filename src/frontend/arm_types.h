@@ -119,8 +119,8 @@ struct LocationDescriptor {
         return LocationDescriptor(new_arm_pc, tflag, eflag, fpscr);
     }
 
-    LocationDescriptor AdvancePC(s32 amount) const {
-        return LocationDescriptor(arm_pc + amount, tflag, eflag, fpscr);
+    LocationDescriptor AdvancePC(int amount) const {
+        return LocationDescriptor(static_cast<u32>(arm_pc + amount), tflag, eflag, fpscr);
     }
 
     LocationDescriptor SetTFlag(bool new_tflag) const {
