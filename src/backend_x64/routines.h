@@ -25,6 +25,9 @@ public:
     Gen::OpArg MFloatNaN32() const {
         return Gen::M(const_FloatNaN32);
     }
+    Gen::OpArg MFloatNonSignMask32() const {
+        return Gen::M(const_FloatNonSignMask32);
+    }
     Gen::OpArg MFloatNegativeZero64() const {
         return Gen::M(const_FloatNegativeZero64);
     }
@@ -41,6 +44,7 @@ public:
 private:
     const u8* const_FloatNegativeZero32;
     const u8* const_FloatNaN32;
+    const u8* const_FloatNonSignMask32;
     const u8* const_FloatNegativeZero64;
     const u8* const_FloatNaN64;
     const u8* const_FloatNonSignMask64;

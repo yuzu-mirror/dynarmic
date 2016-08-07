@@ -36,6 +36,8 @@ void Routines::GenConstants() {
     Write32(0x80000000u);
     const_FloatNaN32 = AlignCode16();
     Write32(0x7fc00000u);
+    const_FloatNonSignMask32 = AlignCode16();
+    Write64(0x7fffffffu);
     const_FloatNegativeZero64 = AlignCode16();
     Write64(0x8000000000000000u);
     const_FloatNaN64 = AlignCode16();

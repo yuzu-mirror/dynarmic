@@ -77,7 +77,7 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     // Floating-point other instructions
     // VMOV_imm
     // VMOV_reg
-    // VABS
+    INST(&V::vfp2_VABS,       "VABS",                "cccc11101D110000dddd101z11M0mmmm"),
     // VNEG
     // VSQRT
     // VCMP

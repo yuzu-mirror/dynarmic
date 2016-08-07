@@ -274,6 +274,14 @@ IR::Value IREmitter::ByteReverseDual(const IR::Value& a) {
     return Inst(IR::Opcode::ByteReverseDual, {a});
 }
 
+IR::Value IREmitter::FPAbs32(const IR::Value& a) {
+    return Inst(IR::Opcode::FPAbs32, {a});
+}
+
+IR::Value IREmitter::FPAbs64(const IR::Value& a) {
+    return Inst(IR::Opcode::FPAbs64, {a});
+}
+
 IR::Value IREmitter::FPAdd32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
     return Inst(IR::Opcode::FPAdd32, {a, b});

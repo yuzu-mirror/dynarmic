@@ -1090,6 +1090,22 @@ static void DefaultNaN64(XEmitter* code, Routines* routines, X64Reg xmm_value) {
     code->SetJumpTarget(fixup);
 }
 
+void EmitX64::EmitFPAbs32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+
+    code->PAND(result, routines->MFloatNonSignMask32());
+}
+
+void EmitX64::EmitFPAbs64(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+
+    code->PAND(result, routines->MFloatNonSignMask64());
+}
+
 void EmitX64::EmitFPAdd32(IR::Block& block, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
