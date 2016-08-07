@@ -99,7 +99,7 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     // VSTM
     // VSTMDB
     // VPUSH
-    // VLDR
+    INST(&V::vfp2_VLDR,           "VLDR",                    "cccc1101UD01nnnndddd101zvvvvvvvv"),
     // VLDM
     // VLDMDB
     // VPOP

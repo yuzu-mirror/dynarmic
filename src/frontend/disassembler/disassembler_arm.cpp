@@ -653,6 +653,11 @@ public:
     std::string vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return Common::StringFromFormat("vsqrt%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
     }
+
+    std::string vfp2_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8) {
+        u32 imm32 = imm8 << 2;
+        return Common::StringFromFormat("vldr%s %s, [%s, #%c%u]", CondToString(cond), FPRegStr(sz, Vd, D).c_str(), RegToString(n), U ? '+' : '-', imm32);
+    }
 };
 
 std::string DisassembleArm(u32 instruction) {

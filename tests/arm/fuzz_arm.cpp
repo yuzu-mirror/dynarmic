@@ -419,6 +419,18 @@ TEST_CASE("VFP: VMOV", "[JitX64][vfp]") {
     });
 }
 
+
+TEST_CASE("VFP: VMOV (reg), VLDR", "[JitX64][vfp]") {
+    const std::array<InstructionGenerator, 2> instructions = {{
+        InstructionGenerator("cccc11101D110000dddd101z01M0mmmm"),
+        InstructionGenerator("cccc1101UD01nnnndddd101zvvvvvvvv"),
+    }};
+
+    FuzzJitArm(1, 1, 10000, [&instructions]() -> u32 {
+        return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+    });
+}
+
 TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
     const std::array<InstructionGenerator, 16> imm_instructions = {
             {
