@@ -332,6 +332,7 @@ struct ArmTranslatorVisitor final {
     // Floating-point misc instructions
     bool vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
 };
 
 } // namespace Arm

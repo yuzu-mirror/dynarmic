@@ -320,6 +320,13 @@ IR::Value IREmitter::FPNeg64(const IR::Value& a) {
     return Inst(IR::Opcode::FPNeg64, {a});
 }
 
+IR::Value IREmitter::FPSqrt32(const IR::Value& a) {
+    return Inst(IR::Opcode::FPSqrt32, {a});
+}
+
+IR::Value IREmitter::FPSqrt64(const IR::Value& a) {
+    return Inst(IR::Opcode::FPSqrt64, {a});
+}
 
 IR::Value IREmitter::FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
