@@ -381,7 +381,18 @@ public:
     }
     std::string arm_LDM_usr() { return "ice"; }
     std::string arm_LDM_eret() { return "ice"; }
-    std::string arm_STM(Cond cond, bool P, bool U, bool W, Reg n, RegList list) { return "ice"; }
+    std::string arm_STM(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("stm%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
+    std::string arm_STMDA(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("stmda%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
+    std::string arm_STMDB(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("stmdb%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
+    std::string arm_STMIB(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("stmib%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
     std::string arm_STM_usr() { return "ice"; }
 
     // Miscellaneous instructions

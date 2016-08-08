@@ -229,7 +229,10 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
         INST(&V::arm_LDMIB,       "LDMIB",               "cccc100110w1nnnnxxxxxxxxxxxxxxxx"), // all
         INST(&V::arm_LDM_usr,     "LDM (usr reg)",       "----100--101--------------------"), // all
         INST(&V::arm_LDM_eret,    "LDM (exce ret)",      "----100--1-1----1---------------"), // all
-        INST(&V::arm_STM,         "STM",                 "cccc100pu0w0nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_STM,         "STM",                 "cccc100010w0nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_STMDA,       "STMDA",               "cccc100000w0nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_STMDB,       "STMDB",               "cccc100100w0nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_STMIB,       "STMIB",               "cccc100110w0nnnnxxxxxxxxxxxxxxxx"), // all
         INST(&V::arm_STM_usr,     "STM (usr reg)",       "----100--100--------------------"), // all
 
         // Miscellaneous instructions

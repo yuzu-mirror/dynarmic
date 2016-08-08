@@ -192,7 +192,10 @@ struct ArmTranslatorVisitor final {
     bool arm_LDMIB(Cond cond, bool W, Reg n, RegList list);
     bool arm_LDM_usr();
     bool arm_LDM_eret();
-    bool arm_STM(Cond cond, bool P, bool U, bool W, Reg n, RegList list);
+    bool arm_STM(Cond cond, bool W, Reg n, RegList list);
+    bool arm_STMDA(Cond cond, bool W, Reg n, RegList list);
+    bool arm_STMDB(Cond cond, bool W, Reg n, RegList list);
+    bool arm_STMIB(Cond cond, bool W, Reg n, RegList list);
     bool arm_STM_usr();
 
     // Miscellaneous instructions
