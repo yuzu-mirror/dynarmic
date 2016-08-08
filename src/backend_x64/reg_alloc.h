@@ -67,7 +67,6 @@ const HostLocList any_gpr = {
     HostLoc::RSI,
     HostLoc::RDI,
     HostLoc::RBP,
-    HostLoc::RSP,
     HostLoc::R8,
     HostLoc::R9,
     HostLoc::R10,

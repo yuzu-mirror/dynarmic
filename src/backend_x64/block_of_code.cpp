@@ -44,7 +44,6 @@ void BlockOfCode::ReturnFromRunCode(bool MXCSR_switch) {
     if (MXCSR_switch)
         SwitchMxcsrOnExit();
 
-    MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
     ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
     RET();
 }
@@ -77,7 +76,6 @@ void BlockOfCode::GenRunCode() {
     ABI_PushRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
 
     MOV(64, R(R15), R(ABI_PARAM1));
-    MOV(64, MDisp(R15, offsetof(JitState, save_host_RSP)), R(RSP));
     SwitchMxcsrOnEntry();
     JMPptr(R(ABI_PARAM2));
 }

@@ -1511,7 +1511,6 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
     code->MOV(64, R(ABI_PARAM1), Imm64(terminal.next.PC()));
     code->MOV(64, R(ABI_PARAM2), Imm64(reinterpret_cast<u64>(jit_interface)));
     code->MOV(32, MJitStateReg(Arm::Reg::PC), R(ABI_PARAM1));
-    code->MOV(64, R(RSP), MDisp(R15, offsetof(JitState, save_host_RSP)));
     code->SwitchMxcsrOnExit();
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.InterpreterFallback));
     code->ReturnFromRunCode(false); // TODO: Check cycles
