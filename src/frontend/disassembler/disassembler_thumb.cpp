@@ -22,20 +22,6 @@ public:
         return value >= 0 ? "+" : "-";
     }
 
-    std::string RegListStr(RegList reg_list) {
-        std::string ret = "";
-        bool first_reg = true;
-        for (size_t i = 0; i < 16; i++) {
-            if (Common::Bit(i, reg_list)) {
-                if (!first_reg)
-                    ret += ", ";
-                ret += RegToString(static_cast<Reg>(i));
-                first_reg = false;
-            }
-        }
-        return ret;
-    }
-
     std::string thumb16_LSL_imm(Imm5 imm5, Reg m, Reg d) {
         return Common::StringFromFormat("lsls %s, %s, #%u", RegToString(d), RegToString(m), imm5);
     }
@@ -271,12 +257,12 @@ public:
 
     std::string thumb16_PUSH(bool M, RegList reg_list) {
         if (M) reg_list |= 1 << 14;
-        return "push " + RegListStr(reg_list);
+        return "push " + RegListToString(reg_list);
     }
 
     std::string thumb16_POP(bool P, RegList reg_list) {
         if (P) reg_list |= 1 << 15;
-        return "pop " + RegListStr(reg_list);
+        return "pop " + RegListToString(reg_list);
     }
 
     std::string thumb16_SETEND(bool E) {
@@ -296,12 +282,12 @@ public:
     }
 
     std::string thumb16_STMIA(Reg n, RegList reg_list) {
-        return Common::StringFromFormat("stm %s!, %s", RegToString(n), RegListStr(reg_list).c_str());
+        return Common::StringFromFormat("stm %s!, %s", RegToString(n), RegListToString(reg_list).c_str());
     }
 
     std::string thumb16_LDMIA(Reg n, RegList reg_list) {
         bool write_back = !Dynarmic::Common::Bit(static_cast<size_t>(n), reg_list);
-        return Common::StringFromFormat("ldm %s%s, %s", RegToString(n), write_back ? "!" : "", RegListStr(reg_list).c_str());
+        return Common::StringFromFormat("ldm %s%s, %s", RegToString(n), write_back ? "!" : "", RegListToString(reg_list).c_str());
     }
 
     std::string thumb16_BX(Reg m) {

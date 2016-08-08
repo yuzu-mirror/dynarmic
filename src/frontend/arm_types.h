@@ -21,13 +21,6 @@ enum class Cond {
     EQ, NE, CS, CC, MI, PL, VS, VC, HI, LS, GE, LT, GT, LE, AL, NV
 };
 
-inline const char* CondToString(Cond cond, bool explicit_al = false) {
-    constexpr std::array<const char*, 15> cond_strs = {
-        "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc", "hi", "ls", "ge", "lt", "gt", "le", "al"
-    };
-    return (!explicit_al && cond == Cond::AL) ? "" : cond_strs.at(static_cast<size_t>(cond));
-}
-
 enum class Reg {
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15,
     SP = R13,
@@ -35,22 +28,6 @@ enum class Reg {
     PC = R15,
     INVALID_REG = 99
 };
-
-inline Reg operator+(Reg reg, int number) {
-    ASSERT(reg != Reg::INVALID_REG);
-
-    int new_reg = static_cast<int>(reg) + number;
-    ASSERT(new_reg >= 0 && new_reg <= 15);
-
-    return static_cast<Reg>(new_reg);
-}
-
-inline const char* RegToString(Reg reg) {
-    constexpr std::array<const char*, 16> reg_strs = {
-        "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc"
-    };
-    return reg_strs.at(static_cast<size_t>(reg));
-}
 
 enum class ExtReg {
     S0, S1, S2, S3, S4, S5, S6, S7,
@@ -62,15 +39,6 @@ enum class ExtReg {
     D16, D17, D18, D19, D20, D21, D22, D23,
     D24, D25, D26, D27, D28, D29, D30, D31,
 };
-
-inline ExtReg operator+(ExtReg reg, int number) {
-    ExtReg new_reg = static_cast<ExtReg>(static_cast<int>(reg) + number);
-
-    ASSERT((reg >= ExtReg::S0 && reg <= ExtReg::S31 && new_reg >= ExtReg::S0 && new_reg <= ExtReg::S31)
-           || (reg >= ExtReg::D0 && reg <= ExtReg::D31 && new_reg >= ExtReg::D0 && new_reg <= ExtReg::D31));
-
-    return new_reg;
-}
 
 using Imm3 = u32;
 using Imm4 = u32;
@@ -150,6 +118,28 @@ struct LocationDescriptorHash {
                                 ^ (static_cast<u64>(x.FPSCR()) << 32));
     }
 };
+
+const char* CondToString(Cond cond, bool explicit_al = false);
+const char* RegToString(Reg reg);
+std::string RegListToString(RegList reg_list);
+
+inline Reg operator+(Reg reg, int number) {
+    ASSERT(reg != Reg::INVALID_REG);
+
+    int new_reg = static_cast<int>(reg) + number;
+    ASSERT(new_reg >= 0 && new_reg <= 15);
+
+    return static_cast<Reg>(new_reg);
+}
+
+inline ExtReg operator+(ExtReg reg, int number) {
+    ExtReg new_reg = static_cast<ExtReg>(static_cast<int>(reg) + number);
+
+    ASSERT((reg >= ExtReg::S0 && reg <= ExtReg::S31 && new_reg >= ExtReg::S0 && new_reg <= ExtReg::S31)
+           || (reg >= ExtReg::D0 && reg <= ExtReg::D31 && new_reg >= ExtReg::D0 && new_reg <= ExtReg::D31));
+
+    return new_reg;
+}
 
 } // namespace Arm
 } // namespace Dynarmic

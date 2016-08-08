@@ -12,6 +12,7 @@ set(SRCS
     common/x64/abi.cpp
     common/x64/cpu_detect.cpp
     common/x64/emitter.cpp
+    frontend/arm_types.cpp
     frontend/disassembler/disassembler_arm.cpp
     frontend/disassembler/disassembler_thumb.cpp
     frontend/ir/ir.cpp
