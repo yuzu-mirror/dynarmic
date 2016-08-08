@@ -67,7 +67,7 @@ private:
     UserCallbacks cb;
     Jit* jit_interface;
     std::unordered_map<Arm::LocationDescriptor, BlockDescriptor, Arm::LocationDescriptorHash> basic_blocks;
-    std::unordered_map<Arm::LocationDescriptor, std::vector<CodePtr>, Arm::LocationDescriptorHash> patch_jmp_locations;
+    std::unordered_map<Arm::LocationDescriptor, std::vector<CodePtr>, Arm::LocationDescriptorHash> patch_jg_locations;
 };
 
 } // namespace BackendX64

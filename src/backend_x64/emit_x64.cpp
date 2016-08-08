@@ -1540,7 +1540,7 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
     code->CMP(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(0));
 
     BlockDescriptor* next_bb = GetBasicBlock(terminal.next);
-    patch_jmp_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
+    patch_jg_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
     if (next_bb) {
         code->J_CC(CC_G, next_bb->code_ptr, true);
     } else {
@@ -1569,7 +1569,7 @@ void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor init
 void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
     u8* const save_code_ptr = code->GetWritableCodePtr();
 
-    for (CodePtr location : patch_jmp_locations[desc]) {
+    for (CodePtr location : patch_jg_locations[desc]) {
         code->SetCodePtr(const_cast<u8*>(location));
         code->J_CC(CC_G, bb, true);
         ASSERT(code->GetCodePtr() - location == 6);
@@ -1580,7 +1580,7 @@ void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
 
 void EmitX64::ClearCache() {
     basic_blocks.clear();
-    patch_jmp_locations.clear();
+    patch_jg_locations.clear();
 }
 
 } // namespace BackendX64
