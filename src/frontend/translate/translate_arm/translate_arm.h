@@ -186,7 +186,10 @@ struct ArmTranslatorVisitor final {
     bool arm_STRT();
 
     // Load/Store multiple instructions
-    bool arm_LDM(Cond cond, bool P, bool U, bool W, Reg n, RegList list);
+    bool arm_LDM(Cond cond, bool W, Reg n, RegList list);
+    bool arm_LDMDA(Cond cond, bool W, Reg n, RegList list);
+    bool arm_LDMDB(Cond cond, bool W, Reg n, RegList list);
+    bool arm_LDMIB(Cond cond, bool W, Reg n, RegList list);
     bool arm_LDM_usr();
     bool arm_LDM_eret();
     bool arm_STM(Cond cond, bool P, bool U, bool W, Reg n, RegList list);

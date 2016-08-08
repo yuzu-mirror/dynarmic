@@ -223,7 +223,10 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
         INST(&V::arm_STRT,        "STRT (A2)",           "----0110-010---------------0----"),
 
         // Load/Store Multiple instructions
-        INST(&V::arm_LDM,         "LDM",                 "cccc100pu0w1nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_LDM,         "LDM",                 "cccc100010w1nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_LDMDA,       "LDMDA",               "cccc100000w1nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_LDMDB,       "LDMDB",               "cccc100100w1nnnnxxxxxxxxxxxxxxxx"), // all
+        INST(&V::arm_LDMIB,       "LDMIB",               "cccc100110w1nnnnxxxxxxxxxxxxxxxx"), // all
         INST(&V::arm_LDM_usr,     "LDM (usr reg)",       "----100--101--------------------"), // all
         INST(&V::arm_LDM_eret,    "LDM (exce ret)",      "----100--1-1----1---------------"), // all
         INST(&V::arm_STM,         "STM",                 "cccc100pu0w0nnnnxxxxxxxxxxxxxxxx"), // all

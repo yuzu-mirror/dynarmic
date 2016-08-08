@@ -352,8 +352,72 @@ bool ArmTranslatorVisitor::arm_STRT() {
     return InterpretThisInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_LDM(Cond cond, bool P, bool U, bool W, Reg n, RegList list) {
-    return InterpretThisInstruction();
+static bool LDMHelper(IREmitter& ir, bool W, Reg n, RegList list, IR::Value start_address, IR::Value writeback_address) {
+    auto address = start_address;
+    for (size_t i = 0; i <= 14; i++) {
+        if (Common::Bit(i, list)) {
+            ir.SetRegister(static_cast<Reg>(i), ir.ReadMemory32(address));
+            address = ir.Add(address, ir.Imm32(4));
+        }
+    }
+    if (W) {
+        ir.SetRegister(n, writeback_address);
+    }
+    if (Common::Bit<15>(list)) {
+        ir.LoadWritePC(ir.ReadMemory32(address));
+        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        return false;
+    }
+    return true;
+}
+
+
+bool ArmTranslatorVisitor::arm_LDM(Cond cond, bool W, Reg n, RegList list) {
+    if (n == Reg::PC || Common::BitCount(list) < 1)
+        return UnpredictableInstruction();
+    // LDM <Rn>{!}, <reg_list>
+    if (ConditionPassed(cond)) {
+        auto start_address = ir.GetRegister(n);
+        auto writeback_address = ir.Add(start_address, ir.Imm32(u32(Common::BitCount(list) * 4)));
+        return LDMHelper(ir, W, n, list, start_address, writeback_address);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
+    if (n == Reg::PC || Common::BitCount(list) < 1)
+        return UnpredictableInstruction();
+    // LDMDA <Rn>{!}, <reg_list>
+    if (ConditionPassed(cond)) {
+        auto start_address = ir.Sub(ir.GetRegister(n), ir.Imm32(u32(4 * Common::BitCount(list) - 4)));
+        auto writeback_address = ir.Add(start_address, ir.Imm32(4));
+        return LDMHelper(ir, W, n, list, start_address, writeback_address);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
+    if (n == Reg::PC || Common::BitCount(list) < 1)
+        return UnpredictableInstruction();
+    // LDMDB <Rn>{!}, <reg_list>
+    if (ConditionPassed(cond)) {
+        auto start_address = ir.Sub(ir.GetRegister(n), ir.Imm32(u32(4 * Common::BitCount(list))));
+        auto writeback_address = start_address;
+        return LDMHelper(ir, W, n, list, start_address, writeback_address);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
+    if (n == Reg::PC || Common::BitCount(list) < 1)
+        return UnpredictableInstruction();
+    // LDMIB <Rn>{!}, <reg_list>
+    if (ConditionPassed(cond)) {
+        auto start_address = ir.Add(ir.GetRegister(n), ir.Imm32(4));
+        auto writeback_address = ir.Add(ir.GetRegister(n), ir.Imm32(u32(4 * Common::BitCount(list))));
+        return LDMHelper(ir, W, n, list, start_address, writeback_address);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDM_usr() {

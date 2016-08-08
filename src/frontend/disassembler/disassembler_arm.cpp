@@ -367,7 +367,18 @@ public:
     std::string arm_STRT() { return "ice"; }
 
     // Load/Store multiple instructions
-    std::string arm_LDM(Cond cond, bool P, bool U, bool W, Reg n, RegList list) { return "ice"; }
+    std::string arm_LDM(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("ldm%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
+    std::string arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("ldmda%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
+    std::string arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("ldmdb%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
+    std::string arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
+        return Common::StringFromFormat("ldmib%s %s%s, {%s}", CondToString(cond), RegToString(n), W ? "!" : "", RegListToString(list).c_str());
+    }
     std::string arm_LDM_usr() { return "ice"; }
     std::string arm_LDM_eret() { return "ice"; }
     std::string arm_STM(Cond cond, bool P, bool U, bool W, Reg n, RegList list) { return "ice"; }
