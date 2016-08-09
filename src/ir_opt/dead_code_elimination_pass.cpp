@@ -13,7 +13,47 @@ namespace Optimization {
 
 void DeadCodeElimination(IR::Block& block) {
     const auto is_side_effect_free = [](IR::Opcode op) -> bool {
-        return IR::GetTypeOf(op) != IR::Type::Void;
+        switch (op) {
+            case IR::Opcode::Breakpoint:
+            case IR::Opcode::SetRegister:
+            case IR::Opcode::SetExtendedRegister32:
+            case IR::Opcode::SetExtendedRegister64:
+            case IR::Opcode::SetNFlag:
+            case IR::Opcode::SetZFlag:
+            case IR::Opcode::SetCFlag:
+            case IR::Opcode::SetVFlag:
+            case IR::Opcode::OrQFlag:
+            case IR::Opcode::BXWritePC:
+            case IR::Opcode::CallSupervisor:
+            case IR::Opcode::FPAbs32:
+            case IR::Opcode::FPAbs64:
+            case IR::Opcode::FPAdd32:
+            case IR::Opcode::FPAdd64:
+            case IR::Opcode::FPDiv32:
+            case IR::Opcode::FPDiv64:
+            case IR::Opcode::FPMul32:
+            case IR::Opcode::FPMul64:
+            case IR::Opcode::FPNeg32:
+            case IR::Opcode::FPNeg64:
+            case IR::Opcode::FPSqrt32:
+            case IR::Opcode::FPSqrt64:
+            case IR::Opcode::FPSub32:
+            case IR::Opcode::FPSub64:
+            case IR::Opcode::ClearExclusive:
+            case IR::Opcode::SetExclusive:
+            case IR::Opcode::WriteMemory8:
+            case IR::Opcode::WriteMemory16:
+            case IR::Opcode::WriteMemory32:
+            case IR::Opcode::WriteMemory64:
+            case IR::Opcode::ExclusiveWriteMemory8:
+            case IR::Opcode::ExclusiveWriteMemory16:
+            case IR::Opcode::ExclusiveWriteMemory32:
+            case IR::Opcode::ExclusiveWriteMemory64:
+                return false;
+            default:
+                ASSERT(IR::GetTypeOf(op) != IR::Type::Void);
+                return true;
+        }
     };
 
     // We iterate over the instructions in reverse order.

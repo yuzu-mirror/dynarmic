@@ -70,7 +70,7 @@ static u32 MemoryRead32(u32 vaddr) {
     return vaddr;
 }
 static u64 MemoryRead64(u32 vaddr) {
-    return vaddr;
+    return MemoryRead32(vaddr) | (u64(MemoryRead32(vaddr+4)) << 32);
 }
 
 static void MemoryWrite8(u32 vaddr, u8 value){
@@ -133,7 +133,7 @@ public:
         REQUIRE(strlen(format) == 32);
 
         for (int i = 0; i < 32; i++) {
-            const u32 bit = 1 << (31 - i);
+            const u32 bit = 1u << (31 - i);
             switch (format[i]) {
                 case '0':
                     mask |= bit;
@@ -169,6 +169,7 @@ public:
     }
     u32 Bits() const { return bits; }
     u32 Mask() const { return mask; }
+    bool IsValid(u32 inst) const { return is_valid(inst); }
 private:
     u32 bits = 0;
     u32 mask = 0;
@@ -210,10 +211,12 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
         u32 initial_fpscr = RandInt<u32>(0x0, 0x1) << 24;
 
+        interp.UnsetExclusiveMemoryAddress();
         interp.Cpsr = initial_cpsr;
         interp.Reg = initial_regs;
         interp.ExtReg = initial_extregs;
         interp.VFP[VFP_FPSCR] = initial_fpscr;
+        jit.Reset();
         jit.Cpsr() = initial_cpsr;
         jit.Regs() = initial_regs;
         jit.ExtRegs() = initial_extregs;
@@ -242,7 +245,7 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
             printf("\nInstruction Listing: \n");
             for (size_t i = 0; i < instruction_count; i++) {
-                 printf("%s\n", Dynarmic::Arm::DisassembleArm(code_mem[i]).c_str());
+                 printf("%x: %s\n", code_mem[i], Dynarmic::Arm::DisassembleArm(code_mem[i]).c_str());
             }
 
             printf("\nInitial Register Listing: \n");
@@ -555,15 +558,42 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
 }
 
 TEST_CASE("Fuzz ARM load/store instructions (byte, half-word, word)", "[JitX64]") {
-    const std::array<InstructionGenerator, 17> instructions = {{
+    auto EXD_valid = [](u32 inst) -> bool {
+        return Bits<0, 3>(inst) % 2 == 0 && Bits<0, 3>(inst) != 14 && Bits<12, 15>(inst) != (Bits<0, 3>(inst) + 1);
+    };
+
+    auto STREX_valid = [](u32 inst) -> bool {
+        return Bits<12, 15>(inst) != Bits<16, 19>(inst) && Bits<12, 15>(inst) != Bits<0, 3>(inst);
+    };
+
+    auto SWP_valid = [](u32 inst) -> bool {
+        return Bits<12, 15>(inst) != Bits<16, 19>(inst) && Bits<16, 19>(inst) != Bits<0, 3>(inst);
+    };
+
+    auto LDREXD_valid = [](u32 inst) -> bool {
+        return Bits<12, 15>(inst) != 14;
+    };
+
+    auto D_valid = [](u32 inst) -> bool {
+        u32 Rn = Bits<16, 19>(inst);
+        u32 Rd = Bits<12, 15>(inst);
+        u32 Rm = Bits<0, 3>(inst);
+        return Rn % 2 == 0 && Rd % 2 == 0 && Rm != Rd && Rm != Rd + 1 && Rd != 14;
+    };
+
+    const std::array<InstructionGenerator, 32> instructions = {{
         InstructionGenerator("cccc010pu0w1nnnnddddvvvvvvvvvvvv"), // LDR_imm
         InstructionGenerator("cccc011pu0w1nnnnddddvvvvvrr0mmmm"), // LDR_reg
         InstructionGenerator("cccc010pu1w1nnnnddddvvvvvvvvvvvv"), // LDRB_imm
         InstructionGenerator("cccc011pu1w1nnnnddddvvvvvrr0mmmm"), // LDRB_reg
+        InstructionGenerator("cccc000pu1w0nnnnddddvvvv1101vvvv", D_valid), // LDRD_imm
+        InstructionGenerator("cccc000pu0w0nnnndddd00001101mmmm", D_valid), // LDRD_reg
         InstructionGenerator("cccc010pu0w0nnnnddddvvvvvvvvvvvv"), // STR_imm
         InstructionGenerator("cccc011pu0w0nnnnddddvvvvvrr0mmmm"), // STR_reg
         InstructionGenerator("cccc010pu1w0nnnnddddvvvvvvvvvvvv"), // STRB_imm
         InstructionGenerator("cccc011pu1w0nnnnddddvvvvvrr0mmmm"), // STRB_reg
+        InstructionGenerator("cccc000pu1w0nnnnddddvvvv1111vvvv", D_valid), // STRD_imm
+        InstructionGenerator("cccc000pu0w0nnnndddd00001111mmmm", D_valid), // STRD_reg
         InstructionGenerator("cccc000pu1w1nnnnddddvvvv1011vvvv"), // LDRH_imm
         InstructionGenerator("cccc000pu0w1nnnndddd00001011mmmm"), // LDRH_reg
         InstructionGenerator("cccc000pu1w1nnnnddddvvvv1101vvvv"), // LDRSB_imm
@@ -573,87 +603,56 @@ TEST_CASE("Fuzz ARM load/store instructions (byte, half-word, word)", "[JitX64]"
         InstructionGenerator("cccc000pu1w0nnnnddddvvvv1011vvvv"), // STRH_imm
         InstructionGenerator("cccc000pu0w0nnnndddd00001011mmmm"), // STRH_reg
         InstructionGenerator("1111000100000001000000e000000000"), // SETEND
+        InstructionGenerator("11110101011111111111000000011111"), // CLREX
+        InstructionGenerator("cccc00011001nnnndddd111110011111"), // LDREX
+        InstructionGenerator("cccc00011101nnnndddd111110011111"), // LDREXB
+        InstructionGenerator("cccc00011011nnnndddd111110011111", LDREXD_valid), // LDREXD
+        InstructionGenerator("cccc00011111nnnndddd111110011111"), // LDREXH
+        InstructionGenerator("cccc00011000nnnndddd11111001mmmm", STREX_valid), // STREX
+        InstructionGenerator("cccc00011100nnnndddd11111001mmmm", STREX_valid), // STREXB
+        InstructionGenerator("cccc00011010nnnndddd11111001mmmm",
+                             [=](u32 inst) { return EXD_valid(inst) && STREX_valid(inst); }), // STREXD
+        InstructionGenerator("cccc00011110nnnndddd11111001mmmm", STREX_valid), // STREXH
+        InstructionGenerator("cccc00010000nnnntttt00001001uuuu", SWP_valid), // SWP
+        InstructionGenerator("cccc00010100nnnntttt00001001uuuu", SWP_valid), // SWPB
     }};
 
     auto instruction_select = [&]() -> u32 {
         size_t inst_index = RandInt<size_t>(0, instructions.size() - 1);
 
-        u32 cond = 0xE;
-        // Have a one-in-twenty-five chance of actually having a cond.
-        if (RandInt(1, 25) == 1) {
-            cond = RandInt<u32>(0x0, 0xD);
-        }
+        while (true) {
+            u32 cond = 0xE;
+            // Have a one-in-twenty-five chance of actually having a cond.
+            if (RandInt(1, 25) == 1) {
+                cond = RandInt<u32>(0x0, 0xD);
+            }
 
-        u32 Rn = RandInt<u32>(0, 14);
-        u32 Rd = RandInt<u32>(0, 14);
-        u32 W = 0;
-        u32 P = RandInt<u32>(0, 1);
-        if (P) W = RandInt<u32>(0, 1);
-        u32 U = RandInt<u32>(0, 1);
-        u32 rand = RandInt<u32>(0, 0xFF);
-        u32 Rm = RandInt<u32>(0, 14);
+            u32 Rn = RandInt<u32>(0, 14);
+            u32 Rd = RandInt<u32>(0, 14);
+            u32 W = 0;
+            u32 P = RandInt<u32>(0, 1);
+            if (P) W = RandInt<u32>(0, 1);
+            u32 U = RandInt<u32>(0, 1);
+            u32 rand = RandInt<u32>(0, 0xFF);
+            u32 Rm = RandInt<u32>(0, 14);
 
-        if (W) {
-            while (Rn == Rd) {
-                Rn = RandInt<u32>(0, 14);
-                Rd = RandInt<u32>(0, 14);
+            if (W) {
+                while (Rn == Rd) {
+                    Rn = RandInt<u32>(0, 14);
+                    Rd = RandInt<u32>(0, 14);
+                }
+            }
+
+            u32 assemble_randoms = (Rm << 0) | (rand << 4) | (Rd << 12) | (Rn << 16) | (W << 21) | (U << 23) | (P << 24) | (cond << 28);
+            u32 inst = instructions[inst_index].Bits() | (assemble_randoms & (~instructions[inst_index].Mask()));
+            if (instructions[inst_index].IsValid(inst)) {
+                return inst;
             }
         }
-
-        u32 assemble_randoms = (Rm << 0) | (rand << 4) | (Rd << 12) | (Rn << 16) | (W << 21) | (U << 23) | (P << 24) | (cond << 28);
-
-        return instructions[inst_index].Bits() | (assemble_randoms & (~instructions[inst_index].Mask()));
     };
 
     SECTION("short blocks") {
-        FuzzJitArm(5, 6, 10000, instruction_select);
-    }
-}
-
-TEST_CASE("Fuzz ARM load/store instructions (double-word)", "[JitX64]") {
-    const std::array<InstructionGenerator, 4> instructions = {{
-        InstructionGenerator("cccc000pu1w0nnnnddddvvvv1101vvvv"), // LDRD_imm
-        InstructionGenerator("cccc000pu0w0nnnndddd00001101mmmm"), // LDRD_reg
-        InstructionGenerator("cccc000pu1w0nnnnddddvvvv1111vvvv"), // STRD_imm
-        InstructionGenerator("cccc000pu0w0nnnndddd00001111mmmm"), // STRD_reg
-    }};
-
-    auto instruction_select = [&]() -> u32 {
-        size_t inst_index = RandInt<size_t>(0, instructions.size() - 1);
-
-        u32 cond = 0xE;
-        // Have a one-in-twenty-five chance of actually having a cond.
-        if (RandInt(1, 25) == 1) {
-            cond = RandInt<u32>(0x0, 0xD);
-        }
-
-        u32 Rn = RandInt<u32>(0, 6) * 2;
-        u32 Rd = RandInt<u32>(0, 6) * 2;
-        u32 W = 0;
-        u32 P = RandInt<u32>(0, 1);
-        if (P) W = RandInt<u32>(0, 1);
-        u32 U = RandInt<u32>(0, 1);
-        u32 rand = RandInt<u32>(0, 0xF);
-        u32 Rm = RandInt<u32>(0, 14);
-
-        if (W) {
-            while (Rn == Rd) {
-                Rn = RandInt<u32>(0, 6) * 2;
-                Rd = RandInt<u32>(0, 6) * 2;
-            }
-        }
-
-        while (Rm == Rd || Rm == Rd + 1) {
-            Rm = RandInt<u32>(0, 14);
-        }
-
-        u32 assemble_randoms = (Rm << 0) | (rand << 4) | (Rd << 12) | (Rn << 16) | (W << 21) | (U << 23) | (P << 24) | (cond << 28);
-
-        return instructions[inst_index].Bits() | (assemble_randoms & (~instructions[inst_index].Mask()));
-    };
-
-    SECTION("short blocks") {
-        FuzzJitArm(5, 6, 10000, instruction_select);
+        FuzzJitArm(5, 6, 30000, instruction_select);
     }
 }
 

@@ -1293,6 +1293,18 @@ void EmitX64::EmitFPSub64(IR::Block& block, IR::Inst* inst) {
     FPThreeOp64(code, reg_alloc, block, inst, &XEmitter::SUBSD);
 }
 
+void EmitX64::EmitClearExclusive(IR::Block&, IR::Inst*) {
+    code->MOV(8, MDisp(R15, offsetof(JitState, exclusive_state)), Imm8(0));
+}
+
+void EmitX64::EmitSetExclusive(IR::Block&, IR::Inst* inst) {
+    ASSERT(inst->GetArg(1).IsImmediate());
+    X64Reg address = reg_alloc.UseRegister(inst->GetArg(0), any_gpr);
+
+    code->MOV(8, MDisp(R15, offsetof(JitState, exclusive_state)), Imm8(1));
+    code->MOV(32, MDisp(R15, offsetof(JitState, exclusive_address)), R(address));
+}
+
 void EmitX64::EmitReadMemory8(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(inst, inst->GetArg(0));
 
@@ -1341,6 +1353,60 @@ void EmitX64::EmitWriteMemory64(IR::Block&, IR::Inst* inst) {
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryWrite64));
 }
 
+static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, void* fn) {
+    reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
+    X64Reg passed = reg_alloc.DefRegister(inst, any_gpr);
+    X64Reg tmp = ABI_RETURN; // Use one of the unusued HostCall registers.
+
+    code->MOV(32, R(passed), Imm32(1));
+    code->CMP(8, MDisp(R15, offsetof(JitState, exclusive_state)), Imm8(0));
+    auto fail1_fixup = code->J_CC(CC_E);
+    code->MOV(32, R(tmp), R(ABI_PARAM1));
+    code->XOR(32, R(tmp), MDisp(R15, offsetof(JitState, exclusive_address)));
+    code->TEST(32, R(tmp), Imm32(JitState::RESERVATION_GRANULE_MASK));
+    auto fail2_fixup = code->J_CC(CC_NE);
+    code->MOV(8, MDisp(R15, offsetof(JitState, exclusive_state)), Imm8(0));
+    code->ABI_CallFunction(fn);
+    code->XOR(32, R(passed), R(passed));
+    code->SetJumpTarget(fail1_fixup);
+    code->SetJumpTarget(fail2_fixup);
+}
+
+void EmitX64::EmitExclusiveWriteMemory8(IR::Block&, IR::Inst* inst) {
+    ExclusiveWrite(code, reg_alloc, inst, reinterpret_cast<void*>(cb.MemoryWrite8));
+}
+
+void EmitX64::EmitExclusiveWriteMemory16(IR::Block&, IR::Inst* inst) {
+    ExclusiveWrite(code, reg_alloc, inst, reinterpret_cast<void*>(cb.MemoryWrite16));
+}
+
+void EmitX64::EmitExclusiveWriteMemory32(IR::Block&, IR::Inst* inst) {
+    ExclusiveWrite(code, reg_alloc, inst, reinterpret_cast<void*>(cb.MemoryWrite32));
+}
+
+void EmitX64::EmitExclusiveWriteMemory64(IR::Block&, IR::Inst* inst) {
+    reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
+    X64Reg passed = reg_alloc.DefRegister(inst, any_gpr);
+    X64Reg value_hi = reg_alloc.UseScratchRegister(inst->GetArg(2), any_gpr);
+    X64Reg value = ABI_PARAM2;
+    X64Reg tmp = ABI_RETURN; // Use one of the unusued HostCall registers.
+
+    code->MOV(32, R(passed), Imm32(1));
+    code->CMP(8, MDisp(R15, offsetof(JitState, exclusive_state)), Imm8(0));
+    auto fail1_fixup = code->J_CC(CC_E);
+    code->MOV(32, R(tmp), R(ABI_PARAM1));
+    code->XOR(32, R(tmp), MDisp(R15, offsetof(JitState, exclusive_address)));
+    code->TEST(32, R(tmp), Imm32(JitState::RESERVATION_GRANULE_MASK));
+    auto fail2_fixup = code->J_CC(CC_NE);
+    code->MOV(8, MDisp(R15, offsetof(JitState, exclusive_state)), Imm8(0));
+    code->MOVZX(64, 32, value, R(value));
+    code->SHL(64, R(value_hi), Imm8(32));
+    code->OR(64, R(value), R(value_hi));
+    code->ABI_CallFunction(reinterpret_cast<void*>(cb.MemoryWrite64));
+    code->XOR(32, R(passed), R(passed));
+    code->SetJumpTarget(fail1_fixup);
+    code->SetJumpTarget(fail2_fixup);
+}
 
 void EmitX64::EmitAddCycles(size_t cycles) {
     ASSERT(cycles < std::numeric_limits<u32>::max());

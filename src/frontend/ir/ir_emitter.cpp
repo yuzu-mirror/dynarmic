@@ -362,6 +362,15 @@ IR::Value IREmitter::FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_
     return Inst(IR::Opcode::FPSub64, {a, b});
 }
 
+void IREmitter::ClearExlcusive() {
+    Inst(IR::Opcode::ClearExclusive, {});
+}
+
+void IREmitter::SetExclusive(const IR::Value& vaddr, size_t byte_size) {
+    ASSERT(byte_size == 1 || byte_size == 2 || byte_size == 4 || byte_size == 8 || byte_size == 16);
+    Inst(IR::Opcode::SetExclusive, {vaddr, Imm8(u8(byte_size))});
+}
+
 IR::Value IREmitter::ReadMemory8(const IR::Value& vaddr) {
     return Inst(IR::Opcode::ReadMemory8, {vaddr});
 }
@@ -409,6 +418,38 @@ void IREmitter::WriteMemory64(const IR::Value& vaddr, const IR::Value& value) {
         Inst(IR::Opcode::WriteMemory64, {vaddr, v});
     } else {
         Inst(IR::Opcode::WriteMemory64, {vaddr, value});
+    }
+}
+
+IR::Value IREmitter::ExclusiveWriteMemory8(const IR::Value& vaddr, const IR::Value& value) {
+    return Inst(IR::Opcode::ExclusiveWriteMemory8, {vaddr, value});
+}
+
+IR::Value IREmitter::ExclusiveWriteMemory16(const IR::Value& vaddr, const IR::Value& value) {
+    if (current_location.EFlag()) {
+        auto v = ByteReverseHalf(value);
+        return Inst(IR::Opcode::ExclusiveWriteMemory16, {vaddr, v});
+    } else {
+        return Inst(IR::Opcode::ExclusiveWriteMemory16, {vaddr, value});
+    }
+}
+
+IR::Value IREmitter::ExclusiveWriteMemory32(const IR::Value& vaddr, const IR::Value& value) {
+    if (current_location.EFlag()) {
+        auto v = ByteReverseWord(value);
+        return Inst(IR::Opcode::ExclusiveWriteMemory32, {vaddr, v});
+    } else {
+        return Inst(IR::Opcode::ExclusiveWriteMemory32, {vaddr, value});
+    }
+}
+
+IR::Value IREmitter::ExclusiveWriteMemory64(const IR::Value& vaddr, const IR::Value& value_lo, const IR::Value& value_hi) {
+    if (current_location.EFlag()) {
+        auto vlo = ByteReverseWord(value_lo);
+        auto vhi = ByteReverseWord(value_hi);
+        return Inst(IR::Opcode::ExclusiveWriteMemory64, {vaddr, vlo, vhi});
+    } else {
+        return Inst(IR::Opcode::ExclusiveWriteMemory64, {vaddr, value_lo, value_hi});
     }
 }
 

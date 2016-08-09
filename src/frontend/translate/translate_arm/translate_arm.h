@@ -304,17 +304,17 @@ struct ArmTranslatorVisitor final {
     bool arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
 
     // Synchronization Primitive instructions
-    bool arm_CLREX() { return InterpretThisInstruction(); }
-    bool arm_LDREX(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
-    bool arm_LDREXB(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
-    bool arm_LDREXD(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
-    bool arm_LDREXH(Cond cond, Reg n, Reg d) { return InterpretThisInstruction(); }
-    bool arm_STREX(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
-    bool arm_STREXB(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
-    bool arm_STREXD(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
-    bool arm_STREXH(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
-    bool arm_SWP(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
-    bool arm_SWPB(Cond cond, Reg n, Reg d, Reg m) { return InterpretThisInstruction(); }
+    bool arm_CLREX();
+    bool arm_LDREX(Cond cond, Reg n, Reg d);
+    bool arm_LDREXB(Cond cond, Reg n, Reg d);
+    bool arm_LDREXD(Cond cond, Reg n, Reg d);
+    bool arm_LDREXH(Cond cond, Reg n, Reg d);
+    bool arm_STREX(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_STREXB(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_STREXD(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_STREXH(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SWP(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_SWPB(Cond cond, Reg n, Reg d, Reg m);
 
     // Status register access instructions
     bool arm_CPS() { return InterpretThisInstruction(); }

@@ -697,17 +697,39 @@ public:
     std::string arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
 
     // Synchronization Primitive instructions
-    std::string arm_CLREX() { return "ice"; }
-    std::string arm_LDREX(Cond cond, Reg n, Reg d) { return "ice"; }
-    std::string arm_LDREXB(Cond cond, Reg n, Reg d) { return "ice"; }
-    std::string arm_LDREXD(Cond cond, Reg n, Reg d) { return "ice"; }
-    std::string arm_LDREXH(Cond cond, Reg n, Reg d) { return "ice"; }
-    std::string arm_STREX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_STREXB(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_STREXD(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_STREXH(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SWP(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SWPB(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_CLREX() {
+        return "clrex";
+    }
+    std::string arm_LDREX(Cond cond, Reg n, Reg d) {
+        return Common::StringFromFormat("ldrex%s %s, [%s]", CondToString(cond), RegToString(d), RegToString(n));
+    }
+    std::string arm_LDREXB(Cond cond, Reg n, Reg d) {
+        return Common::StringFromFormat("ldrexb%s %s, [%s]", CondToString(cond), RegToString(d), RegToString(n));
+    }
+    std::string arm_LDREXD(Cond cond, Reg n, Reg d) {
+        return Common::StringFromFormat("ldrexd%s %s, %s, [%s]", CondToString(cond), RegToString(d), RegToString(d+1), RegToString(n));
+    }
+    std::string arm_LDREXH(Cond cond, Reg n, Reg d) {
+        return Common::StringFromFormat("ldrexh%s %s, [%s]", CondToString(cond), RegToString(d), RegToString(n));
+    }
+    std::string arm_STREX(Cond cond, Reg n, Reg d, Reg m) {
+        return Common::StringFromFormat("strex%s %s, %s, [%s]", CondToString(cond), RegToString(d), RegToString(m), RegToString(n));
+    }
+    std::string arm_STREXB(Cond cond, Reg n, Reg d, Reg m) {
+        return Common::StringFromFormat("strexb%s %s, %s, [%s]", CondToString(cond), RegToString(d), RegToString(m), RegToString(n));
+    }
+    std::string arm_STREXD(Cond cond, Reg n, Reg d, Reg m) {
+        return Common::StringFromFormat("strexd%s %s, %s, %s, [%s]", CondToString(cond), RegToString(d), RegToString(m), RegToString(m+1), RegToString(n));
+    }
+    std::string arm_STREXH(Cond cond, Reg n, Reg d, Reg m) {
+        return Common::StringFromFormat("strexh%s %s, %s, [%s]", CondToString(cond), RegToString(d), RegToString(m), RegToString(n));
+    }
+    std::string arm_SWP(Cond cond, Reg n, Reg t, Reg t2) {
+        return Common::StringFromFormat("swp%s %s, %s, [%s]", CondToString(cond), RegToString(t), RegToString(t2), RegToString(n));
+    }
+    std::string arm_SWPB(Cond cond, Reg n, Reg t, Reg t2) {
+        return Common::StringFromFormat("swpb%s %s, %s, [%s]", CondToString(cond), RegToString(t), RegToString(t2), RegToString(n));
+    }
 
     // Status register access instructions
     std::string arm_CPS() { return "ice"; }

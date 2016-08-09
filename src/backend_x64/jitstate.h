@@ -29,6 +29,11 @@ struct JitState {
     u32 save_host_MXCSR = 0;
     s64 cycles_remaining = 0;
 
+    // Exclusive state
+    static constexpr u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
+    u32 exclusive_state = 0;
+    u32 exclusive_address = 0;
+
     u32 FPSCR_IDC = 0;
     u32 FPSCR_UFC = 0;
     u32 guest_FPSCR_flags = 0;

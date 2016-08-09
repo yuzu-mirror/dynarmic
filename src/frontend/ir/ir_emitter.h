@@ -113,6 +113,8 @@ public:
     IR::Value FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
     IR::Value FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
 
+    void ClearExlcusive();
+    void SetExclusive(const IR::Value& vaddr, size_t byte_size);
     IR::Value ReadMemory8(const IR::Value& vaddr);
     IR::Value ReadMemory16(const IR::Value& vaddr);
     IR::Value ReadMemory32(const IR::Value& vaddr);
@@ -121,6 +123,10 @@ public:
     void WriteMemory16(const IR::Value& vaddr, const IR::Value& value);
     void WriteMemory32(const IR::Value& vaddr, const IR::Value& value);
     void WriteMemory64(const IR::Value& vaddr, const IR::Value& value);
+    IR::Value ExclusiveWriteMemory8(const IR::Value& vaddr, const IR::Value& value);
+    IR::Value ExclusiveWriteMemory16(const IR::Value& vaddr, const IR::Value& value);
+    IR::Value ExclusiveWriteMemory32(const IR::Value& vaddr, const IR::Value& value);
+    IR::Value ExclusiveWriteMemory64(const IR::Value& vaddr, const IR::Value& value_lo, const IR::Value& value_hi);
 
     void Breakpoint();
 

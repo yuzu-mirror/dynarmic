@@ -82,6 +82,8 @@ OPCODE(FPSub32,                 T::F32,         T::F32,         T::F32          
 OPCODE(FPSub64,                 T::F64,         T::F64,         T::F64                          )
 
 // Memory access
+OPCODE(ClearExclusive,          T::Void,                                                        )
+OPCODE(SetExclusive,            T::Void,        T::U32,         T::U8                           )
 OPCODE(ReadMemory8,             T::U8,          T::U32                                          )
 OPCODE(ReadMemory16,            T::U16,         T::U32                                          )
 OPCODE(ReadMemory32,            T::U32,         T::U32                                          )
@@ -90,3 +92,7 @@ OPCODE(WriteMemory8,            T::Void,        T::U32,         T::U8           
 OPCODE(WriteMemory16,           T::Void,        T::U32,         T::U16                          )
 OPCODE(WriteMemory32,           T::Void,        T::U32,         T::U32                          )
 OPCODE(WriteMemory64,           T::Void,        T::U32,         T::U64                          )
+OPCODE(ExclusiveWriteMemory8,   T::U32,         T::U32,         T::U8                           )
+OPCODE(ExclusiveWriteMemory16,  T::U32,         T::U32,         T::U16                          )
+OPCODE(ExclusiveWriteMemory32,  T::U32,         T::U32,         T::U32                          )
+OPCODE(ExclusiveWriteMemory64,  T::U32,         T::U32,         T::U32,         T::U32          )

@@ -181,8 +181,8 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
         INST(&V::arm_STREXB,      "STREXB",              "cccc00011100nnnndddd11111001mmmm"), // v6K
         INST(&V::arm_STREXD,      "STREXD",              "cccc00011010nnnndddd11111001mmmm"), // v6K
         INST(&V::arm_STREXH,      "STREXH",              "cccc00011110nnnndddd11111001mmmm"), // v6K
-        INST(&V::arm_SWP,         "SWP",                 "cccc00010000nnnndddd00001001mmmm"), // v2S (v6: Deprecated)
-        INST(&V::arm_SWPB,        "SWPB",                "cccc00010100nnnndddd00001001mmmm"), // v2S (v6: Deprecated)
+        INST(&V::arm_SWP,         "SWP",                 "cccc00010000nnnntttt00001001uuuu"), // v2S (v6: Deprecated)
+        INST(&V::arm_SWPB,        "SWPB",                "cccc00010100nnnntttt00001001uuuu"), // v2S (v6: Deprecated)
 
         // Load/Store instructions
         INST(&V::arm_LDR_imm,     "LDR (imm)",           "cccc010pu0w1nnnnddddvvvvvvvvvvvv"),
