@@ -337,32 +337,158 @@ public:
     std::string arm_YIELD() { return "<unimplemented>"; }
 
     // Load/Store instructions
-    std::string arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) { return "ice"; }
-    std::string arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) { return "ice"; }
-    std::string arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) { return "ice"; }
-    std::string arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) { return "ice"; }
+    std::string arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12) {
+        if (P) {
+            return Common::StringFromFormat("ldr%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldr%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm5 imm5, ShiftType shift, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("ldr%s %s, [%s, %c%s%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldr%s %s, [%s], %c%s%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12) {
+        if (P) {
+            return Common::StringFromFormat("ldrb%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrb%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm5 imm5, ShiftType shift, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("ldrb%s %s, [%s, %c%s%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrb%s %s, [%s], %c%s%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? " (err: W == 1!!!)" : "");
+        }
+    }
     std::string arm_LDRBT() { return "ice"; }
-    std::string arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) { return "ice"; }
-    std::string arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) { return "ice"; }
-    std::string arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        u32 imm32 = (imm8a << 4) | imm8b;
+        if (P) {
+            return Common::StringFromFormat("ldrd%s %s, %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', imm32, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrd%s %s, %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', imm32, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("ldrd%s %s, %s, [%s, %c%s]%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', RegToString(m), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrd%s %s, %s, [%s], %c%s%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', RegToString(m), W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        u32 imm32 = (imm8a << 4) | imm8b;
+        if (P) {
+            return Common::StringFromFormat("ldrh%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrh%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("ldrd%s %s, [%s, %c%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrd%s %s, [%s], %c%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? " (err: W == 1!!!)" : "");
+        }
+    }
     std::string arm_LDRHT() { return "ice"; }
-    std::string arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) { return "ice"; }
-    std::string arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        u32 imm32 = (imm8a << 4) | imm8b;
+        if (P) {
+            return Common::StringFromFormat("ldrsb%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrsb%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("ldrsb%s %s, [%s, %c%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrsb%s %s, [%s], %c%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? " (err: W == 1!!!)" : "");
+        }
+    }
     std::string arm_LDRSBT() { return "ice"; }
-    std::string arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) { return "ice"; }
-    std::string arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        u32 imm32 = (imm8a << 4) | imm8b;
+        if (P) {
+            return Common::StringFromFormat("ldrsh%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrsh%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("ldrsh%s %s, [%s, %c%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("ldrsh%s %s, [%s], %c%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? " (err: W == 1!!!)" : "");
+        }
+    }
     std::string arm_LDRSHT() { return "ice"; }
     std::string arm_LDRT() { return "ice"; }
-    std::string arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) { return "ice"; }
-    std::string arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) { return "ice"; }
-    std::string arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12) { return "ice"; }
-    std::string arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m) { return "ice"; }
+    std::string arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12) {
+        if (P) {
+            return Common::StringFromFormat("str%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("str%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm5 imm5, ShiftType shift, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("str%s %s, [%s, %c%s%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("str%s %s, [%s], %c%s%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12) {
+        if (P) {
+            return Common::StringFromFormat("strb%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("strb%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm5 imm5, ShiftType shift, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("strb%s %s, [%s, %c%s%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("strb%s %s, [%s], %c%s%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? " (err: W == 1!!!)" : "");
+        }
+    }
     std::string arm_STRBT() { return "ice"; }
-    std::string arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) { return "ice"; }
-    std::string arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) { return "ice"; }
-    std::string arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        u32 imm32 = (imm8a << 4) | imm8b;
+        if (P) {
+            return Common::StringFromFormat("strd%s %s, %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', imm32, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("strd%s %s, %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', imm32, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("strd%s %s, %s, [%s, %c%s]%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', RegToString(m), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("strd%s %s, %s, [%s], %c%s%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', RegToString(m), W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        u32 imm32 = (imm8a << 4) | imm8b;
+        if (P) {
+            return Common::StringFromFormat("strh%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("strh%s %s, [%s], #%c%u%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm32, W ? " (err: W == 1!!!)" : "");
+        }
+    }
+    std::string arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+        if (P) {
+            return Common::StringFromFormat("strd%s %s, [%s, %c%s]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? "!" : "");
+        } else {
+            return Common::StringFromFormat("strd%s %s, [%s], %c%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), W ? " (err: W == 1!!!)" : "");
+        }
+    }
     std::string arm_STRHT() { return "ice"; }
     std::string arm_STRT() { return "ice"; }
 
