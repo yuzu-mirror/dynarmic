@@ -120,7 +120,7 @@ Value Inst::GetArg(size_t index) const {
 
 void Inst::SetArg(size_t index, Value value) {
     DEBUG_ASSERT(index < GetNumArgsOf(op));
-    DEBUG_ASSERT(value.GetType() == GetArgTypeOf(op, index));
+    DEBUG_ASSERT(value.GetType() == GetArgTypeOf(op, index) || Type::Opaque == GetArgTypeOf(op, index));
 
     if (!args[index].IsImmediate()) {
         UndoUse(args[index]);

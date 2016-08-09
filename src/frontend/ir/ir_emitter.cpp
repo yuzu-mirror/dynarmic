@@ -426,7 +426,6 @@ IR::Value IREmitter::Inst(IR::Opcode op, std::initializer_list<IR::Value> args) 
     DEBUG_ASSERT(args.size() == inst->NumArgs());
 
     std::for_each(args.begin(), args.end(), [&inst, op, index = size_t(0)](const auto& v) mutable {
-        DEBUG_ASSERT(IR::GetArgTypeOf(op, index) == v.GetType());
         inst->SetArg(index, v);
         index++;
     });
