@@ -123,6 +123,11 @@ void Jit::ClearCache(bool poison_memory) {
     impl->emitter.ClearCache();
 }
 
+void Jit::Reset() {
+    ASSERT(!is_executing);
+    impl->jit_state = {};
+}
+
 void Jit::HaltExecution() {
     ASSERT(is_executing);
     halt_requested = true;

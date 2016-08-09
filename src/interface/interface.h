@@ -58,6 +58,12 @@ public:
     void ClearCache(bool poison_memory = true);
 
     /**
+     * Reset CPU state to state at startup. Does not clear code cache.
+     * Cannot be called from a callback.
+     */
+    void Reset();
+
+    /**
      * Stops execution in Jit::Run.
      * Can only be called from a callback.
      */
