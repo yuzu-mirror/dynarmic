@@ -424,13 +424,14 @@ TEST_CASE("VFP: VMOV", "[JitX64][vfp]") {
 
 
 TEST_CASE("VFP: VMOV (reg), VLDR, VSTR", "[JitX64][vfp]") {
-    const std::array<InstructionGenerator, 3> instructions = {{
-        InstructionGenerator("cccc11101D110000dddd101z01M0mmmm"),
-        InstructionGenerator("cccc1101UD01nnnndddd101zvvvvvvvv"),
-        InstructionGenerator("cccc1101UD00nnnndddd101zvvvvvvvv"),
+    const std::array<InstructionGenerator, 4> instructions = {{
+        InstructionGenerator("1111000100000001000000e000000000"), // SETEND
+        InstructionGenerator("cccc11101D110000dddd101z01M0mmmm"), // VMOV (reg)
+        InstructionGenerator("cccc1101UD01nnnndddd101zvvvvvvvv"), // VLDR
+        InstructionGenerator("cccc1101UD00nnnndddd101zvvvvvvvv"), // VSTR
     }};
 
-    FuzzJitArm(1, 1, 10000, [&instructions]() -> u32 {
+    FuzzJitArm(5, 6, 10000, [&instructions]() -> u32 {
         return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
     });
 }

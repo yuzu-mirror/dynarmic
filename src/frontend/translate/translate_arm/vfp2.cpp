@@ -388,8 +388,11 @@ bool ArmTranslatorVisitor::vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd
         auto address = U ? ir.Add(base, ir.Imm32(imm32)) : ir.Sub(base, ir.Imm32(imm32));
         if (sz) {
             auto d_u64 = ir.TransferFromFP64(ir.GetExtendedRegister(d));
-            ir.WriteMemory32(address, ir.LeastSignificantWord(d_u64));
-            ir.WriteMemory32(ir.Add(address, ir.Imm32(4)), ir.MostSignificantWord(d_u64).result);
+            auto lo = ir.LeastSignificantWord(d_u64);
+            auto hi = ir.MostSignificantWord(d_u64).result;
+            if (ir.current_location.EFlag()) std::swap(lo, hi);
+            ir.WriteMemory32(address, lo);
+            ir.WriteMemory32(ir.Add(address, ir.Imm32(4)), hi);
         } else {
             ir.WriteMemory32(address, ir.TransferFromFP32(ir.GetExtendedRegister(d)));
         }
