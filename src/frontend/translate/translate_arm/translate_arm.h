@@ -353,6 +353,7 @@ struct ArmTranslatorVisitor final {
 
     // Floating-point load-store instructions
     bool vfp2_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8);
+    bool vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8);
 };
 
 } // namespace Arm

@@ -59,6 +59,7 @@ set(HEADERS
     frontend/decoder/decoder_detail.h
     frontend/decoder/thumb16.h
     frontend/decoder/thumb32.h
+    frontend/decoder/vfp2.h
     frontend/disassembler/disassembler.h
     frontend/ir/ir.h
     frontend/ir/ir_emitter.h

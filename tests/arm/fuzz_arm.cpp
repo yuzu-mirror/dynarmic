@@ -423,10 +423,11 @@ TEST_CASE("VFP: VMOV", "[JitX64][vfp]") {
 }
 
 
-TEST_CASE("VFP: VMOV (reg), VLDR", "[JitX64][vfp]") {
-    const std::array<InstructionGenerator, 2> instructions = {{
+TEST_CASE("VFP: VMOV (reg), VLDR, VSTR", "[JitX64][vfp]") {
+    const std::array<InstructionGenerator, 3> instructions = {{
         InstructionGenerator("cccc11101D110000dddd101z01M0mmmm"),
         InstructionGenerator("cccc1101UD01nnnndddd101zvvvvvvvv"),
+        InstructionGenerator("cccc1101UD00nnnndddd101zvvvvvvvv"),
     }};
 
     FuzzJitArm(1, 1, 10000, [&instructions]() -> u32 {

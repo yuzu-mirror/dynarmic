@@ -379,5 +379,23 @@ bool ArmTranslatorVisitor::vfp2_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd
     return true;
 }
 
+bool ArmTranslatorVisitor::vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8) {
+    u32 imm32 = imm8 << 2;
+    ExtReg d = ToExtReg(sz, Vd, D);
+    // VSTR <{S,D}d>, [<Rn>, #+/-<imm32>]
+    if (ConditionPassed(cond)) {
+        auto base = n == Reg::PC ? ir.Imm32(ir.AlignPC(4)) : ir.GetRegister(n);
+        auto address = U ? ir.Add(base, ir.Imm32(imm32)) : ir.Sub(base, ir.Imm32(imm32));
+        if (sz) {
+            auto d_u64 = ir.TransferFromFP64(ir.GetExtendedRegister(d));
+            ir.WriteMemory32(address, ir.LeastSignificantWord(d_u64));
+            ir.WriteMemory32(ir.Add(address, ir.Imm32(4)), ir.MostSignificantWord(d_u64).result);
+        } else {
+            ir.WriteMemory32(address, ir.TransferFromFP32(ir.GetExtendedRegister(d)));
+        }
+    }
+    return true;
+}
+
 } // namespace Arm
 } // namespace Dynarmic
