@@ -736,7 +736,9 @@ public:
     std::string arm_MRS() { return "ice"; }
     std::string arm_MSR() { return "ice"; }
     std::string arm_RFE() { return "ice"; }
-    std::string arm_SETEND(bool E) { return "ice"; }
+    std::string arm_SETEND(bool E) {
+        return E ? "setend be" : "setend le";
+    }
     std::string arm_SRS() { return "ice"; }
 
     // Floating point arithmetic instructions
