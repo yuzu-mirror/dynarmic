@@ -27,7 +27,7 @@ bool ArmTranslatorVisitor::arm_RFE() {
 
 bool ArmTranslatorVisitor::arm_SETEND(bool E) {
     // SETEND {BE,LE}
-    ir.SetTerm(ir.current_location.AdvancePC(4).SetEFlag(E));
+    ir.SetTerm(IR::Term::LinkBlock{ir.current_location.AdvancePC(4).SetEFlag(E)});
     return false;
 }
 
