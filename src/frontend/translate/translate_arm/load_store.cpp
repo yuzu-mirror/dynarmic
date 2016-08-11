@@ -225,11 +225,35 @@ bool ArmTranslatorVisitor::arm_LDRHT() {
 }
 
 bool ArmTranslatorVisitor::arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b))));
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m))));
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRSBT() {
@@ -237,11 +261,35 @@ bool ArmTranslatorVisitor::arm_LDRSBT() {
 }
 
 bool ArmTranslatorVisitor::arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b))));
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m))));
+
+        if (d == Reg::PC) {
+            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            return false;
+        }
+
+        ir.SetRegister(d, data);
+    }
+
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_LDRSHT() {
