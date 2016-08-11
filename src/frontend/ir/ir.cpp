@@ -219,6 +219,8 @@ std::string DumpBlock(const IR::Block& block) {
                 return Common::StringFromFormat("#%#x", arg.GetU32());
             case Type::RegRef:
                 return Arm::RegToString(arg.GetRegRef());
+            case Type::ExtRegRef:
+                return Arm::ExtRegToString(arg.GetExtRegRef());
             default:
                 return "<unknown immediate type>";
         }

@@ -121,6 +121,7 @@ struct LocationDescriptorHash {
 
 const char* CondToString(Cond cond, bool explicit_al = false);
 const char* RegToString(Reg reg);
+const char* ExtRegToString(ExtReg reg);
 std::string RegListToString(RegList reg_list);
 
 inline Reg operator+(Reg reg, int number) {
