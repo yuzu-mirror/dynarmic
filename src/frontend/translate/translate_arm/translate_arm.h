@@ -317,12 +317,12 @@ struct ArmTranslatorVisitor final {
     bool arm_SWPB(Cond cond, Reg n, Reg d, Reg m);
 
     // Status register access instructions
-    bool arm_CPS() { return InterpretThisInstruction(); }
-    bool arm_MRS() { return InterpretThisInstruction(); }
-    bool arm_MSR() { return InterpretThisInstruction(); }
-    bool arm_RFE() { return InterpretThisInstruction(); }
-    bool arm_SETEND(bool E) { return InterpretThisInstruction(); }
-    bool arm_SRS() { return InterpretThisInstruction(); }
+    bool arm_CPS();
+    bool arm_MRS();
+    bool arm_MSR();
+    bool arm_RFE();
+    bool arm_SETEND(bool E);
+    bool arm_SRS();
 
     // Floating-point three-register data processing instructions
     bool vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
