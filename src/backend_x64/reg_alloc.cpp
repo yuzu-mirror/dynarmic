@@ -45,7 +45,7 @@ static Gen::X64Reg HostLocToX64(HostLoc loc) {
 }
 
 static Gen::OpArg SpillToOpArg(HostLoc loc) {
-    static_assert(std::is_same<decltype(JitState{}.Spill[0]), u64&>::value, "Spill must be u64");
+    static_assert(std::is_same<decltype(JitState{nullptr}.Spill[0]), u64&>::value, "Spill must be u64");
     DEBUG_ASSERT(HostLocIsSpill(loc));
 
     size_t i = static_cast<size_t>(loc) - static_cast<size_t>(HostLoc::FirstSpill);

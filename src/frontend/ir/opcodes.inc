@@ -22,6 +22,9 @@ OPCODE(OrQFlag,                 T::Void,        T::U1                           
 OPCODE(BXWritePC,               T::Void,        T::U32                                          )
 OPCODE(CallSupervisor,          T::Void,        T::U32                                          )
 
+// Hints
+OPCODE(PushRSB,                 T::Void,        T::U64                                          )
+
 // Pseudo-operation, handled specially at final emit
 OPCODE(GetCarryFromOp,          T::U1,          T::U32                                          )
 OPCODE(GetOverflowFromOp,       T::U1,          T::U32                                          )

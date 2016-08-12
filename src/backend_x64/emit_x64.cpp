@@ -67,6 +67,7 @@ EmitX64::BlockDescriptor EmitX64::Emit(const Arm::LocationDescriptor descriptor,
     code->INT3();
     const CodePtr code_ptr = code->GetCodePtr();
     basic_blocks[descriptor].code_ptr = code_ptr;
+    unique_hash_to_code_ptr[descriptor.UniqueHash()] = code_ptr;
 
     EmitCondPrelude(block.cond, block.cond_failed, block.location);
 
@@ -326,6 +327,27 @@ void EmitX64::EmitCallSupervisor(IR::Block&, IR::Inst* inst) {
     code->SwitchMxcsrOnExit();
     code->ABI_CallFunction(reinterpret_cast<void*>(cb.CallSVC));
     code->SwitchMxcsrOnEntry();
+}
+
+void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
+    ASSERT(inst->GetArg(0).IsImmediate());
+    u64 imm64 = inst->GetArg(0).GetU64();
+
+    X64Reg tmp = reg_alloc.ScratchRegister({HostLoc::RCX});
+    X64Reg rsb_index = reg_alloc.ScratchRegister(any_gpr);
+    u64 code_ptr = unique_hash_to_code_ptr.find(imm64) != unique_hash_to_code_ptr.end()
+                    ? u64(unique_hash_to_code_ptr[imm64])
+                    : u64(code->GetReturnFromRunCodeAddress());
+
+    code->MOV(32, R(rsb_index), MDisp(R15, offsetof(JitState, rsb_ptr)));
+    code->AND(32, R(rsb_index), Imm32(u32(JitState::RSBSize - 1)));
+    code->MOV(64, R(tmp), Imm64(imm64));
+    code->MOV(64, MComplex(R15, rsb_index, SCALE_1, offsetof(JitState, rsb_location_descriptors)), R(tmp));
+    patch_unique_hash_locations[imm64].emplace_back(code->GetCodePtr());
+    code->MOV(64, R(tmp), Imm64(code_ptr)); // This line has to match up with EmitX64::Patch.
+    code->MOV(64, MComplex(R15, rsb_index, SCALE_1, offsetof(JitState, rsb_codeptrs)), R(tmp));
+    code->ADD(32, R(rsb_index), Imm32(1));
+    code->MOV(32, MDisp(R15, offsetof(JitState, rsb_ptr)), R(rsb_index));
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Block&, IR::Inst*) {
@@ -1696,7 +1718,22 @@ void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::L
 }
 
 void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescriptor initial_location) {
-    EmitTerminalReturnToDispatch({}, initial_location);  // TODO: Implement RSB
+    // This calculation has to match up with IREmitter::PushRSB
+    code->MOV(32, R(RBX), MJitStateCpsr());
+    code->MOV(32, R(RCX), MJitStateReg(Arm::Reg::PC));
+    code->AND(32, R(RBX), Imm32((1 << 5) | (1 << 9)));
+    code->SHL(32, R(RBX), Imm8(2));
+    code->OR(32, R(RBX), MDisp(R15, offsetof(JitState, guest_FPSCR_mode)));
+    code->SHR(64, R(RBX), Imm8(32));
+    code->OR(64, R(RBX), R(RCX));
+
+    code->MOV(64, R(RAX), Imm64(u64(code->GetReturnFromRunCodeAddress())));
+    for (size_t i = 0; i < JitState::RSBSize; ++i) {
+        code->CMP(64, R(RBX), MDisp(R15, int(offsetof(JitState, rsb_location_descriptors) + i * sizeof(u64))));
+        code->CMOVcc(64, RAX, MDisp(R15, int(offsetof(JitState, rsb_codeptrs) + i * sizeof(u64))), CC_E);
+    }
+    code->SUB(32, MDisp(R15, offsetof(JitState, rsb_ptr)), Imm32(1));
+    code->JMPptr(R(RAX));
 }
 
 void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location) {
@@ -1714,6 +1751,11 @@ void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
         code->SetCodePtr(const_cast<u8*>(location));
         code->J_CC(CC_G, bb, true);
         ASSERT(code->GetCodePtr() - location == 6);
+    }
+
+    for (CodePtr location : patch_unique_hash_locations[desc.UniqueHash()]) {
+        code->SetCodePtr(const_cast<u8*>(location));
+        code->MOV(64, R(RCX), Imm64(u64(bb)));
     }
 
     code->SetCodePtr(save_code_ptr);

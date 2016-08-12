@@ -50,6 +50,7 @@ public:
     explicit Value(bool value);
     explicit Value(u8 value);
     explicit Value(u32 value);
+    explicit Value(u64 value);
 
     bool IsEmpty() const;
     bool IsImmediate() const;
@@ -61,6 +62,7 @@ public:
     bool GetU1() const;
     u8 GetU8() const;
     u32 GetU32() const;
+    u64 GetU64() const;
 
 private:
     Type type;
@@ -72,6 +74,7 @@ private:
         bool imm_u1;
         u8 imm_u8;
         u32 imm_u32;
+        u64 imm_u64;
     } inner;
 };
 

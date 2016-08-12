@@ -753,15 +753,18 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_BX(Reg m) {
         // BX <Rm>
         ir.BXWritePC(ir.GetRegister(m));
-        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        if (m == Reg::R14)
+            ir.SetTerm(IR::Term::PopRSBHint{});
+        else
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
         return false;
     }
 
     bool thumb16_BLX_reg(Reg m) {
         // BLX <Rm>
+        ir.PushRSB(ir.current_location.AdvancePC(2));
         ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 2) | 1));
         ir.BXWritePC(ir.GetRegister(m));
-        // TODO(optimization): Possible push RSB location
         ir.SetTerm(IR::Term::ReturnToDispatch{});
         return false;
     }
@@ -798,6 +801,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_BL_imm(Imm11 hi, Imm11 lo) {
         s32 imm32 = Common::SignExtend<23, s32>((hi << 12) | (lo << 1)) + 4;
         // BL <label>
+        ir.PushRSB(ir.current_location.AdvancePC(4));
         ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 4) | 1));
         auto new_location = ir.current_location.AdvancePC(imm32);
         ir.SetTerm(IR::Term::LinkBlock{new_location});
@@ -810,6 +814,7 @@ struct ThumbTranslatorVisitor final {
             return UnpredictableInstruction();
         }
         // BLX <label>
+        ir.PushRSB(ir.current_location.AdvancePC(4));
         ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 4) | 1));
         auto new_location = ir.current_location
                               .SetPC(ir.AlignPC(4) + imm32)

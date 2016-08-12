@@ -13,9 +13,13 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+class BlockOfCode;
+
 constexpr size_t SpillCount = 32;
 
 struct JitState {
+    JitState(BlockOfCode* code) { ResetRSB(code); }
+
     u32 Cpsr = 0;
     std::array<u32, 16> Reg{}; // Current register file.
     // TODO: Mode-specific register sets unimplemented.
@@ -34,9 +38,16 @@ struct JitState {
     u32 exclusive_state = 0;
     u32 exclusive_address = 0;
 
+    static constexpr size_t RSBSize = 4; // MUST be a power of 2.
+    u32 rsb_ptr = 0;
+    std::array<u64, RSBSize> rsb_location_descriptors;
+    std::array<u64, RSBSize> rsb_codeptrs;
+    void ResetRSB(BlockOfCode* code);
+
     u32 FPSCR_IDC = 0;
     u32 FPSCR_UFC = 0;
-    u32 guest_FPSCR_flags = 0;
+    u32 guest_FPSCR_mode = 0;
+    u32 guest_FPSCR_nzcv = 0;
     u32 old_FPSCR = 0;
     u32 Fpscr() const;
     void SetFpscr(u32 FPSCR);

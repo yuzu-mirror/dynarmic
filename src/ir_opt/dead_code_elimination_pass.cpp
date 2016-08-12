@@ -25,6 +25,7 @@ void DeadCodeElimination(IR::Block& block) {
             case IR::Opcode::OrQFlag:
             case IR::Opcode::BXWritePC:
             case IR::Opcode::CallSupervisor:
+            case IR::Opcode::PushRSB:
             case IR::Opcode::FPAbs32:
             case IR::Opcode::FPAbs64:
             case IR::Opcode::FPAdd32:

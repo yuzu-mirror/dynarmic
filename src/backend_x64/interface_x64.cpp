@@ -29,10 +29,15 @@ namespace Dynarmic {
 using namespace BackendX64;
 
 struct Jit::Impl {
-    Impl(Jit* jit, UserCallbacks callbacks) : emitter(&block_of_code, callbacks, jit), callbacks(callbacks) {}
+    Impl(Jit* jit, UserCallbacks callbacks)
+            : block_of_code()
+            , jit_state(&block_of_code)
+            , emitter(&block_of_code, callbacks, jit)
+            , callbacks(callbacks)
+    {}
 
-    JitState jit_state{};
-    BlockOfCode block_of_code{};
+    BlockOfCode block_of_code;
+    JitState jit_state;
     EmitX64 emitter;
     const UserCallbacks callbacks;
 
@@ -41,7 +46,7 @@ struct Jit::Impl {
         bool TFlag = Common::Bit<5>(jit_state.Cpsr);
         bool EFlag = Common::Bit<9>(jit_state.Cpsr);
 
-        Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.guest_FPSCR_flags};
+        Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.guest_FPSCR_mode};
 
         CodePtr code_ptr = GetBasicBlock(descriptor).code_ptr;
         return block_of_code.RunCode(&jit_state, code_ptr, cycle_count);
@@ -121,11 +126,12 @@ void Jit::ClearCache(bool poison_memory) {
     ASSERT(!is_executing);
     impl->block_of_code.ClearCache(poison_memory);
     impl->emitter.ClearCache();
+    impl->jit_state.ResetRSB(&impl->block_of_code);
 }
 
 void Jit::Reset() {
     ASSERT(!is_executing);
-    impl->jit_state = {};
+    impl->jit_state = JitState(&impl->block_of_code);
 }
 
 void Jit::HaltExecution() {

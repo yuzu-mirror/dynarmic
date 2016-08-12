@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <array>
+
 #include "backend_x64/jitstate.h"
 #include "common/common_types.h"
 #include "common/x64/emitter.h"
@@ -51,6 +53,10 @@ public:
         return Gen::M(const_FloatPenultimatePositiveDenormal64);
     }
 
+    CodePtr GetReturnFromRunCodeAddress() const {
+        return return_from_run_code;
+    }
+
 private:
     const u8* const_FloatNegativeZero32;
     const u8* const_FloatNaN32;
@@ -64,6 +70,10 @@ private:
     using RunCodeFuncType = void(*)(JitState*, CodePtr);
     RunCodeFuncType run_code;
     void GenRunCode();
+
+    CodePtr return_from_run_code;
+    CodePtr return_from_run_code_without_mxcsr_switch;
+    void GenReturnFromRunCode();
 };
 
 } // namespace BackendX64

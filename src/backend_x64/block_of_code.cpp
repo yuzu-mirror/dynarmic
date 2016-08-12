@@ -15,7 +15,7 @@ using namespace Gen;
 namespace Dynarmic {
 namespace BackendX64 {
 
-BlockOfCode::BlockOfCode() {
+BlockOfCode::BlockOfCode() : Gen::XCodeBlock() {
     AllocCodeSpace(128 * 1024 * 1024);
     ClearCache(false);
 }
@@ -29,6 +29,7 @@ void BlockOfCode::ClearCache(bool poison_memory) {
 
     GenConstants();
     GenRunCode();
+    GenReturnFromRunCode();
 }
 
 size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const {
@@ -41,11 +42,7 @@ size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cyc
 }
 
 void BlockOfCode::ReturnFromRunCode(bool MXCSR_switch) {
-    if (MXCSR_switch)
-        SwitchMxcsrOnExit();
-
-    ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
-    RET();
+    JMP(MXCSR_switch ? return_from_run_code : return_from_run_code_without_mxcsr_switch, true);
 }
 
 void BlockOfCode::GenConstants() {
@@ -78,6 +75,17 @@ void BlockOfCode::GenRunCode() {
     MOV(64, R(R15), R(ABI_PARAM1));
     SwitchMxcsrOnEntry();
     JMPptr(R(ABI_PARAM2));
+}
+
+void BlockOfCode::GenReturnFromRunCode() {
+    return_from_run_code = GetCodePtr();
+
+    SwitchMxcsrOnExit();
+
+    return_from_run_code_without_mxcsr_switch = GetCodePtr();
+
+    ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
+    RET();
 }
 
 void BlockOfCode::SwitchMxcsrOnEntry() {

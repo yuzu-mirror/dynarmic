@@ -71,10 +71,10 @@ enum class SignExtendRotation {
  * tells us if the processor is in Thumb or Arm mode.
  */
 struct LocationDescriptor {
-    static constexpr u32 FPSCR_MASK = 0x3F79F9F;
+    static constexpr u32 FPSCR_MODE_MASK = 0x03F79F00;
 
     LocationDescriptor(u32 arm_pc, bool tflag, bool eflag, u32 fpscr)
-            : arm_pc(arm_pc), tflag(tflag), eflag(eflag), fpscr(fpscr & FPSCR_MASK) {}
+            : arm_pc(arm_pc), tflag(tflag), eflag(eflag), fpscr(fpscr & FPSCR_MODE_MASK) {}
 
     u32 PC() const { return arm_pc; }
     bool TFlag() const { return tflag; }
@@ -106,7 +106,17 @@ struct LocationDescriptor {
     }
 
     LocationDescriptor SetFPSCR(u32 new_fpscr) const {
-        return LocationDescriptor(arm_pc, tflag, eflag, new_fpscr & FPSCR_MASK);
+        return LocationDescriptor(arm_pc, tflag, eflag, new_fpscr & FPSCR_MODE_MASK);
+    }
+
+    u64 UniqueHash() const {
+        // This value MUST BE UNIQUE.
+        // This calculation has to match up with EmitX64::EmitTerminalPopRSBHint
+        u64 pc_u64 = u64(arm_pc);
+        u64 fpscr_u64 = u64(fpscr) << 32;
+        u64 t_u64 = tflag ? (1ull << 35) : 0;
+        u64 e_u64 = eflag ? (1ull << 39) : 0;
+        return pc_u64 | fpscr_u64 | t_u64 | e_u64;
     }
 
 private:
@@ -118,10 +128,7 @@ private:
 
 struct LocationDescriptorHash {
     size_t operator()(const LocationDescriptor& x) const {
-        return std::hash<u64>()(static_cast<u64>(x.PC())
-                                ^ static_cast<u64>(x.TFlag())
-                                ^ (static_cast<u64>(x.EFlag()) << 1)
-                                ^ (static_cast<u64>(x.FPSCR()) << 32));
+        return std::hash<u64>()(x.UniqueHash());
     }
 };
 

@@ -4,13 +4,21 @@
  * General Public License version 2 or any later version.
  */
 
+#include "backend_x64/block_of_code.h"
 #include "backend_x64/jitstate.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
+#include "frontend/arm_types.h"
 
 namespace Dynarmic {
 namespace BackendX64 {
+
+void JitState::ResetRSB(BlockOfCode* code) {
+    for (auto& value : rsb_codeptrs) {
+        value = u64(code->GetReturnFromRunCodeAddress());
+    }
+}
 
 /**
  * Comparing MXCSR and FPSCR
@@ -68,14 +76,16 @@ namespace BackendX64 {
  */
 
 // NZCV; QC (ASMID only), AHP; DN, FZ, RMode, Stride; SBZP; Len; trap enables; cumulative bits
-constexpr u32 FPSCR_MASK = 0b1111'00'111111'0'111'10011111'00000000;
+constexpr u32 FPSCR_MODE_MASK = Arm::LocationDescriptor::FPSCR_MODE_MASK;
+constexpr u32 FPSCR_NZCV_MASK = 0xF0000000;
 
 u32 JitState::Fpscr() const {
-    ASSERT((guest_FPSCR_flags & ~FPSCR_MASK) == 0);
+    ASSERT((guest_FPSCR_mode & ~FPSCR_MODE_MASK) == 0);
+    ASSERT((guest_FPSCR_nzcv & ~FPSCR_NZCV_MASK) == 0);
     ASSERT((FPSCR_IDC & ~(1 << 7)) == 0);
     ASSERT((FPSCR_UFC & ~(1 << 3)) == 0);
 
-    u32 FPSCR = guest_FPSCR_flags;
+    u32 FPSCR = guest_FPSCR_mode | guest_FPSCR_nzcv;
     FPSCR |= (guest_MXCSR & 0b0000000000001);       // IOC = IE
     FPSCR |= (guest_MXCSR & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
     FPSCR |= FPSCR_IDC;
@@ -86,7 +96,8 @@ u32 JitState::Fpscr() const {
 
 void JitState::SetFpscr(u32 FPSCR) {
     old_FPSCR = FPSCR;
-    guest_FPSCR_flags = FPSCR & FPSCR_MASK;
+    guest_FPSCR_mode = FPSCR & FPSCR_MODE_MASK;
+    guest_FPSCR_nzcv = FPSCR & FPSCR_NZCV_MASK;
     guest_MXCSR = 0;
 
     // Exception masks / enables
@@ -113,7 +124,6 @@ void JitState::SetFpscr(u32 FPSCR) {
         guest_MXCSR |= (1 << 6);  // SSE Denormals are Zero
     }
 }
-
 
 } // namespace BackendX64
 } // namespace Dynarmic

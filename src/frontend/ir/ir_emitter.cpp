@@ -98,6 +98,10 @@ void IREmitter::CallSupervisor(const IR::Value& value) {
     Inst(IR::Opcode::CallSupervisor, {value});
 }
 
+void IREmitter::PushRSB(const LocationDescriptor& return_location) {
+    Inst(IR::Opcode::PushRSB, {IR::Value(return_location.UniqueHash())});
+}
+
 IR::Value IREmitter::GetCFlag() {
     return Inst(IR::Opcode::GetCFlag, {});
 }

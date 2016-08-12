@@ -54,6 +54,7 @@ public:
     void BXWritePC(const IR::Value& value);
     void LoadWritePC(const IR::Value& value);
     void CallSupervisor(const IR::Value& value);
+    void PushRSB(const LocationDescriptor& return_location);
 
     IR::Value GetCFlag();
     void SetNFlag(const IR::Value& value);

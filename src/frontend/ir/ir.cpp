@@ -41,6 +41,10 @@ Value::Value(u32 value) : type(Type::U32) {
     inner.imm_u32 = value;
 }
 
+Value::Value(u64 value) : type(Type::U64) {
+    inner.imm_u64 = value;
+}
+
 bool Value::IsImmediate() const {
     if (type == Type::Opaque)
         return inner.inst->GetOpcode() == Opcode::Identity ? inner.inst->GetArg(0).IsImmediate() : false;
@@ -96,6 +100,13 @@ u32 Value::GetU32() const {
         return inner.inst->GetArg(0).GetU32();
     DEBUG_ASSERT(type == Type::U32);
     return inner.imm_u32;
+}
+
+u64 Value::GetU64() const {
+    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+        return inner.inst->GetArg(0).GetU64();
+    DEBUG_ASSERT(type == Type::U64);
+    return inner.imm_u64;
 }
 
 // Inst class member definitions

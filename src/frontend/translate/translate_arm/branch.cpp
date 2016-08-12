@@ -26,6 +26,7 @@ bool ArmTranslatorVisitor::arm_BL(Cond cond, Imm24 imm24) {
     u32 imm32 = Common::SignExtend<26, u32>(imm24 << 2) + 8;
     // BL <label>
     if (ConditionPassed(cond)) {
+        ir.PushRSB(ir.current_location.AdvancePC(4));
         ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
         auto new_location = ir.current_location.AdvancePC(imm32);
         ir.SetTerm(IR::Term::LinkBlock{ new_location });
@@ -37,6 +38,7 @@ bool ArmTranslatorVisitor::arm_BL(Cond cond, Imm24 imm24) {
 bool ArmTranslatorVisitor::arm_BLX_imm(bool H, Imm24 imm24) {
     u32 imm32 = Common::SignExtend<26, u32>((imm24 << 2)) + (H ? 2 : 0) + 8;
     // BLX <label>
+    ir.PushRSB(ir.current_location.AdvancePC(4));
     ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
     auto new_location = ir.current_location.AdvancePC(imm32).SetTFlag(true);
     ir.SetTerm(IR::Term::LinkBlock{ new_location });
@@ -48,6 +50,7 @@ bool ArmTranslatorVisitor::arm_BLX_reg(Cond cond, Reg m) {
         return UnpredictableInstruction();
     // BLX <Rm>
     if (ConditionPassed(cond)) {
+        ir.PushRSB(ir.current_location.AdvancePC(4));
         ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
         ir.BXWritePC(ir.GetRegister(m));
         ir.SetTerm(IR::Term::ReturnToDispatch{});
@@ -60,7 +63,10 @@ bool ArmTranslatorVisitor::arm_BX(Cond cond, Reg m) {
     // BX <Rm>
     if (ConditionPassed(cond)) {
         ir.BXWritePC(ir.GetRegister(m));
-        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        if (m == Reg::R14)
+            ir.SetTerm(IR::Term::PopRSBHint{});
+        else
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
         return false;
     }
     return true;

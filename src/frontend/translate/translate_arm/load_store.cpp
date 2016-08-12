@@ -44,7 +44,10 @@ bool ArmTranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n,
 
         if (d == Reg::PC) {
             ir.BXWritePC(data);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
+            if (!P && W && n == Reg::R13)
+                ir.SetTerm(IR::Term::PopRSBHint{});
+            else
+                ir.SetTerm(IR::Term::ReturnToDispatch{});
             return false;
         }
 
@@ -413,7 +416,10 @@ static bool LDMHelper(IREmitter& ir, bool W, Reg n, RegList list, IR::Value star
     }
     if (Common::Bit<15>(list)) {
         ir.LoadWritePC(ir.ReadMemory32(address));
-        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        if (n == Reg::R13)
+            ir.SetTerm(IR::Term::PopRSBHint{});
+        else
+            ir.SetTerm(IR::Term::ReturnToDispatch{});
         return false;
     }
     return true;
