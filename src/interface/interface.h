@@ -32,6 +32,7 @@ struct UserCallbacks {
 
     bool (*IsReadOnlyMemory)(u32 vaddr);
 
+    /// The intrepreter must execute only one instruction at PC.
     void (*InterpreterFallback)(u32 pc, Jit* jit);
 
     bool (*CallSVC)(u32 swi);
@@ -91,6 +92,10 @@ public:
         return is_executing;
     }
 
+    /**
+     * @param descriptor Basic block descriptor.
+     * @return A string containing disassembly of the host machine code produced for the basic block.
+     */
     std::string Disassemble(const Arm::LocationDescriptor& descriptor);
 
 private:

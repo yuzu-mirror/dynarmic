@@ -13,6 +13,11 @@
 namespace Dynarmic {
 namespace Arm {
 
+/**
+ * Convenience class to construct a basic block of the intermediate representation.
+ * `block` is the resulting block.
+ * The user of this class updates `current_location` as appropriate.
+ */
 class IREmitter {
 public:
     explicit IREmitter(LocationDescriptor descriptor) : block(descriptor), current_location(descriptor) {}

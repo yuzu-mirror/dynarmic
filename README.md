@@ -1,9 +1,12 @@
 Dynarmic
 ========
 
-An (eventual) dynamic recompiler for ARMv6K. The code is a mess.
+A dynamic recompiler for the ARMv6K architecture.
 
-A lot of optimization work can be done (it currently produces bad code, worse than that non-IR JIT).
+Documentation
+-------------
+
+Design documentation can be found at [docs/Design.md](docs/Design.md).
 
 Plans
 -----
@@ -12,8 +15,8 @@ Plans
 
 * Actually finish the translators off
 * Get everything working
-* Redundant Get/Set elimination
-* Handle immediates properly
+* ~~Redundant Get/Set elimination~~
+* ~~Handle immediates properly~~
 * Allow ARM flags to be stored in host flags
 
 ### Medium-term

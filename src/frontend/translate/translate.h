@@ -13,6 +13,12 @@ namespace Arm {
 
 using MemoryRead32FuncType = u32 (*)(u32 vaddr);
 
+/**
+ * This function translates instructions in memory into our intermediate representation.
+ * @param descriptor The starting location of the basic block. Includes information like PC, Thumb state, &c.
+ * @param memory_read_32 The function we should use to read emulated memory.
+ * @return A translated basic block in the intermediate representation.
+ */
 IR::Block Translate(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32);
 
 } // namespace Arm

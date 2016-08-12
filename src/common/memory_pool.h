@@ -15,12 +15,17 @@ namespace Common {
 
 class Pool {
 public:
+    /**
+     * @param object_size Byte-size of objects to construct
+     * @param initial_pool_size Number of objects to have per slab
+     */
     Pool(size_t object_size, size_t initial_pool_size);
     ~Pool();
 
     Pool(Pool&) = delete;
     Pool(Pool&&) = delete;
 
+    /// Returns a pointer to an `object_size`-bytes block of memory.
     void* Alloc();
 
 private:

@@ -60,7 +60,7 @@ static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
     block.instructions.erase(block.instructions.iterator_to(*inst));
 }
 
-EmitX64::BlockDescriptor* EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block& block) {
+EmitX64::BlockDescriptor EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block& block) {
     inhibit_emission.clear();
     reg_alloc.Reset();
 
@@ -98,7 +98,7 @@ EmitX64::BlockDescriptor* EmitX64::Emit(const Arm::LocationDescriptor descriptor
 
     Patch(descriptor, code_ptr);
     basic_blocks[descriptor].size = code->GetCodePtr() - code_ptr;
-    return &basic_blocks[descriptor];
+    return basic_blocks[descriptor];
 }
 
 void EmitX64::EmitBreakpoint(IR::Block&, IR::Inst*) {
@@ -1630,7 +1630,7 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
 
     code->CMP(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(0));
 
-    BlockDescriptor* next_bb = GetBasicBlock(terminal.next);
+    auto next_bb = GetBasicBlock(terminal.next);
     patch_jg_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
     if (next_bb) {
         code->J_CC(CC_G, next_bb->code_ptr, true);

@@ -10,47 +10,36 @@
 #include "common/assert.h"
 #include "common/string_util.h"
 #include "frontend/ir/ir.h"
+#include "frontend/ir/opcodes.h"
 
 namespace Dynarmic {
 namespace IR {
 
-// Opcode information
-
-namespace OpcodeInfo {
-
-using T = Dynarmic::IR::Type;
-
-struct Meta {
-    const char* name;
-    Type type;
-    std::vector<Type> arg_types;
-};
-
-static const std::map<Opcode, Meta> opcode_info {{
-#define OPCODE(name, type, ...) { Opcode::name, { #name, type, { __VA_ARGS__ } } },
-#include "opcodes.inc"
-#undef OPCODE
-}};
-
-} // namespace OpcodeInfo
-
-Type GetTypeOf(Opcode op) {
-    return OpcodeInfo::opcode_info.at(op).type;
-}
-
-size_t GetNumArgsOf(Opcode op) {
-    return OpcodeInfo::opcode_info.at(op).arg_types.size();
-}
-
-Type GetArgTypeOf(Opcode op, size_t arg_index) {
-    return OpcodeInfo::opcode_info.at(op).arg_types.at(arg_index);
-}
-
-const char* GetNameOf(Opcode op) {
-    return OpcodeInfo::opcode_info.at(op).name;
-}
-
 // Value class member definitions
+
+Value::Value(Inst* value) : type(Type::Opaque) {
+    inner.inst = value;
+}
+
+Value::Value(Arm::Reg value) : type(Type::RegRef) {
+    inner.imm_regref = value;
+}
+
+Value::Value(Arm::ExtReg value) : type(Type::ExtRegRef) {
+    inner.imm_extregref = value;
+}
+
+Value::Value(bool value) : type(Type::U1) {
+    inner.imm_u1 = value;
+}
+
+Value::Value(u8 value) : type(Type::U8) {
+    inner.imm_u8 = value;
+}
+
+Value::Value(u32 value) : type(Type::U32) {
+    inner.imm_u32 = value;
+}
 
 bool Value::IsImmediate() const {
     if (type == Type::Opaque)

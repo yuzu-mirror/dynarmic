@@ -64,6 +64,12 @@ enum class SignExtendRotation {
     ROR_24  ///< ROR #24
 };
 
+/**
+ * LocationDescriptor describes the location of a basic block.
+ * The location is not solely based on the PC because other flags influence the way
+ * instructions should be translated. The CPSR.T flag is most notable since it
+ * tells us if the processor is in Thumb or Arm mode.
+ */
 struct LocationDescriptor {
     static constexpr u32 FPSCR_MASK = 0x3F79F9F;
 

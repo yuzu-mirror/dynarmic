@@ -32,62 +32,24 @@ namespace IR {
 //
 // A basic block is represented as an IR::Block.
 
-enum class Type {
-    Void      = 1 << 0,
-    RegRef    = 1 << 1,
-    ExtRegRef = 1 << 2,
-    Opaque    = 1 << 3,
-    U1        = 1 << 4,
-    U8        = 1 << 5,
-    U16       = 1 << 6,
-    U32       = 1 << 7,
-    U64       = 1 << 8,
-    F32       = 1 << 9,
-    F64       = 1 << 10,
-};
-
-Type GetTypeOf(Opcode op);
-size_t GetNumArgsOf(Opcode op);
-Type GetArgTypeOf(Opcode op, size_t arg_index);
-const char* GetNameOf(Opcode op);
-
 // Type declarations
-
-/**
- * A representation of a microinstruction. A single ARM/Thumb instruction may be
- * converted into zero or more microinstructions.
- */
 
 struct Value;
 class Inst;
 
+/**
+ * A representation of a value in the IR.
+ * A value may either be an immediate or the result of a microinstruction.
+ */
 struct Value final {
 public:
     Value() : type(Type::Void) {}
-
-    explicit Value(Inst* value) : type(Type::Opaque) {
-        inner.inst = value;
-    }
-
-    explicit Value(Arm::Reg value) : type(Type::RegRef) {
-        inner.imm_regref = value;
-    }
-
-    explicit Value(Arm::ExtReg value) : type(Type::ExtRegRef) {
-        inner.imm_extregref = value;
-    }
-
-    explicit Value(bool value) : type(Type::U1) {
-        inner.imm_u1 = value;
-    }
-
-    explicit Value(u8 value) : type(Type::U8) {
-        inner.imm_u8 = value;
-    }
-
-    explicit Value(u32 value) : type(Type::U32) {
-        inner.imm_u32 = value;
-    }
+    explicit Value(Inst* value);
+    explicit Value(Arm::Reg value);
+    explicit Value(Arm::ExtReg value);
+    explicit Value(bool value);
+    explicit Value(u8 value);
+    explicit Value(u32 value);
 
     bool IsEmpty() const;
     bool IsImmediate() const;
@@ -113,6 +75,10 @@ private:
     } inner;
 };
 
+/**
+ * A representation of a microinstruction. A single ARM/Thumb instruction may be
+ * converted into zero or more microinstructions.
+ */
 class Inst final : public Common::IntrusiveListNode<Inst> {
 public:
     Inst(Opcode op) : op(op) {}
@@ -151,7 +117,7 @@ struct Invalid {};
 
 /**
  * This terminal instruction calls the interpreter, starting at `next`.
- * The interpreter must interpret at least 1 instruction but may choose to interpret more.
+ * The interpreter must interpret exactly one instruction.
  */
 struct Interpret {
     explicit Interpret(const Arm::LocationDescriptor& next_) : next(next_) {}

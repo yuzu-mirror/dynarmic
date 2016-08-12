@@ -43,17 +43,17 @@ struct Jit::Impl {
 
         Arm::LocationDescriptor descriptor{pc, TFlag, EFlag, jit_state.guest_FPSCR_flags};
 
-        CodePtr code_ptr = GetBasicBlock(descriptor)->code_ptr;
+        CodePtr code_ptr = GetBasicBlock(descriptor).code_ptr;
         return block_of_code.RunCode(&jit_state, code_ptr, cycle_count);
     }
 
     std::string Disassemble(const Arm::LocationDescriptor& descriptor) {
         auto block = GetBasicBlock(descriptor);
-        std::string result = Common::StringFromFormat("address: %p\nsize: %zu bytes\n", block->code_ptr, block->size);
+        std::string result = Common::StringFromFormat("address: %p\nsize: %zu bytes\n", block.code_ptr, block.size);
 
 #ifdef DYNARMIC_USE_LLVM
-        CodePtr end = block->code_ptr + block->size;
-        size_t remaining = block->size;
+        CodePtr end = block.code_ptr + block.size;
+        size_t remaining = block.size;
 
         LLVMInitializeX86TargetInfo();
         LLVMInitializeX86TargetMC();
@@ -61,7 +61,7 @@ struct Jit::Impl {
         LLVMDisasmContextRef llvm_ctx = LLVMCreateDisasm("x86_64", nullptr, 0, nullptr, nullptr);
         LLVMSetDisasmOptions(llvm_ctx, LLVMDisassembler_Option_AsmPrinterVariant);
 
-        for (CodePtr pos = block->code_ptr; pos < end;) {
+        for (CodePtr pos = block.code_ptr; pos < end;) {
             char buffer[80];
             size_t inst_size = LLVMDisasmInstruction(llvm_ctx, const_cast<u8*>(pos), remaining, (u64)pos, buffer, sizeof(buffer));
             assert(inst_size);
@@ -85,10 +85,10 @@ struct Jit::Impl {
     }
 
 private:
-    EmitX64::BlockDescriptor* GetBasicBlock(Arm::LocationDescriptor descriptor) {
+    EmitX64::BlockDescriptor GetBasicBlock(Arm::LocationDescriptor descriptor) {
         auto block = emitter.GetBasicBlock(descriptor);
         if (block)
-            return block;
+            return *block;
 
         IR::Block ir_block = Arm::Translate(descriptor, callbacks.MemoryRead32);
         Optimization::GetSetElimination(ir_block);

@@ -23,14 +23,14 @@ through several stages:
 Using the x64 backend as an example:
 
 * Decoding is done by [double dispatch](https://en.wikipedia.org/wiki/Visitor_pattern) in 
-`src/frontend/decoder/{arm.h,thumb16.h,thumb32.h}`.
-* Translation is done by the visitors in `src/frontend/translate/{translate_arm.cpp,translate_thumb.cpp}`. 
-The function `IR::Block Translate(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32)` takes a 
+`src/frontend/decoder/{[arm.h](../src/frontend/decoder/arm.h),[thumb16.h](../src/frontend/decoder/thumb.h),[thumb32.h](../src/frontend/decoder/thumb32.h)}`.
+* Translation is done by the visitors in `src/frontend/translate/translate_{arm,thumb}.cpp`.
+The function [`IR::Block Translate(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32)`](../src/frontend/translate/translate.h) takes a
 memory location and memory reader callback and returns a basic block of IR. 
-* The IR can be found under `src/frontend/ir/`.
-* Optimization is not implemented yet.
+* The IR can be found under [`src/frontend/ir/`](../src/frontend/ir/).
+* Optimizations can be found under [`src/ir_opt/`](../src/ir_opt/).
 * Emission is done by `EmitX64` which can be found in `src/backend_x64/emit_x64.{h,cpp}`.
-* Execution is performed by calling `BlockOfCode::RunCode` in `src/backend_x64/routines.{h,cpp}`.
+* Execution is performed by calling `BlockOfCode::RunCode` in `src/backend_x64/block_of_code.{h,cpp}`.
  
 ## Decoder
 
@@ -102,7 +102,9 @@ differences in the way edges are handled are a quirk of the current implementati
 function analyser in the medium-term future.
 
 Dynarmic's intermediate representation is typed. Each microinstruction may take zero or more arguments and may
-return zero or more arguments. Each microinstruction is documented below:
+return zero or more arguments. A subset of the microinstructions available is documented below.
+
+A complete list of microinstructions can be found in [src/frontend/ir/opcodes.inc](../src/frontend/ir/opcodes.inc).
 
 ### Immediate: Imm{U1,U8,U32,RegRef}
 
@@ -119,11 +121,11 @@ by the IR.
     <u32> GetRegister(<RegRef> reg)
     <void> SetRegister(<RegRef> reg, <u32> value)
     
-Gets and sets `JitState::Reg[reg]`. Note that `SetRegister(ImmRegRef(Arm::R15), _)` is disallowed by IRBuilder.
+Gets and sets `JitState::Reg[reg]`. Note that `SetRegister(Arm::Reg::R15, _)` is disallowed by IRBuilder.
 Use `{ALU,BX}WritePC` instead.
 
-Note that sequences like `SetRegister(ImmRegRef(Arm::R4), _)` followed by `GetRegister(ImmRegRef(Arm::R4))` ~~are~~ 
-*will be* optimized away.
+Note that sequences like `SetRegister(R4, _)` followed by `GetRegister(R4)` are
+optimized away.
     
 ### Context: {Get,Set}{N,Z,C,V}Flag
 
@@ -136,7 +138,7 @@ Note that sequences like `SetRegister(ImmRegRef(Arm::R4), _)` followed by `GetRe
     <u1> GetVFlag()
     <void> SetVFlag(<u1> value)
 
-Gets and sets bits in `JitState::Cpsr`. Similarly to registers redundant get/sets will be optimized away.
+Gets and sets bits in `JitState::Cpsr`. Similarly to registers redundant get/sets are optimized away.
 
 ### Context: {ALU,BX}WritePC
 
@@ -283,8 +285,7 @@ Memory access.
     SetTerm(IR::Term::Interpret{next})
                 
 This terminal instruction calls the interpreter, starting at `next`.
-The interpreter must interpret ~~at least 1 instruction but may choose to interpret more.~~
-**exactly one instruction (in the current implementation).**
+The interpreter must interpret exactly one instruction.
               
 ### Terminal: ReturnToDispatch
 
@@ -301,19 +302,6 @@ This terminal instruction jumps to the basic block described by `next` if we hav
 cycles remaining. If we do not have enough cycles remaining, we return to the
 dispatcher, which will return control to the host.
 
-### Terminal: LinkBlockFast
-
-    SetTerm(IR::Term::LinkBlockFast{next})
-
-This terminal instruction jumps to the basic block described by `next` unconditionally.
-This is an optimization and MUST only be emitted when this is guaranteed not to result
-in hanging, even in the face of other optimizations. (In practice, this means that only
-forward jumps to short-ish blocks would use this instruction.)
-A backend that doesn't support this optimization may choose to implement this exactly
-as LinkBlock.
-
-**(degasus says this is probably a pretty useless optimization)**
-
 ### Terminal: PopRSBHint
 
     SetTerm(IR::Term::PopRSBHint{})
@@ -324,13 +312,9 @@ This is an optimization for faster function calls. A backend that doesn't suppor
 this optimization or doesn't have a RSB may choose to implement this exactly as
 ReturnToDispatch.
 
-**(This would be quite profitable once implemented. degasus agrees.)**
-
 ### Terminal: If
 
     SetTerm(IR::Term::If{cond, term_then, term_else})
 
-~~This terminal instruction conditionally executes one terminal or another depending 
-on the run-time state of the ARM flags.~~
-              
-**(Unimplemented.)**
+This terminal instruction conditionally executes one terminal or another depending
+on the run-time state of the ARM flags.

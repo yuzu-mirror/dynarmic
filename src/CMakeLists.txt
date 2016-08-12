@@ -17,6 +17,7 @@ set(SRCS
     frontend/disassembler/disassembler_thumb.cpp
     frontend/ir/ir.cpp
     frontend/ir/ir_emitter.cpp
+    frontend/ir/opcodes.cpp
     frontend/translate/translate.cpp
     frontend/translate/translate_arm.cpp
     frontend/translate/translate_arm/branch.cpp

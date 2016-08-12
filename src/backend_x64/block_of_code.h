@@ -17,12 +17,16 @@ class BlockOfCode final : public Gen::XCodeBlock {
 public:
     BlockOfCode();
 
+    /// Clears this block of code and resets code pointer to beginning.
     void ClearCache(bool poison_memory);
 
+    /// Runs emulated code for approximately `cycles_to_run` cycles.
     size_t RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const;
+    /// Code emitter: Returns to host
     void ReturnFromRunCode(bool MXCSR_switch = true);
-
+    /// Code emitter: Makes guest MXCSR the current MXCSR
     void SwitchMxcsrOnEntry();
+    /// Code emitter: Makes saved host MXCSR the current MXCSR
     void SwitchMxcsrOnExit();
 
     Gen::OpArg MFloatNegativeZero32() const {

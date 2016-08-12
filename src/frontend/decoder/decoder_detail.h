@@ -101,7 +101,7 @@ private:
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable:4800)
+#pragma warning(disable:4800) // forcing value to bool 'true' or 'false' (performance warning)
 #endif
     template<typename Visitor, typename ...Args, typename CallRetT>
     struct VisitorCaller<CallRetT(Visitor::*)(Args...)> {

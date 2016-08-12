@@ -9,6 +9,8 @@
 #include <set>
 #include <unordered_map>
 
+#include <boost/optional.hpp>
+
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/reg_alloc.h"
 #include "common/x64/emitter.h"
@@ -24,16 +26,22 @@ public:
             : reg_alloc(code), code(code), cb(cb), jit_interface(jit_interface) {}
 
     struct BlockDescriptor {
-        CodePtr code_ptr;
-        size_t size;
+        CodePtr code_ptr; ///< Entrypoint of emitted code
+        size_t size;      ///< Length in bytes of emitted code
     };
-    BlockDescriptor* Emit(const Arm::LocationDescriptor descriptor, IR::Block& ir);
 
-    BlockDescriptor* GetBasicBlock(Arm::LocationDescriptor descriptor) {
+    /// Emit host machine code for a basic block starting at `descriptor` with intermediate representation `ir`.
+    BlockDescriptor Emit(const Arm::LocationDescriptor descriptor, IR::Block& ir);
+
+    /// Looks up an emitted host block in the cache.
+    boost::optional<BlockDescriptor> GetBasicBlock(Arm::LocationDescriptor descriptor) {
         auto iter = basic_blocks.find(descriptor);
-        return iter != basic_blocks.end() ? &iter->second : nullptr;
+        if (iter == basic_blocks.end())
+            return boost::none;
+        return boost::make_optional<BlockDescriptor>(iter->second);
     }
 
+    /// Empties the cache.
     void ClearCache();
 
 private:
