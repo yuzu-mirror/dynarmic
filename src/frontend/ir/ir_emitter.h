@@ -102,6 +102,10 @@ public:
     IR::Value PackedSaturatedAddS8(const IR::Value& a, const IR::Value& b);
     IR::Value PackedSaturatedSubU8(const IR::Value& a, const IR::Value& b);
     IR::Value PackedSaturatedSubS8(const IR::Value& a, const IR::Value& b);
+    IR::Value PackedSaturatedAddU16(const IR::Value& a, const IR::Value& b);
+    IR::Value PackedSaturatedAddS16(const IR::Value& a, const IR::Value& b);
+    IR::Value PackedSaturatedSubU16(const IR::Value& a, const IR::Value& b);
+    IR::Value PackedSaturatedSubS16(const IR::Value& a, const IR::Value& b);
 
     IR::Value TransferToFP32(const IR::Value& a);
     IR::Value TransferToFP64(const IR::Value& a);

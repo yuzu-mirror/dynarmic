@@ -1089,6 +1089,22 @@ void EmitX64::EmitPackedSaturatedSubS8(IR::Block& block, IR::Inst* inst) {
     EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PSUBSB);
 }
 
+void EmitX64::EmitPackedSaturatedAddU16(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PADDUSW);
+}
+
+void EmitX64::EmitPackedSaturatedAddS16(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PADDSW);
+}
+
+void EmitX64::EmitPackedSaturatedSubU16(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PSUBUSW);
+}
+
+void EmitX64::EmitPackedSaturatedSubS16(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PSUBSW);
+}
+
 static void DenormalsAreZero32(BlockOfCode* code, X64Reg xmm_value, X64Reg gpr_scratch) {
     // We need to report back whether we've found a denormal on input.
     // SSE doesn't do this for us when SSE's DAZ is enabled.

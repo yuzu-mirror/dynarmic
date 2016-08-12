@@ -298,6 +298,22 @@ IR::Value IREmitter::PackedSaturatedSubS8(const IR::Value& a, const IR::Value& b
     return Inst(IR::Opcode::PackedSaturatedSubS8, {a, b});
 }
 
+IR::Value IREmitter::PackedSaturatedAddU16(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::PackedSaturatedAddU16, {a, b});
+}
+
+IR::Value IREmitter::PackedSaturatedAddS16(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::PackedSaturatedAddS16, {a, b});
+}
+
+IR::Value IREmitter::PackedSaturatedSubU16(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::PackedSaturatedSubU16, {a, b});
+}
+
+IR::Value IREmitter::PackedSaturatedSubS16(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::PackedSaturatedSubS16, {a, b});
+}
+
 IR::Value IREmitter::TransferToFP32(const IR::Value& a) {
     return Inst(IR::Opcode::TransferToFP32, {a});
 }

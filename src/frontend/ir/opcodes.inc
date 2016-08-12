@@ -64,6 +64,10 @@ OPCODE(PackedSaturatedAddU8,    T::U32,         T::U32,         T::U32          
 OPCODE(PackedSaturatedAddS8,    T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubU8,    T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubS8,    T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSaturatedAddU16,   T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSaturatedAddS16,   T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSaturatedSubU16,   T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSaturatedSubS16,   T::U32,         T::U32,         T::U32                          )
 
 // Floating-point
 OPCODE(TransferToFP32,          T::F32,         T::U32                                          )
