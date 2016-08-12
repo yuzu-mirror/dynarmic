@@ -77,7 +77,11 @@ bool ArmTranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_QSUB8(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedSaturatedSubS8(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_QSUB16(Cond cond, Reg n, Reg d, Reg m) {

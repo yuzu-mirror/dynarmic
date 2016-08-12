@@ -1055,7 +1055,7 @@ void EmitX64::EmitByteReverseDual(IR::Block&, IR::Inst* inst) {
     code->BSWAP(64, result);
 }
 
-void EmitX64::EmitPackedSaturatedSubU8(IR::Block& block, IR::Inst* inst) {
+static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
 
@@ -1068,9 +1068,17 @@ void EmitX64::EmitPackedSaturatedSubU8(IR::Block& block, IR::Inst* inst) {
     code->MOVD_xmm(xmm_scratch_a, R(result));
     code->MOVD_xmm(xmm_scratch_b, op_arg);
 
-    code->PSUBUSB(xmm_scratch_a, R(xmm_scratch_b));
+    (code->*fn)(xmm_scratch_a, R(xmm_scratch_b));
 
     code->MOVD_xmm(R(result), xmm_scratch_a);
+}
+
+void EmitX64::EmitPackedSaturatedSubU8(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PSUBUSB);
+}
+
+void EmitX64::EmitPackedSaturatedSubS8(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PSUBSB);
 }
 
 static void DenormalsAreZero32(BlockOfCode* code, X64Reg xmm_value, X64Reg gpr_scratch) {

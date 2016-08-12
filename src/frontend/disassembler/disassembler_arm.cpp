@@ -667,7 +667,9 @@ public:
     std::string arm_QADD16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
     std::string arm_QASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
     std::string arm_QSAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_QSUB8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_QSUB8(Cond cond, Reg n, Reg d, Reg m) {
+        return Common::StringFromFormat("qsub8%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
     std::string arm_QSUB16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
     std::string arm_UQADD8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
     std::string arm_UQADD16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }

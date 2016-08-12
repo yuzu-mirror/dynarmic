@@ -829,8 +829,9 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
         return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111 && Bits<16, 19>(instr) != 0b1111;
     };
 
-    const std::array<InstructionGenerator, 1> saturating_instructions = {{
+    const std::array<InstructionGenerator, 2> saturating_instructions = {{
         InstructionGenerator("cccc01100110nnnndddd11111111mmmm", is_valid), // UQSUB8
+        InstructionGenerator("cccc01100010nnnndddd11111111mmmm", is_valid), // QSUB8
     }};
 
     SECTION("Parallel Add/Subtract (Saturating)") {
