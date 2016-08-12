@@ -98,6 +98,8 @@ public:
     IR::Value ByteReverseWord(const IR::Value& a);
     IR::Value ByteReverseHalf(const IR::Value& a);
     IR::Value ByteReverseDual(const IR::Value& a);
+    IR::Value PackedSaturatedAddU8(const IR::Value& a, const IR::Value& b);
+    IR::Value PackedSaturatedAddS8(const IR::Value& a, const IR::Value& b);
     IR::Value PackedSaturatedSubU8(const IR::Value& a, const IR::Value& b);
     IR::Value PackedSaturatedSubS8(const IR::Value& a, const IR::Value& b);
 

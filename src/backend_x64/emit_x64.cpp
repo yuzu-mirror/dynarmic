@@ -1073,6 +1073,14 @@ static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst
     code->MOVD_xmm(R(result), xmm_scratch_a);
 }
 
+void EmitX64::EmitPackedSaturatedAddU8(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PADDUSB);
+}
+
+void EmitX64::EmitPackedSaturatedAddS8(IR::Block& block, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PADDSB);
+}
+
 void EmitX64::EmitPackedSaturatedSubU8(IR::Block& block, IR::Inst* inst) {
     EmitPackedOperation(code, reg_alloc, inst, &XEmitter::PSUBUSB);
 }

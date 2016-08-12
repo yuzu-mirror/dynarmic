@@ -282,6 +282,14 @@ IR::Value IREmitter::ByteReverseDual(const IR::Value& a) {
     return Inst(IR::Opcode::ByteReverseDual, {a});
 }
 
+IR::Value IREmitter::PackedSaturatedAddU8(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::PackedSaturatedAddU8, {a, b});
+}
+
+IR::Value IREmitter::PackedSaturatedAddS8(const IR::Value& a, const IR::Value& b) {
+    return Inst(IR::Opcode::PackedSaturatedAddS8, {a, b});
+}
+
 IR::Value IREmitter::PackedSaturatedSubU8(const IR::Value& a, const IR::Value& b) {
     return Inst(IR::Opcode::PackedSaturatedSubU8, {a, b});
 }

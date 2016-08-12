@@ -61,7 +61,11 @@ bool ArmTranslatorVisitor::arm_USUB16(Cond cond, Reg n, Reg d, Reg m) {
 
 // Parallel Add/Subtract (Saturating) instructions
 bool ArmTranslatorVisitor::arm_QADD8(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedSaturatedAddS8(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_QADD16(Cond cond, Reg n, Reg d, Reg m) {
@@ -89,7 +93,11 @@ bool ArmTranslatorVisitor::arm_QSUB16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UQADD8(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedSaturatedAddU8(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_UQADD16(Cond cond, Reg n, Reg d, Reg m) {
