@@ -60,6 +60,7 @@ OPCODE(ZeroExtendByteToWord,    T::U32,         T::U8                           
 OPCODE(ByteReverseWord,         T::U32,         T::U32                                          )
 OPCODE(ByteReverseHalf,         T::U16,         T::U16                                          )
 OPCODE(ByteReverseDual,         T::U64,         T::U64                                          )
+OPCODE(PackedSaturatedSubU8,    T::U32,         T::U32,         T::U32                          )
 
 // Floating-point
 OPCODE(TransferToFP32,          T::F32,         T::U32                                          )

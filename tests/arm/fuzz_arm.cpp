@@ -822,3 +822,20 @@ TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
         });
     }
 }
+
+TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
+    const auto is_valid = [](u32 instr) -> bool {
+        // R15 as Rd, Rn, or Rm is UNPREDICTABLE
+        return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111 && Bits<16, 19>(instr) != 0b1111;
+    };
+
+    const std::array<InstructionGenerator, 1> saturating_instructions = {{
+        InstructionGenerator("cccc01100110nnnndddd11111111mmmm", is_valid), // UQSUB8
+    }};
+
+    SECTION("Parallel Add/Subtract (Saturating)") {
+        FuzzJitArm(1, 1, 10000, [&saturating_instructions]() -> u32 {
+            return saturating_instructions[RandInt<size_t>(0, saturating_instructions.size() - 1)].Generate();
+        });
+    }
+}

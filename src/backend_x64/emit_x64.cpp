@@ -1055,6 +1055,24 @@ void EmitX64::EmitByteReverseDual(IR::Block&, IR::Inst* inst) {
     code->BSWAP(64, result);
 }
 
+void EmitX64::EmitPackedSaturatedSubU8(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
+    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
+
+    X64Reg xmm_scratch_a = reg_alloc.ScratchRegister(any_xmm);
+    X64Reg xmm_scratch_b = reg_alloc.ScratchRegister(any_xmm);
+
+    code->MOVD_xmm(xmm_scratch_a, R(result));
+    code->MOVD_xmm(xmm_scratch_b, op_arg);
+
+    code->PSUBUSB(xmm_scratch_a, R(xmm_scratch_b));
+
+    code->MOVD_xmm(R(result), xmm_scratch_a);
+}
+
 static void DenormalsAreZero32(BlockOfCode* code, X64Reg xmm_value, X64Reg gpr_scratch) {
     // We need to report back whether we've found a denormal on input.
     // SSE doesn't do this for us when SSE's DAZ is enabled.

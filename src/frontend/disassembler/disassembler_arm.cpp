@@ -673,7 +673,9 @@ public:
     std::string arm_UQADD16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
     std::string arm_UQASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
     std::string arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UQSUB8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_UQSUB8(Cond cond, Reg n, Reg d, Reg m) {
+        return Common::StringFromFormat("uqsub8%s %s, %s, %s", CondToString(cond), RegToString(d), RegToString(n), RegToString(m));
+    }
     std::string arm_UQSUB16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
 
     // Parallel Add/Subtract (Halving) instructions
