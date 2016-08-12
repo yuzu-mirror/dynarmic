@@ -343,8 +343,10 @@ void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
     code->AND(32, R(rsb_index), Imm32(u32(JitState::RSBSize - 1)));
     code->MOV(64, R(tmp), Imm64(imm64));
     code->MOV(64, MComplex(R15, rsb_index, SCALE_1, offsetof(JitState, rsb_location_descriptors)), R(tmp));
-    patch_unique_hash_locations[imm64].emplace_back(code->GetCodePtr());
+    CodePtr patch_location = code->GetCodePtr();
+    patch_unique_hash_locations[imm64].emplace_back(patch_location);
     code->MOV(64, R(tmp), Imm64(code_ptr)); // This line has to match up with EmitX64::Patch.
+    ASSERT((code->GetCodePtr() - patch_location) == 10);
     code->MOV(64, MComplex(R15, rsb_index, SCALE_1, offsetof(JitState, rsb_codeptrs)), R(tmp));
     code->ADD(32, R(rsb_index), Imm32(1));
     code->MOV(32, MDisp(R15, offsetof(JitState, rsb_ptr)), R(rsb_index));
@@ -1756,6 +1758,7 @@ void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
     for (CodePtr location : patch_unique_hash_locations[desc.UniqueHash()]) {
         code->SetCodePtr(const_cast<u8*>(location));
         code->MOV(64, R(RCX), Imm64(u64(bb)));
+        ASSERT((code->GetCodePtr() - location) == 10);
     }
 
     code->SetCodePtr(save_code_ptr);
