@@ -392,7 +392,8 @@ void RegAlloc::EndOfAllocScope() {
             iter.values.clear();
             iter.values.emplace_back(iter.def);
             iter.def = nullptr;
-        } else if (!iter.values.empty()) {
+        }
+        if (!iter.values.empty()) {
             auto to_erase = std::remove_if(iter.values.begin(), iter.values.end(),
                                            [](const auto& inst){ return inst->use_count <= 0; });
             iter.values.erase(to_erase, iter.values.end());
