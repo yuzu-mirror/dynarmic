@@ -846,3 +846,27 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
         });
     }
 }
+
+TEST_CASE("VFP: VPUSH, VPOP", "[JitX64][vfp]") {
+    const auto is_valid = [](u32 instr) -> bool {
+        auto regs = (instr & 0x100) ? (Bits<0, 7>(instr) >> 1) : Bits<0, 7>(instr);
+        auto base = Bits<12, 15>(instr);
+        unsigned d;
+        if (instr & 0x100) {
+            d = (base + ((instr & 0x400000) ? 16 : 0));
+        } else {
+            d = ((base << 1) + ((instr & 0x400000) ? 1 : 0));
+        }
+        // if regs == 0 || regs > 16 || (d+regs) > 32 then UNPREDICTABLE
+        return regs != 0 && regs <= 16 && (d + regs) <= 32;
+    };
+
+    const std::array<InstructionGenerator, 2> instructions = {{
+        InstructionGenerator("cccc11010D101101dddd101zvvvvvvvv", is_valid), // VPUSH
+        InstructionGenerator("cccc11001D111101dddd1010vvvvvvvv", is_valid), // VPOP
+    }};
+
+    FuzzJitArm(5, 6, 10000, [&instructions]() -> u32 {
+        return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+    });
+}

@@ -350,6 +350,8 @@ struct ArmTranslatorVisitor final {
     bool vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8);
+    bool vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8);
 
     // Floating-point load-store instructions
     bool vfp2_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8);

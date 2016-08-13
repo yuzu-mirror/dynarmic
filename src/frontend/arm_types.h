@@ -137,6 +137,21 @@ const char* RegToString(Reg reg);
 const char* ExtRegToString(ExtReg reg);
 std::string RegListToString(RegList reg_list);
 
+inline size_t RegNumber(Reg reg) {
+    ASSERT(reg != Reg::INVALID_REG);
+    return static_cast<size_t>(reg);
+}
+
+inline size_t RegNumber(ExtReg reg) {
+    if (reg >= ExtReg::S0 && reg <= ExtReg::S31) {
+        return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::S0);
+    } else if (reg >= ExtReg::D0 && reg <= ExtReg::D31) {
+        return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::D0);
+    } else {
+        ASSERT_MSG(false, "Invalid extended register");
+    }
+}
+
 inline Reg operator+(Reg reg, int number) {
     ASSERT(reg != Reg::INVALID_REG);
 
