@@ -92,6 +92,14 @@ void GetSetElimination(IR::Block& block) {
                 do_get(v_info, inst);
                 break;
             }
+            case IR::Opcode::SetCpsr:
+            case IR::Opcode::GetCpsr: {
+                n_info = {};
+                z_info = {};
+                c_info = {};
+                v_info = {};
+                break;
+            }
             default:
                 break;
         }

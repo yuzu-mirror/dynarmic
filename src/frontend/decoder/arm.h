@@ -343,8 +343,9 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
         // Status Register Access instructions
         INST(&V::arm_CPS,         "CPS",                 "111100010000---00000000---0-----"), // v6
         INST(&V::arm_SETEND,      "SETEND",              "1111000100000001000000e000000000"), // v6
-        INST(&V::arm_MRS,         "MRS",                 "----00010-00--------00--00000000"), // v3
-        INST(&V::arm_MSR,         "MSR",                 "----00-10-10----1111------------"), // v3
+        INST(&V::arm_MRS,         "MRS",                 "cccc000100001111dddd000000000000"), // v3
+        INST(&V::arm_MSR_imm,     "MSR (imm)",           "cccc00110010mm001111rrrrvvvvvvvv"), // v3
+        INST(&V::arm_MSR_reg,     "MSR (reg)",           "cccc00010010mm00111100000000nnnn"), // v3
         INST(&V::arm_RFE,         "RFE",                 "----0001101-0000---------110----"), // v6
         INST(&V::arm_SRS,         "SRS",                 "0000011--0-00000000000000001----"), // v6
 

@@ -318,8 +318,9 @@ struct ArmTranslatorVisitor final {
 
     // Status register access instructions
     bool arm_CPS();
-    bool arm_MRS();
-    bool arm_MSR();
+    bool arm_MRS(Cond cond, Reg d);
+    bool arm_MSR_imm(Cond cond, int mask, int rotate, Imm8 imm8);
+    bool arm_MSR_reg(Cond cond, int mask, Reg n);
     bool arm_RFE();
     bool arm_SETEND(bool E);
     bool arm_SRS();

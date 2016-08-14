@@ -749,8 +749,19 @@ public:
 
     // Status register access instructions
     std::string arm_CPS() { return "ice"; }
-    std::string arm_MRS() { return "ice"; }
-    std::string arm_MSR() { return "ice"; }
+    std::string arm_MRS(Cond cond, Reg d) {
+        return Common::StringFromFormat("mrs%s %s, apsr", CondToString(cond), RegToString(d));
+    }
+    std::string arm_MSR_imm(Cond cond, int mask, int rotate, Imm8 imm8) {
+        bool write_nzcvq = Common::Bit<1>(mask);
+        bool write_g = Common::Bit<0>(mask);
+        return Common::StringFromFormat("msr%s apsr_%s%s, #%u", CondToString(cond), write_nzcvq ? "nzcvq" : "", write_g ? "g" : "", ArmExpandImm(rotate, imm8));
+    }
+    std::string arm_MSR_reg(Cond cond, int mask, Reg n) {
+        bool write_nzcvq = Common::Bit<1>(mask);
+        bool write_g = Common::Bit<0>(mask);
+        return Common::StringFromFormat("msr%s apsr_%s%s, %s", CondToString(cond), write_nzcvq ? "nzcvq" : "", write_g ? "g" : "", RegToString(n));
+    }
     std::string arm_RFE() { return "ice"; }
     std::string arm_SETEND(bool E) {
         return E ? "setend be" : "setend le";

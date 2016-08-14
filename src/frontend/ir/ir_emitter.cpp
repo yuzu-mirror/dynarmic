@@ -102,6 +102,14 @@ void IREmitter::PushRSB(const LocationDescriptor& return_location) {
     Inst(IR::Opcode::PushRSB, {IR::Value(return_location.UniqueHash())});
 }
 
+IR::Value IREmitter::GetCpsr() {
+    return Inst(IR::Opcode::GetCpsr, {});
+}
+
+void IREmitter::SetCpsr(const IR::Value& value) {
+    Inst(IR::Opcode::SetCpsr, {value});
+}
+
 IR::Value IREmitter::GetCFlag() {
     return Inst(IR::Opcode::GetCFlag, {});
 }

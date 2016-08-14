@@ -209,6 +209,16 @@ void EmitX64::EmitSetZFlag(IR::Block&, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitGetCpsr(IR::Block&, IR::Inst* inst) {
+    X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
+    code->MOV(32, R(result), MJitStateCpsr());
+}
+
+void EmitX64::EmitSetCpsr(IR::Block&, IR::Inst* inst) {
+    X64Reg arg = reg_alloc.UseRegister(inst->GetArg(0), any_gpr);
+    code->MOV(32, MJitStateCpsr(), R(arg));
+}
+
 void EmitX64::EmitGetCFlag(IR::Block&, IR::Inst* inst) {
     X64Reg result = reg_alloc.DefRegister(inst, any_gpr);
     code->MOV(32, R(result), MJitStateCpsr());

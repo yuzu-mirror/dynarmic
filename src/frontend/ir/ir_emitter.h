@@ -56,6 +56,8 @@ public:
     void CallSupervisor(const IR::Value& value);
     void PushRSB(const LocationDescriptor& return_location);
 
+    IR::Value GetCpsr();
+    void SetCpsr(const IR::Value& value);
     IR::Value GetCFlag();
     void SetNFlag(const IR::Value& value);
     void SetZFlag(const IR::Value& value);
