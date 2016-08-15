@@ -1714,9 +1714,8 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
 
     code->CMP(64, MDisp(R15, offsetof(JitState, cycles_remaining)), Imm32(0));
 
-    auto next_bb = GetBasicBlock(terminal.next);
     patch_jg_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
-    if (next_bb) {
+    if (auto next_bb = GetBasicBlock(terminal.next)) {
         code->J_CC(CC_G, next_bb->code_ptr, true);
     } else {
         code->NOP(6); // Leave enough space for a jg instruction.
@@ -1726,7 +1725,28 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
 }
 
 void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location) {
-    EmitTerminalLinkBlock(IR::Term::LinkBlock{terminal.next}, initial_location); // TODO: Implement
+    if (terminal.next.TFlag() != initial_location.TFlag()) {
+        if (terminal.next.TFlag()) {
+            code->OR(32, MJitStateCpsr(), Imm32(1 << 5));
+        } else {
+            code->AND(32, MJitStateCpsr(), Imm32(~(1 << 5)));
+        }
+    }
+    if (terminal.next.EFlag() != initial_location.EFlag()) {
+        if (terminal.next.EFlag()) {
+            code->OR(32, MJitStateCpsr(), Imm32(1 << 9));
+        } else {
+            code->AND(32, MJitStateCpsr(), Imm32(~(1 << 9)));
+        }
+    }
+
+    patch_jmp_locations[terminal.next].emplace_back(code->GetWritableCodePtr());
+    if (auto next_bb = GetBasicBlock(terminal.next)) {
+        code->JMP(next_bb->code_ptr, true);
+    } else {
+        code->MOV(32, MJitStateReg(Arm::Reg::PC), Imm32(terminal.next.PC()));
+        code->JMP(code->GetReturnFromRunCodeAddress(), true);
+    }
 }
 
 void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescriptor initial_location) {
@@ -1765,6 +1785,12 @@ void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
         ASSERT(code->GetCodePtr() - location == 6);
     }
 
+    for (CodePtr location : patch_jmp_locations[desc]) {
+        code->SetCodePtr(const_cast<u8*>(location));
+        code->JMP(bb, true);
+        ASSERT(code->GetCodePtr() - location == 5);
+    }
+
     for (CodePtr location : patch_unique_hash_locations[desc.UniqueHash()]) {
         code->SetCodePtr(const_cast<u8*>(location));
         code->MOV(64, R(RCX), Imm64(u64(bb)));
@@ -1777,6 +1803,7 @@ void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
 void EmitX64::ClearCache() {
     basic_blocks.clear();
     patch_jg_locations.clear();
+    patch_jmp_locations.clear();
 }
 
 } // namespace BackendX64

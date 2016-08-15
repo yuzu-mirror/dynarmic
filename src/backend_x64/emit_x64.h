@@ -78,6 +78,7 @@ private:
     std::unordered_map<u64, std::vector<CodePtr>> patch_unique_hash_locations;
     std::unordered_map<Arm::LocationDescriptor, BlockDescriptor, Arm::LocationDescriptorHash> basic_blocks;
     std::unordered_map<Arm::LocationDescriptor, std::vector<CodePtr>, Arm::LocationDescriptorHash> patch_jg_locations;
+    std::unordered_map<Arm::LocationDescriptor, std::vector<CodePtr>, Arm::LocationDescriptorHash> patch_jmp_locations;
 };
 
 } // namespace BackendX64

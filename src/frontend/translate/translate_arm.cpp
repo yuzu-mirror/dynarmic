@@ -41,7 +41,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
 
     if (visitor.cond_state == ConditionalState::Translating) {
         if (should_continue) {
-            visitor.ir.SetTerm(IR::Term::LinkBlock{visitor.ir.current_location});
+            visitor.ir.SetTerm(IR::Term::LinkBlockFast{visitor.ir.current_location});
         }
         visitor.ir.block.cond_failed = { visitor.ir.current_location };
     }
@@ -73,7 +73,7 @@ bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
     if (!ir.block.instructions.IsEmpty()) {
         // We've already emitted instructions. Quit for now, we'll make a new block here later.
         cond_state = ConditionalState::Break;
-        ir.SetTerm(IR::Term::LinkBlock{ir.current_location});
+        ir.SetTerm(IR::Term::LinkBlockFast{ir.current_location});
         return false;
     }
 
