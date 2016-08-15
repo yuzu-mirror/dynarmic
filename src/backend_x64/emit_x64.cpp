@@ -1732,7 +1732,7 @@ void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::L
 void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescriptor initial_location) {
     // This calculation has to match up with IREmitter::PushRSB
     code->MOV(32, R(RBX), MJitStateCpsr());
-    code->MOV(32, R(RCX), MJitStateReg(Arm::Reg::PC));
+    code->MOVZX(64, 32, RCX, MJitStateReg(Arm::Reg::PC));
     code->AND(32, R(RBX), Imm32((1 << 5) | (1 << 9)));
     code->SHR(32, R(RBX), Imm8(2));
     code->OR(32, R(RBX), MDisp(R15, offsetof(JitState, guest_FPSCR_mode)));
@@ -1744,7 +1744,7 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescript
         code->CMP(64, R(RBX), MDisp(R15, int(offsetof(JitState, rsb_location_descriptors) + i * sizeof(u64))));
         code->CMOVcc(64, RAX, MDisp(R15, int(offsetof(JitState, rsb_codeptrs) + i * sizeof(u64))), CC_E);
     }
-    code->SUB(32, MDisp(R15, offsetof(JitState, rsb_ptr)), Imm32(1));
+
     code->JMPptr(R(RAX));
 }
 
