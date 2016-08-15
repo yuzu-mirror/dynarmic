@@ -1734,9 +1734,9 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescript
     code->MOV(32, R(RBX), MJitStateCpsr());
     code->MOV(32, R(RCX), MJitStateReg(Arm::Reg::PC));
     code->AND(32, R(RBX), Imm32((1 << 5) | (1 << 9)));
-    code->SHL(32, R(RBX), Imm8(2));
+    code->SHR(32, R(RBX), Imm8(2));
     code->OR(32, R(RBX), MDisp(R15, offsetof(JitState, guest_FPSCR_mode)));
-    code->SHR(64, R(RBX), Imm8(32));
+    code->SHL(64, R(RBX), Imm8(32));
     code->OR(64, R(RBX), R(RCX));
 
     code->MOV(64, R(RAX), Imm64(u64(code->GetReturnFromRunCodeAddress())));
