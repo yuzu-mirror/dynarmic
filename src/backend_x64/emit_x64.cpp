@@ -343,23 +343,35 @@ void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
     ASSERT(inst->GetArg(0).IsImmediate());
     u64 imm64 = inst->GetArg(0).GetU64();
 
-    X64Reg tmp = reg_alloc.ScratchRegister({HostLoc::RCX});
-    X64Reg rsb_index = reg_alloc.ScratchRegister(any_gpr);
+    X64Reg code_ptr_reg = reg_alloc.ScratchRegister({HostLoc::RCX});
+    X64Reg loc_desc_reg = reg_alloc.ScratchRegister(any_gpr);
+    X64Reg index_reg = reg_alloc.ScratchRegister(any_gpr);
     u64 code_ptr = unique_hash_to_code_ptr.find(imm64) != unique_hash_to_code_ptr.end()
                     ? u64(unique_hash_to_code_ptr[imm64])
                     : u64(code->GetReturnFromRunCodeAddress());
 
-    code->MOV(32, R(rsb_index), MDisp(R15, offsetof(JitState, rsb_ptr)));
-    code->AND(32, R(rsb_index), Imm32(u32(JitState::RSBSize - 1)));
-    code->MOV(64, R(tmp), Imm64(imm64));
-    code->MOV(64, MComplex(R15, rsb_index, SCALE_1, offsetof(JitState, rsb_location_descriptors)), R(tmp));
+    code->MOV(32, R(index_reg), MDisp(R15, offsetof(JitState, rsb_ptr)));
+    code->AND(32, R(index_reg), Imm32(JitState::RSBSize - 1));
+
+    code->MOV(64, R(loc_desc_reg), Imm64(imm64));
     CodePtr patch_location = code->GetCodePtr();
     patch_unique_hash_locations[imm64].emplace_back(patch_location);
-    code->MOV(64, R(tmp), Imm64(code_ptr)); // This line has to match up with EmitX64::Patch.
+    code->MOV(64, R(code_ptr_reg), Imm64(code_ptr)); // This line has to match up with EmitX64::Patch.
     ASSERT((code->GetCodePtr() - patch_location) == 10);
-    code->MOV(64, MComplex(R15, rsb_index, SCALE_1, offsetof(JitState, rsb_codeptrs)), R(tmp));
-    code->ADD(32, R(rsb_index), Imm32(1));
-    code->MOV(32, MDisp(R15, offsetof(JitState, rsb_ptr)), R(rsb_index));
+
+    std::vector<FixupBranch> fixups;
+    fixups.reserve(JitState::RSBSize);
+    for (size_t i = 0; i < JitState::RSBSize; ++i) {
+        code->CMP(64, R(loc_desc_reg), MDisp(R15, int(offsetof(JitState, rsb_location_descriptors) + i * sizeof(u64))));
+        fixups.push_back(code->J_CC(CC_E));
+    }
+
+    code->MOV(32, MDisp(R15, offsetof(JitState, rsb_ptr)), R(index_reg));
+    code->MOV(64, MComplex(R15, index_reg, SCALE_8, offsetof(JitState, rsb_location_descriptors)), R(loc_desc_reg));
+    code->MOV(64, MComplex(R15, index_reg, SCALE_8, offsetof(JitState, rsb_codeptrs)), R(code_ptr_reg));
+    for (auto f : fixups) {
+        code->SetJumpTarget(f);
+    }
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Block&, IR::Inst*) {
