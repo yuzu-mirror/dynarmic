@@ -17,9 +17,10 @@ bool ArmTranslatorVisitor::arm_SVC(Cond cond, Imm24 imm24) {
     u32 imm32 = imm24;
     // SVC<c> #<imm24>
     if (ConditionPassed(cond)) {
+        ir.PushRSB(ir.current_location.AdvancePC(4));
         ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
         ir.CallSupervisor(ir.Imm32(imm32));
-        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        ir.SetTerm(IR::Term::CheckHalt{IR::Term::PopRSBHint{}});
         return false;
     }
     return true;

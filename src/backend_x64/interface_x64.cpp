@@ -112,10 +112,10 @@ size_t Jit::Run(size_t cycle_count) {
     is_executing = true;
     SCOPE_EXIT({ this->is_executing = false; });
 
-    halt_requested = false;
+    impl->jit_state.halt_requested = false;
 
     size_t cycles_executed = 0;
-    while (cycles_executed < cycle_count && !halt_requested) {
+    while (cycles_executed < cycle_count && !impl->jit_state.halt_requested) {
         cycles_executed += impl->Execute(cycle_count - cycles_executed);
     }
 
@@ -136,7 +136,7 @@ void Jit::Reset() {
 
 void Jit::HaltExecution() {
     ASSERT(is_executing);
-    halt_requested = true;
+    impl->jit_state.halt_requested = true;
 
     // TODO: Uh do other stuff to JitState pls.
 }

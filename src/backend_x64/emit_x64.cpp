@@ -1674,6 +1674,9 @@ void EmitX64::EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initia
     case 6:
         EmitTerminalIf(boost::get<IR::Term::If>(terminal), initial_location);
         return;
+    case 7:
+        EmitTerminalCheckHalt(boost::get<IR::Term::CheckHalt>(terminal), initial_location);
+        return;
     default:
         ASSERT_MSG(0, "Invalid Terminal. Bad programmer.");
         return;
@@ -1774,6 +1777,12 @@ void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor init
     EmitTerminal(terminal.else_, initial_location);
     code->SetJumpTarget(fixup);
     EmitTerminal(terminal.then_, initial_location);
+}
+
+void EmitX64::EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, Arm::LocationDescriptor initial_location) {
+    code->CMP(8, MDisp(R15, offsetof(JitState, halt_requested)), Imm8(0));
+    code->J_CC(CC_NE, code->GetReturnFromRunCodeAddress(), true);
+    EmitTerminal(terminal.else_, initial_location);
 }
 
 void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {

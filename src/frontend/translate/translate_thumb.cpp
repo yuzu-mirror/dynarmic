@@ -773,8 +773,9 @@ struct ThumbTranslatorVisitor final {
         u32 imm32 = imm8;
         // SVC #<imm8>
         ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 2));
+        ir.PushRSB(ir.current_location.AdvancePC(2));
         ir.CallSupervisor(ir.Imm32(imm32));
-        ir.SetTerm(IR::Term::ReturnToDispatch{});
+        ir.SetTerm(IR::Term::CheckHalt{IR::Term::PopRSBHint{}});
         return false;
     }
 

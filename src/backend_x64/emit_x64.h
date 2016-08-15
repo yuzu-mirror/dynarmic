@@ -64,6 +64,7 @@ private:
     void EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, Arm::LocationDescriptor initial_location);
     void EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location);
+    void EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, Arm::LocationDescriptor initial_location);
     void Patch(Arm::LocationDescriptor desc, CodePtr bb);
 
     // Per-block state

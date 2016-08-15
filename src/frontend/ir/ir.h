@@ -166,6 +166,7 @@ struct LinkBlockFast {
 struct PopRSBHint {};
 
 struct If;
+struct CheckHalt;
 /// A Terminal is the terminal instruction in a MicroBlock.
 using Terminal = boost::variant<
         Invalid,
@@ -174,7 +175,8 @@ using Terminal = boost::variant<
         LinkBlock,
         LinkBlockFast,
         PopRSBHint,
-        boost::recursive_wrapper<If>
+        boost::recursive_wrapper<If>,
+        boost::recursive_wrapper<CheckHalt>
 >;
 
 /**
@@ -185,6 +187,15 @@ struct If {
     If(Arm::Cond if_, Terminal then_, Terminal else_) : if_(if_), then_(then_), else_(else_) {}
     Arm::Cond if_;
     Terminal then_;
+    Terminal else_;
+};
+
+/**
+ * This terminal instruction checks if a halt was requested. If it wasn't, else_ is
+ * executed.
+ */
+struct CheckHalt {
+    CheckHalt(Terminal else_) : else_(else_) {}
     Terminal else_;
 };
 

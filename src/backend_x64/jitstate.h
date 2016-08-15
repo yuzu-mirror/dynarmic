@@ -32,6 +32,7 @@ struct JitState {
     u32 guest_MXCSR = 0x00001f80;
     u32 save_host_MXCSR = 0;
     s64 cycles_remaining = 0;
+    bool halt_requested = false;
 
     // Exclusive state
     static constexpr u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;

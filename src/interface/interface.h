@@ -99,7 +99,6 @@ public:
     std::string Disassemble(const Arm::LocationDescriptor& descriptor);
 
 private:
-    bool halt_requested = false;
     bool is_executing = false;
 
     struct Impl;
