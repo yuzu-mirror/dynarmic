@@ -14,7 +14,7 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
-void JitState::ResetRSB(BlockOfCode* code) {
+void JitState::ResetRSB(const BlockOfCode* code) {
     for (auto& value : rsb_codeptrs) {
         value = u64(code->GetReturnFromRunCodeAddress());
     }
