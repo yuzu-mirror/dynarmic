@@ -20,7 +20,7 @@ namespace Arm {
 
 template <typename Visitor>
 struct VFP2Matcher {
-    using CallRetT = typename mp::MemFnInfo<decltype(&Visitor::vfp2_VADD)>::return_type;
+    using CallRetT = mp::return_type_t<decltype(&Visitor::vfp2_VADD)>;
 
     VFP2Matcher(const char* const name, u32 mask, u32 expect, std::function<CallRetT(Visitor&, u32)> fn)
             : name(name), mask(mask), expect(expect), fn(fn) {}

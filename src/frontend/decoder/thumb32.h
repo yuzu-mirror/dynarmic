@@ -20,7 +20,7 @@ namespace Arm {
 
 template <typename Visitor>
 struct Thumb32Matcher {
-    using CallRetT = typename mp::MemFnInfo<decltype(&Visitor::thumb32_UDF)>::return_type;
+    using CallRetT = mp::return_type_t<decltype(&Visitor::thumb32_UDF)>;
 
     Thumb32Matcher(const char* const name, u32 mask, u32 expect, std::function<CallRetT(Visitor&, u32)> fn)
             : name(name), mask(mask), expect(expect), fn(fn) {}

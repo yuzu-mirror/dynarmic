@@ -127,8 +127,8 @@ public:
      */
     template<typename FnT>
     static auto GetMatcher(FnT fn, const char* const name, const char* const bitstring) {
-        using Visitor = typename mp::MemFnInfo<FnT>::class_type;
-        constexpr size_t args_count = mp::MemFnInfo<FnT>::args_count;
+        using Visitor = typename mp::FunctionInfo<FnT>::class_type;
+        constexpr size_t args_count = mp::FunctionInfo<FnT>::args_count;
         using Iota = std::make_index_sequence<args_count>;
 
         const auto mask_and_expect = GetMaskAndExpect(bitstring);
