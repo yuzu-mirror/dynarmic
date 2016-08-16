@@ -172,7 +172,7 @@ private:
     HostLocInfo& LocInfo(HostLoc loc) {
         return hostloc_info[static_cast<size_t>(loc)];
     }
-    HostLocInfo GetLocInfo(HostLoc loc) const {
+    const HostLocInfo& LocInfo(HostLoc loc) const {
         return hostloc_info[static_cast<size_t>(loc)];
     }
 };

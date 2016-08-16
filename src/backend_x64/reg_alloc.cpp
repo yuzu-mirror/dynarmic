@@ -351,17 +351,19 @@ boost::optional<HostLoc> RegAlloc::ValueLocation(IR::Inst* value) const {
 }
 
 bool RegAlloc::IsRegisterOccupied(HostLoc loc) const {
-    return !GetLocInfo(loc).values.empty() || GetLocInfo(loc).def;
+    const auto& info = LocInfo(loc);
+
+    return !info.values.empty() || info.def;
 }
 
 bool RegAlloc::IsRegisterAllocated(HostLoc loc) const {
-    return GetLocInfo(loc).is_being_used;
+    return LocInfo(loc).is_being_used;
 }
 
 bool RegAlloc::IsLastUse(IR::Inst* inst) const {
     if (inst->use_count > 1)
         return false;
-    return GetLocInfo(*ValueLocation(inst)).values.size() == 1;
+    return LocInfo(*ValueLocation(inst)).values.size() == 1;
 }
 
 void RegAlloc::SpillRegister(HostLoc loc) {
