@@ -23,7 +23,6 @@ template <typename T> class IntrusiveListConstIterator;
 template <typename T>
 class IntrusiveListNode {
 public:
-    IntrusiveListNode() : next(this), prev(this) {}
     void UnlinkFromList() {
         prev->next = next;
         next->prev = prev;
@@ -31,12 +30,13 @@ public:
         next = prev = nullptr;
 #endif
     }
+
 private:
     friend class IntrusiveList<T>;
     friend class IntrusiveListIterator<T>;
     friend class IntrusiveListConstIterator<T>;
-    IntrusiveListNode<T>* next;
-    IntrusiveListNode<T>* prev;
+    IntrusiveListNode* next = this;
+    IntrusiveListNode* prev = this;
 };
 
 template <typename T>
@@ -125,13 +125,11 @@ private:
 template <typename T>
 class IntrusiveListIterator {
 public:
-    IntrusiveListIterator() : root(nullptr), node(nullptr) {}
-    IntrusiveListIterator(IntrusiveList<T>* list, IntrusiveListNode<T>* node) : root(list->root.get()), node(node) {}
-    IntrusiveListIterator(const IntrusiveListIterator& other) : root(other.root), node(other.node) {}
-    IntrusiveListIterator& operator=(IntrusiveListIterator other) {
-        std::swap(root, other.root);
-        std::swap(node, other.node);
-        return *this;
+    IntrusiveListIterator() = default;
+    IntrusiveListIterator(const IntrusiveListIterator& other) = default;
+    IntrusiveListIterator& operator=(const IntrusiveListIterator& other) = default;
+
+    IntrusiveListIterator(IntrusiveList<T>* list, IntrusiveListNode<T>* node) : root(list->root.get()), node(node) {
     }
 
     IntrusiveListIterator& operator++() {
@@ -180,20 +178,18 @@ public:
 
 private:
     friend class IntrusiveList<T>;
-    IntrusiveListNode<T>* root;
-    IntrusiveListNode<T>* node;
+    IntrusiveListNode<T>* root = nullptr;
+    IntrusiveListNode<T>* node = nullptr;
 };
 
 template <typename T>
 class IntrusiveListConstIterator {
 public:
-    IntrusiveListConstIterator() : root(nullptr), node(nullptr) {}
-    IntrusiveListConstIterator(const IntrusiveList<T>* list, IntrusiveListNode<T>* node) : root(list->root.get()), node(node) {}
-    IntrusiveListConstIterator(const IntrusiveListConstIterator& other) : root(other.root), node(other.node) {}
-    IntrusiveListConstIterator& operator=(IntrusiveListConstIterator other) {
-        std::swap(root, other.root);
-        std::swap(node, other.node);
-        return *this;
+    IntrusiveListConstIterator() = default;
+    IntrusiveListConstIterator(const IntrusiveListConstIterator& other) = default;
+    IntrusiveListConstIterator& operator=(const IntrusiveListConstIterator& other) = default;
+
+    IntrusiveListConstIterator(const IntrusiveList<T>* list, IntrusiveListNode<T>* node) : root(list->root.get()), node(node) {
     }
 
     IntrusiveListConstIterator& operator++() {
@@ -234,8 +230,8 @@ public:
 
 private:
     friend class IntrusiveList<T>;
-    IntrusiveListNode<T>* root;
-    IntrusiveListNode<T>* node;
+    IntrusiveListNode<T>* root = nullptr;
+    IntrusiveListNode<T>* node = nullptr;
 };
 
 template <typename T>
