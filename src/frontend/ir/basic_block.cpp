@@ -70,8 +70,16 @@ std::string DumpBlock(const IR::Block& block) {
 
         const size_t arg_count = GetNumArgsOf(op);
         for (size_t arg_index = 0; arg_index < arg_count; arg_index++) {
+            const Value arg = inst->GetArg(arg_index);
+
             ret += arg_index != 0 ? ", " : " ";
-            ret += arg_to_string(inst->GetArg(arg_index));
+            ret += arg_to_string(arg);
+
+            Type actual_type = arg.GetType();
+            Type expected_type = GetArgTypeOf(op, arg_index);
+            if (actual_type != expected_type && actual_type != Type::Opaque && expected_type != Type::Opaque) {
+                ret += Common::StringFromFormat("<type error: %s != %s>", GetNameOf(actual_type), GetNameOf(expected_type));
+            }
         }
 
         ret += "\n";

@@ -4,6 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
+#include <array>
 #include <map>
 #include <vector>
 
@@ -46,6 +47,13 @@ Type GetArgTypeOf(Opcode op, size_t arg_index) {
 
 const char* GetNameOf(Opcode op) {
     return OpcodeInfo::opcode_info.at(op).name;
+}
+
+const char* GetNameOf(Type type) {
+    const static std::array<const char*, 11> names = {
+        "Void", "RegRef", "ExtRegRef", "Opaque", "U1", "U8", "U16", "U32", "U64", "F32", "F64"
+    };
+    return names.at(static_cast<size_t>(type));
 }
 
 } // namespace IR
