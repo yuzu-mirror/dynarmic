@@ -15,9 +15,11 @@ set(SRCS
     frontend/arm_types.cpp
     frontend/disassembler/disassembler_arm.cpp
     frontend/disassembler/disassembler_thumb.cpp
-    frontend/ir/ir.cpp
+    frontend/ir/basic_block.cpp
     frontend/ir/ir_emitter.cpp
+    frontend/ir/microinstruction.cpp
     frontend/ir/opcodes.cpp
+    frontend/ir/value.cpp
     frontend/translate/translate.cpp
     frontend/translate/translate_arm.cpp
     frontend/translate/translate_arm/branch.cpp
@@ -63,9 +65,12 @@ set(HEADERS
     frontend/decoder/thumb32.h
     frontend/decoder/vfp2.h
     frontend/disassembler/disassembler.h
-    frontend/ir/ir.h
+    frontend/ir/basic_block.h
     frontend/ir/ir_emitter.h
+    frontend/ir/microinstruction.h
     frontend/ir/opcodes.h
+    frontend/ir/terminal.h
+    frontend/ir/value.h
     frontend/translate/translate.h
     frontend/translate/translate_arm/translate_arm.h
     interface/interface.h

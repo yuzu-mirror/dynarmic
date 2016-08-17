@@ -4,8 +4,12 @@
  * General Public License version 2 or any later version.
  */
 
+#include <array>
+
 #include "common/assert.h"
-#include "frontend/ir/ir.h"
+#include "common/common_types.h"
+#include "frontend/ir/basic_block.h"
+#include "frontend/ir/value.h"
 #include "ir_opt/passes.h"
 
 namespace Dynarmic {

@@ -4,22 +4,26 @@
  * General Public License version 2 or any later version.
  */
 
+#include <algorithm>
+#include <array>
 #include <cinttypes>
+#include <cstdio>
 #include <cstring>
 #include <functional>
+#include <tuple>
 
 #include <catch.hpp>
 
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "frontend/disassembler/disassembler.h"
+#include "frontend/ir/basic_block.h"
+#include "frontend/translate/translate.h"
 #include "interface/interface.h"
+#include "ir_opt/passes.h"
 #include "rand_int.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
-
-#include "frontend/translate/translate.h"
-#include "ir_opt/passes.h"
 
 struct WriteRecord {
     size_t size;

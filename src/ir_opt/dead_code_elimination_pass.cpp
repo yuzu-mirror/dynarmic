@@ -5,7 +5,8 @@
  */
 
 #include "common/assert.h"
-#include "frontend/ir/ir.h"
+#include "frontend/ir/basic_block.h"
+#include "frontend/ir/opcodes.h"
 #include "ir_opt/passes.h"
 
 namespace Dynarmic {

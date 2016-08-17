@@ -8,7 +8,7 @@
 #include "frontend/arm_types.h"
 #include "frontend/decoder/arm.h"
 #include "frontend/decoder/vfp2.h"
-#include "frontend/ir/ir.h"
+#include "frontend/ir/basic_block.h"
 #include "frontend/translate/translate.h"
 #include "frontend/translate/translate_arm/translate_arm.h"
 

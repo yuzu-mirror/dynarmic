@@ -8,13 +8,17 @@
 
 #include <set>
 #include <unordered_map>
+#include <vector>
 
 #include <boost/optional.hpp>
 
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/reg_alloc.h"
 #include "common/x64/emitter.h"
-#include "frontend/ir/ir.h"
+#include "frontend/arm_types.h"
+#include "frontend/ir/basic_block.h"
+#include "frontend/ir/microinstruction.h"
+#include "frontend/ir/terminal.h"
 #include "interface/interface.h"
 
 namespace Dynarmic {

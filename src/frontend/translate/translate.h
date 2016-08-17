@@ -5,10 +5,15 @@
  */
 #pragma once
 
+#include "common/common_types.h"
 #include "frontend/arm_types.h"
-#include "frontend/ir/ir.h"
 
 namespace Dynarmic {
+
+namespace IR {
+    class Block;
+} // namespace IR
+
 namespace Arm {
 
 using MemoryRead32FuncType = u32 (*)(u32 vaddr);

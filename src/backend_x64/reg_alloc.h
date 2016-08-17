@@ -6,13 +6,18 @@
 
 #pragma once
 
+#include <array>
 #include <map>
+#include <vector>
+
+#include <boost/optional.hpp>
 
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/jitstate.h"
 #include "common/common_types.h"
 #include "common/x64/emitter.h"
-#include "frontend/ir/ir.h"
+#include "frontend/ir/microinstruction.h"
+#include "frontend/ir/value.h"
 
 namespace Dynarmic {
 namespace BackendX64 {

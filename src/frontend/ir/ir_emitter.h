@@ -6,9 +6,21 @@
 
 #pragma once
 
+#include <initializer_list>
+
+#include "common/common_types.h"
 #include "frontend/arm_types.h"
-#include "frontend/ir/ir.h"
+#include "frontend/ir/basic_block.h"
 #include "frontend/ir/opcodes.h"
+#include "frontend/ir/terminal.h"
+#include "frontend/ir/value.h"
+
+// ARM JIT Microinstruction Intermediate Representation
+//
+// This intermediate representation is an SSA IR. It is designed primarily for analysis,
+// though it can be lowered into a reduced form for interpretation. Each IR node (Value)
+// is a microinstruction of an idealised ARM CPU. The choice of microinstructions is made
+// not based on any existing microarchitecture but on ease of implementation.
 
 namespace Dynarmic {
 namespace Arm {

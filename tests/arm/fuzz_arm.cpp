@@ -4,9 +4,14 @@
  * General Public License version 2 or any later version.
  */
 
+#include <algorithm>
+#include <array>
 #include <cinttypes>
+#include <cstdio>
 #include <cstring>
 #include <functional>
+#include <tuple>
+#include <vector>
 
 #include <catch.hpp>
 
@@ -14,7 +19,7 @@
 #include "common/common_types.h"
 #include "frontend/arm_types.h"
 #include "frontend/disassembler/disassembler.h"
-#include "frontend/ir/ir.h"
+#include "frontend/ir/basic_block.h"
 #include "frontend/translate/translate.h"
 #include "interface/interface.h"
 #include "ir_opt/passes.h"

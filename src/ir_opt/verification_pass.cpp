@@ -7,7 +7,9 @@
 #include <map>
 
 #include "common/assert.h"
-#include "frontend/ir/ir.h"
+#include "common/common_types.h"
+#include "frontend/ir/basic_block.h"
+#include "frontend/ir/microinstruction.h"
 #include "ir_opt/passes.h"
 
 namespace Dynarmic {
