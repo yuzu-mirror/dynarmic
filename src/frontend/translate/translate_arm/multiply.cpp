@@ -147,25 +147,94 @@ bool ArmTranslatorVisitor::arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
 
 // Multiply (Halfword) instructions
 bool ArmTranslatorVisitor::arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, bool N, Reg n) {
-    return InterpretThisInstruction();
+    if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (dLo == dHi)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n16 = N ? ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result
+                     : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m16 = M ? ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result
+                     : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto product = ir.SignExtendWordToLong(ir.Mul(n16, m16));
+        auto addend = ir.Pack2x32To1x64(ir.GetRegister(dLo), ir.GetRegister(dHi));
+        auto result = ir.Add64(product, addend);
+        ir.SetRegister(dLo, ir.LeastSignificantWord(result));
+        ir.SetRegister(dHi, ir.MostSignificantWord(result).result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMLAxy(Cond cond, Reg d, Reg a, Reg m, bool M, bool N, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n16 = N ? ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result
+                     : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m16 = M ? ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result
+                     : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto product = ir.Mul(n16, m16);
+        auto result_overflow = ir.AddWithCarry(product, ir.GetRegister(a), ir.Imm1(0));
+        ir.SetRegister(d, result_overflow.result);
+        ir.OrQFlag(result_overflow.overflow);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMULxy(Cond cond, Reg d, Reg m, bool M, bool N, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n16 = N ? ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result
+                     : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m16 = M ? ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result
+                     : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto result = ir.Mul(n16, m16);
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 
 // Multiply (word by halfword) instructions
 bool ArmTranslatorVisitor::arm_SMLAWy(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.SignExtendWordToLong(ir.GetRegister(n));
+        auto m32 = ir.GetRegister(m);
+        if (M)
+            m32 = ir.LogicalShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m16 = ir.LeastSignificantHalf(m32);
+        m16 = ir.SignExtendWordToLong(ir.SignExtendHalfToWord(m16));
+        auto product = ir.LeastSignificantWord(ir.LogicalShiftRight64(ir.Mul64(n32, m16), ir.Imm8(16)));
+        auto result_overflow = ir.AddWithCarry(product, ir.GetRegister(a), ir.Imm1(0));
+        ir.SetRegister(d, result_overflow.result);
+        ir.OrQFlag(result_overflow.overflow);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.SignExtendWordToLong(ir.GetRegister(n));
+        auto m32 = ir.GetRegister(m);
+        if (M)
+            m32 = ir.LogicalShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m16 = ir.LeastSignificantHalf(m32);
+        m16 = ir.SignExtendWordToLong(ir.SignExtendHalfToWord(m16));
+        auto result = ir.LogicalShiftRight64(ir.Mul64(n32, m16), ir.Imm8(16));
+        ir.SetRegister(d, ir.LeastSignificantWord(result));
+    }
+    return true;
 }
 
 
@@ -223,27 +292,142 @@ bool ArmTranslatorVisitor::arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n) {
 
 // Multiply (Dual) instructions
 bool ArmTranslatorVisitor::arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (a == Reg::PC)
+        return arm_SMUAD(cond, d, m, M, n);
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto n_hi = ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m_hi = ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        if (M)
+            std::swap(m_lo, m_hi);
+        auto product_lo = ir.Mul(n_lo, m_lo);
+        auto product_hi = ir.Mul(n_hi, m_hi);
+        auto addend = ir.GetRegister(a);
+        auto result_overflow = ir.AddWithCarry(product_lo, product_hi, ir.Imm1(0));
+        ir.OrQFlag(result_overflow.overflow);
+        result_overflow = ir.AddWithCarry(result_overflow.result, addend, ir.Imm1(0));
+        ir.SetRegister(d, result_overflow.result);
+        ir.OrQFlag(result_overflow.overflow);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (dLo == dHi)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto n_hi = ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m_hi = ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        if (M)
+            std::swap(m_lo, m_hi);
+        auto product_lo = ir.SignExtendWordToLong(ir.Mul(n_lo, m_lo));
+        auto product_hi = ir.SignExtendWordToLong(ir.Mul(n_hi, m_hi));
+        auto addend = ir.Pack2x32To1x64(ir.GetRegister(dLo), ir.GetRegister(dHi));
+        auto result = ir.Add64(ir.Add64(product_lo, product_hi), addend);
+        ir.SetRegister(dLo, ir.LeastSignificantWord(result));
+        ir.SetRegister(dHi, ir.MostSignificantWord(result).result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (a == Reg::PC)
+        return arm_SMUSD(cond, d, m, M, n);
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto n_hi = ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m_hi = ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        if (M)
+            std::swap(m_lo, m_hi);
+        auto product_lo = ir.Mul(n_lo, m_lo);
+        auto product_hi = ir.Mul(n_hi, m_hi);
+        auto addend = ir.GetRegister(a);
+        auto result_overflow = ir.AddWithCarry(ir.Sub(product_lo, product_hi), addend, ir.Imm1(0));
+        ir.SetRegister(d, result_overflow.result);
+        ir.OrQFlag(result_overflow.overflow);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (dLo == dHi)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto n_hi = ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m_hi = ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        if (M)
+            std::swap(m_lo, m_hi);
+        auto product_lo = ir.SignExtendWordToLong(ir.Mul(n_lo, m_lo));
+        auto product_hi = ir.SignExtendWordToLong(ir.Mul(n_hi, m_hi));
+        auto addend = ir.Pack2x32To1x64(ir.GetRegister(dLo), ir.GetRegister(dHi));
+        auto result = ir.Add64(ir.Sub64(product_lo, product_hi), addend);
+        ir.SetRegister(dLo, ir.LeastSignificantWord(result));
+        ir.SetRegister(dHi, ir.MostSignificantWord(result).result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMUAD(Cond cond, Reg d, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto n_hi = ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m_hi = ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        if (M)
+            std::swap(m_lo, m_hi);
+        auto product_lo = ir.Mul(n_lo, m_lo);
+        auto product_hi = ir.Mul(n_hi, m_hi);
+        auto result_overflow = ir.AddWithCarry(product_lo, product_hi, ir.Imm1(0));
+        ir.SetRegister(d, result_overflow.result);
+        ir.OrQFlag(result_overflow.overflow);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SMUSD(Cond cond, Reg d, Reg m, bool M, Reg n) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto n32 = ir.GetRegister(n);
+        auto m32 = ir.GetRegister(m);
+        auto n_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+        auto m_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+        auto n_hi = ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result;
+        auto m_hi = ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+        if (M)
+            std::swap(m_lo, m_hi);
+        auto product_lo = ir.Mul(n_lo, m_lo);
+        auto product_hi = ir.Mul(n_hi, m_hi);
+        auto result = ir.Sub(product_lo, product_hi);
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 } // namespace Arm

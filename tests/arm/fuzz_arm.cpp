@@ -792,7 +792,7 @@ TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
                Bits<12, 15>(inst) != Bits<16, 19>(inst);
     };
 
-    const std::array<InstructionGenerator, 10> instructions = {{
+    const std::array<InstructionGenerator, 21> instructions = {{
         InstructionGenerator("cccc0000001Sddddaaaammmm1001nnnn", validate_d_a_m_n), // MLA
         InstructionGenerator("cccc0000000Sdddd0000mmmm1001nnnn", validate_d_m_n),   // MUL
 
@@ -802,27 +802,26 @@ TEST_CASE("Fuzz ARM multiply instructions", "[JitX64]") {
         InstructionGenerator("cccc0000101Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMLAL
         InstructionGenerator("cccc0000100Sddddaaaammmm1001nnnn", validate_h_l_m_n), // UMULL
 
-        //InstructionGenerator("cccc00010100ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLALxy
-        //InstructionGenerator("cccc00010000ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLAxy
-        //InstructionGenerator("cccc00010110dddd0000mmmm1xy0nnnn", validate_d_m_n),   // SMULxy
+        InstructionGenerator("cccc00010100ddddaaaammmm1xy0nnnn", validate_h_l_m_n), // SMLALxy
+        InstructionGenerator("cccc00010000ddddaaaammmm1xy0nnnn", validate_d_a_m_n), // SMLAxy
+        InstructionGenerator("cccc00010110dddd0000mmmm1xy0nnnn", validate_d_m_n),   // SMULxy
 
-        //InstructionGenerator("cccc00010010ddddaaaammmm1y00nnnn", validate_d_a_m_n), // SMLAWy
-        //InstructionGenerator("cccc00010010dddd0000mmmm1y10nnnn", validate_d_m_n),   // SMULWy
+        InstructionGenerator("cccc00010010ddddaaaammmm1y00nnnn", validate_d_a_m_n), // SMLAWy
+        InstructionGenerator("cccc00010010dddd0000mmmm1y10nnnn", validate_d_m_n),   // SMULWy
 
         InstructionGenerator("cccc01110101dddd1111mmmm00R1nnnn", validate_d_m_n),   // SMMUL
         InstructionGenerator("cccc01110101ddddaaaammmm00R1nnnn", validate_d_a_m_n), // SMMLA
         InstructionGenerator("cccc01110101ddddaaaammmm11R1nnnn", validate_d_a_m_n), // SMMLS
-
-        //InstructionGenerator("cccc01110000ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLAD
-        //InstructionGenerator("cccc01110100ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLALD
-        //InstructionGenerator("cccc01110000ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSD
-        //InstructionGenerator("cccc01110100ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSLD
-        //InstructionGenerator("cccc01110000dddd1111mmmm00M1nnnn", validate_d_m_n),   // SMUAD
-        //InstructionGenerator("cccc01110000dddd1111mmmm01M1nnnn", validate_d_m_n),   // SMUSD
+        InstructionGenerator("cccc01110000ddddaaaammmm00M1nnnn", validate_d_a_m_n), // SMLAD
+        InstructionGenerator("cccc01110100ddddaaaammmm00M1nnnn", validate_h_l_m_n), // SMLALD
+        InstructionGenerator("cccc01110000ddddaaaammmm01M1nnnn", validate_d_a_m_n), // SMLSD
+        InstructionGenerator("cccc01110100ddddaaaammmm01M1nnnn", validate_h_l_m_n), // SMLSLD
+        InstructionGenerator("cccc01110000dddd1111mmmm00M1nnnn", validate_d_m_n),   // SMUAD
+        InstructionGenerator("cccc01110000dddd1111mmmm01M1nnnn", validate_d_m_n),   // SMUSD
     }};
 
     SECTION("Multiply") {
-        FuzzJitArm(2, 2, 10000, [&]() -> u32 {
+        FuzzJitArm(1, 1, 10000, [&]() -> u32 {
             return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
         });
     }
@@ -850,6 +849,30 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
             return saturating_instructions[RandInt<size_t>(0, saturating_instructions.size() - 1)].Generate();
         });
     }
+}
+
+TEST_CASE( "SMUAD", "[JitX64]" ) {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xE700F211; // smuad r0, r1, r2
+
+    jit.Regs() = {
+            0, // Rd
+            0x80008000, // Rn
+            0x80008000, // Rm
+            0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+    };
+    jit.Cpsr() = 0x000001d0; // User-mode
+
+    jit.Run(6);
+
+    REQUIRE(jit.Regs()[0] == 0x80000000);
+    REQUIRE(jit.Regs()[1] == 0x80008000);
+    REQUIRE(jit.Regs()[2] == 0x80008000);
+    REQUIRE(jit.Cpsr() == 0x080001d0);
 }
 
 TEST_CASE("VFP: VPUSH, VPOP", "[JitX64][vfp]") {
