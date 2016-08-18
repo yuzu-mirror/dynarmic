@@ -1820,6 +1820,8 @@ void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
 }
 
 void EmitX64::ClearCache() {
+    unique_hash_to_code_ptr.clear();
+    patch_unique_hash_locations.clear();
     basic_blocks.clear();
     patch_jg_locations.clear();
     patch_jmp_locations.clear();
