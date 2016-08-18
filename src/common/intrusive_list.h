@@ -42,11 +42,23 @@ private:
 template <typename T>
 class IntrusiveList {
 public:
+    using difference_type        = std::ptrdiff_t;
+    using size_type              = std::size_t;
+    using value_type             = T;
+    using pointer                = value_type*;
+    using const_pointer          = const value_type*;
+    using reference              = value_type&;
+    using const_reference        = const value_type&;
+    using iterator               = IntrusiveListIterator<value_type>;
+    using const_iterator         = IntrusiveListIterator<const value_type>;
+    using reverse_iterator       = std::reverse_iterator<iterator>;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+
     /**
      * Add an entry to the start of the list.
      * @param node Node to add to the list.
      */
-    void Prepend(T& node) {
+    void Prepend(reference node) {
         AddAfter(root.get(), &node);
     }
 
@@ -54,7 +66,7 @@ public:
      * Add an entry to the end of the list
      * @param node  Node to add to the list.
      */
-    void Append(T& node) {
+    void Append(reference node) {
         AddBefore(root.get(), &node);
     }
 
@@ -63,7 +75,7 @@ public:
      * @param existing_node Node to add new_node after. Must already be member of the list.
      * @param new_node Node to add to the list.
      */
-    void AddAfter(T& existing, T& node) {
+    void AddAfter(reference existing, reference node) {
         AddAfter(&existing, &node);
     }
 
@@ -72,7 +84,7 @@ public:
      * @param existing_node Node to add new_node before. Must already be member of the list.
      * @param new_node Node to add to the list.
      */
-    void AddBefore(T& existing, T& node) {
+    void AddBefore(reference existing, reference node) {
         AddBefore(&existing, &node);
     }
 
@@ -80,7 +92,7 @@ public:
      * Removes node from list
      * @param node Node to remove from list.
      */
-    void Remove(T& node) {
+    void Remove(reference node) {
         node.UnlinkFromList();
     }
 
@@ -92,14 +104,33 @@ public:
         return root->next == root.get();
     }
 
-    IntrusiveListIterator<T> begin();
-    IntrusiveListIterator<T> end();
-    IntrusiveListIterator<T> erase(const IntrusiveListIterator<T>&);
-    IntrusiveListIterator<T> iterator_to(T&);
+    // Iterator interface
+    iterator               begin()         { return iterator(root.get(), root->next);       }
+    const_iterator         begin()   const { return const_iterator(root.get(), root->next); }
+    const_iterator         cbegin()  const { return begin();                                }
 
-    IntrusiveListIterator<T> begin() const;
-    IntrusiveListIterator<T> end() const;
-    IntrusiveListIterator<T> iterator_to(T&) const;
+    iterator               end()           { return iterator(root.get(), root.get());       }
+    const_iterator         end()     const { return const_iterator(root.get(), root.get()); }
+    const_iterator         cend()    const { return end();                                  }
+
+    reverse_iterator       rbegin()        { return reverse_iterator(end());                }
+    const_reverse_iterator rbegin()  const { return const_reverse_iterator(end());          }
+    const_reverse_iterator crbegin() const { return rbegin();                               }
+
+    reverse_iterator       rend()          { return reverse_iterator(begin());              }
+    const_reverse_iterator rend()    const { return const_reverse_iterator(begin());        }
+    const_reverse_iterator crend()   const { return rend();                                 }
+
+    iterator       iterator_to(reference item)       { return iterator(root.get(), &item);       }
+    const_iterator iterator_to(reference item) const { return const_iterator(root.get(), &item); }
+
+    iterator erase(iterator it) {
+        DEBUG_ASSERT(it.root == root.get() && it.node != it.root);
+        IntrusiveListNode<T>* to_remove = it.node;
+        ++it;
+        to_remove->UnlinkFromList();
+        return it;
+    }
 
 private:
     void AddAfter(IntrusiveListNode<T>* existing_node, IntrusiveListNode<T>* new_node) {
@@ -185,46 +216,6 @@ private:
     node_pointer root = nullptr;
     node_pointer node = nullptr;
 };
-
-template <typename T>
-IntrusiveListIterator<T> IntrusiveList<T>::begin() {
-    return IntrusiveListIterator<T>(root.get(), root->next);
-}
-
-template <typename T>
-IntrusiveListIterator<T> IntrusiveList<T>::end() {
-    return IntrusiveListIterator<T>(root.get(), root.get());
-}
-
-template <typename T>
-IntrusiveListIterator<T> IntrusiveList<T>::erase(const IntrusiveListIterator<T>& it) {
-    DEBUG_ASSERT(it.root == root.get() && it.node != it.root);
-    IntrusiveListNode<T>* to_remove = it.node;
-    IntrusiveListIterator<T> ret = it;
-    ++ret;
-    to_remove->UnlinkFromList();
-    return ret;
-}
-
-template <typename T>
-IntrusiveListIterator<T> IntrusiveList<T>::iterator_to(T& item) {
-    return IntrusiveListIterator<T>(root.get(), &item);
-}
-
-template <typename T>
-IntrusiveListIterator<T> IntrusiveList<T>::begin() const {
-    return IntrusiveListIterator<T>(root.get(), root->next);
-}
-
-template <typename T>
-IntrusiveListIterator<T> IntrusiveList<T>::end() const {
-    return IntrusiveListIterator<T>(root.get(), root.get());
-}
-
-template <typename T>
-IntrusiveListIterator<T> IntrusiveList<T>::iterator_to(T& item) const {
-    return IntrusiveListIterator<T>(root.get(), &item);
-}
 
 } // namespace Common
 } // namespace Dynarmic
