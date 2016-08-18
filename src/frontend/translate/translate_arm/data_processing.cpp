@@ -55,19 +55,13 @@ bool ArmTranslatorVisitor::arm_ADC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_ADC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || s == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.AddWithCarry(ir.GetRegister(n), shifted.result, ir.GetCFlag());
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result.result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result.result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result.result));
@@ -122,19 +116,13 @@ bool ArmTranslatorVisitor::arm_ADD_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_ADD_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || s == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.AddWithCarry(ir.GetRegister(n), shifted.result, ir.Imm1(0));
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result.result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result.result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result.result));
@@ -188,19 +176,13 @@ bool ArmTranslatorVisitor::arm_AND_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_AND_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || s == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.And(ir.GetRegister(n), shifted.result);
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result));
@@ -253,19 +235,13 @@ bool ArmTranslatorVisitor::arm_BIC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_BIC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || s == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.And(ir.GetRegister(n), ir.Not(shifted.result));
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result));
@@ -301,6 +277,8 @@ bool ArmTranslatorVisitor::arm_CMN_reg(Cond cond, Reg n, Imm5 imm5, ShiftType sh
 }
 
 bool ArmTranslatorVisitor::arm_CMN_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Reg m) {
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
@@ -340,6 +318,8 @@ bool ArmTranslatorVisitor::arm_CMP_reg(Cond cond, Reg n, Imm5 imm5, ShiftType sh
 }
 
 bool ArmTranslatorVisitor::arm_CMP_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Reg m) {
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
@@ -395,19 +375,13 @@ bool ArmTranslatorVisitor::arm_EOR_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_EOR_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || s == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.Eor(ir.GetRegister(n), shifted.result);
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result));
@@ -460,19 +434,13 @@ bool ArmTranslatorVisitor::arm_MOV_reg(Cond cond, bool S, Reg d, Imm5 imm5, Shif
 }
 
 bool ArmTranslatorVisitor::arm_MOV_rsr(Cond cond, bool S, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (m == Reg::PC || s == Reg::PC)
+    if (d == Reg::PC || m == Reg::PC || s == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = shifted.result;
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result));
@@ -525,19 +493,13 @@ bool ArmTranslatorVisitor::arm_MVN_reg(Cond cond, bool S, Reg d, Imm5 imm5, Shif
 }
 
 bool ArmTranslatorVisitor::arm_MVN_rsr(Cond cond, bool S, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (m == Reg::PC || s == Reg::PC)
+    if (d == Reg::PC || m == Reg::PC || s == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.Not(shifted.result);
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result));
@@ -590,19 +552,13 @@ bool ArmTranslatorVisitor::arm_ORR_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_ORR_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC || d == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.Or(ir.GetRegister(n), shifted.result);
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result));
@@ -656,19 +612,13 @@ bool ArmTranslatorVisitor::arm_RSB_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_RSB_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC || d == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.SubWithCarry(shifted.result, ir.GetRegister(n), ir.Imm1(1));
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result.result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result.result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result.result));
@@ -723,19 +673,13 @@ bool ArmTranslatorVisitor::arm_RSC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_RSC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC || d == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.SubWithCarry(shifted.result, ir.GetRegister(n), ir.GetCFlag());
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result.result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result.result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result.result));
@@ -790,19 +734,13 @@ bool ArmTranslatorVisitor::arm_SBC_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_SBC_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC || d == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.SubWithCarry(ir.GetRegister(n), shifted.result, ir.GetCFlag());
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result.result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result.result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result.result));
@@ -857,19 +795,13 @@ bool ArmTranslatorVisitor::arm_SUB_reg(Cond cond, bool S, Reg n, Reg d, Imm5 imm
 }
 
 bool ArmTranslatorVisitor::arm_SUB_rsr(Cond cond, bool S, Reg n, Reg d, Reg s, ShiftType shift, Reg m) {
-    if (n == Reg::PC || m == Reg::PC || s == Reg::PC)
+    if (n == Reg::PC || m == Reg::PC || s == Reg::PC || d == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto shift_n = ir.LeastSignificantByte(ir.GetRegister(s));
         auto carry_in = ir.GetCFlag();
         auto shifted = EmitRegShift(ir.GetRegister(m), shift, shift_n, carry_in);
         auto result = ir.SubWithCarry(ir.GetRegister(n), shifted.result, ir.Imm1(1));
-        if (d == Reg::PC) {
-            ASSERT(!S);
-            ir.ALUWritePC(result.result);
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
         ir.SetRegister(d, result.result);
         if (S) {
             ir.SetNFlag(ir.MostSignificantBit(result.result));
