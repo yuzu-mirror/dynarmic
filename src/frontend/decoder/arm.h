@@ -237,7 +237,7 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
 
         // Miscellaneous instructions
         INST(&V::arm_CLZ,         "CLZ",                 "cccc000101101111dddd11110001mmmm"), // v5
-        INST(&V::arm_NOP,         "NOP",                 "----001100100000111100000000----"), // v6K
+        INST(&V::arm_NOP,         "NOP",                 "----0011001000001111000000000000"), // v6K
         INST(&V::arm_SEL,         "SEL",                 "cccc01101000nnnndddd11111011mmmm"), // v6
 
         // Unsigned Sum of Absolute Differences instructions
