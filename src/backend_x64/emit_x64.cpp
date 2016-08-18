@@ -1106,13 +1106,13 @@ static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst
     IR::Value b = inst->GetArg(1);
 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_gpr);
-    OpArg op_arg = reg_alloc.UseOpArg(b, any_gpr);
+    X64Reg arg = reg_alloc.UseRegister(b, any_gpr);
 
     X64Reg xmm_scratch_a = reg_alloc.ScratchRegister(any_xmm);
     X64Reg xmm_scratch_b = reg_alloc.ScratchRegister(any_xmm);
 
     code->MOVD_xmm(xmm_scratch_a, R(result));
-    code->MOVD_xmm(xmm_scratch_b, op_arg);
+    code->MOVD_xmm(xmm_scratch_b, R(arg));
 
     (code->*fn)(xmm_scratch_a, R(xmm_scratch_b));
 
