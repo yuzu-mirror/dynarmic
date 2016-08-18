@@ -126,13 +126,13 @@ public:
     }
 
     // Coprocessor instructions
-    std::string arm_CDP() { return "<unimplemented>"; }
-    std::string arm_LDC() { return "<unimplemented>"; }
-    std::string arm_MCR() { return "<unimplemented>"; }
-    std::string arm_MCRR() { return "<unimplemented>"; }
-    std::string arm_MRC() { return "<unimplemented>"; }
-    std::string arm_MRRC() { return "<unimplemented>"; }
-    std::string arm_STC() { return "<unimplemented>"; }
+    std::string arm_CDP() { return "cdp <unimplemented>"; }
+    std::string arm_LDC() { return "ldc <unimplemented>"; }
+    std::string arm_MCR() { return "mcr <unimplemented>"; }
+    std::string arm_MCRR() { return "mcrr <unimplemented>"; }
+    std::string arm_MRC() { return "mrc <unimplemented>"; }
+    std::string arm_MRRC() { return "mrrc <unimplemented>"; }
+    std::string arm_STC() { return "stc <unimplemented>"; }
 
     // Data processing instructions
     std::string arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
@@ -330,11 +330,11 @@ public:
     }
 
     // Hint instructions
-    std::string arm_PLD() { return "<unimplemented>"; }
-    std::string arm_SEV() { return "<unimplemented>"; }
-    std::string arm_WFE() { return "<unimplemented>"; }
-    std::string arm_WFI() { return "<unimplemented>"; }
-    std::string arm_YIELD() { return "<unimplemented>"; }
+    std::string arm_PLD() { return "pld <unimplemented>"; }
+    std::string arm_SEV() { return "sev <unimplemented>"; }
+    std::string arm_WFE() { return "wfe <unimplemented>"; }
+    std::string arm_WFI() { return "wfi <unimplemented>"; }
+    std::string arm_YIELD() { return "yield <unimplemented>"; }
 
     // Load/Store instructions
     std::string arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12) {
