@@ -11,7 +11,7 @@ namespace Arm {
 
 // Multiply (Normal) instructions
 bool ArmTranslatorVisitor::arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n) {
-    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.Add(ir.Mul(ir.GetRegister(n), ir.GetRegister(m)), ir.GetRegister(a));
