@@ -165,7 +165,7 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
         INST(&V::arm_UXTAH,       "UXTAH",               "cccc01101111nnnnddddrr000111mmmm"), // v6
 
         // Hint instructions
-        INST(&V::arm_PLD,         "PLD",                 "111101---101----1111------------"), // v5E
+        INST(&V::arm_PLD,         "PLD",                 "111101-1-101----1111------------"), // v5E; different on v7
         INST(&V::arm_SEV,         "SEV",                 "----0011001000001111000000000100"), // v6K
         INST(&V::arm_WFE,         "WFE",                 "----0011001000001111000000000010"), // v6K
         INST(&V::arm_WFI,         "WFI",                 "----0011001000001111000000000011"), // v6K
