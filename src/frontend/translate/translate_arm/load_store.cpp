@@ -645,7 +645,7 @@ static bool LDMHelper(IREmitter& ir, bool W, Reg n, RegList list, IR::Value star
             address = ir.Add(address, ir.Imm32(4));
         }
     }
-    if (W) {
+    if (W && !Common::Bit(RegNumber(n), list)) {
         ir.SetRegister(n, writeback_address);
     }
     if (Common::Bit<15>(list)) {
@@ -677,7 +677,7 @@ bool ArmTranslatorVisitor::arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
     // LDMDA <Rn>{!}, <reg_list>
     if (ConditionPassed(cond)) {
         auto start_address = ir.Sub(ir.GetRegister(n), ir.Imm32(u32(4 * Common::BitCount(list) - 4)));
-        auto writeback_address = ir.Add(start_address, ir.Imm32(4));
+        auto writeback_address = ir.Sub(start_address, ir.Imm32(4));
         return LDMHelper(ir, W, n, list, start_address, writeback_address);
     }
     return true;
@@ -750,7 +750,7 @@ bool ArmTranslatorVisitor::arm_STMDA(Cond cond, bool W, Reg n, RegList list) {
     // STMDA <Rn>{!}, <reg_list>
     if (ConditionPassed(cond)) {
         auto start_address = ir.Sub(ir.GetRegister(n), ir.Imm32(u32(4 * Common::BitCount(list) - 4)));
-        auto writeback_address = ir.Add(start_address, ir.Imm32(4));
+        auto writeback_address = ir.Sub(start_address, ir.Imm32(4));
         return STMHelper(ir, W, n, list, start_address, writeback_address);
     }
     return true;
