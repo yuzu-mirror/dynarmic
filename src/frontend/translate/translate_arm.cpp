@@ -98,48 +98,38 @@ bool ArmTranslatorVisitor::LinkToNextInstruction() {
 }
 
 IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in) {
-    IREmitter::ResultAndCarry result_and_carry;
-    switch (type)
-    {
+    switch (type) {
         case ShiftType::LSL:
-            result_and_carry = ir.LogicalShiftLeft(value, ir.Imm8(imm5), carry_in);
-            break;
+            return ir.LogicalShiftLeft(value, ir.Imm8(imm5), carry_in);
         case ShiftType::LSR:
             imm5 = imm5 ? imm5 : 32;
-            result_and_carry = ir.LogicalShiftRight(value, ir.Imm8(imm5), carry_in);
-            break;
+            return ir.LogicalShiftRight(value, ir.Imm8(imm5), carry_in);
         case ShiftType::ASR:
             imm5 = imm5 ? imm5 : 32;
-            result_and_carry = ir.ArithmeticShiftRight(value, ir.Imm8(imm5), carry_in);
-            break;
+            return ir.ArithmeticShiftRight(value, ir.Imm8(imm5), carry_in);
         case ShiftType::ROR:
             if (imm5)
-                result_and_carry = ir.RotateRight(value, ir.Imm8(imm5), carry_in);
+                return ir.RotateRight(value, ir.Imm8(imm5), carry_in);
             else
-                result_and_carry = ir.RotateRightExtended(value, carry_in);
-            break;
+                return ir.RotateRightExtended(value, carry_in);
     }
-    return result_and_carry;
+    ASSERT_MSG(false, "Unreachable");
+    return {};
 }
 
 IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in) {
-    IREmitter::ResultAndCarry result_and_carry;
-    switch (type)
-    {
+    switch (type) {
         case ShiftType::LSL:
-            result_and_carry = ir.LogicalShiftLeft(value, amount, carry_in);
-            break;
+            return ir.LogicalShiftLeft(value, amount, carry_in);
         case ShiftType::LSR:
-            result_and_carry = ir.LogicalShiftRight(value, amount, carry_in);
-            break;
+            return ir.LogicalShiftRight(value, amount, carry_in);
         case ShiftType::ASR:
-            result_and_carry = ir.ArithmeticShiftRight(value, amount, carry_in);
-            break;
+            return ir.ArithmeticShiftRight(value, amount, carry_in);
         case ShiftType::ROR:
-            result_and_carry = ir.RotateRight(value, amount, carry_in);
-            break;
+            return ir.RotateRight(value, amount, carry_in);
     }
-    return result_and_carry;
+    ASSERT_MSG(false, "Unreachable");
+    return {};
 }
 
 } // namespace Arm
