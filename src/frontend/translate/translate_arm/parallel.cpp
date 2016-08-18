@@ -61,6 +61,8 @@ bool ArmTranslatorVisitor::arm_USUB16(Cond cond, Reg n, Reg d, Reg m) {
 
 // Parallel Add/Subtract (Saturating) instructions
 bool ArmTranslatorVisitor::arm_QADD8(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedAddS8(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
@@ -69,6 +71,8 @@ bool ArmTranslatorVisitor::arm_QADD8(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_QADD16(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedAddS16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
@@ -85,6 +89,8 @@ bool ArmTranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_QSUB8(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedSubS8(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
@@ -93,6 +99,8 @@ bool ArmTranslatorVisitor::arm_QSUB8(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_QSUB16(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedSubS16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
@@ -125,6 +133,8 @@ bool ArmTranslatorVisitor::arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UQSUB8(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedSubU8(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
@@ -133,6 +143,8 @@ bool ArmTranslatorVisitor::arm_UQSUB8(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UQSUB16(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedSubU16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
