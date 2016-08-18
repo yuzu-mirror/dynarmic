@@ -155,35 +155,41 @@ struct ArmTranslatorVisitor final {
     bool arm_WFI() { return true; }
     bool arm_YIELD() { return true; }
 
-    // Load/Store instructions
-    bool arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
-    bool arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
-    bool arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
-    bool arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
+    // Load/Store
     bool arm_LDRBT();
-    bool arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
-    bool arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
-    bool arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
-    bool arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
     bool arm_LDRHT();
-    bool arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
-    bool arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
     bool arm_LDRSBT();
-    bool arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
-    bool arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
     bool arm_LDRSHT();
     bool arm_LDRT();
+    bool arm_STRBT();
+    bool arm_STRHT();
+    bool arm_STRT();
+    bool arm_LDR_lit(Cond cond, bool U, Reg t, Imm12 imm12);
+    bool arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
+    bool arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
+    bool arm_LDRB_lit(Cond cond, bool U, Reg t, Imm12 imm12);
+    bool arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12);
+    bool arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm5 imm5, ShiftType shift, Reg m);
+    bool arm_LDRD_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_LDRH_lit(Cond cond, bool P, bool U, bool W, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_LDRSB_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m);
+    bool arm_LDRSH_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m);
     bool arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
     bool arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
     bool arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
     bool arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
-    bool arm_STRBT();
     bool arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
     bool arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
     bool arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
     bool arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
-    bool arm_STRHT();
-    bool arm_STRT();
 
     // Load/Store multiple instructions
     bool arm_LDM(Cond cond, bool W, Reg n, RegList list);

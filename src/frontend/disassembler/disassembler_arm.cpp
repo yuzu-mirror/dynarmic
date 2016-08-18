@@ -337,6 +337,10 @@ public:
     std::string arm_YIELD() { return "yield <unimplemented>"; }
 
     // Load/Store instructions
+    std::string arm_LDR_lit(Cond cond, bool U, Reg t, Imm12 imm12) {
+        bool P = true, W = false;
+        return arm_LDR_imm(cond, P, U, W, Reg::PC, t, imm12);
+    }
     std::string arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12) {
         if (P) {
             return Common::StringFromFormat("ldr%s %s, [%s, #%c%u]%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', imm12, W ? "!" : "");
@@ -350,6 +354,10 @@ public:
         } else {
             return Common::StringFromFormat("ldr%s %s, [%s], %c%s%s%s", CondToString(cond), RegToString(t), RegToString(n), U ? '+' : '-', RegToString(m), ShiftStr(shift, imm5).c_str(), W ? " (err: W == 1!!!)" : "");
         }
+    }
+    std::string arm_LDRB_lit(Cond cond, bool U, Reg t, Imm12 imm12) {
+        bool P = true, W = false;
+        return arm_LDRB_imm(cond, P, U, W, Reg::PC, t, imm12);
     }
     std::string arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm12 imm12) {
         if (P) {
@@ -366,6 +374,10 @@ public:
         }
     }
     std::string arm_LDRBT() { return "ice"; }
+    std::string arm_LDRD_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        bool P = true, W = false;
+        return arm_LDRD_imm(cond, P, U, W, Reg::PC, t, imm8a, imm8b);
+    }
     std::string arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
         u32 imm32 = (imm8a << 4) | imm8b;
         if (P) {
@@ -380,6 +392,9 @@ public:
         } else {
             return Common::StringFromFormat("ldrd%s %s, %s, [%s], %c%s%s", CondToString(cond), RegToString(t), RegToString(t+1), RegToString(n), U ? '+' : '-', RegToString(m), W ? " (err: W == 1!!!)" : "");
         }
+    }
+    std::string arm_LDRH_lit(Cond cond, bool P, bool U, bool W, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        return arm_LDRH_imm(cond, P, U, W, Reg::PC, t, imm8a, imm8b);
     }
     std::string arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
         u32 imm32 = (imm8a << 4) | imm8b;
@@ -397,6 +412,10 @@ public:
         }
     }
     std::string arm_LDRHT() { return "ice"; }
+    std::string arm_LDRSB_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        bool P = true, W = false;
+        return arm_LDRSB_imm(cond, P, U, W, Reg::PC, t, imm8a, imm8b);
+    }
     std::string arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
         u32 imm32 = (imm8a << 4) | imm8b;
         if (P) {
@@ -413,6 +432,10 @@ public:
         }
     }
     std::string arm_LDRSBT() { return "ice"; }
+    std::string arm_LDRSH_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Imm4 imm8b) {
+        bool P = true, W = false;
+        return arm_LDRSH_imm(cond, P, U, W, Reg::PC, t, imm8a, imm8b);
+    }
     std::string arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
         u32 imm32 = (imm8a << 4) | imm8b;
         if (P) {

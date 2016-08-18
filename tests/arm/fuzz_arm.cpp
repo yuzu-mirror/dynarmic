@@ -643,7 +643,7 @@ TEST_CASE("Fuzz ARM load/store instructions (byte, half-word, word)", "[JitX64]"
             u32 rand = RandInt<u32>(0, 0xFF);
             u32 Rm = RandInt<u32>(0, 14);
 
-            if (W) {
+            if (!P || W) {
                 while (Rn == Rd) {
                     Rn = RandInt<u32>(0, 14);
                     Rd = RandInt<u32>(0, 14);
