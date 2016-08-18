@@ -57,15 +57,11 @@ bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
                        "(i.e.: one and only one conditional instruction per block)");
     ASSERT_MSG(cond_state != ConditionalState::Break,
                "This should never happen. We requested a break but that wasn't honored.");
+    ASSERT_MSG(cond != Cond::NV, "NV conditional is obsolete");
 
     if (cond == Cond::AL) {
         // Everything is fine with the world
         return true;
-    }
-
-    if (cond == Cond::NV) {
-        // NV conditional is obsolete, but still seems to be used in some places!
-        return false;
     }
 
     // non-AL cond
