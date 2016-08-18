@@ -8,6 +8,7 @@
 
 #include <iterator>
 #include <memory>
+#include <type_traits>
 
 #include "common/assert.h"
 #include "common/common_types.h"
@@ -15,10 +16,8 @@
 namespace Dynarmic {
 namespace Common {
 
-template <typename T> class IntrusiveListNode;
 template <typename T> class IntrusiveList;
 template <typename T> class IntrusiveListIterator;
-template <typename T> class IntrusiveListConstIterator;
 
 template <typename T>
 class IntrusiveListNode {
@@ -34,7 +33,8 @@ public:
 private:
     friend class IntrusiveList<T>;
     friend class IntrusiveListIterator<T>;
-    friend class IntrusiveListConstIterator<T>;
+    friend class IntrusiveListIterator<const T>;
+
     IntrusiveListNode* next = this;
     IntrusiveListNode* prev = this;
 };
@@ -97,14 +97,11 @@ public:
     IntrusiveListIterator<T> erase(const IntrusiveListIterator<T>&);
     IntrusiveListIterator<T> iterator_to(T&);
 
-    IntrusiveListConstIterator<T> begin() const;
-    IntrusiveListConstIterator<T> end() const;
-    IntrusiveListConstIterator<T> iterator_to(T&) const;
+    IntrusiveListIterator<T> begin() const;
+    IntrusiveListIterator<T> end() const;
+    IntrusiveListIterator<T> iterator_to(T&) const;
 
 private:
-    friend class IntrusiveListIterator<T>;
-    friend class IntrusiveListConstIterator<T>;
-
     void AddAfter(IntrusiveListNode<T>* existing_node, IntrusiveListNode<T>* new_node) {
         new_node->next = existing_node->next;
         new_node->prev = existing_node;
@@ -125,11 +122,26 @@ private:
 template <typename T>
 class IntrusiveListIterator {
 public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = T;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+
+    // If value_type is const, we want "const IntrusiveListNode<value_type>", not "const IntrusiveListNode<const value_type>"
+    using node_type         = std::conditional_t<std::is_const<value_type>::value,
+                                                 const IntrusiveListNode<std::remove_const_t<value_type>>,
+                                                 IntrusiveListNode<value_type>>;
+    using node_pointer      = node_type*;
+    using node_reference    = node_type&;
+
     IntrusiveListIterator() = default;
     IntrusiveListIterator(const IntrusiveListIterator& other) = default;
     IntrusiveListIterator& operator=(const IntrusiveListIterator& other) = default;
 
-    IntrusiveListIterator(IntrusiveList<T>* list, IntrusiveListNode<T>* node) : root(list->root.get()), node(node) {
+    IntrusiveListIterator(node_pointer list_root, node_pointer node) : root(list_root), node(node) {
     }
 
     IntrusiveListIterator& operator++() {
@@ -159,89 +171,29 @@ public:
         return !(*this == other);
     }
 
-    const T& operator*() const {
+    reference operator*() const {
         DEBUG_ASSERT(node != root);
-        return *reinterpret_cast<T*>(node);
+        return static_cast<T&>(*node);
     }
-    T& operator*() {
+    pointer operator->() const {
         DEBUG_ASSERT(node != root);
-        return *reinterpret_cast<T*>(node);
-    }
-    T* operator->() {
-        DEBUG_ASSERT(node != root);
-        return reinterpret_cast<T*>(node);
-    }
-    const T* operator->() const {
-        DEBUG_ASSERT(node != root);
-        return reinterpret_cast<T*>(node);
+        return std::addressof(operator*());
     }
 
 private:
     friend class IntrusiveList<T>;
-    IntrusiveListNode<T>* root = nullptr;
-    IntrusiveListNode<T>* node = nullptr;
-};
-
-template <typename T>
-class IntrusiveListConstIterator {
-public:
-    IntrusiveListConstIterator() = default;
-    IntrusiveListConstIterator(const IntrusiveListConstIterator& other) = default;
-    IntrusiveListConstIterator& operator=(const IntrusiveListConstIterator& other) = default;
-
-    IntrusiveListConstIterator(const IntrusiveList<T>* list, IntrusiveListNode<T>* node) : root(list->root.get()), node(node) {
-    }
-
-    IntrusiveListConstIterator& operator++() {
-        node = node == root ? node : node->next;
-        return *this;
-    }
-    IntrusiveListConstIterator operator++(int) {
-        IntrusiveListConstIterator it(*this);
-        node = node == root ? node : node->next;
-        return it;
-    }
-    IntrusiveListConstIterator& operator--() {
-        node = node->prev == root ? node : node->prev;
-        return *this;
-    }
-    IntrusiveListConstIterator operator--(int) {
-        IntrusiveListConstIterator it(*this);
-        node = node->prev == root ? node : node->prev;
-        return it;
-    }
-
-    bool operator==(const IntrusiveListConstIterator& other) const {
-        DEBUG_ASSERT(root == other.root);
-        return node == other.node;
-    }
-    bool operator!=(const IntrusiveListConstIterator& other) const {
-        return !(*this == other);
-    }
-
-    const T& operator*() const {
-        DEBUG_ASSERT(node != root);
-        return *reinterpret_cast<T*>(node);
-    }
-    const T* operator->() const {
-        DEBUG_ASSERT(node != root);
-        return reinterpret_cast<T*>(node);
-    }
-
-private:
-    friend class IntrusiveList<T>;
-    IntrusiveListNode<T>* root = nullptr;
-    IntrusiveListNode<T>* node = nullptr;
+    node_pointer root = nullptr;
+    node_pointer node = nullptr;
 };
 
 template <typename T>
 IntrusiveListIterator<T> IntrusiveList<T>::begin() {
-    return IntrusiveListIterator<T>(this, root->next);
+    return IntrusiveListIterator<T>(root.get(), root->next);
 }
 
 template <typename T>
 IntrusiveListIterator<T> IntrusiveList<T>::end() {
-    return IntrusiveListIterator<T>(this, root.get());
+    return IntrusiveListIterator<T>(root.get(), root.get());
 }
 
 template <typename T>
@@ -256,22 +208,22 @@ IntrusiveListIterator<T> IntrusiveList<T>::erase(const IntrusiveListIterator<T>&
 
 template <typename T>
 IntrusiveListIterator<T> IntrusiveList<T>::iterator_to(T& item) {
-    return IntrusiveListIterator<T>(this, static_cast<IntrusiveListNode<T>*>(&item));
+    return IntrusiveListIterator<T>(root.get(), static_cast<IntrusiveListNode<T>*>(&item));
 }
 
 template <typename T>
-IntrusiveListConstIterator<T> IntrusiveList<T>::begin() const {
-    return IntrusiveListConstIterator<T>(this, root->next);
+IntrusiveListIterator<T> IntrusiveList<T>::begin() const {
+    return IntrusiveListIterator<T>(root.get(), root->next);
 }
 
 template <typename T>
-IntrusiveListConstIterator<T> IntrusiveList<T>::end() const {
-    return IntrusiveListConstIterator<T>(this, root.get());
+IntrusiveListIterator<T> IntrusiveList<T>::end() const {
+    return IntrusiveListIterator<T>(root.get(), root.get());
 }
 
 template <typename T>
-IntrusiveListConstIterator<T> IntrusiveList<T>::iterator_to(T& item) const {
-    return IntrusiveListConstIterator<T>(this, static_cast<IntrusiveListNode<T>*>(&item));
+IntrusiveListIterator<T> IntrusiveList<T>::iterator_to(T& item) const {
+    return IntrusiveListIterator<T>(root.get(), static_cast<IntrusiveListNode<T>*>(&item));
 }
 
 } // namespace Common
