@@ -56,9 +56,7 @@ private:
 
     // Helpers
     void EmitAddCycles(size_t cycles);
-    void EmitCondPrelude(Arm::Cond cond,
-                         boost::optional<Arm::LocationDescriptor> cond_failed,
-                         Arm::LocationDescriptor current_location);
+    void EmitCondPrelude(const IR::Block& block);
 
     // Terminal instruction emitters
     void EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initial_location);

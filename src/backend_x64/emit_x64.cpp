@@ -69,7 +69,7 @@ EmitX64::BlockDescriptor EmitX64::Emit(const Arm::LocationDescriptor descriptor,
     basic_blocks[descriptor].code_ptr = code_ptr;
     unique_hash_to_code_ptr[descriptor.UniqueHash()] = code_ptr;
 
-    EmitCondPrelude(block.cond, block.cond_failed, block.location);
+    EmitCondPrelude(block);
 
     for (auto iter = block.instructions.begin(); iter != block.instructions.end(); ++iter) {
         IR::Inst* inst = &*iter;
@@ -1647,22 +1647,20 @@ static CCFlags EmitCond(BlockOfCode* code, Arm::Cond cond) {
     return cc;
 }
 
-void EmitX64::EmitCondPrelude(Arm::Cond cond,
-                              boost::optional<Arm::LocationDescriptor> cond_failed,
-                              Arm::LocationDescriptor initial_location) {
-    if (cond == Arm::Cond::AL) {
-        ASSERT(!cond_failed.is_initialized());
+void EmitX64::EmitCondPrelude(const IR::Block& block) {
+    if (block.cond == Arm::Cond::AL) {
+        ASSERT(!block.cond_failed.is_initialized());
         return;
     }
 
-    ASSERT(cond_failed.is_initialized());
+    ASSERT(block.cond_failed.is_initialized());
 
-    CCFlags cc = EmitCond(code, cond);
+    CCFlags cc = EmitCond(code, block.cond);
 
     // TODO: Improve, maybe.
     auto fixup = code->J_CC(cc, true);
-    EmitAddCycles(1); // TODO: Proper cycle count
-    EmitTerminalLinkBlock(IR::Term::LinkBlock{cond_failed.get()}, initial_location);
+    EmitAddCycles(block.cycle_count);
+    EmitTerminalLinkBlock(IR::Term::LinkBlock{block.cond_failed.get()}, block.location);
     code->SetJumpTarget(fixup);
 }
 
