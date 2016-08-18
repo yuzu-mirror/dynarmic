@@ -47,7 +47,7 @@ public:
      * @param node Node to add to the list.
      */
     void Prepend(T& node) {
-        AddAfter(root.get(), static_cast<IntrusiveListNode<T>*>(&node));
+        AddAfter(root.get(), &node);
     }
 
     /**
@@ -55,7 +55,7 @@ public:
      * @param node  Node to add to the list.
      */
     void Append(T& node) {
-        AddBefore(root.get(), static_cast<IntrusiveListNode<T>*>(&node));
+        AddBefore(root.get(), &node);
     }
 
     /**
@@ -64,7 +64,7 @@ public:
      * @param new_node Node to add to the list.
      */
     void AddAfter(T& existing, T& node) {
-        AddAfter(static_cast<IntrusiveListNode<T>*>(&existing), static_cast<IntrusiveListNode<T>*>(&node));
+        AddAfter(&existing, &node);
     }
 
     /**
@@ -73,7 +73,7 @@ public:
      * @param new_node Node to add to the list.
      */
     void AddBefore(T& existing, T& node) {
-        AddBefore(static_cast<IntrusiveListNode<T>*>(&existing), static_cast<IntrusiveListNode<T>*>(&node));
+        AddBefore(&existing, &node);
     }
 
     /**
@@ -208,7 +208,7 @@ IntrusiveListIterator<T> IntrusiveList<T>::erase(const IntrusiveListIterator<T>&
 
 template <typename T>
 IntrusiveListIterator<T> IntrusiveList<T>::iterator_to(T& item) {
-    return IntrusiveListIterator<T>(root.get(), static_cast<IntrusiveListNode<T>*>(&item));
+    return IntrusiveListIterator<T>(root.get(), &item);
 }
 
 template <typename T>
@@ -223,7 +223,7 @@ IntrusiveListIterator<T> IntrusiveList<T>::end() const {
 
 template <typename T>
 IntrusiveListIterator<T> IntrusiveList<T>::iterator_to(T& item) const {
-    return IntrusiveListIterator<T>(root.get(), static_cast<IntrusiveListNode<T>*>(&item));
+    return IntrusiveListIterator<T>(root.get(), &item);
 }
 
 } // namespace Common
