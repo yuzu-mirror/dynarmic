@@ -136,7 +136,7 @@ public:
 
 private:
     HostLoc SelectARegister(HostLocList desired_locations) const;
-    boost::optional<HostLoc> ValueLocation(IR::Inst* value) const;
+    boost::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
     bool IsRegisterOccupied(HostLoc loc) const;
     bool IsRegisterAllocated(HostLoc loc) const;
     bool IsLastUse(IR::Inst* inst) const;
