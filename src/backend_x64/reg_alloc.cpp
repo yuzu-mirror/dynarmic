@@ -229,7 +229,7 @@ Gen::X64Reg RegAlloc::UseScratchRegister(IR::Value use_value, HostLocList desire
 Gen::X64Reg RegAlloc::UseScratchRegister(IR::Inst* use_inst, HostLocList desired_locations) {
     DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
     DEBUG_ASSERT_MSG(ValueLocation(use_inst), "use_inst has not been defined");
-    ASSERT_MSG(use_inst->use_count != 0, "use_inst ran out of uses. (Use-d an IR::Inst* too many times)");
+    ASSERT_MSG(use_inst->HasUses(), "use_inst ran out of uses. (Use-d an IR::Inst* too many times)");
 
     HostLoc current_location = *ValueLocation(use_inst);
     HostLoc new_location = SelectARegister(desired_locations);
@@ -397,14 +397,14 @@ void RegAlloc::EndOfAllocScope() {
         }
         if (!iter.values.empty()) {
             auto to_erase = std::remove_if(iter.values.begin(), iter.values.end(),
-                                           [](const auto& inst){ return inst->use_count <= 0; });
+                                           [](const auto& inst){ return !inst->HasUses(); });
             iter.values.erase(to_erase, iter.values.end());
         }
     }
 }
 
 void RegAlloc::DecrementRemainingUses(IR::Inst* value) {
-    ASSERT_MSG(value->use_count > 0, "value doesn't have any remaining uses");
+    ASSERT_MSG(value->HasUses(), "value doesn't have any remaining uses");
     value->use_count--;
 }
 
