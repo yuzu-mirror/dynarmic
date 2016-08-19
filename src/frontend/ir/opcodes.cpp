@@ -56,5 +56,9 @@ const char* GetNameOf(Type type) {
     return names.at(static_cast<size_t>(type));
 }
 
+bool AreTypesCompatible(Type t1, Type t2) {
+    return t1 == t2 || t1 == Type::Opaque || t2 == Type::Opaque;
+}
+
 } // namespace IR
 } // namespace Dynarmic

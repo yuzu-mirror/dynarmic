@@ -77,7 +77,7 @@ std::string DumpBlock(const IR::Block& block) {
 
             Type actual_type = arg.GetType();
             Type expected_type = GetArgTypeOf(op, arg_index);
-            if (actual_type != expected_type && actual_type != Type::Opaque && expected_type != Type::Opaque) {
+            if (!AreTypesCompatible(actual_type, expected_type)) {
                 ret += Common::StringFromFormat("<type error: %s != %s>", GetNameOf(actual_type), GetNameOf(expected_type));
             }
         }

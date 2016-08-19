@@ -20,7 +20,7 @@ void VerificationPass(const IR::Block& block) {
         for (size_t i = 0; i < inst.NumArgs(); i++) {
             IR::Type t1 = inst.GetArg(i).GetType();
             IR::Type t2 = IR::GetArgTypeOf(inst.GetOpcode(), i);
-            if (t1 != t2 && t1 != IR::Type::Opaque && t2 != IR::Type::Opaque) {
+            if (!IR::AreTypesCompatible(t1, t2)) {
                 puts(IR::DumpBlock(block).c_str());
                 ASSERT(false);
             }

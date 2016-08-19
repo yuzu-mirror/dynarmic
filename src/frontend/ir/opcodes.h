@@ -56,5 +56,8 @@ const char* GetNameOf(Opcode op);
 /// Get the name of a type.
 const char* GetNameOf(Type type);
 
+/// @returns true if t1 and t2 are compatible types
+bool AreTypesCompatible(Type t1, Type t2);
+
 } // namespace Arm
 } // namespace Dynarmic
