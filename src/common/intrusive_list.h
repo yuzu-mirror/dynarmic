@@ -55,37 +55,36 @@ public:
     using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
     /**
+     * Inserts a node at the given location indicated by an iterator.
+     *
+     * @param location The location to insert the node.
+     * @param new_node The node to add.
+     */
+    iterator insert(iterator location, pointer new_node) {
+        auto existing_node = location.AsNodePointer();
+
+        new_node->next = existing_node;
+        new_node->prev = existing_node->prev;
+        existing_node->prev->next = new_node;
+        existing_node->prev = new_node;
+
+        return iterator(root.get(), new_node);
+    }
+
+    /**
      * Add an entry to the start of the list.
      * @param node Node to add to the list.
      */
-    void Prepend(reference node) {
-        AddAfter(root.get(), &node);
+    void push_front(pointer node) {
+        insert(begin(), node);
     }
 
     /**
      * Add an entry to the end of the list
-     * @param node  Node to add to the list.
+     * @param node Node to add to the list.
      */
-    void Append(reference node) {
-        AddBefore(root.get(), &node);
-    }
-
-    /**
-     * Add an entry after an existing node in this list
-     * @param existing_node Node to add new_node after. Must already be member of the list.
-     * @param new_node Node to add to the list.
-     */
-    void AddAfter(reference existing, reference node) {
-        AddAfter(&existing, &node);
-    }
-
-    /**
-     * Add an entry before an existing node in this list
-     * @param existing_node Node to add new_node before. Must already be member of the list.
-     * @param new_node Node to add to the list.
-     */
-    void AddBefore(reference existing, reference node) {
-        AddBefore(&existing, &node);
+    void push_back(pointer node) {
+        insert(end(), node);
     }
 
     /**
@@ -133,20 +132,6 @@ public:
     }
 
 private:
-    void AddAfter(IntrusiveListNode<T>* existing_node, IntrusiveListNode<T>* new_node) {
-        new_node->next = existing_node->next;
-        new_node->prev = existing_node;
-        existing_node->next->prev = new_node;
-        existing_node->next = new_node;
-    }
-
-    void AddBefore(IntrusiveListNode<T>* existing_node, IntrusiveListNode<T>* new_node) {
-        new_node->next = existing_node;
-        new_node->prev = existing_node->prev;
-        existing_node->prev->next = new_node;
-        existing_node->prev = new_node;
-    }
-
     std::shared_ptr<IntrusiveListNode<T>> root = std::make_shared<IntrusiveListNode<T>>();
 };
 
@@ -209,6 +194,10 @@ public:
     pointer operator->() const {
         DEBUG_ASSERT(node != root);
         return std::addressof(operator*());
+    }
+
+    node_pointer AsNodePointer() const {
+        return node;
     }
 
 private:
