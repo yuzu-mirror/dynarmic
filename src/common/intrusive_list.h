@@ -91,7 +91,7 @@ public:
      * Removes node from list
      * @param node Node to remove from list.
      */
-    void Remove(reference node) {
+    void remove(reference node) {
         node.UnlinkFromList();
     }
 
@@ -99,7 +99,7 @@ public:
      * Is this list empty?
      * @returns true if there are no nodes in this list.
      */
-    bool IsEmpty() {
+    bool empty() const {
         return root->next == root.get();
     }
 
