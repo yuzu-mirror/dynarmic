@@ -48,7 +48,7 @@ public:
                 if (imm5 == 0) return ", rrx";
                 return Common::StringFromFormat(", ror #%hhu", imm5);
         }
-        assert(false);
+        ASSERT(false);
         return "<internal error>";
     }
 
@@ -63,7 +63,7 @@ public:
             case ShiftType::ROR:
                 return Common::StringFromFormat("%s, ror %s", RegToString(m), RegToString(s));
         }
-        assert(false);
+        ASSERT(false);
         return "<internal error>";
     }
 
@@ -78,7 +78,7 @@ public:
             case SignExtendRotation::ROR_24:
                 return Common::StringFromFormat("%s, ror #24", RegToString(m));
         }
-        assert(false);
+        ASSERT(false);
         return "<internal error>";
     }
 

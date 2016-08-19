@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
 #include <tuple>
 
 #include "common/assert.h"

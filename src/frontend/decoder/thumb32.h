@@ -45,7 +45,7 @@ struct Thumb32Matcher {
      * @param instruction The instruction to decode.
      */
     CallRetT call(Visitor& v, u32 instruction) const {
-        assert(Matches(instruction));
+        ASSERT(Matches(instruction));
         return fn(v, instruction);
     }
 

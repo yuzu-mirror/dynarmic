@@ -69,7 +69,7 @@ struct Jit::Impl {
         for (CodePtr pos = block.code_ptr; pos < end;) {
             char buffer[80];
             size_t inst_size = LLVMDisasmInstruction(llvm_ctx, const_cast<u8*>(pos), remaining, (u64)pos, buffer, sizeof(buffer));
-            assert(inst_size);
+            ASSERT(inst_size);
             for (CodePtr i = pos; i < pos + inst_size; i++)
                 result.append(Common::StringFromFormat("%02x ", *i));
             for (size_t i = inst_size; i < 10; i++)
