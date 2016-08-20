@@ -88,6 +88,24 @@ public:
     }
 
     /**
+     * Erases the node at the front of the list.
+     * @note Must not be called on an empty list.
+     */
+    void pop_front() {
+        DEBUG_ASSERT(!empty());
+        erase(begin());
+    }
+
+    /**
+     * Erases the node at the back of the list.
+     * @note Must not be called on an empty list.
+     */
+    void pop_back() {
+        DEBUG_ASSERT(!empty());
+        erase(--end());
+    }
+
+    /**
      * Removes node from list
      * @param node Node to remove from list.
      */
@@ -101,6 +119,42 @@ public:
      */
     bool empty() const {
         return root->next == root.get();
+    }
+
+    /**
+     * Retrieves a reference to the node at the front of the list.
+     * @note Must not be called on an empty list.
+     */
+    reference front() {
+        DEBUG_ASSERT(!empty());
+        return *begin();
+    }
+
+    /**
+     * Retrieves a constant reference to the node at the front of the list.
+     * @note Must not be called on an empty list.
+     */
+    const_reference front() const {
+        DEBUG_ASSERT(!empty());
+        return *begin();
+    }
+
+    /**
+     * Retrieves a reference to the node at the back of the list.
+     * @note Must not be called on an empty list.
+     */
+    reference back() {
+        DEBUG_ASSERT(!empty());
+        return *--end();
+    }
+
+    /**
+     * Retrieves a constant reference to the node at the back of the list.
+     * @note Must not be called on an empty list.
+     */
+    const_reference back() const {
+        DEBUG_ASSERT(!empty());
+        return *--end();
     }
 
     // Iterator interface
