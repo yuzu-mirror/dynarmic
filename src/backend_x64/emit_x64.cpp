@@ -71,7 +71,7 @@ EmitX64::BlockDescriptor EmitX64::Emit(const Arm::LocationDescriptor descriptor,
 
     EmitCondPrelude(block);
 
-    for (auto iter = block.instructions.begin(); iter != block.instructions.end(); ++iter) {
+    for (auto iter = block.begin(); iter != block.end(); ++iter) {
         IR::Inst* inst = &*iter;
 
         // Call the relevant Emit* member function.

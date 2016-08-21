@@ -61,18 +61,18 @@ void DeadCodeElimination(IR::Block& block) {
     // We iterate over the instructions in reverse order.
     // This is because removing an instruction reduces the number of uses for earlier instructions.
 
-    if (block.instructions.empty()) {
+    if (block.empty()) {
         return;
     }
 
-    auto iter = block.instructions.end();
+    auto iter = block.end();
     do {
         --iter;
         if (!iter->HasUses() && is_side_effect_free(iter->GetOpcode())) {
             iter->Invalidate();
             iter = block.instructions.erase(iter);
         }
-    } while (iter != block.instructions.begin());
+    } while (iter != block.begin());
 }
 
 } // namespace Optimization

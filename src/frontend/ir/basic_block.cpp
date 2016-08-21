@@ -57,7 +57,7 @@ std::string DumpBlock(const IR::Block& block) {
         }
     };
 
-    for (auto inst = block.instructions.begin(); inst != block.instructions.end(); ++inst) {
+    for (auto inst = block.begin(); inst != block.end(); ++inst) {
         const Opcode op = inst->GetOpcode();
 
         if (GetTypeOf(op) != Type::Void) {
