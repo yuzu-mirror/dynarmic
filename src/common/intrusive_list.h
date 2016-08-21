@@ -256,9 +256,28 @@ public:
         return it;
     }
 
+    /**
+     * Exchanges contents of this list with another list instance.
+     * @param other The other list to swap with.
+     */
+    void swap(IntrusiveList& other) {
+        root.swap(other.root);
+    }
+
 private:
     std::shared_ptr<IntrusiveListNode<T>> root = std::make_shared<IntrusiveListNode<T>>();
 };
+
+/**
+ * Exchanges contents of an intrusive list with another intrusive list.
+ * @tparam T The type of data being kept track of by the lists.
+ * @param lhs The first list.
+ * @param rhs The second list.
+ */
+template <typename T>
+void swap(IntrusiveList<T>& lhs, IntrusiveList<T>& rhs) {
+    lhs.swap(rhs);
+}
 
 } // namespace Common
 } // namespace Dynarmic
