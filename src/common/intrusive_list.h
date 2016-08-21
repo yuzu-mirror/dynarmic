@@ -40,6 +40,77 @@ private:
 };
 
 template <typename T>
+class IntrusiveListIterator {
+public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using difference_type   = std::ptrdiff_t;
+    using value_type        = T;
+    using pointer           = value_type*;
+    using const_pointer     = const value_type*;
+    using reference         = value_type&;
+    using const_reference   = const value_type&;
+
+    // If value_type is const, we want "const IntrusiveListNode<value_type>", not "const IntrusiveListNode<const value_type>"
+    using node_type         = std::conditional_t<std::is_const<value_type>::value,
+                                                 const IntrusiveListNode<std::remove_const_t<value_type>>,
+                                                 IntrusiveListNode<value_type>>;
+    using node_pointer      = node_type*;
+    using node_reference    = node_type&;
+
+    IntrusiveListIterator() = default;
+    IntrusiveListIterator(const IntrusiveListIterator& other) = default;
+    IntrusiveListIterator& operator=(const IntrusiveListIterator& other) = default;
+
+    IntrusiveListIterator(node_pointer list_root, node_pointer node) : root(list_root), node(node) {
+    }
+
+    IntrusiveListIterator& operator++() {
+        node = node == root ? node : node->next;
+        return *this;
+    }
+    IntrusiveListIterator operator++(int) {
+        IntrusiveListIterator it(*this);
+        node = node == root ? node : node->next;
+        return it;
+    }
+    IntrusiveListIterator& operator--() {
+        node = node->prev == root ? node : node->prev;
+        return *this;
+    }
+    IntrusiveListIterator operator--(int) {
+        IntrusiveListIterator it(*this);
+        node = node->prev == root ? node : node->prev;
+        return it;
+    }
+
+    bool operator==(const IntrusiveListIterator& other) const {
+        DEBUG_ASSERT(root == other.root);
+        return node == other.node;
+    }
+    bool operator!=(const IntrusiveListIterator& other) const {
+        return !(*this == other);
+    }
+
+    reference operator*() const {
+        DEBUG_ASSERT(node != root);
+        return static_cast<T&>(*node);
+    }
+    pointer operator->() const {
+        DEBUG_ASSERT(node != root);
+        return std::addressof(operator*());
+    }
+
+    node_pointer AsNodePointer() const {
+        return node;
+    }
+
+private:
+    friend class IntrusiveList<T>;
+    node_pointer root = nullptr;
+    node_pointer node = nullptr;
+};
+
+template <typename T>
 class IntrusiveList {
 public:
     using difference_type        = std::ptrdiff_t;
@@ -187,77 +258,6 @@ public:
 
 private:
     std::shared_ptr<IntrusiveListNode<T>> root = std::make_shared<IntrusiveListNode<T>>();
-};
-
-template <typename T>
-class IntrusiveListIterator {
-public:
-    using iterator_category = std::bidirectional_iterator_tag;
-    using difference_type   = std::ptrdiff_t;
-    using value_type        = T;
-    using pointer           = value_type*;
-    using const_pointer     = const value_type*;
-    using reference         = value_type&;
-    using const_reference   = const value_type&;
-
-    // If value_type is const, we want "const IntrusiveListNode<value_type>", not "const IntrusiveListNode<const value_type>"
-    using node_type         = std::conditional_t<std::is_const<value_type>::value,
-                                                 const IntrusiveListNode<std::remove_const_t<value_type>>,
-                                                 IntrusiveListNode<value_type>>;
-    using node_pointer      = node_type*;
-    using node_reference    = node_type&;
-
-    IntrusiveListIterator() = default;
-    IntrusiveListIterator(const IntrusiveListIterator& other) = default;
-    IntrusiveListIterator& operator=(const IntrusiveListIterator& other) = default;
-
-    IntrusiveListIterator(node_pointer list_root, node_pointer node) : root(list_root), node(node) {
-    }
-
-    IntrusiveListIterator& operator++() {
-        node = node == root ? node : node->next;
-        return *this;
-    }
-    IntrusiveListIterator operator++(int) {
-        IntrusiveListIterator it(*this);
-        node = node == root ? node : node->next;
-        return it;
-    }
-    IntrusiveListIterator& operator--() {
-        node = node->prev == root ? node : node->prev;
-        return *this;
-    }
-    IntrusiveListIterator operator--(int) {
-        IntrusiveListIterator it(*this);
-        node = node->prev == root ? node : node->prev;
-        return it;
-    }
-
-    bool operator==(const IntrusiveListIterator& other) const {
-        DEBUG_ASSERT(root == other.root);
-        return node == other.node;
-    }
-    bool operator!=(const IntrusiveListIterator& other) const {
-        return !(*this == other);
-    }
-
-    reference operator*() const {
-        DEBUG_ASSERT(node != root);
-        return static_cast<T&>(*node);
-    }
-    pointer operator->() const {
-        DEBUG_ASSERT(node != root);
-        return std::addressof(operator*());
-    }
-
-    node_pointer AsNodePointer() const {
-        return node;
-    }
-
-private:
-    friend class IntrusiveList<T>;
-    node_pointer root = nullptr;
-    node_pointer node = nullptr;
 };
 
 } // namespace Common
