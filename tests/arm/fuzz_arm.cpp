@@ -216,7 +216,7 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
         std::array<u32, 64> initial_extregs;
         std::generate_n(initial_extregs.begin(), 64, []{ return RandInt<u32>(0, 0xFFFFFFFF); });
 
-        u32 initial_fpscr = RandInt<u32>(0x0, 0x1) << 24;
+        u32 initial_fpscr = 0x01000000 | (RandInt<u32>(0, 3) << 22);
 
         interp.UnsetExclusiveMemoryAddress();
         interp.Cpsr = initial_cpsr;
