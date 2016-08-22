@@ -20,8 +20,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 if (MSVC)
     add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
 else()
-    add_compile_options(-Wall -Werror -Wextra -pedantic -pedantic-errors -Wfatal-errors
-                        -Wno-unused-parameter -Wno-missing-braces)
+    add_compile_options(-Wall
+                        -Werror
+                        -Wextra
+                        -Wcast-qual
+                        -pedantic
+                        -pedantic-errors
+                        -Wfatal-errors
+                        -Wno-unused-parameter
+                        -Wno-missing-braces)
+
     if (ARCHITECTURE_x86_64)
         add_compile_options(-msse4.1)
     endif()
