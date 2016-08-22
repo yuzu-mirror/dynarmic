@@ -99,19 +99,19 @@ bool ArmTranslatorVisitor::LinkToNextInstruction() {
 
 IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in) {
     switch (type) {
-        case ShiftType::LSL:
-            return ir.LogicalShiftLeft(value, ir.Imm8(imm5), carry_in);
-        case ShiftType::LSR:
-            imm5 = imm5 ? imm5 : 32;
-            return ir.LogicalShiftRight(value, ir.Imm8(imm5), carry_in);
-        case ShiftType::ASR:
-            imm5 = imm5 ? imm5 : 32;
-            return ir.ArithmeticShiftRight(value, ir.Imm8(imm5), carry_in);
-        case ShiftType::ROR:
-            if (imm5)
-                return ir.RotateRight(value, ir.Imm8(imm5), carry_in);
-            else
-                return ir.RotateRightExtended(value, carry_in);
+    case ShiftType::LSL:
+        return ir.LogicalShiftLeft(value, ir.Imm8(imm5), carry_in);
+    case ShiftType::LSR:
+        imm5 = imm5 ? imm5 : 32;
+        return ir.LogicalShiftRight(value, ir.Imm8(imm5), carry_in);
+    case ShiftType::ASR:
+        imm5 = imm5 ? imm5 : 32;
+        return ir.ArithmeticShiftRight(value, ir.Imm8(imm5), carry_in);
+    case ShiftType::ROR:
+        if (imm5)
+            return ir.RotateRight(value, ir.Imm8(imm5), carry_in);
+        else
+            return ir.RotateRightExtended(value, carry_in);
     }
     ASSERT_MSG(false, "Unreachable");
     return {};
@@ -119,14 +119,14 @@ IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, Sh
 
 IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in) {
     switch (type) {
-        case ShiftType::LSL:
-            return ir.LogicalShiftLeft(value, amount, carry_in);
-        case ShiftType::LSR:
-            return ir.LogicalShiftRight(value, amount, carry_in);
-        case ShiftType::ASR:
-            return ir.ArithmeticShiftRight(value, amount, carry_in);
-        case ShiftType::ROR:
-            return ir.RotateRight(value, amount, carry_in);
+    case ShiftType::LSL:
+        return ir.LogicalShiftLeft(value, amount, carry_in);
+    case ShiftType::LSR:
+        return ir.LogicalShiftRight(value, amount, carry_in);
+    case ShiftType::ASR:
+        return ir.ArithmeticShiftRight(value, amount, carry_in);
+    case ShiftType::ROR:
+        return ir.RotateRight(value, amount, carry_in);
     }
     ASSERT_MSG(false, "Unreachable");
     return {};

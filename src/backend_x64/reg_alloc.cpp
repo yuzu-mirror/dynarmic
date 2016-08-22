@@ -16,17 +16,17 @@ namespace BackendX64 {
 
 static Gen::OpArg ImmediateToOpArg(const IR::Value& imm) {
     switch (imm.GetType()) {
-        case IR::Type::U1:
-            return Gen::Imm32(imm.GetU1());
-            break;
-        case IR::Type::U8:
-            return Gen::Imm32(imm.GetU8());
-            break;
-        case IR::Type::U32:
-            return Gen::Imm32(imm.GetU32());
-            break;
-        default:
-            ASSERT_MSG(false, "This should never happen.");
+    case IR::Type::U1:
+        return Gen::Imm32(imm.GetU1());
+        break;
+    case IR::Type::U8:
+        return Gen::Imm32(imm.GetU8());
+        break;
+    case IR::Type::U32:
+        return Gen::Imm32(imm.GetU32());
+        break;
+    default:
+        ASSERT_MSG(false, "This should never happen.");
     }
 }
 

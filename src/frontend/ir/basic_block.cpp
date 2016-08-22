@@ -42,18 +42,18 @@ std::string DumpBlock(const IR::Block& block) {
             return Common::StringFromFormat("%%%zu", inst_to_index.at(arg.GetInst()));
         }
         switch (arg.GetType()) {
-            case Type::U1:
-                return Common::StringFromFormat("#%s", arg.GetU1() ? "1" : "0");
-            case Type::U8:
-                return Common::StringFromFormat("#%u", arg.GetU8());
-            case Type::U32:
-                return Common::StringFromFormat("#%#x", arg.GetU32());
-            case Type::RegRef:
-                return Arm::RegToString(arg.GetRegRef());
-            case Type::ExtRegRef:
-                return Arm::ExtRegToString(arg.GetExtRegRef());
-            default:
-                return "<unknown immediate type>";
+        case Type::U1:
+            return Common::StringFromFormat("#%s", arg.GetU1() ? "1" : "0");
+        case Type::U8:
+            return Common::StringFromFormat("#%u", arg.GetU8());
+        case Type::U32:
+            return Common::StringFromFormat("#%#x", arg.GetU32());
+        case Type::RegRef:
+            return Arm::RegToString(arg.GetRegRef());
+        case Type::ExtRegRef:
+            return Arm::ExtRegToString(arg.GetExtRegRef());
+        default:
+            return "<unknown immediate type>";
         }
     };
 

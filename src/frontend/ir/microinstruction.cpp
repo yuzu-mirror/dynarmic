@@ -259,14 +259,14 @@ void Inst::Use(Value& value) {
     value.GetInst()->use_count++;
 
     switch (op){
-        case Opcode::GetCarryFromOp:
-            value.GetInst()->carry_inst = this;
-            break;
-        case Opcode::GetOverflowFromOp:
-            value.GetInst()->overflow_inst = this;
-            break;
-        default:
-            break;
+    case Opcode::GetCarryFromOp:
+        value.GetInst()->carry_inst = this;
+        break;
+    case Opcode::GetOverflowFromOp:
+        value.GetInst()->overflow_inst = this;
+        break;
+    default:
+        break;
     }
 }
 
@@ -274,14 +274,14 @@ void Inst::UndoUse(Value& value) {
     value.GetInst()->use_count--;
 
     switch (op){
-        case Opcode::GetCarryFromOp:
-            value.GetInst()->carry_inst = nullptr;
-            break;
-        case Opcode::GetOverflowFromOp:
-            value.GetInst()->overflow_inst = nullptr;
-            break;
-        default:
-            break;
+    case Opcode::GetCarryFromOp:
+        value.GetInst()->carry_inst = nullptr;
+        break;
+    case Opcode::GetOverflowFromOp:
+        value.GetInst()->overflow_inst = nullptr;
+        break;
+    default:
+        break;
     }
 }
 

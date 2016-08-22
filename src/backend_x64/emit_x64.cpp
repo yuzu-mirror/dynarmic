@@ -44,12 +44,12 @@ static OpArg MJitStateCpsr() {
 
 static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
     switch (opcode) {
-        case IR::Opcode::GetCarryFromOp:
-            return inst->carry_inst;
-        case IR::Opcode::GetOverflowFromOp:
-            return inst->overflow_inst;
-        default:
-            break;
+    case IR::Opcode::GetCarryFromOp:
+        return inst->carry_inst;
+    case IR::Opcode::GetOverflowFromOp:
+        return inst->overflow_inst;
+    default:
+        break;
     }
 
     ASSERT_MSG(false, "unreachable");
@@ -77,16 +77,16 @@ EmitX64::BlockDescriptor EmitX64::Emit(const Arm::LocationDescriptor descriptor,
         // Call the relevant Emit* member function.
         switch (inst->GetOpcode()) {
 
-#define OPCODE(name, type, ...)                    \
-            case IR::Opcode::name:                 \
-                EmitX64::Emit##name(block, inst);  \
-                break;
+#define OPCODE(name, type, ...)                \
+        case IR::Opcode::name:                 \
+            EmitX64::Emit##name(block, inst);  \
+            break;
 #include "frontend/ir/opcodes.inc"
 #undef OPCODE
 
-            default:
-                ASSERT_MSG(false, "Invalid opcode %zu", static_cast<size_t>(inst->GetOpcode()));
-                break;
+        default:
+            ASSERT_MSG(false, "Invalid opcode %zu", static_cast<size_t>(inst->GetOpcode()));
+            break;
         }
 
         reg_alloc.EndOfAllocScope();
@@ -1539,109 +1539,109 @@ static CCFlags EmitCond(BlockOfCode* code, Arm::Cond cond) {
     CCFlags cc;
 
     switch (cond) {
-        case Arm::Cond::EQ: //z
-            ZFlag(RAX);
-            code->CMP(8, R(RAX), Imm8(0));
-            cc = CC_NE;
-            break;
-        case Arm::Cond::NE: //!z
-            ZFlag(RAX);
-            code->CMP(8, R(RAX), Imm8(0));
-            cc = CC_E;
-            break;
-        case Arm::Cond::CS: //c
-            CFlag(RBX);
-            code->CMP(8, R(RBX), Imm8(0));
-            cc = CC_NE;
-            break;
-        case Arm::Cond::CC: //!c
-            CFlag(RBX);
-            code->CMP(8, R(RBX), Imm8(0));
-            cc = CC_E;
-            break;
-        case Arm::Cond::MI: //n
-            NFlag(RCX);
-            code->CMP(8, R(RCX), Imm8(0));
-            cc = CC_NE;
-            break;
-        case Arm::Cond::PL: //!n
-            NFlag(RCX);
-            code->CMP(8, R(RCX), Imm8(0));
-            cc = CC_E;
-            break;
-        case Arm::Cond::VS: //v
-            VFlag(RDX);
-            code->CMP(8, R(RDX), Imm8(0));
-            cc = CC_NE;
-            break;
-        case Arm::Cond::VC: //!v
-            VFlag(RDX);
-            code->CMP(8, R(RDX), Imm8(0));
-            cc = CC_E;
-            break;
-        case Arm::Cond::HI: { //c & !z
-            const X64Reg tmp = RSI;
-            ZFlag(RAX);
-            code->MOVZX(64, 8, tmp, R(RAX));
-            CFlag(RBX);
-            code->CMP(8, R(RBX), R(tmp));
-            cc = CC_A;
-            break;
-        }
-        case Arm::Cond::LS: { //!c | z
-            const X64Reg tmp = RSI;
-            ZFlag(RAX);
-            code->MOVZX(64, 8, tmp, R(RAX));
-            CFlag(RBX);
-            code->CMP(8, R(RBX), R(tmp));
-            cc = CC_BE;
-            break;
-        }
-        case Arm::Cond::GE: { // n == v
-            const X64Reg tmp = RSI;
-            VFlag(RDX);
-            code->MOVZX(64, 8, tmp, R(RDX));
-            NFlag(RCX);
-            code->CMP(8, R(RCX), R(tmp));
-            cc = CC_E;
-            break;
-        }
-        case Arm::Cond::LT: { // n != v
-            const X64Reg tmp = RSI;
-            VFlag(RDX);
-            code->MOVZX(64, 8, tmp, R(RDX));
-            NFlag(RCX);
-            code->CMP(8, R(RCX), R(tmp));
-            cc = CC_NE;
-            break;
-        }
-        case Arm::Cond::GT: { // !z & (n == v)
-            const X64Reg tmp = RSI;
-            NFlag(RCX);
-            code->MOVZX(64, 8, tmp, R(RCX));
-            VFlag(RDX);
-            code->XOR(8, R(tmp), R(RDX));
-            ZFlag(RAX);
-            code->OR(8, R(tmp), R(RAX));
-            code->TEST(8, R(tmp), R(tmp));
-            cc = CC_Z;
-            break;
-        }
-        case Arm::Cond::LE: { // z | (n != v)
-            X64Reg tmp = RSI;
-            NFlag(RCX);
-            code->MOVZX(64, 8, tmp, R(RCX));
-            VFlag(RDX);
-            code->XOR(8, R(tmp), R(RDX));
-            ZFlag(RAX);
-            code->OR(8, R(tmp), R(RAX));
-            code->TEST(8, R(tmp), R(tmp));
-            cc = CC_NZ;
-            break;
-        }
-        default:
-            ASSERT_MSG(0, "Unknown cond %zu", static_cast<size_t>(cond));
-            break;
+    case Arm::Cond::EQ: //z
+        ZFlag(RAX);
+        code->CMP(8, R(RAX), Imm8(0));
+        cc = CC_NE;
+        break;
+    case Arm::Cond::NE: //!z
+        ZFlag(RAX);
+        code->CMP(8, R(RAX), Imm8(0));
+        cc = CC_E;
+        break;
+    case Arm::Cond::CS: //c
+        CFlag(RBX);
+        code->CMP(8, R(RBX), Imm8(0));
+        cc = CC_NE;
+        break;
+    case Arm::Cond::CC: //!c
+        CFlag(RBX);
+        code->CMP(8, R(RBX), Imm8(0));
+        cc = CC_E;
+        break;
+    case Arm::Cond::MI: //n
+        NFlag(RCX);
+        code->CMP(8, R(RCX), Imm8(0));
+        cc = CC_NE;
+        break;
+    case Arm::Cond::PL: //!n
+        NFlag(RCX);
+        code->CMP(8, R(RCX), Imm8(0));
+        cc = CC_E;
+        break;
+    case Arm::Cond::VS: //v
+        VFlag(RDX);
+        code->CMP(8, R(RDX), Imm8(0));
+        cc = CC_NE;
+        break;
+    case Arm::Cond::VC: //!v
+        VFlag(RDX);
+        code->CMP(8, R(RDX), Imm8(0));
+        cc = CC_E;
+        break;
+    case Arm::Cond::HI: { //c & !z
+        const X64Reg tmp = RSI;
+        ZFlag(RAX);
+        code->MOVZX(64, 8, tmp, R(RAX));
+        CFlag(RBX);
+        code->CMP(8, R(RBX), R(tmp));
+        cc = CC_A;
+        break;
+    }
+    case Arm::Cond::LS: { //!c | z
+        const X64Reg tmp = RSI;
+        ZFlag(RAX);
+        code->MOVZX(64, 8, tmp, R(RAX));
+        CFlag(RBX);
+        code->CMP(8, R(RBX), R(tmp));
+        cc = CC_BE;
+        break;
+    }
+    case Arm::Cond::GE: { // n == v
+        const X64Reg tmp = RSI;
+        VFlag(RDX);
+        code->MOVZX(64, 8, tmp, R(RDX));
+        NFlag(RCX);
+        code->CMP(8, R(RCX), R(tmp));
+        cc = CC_E;
+        break;
+    }
+    case Arm::Cond::LT: { // n != v
+        const X64Reg tmp = RSI;
+        VFlag(RDX);
+        code->MOVZX(64, 8, tmp, R(RDX));
+        NFlag(RCX);
+        code->CMP(8, R(RCX), R(tmp));
+        cc = CC_NE;
+        break;
+    }
+    case Arm::Cond::GT: { // !z & (n == v)
+        const X64Reg tmp = RSI;
+        NFlag(RCX);
+        code->MOVZX(64, 8, tmp, R(RCX));
+        VFlag(RDX);
+        code->XOR(8, R(tmp), R(RDX));
+        ZFlag(RAX);
+        code->OR(8, R(tmp), R(RAX));
+        code->TEST(8, R(tmp), R(tmp));
+        cc = CC_Z;
+        break;
+    }
+    case Arm::Cond::LE: { // z | (n != v)
+        X64Reg tmp = RSI;
+        NFlag(RCX);
+        code->MOVZX(64, 8, tmp, R(RCX));
+        VFlag(RDX);
+        code->XOR(8, R(tmp), R(RDX));
+        ZFlag(RAX);
+        code->OR(8, R(tmp), R(RAX));
+        code->TEST(8, R(tmp), R(tmp));
+        cc = CC_NZ;
+        break;
+    }
+    default:
+        ASSERT_MSG(0, "Unknown cond %zu", static_cast<size_t>(cond));
+        break;
     }
 
     return cc;

@@ -217,14 +217,14 @@ bool ArmTranslatorVisitor::arm_LDRD_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Im
         auto data_b = ir.ReadMemory32(address_b);
 
         switch (t) {
-            case Reg::PC:
-                data_a = ir.Add(data_a, ir.Imm32(4));
-                break;
-            case Reg::LR:
-                data_b = ir.Add(data_b, ir.Imm32(4));
-                break;
-            default:
-                break;
+        case Reg::PC:
+            data_a = ir.Add(data_a, ir.Imm32(4));
+            break;
+        case Reg::LR:
+            data_b = ir.Add(data_b, ir.Imm32(4));
+            break;
+        default:
+            break;
         }
 
         if (t == Reg::PC) {

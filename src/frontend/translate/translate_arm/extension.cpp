@@ -12,17 +12,17 @@ namespace Arm {
 IR::Value ArmTranslatorVisitor::SignZeroExtendRor(Reg m, SignExtendRotation rotate) {
     IR::Value rotated, reg_m = ir.GetRegister(m);
     switch (rotate) {
-        case SignExtendRotation::ROR_0:
-            rotated = reg_m;
-            break;
-        case SignExtendRotation::ROR_8:
-            rotated = ir.RotateRight(reg_m, ir.Imm8(8), ir.Imm1(0)).result;
-            break;
-        case SignExtendRotation::ROR_16:
-            rotated = ir.RotateRight(reg_m, ir.Imm8(16), ir.Imm1(0)).result;
-            break;
-        case SignExtendRotation::ROR_24:
-            rotated = ir.RotateRight(reg_m, ir.Imm8(24), ir.Imm1(0)).result;
+    case SignExtendRotation::ROR_0:
+        rotated = reg_m;
+        break;
+    case SignExtendRotation::ROR_8:
+        rotated = ir.RotateRight(reg_m, ir.Imm8(8), ir.Imm1(0)).result;
+        break;
+    case SignExtendRotation::ROR_16:
+        rotated = ir.RotateRight(reg_m, ir.Imm8(16), ir.Imm1(0)).result;
+        break;
+    case SignExtendRotation::ROR_24:
+        rotated = ir.RotateRight(reg_m, ir.Imm8(24), ir.Imm1(0)).result;
     }
     return rotated;
 }

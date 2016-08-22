@@ -130,16 +130,16 @@ public:
         for (int i = 0; i < 16; i++) {
             const u16 bit = 1 << (15 - i);
             switch (format[i]) {
-                case '0':
-                    mask |= bit;
-                    break;
-                case '1':
-                    bits |= bit;
-                    mask |= bit;
-                    break;
-                default:
-                    // Do nothing
-                    break;
+            case '0':
+                mask |= bit;
+                break;
+            case '1':
+                bits |= bit;
+                mask |= bit;
+                break;
+            default:
+                // Do nothing
+                break;
             }
         }
     }

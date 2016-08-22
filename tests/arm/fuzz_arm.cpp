@@ -142,16 +142,16 @@ public:
         for (int i = 0; i < 32; i++) {
             const u32 bit = 1u << (31 - i);
             switch (format[i]) {
-                case '0':
-                    mask |= bit;
-                    break;
-                case '1':
-                    bits |= bit;
-                    mask |= bit;
-                    break;
-                default:
-                    // Do nothing
-                    break;
+            case '0':
+                mask |= bit;
+                break;
+            case '1':
+                bits |= bit;
+                mask |= bit;
+                break;
+            default:
+                // Do nothing
+                break;
             }
         }
     }
@@ -514,36 +514,36 @@ TEST_CASE("Fuzz ARM data processing instructions", "[JitX64]") {
             u32 S = RandInt<u32>(0, 1);
 
             switch (instruction_set) {
-                case 0: {
-                    InstructionGenerator instruction = imm_instructions[RandInt<size_t>(0, imm_instructions.size() - 1)];
-                    u32 Rd = RandInt<u32>(0, Rd_can_be_r15 ? 15 : 14);
-                    if (Rd == 15) S = false;
-                    u32 Rn = RandInt<u32>(0, 15);
-                    u32 shifter_operand = RandInt<u32>(0, 0xFFF);
-                    u32 assemble_randoms = (shifter_operand << 0) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
-                    return instruction.Bits() | (assemble_randoms & ~instruction.Mask());
-                }
-                case 1: {
-                    InstructionGenerator instruction = reg_instructions[RandInt<size_t>(0, reg_instructions.size() - 1)];
-                    u32 Rd = RandInt<u32>(0, Rd_can_be_r15 ? 15 : 14);
-                    if (Rd == 15) S = false;
-                    u32 Rn = RandInt<u32>(0, 15);
-                    u32 shifter_operand = RandInt<u32>(0, 0xFFF);
-                    u32 assemble_randoms =
-                            (shifter_operand << 0) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
-                    return instruction.Bits() | (assemble_randoms & ~instruction.Mask());
-                }
-                case 2: {
-                    InstructionGenerator instruction = rsr_instructions[RandInt<size_t>(0, rsr_instructions.size() - 1)];
-                    u32 Rd = RandInt<u32>(0, 14); // Rd can never be 15.
-                    u32 Rn = RandInt<u32>(0, 14);
-                    u32 Rs = RandInt<u32>(0, 14);
-                    int rotate = RandInt<int>(0, 3);
-                    u32 Rm = RandInt<u32>(0, 14);
-                    u32 assemble_randoms =
-                            (Rm << 0) | (rotate << 5) | (Rs << 8) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
-                    return instruction.Bits() | (assemble_randoms & ~instruction.Mask());
-                }
+            case 0: {
+                InstructionGenerator instruction = imm_instructions[RandInt<size_t>(0, imm_instructions.size() - 1)];
+                u32 Rd = RandInt<u32>(0, Rd_can_be_r15 ? 15 : 14);
+                if (Rd == 15) S = false;
+                u32 Rn = RandInt<u32>(0, 15);
+                u32 shifter_operand = RandInt<u32>(0, 0xFFF);
+                u32 assemble_randoms = (shifter_operand << 0) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
+                return instruction.Bits() | (assemble_randoms & ~instruction.Mask());
+            }
+            case 1: {
+                InstructionGenerator instruction = reg_instructions[RandInt<size_t>(0, reg_instructions.size() - 1)];
+                u32 Rd = RandInt<u32>(0, Rd_can_be_r15 ? 15 : 14);
+                if (Rd == 15) S = false;
+                u32 Rn = RandInt<u32>(0, 15);
+                u32 shifter_operand = RandInt<u32>(0, 0xFFF);
+                u32 assemble_randoms =
+                        (shifter_operand << 0) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
+                return instruction.Bits() | (assemble_randoms & ~instruction.Mask());
+            }
+            case 2: {
+                InstructionGenerator instruction = rsr_instructions[RandInt<size_t>(0, rsr_instructions.size() - 1)];
+                u32 Rd = RandInt<u32>(0, 14); // Rd can never be 15.
+                u32 Rn = RandInt<u32>(0, 14);
+                u32 Rs = RandInt<u32>(0, 14);
+                int rotate = RandInt<int>(0, 3);
+                u32 Rm = RandInt<u32>(0, 14);
+                u32 assemble_randoms =
+                        (Rm << 0) | (rotate << 5) | (Rs << 8) | (Rd << 12) | (Rn << 16) | (S << 20) | (cond << 28);
+                return instruction.Bits() | (assemble_randoms & ~instruction.Mask());
+            }
             }
             return 0;
         };

@@ -49,63 +49,63 @@ void GetSetElimination(IR::Block& block) {
 
     for (auto inst = block.begin(); inst != block.end(); ++inst) {
         switch (inst->GetOpcode()) {
-            case IR::Opcode::SetRegister: {
-                Arm::Reg reg = inst->GetArg(0).GetRegRef();
-                if (reg == Arm::Reg::PC)
-                    break;
-                size_t reg_index = static_cast<size_t>(reg);
-                do_set(reg_info[reg_index], inst->GetArg(1), inst);
+        case IR::Opcode::SetRegister: {
+            Arm::Reg reg = inst->GetArg(0).GetRegRef();
+            if (reg == Arm::Reg::PC)
                 break;
-            }
-            case IR::Opcode::GetRegister: {
-                Arm::Reg reg = inst->GetArg(0).GetRegRef();
-                ASSERT(reg != Arm::Reg::PC);
-                size_t reg_index = static_cast<size_t>(reg);
-                do_get(reg_info[reg_index], inst);
-                break;
-            }
-            case IR::Opcode::SetNFlag: {
-                do_set(n_info, inst->GetArg(0), inst);
-                break;
-            }
-            case IR::Opcode::GetNFlag: {
-                do_get(n_info, inst);
-                break;
-            }
-            case IR::Opcode::SetZFlag: {
-                do_set(z_info, inst->GetArg(0), inst);
-                break;
-            }
-            case IR::Opcode::GetZFlag: {
-                do_get(z_info, inst);
-                break;
-            }
-            case IR::Opcode::SetCFlag: {
-                do_set(c_info, inst->GetArg(0), inst);
-                break;
-            }
-            case IR::Opcode::GetCFlag: {
-                do_get(c_info, inst);
-                break;
-            }
-            case IR::Opcode::SetVFlag: {
-                do_set(v_info, inst->GetArg(0), inst);
-                break;
-            }
-            case IR::Opcode::GetVFlag: {
-                do_get(v_info, inst);
-                break;
-            }
-            case IR::Opcode::SetCpsr:
-            case IR::Opcode::GetCpsr: {
-                n_info = {};
-                z_info = {};
-                c_info = {};
-                v_info = {};
-                break;
-            }
-            default:
-                break;
+            size_t reg_index = static_cast<size_t>(reg);
+            do_set(reg_info[reg_index], inst->GetArg(1), inst);
+            break;
+        }
+        case IR::Opcode::GetRegister: {
+            Arm::Reg reg = inst->GetArg(0).GetRegRef();
+            ASSERT(reg != Arm::Reg::PC);
+            size_t reg_index = static_cast<size_t>(reg);
+            do_get(reg_info[reg_index], inst);
+            break;
+        }
+        case IR::Opcode::SetNFlag: {
+            do_set(n_info, inst->GetArg(0), inst);
+            break;
+        }
+        case IR::Opcode::GetNFlag: {
+            do_get(n_info, inst);
+            break;
+        }
+        case IR::Opcode::SetZFlag: {
+            do_set(z_info, inst->GetArg(0), inst);
+            break;
+        }
+        case IR::Opcode::GetZFlag: {
+            do_get(z_info, inst);
+            break;
+        }
+        case IR::Opcode::SetCFlag: {
+            do_set(c_info, inst->GetArg(0), inst);
+            break;
+        }
+        case IR::Opcode::GetCFlag: {
+            do_get(c_info, inst);
+            break;
+        }
+        case IR::Opcode::SetVFlag: {
+            do_set(v_info, inst->GetArg(0), inst);
+            break;
+        }
+        case IR::Opcode::GetVFlag: {
+            do_get(v_info, inst);
+            break;
+        }
+        case IR::Opcode::SetCpsr:
+        case IR::Opcode::GetCpsr: {
+            n_info = {};
+            z_info = {};
+            c_info = {};
+            v_info = {};
+            break;
+        }
+        default:
+            break;
         }
     }
 }

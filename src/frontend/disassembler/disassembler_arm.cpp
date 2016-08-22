@@ -35,18 +35,18 @@ public:
 
     std::string ShiftStr(ShiftType shift, Imm5 imm5) {
         switch (shift) {
-            case ShiftType::LSL:
-                if (imm5 == 0) return "";
-                return Common::StringFromFormat(", lsl #%hhu", imm5);
-            case ShiftType::LSR:
-                if (imm5 == 0) return ", lsr #32";
-                return Common::StringFromFormat(", lsr #%hhu", imm5);
-            case ShiftType::ASR:
-                if (imm5 == 0) return ", asr #32";
-                return Common::StringFromFormat(", asr #%hhu", imm5);
-            case ShiftType::ROR:
-                if (imm5 == 0) return ", rrx";
-                return Common::StringFromFormat(", ror #%hhu", imm5);
+        case ShiftType::LSL:
+            if (imm5 == 0) return "";
+            return Common::StringFromFormat(", lsl #%hhu", imm5);
+        case ShiftType::LSR:
+            if (imm5 == 0) return ", lsr #32";
+            return Common::StringFromFormat(", lsr #%hhu", imm5);
+        case ShiftType::ASR:
+            if (imm5 == 0) return ", asr #32";
+            return Common::StringFromFormat(", asr #%hhu", imm5);
+        case ShiftType::ROR:
+            if (imm5 == 0) return ", rrx";
+            return Common::StringFromFormat(", ror #%hhu", imm5);
         }
         ASSERT(false);
         return "<internal error>";
@@ -54,14 +54,14 @@ public:
 
     std::string RsrStr(Reg s, ShiftType shift, Reg m) {
         switch (shift){
-            case ShiftType::LSL:
-                return Common::StringFromFormat("%s, lsl %s", RegToString(m), RegToString(s));
-            case ShiftType::LSR:
-                return Common::StringFromFormat("%s, lsr %s", RegToString(m), RegToString(s));
-            case ShiftType::ASR:
-                return Common::StringFromFormat("%s, asr %s", RegToString(m), RegToString(s));
-            case ShiftType::ROR:
-                return Common::StringFromFormat("%s, ror %s", RegToString(m), RegToString(s));
+        case ShiftType::LSL:
+            return Common::StringFromFormat("%s, lsl %s", RegToString(m), RegToString(s));
+        case ShiftType::LSR:
+            return Common::StringFromFormat("%s, lsr %s", RegToString(m), RegToString(s));
+        case ShiftType::ASR:
+            return Common::StringFromFormat("%s, asr %s", RegToString(m), RegToString(s));
+        case ShiftType::ROR:
+            return Common::StringFromFormat("%s, ror %s", RegToString(m), RegToString(s));
         }
         ASSERT(false);
         return "<internal error>";
@@ -69,14 +69,14 @@ public:
 
     std::string RorStr(Reg m, SignExtendRotation rotate) {
         switch (rotate) {
-            case SignExtendRotation::ROR_0:
-                return RegToString(m);
-            case SignExtendRotation::ROR_8:
-                return Common::StringFromFormat("%s, ror #8", RegToString(m));
-            case SignExtendRotation::ROR_16:
-                return Common::StringFromFormat("%s, ror #16", RegToString(m));
-            case SignExtendRotation::ROR_24:
-                return Common::StringFromFormat("%s, ror #24", RegToString(m));
+        case SignExtendRotation::ROR_0:
+            return RegToString(m);
+        case SignExtendRotation::ROR_8:
+            return Common::StringFromFormat("%s, ror #8", RegToString(m));
+        case SignExtendRotation::ROR_16:
+            return Common::StringFromFormat("%s, ror #16", RegToString(m));
+        case SignExtendRotation::ROR_24:
+            return Common::StringFromFormat("%s, ror #24", RegToString(m));
         }
         ASSERT(false);
         return "<internal error>";
