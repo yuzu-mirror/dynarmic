@@ -5,9 +5,16 @@ project(dynarmic)
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
 
+# Set hard requirements for C++
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Signify where the module directories are
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
+
 # Compiler flags
 if (NOT MSVC)
-    add_compile_options(--std=c++14)
     add_compile_options(-Wall -Werror -Wextra -pedantic -pedantic-errors -Wfatal-errors
                         -Wno-unused-parameter -Wno-missing-braces)
     if (ARCHITECTURE_x86_64)
@@ -17,39 +24,8 @@ else()
     add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
 endif()
 
-# This function should be passed a list of all files in a target. It will automatically generate
-# file groups following the directory hierarchy, so that the layout of the files in IDEs matches the
-# one in the filesystem.
-function(create_directory_groups)
-    # Place any files that aren't in the source list in a separate group so that they don't get in
-    # the way.
-    source_group("Other Files" REGULAR_EXPRESSION ".")
-
-    foreach(file_name ${ARGV})
-        get_filename_component(dir_name "${file_name}" PATH)
-        # Group names use '\' as a separator even though the entire rest of CMake uses '/'...
-        string(REPLACE "/" "\\" group_name "${dir_name}")
-        source_group("${group_name}" FILES "${file_name}")
-    endforeach()
-endfunction()
-
 # Arch detection
-include(CheckSymbolExists)
-function(detect_architecture symbol arch)
-    if (NOT DEFINED ARCHITECTURE)
-        set(CMAKE_REQUIRED_QUIET 1)
-        check_symbol_exists("${symbol}" "" ARCHITECTURE_${arch})
-        unset(CMAKE_REQUIRED_QUIET)
-
-        # The output variable needs to be unique across invocations otherwise
-        # CMake's crazy scope rules will keep it defined
-        if (ARCHITECTURE_${arch})
-            set(ARCHITECTURE "${arch}" PARENT_SCOPE)
-            set(ARCHITECTURE_${arch} 1 PARENT_SCOPE)
-            add_definitions(-DARCHITECTURE_${arch}=1)
-        endif()
-    endif()
-endfunction()
+include(DetectArchitecture)
 if (MSVC)
     detect_architecture("_M_AMD64" x86_64)
     detect_architecture("_M_IX86" x86)

@@ -1,4 +1,5 @@
 include_directories(.)
+include(CreateDirectoryGroups)
 
 set(SRCS
     backend_x64/block_of_code.cpp

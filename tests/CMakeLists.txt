@@ -1,4 +1,5 @@
 include_directories(. ../src)
+include(CreateDirectoryGroups)
 
 set(SRCS
     arm/fuzz_arm.cpp
