@@ -10,6 +10,7 @@ set(SRCS
     skyeye_interpreter/dyncom/arm_dyncom_dec.cpp
     skyeye_interpreter/dyncom/arm_dyncom_interpreter.cpp
     skyeye_interpreter/dyncom/arm_dyncom_thumb.cpp
+    skyeye_interpreter/dyncom/arm_dyncom_trans.cpp
     skyeye_interpreter/skyeye_common/armstate.cpp
     skyeye_interpreter/skyeye_common/armsupp.cpp
     skyeye_interpreter/skyeye_common/vfp/vfp.cpp
@@ -23,6 +24,7 @@ set(HEADERS
     skyeye_interpreter/dyncom/arm_dyncom_interpreter.h
     skyeye_interpreter/dyncom/arm_dyncom_run.h
     skyeye_interpreter/dyncom/arm_dyncom_thumb.h
+    skyeye_interpreter/dyncom/arm_dyncom_trans.h
     skyeye_interpreter/skyeye_common/arm_regformat.h
     skyeye_interpreter/skyeye_common/armstate.h
     skyeye_interpreter/skyeye_common/armsupp.h

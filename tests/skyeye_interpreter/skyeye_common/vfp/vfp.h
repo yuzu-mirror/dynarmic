@@ -22,7 +22,10 @@
 
 #include "skyeye_interpreter/skyeye_common/vfp/vfp_helper.h" /* for references to cdp SoftFloat functions */
 
-#define VFP_DEBUG_UNTESTED(x) //LOG_TRACE(Core_ARM11, "in func %s, " #x " untested", __FUNCTION__);
+#define LOG_INFO(...) do{}while(0)
+#define LOG_TRACE(...) do{}while(0)
+
+#define VFP_DEBUG_UNTESTED(x) LOG_TRACE(Core_ARM11, "in func %s, " #x " untested", __FUNCTION__);
 #define CHECK_VFP_ENABLED
 #define CHECK_VFP_CDP_RET vfp_raise_exceptions(cpu, ret, inst_cream->instr, cpu->VFP[VFP_FPSCR]);
 

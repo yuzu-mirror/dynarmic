@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#include <cstddef>
+
 // We can provide simple Thumb simulation by decoding the Thumb instruction into its corresponding
 // ARM instruction, and using the existing ARM simulator.
 
@@ -305,9 +307,9 @@ ThumbDecodeStatus TranslateThumbInstruction(u32 addr, u32 instr, u32* ainstr, u3
             if (subset_index == 2) {
                 valid = ThumbDecodeStatus::UNDEFINED;
             } else {
-                *ainstr = subset[subset_index]             // base
-                          | (BITS(tinstr, 0, 2) << 12)     // Rd
-                          | BITS(tinstr, 3, 5);            // Rm
+                *ainstr = subset[subset_index]       // base
+                    | (BITS(tinstr, 0, 2) << 12)     // Rd
+                    | BITS(tinstr, 3, 5);            // Rm
             }
         } else {
             static const u32 subset[4] = {

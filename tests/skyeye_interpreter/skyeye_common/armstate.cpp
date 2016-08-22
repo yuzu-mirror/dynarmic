@@ -188,13 +188,25 @@ void ARMul_State::ResetMPCoreCP15Registers()
     CP15[CP15_TLB_DEBUG_CONTROL] = 0x00000000;
 }
 
+//static void CheckMemoryBreakpoint(u32 address, GDBStub::BreakpointType type)
+//{
+//    if (GDBStub::g_server_enabled && GDBStub::CheckBreakpoint(address, type)) {
+//        LOG_DEBUG(Debug, "Found memory breakpoint @ %08x", address);
+//        GDBStub::Break(true);
+//    }
+//}
+
 u8 ARMul_State::ReadMemory8(u32 address) const
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
+
     return (*user_callbacks.MemoryRead8)(address);
 }
 
 u16 ARMul_State::ReadMemory16(u32 address) const
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
+
     u16 data = (*user_callbacks.MemoryRead16)(address);
 
     if (InBigEndianMode())
@@ -205,6 +217,8 @@ u16 ARMul_State::ReadMemory16(u32 address) const
 
 u32 ARMul_State::ReadMemory32(u32 address) const
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
+
     u32 data = (*user_callbacks.MemoryRead32)(address);
 
     if (InBigEndianMode())
@@ -215,6 +229,8 @@ u32 ARMul_State::ReadMemory32(u32 address) const
 
 u64 ARMul_State::ReadMemory64(u32 address) const
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Read);
+
     u64 data = (*user_callbacks.MemoryRead64)(address);
 
     if (InBigEndianMode())
@@ -225,11 +241,15 @@ u64 ARMul_State::ReadMemory64(u32 address) const
 
 void ARMul_State::WriteMemory8(u32 address, u8 data)
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Write);
+
     (*user_callbacks.MemoryWrite8)(address, data);
 }
 
 void ARMul_State::WriteMemory16(u32 address, u16 data)
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Write);
+
     if (InBigEndianMode())
         data = Common::swap16(data);
 
@@ -238,6 +258,8 @@ void ARMul_State::WriteMemory16(u32 address, u16 data)
 
 void ARMul_State::WriteMemory32(u32 address, u32 data)
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Write);
+
     if (InBigEndianMode())
         data = Common::swap32(data);
 
@@ -246,6 +268,8 @@ void ARMul_State::WriteMemory32(u32 address, u32 data)
 
 void ARMul_State::WriteMemory64(u32 address, u64 data)
 {
+//    CheckMemoryBreakpoint(address, GDBStub::BreakpointType::Write);
+
     if (InBigEndianMode())
         data = Common::swap64(data);
 
@@ -440,6 +464,7 @@ u32 ARMul_State::ReadCP15Register(u32 crn, u32 opcode_1, u32 crm, u32 opcode_2) 
         }
     }
 
+//    LOG_ERROR(Core_ARM11, "MRC CRn=%u, CRm=%u, OP1=%u OP2=%u is not implemented. Returning zero.", crn, crm, opcode_1, opcode_2);
     ASSERT_MSG(false, "MRC CRn=%u, CRm=%u, OP1=%u OP2=%u is not implemented. Returning zero.", crn, crm, opcode_1, opcode_2);
     return 0;
 }
@@ -496,8 +521,7 @@ void ARMul_State::WriteCP15Register(u32 value, u32 crn, u32 opcode_1, u32 crm, u
             else if (crm == 4 && opcode_2 == 0)
             {
                 // NOTE: Not entirely accurate. This should do permission checks.
-                // TODO: Implement this maybe.
-                // CP15[CP15_PHYS_ADDRESS] = Memory::VirtualToPhysicalAddress(value);
+                //CP15[CP15_PHYS_ADDRESS] = Memory::VirtualToPhysicalAddress(value);
             }
             else if (crm == 5)
             {
