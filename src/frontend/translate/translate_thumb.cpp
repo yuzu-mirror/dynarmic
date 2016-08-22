@@ -763,8 +763,8 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_BLX_reg(Reg m) {
         // BLX <Rm>
         ir.PushRSB(ir.current_location.AdvancePC(2));
-        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 2) | 1));
         ir.BXWritePC(ir.GetRegister(m));
+        ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 2) | 1));
         ir.SetTerm(IR::Term::ReturnToDispatch{});
         return false;
     }
