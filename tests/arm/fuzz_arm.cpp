@@ -99,6 +99,7 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
     interp_state.Reg = jit->Regs();
     interp_state.ExtReg = jit->ExtRegs();
     interp_state.Cpsr = jit->Cpsr();
+    interp_state.VFP[VFP_FPSCR] = jit->Fpscr();
     interp_state.Reg[15] = pc;
 
     InterpreterClearCache();
@@ -110,6 +111,7 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
     jit->Regs() = interp_state.Reg;
     jit->ExtRegs() = interp_state.ExtReg;
     jit->Cpsr() = interp_state.Cpsr;
+    jit->SetFpscr(interp_state.VFP[VFP_FPSCR]);
 }
 
 static void Fail() {
