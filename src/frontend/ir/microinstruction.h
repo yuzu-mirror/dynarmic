@@ -24,6 +24,55 @@ class Inst final : public Common::IntrusiveListNode<Inst> {
 public:
     explicit Inst(Opcode op) : op(op) {}
 
+    /// Determines whether or not this instruction performs an arithmetic shift.
+    bool IsArithmeticShift() const;
+    /// Determines whether or not this instruction performs a logical shift.
+    bool IsLogicalShift() const;
+    /// Determines whether or not this instruction performs a circular shift.
+    bool IsCircularShift() const;
+    /// Determines whether or not this instruction performs any kind of shift.
+    bool IsShift() const;
+
+    /// Determines whether or not this instruction performs a shared memory read.
+    bool IsSharedMemoryRead() const;
+    /// Determines whether or not this instruction performs a shared memory write.
+    bool IsSharedMemoryWrite() const;
+    /// Determines whether or not this instruction performs a shared memory read or write.
+    bool IsSharedMemoryReadOrWrite() const;
+    /// Determines whether or not this instruction performs an atomic memory write.
+    bool IsExclusiveMemoryWrite() const;
+
+    /// Determines whether or not this instruction performs any kind of memory read.
+    bool IsMemoryRead() const;
+    /// Determines whether or not this instruction performs any kind of memory write.
+    bool IsMemoryWrite() const;
+    /// Determines whether or not this instruction performs any kind of memory access.
+    bool IsMemoryReadOrWrite() const;
+
+    /// Determines whether or not this instruction reads from the CPSR.
+    bool ReadsFromCPSR() const;
+    /// Determines whether or not this instruction writes to the CPSR.
+    bool WritesToCPSR() const;
+
+    /// Determines whether or not this instruction reads from a core register.
+    bool ReadsFromCoreRegister() const;
+    /// Determines whether or not this instruction writes to a core register.
+    bool WritesToCoreRegister() const;
+
+    /// Determines whether or not this instruction reads from the FPSCR.
+    bool ReadsFromFPSCR() const;
+    /// Determines whether or not this instruction writes to the FPSCR.
+    bool WritesToFPSCR() const;
+
+    /// Determines whether or not this instruction alters memory-exclusivity.
+    bool AltersExclusiveState() const;
+
+    /// Determines whether or not this instruction causes a CPU exception.
+    bool CausesCPUException() const;
+
+    /// Determines whether or not this instruction may have side-effects.
+    bool MayHaveSideEffects() const;
+
     bool HasUses() const { return use_count > 0; }
 
     /// Get the microop this microinstruction represents.
