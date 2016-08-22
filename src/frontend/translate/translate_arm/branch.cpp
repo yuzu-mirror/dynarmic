@@ -51,8 +51,8 @@ bool ArmTranslatorVisitor::arm_BLX_reg(Cond cond, Reg m) {
     // BLX <Rm>
     if (ConditionPassed(cond)) {
         ir.PushRSB(ir.current_location.AdvancePC(4));
-        ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
         ir.BXWritePC(ir.GetRegister(m));
+        ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
         ir.SetTerm(IR::Term::ReturnToDispatch{});
         return false;
     }
