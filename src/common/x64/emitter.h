@@ -601,6 +601,14 @@ public:
     void CMPNLTSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_NLT); }
     void CMPORDSS(X64Reg regOp, const OpArg& arg) { CMPSS(regOp, arg, CMP_ORD); }
 
+    void CMPEQSD(X64Reg regOp, const OpArg& arg) { CMPSD(regOp, arg, CMP_EQ); }
+    void CMPLTSD(X64Reg regOp, const OpArg& arg) { CMPSD(regOp, arg, CMP_LT); }
+    void CMPLESD(X64Reg regOp, const OpArg& arg) { CMPSD(regOp, arg, CMP_LE); }
+    void CMPUNORDSD(X64Reg regOp, const OpArg& arg) { CMPSD(regOp, arg, CMP_UNORD); }
+    void CMPNEQSD(X64Reg regOp, const OpArg& arg) { CMPSD(regOp, arg, CMP_NEQ); }
+    void CMPNLTSD(X64Reg regOp, const OpArg& arg) { CMPSD(regOp, arg, CMP_NLT); }
+    void CMPORDSD(X64Reg regOp, const OpArg& arg) { CMPSD(regOp, arg, CMP_ORD); }
+
     // SSE/SSE2: Floating point packed arithmetic (x4 for float, x2 for double)
     void ADDPS(X64Reg regOp, const OpArg& arg);
     void ADDPD(X64Reg regOp, const OpArg& arg);
