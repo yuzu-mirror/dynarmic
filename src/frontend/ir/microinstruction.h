@@ -22,7 +22,7 @@ namespace IR {
  */
 class Inst final : public Common::IntrusiveListNode<Inst> {
 public:
-    Inst(Opcode op) : op(op) {}
+    explicit Inst(Opcode op) : op(op) {}
 
     bool HasUses() const { return use_count > 0; }
 
