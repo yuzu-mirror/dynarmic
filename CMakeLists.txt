@@ -17,14 +17,14 @@ set(CMAKE_WARN_DEPRECATED ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 # Compiler flags
-if (NOT MSVC)
+if (MSVC)
+    add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
+else()
     add_compile_options(-Wall -Werror -Wextra -pedantic -pedantic-errors -Wfatal-errors
                         -Wno-unused-parameter -Wno-missing-braces)
     if (ARCHITECTURE_x86_64)
         add_compile_options(-msse4.1)
     endif()
-else()
-    add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
 endif()
 
 # Arch detection
