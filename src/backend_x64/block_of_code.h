@@ -31,6 +31,9 @@ public:
     /// Code emitter: Makes saved host MXCSR the current MXCSR
     void SwitchMxcsrOnExit();
 
+    Gen::OpArg MFloatPositiveZero32() const {
+        return Gen::M(const_FloatPositiveZero32);
+    }
     Gen::OpArg MFloatNegativeZero32() const {
         return Gen::M(const_FloatNegativeZero32);
     }
@@ -39,6 +42,9 @@ public:
     }
     Gen::OpArg MFloatNonSignMask32() const {
         return Gen::M(const_FloatNonSignMask32);
+    }
+    Gen::OpArg MFloatPositiveZero64() const {
+        return Gen::M(const_FloatPositiveZero64);
     }
     Gen::OpArg MFloatNegativeZero64() const {
         return Gen::M(const_FloatNegativeZero64);
@@ -52,27 +58,45 @@ public:
     Gen::OpArg MFloatPenultimatePositiveDenormal64() const {
         return Gen::M(const_FloatPenultimatePositiveDenormal64);
     }
+    Gen::OpArg MFloatMinS32() const {
+        return Gen::M(const_FloatMinS32);
+    }
+    Gen::OpArg MFloatMaxS32() const {
+        return Gen::M(const_FloatMaxS32);
+    }
+    Gen::OpArg MFloatMinU32() const {
+        return Gen::M(const_FloatMinU32);
+    }
+    Gen::OpArg MFloatMaxU32() const {
+        return Gen::M(const_FloatMaxU32);
+    }
 
     CodePtr GetReturnFromRunCodeAddress() const {
         return return_from_run_code;
     }
 
 private:
-    const u8* const_FloatNegativeZero32;
-    const u8* const_FloatNaN32;
-    const u8* const_FloatNonSignMask32;
-    const u8* const_FloatNegativeZero64;
-    const u8* const_FloatNaN64;
-    const u8* const_FloatNonSignMask64;
-    const u8* const_FloatPenultimatePositiveDenormal64;
+    const u8* const_FloatPositiveZero32 = nullptr;
+    const u8* const_FloatNegativeZero32 = nullptr;
+    const u8* const_FloatNaN32 = nullptr;
+    const u8* const_FloatNonSignMask32 = nullptr;
+    const u8* const_FloatPositiveZero64 = nullptr;
+    const u8* const_FloatNegativeZero64 = nullptr;
+    const u8* const_FloatNaN64 = nullptr;
+    const u8* const_FloatNonSignMask64 = nullptr;
+    const u8* const_FloatPenultimatePositiveDenormal64 = nullptr;
+    const u8* const_FloatMinS32 = nullptr;
+    const u8* const_FloatMaxS32 = nullptr;
+    const u8* const_FloatMinU32 = nullptr;
+    const u8* const_FloatMaxU32 = nullptr;
     void GenConstants();
 
     using RunCodeFuncType = void(*)(JitState*, CodePtr);
-    RunCodeFuncType run_code;
+    RunCodeFuncType run_code = nullptr;
     void GenRunCode();
 
-    CodePtr return_from_run_code;
-    CodePtr return_from_run_code_without_mxcsr_switch;
+    CodePtr return_from_run_code = nullptr;
+    CodePtr return_from_run_code_without_mxcsr_switch = nullptr;
     void GenReturnFromRunCode();
 };
 

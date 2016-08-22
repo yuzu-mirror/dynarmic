@@ -60,6 +60,14 @@ void BlockOfCode::GenConstants() {
     Write64(0x7fffffffffffffffu);
     const_FloatPenultimatePositiveDenormal64 = AlignCode16();
     Write64(0x000ffffffffffffeu);
+    const_FloatMinS32 = AlignCode16();
+    Write64(0xc1e0000000000000u); // -2147483648 as a double
+    const_FloatMaxS32 = AlignCode16();
+    Write64(0x41dfffffffc00000u); // 2147483647 as a double
+    const_FloatPositiveZero32 = const_FloatPositiveZero64 = const_FloatMinU32 = AlignCode16();
+    Write64(0x0000000000000000u); // 0 as a double
+    const_FloatMaxU32 = AlignCode16();
+    Write64(0x41efffffffe00000u); // 4294967295 as a double
     AlignCode16();
 }
 
