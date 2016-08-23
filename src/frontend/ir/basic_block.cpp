@@ -57,8 +57,8 @@ std::string DumpBlock(const IR::Block& block) {
         }
     };
 
-    for (auto inst = block.begin(); inst != block.end(); ++inst) {
-        const Opcode op = inst->GetOpcode();
+    for (const auto& inst : block) {
+        const Opcode op = inst.GetOpcode();
 
         if (GetTypeOf(op) != Type::Void) {
             ret += Common::StringFromFormat("%%%-5zu = ", index);
@@ -70,7 +70,7 @@ std::string DumpBlock(const IR::Block& block) {
 
         const size_t arg_count = GetNumArgsOf(op);
         for (size_t arg_index = 0; arg_index < arg_count; arg_index++) {
-            const Value arg = inst->GetArg(arg_index);
+            const Value arg = inst.GetArg(arg_index);
 
             ret += arg_index != 0 ? ", " : " ";
             ret += arg_to_string(arg);
@@ -83,7 +83,7 @@ std::string DumpBlock(const IR::Block& block) {
         }
 
         ret += "\n";
-        inst_to_index[&*inst] = index++;
+        inst_to_index[&inst] = index++;
     }
 
     return ret;
