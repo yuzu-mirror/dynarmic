@@ -362,7 +362,7 @@ bool ArmTranslatorVisitor::vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, boo
 
 bool ArmTranslatorVisitor::vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
     const ExtReg d = ToExtReg(sz, Vd, D);
-    const unsigned regs = sz ? imm8 >> 1 : imm8;
+    const size_t regs = sz ? imm8 >> 1 : imm8;
 
     if (regs == 0 || RegNumber(d)+regs > 32)
         return UnpredictableInstruction();
@@ -373,7 +373,7 @@ bool ArmTranslatorVisitor::vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8
     if (ConditionPassed(cond)) {
         auto address = ir.GetRegister(Reg::SP);
 
-        for (unsigned i = 0; i < regs; ++i) {
+        for (size_t i = 0; i < regs; ++i) {
             if (sz) {
                 auto lo = ir.ReadMemory32(address);
                 address = ir.Add(address, ir.Imm32(4));
@@ -396,7 +396,7 @@ bool ArmTranslatorVisitor::vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8
 bool ArmTranslatorVisitor::vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
     u32 imm32 = imm8 << 2;
     const ExtReg d = ToExtReg(sz, Vd, D);
-    const unsigned regs = sz ? imm8 >> 1 : imm8;
+    const size_t regs = sz ? imm8 >> 1 : imm8;
 
     if (regs == 0 || RegNumber(d)+regs > 32)
         return UnpredictableInstruction();
@@ -408,7 +408,7 @@ bool ArmTranslatorVisitor::vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm
         auto address = ir.Sub(ir.GetRegister(Reg::SP), ir.Imm32(imm32));
         ir.SetRegister(Reg::SP, address);
 
-        for (unsigned i = 0; i < regs; ++i) {
+        for (size_t i = 0; i < regs; ++i) {
             if (sz) {
                 const auto d_u64 = ir.TransferFromFP64(ir.GetExtendedRegister(d + i));
                 auto lo = ir.LeastSignificantWord(d_u64);

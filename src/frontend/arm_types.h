@@ -160,17 +160,17 @@ inline size_t RegNumber(ExtReg reg) {
     }
 }
 
-inline Reg operator+(Reg reg, int number) {
+inline Reg operator+(Reg reg, size_t number) {
     ASSERT(reg != Reg::INVALID_REG);
 
-    int new_reg = static_cast<int>(reg) + number;
+    size_t new_reg = static_cast<size_t>(reg) + number;
     ASSERT(new_reg >= 0 && new_reg <= 15);
 
     return static_cast<Reg>(new_reg);
 }
 
-inline ExtReg operator+(ExtReg reg, int number) {
-    ExtReg new_reg = static_cast<ExtReg>(static_cast<int>(reg) + number);
+inline ExtReg operator+(ExtReg reg, size_t number) {
+    ExtReg new_reg = static_cast<ExtReg>(static_cast<size_t>(reg) + number);
 
     ASSERT((reg >= ExtReg::S0 && reg <= ExtReg::S31 && new_reg >= ExtReg::S0 && new_reg <= ExtReg::S31)
            || (reg >= ExtReg::D0 && reg <= ExtReg::D31 && new_reg >= ExtReg::D0 && new_reg <= ExtReg::D31));
