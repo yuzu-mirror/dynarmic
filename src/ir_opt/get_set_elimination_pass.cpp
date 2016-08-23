@@ -23,6 +23,8 @@ void GetSetElimination(IR::Block& block) {
         Iterator last_set_instruction;
     };
     std::array<RegisterInfo, 15> reg_info;
+    std::array<RegisterInfo, 32> ext_reg_singles_info;
+    std::array<RegisterInfo, 32> ext_reg_doubles_info;
     RegisterInfo n_info;
     RegisterInfo z_info;
     RegisterInfo c_info;
@@ -62,6 +64,52 @@ void GetSetElimination(IR::Block& block) {
             ASSERT(reg != Arm::Reg::PC);
             size_t reg_index = static_cast<size_t>(reg);
             do_get(reg_info[reg_index], inst);
+            break;
+        }
+        case IR::Opcode::SetExtendedRegister32: {
+            Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+            size_t reg_index = Arm::RegNumber(reg);
+            do_set(ext_reg_singles_info[reg_index], inst->GetArg(1), inst);
+
+            size_t doubles_reg_index = reg_index / 2;
+            if (doubles_reg_index < ext_reg_doubles_info.size()) {
+                ext_reg_doubles_info[doubles_reg_index] = {};
+            }
+            break;
+        }
+        case IR::Opcode::GetExtendedRegister32: {
+            Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+            size_t reg_index = Arm::RegNumber(reg);
+            do_get(ext_reg_singles_info[reg_index], inst);
+
+            size_t doubles_reg_index = reg_index / 2;
+            if (doubles_reg_index < ext_reg_doubles_info.size()) {
+                ext_reg_doubles_info[doubles_reg_index] = {};
+            }
+            break;
+        }
+        case IR::Opcode::SetExtendedRegister64: {
+            Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+            size_t reg_index = Arm::RegNumber(reg);
+            do_set(ext_reg_doubles_info[reg_index], inst->GetArg(1), inst);
+
+            size_t singles_reg_index = reg_index * 2;
+            if (singles_reg_index < ext_reg_singles_info.size()) {
+                ext_reg_singles_info[singles_reg_index] = {};
+                ext_reg_singles_info[singles_reg_index+1] = {};
+            }
+            break;
+        }
+        case IR::Opcode::GetExtendedRegister64: {
+            Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
+            size_t reg_index = Arm::RegNumber(reg);
+            do_get(ext_reg_doubles_info[reg_index], inst);
+
+            size_t singles_reg_index = reg_index * 2;
+            if (singles_reg_index < ext_reg_singles_info.size()) {
+                ext_reg_singles_info[singles_reg_index] = {};
+                ext_reg_singles_info[singles_reg_index+1] = {};
+            }
             break;
         }
         case IR::Opcode::SetNFlag: {

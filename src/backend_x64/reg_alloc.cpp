@@ -119,7 +119,9 @@ Gen::X64Reg RegAlloc::UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, Hos
         }
     }
 
-    bool is_floating_point = use_inst->GetType() == IR::Type::F32 || use_inst->GetType() == IR::Type::F64;
+    bool is_floating_point = HostLocIsXMM(*desired_locations.begin());
+    if (is_floating_point)
+        DEBUG_ASSERT(use_inst->GetType() == IR::Type::F32 || use_inst->GetType() == IR::Type::F64);
     Gen::X64Reg use_reg = UseRegister(use_inst, is_floating_point ? any_xmm : any_gpr);
     Gen::X64Reg def_reg = DefRegister(def_inst, desired_locations);
     if (is_floating_point) {
