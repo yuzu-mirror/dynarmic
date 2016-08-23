@@ -363,6 +363,8 @@ struct ArmTranslatorVisitor final {
     bool vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8);
     bool vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8);
     bool vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8);
+    bool vfp2_VLDM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm8 imm8);
+    bool vfp2_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm8 imm8);
 };
 
 } // namespace Arm

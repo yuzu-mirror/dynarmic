@@ -102,8 +102,8 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     INST(&V::vfp2_VPOP,           "VPOP",                    "cccc11001D111101dddd101zvvvvvvvv"),
     INST(&V::vfp2_VLDR,           "VLDR",                    "cccc1101UD01nnnndddd101zvvvvvvvv"),
     INST(&V::vfp2_VSTR,           "VSTR",                    "cccc1101UD00nnnndddd101zvvvvvvvv"),
-    // VLDM
-    // VLDMDB
+    INST(&V::vfp2_VLDM_a1,        "VLDM (A1)",               "cccc110puDw1nnnndddd1011vvvvvvvv"),
+    INST(&V::vfp2_VLDM_a2,        "VLDM (A2)",               "cccc110puDw1nnnndddd1010vvvvvvvv"),
 
 #undef INST
 
