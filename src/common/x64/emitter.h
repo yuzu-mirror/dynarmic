@@ -367,7 +367,7 @@ public:
     XEmitter(u8 *code_ptr) { code = code_ptr; flags_locked = false; }
     virtual ~XEmitter() {}
 
-    void WriteModRM(int mod, int rm, int reg);
+    void WriteModRM(int mod, int reg, int rm);
     void WriteSIB(int scale, int index, int base);
 
     void SetCodePtr(u8 *ptr);
