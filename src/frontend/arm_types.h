@@ -164,7 +164,7 @@ inline Reg operator+(Reg reg, size_t number) {
     ASSERT(reg != Reg::INVALID_REG);
 
     size_t new_reg = static_cast<size_t>(reg) + number;
-    ASSERT(new_reg >= 0 && new_reg <= 15);
+    ASSERT(new_reg <= 15);
 
     return static_cast<Reg>(new_reg);
 }
