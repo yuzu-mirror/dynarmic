@@ -95,13 +95,12 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     // VCVTR
 
     // Extension register load-store instructions
-    // VSTR
-    // VSTM
-    // VSTMDB
     INST(&V::vfp2_VPUSH,          "VPUSH",                   "cccc11010D101101dddd101zvvvvvvvv"),
     INST(&V::vfp2_VPOP,           "VPOP",                    "cccc11001D111101dddd101zvvvvvvvv"),
     INST(&V::vfp2_VLDR,           "VLDR",                    "cccc1101UD01nnnndddd101zvvvvvvvv"),
     INST(&V::vfp2_VSTR,           "VSTR",                    "cccc1101UD00nnnndddd101zvvvvvvvv"),
+    INST(&V::vfp2_VSTM_a1,        "VSTM (A1)",               "cccc110puDw0nnnndddd1011vvvvvvvv"),
+    INST(&V::vfp2_VSTM_a2,        "VSTM (A2)",               "cccc110puDw0nnnndddd1010vvvvvvvv"),
     INST(&V::vfp2_VLDM_a1,        "VLDM (A1)",               "cccc110puDw1nnnndddd1011vvvvvvvv"),
     INST(&V::vfp2_VLDM_a2,        "VLDM (A2)",               "cccc110puDw1nnnndddd1010vvvvvvvv"),
 

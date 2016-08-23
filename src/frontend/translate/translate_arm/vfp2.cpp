@@ -467,6 +467,73 @@ bool ArmTranslatorVisitor::vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd
     return true;
 }
 
+bool ArmTranslatorVisitor::vfp2_VSTM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm8 imm8) {
+    if (!p && !u && !w)
+        ASSERT_MSG(false, "Decode error");
+    if (p && !w)
+        ASSERT_MSG(false, "Decode error");
+    if (p == u && w)
+        return arm_UDF();
+    if (n == Reg::PC && w)
+        return UnpredictableInstruction();
+
+    ExtReg d = ToExtReg(true, Vd, D);
+    u32 imm32 = imm8 << 2;
+    size_t regs = imm8 / 2;
+
+    if (regs == 0 || regs > 16 || Arm::RegNumber(d)+regs > 32)
+        return UnpredictableInstruction();
+
+    // VSTM<mode>.F64 <Rn>{!}, <list of double registers>
+    if (ConditionPassed(cond)) {
+        auto address = u ? ir.GetRegister(n) : ir.Sub(ir.GetRegister(n), ir.Imm32(imm32));
+        if (w)
+            ir.SetRegister(n, u ? ir.Add(address, ir.Imm32(imm32)) : address);
+        for (size_t i = 0; i < regs; i++) {
+            auto value = ir.TransferFromFP64(ir.GetExtendedRegister(d + i));
+            auto word1 = ir.LeastSignificantWord(value);
+            auto word2 = ir.MostSignificantWord(value).result;
+            if (ir.current_location.EFlag()) std::swap(word1, word2);
+            ir.WriteMemory32(address, word1);
+            address = ir.Add(address, ir.Imm32(4));
+            ir.WriteMemory32(address, word2);
+            address = ir.Add(address, ir.Imm32(4));
+        }
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::vfp2_VSTM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm8 imm8) {
+    if (!p && !u && !w)
+        ASSERT_MSG(false, "Decode error");
+    if (p && !w)
+        ASSERT_MSG(false, "Decode error");
+    if (p == u && w)
+        return arm_UDF();
+    if (n == Reg::PC && w)
+        return UnpredictableInstruction();
+
+    ExtReg d = ToExtReg(false, Vd, D);
+    u32 imm32 = imm8 << 2;
+    size_t regs = imm8;
+
+    if (regs == 0 || Arm::RegNumber(d)+regs > 32)
+        return UnpredictableInstruction();
+
+    // VSTM<mode>.F32 <Rn>{!}, <list of single registers>
+    if (ConditionPassed(cond)) {
+        auto address = u ? ir.GetRegister(n) : ir.Sub(ir.GetRegister(n), ir.Imm32(imm32));
+        if (w)
+            ir.SetRegister(n, u ? ir.Add(address, ir.Imm32(imm32)) : address);
+        for (size_t i = 0; i < regs; i++) {
+            auto word = ir.TransferFromFP32(ir.GetExtendedRegister(d + i));
+            ir.WriteMemory32(address, word);
+            address = ir.Add(address, ir.Imm32(4));
+        }
+    }
+    return true;
+}
+
 bool ArmTranslatorVisitor::vfp2_VLDM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm8 imm8) {
     if (!p && !u && !w)
         ASSERT_MSG(false, "Decode error");
@@ -479,7 +546,7 @@ bool ArmTranslatorVisitor::vfp2_VLDM_a1(Cond cond, bool p, bool u, bool D, bool 
 
     ExtReg d = ToExtReg(true, Vd, D);
     u32 imm32 = imm8 << 2;
-    size_t regs = imm8;
+    size_t regs = imm8 / 2;
 
     if (regs == 0 || regs > 16 || Arm::RegNumber(d)+regs > 32)
         return UnpredictableInstruction();
@@ -531,7 +598,6 @@ bool ArmTranslatorVisitor::vfp2_VLDM_a2(Cond cond, bool p, bool u, bool D, bool 
     }
     return true;
 }
-
 
 } // namespace Arm
 } // namespace Dynarmic
