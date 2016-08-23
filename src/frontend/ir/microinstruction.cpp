@@ -214,6 +214,12 @@ bool Inst::MayHaveSideEffects() const {
 
 }
 
+Type Inst::GetType() const {
+    if (op == Opcode::Identity)
+        return args[0].GetType();
+    return GetTypeOf(op);
+}
+
 Value Inst::GetArg(size_t index) const {
     DEBUG_ASSERT(index < GetNumArgsOf(op));
     DEBUG_ASSERT(!args[index].IsEmpty());

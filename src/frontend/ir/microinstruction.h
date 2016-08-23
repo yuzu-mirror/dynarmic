@@ -78,7 +78,7 @@ public:
     /// Get the microop this microinstruction represents.
     Opcode GetOpcode() const { return op; }
     /// Get the type this instruction returns.
-    Type GetType() const { return GetTypeOf(op); }
+    Type GetType() const;
     /// Get the number of arguments this instruction has.
     size_t NumArgs() const { return GetNumArgsOf(op); }
 
