@@ -29,13 +29,13 @@ static void assert_noinline_call(const Fn& fn) {
     do if (!(_a_)) { assert_noinline_call([] { \
         fprintf(stderr, "Assertion Failed!\n" #_a_); \
         throw ""; \
-    }); } while (0)
+    }); } while (false)
 
 #define ASSERT_MSG(_a_, ...) \
     do if (!(_a_)) { assert_noinline_call([&] { \
         fprintf(stderr, "Assertion Failed!\n" #_a_ "\n" __VA_ARGS__); \
         throw ""; \
-    }); } while (0)
+    }); } while (false)
 
 #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
 #define UNREACHABLE_MSG(...) ASSERT_MSG(false, __VA_ARGS__)
