@@ -360,6 +360,72 @@ bool ArmTranslatorVisitor::vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, boo
     return true;
 }
 
+bool ArmTranslatorVisitor::vfp2_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+    ExtReg d = ToExtReg(!sz, Vd, D); // Destination is of opposite size to source
+    ExtReg m = ToExtReg(sz, Vm, M);
+    // VCVT.F64.F32 <Sd> <Dm>
+    // VCVT.F32.F64 <Dd> <Sm>
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(m);
+        auto result = sz
+                      ? ir.FPDoubleToSingle(a, true)
+                      : ir.FPSingleToDouble(a, true);
+        ir.SetExtendedRegister(d, result);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::vfp2_VCVT_to_float(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm) {
+    ExtReg d = ToExtReg(sz, Vd, D);
+    ExtReg m = ToExtReg(false, Vm, M);
+    bool round_to_nearest = false;
+    // VCVT.F32.{S32,U32} <Sd>, <Sm>
+    // VCVT.F64.{S32,U32} <Sd>, <Dm>
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(m);
+        auto result = sz
+                      ? is_signed
+                        ? ir.FPS32ToDouble(a, round_to_nearest, true)
+                        : ir.FPU32ToDouble(a, round_to_nearest, true)
+                      : is_signed
+                        ? ir.FPS32ToSingle(a, round_to_nearest, true)
+                        : ir.FPU32ToSingle(a, round_to_nearest, true);
+        ir.SetExtendedRegister(d, result);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::vfp2_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
+    ExtReg d = ToExtReg(false, Vd, D);
+    ExtReg m = ToExtReg(sz, Vm, M);
+    // VCVT{,R}.U32.F32 <Sd>, <Sm>
+    // VCVT{,R}.U32.F64 <Sd>, <Dm>
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(m);
+        auto result = sz
+                      ? ir.FPDoubleToU32(a, round_towards_zero, true)
+                      : ir.FPSingleToU32(a, round_towards_zero, true);
+        ir.SetExtendedRegister(d, result);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::vfp2_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
+    ExtReg d = ToExtReg(false, Vd, D);
+    ExtReg m = ToExtReg(sz, Vm, M);
+    // VCVT{,R}.S32.F32 <Sd>, <Sm>
+    // VCVT{,R}.S32.F64 <Sd>, <Dm>
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(m);
+        auto result = sz
+                      ? ir.FPDoubleToS32(a, round_towards_zero, true)
+                      : ir.FPSingleToS32(a, round_towards_zero, true);
+        ir.SetExtendedRegister(d, result);
+    }
+    return true;
+}
+
+
 bool ArmTranslatorVisitor::vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
     const ExtReg d = ToExtReg(sz, Vd, D);
     const size_t regs = sz ? imm8 >> 1 : imm8;

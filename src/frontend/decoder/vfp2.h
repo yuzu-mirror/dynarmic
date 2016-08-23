@@ -89,10 +89,12 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     INST(&V::vfp2_VABS,           "VABS",                    "cccc11101D110000dddd101z11M0mmmm"),
     INST(&V::vfp2_VNEG,           "VNEG",                    "cccc11101D110001dddd101z01M0mmmm"),
     INST(&V::vfp2_VSQRT,          "VSQRT",                   "cccc11101D110001dddd101z11M0mmmm"),
+    INST(&V::vfp2_VCVT_f_to_f,    "VCVT (f32<->f64)",        "cccc11101D110111dddd101z11M0mmmm"),
+    INST(&V::vfp2_VCVT_to_float,  "VCVT (to float)",         "cccc11101D111000dddd101zs1M0mmmm"),
+    INST(&V::vfp2_VCVT_to_u32,    "VCVT (to u32)",           "cccc11101D111100dddd101zr1M0mmmm"),
+    INST(&V::vfp2_VCVT_to_s32,    "VCVT (to s32)",           "cccc11101D111101dddd101zr1M0mmmm"),
     // VCMP
     // VCMPE
-    // VCVT
-    // VCVTR
 
     // Extension register load-store instructions
     INST(&V::vfp2_VPUSH,          "VPUSH",                   "cccc11010D101101dddd101zvvvvvvvv"),

@@ -406,6 +406,56 @@ IR::Value IREmitter::FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_
     return Inst(IR::Opcode::FPSub64, {a, b});
 }
 
+IR::Value IREmitter::FPDoubleToSingle(const IR::Value& a, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPDoubleToSingle, {a});
+}
+
+IR::Value IREmitter::FPSingleToDouble(const IR::Value& a, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPSingleToDouble, {a});
+}
+
+IR::Value IREmitter::FPSingleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPSingleToS32, {a, Imm1(round_towards_zero)});
+}
+
+IR::Value IREmitter::FPSingleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPSingleToU32, {a, Imm1(round_towards_zero)});
+}
+
+IR::Value IREmitter::FPDoubleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPDoubleToS32, {a, Imm1(round_towards_zero)});
+}
+
+IR::Value IREmitter::FPDoubleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPDoubleToU32, {a, Imm1(round_towards_zero)});
+}
+
+IR::Value IREmitter::FPS32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPS32ToSingle, {a, Imm1(round_to_nearest)});
+}
+
+IR::Value IREmitter::FPU32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPU32ToSingle, {a, Imm1(round_to_nearest)});
+}
+
+IR::Value IREmitter::FPS32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPS32ToDouble, {a, Imm1(round_to_nearest)});
+}
+
+IR::Value IREmitter::FPU32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    return Inst(IR::Opcode::FPU32ToDouble, {a, Imm1(round_to_nearest)});
+}
+
 void IREmitter::ClearExlcusive() {
     Inst(IR::Opcode::ClearExclusive, {});
 }

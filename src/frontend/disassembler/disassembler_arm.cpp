@@ -871,6 +871,22 @@ public:
         return Common::StringFromFormat("vsqrt%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
     }
 
+    std::string vfp2_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+        return Common::StringFromFormat("vcvt%s.%s.%s %s, %s", CondToString(cond), !sz ? "f64" : "f32", sz ? "f64" : "f32", FPRegStr(!sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
+
+    std::string vfp2_VCVT_to_float(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm) {
+        return Common::StringFromFormat("vcvt%s.%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", is_signed ? "s32" : "u32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(false, Vm, M).c_str());
+    }
+
+    std::string vfp2_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
+        return Common::StringFromFormat("vcvt%s%s.u32.%s %s, %s", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
+
+    std::string vfp2_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
+        return Common::StringFromFormat("vcvt%s%s.s32.%s %s, %s", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
+    }
+
     std::string vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
         return Common::StringFromFormat("vpop%s %s(+%u)", CondToString(cond), FPRegStr(sz, Vd, D).c_str(), imm8 >> (sz ? 1 : 0));
     }

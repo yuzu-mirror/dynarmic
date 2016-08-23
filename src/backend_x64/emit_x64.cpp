@@ -1211,6 +1211,13 @@ static void DefaultNaN64(BlockOfCode* code, X64Reg xmm_value) {
     code->SetJumpTarget(fixup);
 }
 
+static void ZeroIfNaN64(BlockOfCode* code, X64Reg xmm_value) {
+    code->UCOMISD(xmm_value, R(xmm_value));
+    auto fixup = code->J_CC(CC_NP);
+    code->MOVAPS(xmm_value, code->MFloatPositiveZero64());
+    code->SetJumpTarget(fixup);
+}
+
 static void FPThreeOp32(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (XEmitter::*fn)(X64Reg, const OpArg&)) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
@@ -1388,6 +1395,283 @@ void EmitX64::EmitFPSub32(IR::Block& block, IR::Inst* inst) {
 void EmitX64::EmitFPSub64(IR::Block& block, IR::Inst* inst) {
     FPThreeOp64(code, reg_alloc, block, inst, &XEmitter::SUBSD);
 }
+
+void EmitX64::EmitFPSingleToDouble(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero32(code, result, gpr_scratch);
+    }
+    code->CVTSS2SD(result, R(result));
+    if (block.location.FPSCR_FTZ()) {
+        FlushToZero64(code, result, gpr_scratch);
+    }
+    if (block.location.FPSCR_DN()) {
+        DefaultNaN64(code, result);
+    }
+}
+
+void EmitX64::EmitFPDoubleToSingle(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero64(code, result, gpr_scratch);
+    }
+    code->CVTSD2SS(result, R(result));
+    if (block.location.FPSCR_FTZ()) {
+        FlushToZero32(code, result, gpr_scratch);
+    }
+    if (block.location.FPSCR_DN()) {
+        DefaultNaN32(code, result);
+    }
+}
+
+void EmitX64::EmitFPSingleToS32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_towards_zero = inst->GetArg(1).GetU1();
+
+    X64Reg from = reg_alloc.UseScratchRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
+    // Conversion to double is lossless, and allows for clamping.
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero32(code, from, gpr_scratch);
+    }
+    code->CVTSS2SD(from, R(from));
+    // First time is to set flags
+    if (round_towards_zero) {
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    } else {
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    }
+    // Clamp to output range
+    ZeroIfNaN64(code, from);
+    code->MINSD(from, code->MFloatMaxS32());
+    code->MAXSD(from, code->MFloatMinS32());
+    // Second time is for real
+    if (round_towards_zero) {
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    } else {
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    }
+    code->MOVD_xmm(to, R(gpr_scratch));
+}
+
+void EmitX64::EmitFPSingleToU32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_towards_zero = inst->GetArg(1).GetU1();
+
+    X64Reg from = reg_alloc.UseScratchRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
+    // Conversion to double is lossless, and allows for accurate clamping.
+    //
+    // Since SSE2 doesn't provide an unsigned conversion, we shift the range as appropriate.
+    //
+    // FIXME: Inexact exception not correctly signalled with the below code
+
+    if (block.location.FPSCR_RMode() != Arm::FPRoundingMode::RoundTowardsZero && !round_towards_zero) {
+        if (block.location.FPSCR_FTZ()) {
+            DenormalsAreZero32(code, from, gpr_scratch);
+        }
+        code->CVTSS2SD(from, R(from));
+        ZeroIfNaN64(code, from);
+        // Bring into SSE range
+        code->ADDSD(from, code->MFloatMinS32());
+        // First time is to set flags
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Clamp to output range
+        code->MINSD(from, code->MFloatMaxS32());
+        code->MAXSD(from, code->MFloatMinS32());
+        // Actually convert
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Bring back into original range
+        code->ADD(32, R(gpr_scratch), Imm32(2147483648u));
+        code->MOVQ_xmm(to, R(gpr_scratch));
+    } else {
+        X64Reg xmm_mask = reg_alloc.ScratchRegister(any_xmm);
+        X64Reg gpr_mask = reg_alloc.ScratchRegister(any_gpr);
+
+        if (block.location.FPSCR_FTZ()) {
+            DenormalsAreZero32(code, from, gpr_scratch);
+        }
+        code->CVTSS2SD(from, R(from));
+        ZeroIfNaN64(code, from);
+        // Generate masks if out-of-signed-range
+        code->MOVAPS(xmm_mask, code->MFloatMaxS32());
+        code->CMPLTSD(xmm_mask, R(from));
+        code->MOVQ_xmm(R(gpr_mask), xmm_mask);
+        code->PAND(xmm_mask, code->MFloatMinS32());
+        code->AND(32, R(gpr_mask), Imm32(2147483648u));
+        // Bring into range if necessary
+        code->ADDSD(from, R(xmm_mask));
+        // First time is to set flags
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Clamp to output range
+        code->MINSD(from, code->MFloatMaxS32());
+        code->MAXSD(from, code->MFloatMinU32());
+        // Actually convert
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Bring back into original range if necessary
+        code->ADD(32, R(gpr_scratch), R(gpr_mask));
+        code->MOVQ_xmm(to, R(gpr_scratch));
+    }
+}
+
+void EmitX64::EmitFPDoubleToS32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_towards_zero = inst->GetArg(1).GetU1();
+
+    X64Reg from = reg_alloc.UseScratchRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
+
+    if (block.location.FPSCR_FTZ()) {
+        DenormalsAreZero64(code, from, gpr_scratch);
+    }
+    // First time is to set flags
+    if (round_towards_zero) {
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    } else {
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    }
+    // Clamp to output range
+    ZeroIfNaN64(code, from);
+    code->MINSD(from, code->MFloatMaxS32());
+    code->MAXSD(from, code->MFloatMinS32());
+    // Second time is for real
+    if (round_towards_zero) {
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    } else {
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+    }
+    code->MOVD_xmm(to, R(gpr_scratch));
+}
+
+void EmitX64::EmitFPDoubleToU32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_towards_zero = inst->GetArg(1).GetU1();
+
+    X64Reg from = reg_alloc.UseScratchRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+    X64Reg xmm_scratch = reg_alloc.ScratchRegister(any_xmm);
+
+    // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
+    // TODO: Use VCVTPD2UDQ when AVX512VL is available.
+    // FIXME: Inexact exception not correctly signalled with the below code
+
+    if (block.location.FPSCR_RMode() != Arm::FPRoundingMode::RoundTowardsZero && !round_towards_zero) {
+        if (block.location.FPSCR_FTZ()) {
+            DenormalsAreZero64(code, from, gpr_scratch);
+        }
+        ZeroIfNaN64(code, from);
+        // Bring into SSE range
+        code->ADDSD(from, code->MFloatMinS32());
+        // First time is to set flags
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Clamp to output range
+        code->MINSD(from, code->MFloatMaxS32());
+        code->MAXSD(from, code->MFloatMinS32());
+        // Actually convert
+        code->CVTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Bring back into original range
+        code->ADD(32, R(gpr_scratch), Imm32(2147483648u));
+        code->MOVQ_xmm(to, R(gpr_scratch));
+    } else {
+        X64Reg xmm_mask = reg_alloc.ScratchRegister(any_xmm);
+        X64Reg gpr_mask = reg_alloc.ScratchRegister(any_gpr);
+
+        if (block.location.FPSCR_FTZ()) {
+            DenormalsAreZero64(code, from, gpr_scratch);
+        }
+        ZeroIfNaN64(code, from);
+        // Generate masks if out-of-signed-range
+        code->MOVAPS(xmm_mask, code->MFloatMaxS32());
+        code->CMPLTSD(xmm_mask, R(from));
+        code->MOVQ_xmm(R(gpr_mask), xmm_mask);
+        code->PAND(xmm_mask, code->MFloatMinS32());
+        code->AND(32, R(gpr_mask), Imm32(2147483648u));
+        // Bring into range if necessary
+        code->ADDSD(from, R(xmm_mask));
+        // First time is to set flags
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Clamp to output range
+        code->MINSD(from, code->MFloatMaxS32());
+        code->MAXSD(from, code->MFloatMinU32());
+        // Actually convert
+        code->CVTTSD2SI(gpr_scratch, R(from)); // 32 bit gpr
+        // Bring back into original range if necessary
+        code->ADD(32, R(gpr_scratch), R(gpr_mask));
+        code->MOVQ_xmm(to, R(gpr_scratch));
+    }
+}
+
+void EmitX64::EmitFPS32ToSingle(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_to_nearest = inst->GetArg(1).GetU1();
+    ASSERT_MSG(!round_to_nearest, "round_to_nearest unimplemented");
+
+    X64Reg from = reg_alloc.UseRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    code->MOVD_xmm(R(gpr_scratch), from);
+    code->CVTSI2SS(32, to, R(gpr_scratch));
+}
+
+void EmitX64::EmitFPU32ToSingle(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_to_nearest = inst->GetArg(1).GetU1();
+    ASSERT_MSG(!round_to_nearest, "round_to_nearest unimplemented");
+
+    X64Reg from = reg_alloc.UseRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    code->MOVD_xmm(R(gpr_scratch), from);
+    code->CVTSI2SS(64, to, R(gpr_scratch));
+}
+
+void EmitX64::EmitFPS32ToDouble(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_to_nearest = inst->GetArg(1).GetU1();
+    ASSERT_MSG(!round_to_nearest, "round_to_nearest unimplemented");
+
+    X64Reg from = reg_alloc.UseRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    code->MOVD_xmm(R(gpr_scratch), from);
+    code->CVTSI2SD(32, to, R(gpr_scratch));
+}
+
+void EmitX64::EmitFPU32ToDouble(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    bool round_to_nearest = inst->GetArg(1).GetU1();
+    ASSERT_MSG(!round_to_nearest, "round_to_nearest unimplemented");
+
+    X64Reg from = reg_alloc.UseRegister(a, any_xmm);
+    X64Reg to = reg_alloc.DefRegister(inst, any_xmm);
+    X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
+
+    code->MOVD_xmm(R(gpr_scratch), from);
+    code->CVTSI2SD(64, to, R(gpr_scratch));
+}
+
 
 void EmitX64::EmitClearExclusive(IR::Block&, IR::Inst*) {
     code->MOV(8, MDisp(R15, offsetof(JitState, exclusive_state)), Imm8(0));

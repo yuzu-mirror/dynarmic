@@ -140,6 +140,16 @@ public:
     IR::Value FPSqrt64(const IR::Value& a);
     IR::Value FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
     IR::Value FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
+    IR::Value FPDoubleToSingle(const IR::Value& a, bool fpscr_controlled);
+    IR::Value FPSingleToDouble(const IR::Value& a, bool fpscr_controlled);
+    IR::Value FPSingleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
+    IR::Value FPSingleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
+    IR::Value FPDoubleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
+    IR::Value FPDoubleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
+    IR::Value FPS32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
+    IR::Value FPU32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
+    IR::Value FPS32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
+    IR::Value FPU32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
 
     void ClearExlcusive();
     void SetExclusive(const IR::Value& vaddr, size_t byte_size);

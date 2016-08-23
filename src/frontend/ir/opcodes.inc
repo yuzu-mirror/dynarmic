@@ -74,7 +74,7 @@ OPCODE(PackedSaturatedAddS16,   T::U32,         T::U32,         T::U32          
 OPCODE(PackedSaturatedSubU16,   T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubS16,   T::U32,         T::U32,         T::U32                          )
 
-// Floating-point
+// Floating-point operations
 OPCODE(TransferToFP32,          T::F32,         T::U32                                          )
 OPCODE(TransferToFP64,          T::F64,         T::U64                                          )
 OPCODE(TransferFromFP32,        T::U32,         T::F32                                          )
@@ -93,6 +93,18 @@ OPCODE(FPSqrt32,                T::F32,         T::F32                          
 OPCODE(FPSqrt64,                T::F64,         T::F64                                          )
 OPCODE(FPSub32,                 T::F32,         T::F32,         T::F32                          )
 OPCODE(FPSub64,                 T::F64,         T::F64,         T::F64                          )
+
+// Floating-point conversions
+OPCODE(FPSingleToDouble,        T::F64,         T::F32                                          )
+OPCODE(FPDoubleToSingle,        T::F32,         T::F64                                          )
+OPCODE(FPSingleToU32,           T::F32,         T::F32,         T::U1                           )
+OPCODE(FPSingleToS32,           T::F32,         T::F32,         T::U1                           )
+OPCODE(FPDoubleToU32,           T::F32,         T::F64,         T::U1                           )
+OPCODE(FPDoubleToS32,           T::F32,         T::F64,         T::U1                           )
+OPCODE(FPU32ToSingle,           T::F32,         T::F32,         T::U1                           )
+OPCODE(FPS32ToSingle,           T::F32,         T::F32,         T::U1                           )
+OPCODE(FPU32ToDouble,           T::F64,         T::F32,         T::U1                           )
+OPCODE(FPS32ToDouble,           T::F64,         T::F32,         T::U1                           )
 
 // Memory access
 OPCODE(ClearExclusive,          T::Void,                                                        )
