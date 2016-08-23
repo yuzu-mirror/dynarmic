@@ -11,15 +11,16 @@
 namespace Dynarmic {
 namespace Common {
 
+#ifdef __MINGW32__
+[[gnu::format(gnu_printf, 1, 2)]]
+#elif !defined(_MSC_VER)
+[[gnu::format(printf, 1, 2)]]
+#endif
 std::string StringFromFormat(
 #ifdef _MSC_VER
     _Printf_format_string_
 #endif
-    const char* format, ...)
-#if defined(__GNUC__) && !defined(__clang__)
-    __attribute__((format(gnu_printf, 1, 2)))
-#endif
-    ;
+    const char* format, ...);
 
 template <typename T>
 constexpr char SignToChar(T value) {
