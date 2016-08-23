@@ -132,6 +132,17 @@ public:
      * @param new_node The node to add.
      */
     iterator insert(iterator location, pointer new_node) {
+        return insert_before(location, new_node);
+    }
+
+    /**
+     * Inserts a node at the given location, moving the previous
+     * node occupant ahead of the one inserted.
+     *
+     * @param location The location to insert the new node.
+     * @param new_node The node to insert into the list.
+     */
+    iterator insert_before(iterator location, pointer new_node) {
         auto existing_node = location.AsNodePointer();
 
         new_node->next = existing_node;
@@ -140,6 +151,19 @@ public:
         existing_node->prev = new_node;
 
         return iterator(root.get(), new_node);
+    }
+
+    /**
+     * Inserts a new node into the list ahead of the position indicated.
+     *
+     * @param position Location to insert the node in front of.
+     * @param new_node The node to be inserted into the list.
+     */
+    iterator insert_after(iterator position, pointer new_node) {
+        if (empty())
+            return insert(begin(), new_node);
+
+        return insert(++position, new_node);
     }
 
     /**
