@@ -64,6 +64,13 @@ enum class SignExtendRotation {
     ROR_24  ///< ROR #24
 };
 
+enum class FPRoundingMode {
+    RoundToNearest,
+    RoundTowardsPositiveInfinity,
+    RoundTowardsNegativeInfinity,
+    RoundTowardsZero,
+};
+
 /**
  * LocationDescriptor describes the location of a basic block.
  * The location is not solely based on the PC because other flags influence the way
@@ -84,6 +91,7 @@ struct LocationDescriptor {
     bool FPSCR_DN() const { return Common::Bit<25>(fpscr); }
     u32 FPSCR_Len() const { return Common::Bits<16, 18>(fpscr) + 1; }
     u32 FPSCR_Stride() const { return Common::Bits<20, 21>(fpscr) + 1; }
+    FPRoundingMode FPSCR_RMode() const { return static_cast<FPRoundingMode>(Common::Bits<22, 23>(fpscr)); }
 
     bool operator == (const LocationDescriptor& o) const {
         return std::tie(arm_pc, tflag, eflag, fpscr) == std::tie(o.arm_pc, o.tflag, o.eflag, o.fpscr);
