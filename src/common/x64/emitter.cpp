@@ -1401,10 +1401,16 @@ void XEmitter::IMUL(int bits, X64Reg regOp, const OpArg& a)
 
 void XEmitter::WriteSSEOp(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes)
 {
+    WriteSSEOp_opBits(32, opPrefix, op, regOp, arg, extrabytes);
+}
+
+void XEmitter::WriteSSEOp_opBits(int opBits, u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes)
+{
+    ASSERT(opBits == 32 || opBits == 64);
     if (opPrefix)
         Write8(opPrefix);
     arg.operandReg = regOp;
-    arg.WriteRex(this, 0, 0);
+    arg.WriteRex(this, opBits, 0);
     Write8(0x0F);
     if (op > 0xFF)
         Write8((op >> 8) & 0xFF);
@@ -1641,8 +1647,8 @@ void XEmitter::CVTSD2SS(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF2, 0x5A, 
 void XEmitter::CVTSS2SD(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF3, 0x5A, regOp, arg);}
 void XEmitter::CVTSD2SI(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF2, 0x2D, regOp, arg);}
 void XEmitter::CVTSS2SI(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF3, 0x2D, regOp, arg);}
-void XEmitter::CVTSI2SD(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF2, 0x2A, regOp, arg);}
-void XEmitter::CVTSI2SS(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF3, 0x2A, regOp, arg);}
+void XEmitter::CVTSI2SD(int opBits, X64Reg regOp, const OpArg& arg) {WriteSSEOp_opBits(opBits, 0xF2, 0x2A, regOp, arg);}
+void XEmitter::CVTSI2SS(int opBits, X64Reg regOp, const OpArg& arg) {WriteSSEOp_opBits(opBits, 0xF3, 0x2A, regOp, arg);}
 
 void XEmitter::CVTDQ2PD(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0xF3, 0xE6, regOp, arg);}
 void XEmitter::CVTDQ2PS(X64Reg regOp, const OpArg& arg) {WriteSSEOp(0x00, 0x5B, regOp, arg);}

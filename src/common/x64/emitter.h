@@ -344,6 +344,7 @@ private:
     void WriteBitTest(int bits, const OpArg& dest, const OpArg& index, int ext);
     void WriteMXCSR(OpArg arg, int ext);
     void WriteSSEOp(u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
+    void WriteSSEOp_opBits(int opBits, u8 opPrefix, u16 op, X64Reg regOp, OpArg arg, int extrabytes = 0);
     void WriteSSSE3Op(u8 opPrefix, u16 op, X64Reg regOp, const OpArg& arg, int extrabytes = 0);
     void WriteSSE41Op(u8 opPrefix, u16 op, X64Reg regOp, const OpArg& arg, int extrabytes = 0);
     void WriteAVXOp(u8 opPrefix, u16 op, X64Reg regOp, const OpArg& arg, int extrabytes = 0);
@@ -714,9 +715,9 @@ public:
     void CVTPS2PD(X64Reg dest, const OpArg& src);
     void CVTPD2PS(X64Reg dest, const OpArg& src);
     void CVTSS2SD(X64Reg dest, const OpArg& src);
-    void CVTSI2SS(X64Reg dest, const OpArg& src);
+    void CVTSI2SS(int opBits, X64Reg dest, const OpArg& src);
     void CVTSD2SS(X64Reg dest, const OpArg& src);
-    void CVTSI2SD(X64Reg dest, const OpArg& src);
+    void CVTSI2SD(int opBits, X64Reg dest, const OpArg& src);
     void CVTDQ2PD(X64Reg regOp, const OpArg& arg);
     void CVTPD2DQ(X64Reg regOp, const OpArg& arg);
     void CVTDQ2PS(X64Reg regOp, const OpArg& arg);
