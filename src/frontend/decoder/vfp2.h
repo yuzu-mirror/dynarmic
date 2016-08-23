@@ -89,8 +89,6 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     INST(&V::vfp2_VABS,           "VABS",                    "cccc11101D110000dddd101z11M0mmmm"),
     INST(&V::vfp2_VNEG,           "VNEG",                    "cccc11101D110001dddd101z01M0mmmm"),
     INST(&V::vfp2_VSQRT,          "VSQRT",                   "cccc11101D110001dddd101z11M0mmmm"),
-    INST(&V::vfp2_VPUSH,          "VPUSH",                   "cccc11010D101101dddd101zvvvvvvvv"),
-    INST(&V::vfp2_VPOP,           "VPOP",                    "cccc11001D111101dddd101zvvvvvvvv"),
     // VCMP
     // VCMPE
     // VCVT
@@ -100,6 +98,8 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     // VSTR
     // VSTM
     // VSTMDB
+    INST(&V::vfp2_VPUSH,          "VPUSH",                   "cccc11010D101101dddd101zvvvvvvvv"),
+    INST(&V::vfp2_VPOP,           "VPOP",                    "cccc11001D111101dddd101zvvvvvvvv"),
     INST(&V::vfp2_VLDR,           "VLDR",                    "cccc1101UD01nnnndddd101zvvvvvvvv"),
     INST(&V::vfp2_VSTR,           "VSTR",                    "cccc1101UD00nnnndddd101zvvvvvvvv"),
     // VLDM

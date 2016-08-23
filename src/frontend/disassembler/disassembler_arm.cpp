@@ -876,11 +876,11 @@ public:
         return Common::StringFromFormat("vsqrt%s.%s %s, %s", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D).c_str(), FPRegStr(sz, Vm, M).c_str());
     }
 
-    std::string  vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
+    std::string vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
         return Common::StringFromFormat("vpop%s %s(+%u)", CondToString(cond), FPRegStr(sz, Vd, D).c_str(), imm8 >> (sz ? 1 : 0));
     }
 
-    std::string  vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
+    std::string vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
         return Common::StringFromFormat("vpush%s %s(+%u)", CondToString(cond), FPRegStr(sz, Vd, D).c_str(), imm8 >> (sz ? 1 : 0));
     }
 
@@ -893,6 +893,8 @@ public:
         u32 imm32 = imm8 << 2;
         return Common::StringFromFormat("vstr%s %s, [%s, #%c%u]", CondToString(cond), FPRegStr(sz, Vd, D).c_str(), RegToString(n), U ? '+' : '-', imm32);
     }
+
+
 };
 
 std::string DisassembleArm(u32 instruction) {
