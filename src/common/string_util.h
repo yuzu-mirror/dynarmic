@@ -21,5 +21,10 @@ std::string StringFromFormat(
 #endif
     ;
 
+template <typename T>
+constexpr char SignToChar(T value) {
+    return value >= 0 ? '+' : '-';
+}
+
 } // namespace Common
 } // namespace Dynarmic

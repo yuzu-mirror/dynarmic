@@ -17,11 +17,6 @@ namespace Arm {
 
 class DisassemblerVisitor {
 public:
-    template<typename T>
-    const char* SignStr(T value) {
-        return value >= 0 ? "+" : "-";
-    }
-
     std::string thumb16_LSL_imm(Imm5 imm5, Reg m, Reg d) {
         return Common::StringFromFormat("lsls %s, %s, #%u", RegToString(d), RegToString(m), imm5);
     }
@@ -308,12 +303,12 @@ public:
 
     std::string thumb16_B_t1(Cond cond, Imm8 imm8) {
         s32 imm32 = Common::SignExtend<9, s32>(imm8 << 1) + 4;
-        return Common::StringFromFormat("b%s %s#%u", CondToString(cond), SignStr(imm32), abs(imm32));
+        return Common::StringFromFormat("b%s %c#%u", CondToString(cond), Common::SignToChar(imm32), abs(imm32));
     }
 
     std::string thumb16_B_t2(Imm11 imm11) {
         s32 imm32 = Common::SignExtend<12, s32>(imm11 << 1) + 4;
-        return Common::StringFromFormat("b %s#%u", SignStr(imm32), abs(imm32));
+        return Common::StringFromFormat("b %c#%u", Common::SignToChar(imm32), abs(imm32));
     }
 };
 

@@ -18,11 +18,6 @@ namespace Arm {
 
 class DisassemblerVisitor {
 public:
-    template<typename T>
-    const char* SignStr(T value) {
-        return value >= 0 ? "+" : "-";
-    }
-
     u32 rotr(u32 x, int shift) {
         shift &= 31;
         if (!shift) return x;
@@ -105,15 +100,15 @@ public:
     // Branch instructions
     std::string arm_B(Cond cond, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8;
-        return Common::StringFromFormat("b%s %s#%i", CondToString(cond), SignStr(offset), abs(offset));
+        return Common::StringFromFormat("b%s %c#%i", CondToString(cond), Common::SignToChar(offset), abs(offset));
     }
     std::string arm_BL(Cond cond, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8;
-        return Common::StringFromFormat("bl%s %s#%i", CondToString(cond), SignStr(offset), abs(offset));
+        return Common::StringFromFormat("bl%s %c#%i", CondToString(cond), Common::SignToChar(offset), abs(offset));
     }
     std::string arm_BLX_imm(bool H, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8 + (H ? 2 : 0);
-        return Common::StringFromFormat("blx %s#%i", SignStr(offset), abs(offset));
+        return Common::StringFromFormat("blx %c#%i", Common::SignToChar(offset), abs(offset));
     }
     std::string arm_BLX_reg(Cond cond, Reg m) {
         return Common::StringFromFormat("blx%s %s", CondToString(cond), RegToString(m));
