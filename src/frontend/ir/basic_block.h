@@ -30,6 +30,7 @@ namespace IR {
 class Block final {
 public:
     using InstructionList        = Common::IntrusiveList<Inst>;
+    using size_type              = InstructionList::size_type;
     using iterator               = InstructionList::iterator;
     using const_iterator         = InstructionList::const_iterator;
     using reverse_iterator       = InstructionList::reverse_iterator;
@@ -38,6 +39,7 @@ public:
     explicit Block(const Arm::LocationDescriptor& location) : location(location) {}
 
     bool                   empty()   const { return instructions.empty();   }
+    size_type              size()    const { return instructions.size();    }
 
     Inst&                  front()         { return instructions.front();   }
     const Inst&            front()   const { return instructions.front();   }

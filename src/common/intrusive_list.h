@@ -217,6 +217,14 @@ public:
     }
 
     /**
+     * Gets the total number of elements within this list.
+     * @return the number of elements in this list.
+     */
+    size_type size() const {
+        return static_cast<size_type>(std::distance(begin(), end()));
+    }
+
+    /**
      * Retrieves a reference to the node at the front of the list.
      * @note Must not be called on an empty list.
      */
