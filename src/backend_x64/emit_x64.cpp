@@ -351,6 +351,7 @@ void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
                     : u64(code->GetReturnFromRunCodeAddress());
 
     code->MOV(32, R(index_reg), MDisp(R15, offsetof(JitState, rsb_ptr)));
+    code->ADD(32, R(index_reg), Imm8(1));
     code->AND(32, R(index_reg), Imm32(JitState::RSBSize - 1));
 
     code->MOV(64, R(loc_desc_reg), Imm64(imm64));
