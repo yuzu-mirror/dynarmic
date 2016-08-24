@@ -11,10 +11,10 @@
 #include <vector>
 
 #include <boost/optional.hpp>
+#include <xbyak.h>
 
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/reg_alloc.h"
-#include "common/x64/emitter.h"
 #include "frontend/arm_types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"

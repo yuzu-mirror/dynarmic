@@ -7,15 +7,17 @@
 #pragma once
 
 #include <array>
+#include <vector>
+
+#include <xbyak.h>
 
 #include "backend_x64/jitstate.h"
 #include "common/common_types.h"
-#include "common/x64/emitter.h"
 
 namespace Dynarmic {
 namespace BackendX64 {
 
-class BlockOfCode final : public Gen::XCodeBlock {
+class BlockOfCode final : public Xbyak::CodeGenerator {
 public:
     BlockOfCode();
 
@@ -30,73 +32,99 @@ public:
     void SwitchMxcsrOnEntry();
     /// Code emitter: Makes saved host MXCSR the current MXCSR
     void SwitchMxcsrOnExit();
+    /// Code emitter: Calls the function
+    void CallFunction(const void* fn);
 
-    Gen::OpArg MFloatPositiveZero32() const {
-        return Gen::M(const_FloatPositiveZero32);
+    Xbyak::Address MFloatPositiveZero32() {
+        return xword[rip + const_FloatPositiveZero32];
     }
-    Gen::OpArg MFloatNegativeZero32() const {
-        return Gen::M(const_FloatNegativeZero32);
+    Xbyak::Address MFloatNegativeZero32() {
+        return xword[rip + const_FloatNegativeZero32];
     }
-    Gen::OpArg MFloatNaN32() const {
-        return Gen::M(const_FloatNaN32);
+    Xbyak::Address MFloatNaN32() {
+        return xword[rip + const_FloatNaN32];
     }
-    Gen::OpArg MFloatNonSignMask32() const {
-        return Gen::M(const_FloatNonSignMask32);
+    Xbyak::Address MFloatNonSignMask32() {
+        return xword[rip + const_FloatNonSignMask32];
     }
-    Gen::OpArg MFloatPositiveZero64() const {
-        return Gen::M(const_FloatPositiveZero64);
+    Xbyak::Address MFloatPositiveZero64() {
+        return xword[rip + const_FloatPositiveZero64];
     }
-    Gen::OpArg MFloatNegativeZero64() const {
-        return Gen::M(const_FloatNegativeZero64);
+    Xbyak::Address MFloatNegativeZero64() {
+        return xword[rip + const_FloatNegativeZero64];
     }
-    Gen::OpArg MFloatNaN64() const {
-        return Gen::M(const_FloatNaN64);
+    Xbyak::Address MFloatNaN64() {
+        return xword[rip + const_FloatNaN64];
     }
-    Gen::OpArg MFloatNonSignMask64() const {
-        return Gen::M(const_FloatNonSignMask64);
+    Xbyak::Address MFloatNonSignMask64() {
+        return xword[rip + const_FloatNonSignMask64];
     }
-    Gen::OpArg MFloatPenultimatePositiveDenormal64() const {
-        return Gen::M(const_FloatPenultimatePositiveDenormal64);
+    Xbyak::Address MFloatPenultimatePositiveDenormal64() {
+        return xword[rip + const_FloatPenultimatePositiveDenormal64];
     }
-    Gen::OpArg MFloatMinS32() const {
-        return Gen::M(const_FloatMinS32);
+    Xbyak::Address MFloatMinS32() {
+        return xword[rip + const_FloatMinS32];
     }
-    Gen::OpArg MFloatMaxS32() const {
-        return Gen::M(const_FloatMaxS32);
+    Xbyak::Address MFloatMaxS32() {
+        return xword[rip + const_FloatMaxS32];
     }
-    Gen::OpArg MFloatMinU32() const {
-        return Gen::M(const_FloatMinU32);
+    Xbyak::Address MFloatMinU32() {
+        return xword[rip + const_FloatMinU32];
     }
-    Gen::OpArg MFloatMaxU32() const {
-        return Gen::M(const_FloatMaxU32);
+    Xbyak::Address MFloatMaxU32() {
+        return xword[rip + const_FloatMaxU32];
     }
 
-    CodePtr GetReturnFromRunCodeAddress() const {
+    const void* GetReturnFromRunCodeAddress() const {
         return return_from_run_code;
     }
 
+    void int3() { db(0xCC); }
+    void nop(size_t size = 0) {
+        for (size_t i = 0; i < size; i++) {
+            db(0x90);
+        }
+    }
+
+    void SetCodePtr(CodePtr ptr);
+    void EnsurePatchLocationSize(CodePtr begin, size_t size);
+
+#ifdef _WIN32
+    Xbyak::Reg64 ABI_RETURN = rax;
+    Xbyak::Reg64 ABI_PARAM1 = rcx;
+    Xbyak::Reg64 ABI_PARAM2 = rdx;
+    Xbyak::Reg64 ABI_PARAM3 = r8;
+    Xbyak::Reg64 ABI_PARAM4 = r9;
+#else
+    Xbyak::Reg64 ABI_RETURN = rax;
+    Xbyak::Reg64 ABI_PARAM1 = rdi;
+    Xbyak::Reg64 ABI_PARAM2 = rsi;
+    Xbyak::Reg64 ABI_PARAM3 = rdx;
+    Xbyak::Reg64 ABI_PARAM4 = rcx;
+#endif
+
 private:
-    const u8* const_FloatPositiveZero32 = nullptr;
-    const u8* const_FloatNegativeZero32 = nullptr;
-    const u8* const_FloatNaN32 = nullptr;
-    const u8* const_FloatNonSignMask32 = nullptr;
-    const u8* const_FloatPositiveZero64 = nullptr;
-    const u8* const_FloatNegativeZero64 = nullptr;
-    const u8* const_FloatNaN64 = nullptr;
-    const u8* const_FloatNonSignMask64 = nullptr;
-    const u8* const_FloatPenultimatePositiveDenormal64 = nullptr;
-    const u8* const_FloatMinS32 = nullptr;
-    const u8* const_FloatMaxS32 = nullptr;
-    const u8* const_FloatMinU32 = nullptr;
-    const u8* const_FloatMaxU32 = nullptr;
+    Xbyak::Label const_FloatPositiveZero32;
+    Xbyak::Label const_FloatNegativeZero32;
+    Xbyak::Label const_FloatNaN32;
+    Xbyak::Label const_FloatNonSignMask32;
+    Xbyak::Label const_FloatPositiveZero64;
+    Xbyak::Label const_FloatNegativeZero64;
+    Xbyak::Label const_FloatNaN64;
+    Xbyak::Label const_FloatNonSignMask64;
+    Xbyak::Label const_FloatPenultimatePositiveDenormal64;
+    Xbyak::Label const_FloatMinS32;
+    Xbyak::Label const_FloatMaxS32;
+    Xbyak::Label const_FloatMinU32;
+    Xbyak::Label const_FloatMaxU32;
     void GenConstants();
 
     using RunCodeFuncType = void(*)(JitState*, CodePtr);
     RunCodeFuncType run_code = nullptr;
     void GenRunCode();
 
-    CodePtr return_from_run_code = nullptr;
-    CodePtr return_from_run_code_without_mxcsr_switch = nullptr;
+    const void* return_from_run_code = nullptr;
+    const void* return_from_run_code_without_mxcsr_switch = nullptr;
     void GenReturnFromRunCode();
 };
 
