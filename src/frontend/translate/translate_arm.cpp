@@ -21,7 +21,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
     bool should_continue = true;
     while (should_continue && visitor.cond_state == ConditionalState::None) {
         const u32 arm_pc = visitor.ir.current_location.PC();
-        const u32 arm_instruction = (*memory_read_32)(arm_pc);
+        const u32 arm_instruction = memory_read_32(arm_pc);
 
         if (auto vfp_decoder = DecodeVFP2<ArmTranslatorVisitor>(arm_instruction)) {
             should_continue = vfp_decoder->call(visitor, arm_instruction);
