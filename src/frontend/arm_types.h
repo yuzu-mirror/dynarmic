@@ -13,6 +13,7 @@
 #include "common/assert.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
+#include "frontend/arm/FPSCR.h"
 
 namespace Dynarmic {
 namespace Arm {
@@ -64,13 +65,6 @@ enum class SignExtendRotation {
     ROR_24  ///< ROR #24
 };
 
-enum class FPRoundingMode {
-    RoundToNearest,
-    RoundTowardsPositiveInfinity,
-    RoundTowardsNegativeInfinity,
-    RoundTowardsZero,
-};
-
 /**
  * LocationDescriptor describes the location of a basic block.
  * The location is not solely based on the PC because other flags influence the way
@@ -80,18 +74,13 @@ enum class FPRoundingMode {
 struct LocationDescriptor {
     static constexpr u32 FPSCR_MODE_MASK = 0x03F79F00;
 
-    LocationDescriptor(u32 arm_pc, bool tflag, bool eflag, u32 fpscr)
-            : arm_pc(arm_pc), tflag(tflag), eflag(eflag), fpscr(fpscr & FPSCR_MODE_MASK) {}
+    LocationDescriptor(u32 arm_pc, bool tflag, bool eflag, FPSCR fpscr)
+            : arm_pc(arm_pc), tflag(tflag), eflag(eflag), fpscr(fpscr.Value() & FPSCR_MODE_MASK) {}
 
     u32 PC() const { return arm_pc; }
     bool TFlag() const { return tflag; }
     bool EFlag() const { return eflag; }
-    u32 FPSCR() const { return fpscr; }
-    bool FPSCR_FTZ() const { return Common::Bit<24>(fpscr); }
-    bool FPSCR_DN() const { return Common::Bit<25>(fpscr); }
-    u32 FPSCR_Len() const { return Common::Bits<16, 18>(fpscr) + 1; }
-    u32 FPSCR_Stride() const { return Common::Bits<20, 21>(fpscr) + 1; }
-    FPRoundingMode FPSCR_RMode() const { return static_cast<FPRoundingMode>(Common::Bits<22, 23>(fpscr)); }
+    Arm::FPSCR FPSCR() const { return fpscr; }
 
     bool operator == (const LocationDescriptor& o) const {
         return std::tie(arm_pc, tflag, eflag, fpscr) == std::tie(o.arm_pc, o.tflag, o.eflag, o.fpscr);
@@ -121,7 +110,7 @@ struct LocationDescriptor {
         // This value MUST BE UNIQUE.
         // This calculation has to match up with EmitX64::EmitTerminalPopRSBHint
         u64 pc_u64 = u64(arm_pc);
-        u64 fpscr_u64 = u64(fpscr) << 32;
+        u64 fpscr_u64 = u64(fpscr.Value()) << 32;
         u64 t_u64 = tflag ? (1ull << 35) : 0;
         u64 e_u64 = eflag ? (1ull << 39) : 0;
         return pc_u64 | fpscr_u64 | t_u64 | e_u64;
@@ -129,9 +118,9 @@ struct LocationDescriptor {
 
 private:
     u32 arm_pc;
-    bool tflag; ///< Thumb / ARM
-    bool eflag; ///< Big / Little Endian
-    u32 fpscr;  ///< Floating point status control register
+    bool tflag;       ///< Thumb / ARM
+    bool eflag;       ///< Big / Little Endian
+    Arm::FPSCR fpscr; ///< Floating point status control register
 };
 
 struct LocationDescriptorHash {

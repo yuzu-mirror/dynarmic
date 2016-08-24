@@ -1226,15 +1226,15 @@ static void FPThreeOp32(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block
     X64Reg operand = reg_alloc.UseRegister(b, any_xmm);
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero32(code, result, gpr_scratch);
         DenormalsAreZero32(code, operand, gpr_scratch);
     }
     (code->*fn)(result, R(operand));
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         FlushToZero32(code, result, gpr_scratch);
     }
-    if (block.location.FPSCR_DN()) {
+    if (block.location.FPSCR().DN()) {
         DefaultNaN32(code, result);
     }
 }
@@ -1247,15 +1247,15 @@ static void FPThreeOp64(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block
     X64Reg operand = reg_alloc.UseRegister(b, any_xmm);
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero64(code, result, gpr_scratch);
         DenormalsAreZero64(code, operand, gpr_scratch);
     }
     (code->*fn)(result, R(operand));
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         FlushToZero64(code, result, gpr_scratch);
     }
-    if (block.location.FPSCR_DN()) {
+    if (block.location.FPSCR().DN()) {
         DefaultNaN64(code, result);
     }
 }
@@ -1266,14 +1266,14 @@ static void FPTwoOp32(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero32(code, result, gpr_scratch);
     }
     (code->*fn)(result, R(result));
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         FlushToZero32(code, result, gpr_scratch);
     }
-    if (block.location.FPSCR_DN()) {
+    if (block.location.FPSCR().DN()) {
         DefaultNaN32(code, result);
     }
 }
@@ -1284,14 +1284,14 @@ static void FPTwoOp64(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, 
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero64(code, result, gpr_scratch);
     }
     (code->*fn)(result, R(result));
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         FlushToZero64(code, result, gpr_scratch);
     }
-    if (block.location.FPSCR_DN()) {
+    if (block.location.FPSCR().DN()) {
         DefaultNaN64(code, result);
     }
 }
@@ -1402,14 +1402,14 @@ void EmitX64::EmitFPSingleToDouble(IR::Block& block, IR::Inst* inst) {
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero32(code, result, gpr_scratch);
     }
     code->CVTSS2SD(result, R(result));
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         FlushToZero64(code, result, gpr_scratch);
     }
-    if (block.location.FPSCR_DN()) {
+    if (block.location.FPSCR().DN()) {
         DefaultNaN64(code, result);
     }
 }
@@ -1420,14 +1420,14 @@ void EmitX64::EmitFPDoubleToSingle(IR::Block& block, IR::Inst* inst) {
     X64Reg result = reg_alloc.UseDefRegister(a, inst, any_xmm);
     X64Reg gpr_scratch = reg_alloc.ScratchRegister(any_gpr);
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero64(code, result, gpr_scratch);
     }
     code->CVTSD2SS(result, R(result));
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         FlushToZero32(code, result, gpr_scratch);
     }
-    if (block.location.FPSCR_DN()) {
+    if (block.location.FPSCR().DN()) {
         DefaultNaN32(code, result);
     }
 }
@@ -1443,7 +1443,7 @@ void EmitX64::EmitFPSingleToS32(IR::Block& block, IR::Inst* inst) {
     // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
     // Conversion to double is lossless, and allows for clamping.
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero32(code, from, gpr_scratch);
     }
     code->CVTSS2SD(from, R(from));
@@ -1481,8 +1481,8 @@ void EmitX64::EmitFPSingleToU32(IR::Block& block, IR::Inst* inst) {
     //
     // FIXME: Inexact exception not correctly signalled with the below code
 
-    if (block.location.FPSCR_RMode() != Arm::FPRoundingMode::RoundTowardsZero && !round_towards_zero) {
-        if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().RMode() != Arm::FPSCR::RoundingMode::TowardsZero && !round_towards_zero) {
+        if (block.location.FPSCR().FTZ()) {
             DenormalsAreZero32(code, from, gpr_scratch);
         }
         code->CVTSS2SD(from, R(from));
@@ -1503,7 +1503,7 @@ void EmitX64::EmitFPSingleToU32(IR::Block& block, IR::Inst* inst) {
         X64Reg xmm_mask = reg_alloc.ScratchRegister(any_xmm);
         X64Reg gpr_mask = reg_alloc.ScratchRegister(any_gpr);
 
-        if (block.location.FPSCR_FTZ()) {
+        if (block.location.FPSCR().FTZ()) {
             DenormalsAreZero32(code, from, gpr_scratch);
         }
         code->CVTSS2SD(from, R(from));
@@ -1539,7 +1539,7 @@ void EmitX64::EmitFPDoubleToS32(IR::Block& block, IR::Inst* inst) {
 
     // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
 
-    if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().FTZ()) {
         DenormalsAreZero64(code, from, gpr_scratch);
     }
     // First time is to set flags
@@ -1574,8 +1574,8 @@ void EmitX64::EmitFPDoubleToU32(IR::Block& block, IR::Inst* inst) {
     // TODO: Use VCVTPD2UDQ when AVX512VL is available.
     // FIXME: Inexact exception not correctly signalled with the below code
 
-    if (block.location.FPSCR_RMode() != Arm::FPRoundingMode::RoundTowardsZero && !round_towards_zero) {
-        if (block.location.FPSCR_FTZ()) {
+    if (block.location.FPSCR().RMode() != Arm::FPSCR::RoundingMode::TowardsZero && !round_towards_zero) {
+        if (block.location.FPSCR().FTZ()) {
             DenormalsAreZero64(code, from, gpr_scratch);
         }
         ZeroIfNaN64(code, from);
@@ -1595,7 +1595,7 @@ void EmitX64::EmitFPDoubleToU32(IR::Block& block, IR::Inst* inst) {
         X64Reg xmm_mask = reg_alloc.ScratchRegister(any_xmm);
         X64Reg gpr_mask = reg_alloc.ScratchRegister(any_gpr);
 
-        if (block.location.FPSCR_FTZ()) {
+        if (block.location.FPSCR().FTZ()) {
             DenormalsAreZero64(code, from, gpr_scratch);
         }
         ZeroIfNaN64(code, from);

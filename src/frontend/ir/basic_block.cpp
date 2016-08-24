@@ -21,7 +21,7 @@ std::string DumpBlock(const IR::Block& block) {
                                         loc.PC(),
                                         loc.TFlag() ? "T" : "!T",
                                         loc.EFlag() ? "E" : "!E",
-                                        loc.FPSCR());
+                                        loc.FPSCR().Value());
     };
 
     ret += Common::StringFromFormat("Block: location=%s\n", loc_to_string(block.location).c_str());

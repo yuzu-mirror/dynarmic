@@ -18,7 +18,7 @@ static ExtReg ToExtReg(bool sz, size_t base, bool bit) {
 }
 
 bool ArmTranslatorVisitor::vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -37,7 +37,7 @@ bool ArmTranslatorVisitor::vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bo
 }
 
 bool ArmTranslatorVisitor::vfp2_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -56,7 +56,7 @@ bool ArmTranslatorVisitor::vfp2_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bo
 }
 
 bool ArmTranslatorVisitor::vfp2_VMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -75,7 +75,7 @@ bool ArmTranslatorVisitor::vfp2_VMUL(Cond cond, bool D, size_t Vn, size_t Vd, bo
 }
 
 bool ArmTranslatorVisitor::vfp2_VMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -95,7 +95,7 @@ bool ArmTranslatorVisitor::vfp2_VMLA(Cond cond, bool D, size_t Vn, size_t Vd, bo
 }
 
 bool ArmTranslatorVisitor::vfp2_VMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -115,7 +115,7 @@ bool ArmTranslatorVisitor::vfp2_VMLS(Cond cond, bool D, size_t Vn, size_t Vd, bo
 }
 
 bool ArmTranslatorVisitor::vfp2_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -134,7 +134,7 @@ bool ArmTranslatorVisitor::vfp2_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, b
 }
 
 bool ArmTranslatorVisitor::vfp2_VNMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -154,7 +154,7 @@ bool ArmTranslatorVisitor::vfp2_VNMLA(Cond cond, bool D, size_t Vn, size_t Vd, b
 }
 
 bool ArmTranslatorVisitor::vfp2_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -174,7 +174,7 @@ bool ArmTranslatorVisitor::vfp2_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, b
 }
 
 bool ArmTranslatorVisitor::vfp2_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -297,7 +297,7 @@ bool ArmTranslatorVisitor::vfp2_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, 
 }
 
 bool ArmTranslatorVisitor::vfp2_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -310,7 +310,7 @@ bool ArmTranslatorVisitor::vfp2_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, 
 }
 
 bool ArmTranslatorVisitor::vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -327,7 +327,7 @@ bool ArmTranslatorVisitor::vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool
 }
 
 bool ArmTranslatorVisitor::vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
@@ -344,7 +344,7 @@ bool ArmTranslatorVisitor::vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool
 }
 
 bool ArmTranslatorVisitor::vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR_Len() != 1 || ir.current_location.FPSCR_Stride() != 1)
+    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != 1)
         return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
 
     ExtReg d = ToExtReg(sz, Vd, D);
