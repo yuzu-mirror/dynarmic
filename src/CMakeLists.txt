@@ -60,6 +60,7 @@ set(HEADERS
     common/x64/cpu_detect.h
     common/x64/emitter.h
     frontend/arm_types.h
+    frontend/arm/FPSCR.h
     frontend/decoder/arm.h
     frontend/decoder/decoder_detail.h
     frontend/decoder/thumb16.h
