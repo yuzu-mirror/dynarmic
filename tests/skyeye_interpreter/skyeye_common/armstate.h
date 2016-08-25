@@ -20,8 +20,9 @@
 #include <array>
 #include <unordered_map>
 
+#include <dynarmic/dynarmic.h>
+
 #include "common/common_types.h"
-#include "interface/interface.h"
 #include "skyeye_interpreter/skyeye_common/arm_regformat.h"
 
 // Signal levels

@@ -6,37 +6,18 @@
 
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <string>
 #include <memory>
 
-#include "common/common_types.h"
+#include <dynarmic/callbacks.h>
 
 namespace Dynarmic {
 
 namespace Arm {
 struct LocationDescriptor;
 }
-
-class Jit;
-
-/// These function pointers may be inserted into compiled code.
-struct UserCallbacks {
-    u8 (*MemoryRead8)(u32 vaddr);
-    u16 (*MemoryRead16)(u32 vaddr);
-    u32 (*MemoryRead32)(u32 vaddr);
-    u64 (*MemoryRead64)(u32 vaddr);
-
-    void (*MemoryWrite8)(u32 vaddr, u8 value);
-    void (*MemoryWrite16)(u32 vaddr, u16 value);
-    void (*MemoryWrite32)(u32 vaddr, u32 value);
-    void (*MemoryWrite64)(u32 vaddr, u64 value);
-
-    bool (*IsReadOnlyMemory)(u32 vaddr);
-
-    /// The intrepreter must execute only one instruction at PC.
-    void (*InterpreterFallback)(u32 pc, Jit* jit);
-
-    bool (*CallSVC)(u32 swi);
-};
 
 class Jit final {
 public:
@@ -49,7 +30,7 @@ public:
      * @param cycle_count Estimated number of cycles to run the CPU for.
      * @returns Actual cycle count.
      */
-    size_t Run(size_t cycle_count);
+    std::size_t Run(std::size_t cycle_count);
 
     /**
      * Clears the code cache of all compiled code.
@@ -71,18 +52,18 @@ public:
     void HaltExecution();
 
     /// View and modify registers.
-    std::array<u32, 16>& Regs();
-    const std::array<u32, 16>& Regs() const;
-    std::array<u32, 64>& ExtRegs();
-    const std::array<u32, 64>& ExtRegs() const;
+    std::array<std::uint32_t, 16>& Regs();
+    const std::array<std::uint32_t, 16>& Regs() const;
+    std::array<std::uint32_t, 64>& ExtRegs();
+    const std::array<std::uint32_t, 64>& ExtRegs() const;
 
     /// View and modify CPSR.
-    u32& Cpsr();
-    u32 Cpsr() const;
+    std::uint32_t& Cpsr();
+    std::uint32_t Cpsr() const;
 
     /// View and modify FPSCR.
-    u32 Fpscr() const;
-    void SetFpscr(u32 value) const;
+    std::uint32_t Fpscr() const;
+    void SetFpscr(std::uint32_t value) const;
 
     /**
      * Returns true if Jit::Run was called but hasn't returned yet.

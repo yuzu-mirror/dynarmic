@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.4.1)
-project(dynarmic)
+project(dynarmic CXX)
 
 # Dynarmic project options
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
@@ -12,6 +12,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Warn on CMake API deprecations
 set(CMAKE_WARN_DEPRECATED ON)
+
+# Disable in-source builds
+set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
+if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+    message(SEND_ERROR "In-source builds are not allowed.")
+endif()
 
 # Signify where the module directories are
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)

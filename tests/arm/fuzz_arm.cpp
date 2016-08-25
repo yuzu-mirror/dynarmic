@@ -15,13 +15,14 @@
 
 #include <catch.hpp>
 
+#include <dynarmic/dynarmic.h>
+
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "frontend/arm_types.h"
 #include "frontend/disassembler/disassembler.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/translate/translate.h"
-#include "interface/interface.h"
 #include "ir_opt/passes.h"
 #include "rand_int.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"

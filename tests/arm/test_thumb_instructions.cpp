@@ -6,8 +6,9 @@
 
 #include <catch.hpp>
 
+#include <dynarmic/dynarmic.h>
+
 #include "common/common_types.h"
-#include "interface/interface.h"
 #include "skyeye_interpreter/dyncom/arm_dyncom_interpreter.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"
 

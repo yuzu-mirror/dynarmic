@@ -1,6 +1,3 @@
-include_directories(. ../src)
-include(CreateDirectoryGroups)
-
 set(SRCS
     arm/fuzz_arm.cpp
     arm/fuzz_thumb.cpp
@@ -34,7 +31,13 @@ set(HEADERS
     skyeye_interpreter/skyeye_common/vfp/vfp_helper.h
     )
 
+include(CreateDirectoryGroups)
 create_directory_groups(${SRCS} ${HEADERS})
+
 add_executable(dynarmic_tests ${SRCS})
 target_link_libraries(dynarmic_tests dynarmic ${llvm_libs})
 set_target_properties(dynarmic_tests PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(dynarmic_tests
+                           PRIVATE . ../src)
+
+add_test(dynarmic_tests dynarmic_tests)
