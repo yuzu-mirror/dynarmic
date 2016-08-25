@@ -7,7 +7,6 @@ set(SRCS
     backend_x64/jitstate.cpp
     backend_x64/reg_alloc.cpp
     common/memory_pool.cpp
-    common/string_util.cpp
     frontend/arm_types.cpp
     frontend/disassembler/disassembler_arm.cpp
     frontend/disassembler/disassembler_thumb.cpp

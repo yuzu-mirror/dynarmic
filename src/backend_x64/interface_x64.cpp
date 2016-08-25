@@ -6,6 +6,8 @@
 
 #include <memory>
 
+#include <fmt/format.h>
+
 #ifdef DYNARMIC_USE_LLVM
 #include <llvm-c/Disassembler.h>
 #include <llvm-c/Target.h>
@@ -18,7 +20,6 @@
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "common/scope_exit.h"
-#include "common/string_util.h"
 #include "dynarmic/dynarmic.h"
 #include "frontend/arm_types.h"
 #include "frontend/translate/translate.h"
@@ -54,7 +55,7 @@ struct Jit::Impl {
 
     std::string Disassemble(const Arm::LocationDescriptor& descriptor) {
         auto block = GetBasicBlock(descriptor);
-        std::string result = Common::StringFromFormat("address: %p\nsize: %zu bytes\n", block.code_ptr, block.size);
+        std::string result = fmt::format("address: {}\nsize: {} bytes\n", block.code_ptr, block.size);
 
 #ifdef DYNARMIC_USE_LLVM
         CodePtr end = block.code_ptr + block.size;
@@ -71,11 +72,11 @@ struct Jit::Impl {
             size_t inst_size = LLVMDisasmInstruction(llvm_ctx, const_cast<u8*>(pos), remaining, (u64)pos, buffer, sizeof(buffer));
             ASSERT(inst_size);
             for (CodePtr i = pos; i < pos + inst_size; i++)
-                result.append(Common::StringFromFormat("%02x ", *i));
+                result += fmt::format("{:02x} ", *i);
             for (size_t i = inst_size; i < 10; i++)
-                result.append("   ");
-            result.append(buffer);
-            result.append("\n");
+                result += "   ";
+            result += buffer;
+            result += '\n';
 
             pos += inst_size;
             remaining -= inst_size;

@@ -4,7 +4,9 @@
  * General Public License version 2 or any later version.
  */
 
-#include "common/string_util.h"
+#include <array>
+
+#include "common/bit_util.h"
 #include "frontend/arm_types.h"
 
 namespace Dynarmic {
