@@ -288,14 +288,17 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
                 printf("%zu [%x] = %" PRIx64 "\n", record.size, record.address, record.data);
             }
 
-            Dynarmic::Arm::LocationDescriptor descriptor = {0, false, false, 0};
-            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate(descriptor, &MemoryRead32);
-            Dynarmic::Optimization::GetSetElimination(ir_block);
-            Dynarmic::Optimization::DeadCodeElimination(ir_block);
-            Dynarmic::Optimization::VerificationPass(ir_block);
-            printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
-
-            printf("\n\nx86_64:\n%s", jit.Disassemble(descriptor).c_str());
+            u32 num_insts = 0;
+            while (num_insts < instructions_to_execute_count) {
+                Dynarmic::Arm::LocationDescriptor descriptor = {num_insts * 4, false, false, 0};
+                Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate(descriptor, &MemoryRead32);
+                Dynarmic::Optimization::GetSetElimination(ir_block);
+                Dynarmic::Optimization::DeadCodeElimination(ir_block);
+                Dynarmic::Optimization::VerificationPass(ir_block);
+                printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
+                printf("\n\nx86_64:\n%s", jit.Disassemble(descriptor).c_str());
+                num_insts += ir_block.cycle_count;
+            }
 
 #ifdef _MSC_VER
             __debugbreak();
