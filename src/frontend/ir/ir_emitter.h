@@ -23,7 +23,7 @@
 // not based on any existing microarchitecture but on ease of implementation.
 
 namespace Dynarmic {
-namespace Arm {
+namespace IR {
 
 /**
  * Convenience class to construct a basic block of the intermediate representation.
@@ -32,147 +32,147 @@ namespace Arm {
  */
 class IREmitter {
 public:
-    explicit IREmitter(LocationDescriptor descriptor) : block(descriptor), current_location(descriptor) {}
+    explicit IREmitter(Arm::LocationDescriptor descriptor) : block(descriptor), current_location(descriptor) {}
 
-    IR::Block block;
-    LocationDescriptor current_location;
+    Block block;
+    Arm::LocationDescriptor current_location;
 
     struct ResultAndCarry {
-        IR::Value result;
-        IR::Value carry;
+        Value result;
+        Value carry;
     };
 
     struct ResultAndCarryAndOverflow {
-        IR::Value result;
-        IR::Value carry;
-        IR::Value overflow;
+        Value result;
+        Value carry;
+        Value overflow;
     };
 
     void Unimplemented();
     u32 PC();
     u32 AlignPC(size_t alignment);
 
-    IR::Value Imm1(bool value);
-    IR::Value Imm8(u8 value);
-    IR::Value Imm32(u32 value);
+    Value Imm1(bool value);
+    Value Imm8(u8 value);
+    Value Imm32(u32 value);
 
-    IR::Value GetRegister(Reg source_reg);
-    IR::Value GetExtendedRegister(ExtReg source_reg);
-    void SetRegister(const Reg dest_reg, const IR::Value& value);
-    void SetExtendedRegister(const ExtReg dest_reg, const IR::Value& value);
+    Value GetRegister(Arm::Reg source_reg);
+    Value GetExtendedRegister(Arm::ExtReg source_reg);
+    void SetRegister(const Arm::Reg dest_reg, const Value& value);
+    void SetExtendedRegister(const Arm::ExtReg dest_reg, const Value& value);
 
-    void ALUWritePC(const IR::Value& value);
-    void BranchWritePC(const IR::Value& value);
-    void BXWritePC(const IR::Value& value);
-    void LoadWritePC(const IR::Value& value);
-    void CallSupervisor(const IR::Value& value);
-    void PushRSB(const LocationDescriptor& return_location);
+    void ALUWritePC(const Value& value);
+    void BranchWritePC(const Value& value);
+    void BXWritePC(const Value& value);
+    void LoadWritePC(const Value& value);
+    void CallSupervisor(const Value& value);
+    void PushRSB(const Arm::LocationDescriptor& return_location);
 
-    IR::Value GetCpsr();
-    void SetCpsr(const IR::Value& value);
-    IR::Value GetCFlag();
-    void SetNFlag(const IR::Value& value);
-    void SetZFlag(const IR::Value& value);
-    void SetCFlag(const IR::Value& value);
-    void SetVFlag(const IR::Value& value);
-    void OrQFlag(const IR::Value& value);
+    Value GetCpsr();
+    void SetCpsr(const Value& value);
+    Value GetCFlag();
+    void SetNFlag(const Value& value);
+    void SetZFlag(const Value& value);
+    void SetCFlag(const Value& value);
+    void SetVFlag(const Value& value);
+    void OrQFlag(const Value& value);
 
-    IR::Value Pack2x32To1x64(const IR::Value& lo, const IR::Value& hi);
-    IR::Value LeastSignificantWord(const IR::Value& value);
-    ResultAndCarry MostSignificantWord(const IR::Value& value);
-    IR::Value LeastSignificantHalf(const IR::Value& value);
-    IR::Value LeastSignificantByte(const IR::Value& value);
-    IR::Value MostSignificantBit(const IR::Value& value);
-    IR::Value IsZero(const IR::Value& value);
-    IR::Value IsZero64(const IR::Value& value);
+    Value Pack2x32To1x64(const Value& lo, const Value& hi);
+    Value LeastSignificantWord(const Value& value);
+    ResultAndCarry MostSignificantWord(const Value& value);
+    Value LeastSignificantHalf(const Value& value);
+    Value LeastSignificantByte(const Value& value);
+    Value MostSignificantBit(const Value& value);
+    Value IsZero(const Value& value);
+    Value IsZero64(const Value& value);
 
-    ResultAndCarry LogicalShiftLeft(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
-    ResultAndCarry LogicalShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
-    IR::Value LogicalShiftRight64(const IR::Value& value_in, const IR::Value& shift_amount);
-    ResultAndCarry ArithmeticShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
-    ResultAndCarry RotateRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in);
-    ResultAndCarry RotateRightExtended(const IR::Value& value_in, const IR::Value& carry_in);
-    ResultAndCarryAndOverflow AddWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
-    IR::Value Add(const IR::Value& a, const IR::Value& b);
-    IR::Value Add64(const IR::Value& a, const IR::Value& b);
-    ResultAndCarryAndOverflow SubWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in);
-    IR::Value Sub(const IR::Value& a, const IR::Value& b);
-    IR::Value Sub64(const IR::Value& a, const IR::Value& b);
-    IR::Value Mul(const IR::Value& a, const IR::Value& b);
-    IR::Value Mul64(const IR::Value& a, const IR::Value& b);
-    IR::Value And(const IR::Value& a, const IR::Value& b);
-    IR::Value Eor(const IR::Value& a, const IR::Value& b);
-    IR::Value Or(const IR::Value& a, const IR::Value& b);
-    IR::Value Not(const IR::Value& a);
-    IR::Value SignExtendWordToLong(const IR::Value& a);
-    IR::Value SignExtendHalfToWord(const IR::Value& a);
-    IR::Value SignExtendByteToWord(const IR::Value& a);
-    IR::Value ZeroExtendWordToLong(const IR::Value& a);
-    IR::Value ZeroExtendHalfToWord(const IR::Value& a);
-    IR::Value ZeroExtendByteToWord(const IR::Value& a);
-    IR::Value ByteReverseWord(const IR::Value& a);
-    IR::Value ByteReverseHalf(const IR::Value& a);
-    IR::Value ByteReverseDual(const IR::Value& a);
-    IR::Value PackedSaturatedAddU8(const IR::Value& a, const IR::Value& b);
-    IR::Value PackedSaturatedAddS8(const IR::Value& a, const IR::Value& b);
-    IR::Value PackedSaturatedSubU8(const IR::Value& a, const IR::Value& b);
-    IR::Value PackedSaturatedSubS8(const IR::Value& a, const IR::Value& b);
-    IR::Value PackedSaturatedAddU16(const IR::Value& a, const IR::Value& b);
-    IR::Value PackedSaturatedAddS16(const IR::Value& a, const IR::Value& b);
-    IR::Value PackedSaturatedSubU16(const IR::Value& a, const IR::Value& b);
-    IR::Value PackedSaturatedSubS16(const IR::Value& a, const IR::Value& b);
+    ResultAndCarry LogicalShiftLeft(const Value& value_in, const Value& shift_amount, const Value& carry_in);
+    ResultAndCarry LogicalShiftRight(const Value& value_in, const Value& shift_amount, const Value& carry_in);
+    Value LogicalShiftRight64(const Value& value_in, const Value& shift_amount);
+    ResultAndCarry ArithmeticShiftRight(const Value& value_in, const Value& shift_amount, const Value& carry_in);
+    ResultAndCarry RotateRight(const Value& value_in, const Value& shift_amount, const Value& carry_in);
+    ResultAndCarry RotateRightExtended(const Value& value_in, const Value& carry_in);
+    ResultAndCarryAndOverflow AddWithCarry(const Value& a, const Value& b, const Value& carry_in);
+    Value Add(const Value& a, const Value& b);
+    Value Add64(const Value& a, const Value& b);
+    ResultAndCarryAndOverflow SubWithCarry(const Value& a, const Value& b, const Value& carry_in);
+    Value Sub(const Value& a, const Value& b);
+    Value Sub64(const Value& a, const Value& b);
+    Value Mul(const Value& a, const Value& b);
+    Value Mul64(const Value& a, const Value& b);
+    Value And(const Value& a, const Value& b);
+    Value Eor(const Value& a, const Value& b);
+    Value Or(const Value& a, const Value& b);
+    Value Not(const Value& a);
+    Value SignExtendWordToLong(const Value& a);
+    Value SignExtendHalfToWord(const Value& a);
+    Value SignExtendByteToWord(const Value& a);
+    Value ZeroExtendWordToLong(const Value& a);
+    Value ZeroExtendHalfToWord(const Value& a);
+    Value ZeroExtendByteToWord(const Value& a);
+    Value ByteReverseWord(const Value& a);
+    Value ByteReverseHalf(const Value& a);
+    Value ByteReverseDual(const Value& a);
+    Value PackedSaturatedAddU8(const Value& a, const Value& b);
+    Value PackedSaturatedAddS8(const Value& a, const Value& b);
+    Value PackedSaturatedSubU8(const Value& a, const Value& b);
+    Value PackedSaturatedSubS8(const Value& a, const Value& b);
+    Value PackedSaturatedAddU16(const Value& a, const Value& b);
+    Value PackedSaturatedAddS16(const Value& a, const Value& b);
+    Value PackedSaturatedSubU16(const Value& a, const Value& b);
+    Value PackedSaturatedSubS16(const Value& a, const Value& b);
 
-    IR::Value TransferToFP32(const IR::Value& a);
-    IR::Value TransferToFP64(const IR::Value& a);
-    IR::Value TransferFromFP32(const IR::Value& a);
-    IR::Value TransferFromFP64(const IR::Value& a);
-    IR::Value FPAbs32(const IR::Value& a);
-    IR::Value FPAbs64(const IR::Value& a);
-    IR::Value FPAdd32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPAdd64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPDiv32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPDiv64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPMul32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPMul64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPNeg32(const IR::Value& a);
-    IR::Value FPNeg64(const IR::Value& a);
-    IR::Value FPSqrt32(const IR::Value& a);
-    IR::Value FPSqrt64(const IR::Value& a);
-    IR::Value FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled);
-    IR::Value FPDoubleToSingle(const IR::Value& a, bool fpscr_controlled);
-    IR::Value FPSingleToDouble(const IR::Value& a, bool fpscr_controlled);
-    IR::Value FPSingleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
-    IR::Value FPSingleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
-    IR::Value FPDoubleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
-    IR::Value FPDoubleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled);
-    IR::Value FPS32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
-    IR::Value FPU32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
-    IR::Value FPS32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
-    IR::Value FPU32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled);
+    Value TransferToFP32(const Value& a);
+    Value TransferToFP64(const Value& a);
+    Value TransferFromFP32(const Value& a);
+    Value TransferFromFP64(const Value& a);
+    Value FPAbs32(const Value& a);
+    Value FPAbs64(const Value& a);
+    Value FPAdd32(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPAdd64(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPDiv32(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPDiv64(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPMul32(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPMul64(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPNeg32(const Value& a);
+    Value FPNeg64(const Value& a);
+    Value FPSqrt32(const Value& a);
+    Value FPSqrt64(const Value& a);
+    Value FPSub32(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPSub64(const Value& a, const Value& b, bool fpscr_controlled);
+    Value FPDoubleToSingle(const Value& a, bool fpscr_controlled);
+    Value FPSingleToDouble(const Value& a, bool fpscr_controlled);
+    Value FPSingleToS32(const Value& a, bool round_towards_zero, bool fpscr_controlled);
+    Value FPSingleToU32(const Value& a, bool round_towards_zero, bool fpscr_controlled);
+    Value FPDoubleToS32(const Value& a, bool round_towards_zero, bool fpscr_controlled);
+    Value FPDoubleToU32(const Value& a, bool round_towards_zero, bool fpscr_controlled);
+    Value FPS32ToSingle(const Value& a, bool round_to_nearest, bool fpscr_controlled);
+    Value FPU32ToSingle(const Value& a, bool round_to_nearest, bool fpscr_controlled);
+    Value FPS32ToDouble(const Value& a, bool round_to_nearest, bool fpscr_controlled);
+    Value FPU32ToDouble(const Value& a, bool round_to_nearest, bool fpscr_controlled);
 
     void ClearExlcusive();
-    void SetExclusive(const IR::Value& vaddr, size_t byte_size);
-    IR::Value ReadMemory8(const IR::Value& vaddr);
-    IR::Value ReadMemory16(const IR::Value& vaddr);
-    IR::Value ReadMemory32(const IR::Value& vaddr);
-    IR::Value ReadMemory64(const IR::Value& vaddr);
-    void WriteMemory8(const IR::Value& vaddr, const IR::Value& value);
-    void WriteMemory16(const IR::Value& vaddr, const IR::Value& value);
-    void WriteMemory32(const IR::Value& vaddr, const IR::Value& value);
-    void WriteMemory64(const IR::Value& vaddr, const IR::Value& value);
-    IR::Value ExclusiveWriteMemory8(const IR::Value& vaddr, const IR::Value& value);
-    IR::Value ExclusiveWriteMemory16(const IR::Value& vaddr, const IR::Value& value);
-    IR::Value ExclusiveWriteMemory32(const IR::Value& vaddr, const IR::Value& value);
-    IR::Value ExclusiveWriteMemory64(const IR::Value& vaddr, const IR::Value& value_lo, const IR::Value& value_hi);
+    void SetExclusive(const Value& vaddr, size_t byte_size);
+    Value ReadMemory8(const Value& vaddr);
+    Value ReadMemory16(const Value& vaddr);
+    Value ReadMemory32(const Value& vaddr);
+    Value ReadMemory64(const Value& vaddr);
+    void WriteMemory8(const Value& vaddr, const Value& value);
+    void WriteMemory16(const Value& vaddr, const Value& value);
+    void WriteMemory32(const Value& vaddr, const Value& value);
+    void WriteMemory64(const Value& vaddr, const Value& value);
+    Value ExclusiveWriteMemory8(const Value& vaddr, const Value& value);
+    Value ExclusiveWriteMemory16(const Value& vaddr, const Value& value);
+    Value ExclusiveWriteMemory32(const Value& vaddr, const Value& value);
+    Value ExclusiveWriteMemory64(const Value& vaddr, const Value& value_lo, const Value& value_hi);
 
     void Breakpoint();
 
-    void SetTerm(const IR::Terminal& terminal);
+    void SetTerm(const Terminal& terminal);
 
 private:
-    IR::Value Inst(IR::Opcode op, std::initializer_list<IR::Value> args);
+    Value Inst(Opcode op, std::initializer_list<Value> args);
 };
 
-} // namespace Arm
+} // namespace IR
 } // namespace Dynarmic

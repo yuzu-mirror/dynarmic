@@ -41,7 +41,7 @@ bool ArmTranslatorVisitor::arm_STRT() {
     ASSERT_MSG(false, "System instructions unimplemented");
 }
 
-static IR::Value GetAddressingMode(IREmitter& ir, bool P, bool U, bool W, Reg n, IR::Value index) {
+static IR::Value GetAddressingMode(IR::IREmitter& ir, bool P, bool U, bool W, Reg n, IR::Value index) {
     IR::Value address;
     if (P) {
         // Pre-indexed addressing
@@ -637,7 +637,7 @@ bool ArmTranslatorVisitor::arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n
     return true;
 }
 
-static bool LDMHelper(IREmitter& ir, bool W, Reg n, RegList list, IR::Value start_address, IR::Value writeback_address) {
+static bool LDMHelper(IR::IREmitter& ir, bool W, Reg n, RegList list, IR::Value start_address, IR::Value writeback_address) {
     auto address = start_address;
     for (size_t i = 0; i <= 14; i++) {
         if (Common::Bit(i, list)) {
@@ -715,7 +715,7 @@ bool ArmTranslatorVisitor::arm_LDM_eret() {
     return InterpretThisInstruction();
 }
 
-static bool STMHelper(IREmitter& ir, bool W, Reg n, RegList list, IR::Value start_address, IR::Value writeback_address) {
+static bool STMHelper(IR::IREmitter& ir, bool W, Reg n, RegList list, IR::Value start_address, IR::Value writeback_address) {
     auto address = start_address;
     for (size_t i = 0; i <= 14; i++) {
         if (Common::Bit(i, list)) {

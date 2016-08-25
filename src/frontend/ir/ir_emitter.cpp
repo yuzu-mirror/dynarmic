@@ -8,7 +8,7 @@
 #include "ir_emitter.h"
 
 namespace Dynarmic {
-namespace Arm {
+namespace IR {
 
 void IREmitter::Unimplemented() {
 
@@ -24,542 +24,542 @@ u32 IREmitter::AlignPC(size_t alignment) {
     return static_cast<u32>(pc - pc % alignment);
 }
 
-IR::Value IREmitter::Imm1(bool imm1) {
-    return IR::Value(imm1);
+Value IREmitter::Imm1(bool imm1) {
+    return Value(imm1);
 }
 
-IR::Value IREmitter::Imm8(u8 imm8) {
-    return IR::Value(imm8);
+Value IREmitter::Imm8(u8 imm8) {
+    return Value(imm8);
 }
 
-IR::Value IREmitter::Imm32(u32 imm32) {
-    return IR::Value(imm32);
+Value IREmitter::Imm32(u32 imm32) {
+    return Value(imm32);
 }
 
-IR::Value IREmitter::GetRegister(Reg reg) {
-    if (reg == Reg::PC) {
+Value IREmitter::GetRegister(Arm::Reg reg) {
+    if (reg == Arm::Reg::PC) {
         return Imm32(PC());
     }
-    return Inst(IR::Opcode::GetRegister, { IR::Value(reg) });
+    return Inst(Opcode::GetRegister, { Value(reg) });
 }
 
-IR::Value IREmitter::GetExtendedRegister(ExtReg reg) {
+Value IREmitter::GetExtendedRegister(Arm::ExtReg reg) {
     if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
-        return Inst(IR::Opcode::GetExtendedRegister32, {IR::Value(reg)});
+        return Inst(Opcode::GetExtendedRegister32, {Value(reg)});
     } else if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
-        return Inst(IR::Opcode::GetExtendedRegister64, {IR::Value(reg)});
+        return Inst(Opcode::GetExtendedRegister64, {Value(reg)});
     } else {
         ASSERT_MSG(false, "Invalid reg.");
     }
 }
 
-void IREmitter::SetRegister(const Reg reg, const IR::Value& value) {
-    ASSERT(reg != Reg::PC);
-    Inst(IR::Opcode::SetRegister, { IR::Value(reg), value });
+void IREmitter::SetRegister(const Arm::Reg reg, const Value& value) {
+    ASSERT(reg != Arm::Reg::PC);
+    Inst(Opcode::SetRegister, { Value(reg), value });
 }
 
-void IREmitter::SetExtendedRegister(const ExtReg reg, const IR::Value& value) {
+void IREmitter::SetExtendedRegister(const Arm::ExtReg reg, const Value& value) {
     if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
-        Inst(IR::Opcode::SetExtendedRegister32, {IR::Value(reg), value});
+        Inst(Opcode::SetExtendedRegister32, {Value(reg), value});
     } else if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
-        Inst(IR::Opcode::SetExtendedRegister64, {IR::Value(reg), value});
+        Inst(Opcode::SetExtendedRegister64, {Value(reg), value});
     } else {
         ASSERT_MSG(false, "Invalid reg.");
     }
 }
 
-void IREmitter::ALUWritePC(const IR::Value& value) {
+void IREmitter::ALUWritePC(const Value& value) {
     // This behaviour is ARM version-dependent.
     // The below implementation is for ARMv6k
     BranchWritePC(value);
 }
 
-void IREmitter::BranchWritePC(const IR::Value& value) {
+void IREmitter::BranchWritePC(const Value& value) {
     if (!current_location.TFlag()) {
         auto new_pc = And(value, Imm32(0xFFFFFFFC));
-        Inst(IR::Opcode::SetRegister, { IR::Value(Reg::PC), new_pc });
+        Inst(Opcode::SetRegister, { Value(Arm::Reg::PC), new_pc });
     } else {
         auto new_pc = And(value, Imm32(0xFFFFFFFE));
-        Inst(IR::Opcode::SetRegister, { IR::Value(Reg::PC), new_pc });
+        Inst(Opcode::SetRegister, { Value(Arm::Reg::PC), new_pc });
     }
 }
 
-void IREmitter::BXWritePC(const IR::Value& value) {
-    Inst(IR::Opcode::BXWritePC, {value});
+void IREmitter::BXWritePC(const Value& value) {
+    Inst(Opcode::BXWritePC, {value});
 }
 
-void IREmitter::LoadWritePC(const IR::Value& value) {
+void IREmitter::LoadWritePC(const Value& value) {
     // This behaviour is ARM version-dependent.
     // The below implementation is for ARMv6k
     BXWritePC(value);
 }
 
-void IREmitter::CallSupervisor(const IR::Value& value) {
-    Inst(IR::Opcode::CallSupervisor, {value});
+void IREmitter::CallSupervisor(const Value& value) {
+    Inst(Opcode::CallSupervisor, {value});
 }
 
-void IREmitter::PushRSB(const LocationDescriptor& return_location) {
-    Inst(IR::Opcode::PushRSB, {IR::Value(return_location.UniqueHash())});
+void IREmitter::PushRSB(const Arm::LocationDescriptor& return_location) {
+    Inst(Opcode::PushRSB, {Value(return_location.UniqueHash())});
 }
 
-IR::Value IREmitter::GetCpsr() {
-    return Inst(IR::Opcode::GetCpsr, {});
+Value IREmitter::GetCpsr() {
+    return Inst(Opcode::GetCpsr, {});
 }
 
-void IREmitter::SetCpsr(const IR::Value& value) {
-    Inst(IR::Opcode::SetCpsr, {value});
+void IREmitter::SetCpsr(const Value& value) {
+    Inst(Opcode::SetCpsr, {value});
 }
 
-IR::Value IREmitter::GetCFlag() {
-    return Inst(IR::Opcode::GetCFlag, {});
+Value IREmitter::GetCFlag() {
+    return Inst(Opcode::GetCFlag, {});
 }
 
-void IREmitter::SetNFlag(const IR::Value& value) {
-    Inst(IR::Opcode::SetNFlag, {value});
+void IREmitter::SetNFlag(const Value& value) {
+    Inst(Opcode::SetNFlag, {value});
 }
 
-void IREmitter::SetZFlag(const IR::Value& value) {
-    Inst(IR::Opcode::SetZFlag, {value});
+void IREmitter::SetZFlag(const Value& value) {
+    Inst(Opcode::SetZFlag, {value});
 }
 
-void IREmitter::SetCFlag(const IR::Value& value) {
-    Inst(IR::Opcode::SetCFlag, {value});
+void IREmitter::SetCFlag(const Value& value) {
+    Inst(Opcode::SetCFlag, {value});
 }
 
-void IREmitter::SetVFlag(const IR::Value& value) {
-    Inst(IR::Opcode::SetVFlag, {value});
+void IREmitter::SetVFlag(const Value& value) {
+    Inst(Opcode::SetVFlag, {value});
 }
 
-void IREmitter::OrQFlag(const IR::Value& value) {
-    Inst(IR::Opcode::OrQFlag, {value});
+void IREmitter::OrQFlag(const Value& value) {
+    Inst(Opcode::OrQFlag, {value});
 }
 
-IR::Value IREmitter::Pack2x32To1x64(const IR::Value& lo, const IR::Value& hi)
+Value IREmitter::Pack2x32To1x64(const Value& lo, const Value& hi)
 {
-    return Inst(IR::Opcode::Pack2x32To1x64, {lo, hi});
+    return Inst(Opcode::Pack2x32To1x64, {lo, hi});
 }
 
-IR::Value IREmitter::LeastSignificantWord(const IR::Value& value) {
-    return Inst(IR::Opcode::LeastSignificantWord, {value});
+Value IREmitter::LeastSignificantWord(const Value& value) {
+    return Inst(Opcode::LeastSignificantWord, {value});
 }
 
-IREmitter::ResultAndCarry IREmitter::MostSignificantWord(const IR::Value& value) {
-    auto result = Inst(IR::Opcode::MostSignificantWord, {value});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+IREmitter::ResultAndCarry IREmitter::MostSignificantWord(const Value& value) {
+    auto result = Inst(Opcode::MostSignificantWord, {value});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
 }
 
-IR::Value IREmitter::LeastSignificantHalf(const IR::Value& value) {
-    return Inst(IR::Opcode::LeastSignificantHalf, {value});
+Value IREmitter::LeastSignificantHalf(const Value& value) {
+    return Inst(Opcode::LeastSignificantHalf, {value});
 }
 
-IR::Value IREmitter::LeastSignificantByte(const IR::Value& value) {
-    return Inst(IR::Opcode::LeastSignificantByte, {value});
+Value IREmitter::LeastSignificantByte(const Value& value) {
+    return Inst(Opcode::LeastSignificantByte, {value});
 }
 
-IR::Value IREmitter::MostSignificantBit(const IR::Value& value) {
-    return Inst(IR::Opcode::MostSignificantBit, {value});
+Value IREmitter::MostSignificantBit(const Value& value) {
+    return Inst(Opcode::MostSignificantBit, {value});
 }
 
-IR::Value IREmitter::IsZero(const IR::Value& value) {
-    return Inst(IR::Opcode::IsZero, {value});
+Value IREmitter::IsZero(const Value& value) {
+    return Inst(Opcode::IsZero, {value});
 }
 
-IR::Value IREmitter::IsZero64(const IR::Value& value) {
-    return Inst(IR::Opcode::IsZero64, {value});
+Value IREmitter::IsZero64(const Value& value) {
+    return Inst(Opcode::IsZero64, {value});
 }
 
-IREmitter::ResultAndCarry IREmitter::LogicalShiftLeft(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in) {
-    auto result = Inst(IR::Opcode::LogicalShiftLeft, {value_in, shift_amount, carry_in});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+IREmitter::ResultAndCarry IREmitter::LogicalShiftLeft(const Value& value_in, const Value& shift_amount, const Value& carry_in) {
+    auto result = Inst(Opcode::LogicalShiftLeft, {value_in, shift_amount, carry_in});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
 }
 
-IREmitter::ResultAndCarry IREmitter::LogicalShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in) {
-    auto result = Inst(IR::Opcode::LogicalShiftRight, {value_in, shift_amount, carry_in});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+IREmitter::ResultAndCarry IREmitter::LogicalShiftRight(const Value& value_in, const Value& shift_amount, const Value& carry_in) {
+    auto result = Inst(Opcode::LogicalShiftRight, {value_in, shift_amount, carry_in});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
 }
 
-IR::Value IREmitter::LogicalShiftRight64(const IR::Value& value_in, const IR::Value& shift_amount) {
-    return Inst(IR::Opcode::LogicalShiftRight64, {value_in, shift_amount});
+Value IREmitter::LogicalShiftRight64(const Value& value_in, const Value& shift_amount) {
+    return Inst(Opcode::LogicalShiftRight64, {value_in, shift_amount});
 }
 
-IREmitter::ResultAndCarry IREmitter::ArithmeticShiftRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in) {
-    auto result = Inst(IR::Opcode::ArithmeticShiftRight, {value_in, shift_amount, carry_in});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+IREmitter::ResultAndCarry IREmitter::ArithmeticShiftRight(const Value& value_in, const Value& shift_amount, const Value& carry_in) {
+    auto result = Inst(Opcode::ArithmeticShiftRight, {value_in, shift_amount, carry_in});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
 }
 
-IREmitter::ResultAndCarry IREmitter::RotateRight(const IR::Value& value_in, const IR::Value& shift_amount, const IR::Value& carry_in) {
-    auto result = Inst(IR::Opcode::RotateRight, {value_in, shift_amount, carry_in});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+IREmitter::ResultAndCarry IREmitter::RotateRight(const Value& value_in, const Value& shift_amount, const Value& carry_in) {
+    auto result = Inst(Opcode::RotateRight, {value_in, shift_amount, carry_in});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
 }
 
-IREmitter::ResultAndCarry IREmitter::RotateRightExtended(const IR::Value& value_in, const IR::Value& carry_in) {
-    auto result = Inst(IR::Opcode::RotateRightExtended, {value_in, carry_in});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
+IREmitter::ResultAndCarry IREmitter::RotateRightExtended(const Value& value_in, const Value& carry_in) {
+    auto result = Inst(Opcode::RotateRightExtended, {value_in, carry_in});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
     return {result, carry_out};
 }
 
-IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in) {
-    auto result = Inst(IR::Opcode::AddWithCarry, {a, b, carry_in});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
-    auto overflow = Inst(IR::Opcode::GetOverflowFromOp, {result});
+IREmitter::ResultAndCarryAndOverflow IREmitter::AddWithCarry(const Value& a, const Value& b, const Value& carry_in) {
+    auto result = Inst(Opcode::AddWithCarry, {a, b, carry_in});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
+    auto overflow = Inst(Opcode::GetOverflowFromOp, {result});
     return {result, carry_out, overflow};
 }
 
-IR::Value IREmitter::Add(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::AddWithCarry, {a, b, Imm1(0)});
+Value IREmitter::Add(const Value& a, const Value& b) {
+    return Inst(Opcode::AddWithCarry, {a, b, Imm1(0)});
 }
 
-IR::Value IREmitter::Add64(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::Add64, {a, b});
+Value IREmitter::Add64(const Value& a, const Value& b) {
+    return Inst(Opcode::Add64, {a, b});
 }
 
-IREmitter::ResultAndCarryAndOverflow IREmitter::SubWithCarry(const IR::Value& a, const IR::Value& b, const IR::Value& carry_in) {
+IREmitter::ResultAndCarryAndOverflow IREmitter::SubWithCarry(const Value& a, const Value& b, const Value& carry_in) {
     // This is equivalent to AddWithCarry(a, Not(b), carry_in).
-    auto result = Inst(IR::Opcode::SubWithCarry, {a, b, carry_in});
-    auto carry_out = Inst(IR::Opcode::GetCarryFromOp, {result});
-    auto overflow = Inst(IR::Opcode::GetOverflowFromOp, {result});
+    auto result = Inst(Opcode::SubWithCarry, {a, b, carry_in});
+    auto carry_out = Inst(Opcode::GetCarryFromOp, {result});
+    auto overflow = Inst(Opcode::GetOverflowFromOp, {result});
     return {result, carry_out, overflow};
 }
 
-IR::Value IREmitter::Sub(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::SubWithCarry, {a, b, Imm1(1)});
+Value IREmitter::Sub(const Value& a, const Value& b) {
+    return Inst(Opcode::SubWithCarry, {a, b, Imm1(1)});
 }
 
-IR::Value IREmitter::Sub64(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::Sub64, {a, b});
+Value IREmitter::Sub64(const Value& a, const Value& b) {
+    return Inst(Opcode::Sub64, {a, b});
 }
 
-IR::Value IREmitter::Mul(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::Mul, {a, b});
+Value IREmitter::Mul(const Value& a, const Value& b) {
+    return Inst(Opcode::Mul, {a, b});
 }
 
-IR::Value IREmitter::Mul64(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::Mul64, {a, b});
+Value IREmitter::Mul64(const Value& a, const Value& b) {
+    return Inst(Opcode::Mul64, {a, b});
 }
 
-IR::Value IREmitter::And(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::And, {a, b});
+Value IREmitter::And(const Value& a, const Value& b) {
+    return Inst(Opcode::And, {a, b});
 }
 
-IR::Value IREmitter::Eor(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::Eor, {a, b});
+Value IREmitter::Eor(const Value& a, const Value& b) {
+    return Inst(Opcode::Eor, {a, b});
 }
 
-IR::Value IREmitter::Or(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::Or, {a, b});
+Value IREmitter::Or(const Value& a, const Value& b) {
+    return Inst(Opcode::Or, {a, b});
 }
 
-IR::Value IREmitter::Not(const IR::Value& a) {
-    return Inst(IR::Opcode::Not, {a});
+Value IREmitter::Not(const Value& a) {
+    return Inst(Opcode::Not, {a});
 }
 
-IR::Value IREmitter::SignExtendWordToLong(const IR::Value& a) {
-    return Inst(IR::Opcode::SignExtendWordToLong, {a});
+Value IREmitter::SignExtendWordToLong(const Value& a) {
+    return Inst(Opcode::SignExtendWordToLong, {a});
 }
 
-IR::Value IREmitter::SignExtendHalfToWord(const IR::Value& a) {
-    return Inst(IR::Opcode::SignExtendHalfToWord, {a});
+Value IREmitter::SignExtendHalfToWord(const Value& a) {
+    return Inst(Opcode::SignExtendHalfToWord, {a});
 }
 
-IR::Value IREmitter::SignExtendByteToWord(const IR::Value& a) {
-    return Inst(IR::Opcode::SignExtendByteToWord, {a});
+Value IREmitter::SignExtendByteToWord(const Value& a) {
+    return Inst(Opcode::SignExtendByteToWord, {a});
 }
 
-IR::Value IREmitter::ZeroExtendWordToLong(const IR::Value& a) {
-    return Inst(IR::Opcode::ZeroExtendWordToLong, {a});
+Value IREmitter::ZeroExtendWordToLong(const Value& a) {
+    return Inst(Opcode::ZeroExtendWordToLong, {a});
 }
 
-IR::Value IREmitter::ZeroExtendHalfToWord(const IR::Value& a) {
-    return Inst(IR::Opcode::ZeroExtendHalfToWord, {a});
+Value IREmitter::ZeroExtendHalfToWord(const Value& a) {
+    return Inst(Opcode::ZeroExtendHalfToWord, {a});
 }
 
-IR::Value IREmitter::ZeroExtendByteToWord(const IR::Value& a) {
-    return Inst(IR::Opcode::ZeroExtendByteToWord, {a});
+Value IREmitter::ZeroExtendByteToWord(const Value& a) {
+    return Inst(Opcode::ZeroExtendByteToWord, {a});
 }
 
-IR::Value IREmitter::ByteReverseWord(const IR::Value& a) {
-    return Inst(IR::Opcode::ByteReverseWord, {a});
+Value IREmitter::ByteReverseWord(const Value& a) {
+    return Inst(Opcode::ByteReverseWord, {a});
 }
 
-IR::Value IREmitter::ByteReverseHalf(const IR::Value& a) {
-    return Inst(IR::Opcode::ByteReverseHalf, {a});
+Value IREmitter::ByteReverseHalf(const Value& a) {
+    return Inst(Opcode::ByteReverseHalf, {a});
 }
 
-IR::Value IREmitter::ByteReverseDual(const IR::Value& a) {
-    return Inst(IR::Opcode::ByteReverseDual, {a});
+Value IREmitter::ByteReverseDual(const Value& a) {
+    return Inst(Opcode::ByteReverseDual, {a});
 }
 
-IR::Value IREmitter::PackedSaturatedAddU8(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedAddU8, {a, b});
+Value IREmitter::PackedSaturatedAddU8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedAddU8, {a, b});
 }
 
-IR::Value IREmitter::PackedSaturatedAddS8(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedAddS8, {a, b});
+Value IREmitter::PackedSaturatedAddS8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedAddS8, {a, b});
 }
 
-IR::Value IREmitter::PackedSaturatedSubU8(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedSubU8, {a, b});
+Value IREmitter::PackedSaturatedSubU8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedSubU8, {a, b});
 }
 
-IR::Value IREmitter::PackedSaturatedSubS8(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedSubS8, {a, b});
+Value IREmitter::PackedSaturatedSubS8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedSubS8, {a, b});
 }
 
-IR::Value IREmitter::PackedSaturatedAddU16(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedAddU16, {a, b});
+Value IREmitter::PackedSaturatedAddU16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedAddU16, {a, b});
 }
 
-IR::Value IREmitter::PackedSaturatedAddS16(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedAddS16, {a, b});
+Value IREmitter::PackedSaturatedAddS16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedAddS16, {a, b});
 }
 
-IR::Value IREmitter::PackedSaturatedSubU16(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedSubU16, {a, b});
+Value IREmitter::PackedSaturatedSubU16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedSubU16, {a, b});
 }
 
-IR::Value IREmitter::PackedSaturatedSubS16(const IR::Value& a, const IR::Value& b) {
-    return Inst(IR::Opcode::PackedSaturatedSubS16, {a, b});
+Value IREmitter::PackedSaturatedSubS16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedSaturatedSubS16, {a, b});
 }
 
-IR::Value IREmitter::TransferToFP32(const IR::Value& a) {
-    return Inst(IR::Opcode::TransferToFP32, {a});
+Value IREmitter::TransferToFP32(const Value& a) {
+    return Inst(Opcode::TransferToFP32, {a});
 }
 
-IR::Value IREmitter::TransferToFP64(const IR::Value& a) {
-    return Inst(IR::Opcode::TransferToFP64, {a});
+Value IREmitter::TransferToFP64(const Value& a) {
+    return Inst(Opcode::TransferToFP64, {a});
 }
 
-IR::Value IREmitter::TransferFromFP32(const IR::Value& a) {
-    return Inst(IR::Opcode::TransferFromFP32, {a});
+Value IREmitter::TransferFromFP32(const Value& a) {
+    return Inst(Opcode::TransferFromFP32, {a});
 }
 
-IR::Value IREmitter::TransferFromFP64(const IR::Value& a) {
-    return Inst(IR::Opcode::TransferFromFP64, {a});
+Value IREmitter::TransferFromFP64(const Value& a) {
+    return Inst(Opcode::TransferFromFP64, {a});
 }
 
-IR::Value IREmitter::FPAbs32(const IR::Value& a) {
-    return Inst(IR::Opcode::FPAbs32, {a});
+Value IREmitter::FPAbs32(const Value& a) {
+    return Inst(Opcode::FPAbs32, {a});
 }
 
-IR::Value IREmitter::FPAbs64(const IR::Value& a) {
-    return Inst(IR::Opcode::FPAbs64, {a});
+Value IREmitter::FPAbs64(const Value& a) {
+    return Inst(Opcode::FPAbs64, {a});
 }
 
-IR::Value IREmitter::FPAdd32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPAdd32(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPAdd32, {a, b});
+    return Inst(Opcode::FPAdd32, {a, b});
 }
 
-IR::Value IREmitter::FPAdd64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPAdd64(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPAdd64, {a, b});
+    return Inst(Opcode::FPAdd64, {a, b});
 }
 
-IR::Value IREmitter::FPDiv32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPDiv32(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPDiv32, {a, b});
+    return Inst(Opcode::FPDiv32, {a, b});
 }
 
-IR::Value IREmitter::FPDiv64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPDiv64(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPDiv64, {a, b});
+    return Inst(Opcode::FPDiv64, {a, b});
 }
 
-IR::Value IREmitter::FPMul32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPMul32(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPMul32, {a, b});
+    return Inst(Opcode::FPMul32, {a, b});
 }
 
-IR::Value IREmitter::FPMul64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPMul64(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPMul64, {a, b});
+    return Inst(Opcode::FPMul64, {a, b});
 }
 
-IR::Value IREmitter::FPNeg32(const IR::Value& a) {
-    return Inst(IR::Opcode::FPNeg32, {a});
+Value IREmitter::FPNeg32(const Value& a) {
+    return Inst(Opcode::FPNeg32, {a});
 }
 
-IR::Value IREmitter::FPNeg64(const IR::Value& a) {
-    return Inst(IR::Opcode::FPNeg64, {a});
+Value IREmitter::FPNeg64(const Value& a) {
+    return Inst(Opcode::FPNeg64, {a});
 }
 
-IR::Value IREmitter::FPSqrt32(const IR::Value& a) {
-    return Inst(IR::Opcode::FPSqrt32, {a});
+Value IREmitter::FPSqrt32(const Value& a) {
+    return Inst(Opcode::FPSqrt32, {a});
 }
 
-IR::Value IREmitter::FPSqrt64(const IR::Value& a) {
-    return Inst(IR::Opcode::FPSqrt64, {a});
+Value IREmitter::FPSqrt64(const Value& a) {
+    return Inst(Opcode::FPSqrt64, {a});
 }
 
-IR::Value IREmitter::FPSub32(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPSub32(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPSub32, {a, b});
+    return Inst(Opcode::FPSub32, {a, b});
 }
 
-IR::Value IREmitter::FPSub64(const IR::Value& a, const IR::Value& b, bool fpscr_controlled) {
+Value IREmitter::FPSub64(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPSub64, {a, b});
+    return Inst(Opcode::FPSub64, {a, b});
 }
 
-IR::Value IREmitter::FPDoubleToSingle(const IR::Value& a, bool fpscr_controlled) {
+Value IREmitter::FPDoubleToSingle(const Value& a, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPDoubleToSingle, {a});
+    return Inst(Opcode::FPDoubleToSingle, {a});
 }
 
-IR::Value IREmitter::FPSingleToDouble(const IR::Value& a, bool fpscr_controlled) {
+Value IREmitter::FPSingleToDouble(const Value& a, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPSingleToDouble, {a});
+    return Inst(Opcode::FPSingleToDouble, {a});
 }
 
-IR::Value IREmitter::FPSingleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+Value IREmitter::FPSingleToS32(const Value& a, bool round_towards_zero, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPSingleToS32, {a, Imm1(round_towards_zero)});
+    return Inst(Opcode::FPSingleToS32, {a, Imm1(round_towards_zero)});
 }
 
-IR::Value IREmitter::FPSingleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+Value IREmitter::FPSingleToU32(const Value& a, bool round_towards_zero, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPSingleToU32, {a, Imm1(round_towards_zero)});
+    return Inst(Opcode::FPSingleToU32, {a, Imm1(round_towards_zero)});
 }
 
-IR::Value IREmitter::FPDoubleToS32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+Value IREmitter::FPDoubleToS32(const Value& a, bool round_towards_zero, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPDoubleToS32, {a, Imm1(round_towards_zero)});
+    return Inst(Opcode::FPDoubleToS32, {a, Imm1(round_towards_zero)});
 }
 
-IR::Value IREmitter::FPDoubleToU32(const IR::Value& a, bool round_towards_zero, bool fpscr_controlled) {
+Value IREmitter::FPDoubleToU32(const Value& a, bool round_towards_zero, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPDoubleToU32, {a, Imm1(round_towards_zero)});
+    return Inst(Opcode::FPDoubleToU32, {a, Imm1(round_towards_zero)});
 }
 
-IR::Value IREmitter::FPS32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+Value IREmitter::FPS32ToSingle(const Value& a, bool round_to_nearest, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPS32ToSingle, {a, Imm1(round_to_nearest)});
+    return Inst(Opcode::FPS32ToSingle, {a, Imm1(round_to_nearest)});
 }
 
-IR::Value IREmitter::FPU32ToSingle(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+Value IREmitter::FPU32ToSingle(const Value& a, bool round_to_nearest, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPU32ToSingle, {a, Imm1(round_to_nearest)});
+    return Inst(Opcode::FPU32ToSingle, {a, Imm1(round_to_nearest)});
 }
 
-IR::Value IREmitter::FPS32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+Value IREmitter::FPS32ToDouble(const Value& a, bool round_to_nearest, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPS32ToDouble, {a, Imm1(round_to_nearest)});
+    return Inst(Opcode::FPS32ToDouble, {a, Imm1(round_to_nearest)});
 }
 
-IR::Value IREmitter::FPU32ToDouble(const IR::Value& a, bool round_to_nearest, bool fpscr_controlled) {
+Value IREmitter::FPU32ToDouble(const Value& a, bool round_to_nearest, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
-    return Inst(IR::Opcode::FPU32ToDouble, {a, Imm1(round_to_nearest)});
+    return Inst(Opcode::FPU32ToDouble, {a, Imm1(round_to_nearest)});
 }
 
 void IREmitter::ClearExlcusive() {
-    Inst(IR::Opcode::ClearExclusive, {});
+    Inst(Opcode::ClearExclusive, {});
 }
 
-void IREmitter::SetExclusive(const IR::Value& vaddr, size_t byte_size) {
+void IREmitter::SetExclusive(const Value& vaddr, size_t byte_size) {
     ASSERT(byte_size == 1 || byte_size == 2 || byte_size == 4 || byte_size == 8 || byte_size == 16);
-    Inst(IR::Opcode::SetExclusive, {vaddr, Imm8(u8(byte_size))});
+    Inst(Opcode::SetExclusive, {vaddr, Imm8(u8(byte_size))});
 }
 
-IR::Value IREmitter::ReadMemory8(const IR::Value& vaddr) {
-    return Inst(IR::Opcode::ReadMemory8, {vaddr});
+Value IREmitter::ReadMemory8(const Value& vaddr) {
+    return Inst(Opcode::ReadMemory8, {vaddr});
 }
 
-IR::Value IREmitter::ReadMemory16(const IR::Value& vaddr) {
-    auto value = Inst(IR::Opcode::ReadMemory16, {vaddr});
+Value IREmitter::ReadMemory16(const Value& vaddr) {
+    auto value = Inst(Opcode::ReadMemory16, {vaddr});
     return current_location.EFlag() ? ByteReverseHalf(value) : value;
 }
 
-IR::Value IREmitter::ReadMemory32(const IR::Value& vaddr) {
-    auto value = Inst(IR::Opcode::ReadMemory32, {vaddr});
+Value IREmitter::ReadMemory32(const Value& vaddr) {
+    auto value = Inst(Opcode::ReadMemory32, {vaddr});
     return current_location.EFlag() ? ByteReverseWord(value) : value;
 }
 
-IR::Value IREmitter::ReadMemory64(const IR::Value& vaddr) {
-    auto value = Inst(IR::Opcode::ReadMemory64, {vaddr});
+Value IREmitter::ReadMemory64(const Value& vaddr) {
+    auto value = Inst(Opcode::ReadMemory64, {vaddr});
     return current_location.EFlag() ? ByteReverseDual(value) : value;
 }
 
-void IREmitter::WriteMemory8(const IR::Value& vaddr, const IR::Value& value) {
-    Inst(IR::Opcode::WriteMemory8, {vaddr, value});
+void IREmitter::WriteMemory8(const Value& vaddr, const Value& value) {
+    Inst(Opcode::WriteMemory8, {vaddr, value});
 }
 
-void IREmitter::WriteMemory16(const IR::Value& vaddr, const IR::Value& value) {
+void IREmitter::WriteMemory16(const Value& vaddr, const Value& value) {
     if (current_location.EFlag()) {
         auto v = ByteReverseHalf(value);
-        Inst(IR::Opcode::WriteMemory16, {vaddr, v});
+        Inst(Opcode::WriteMemory16, {vaddr, v});
     } else {
-        Inst(IR::Opcode::WriteMemory16, {vaddr, value});
+        Inst(Opcode::WriteMemory16, {vaddr, value});
     }
 }
 
-void IREmitter::WriteMemory32(const IR::Value& vaddr, const IR::Value& value) {
+void IREmitter::WriteMemory32(const Value& vaddr, const Value& value) {
     if (current_location.EFlag()) {
         auto v = ByteReverseWord(value);
-        Inst(IR::Opcode::WriteMemory32, {vaddr, v});
+        Inst(Opcode::WriteMemory32, {vaddr, v});
     } else {
-        Inst(IR::Opcode::WriteMemory32, {vaddr, value});
+        Inst(Opcode::WriteMemory32, {vaddr, value});
     }
 }
 
-void IREmitter::WriteMemory64(const IR::Value& vaddr, const IR::Value& value) {
+void IREmitter::WriteMemory64(const Value& vaddr, const Value& value) {
     if (current_location.EFlag()) {
         auto v = ByteReverseDual(value);
-        Inst(IR::Opcode::WriteMemory64, {vaddr, v});
+        Inst(Opcode::WriteMemory64, {vaddr, v});
     } else {
-        Inst(IR::Opcode::WriteMemory64, {vaddr, value});
+        Inst(Opcode::WriteMemory64, {vaddr, value});
     }
 }
 
-IR::Value IREmitter::ExclusiveWriteMemory8(const IR::Value& vaddr, const IR::Value& value) {
-    return Inst(IR::Opcode::ExclusiveWriteMemory8, {vaddr, value});
+Value IREmitter::ExclusiveWriteMemory8(const Value& vaddr, const Value& value) {
+    return Inst(Opcode::ExclusiveWriteMemory8, {vaddr, value});
 }
 
-IR::Value IREmitter::ExclusiveWriteMemory16(const IR::Value& vaddr, const IR::Value& value) {
+Value IREmitter::ExclusiveWriteMemory16(const Value& vaddr, const Value& value) {
     if (current_location.EFlag()) {
         auto v = ByteReverseHalf(value);
-        return Inst(IR::Opcode::ExclusiveWriteMemory16, {vaddr, v});
+        return Inst(Opcode::ExclusiveWriteMemory16, {vaddr, v});
     } else {
-        return Inst(IR::Opcode::ExclusiveWriteMemory16, {vaddr, value});
+        return Inst(Opcode::ExclusiveWriteMemory16, {vaddr, value});
     }
 }
 
-IR::Value IREmitter::ExclusiveWriteMemory32(const IR::Value& vaddr, const IR::Value& value) {
+Value IREmitter::ExclusiveWriteMemory32(const Value& vaddr, const Value& value) {
     if (current_location.EFlag()) {
         auto v = ByteReverseWord(value);
-        return Inst(IR::Opcode::ExclusiveWriteMemory32, {vaddr, v});
+        return Inst(Opcode::ExclusiveWriteMemory32, {vaddr, v});
     } else {
-        return Inst(IR::Opcode::ExclusiveWriteMemory32, {vaddr, value});
+        return Inst(Opcode::ExclusiveWriteMemory32, {vaddr, value});
     }
 }
 
-IR::Value IREmitter::ExclusiveWriteMemory64(const IR::Value& vaddr, const IR::Value& value_lo, const IR::Value& value_hi) {
+Value IREmitter::ExclusiveWriteMemory64(const Value& vaddr, const Value& value_lo, const Value& value_hi) {
     if (current_location.EFlag()) {
         auto vlo = ByteReverseWord(value_lo);
         auto vhi = ByteReverseWord(value_hi);
-        return Inst(IR::Opcode::ExclusiveWriteMemory64, {vaddr, vlo, vhi});
+        return Inst(Opcode::ExclusiveWriteMemory64, {vaddr, vlo, vhi});
     } else {
-        return Inst(IR::Opcode::ExclusiveWriteMemory64, {vaddr, value_lo, value_hi});
+        return Inst(Opcode::ExclusiveWriteMemory64, {vaddr, value_lo, value_hi});
     }
 }
 
 void IREmitter::Breakpoint() {
-    Inst(IR::Opcode::Breakpoint, {});
+    Inst(Opcode::Breakpoint, {});
 }
 
-void IREmitter::SetTerm(const IR::Terminal& terminal) {
+void IREmitter::SetTerm(const Terminal& terminal) {
     block.SetTerminal(terminal);
 }
 
-IR::Value IREmitter::Inst(IR::Opcode op, std::initializer_list<IR::Value> args) {
+Value IREmitter::Inst(Opcode op, std::initializer_list<Value> args) {
     block.AppendNewInst(op, args);
-    return IR::Value(&block.back());
+    return Value(&block.back());
 }
 
-} // namespace Arm
+} // namespace IR
 } // namespace Dynarmic
 

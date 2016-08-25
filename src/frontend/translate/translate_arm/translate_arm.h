@@ -27,7 +27,7 @@ struct ArmTranslatorVisitor final {
         ASSERT_MSG(!descriptor.TFlag(), "The processor must be in Arm mode");
     }
 
-    IREmitter ir;
+    IR::IREmitter ir;
     ConditionalState cond_state = ConditionalState::None;
 
     bool ConditionPassed(Cond cond);
@@ -60,8 +60,8 @@ struct ArmTranslatorVisitor final {
         return {imm32, carry_out};
     }
 
-    IREmitter::ResultAndCarry EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in);
-    IREmitter::ResultAndCarry EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in);
+    IR::IREmitter::ResultAndCarry EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in);
+    IR::IREmitter::ResultAndCarry EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in);
     IR::Value SignZeroExtendRor(Reg m, SignExtendRotation rotate);
 
     // Branch instructions

@@ -24,7 +24,7 @@ struct ThumbTranslatorVisitor final {
         ASSERT_MSG(descriptor.TFlag(), "The processor must be in Thumb mode");
     }
 
-    IREmitter ir;
+    IR::IREmitter ir;
 
     bool InterpretThisInstruction() {
         ir.SetTerm(IR::Term::Interpret(ir.current_location));

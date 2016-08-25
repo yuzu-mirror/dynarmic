@@ -17,7 +17,7 @@
 namespace Dynarmic {
 namespace Arm {
 
-static bool CondCanContinue(ConditionalState cond_state, IREmitter& ir) {
+static bool CondCanContinue(ConditionalState cond_state, IR::IREmitter& ir) {
     ASSERT_MSG(cond_state != ConditionalState::Break, "Should never happen.");
 
     if (cond_state == ConditionalState::None)
@@ -124,7 +124,7 @@ bool ArmTranslatorVisitor::LinkToNextInstruction() {
     return false;
 }
 
-IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in) {
+IR::IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in) {
     switch (type) {
     case ShiftType::LSL:
         return ir.LogicalShiftLeft(value, ir.Imm8(imm5), carry_in);
@@ -144,7 +144,7 @@ IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, Sh
     return {};
 }
 
-IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in) {
+IR::IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in) {
     switch (type) {
     case ShiftType::LSL:
         return ir.LogicalShiftLeft(value, amount, carry_in);
