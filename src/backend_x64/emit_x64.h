@@ -70,7 +70,6 @@ private:
     void Patch(Arm::LocationDescriptor desc, CodePtr bb);
 
     // Per-block state
-    std::set<IR::Value*> inhibit_emission;
     RegAlloc reg_alloc;
 
     // State
