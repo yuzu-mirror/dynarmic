@@ -29,6 +29,7 @@ else()
                         -Wfatal-errors
                         -Wno-unused-parameter
                         -Wno-missing-braces)
+    add_compile_options(-fno-operator-names)
 
     if (ARCHITECTURE_x86_64)
         add_compile_options(-msse4.1)
@@ -66,6 +67,9 @@ include_directories(${Boost_INCLUDE_DIRS})
 # Include Catch
 include_directories(externals/catch)
 enable_testing(true)  # Enables unit-testing.
+
+# Include Xbyak
+include_directories(externals/xbyak/xbyak)
 
 # Include LLVM
 if (DYNARMIC_USE_LLVM)

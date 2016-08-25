@@ -2,17 +2,15 @@ include_directories(.)
 include(CreateDirectoryGroups)
 
 set(SRCS
+    backend_x64/abi.cpp
     backend_x64/block_of_code.cpp
     backend_x64/emit_x64.cpp
+    backend_x64/hostloc.cpp
     backend_x64/interface_x64.cpp
     backend_x64/jitstate.cpp
     backend_x64/reg_alloc.cpp
     common/memory_pool.cpp
-    common/memory_util.cpp
     common/string_util.cpp
-    common/x64/abi.cpp
-    common/x64/cpu_detect.cpp
-    common/x64/emitter.cpp
     frontend/arm_types.cpp
     frontend/disassembler/disassembler_arm.cpp
     frontend/disassembler/disassembler_thumb.cpp
@@ -41,24 +39,21 @@ set(SRCS
     )
 
 set(HEADERS
+    backend_x64/abi.h
     backend_x64/block_of_code.h
     backend_x64/emit_x64.h
+    backend_x64/hostloc.h
     backend_x64/jitstate.h
     backend_x64/reg_alloc.h
     common/assert.h
-    common/bit_set.h
     common/bit_util.h
-    common/code_block.h
     common/common_types.h
     common/intrusive_list.h
+    common/iterator_util.h
     common/memory_pool.h
-    common/memory_util.h
     common/mp.h
     common/scope_exit.h
     common/string_util.h
-    common/x64/abi.h
-    common/x64/cpu_detect.h
-    common/x64/emitter.h
     frontend/arm_types.h
     frontend/arm/FPSCR.h
     frontend/decoder/arm.h

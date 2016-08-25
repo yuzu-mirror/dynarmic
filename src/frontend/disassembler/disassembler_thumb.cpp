@@ -22,11 +22,11 @@ public:
     }
 
     std::string thumb16_LSR_imm(Imm5 imm5, Reg m, Reg d) {
-        return Common::StringFromFormat("lsrs %s, %s, #%u", RegToString(d), RegToString(m), imm5);
+        return Common::StringFromFormat("lsrs %s, %s, #%u", RegToString(d), RegToString(m), imm5 != 0 ? imm5 : 32);
     }
 
     std::string thumb16_ASR_imm(Imm5 imm5, Reg m, Reg d) {
-        return Common::StringFromFormat("asrs %s, %s, #%u", RegToString(d), RegToString(m), imm5);
+        return Common::StringFromFormat("asrs %s, %s, #%u", RegToString(d), RegToString(m), imm5 != 0 ? imm5 : 32);
     }
 
     std::string thumb16_ADD_reg_t1(Reg m, Reg n, Reg d) {

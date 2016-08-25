@@ -7,52 +7,42 @@
 #include <algorithm>
 #include <map>
 
+#include <xbyak.h>
+
+#include "backend_x64/jitstate.h"
 #include "backend_x64/reg_alloc.h"
 #include "common/assert.h"
-#include "common/x64/emitter.h"
 
 namespace Dynarmic {
 namespace BackendX64 {
 
-static Gen::OpArg ImmediateToOpArg(const IR::Value& imm) {
+static u32 ImmediateToU32(const IR::Value& imm) {
     switch (imm.GetType()) {
     case IR::Type::U1:
-        return Gen::Imm32(imm.GetU1());
+        return u32(imm.GetU1());
         break;
     case IR::Type::U8:
-        return Gen::Imm32(imm.GetU8());
+        return u32(imm.GetU8());
         break;
     case IR::Type::U32:
-        return Gen::Imm32(imm.GetU32());
+        return u32(imm.GetU32());
         break;
     default:
         ASSERT_MSG(false, "This should never happen.");
     }
 }
 
-static Gen::X64Reg HostLocToX64(HostLoc loc) {
-    DEBUG_ASSERT(HostLocIsRegister(loc));
-    DEBUG_ASSERT(loc != HostLoc::RSP);
-    // HostLoc is ordered such that the numbers line up.
-    if (HostLocIsGPR(loc)) {
-        return static_cast<Gen::X64Reg>(loc);
+static Xbyak::Reg HostLocToX64(HostLoc hostloc) {
+    if (HostLocIsGPR(hostloc)) {
+        return HostLocToReg64(hostloc);
     }
-    if (HostLocIsXMM(loc)) {
-        return static_cast<Gen::X64Reg>(size_t(loc) - size_t(HostLoc::XMM0));
+    if (HostLocIsXMM(hostloc)) {
+        return HostLocToXmm(hostloc);
     }
     ASSERT_MSG(false, "This should never happen.");
-    return Gen::INVALID_REG;
 }
 
-static Gen::OpArg SpillToOpArg(HostLoc loc) {
-    static_assert(std::is_same<decltype(JitState{nullptr}.Spill[0]), u64&>::value, "Spill must be u64");
-    DEBUG_ASSERT(HostLocIsSpill(loc));
-
-    size_t i = static_cast<size_t>(loc) - static_cast<size_t>(HostLoc::FirstSpill);
-    return Gen::MDisp(Gen::R15, static_cast<int>(offsetof(JitState, Spill) + i * sizeof(u64)));
-}
-
-Gen::X64Reg RegAlloc::DefRegister(IR::Inst* def_inst, HostLocList desired_locations) {
+HostLoc RegAlloc::DefHostLocReg(IR::Inst* def_inst, HostLocList desired_locations) {
     DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
 
@@ -66,14 +56,14 @@ Gen::X64Reg RegAlloc::DefRegister(IR::Inst* def_inst, HostLocList desired_locati
     LocInfo(location).def = def_inst;
 
     DEBUG_ASSERT(LocInfo(location).IsDef());
-    return HostLocToX64(location);
+    return location;
 }
 
 void RegAlloc::RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst) {
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
 
     if (use_inst.IsImmediate()) {
-        LoadImmediateIntoRegister(use_inst, DefRegister(def_inst, any_gpr));
+        LoadImmediateIntoHostLocReg(use_inst, DefHostLocReg(def_inst, any_gpr));
         return;
     }
 
@@ -84,15 +74,15 @@ void RegAlloc::RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst) {
     DEBUG_ASSERT(LocInfo(location).IsIdle());
 }
 
-Gen::X64Reg RegAlloc::UseDefRegister(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations) {
+HostLoc RegAlloc::UseDefHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations) {
     if (!use_value.IsImmediate()) {
-        return UseDefRegister(use_value.GetInst(), def_inst, desired_locations);
+        return UseDefHostLocReg(use_value.GetInst(), def_inst, desired_locations);
     }
 
-    return LoadImmediateIntoRegister(use_value, DefRegister(def_inst, desired_locations));
+    return LoadImmediateIntoHostLocReg(use_value, DefHostLocReg(def_inst, desired_locations));
 }
 
-Gen::X64Reg RegAlloc::UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, HostLocList desired_locations) {
+HostLoc RegAlloc::UseDefHostLocReg(IR::Inst* use_inst, IR::Inst* def_inst, HostLocList desired_locations) {
     DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
     DEBUG_ASSERT_MSG(ValueLocation(use_inst), "use_inst has not been defined");
@@ -112,9 +102,9 @@ Gen::X64Reg RegAlloc::UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, Hos
                 EmitMove(new_location, current_location);
                 LocInfo(new_location) = LocInfo(current_location);
                 LocInfo(current_location) = {};
-                return HostLocToX64(new_location);
+                return new_location;
             } else {
-                return HostLocToX64(current_location);
+                return current_location;
             }
         }
     }
@@ -123,17 +113,17 @@ Gen::X64Reg RegAlloc::UseDefRegister(IR::Inst* use_inst, IR::Inst* def_inst, Hos
     if (is_floating_point) {
         DEBUG_ASSERT(use_inst->GetType() == IR::Type::F32 || use_inst->GetType() == IR::Type::F64);
     }
-    Gen::X64Reg use_reg = UseRegister(use_inst, is_floating_point ? any_xmm : any_gpr);
-    Gen::X64Reg def_reg = DefRegister(def_inst, desired_locations);
+    HostLoc use_reg = UseHostLocReg(use_inst, is_floating_point ? any_xmm : any_gpr);
+    HostLoc def_reg = DefHostLocReg(def_inst, desired_locations);
     if (is_floating_point) {
-        code->MOVAPD(def_reg, Gen::R(use_reg));
+        code->movapd(HostLocToXmm(def_reg), HostLocToXmm(use_reg));
     } else {
-        code->MOV(64, Gen::R(def_reg), Gen::R(use_reg));
+        code->mov(HostLocToReg64(def_reg), HostLocToReg64(use_reg));
     }
     return def_reg;
 }
 
-std::tuple<Gen::OpArg, Gen::X64Reg> RegAlloc::UseDefOpArg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations) {
+std::tuple<OpArg, HostLoc> RegAlloc::UseDefOpArgHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations) {
     DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
     DEBUG_ASSERT_MSG(use_value.IsImmediate() || ValueLocation(use_value.GetInst()), "use_inst has not been defined");
@@ -148,37 +138,37 @@ std::tuple<Gen::OpArg, Gen::X64Reg> RegAlloc::UseDefOpArg(IR::Value use_value, I
                 if (HostLocIsSpill(current_location)) {
                     loc_info.is_being_used = true;
                     DEBUG_ASSERT(loc_info.IsUse());
-                    return std::make_tuple(SpillToOpArg(current_location), DefRegister(def_inst, desired_locations));
+                    return std::make_tuple(SpillToOpArg(current_location), DefHostLocReg(def_inst, desired_locations));
                 } else {
                     loc_info.is_being_used = true;
                     loc_info.def = def_inst;
                     DEBUG_ASSERT(loc_info.IsUseDef());
-                    return std::make_tuple(Gen::R(HostLocToX64(current_location)), HostLocToX64(current_location));
+                    return std::make_tuple(HostLocToX64(current_location), current_location);
                 }
             }
         }
     }
 
-    Gen::OpArg use_oparg = UseOpArg(use_value, any_gpr);
-    Gen::X64Reg def_reg = DefRegister(def_inst, desired_locations);
+    OpArg use_oparg = UseOpArg(use_value, any_gpr);
+    HostLoc def_reg = DefHostLocReg(def_inst, desired_locations);
     return std::make_tuple(use_oparg, def_reg);
 }
 
-Gen::X64Reg RegAlloc::UseRegister(IR::Value use_value, HostLocList desired_locations) {
+HostLoc RegAlloc::UseHostLocReg(IR::Value use_value, HostLocList desired_locations) {
     if (!use_value.IsImmediate()) {
-        return UseRegister(use_value.GetInst(), desired_locations);
+        return UseHostLocReg(use_value.GetInst(), desired_locations);
     }
 
-    return LoadImmediateIntoRegister(use_value, ScratchRegister(desired_locations));
+    return LoadImmediateIntoHostLocReg(use_value, ScratchHostLocReg(desired_locations));
 }
 
-Gen::X64Reg RegAlloc::UseRegister(IR::Inst* use_inst, HostLocList desired_locations) {
+HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_locations) {
     HostLoc current_location;
     bool was_being_used;
     std::tie(current_location, was_being_used) = UseHostLoc(use_inst, desired_locations);
 
     if (HostLocIsRegister(current_location)) {
-        return HostLocToX64(current_location);
+        return current_location;
     } else if (HostLocIsSpill(current_location)) {
         HostLoc new_location = SelectARegister(desired_locations);
         if (IsRegisterOccupied(new_location)) {
@@ -193,16 +183,15 @@ Gen::X64Reg RegAlloc::UseRegister(IR::Inst* use_inst, HostLocList desired_locati
             LocInfo(new_location).is_being_used = true;
             DEBUG_ASSERT(LocInfo(new_location).IsScratch());
         }
-        return HostLocToX64(new_location);
+        return new_location;
     }
 
     ASSERT_MSG(false, "Unknown current_location type");
-    return Gen::INVALID_REG;
 }
 
-Gen::OpArg RegAlloc::UseOpArg(IR::Value use_value, HostLocList desired_locations) {
+OpArg RegAlloc::UseOpArg(IR::Value use_value, HostLocList desired_locations) {
     if (use_value.IsImmediate()) {
-        return ImmediateToOpArg(use_value);
+        return Xbyak::Operand(); // return a None
     }
 
     IR::Inst* use_inst = use_value.GetInst();
@@ -212,24 +201,23 @@ Gen::OpArg RegAlloc::UseOpArg(IR::Value use_value, HostLocList desired_locations
     std::tie(current_location, was_being_used) = UseHostLoc(use_inst, desired_locations);
 
     if (HostLocIsRegister(current_location)) {
-        return Gen::R(HostLocToX64(current_location));
+        return HostLocToX64(current_location);
     } else if (HostLocIsSpill(current_location)) {
         return SpillToOpArg(current_location);
     }
 
     ASSERT_MSG(false, "Unknown current_location type");
-    return Gen::R(Gen::INVALID_REG);
 }
 
-Gen::X64Reg RegAlloc::UseScratchRegister(IR::Value use_value, HostLocList desired_locations) {
+HostLoc RegAlloc::UseScratchHostLocReg(IR::Value use_value, HostLocList desired_locations) {
     if (!use_value.IsImmediate()) {
-        return UseScratchRegister(use_value.GetInst(), desired_locations);
+        return UseScratchHostLocReg(use_value.GetInst(), desired_locations);
     }
 
-    return LoadImmediateIntoRegister(use_value, ScratchRegister(desired_locations));
+    return LoadImmediateIntoHostLocReg(use_value, ScratchHostLocReg(desired_locations));
 }
 
-Gen::X64Reg RegAlloc::UseScratchRegister(IR::Inst* use_inst, HostLocList desired_locations) {
+HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_locations) {
     DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
     DEBUG_ASSERT_MSG(ValueLocation(use_inst), "use_inst has not been defined");
     ASSERT_MSG(use_inst->HasUses(), "use_inst ran out of uses. (Use-d an IR::Inst* too many times)");
@@ -245,7 +233,7 @@ Gen::X64Reg RegAlloc::UseScratchRegister(IR::Inst* use_inst, HostLocList desired
         LocInfo(new_location).is_being_used = true;
         DecrementRemainingUses(use_inst);
         DEBUG_ASSERT(LocInfo(new_location).IsScratch());
-        return HostLocToX64(new_location);
+        return new_location;
     } else if (HostLocIsRegister(current_location)) {
         ASSERT(LocInfo(current_location).IsIdle()
                 || LocInfo(current_location).IsUse()
@@ -261,14 +249,13 @@ Gen::X64Reg RegAlloc::UseScratchRegister(IR::Inst* use_inst, HostLocList desired
         LocInfo(new_location).values.clear();
         DecrementRemainingUses(use_inst);
         DEBUG_ASSERT(LocInfo(new_location).IsScratch());
-        return HostLocToX64(new_location);
+        return new_location;
     }
 
-    ASSERT_MSG(0, "Invalid current_location");
-    return Gen::INVALID_REG;
+    ASSERT_MSG(false, "Invalid current_location");
 }
 
-Gen::X64Reg RegAlloc::ScratchRegister(HostLocList desired_locations) {
+HostLoc RegAlloc::ScratchHostLocReg(HostLocList desired_locations) {
     DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
 
     HostLoc location = SelectARegister(desired_locations);
@@ -281,7 +268,7 @@ Gen::X64Reg RegAlloc::ScratchRegister(HostLocList desired_locations) {
     LocInfo(location).is_being_used = true;
 
     DEBUG_ASSERT(LocInfo(location).IsScratch());
-    return HostLocToX64(location);
+    return location;
 }
 
 void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1_use, IR::Value arg2_use, IR::Value arg3_use) {
@@ -301,26 +288,26 @@ void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1
     // TODO: This works but almost certainly leads to suboptimal generated code.
 
     for (HostLoc caller_save : OtherCallerSave) {
-        ScratchRegister({caller_save});
+        ScratchHostLocReg({caller_save});
     }
 
     if (result_def) {
-        DefRegister(result_def, {AbiReturn});
+        DefHostLocReg(result_def, {AbiReturn});
     } else {
-        ScratchRegister({AbiReturn});
+        ScratchHostLocReg({AbiReturn});
     }
 
     for (size_t i = 0; i < AbiArgs.size(); i++) {
         if (!args[i]->IsEmpty()) {
-            UseScratchRegister(*args[i], {AbiArgs[i]});
+            UseScratchHostLocReg(*args[i], {AbiArgs[i]});
         } else {
-            ScratchRegister({AbiArgs[i]});
+            ScratchHostLocReg({AbiArgs[i]});
         }
     }
 
     // Flush all xmm registers
     for (auto xmm : any_xmm) {
-        ScratchRegister({xmm});
+        ScratchHostLocReg({xmm});
     }
 }
 
@@ -421,17 +408,17 @@ void RegAlloc::Reset() {
 
 void RegAlloc::EmitMove(HostLoc to, HostLoc from) {
     if (HostLocIsXMM(to) && HostLocIsSpill(from)) {
-        code->MOVSD(HostLocToX64(to), SpillToOpArg(from));
+        code->movsd(HostLocToXmm(to), SpillToOpArg(from));
     } else if (HostLocIsSpill(to) && HostLocIsXMM(from)) {
-        code->MOVSD(SpillToOpArg(to), HostLocToX64(from));
+        code->movsd(SpillToOpArg(to), HostLocToXmm(from));
     } else if (HostLocIsXMM(to) && HostLocIsXMM(from)) {
-        code->MOVAPS(HostLocToX64(to), Gen::R(HostLocToX64(from)));
+        code->movaps(HostLocToXmm(to), HostLocToXmm(from));
     } else if (HostLocIsGPR(to) && HostLocIsSpill(from)) {
-        code->MOV(64, Gen::R(HostLocToX64(to)), SpillToOpArg(from));
+        code->mov(HostLocToReg64(to), SpillToOpArg(from));
     } else if (HostLocIsSpill(to) && HostLocIsGPR(from)) {
-        code->MOV(64, SpillToOpArg(to), Gen::R(HostLocToX64(from)));
+        code->mov(SpillToOpArg(to), HostLocToReg64(from));
     } else if (HostLocIsGPR(to) && HostLocIsGPR(from)){
-        code->MOV(64, Gen::R(HostLocToX64(to)), Gen::R(HostLocToX64(from)));
+        code->mov(HostLocToReg64(to), HostLocToReg64(from));
     } else {
         ASSERT_MSG(false, "Invalid RegAlloc::EmitMove");
     }
@@ -439,7 +426,7 @@ void RegAlloc::EmitMove(HostLoc to, HostLoc from) {
 
 void RegAlloc::EmitExchange(HostLoc a, HostLoc b) {
     if (HostLocIsGPR(a) && HostLocIsGPR(b)) {
-        code->XCHG(64, Gen::R(HostLocToX64(a)), Gen::R(HostLocToX64(b)));
+        code->xchg(HostLocToReg64(a), HostLocToReg64(b));
     } else if (HostLocIsXMM(a) && HostLocIsXMM(b)) {
         ASSERT_MSG(false, "Exchange is unnecessary for XMM registers");
     } else {
@@ -496,14 +483,17 @@ std::tuple<HostLoc, bool> RegAlloc::UseHostLoc(IR::Inst* use_inst, HostLocList d
     return std::make_tuple(static_cast<HostLoc>(-1), false);
 }
 
-Gen::X64Reg RegAlloc::LoadImmediateIntoRegister(IR::Value imm, Gen::X64Reg reg) {
+HostLoc RegAlloc::LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc host_loc) {
     ASSERT_MSG(imm.IsImmediate(), "imm is not an immediate");
-    Gen::OpArg op_arg = ImmediateToOpArg(imm);
-    if (op_arg.GetImmValue() == 0)
-        code->XOR(32, Gen::R(reg), Gen::R(reg));
+
+    Xbyak::Reg64 reg = HostLocToReg64(host_loc);
+
+    u32 imm_value = ImmediateToU32(imm);
+    if (imm_value == 0)
+        code->xor_(reg, reg);
     else
-        code->MOV(32, Gen::R(reg), op_arg);
-    return reg;
+        code->mov(reg.cvt32(), imm_value);
+    return host_loc;
 }
 
 } // namespace BackendX64

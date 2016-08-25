@@ -6,27 +6,24 @@
 
 #include <limits>
 
+#include <xbyak.h>
+
+#include "backend_x64/abi.h"
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/jitstate.h"
-#include "common/x64/abi.h"
-
-using namespace Gen;
+#include "common/assert.h"
 
 namespace Dynarmic {
 namespace BackendX64 {
 
-BlockOfCode::BlockOfCode() : Gen::XCodeBlock() {
-    AllocCodeSpace(128 * 1024 * 1024);
+BlockOfCode::BlockOfCode() : Xbyak::CodeGenerator(128 * 1024 * 1024) {
     ClearCache(false);
 }
 
 void BlockOfCode::ClearCache(bool poison_memory) {
-    if (poison_memory) {
-        ClearCodeSpace();
-    } else {
-        ResetCodePtr();
-    }
-
+    consts.~Consts();
+    new (&consts) Consts();
+    reset();
     GenConstants();
     GenRunCode();
     GenReturnFromRunCode();
@@ -42,68 +39,116 @@ size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cyc
 }
 
 void BlockOfCode::ReturnFromRunCode(bool MXCSR_switch) {
-    JMP(MXCSR_switch ? return_from_run_code : return_from_run_code_without_mxcsr_switch, true);
+    jmp(MXCSR_switch ? return_from_run_code : return_from_run_code_without_mxcsr_switch);
 }
 
 void BlockOfCode::GenConstants() {
-    const_FloatNegativeZero32 = AlignCode16();
-    Write32(0x80000000u);
-    const_FloatNaN32 = AlignCode16();
-    Write32(0x7fc00000u);
-    const_FloatNonSignMask32 = AlignCode16();
-    Write64(0x7fffffffu);
-    const_FloatNegativeZero64 = AlignCode16();
-    Write64(0x8000000000000000u);
-    const_FloatNaN64 = AlignCode16();
-    Write64(0x7ff8000000000000u);
-    const_FloatNonSignMask64 = AlignCode16();
-    Write64(0x7fffffffffffffffu);
-    const_FloatPenultimatePositiveDenormal64 = AlignCode16();
-    Write64(0x000ffffffffffffeu);
-    const_FloatMinS32 = AlignCode16();
-    Write64(0xc1e0000000000000u); // -2147483648 as a double
-    const_FloatMaxS32 = AlignCode16();
-    Write64(0x41dfffffffc00000u); // 2147483647 as a double
-    const_FloatPositiveZero32 = const_FloatPositiveZero64 = const_FloatMinU32 = AlignCode16();
-    Write64(0x0000000000000000u); // 0 as a double
-    const_FloatMaxU32 = AlignCode16();
-    Write64(0x41efffffffe00000u); // 4294967295 as a double
-    AlignCode16();
+    align();
+    L(consts.FloatNegativeZero32);
+    dd(0x80000000u);
+
+    align();
+    L(consts.FloatNaN32);
+    dd(0x7fc00000u);
+
+    align();
+    L(consts.FloatNonSignMask32);
+    dq(0x7fffffffu);
+
+    align();
+    L(consts.FloatNegativeZero64);
+    dq(0x8000000000000000u);
+
+    align();
+    L(consts.FloatNaN64);
+    dq(0x7ff8000000000000u);
+
+    align();
+    L(consts.FloatNonSignMask64);
+    dq(0x7fffffffffffffffu);
+
+    align();
+    L(consts.FloatPenultimatePositiveDenormal64);
+    dq(0x000ffffffffffffeu);
+
+    align();
+    L(consts.FloatMinS32);
+    dq(0xc1e0000000000000u); // -2147483648 as a double
+
+    align();
+    L(consts.FloatMaxS32);
+    dq(0x41dfffffffc00000u); // 2147483647 as a double
+
+    align();
+    L(consts.FloatPositiveZero32);
+    L(consts.FloatPositiveZero64);
+    L(consts.FloatMinU32);
+    dq(0x0000000000000000u); // 0 as a double
+
+    align();
+    L(consts.FloatMaxU32);
+    dq(0x41efffffffe00000u); // 4294967295 as a double
+
+    align();
 }
 
 void BlockOfCode::GenRunCode() {
-    run_code = reinterpret_cast<RunCodeFuncType>(const_cast<u8*>(GetCodePtr()));
+    align();
+    run_code = getCurr<RunCodeFuncType>();
 
     // This serves two purposes:
     // 1. It saves all the registers we as a callee need to save.
     // 2. It aligns the stack so that the code the JIT emits can assume
     //    that the stack is appropriately aligned for CALLs.
-    ABI_PushRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
+    ABI_PushCalleeSaveRegistersAndAdjustStack(this);
 
-    MOV(64, R(R15), R(ABI_PARAM1));
+    mov(r15, ABI_PARAM1);
     SwitchMxcsrOnEntry();
-    JMPptr(R(ABI_PARAM2));
+    jmp(ABI_PARAM2);
 }
 
 void BlockOfCode::GenReturnFromRunCode() {
-    return_from_run_code = GetCodePtr();
+    return_from_run_code = getCurr<const void*>();
 
     SwitchMxcsrOnExit();
 
-    return_from_run_code_without_mxcsr_switch = GetCodePtr();
+    return_from_run_code_without_mxcsr_switch = getCurr<const void*>();
 
-    ABI_PopRegistersAndAdjustStack(ABI_ALL_CALLEE_SAVED, 8);
-    RET();
+    ABI_PopCalleeSaveRegistersAndAdjustStack(this);
+    ret();
 }
 
 void BlockOfCode::SwitchMxcsrOnEntry() {
-    STMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
-    LDMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
+    stmxcsr(dword[r15 + offsetof(JitState, save_host_MXCSR)]);
+    ldmxcsr(dword[r15 + offsetof(JitState, guest_MXCSR)]);
 }
 
 void BlockOfCode::SwitchMxcsrOnExit() {
-    STMXCSR(MDisp(R15, offsetof(JitState, guest_MXCSR)));
-    LDMXCSR(MDisp(R15, offsetof(JitState, save_host_MXCSR)));
+    stmxcsr(dword[r15 + offsetof(JitState, guest_MXCSR)]);
+    ldmxcsr(dword[r15 + offsetof(JitState, save_host_MXCSR)]);
+}
+
+void BlockOfCode::CallFunction(const void* fn) {
+    u64 distance = u64(fn) - (getCurr<u64>() + 5);
+    if (distance >= 0x0000000080000000ULL && distance < 0xFFFFFFFF80000000ULL) {
+        // Far call
+        mov(rax, u64(fn));
+        call(rax);
+    } else {
+        call(fn);
+    }
+}
+
+void BlockOfCode::SetCodePtr(CodePtr ptr) {
+    // The "size" defines where top_, the insertion point, is.
+    size_t required_size = reinterpret_cast<const u8*>(ptr) - getCode();
+    setSize(required_size);
+}
+
+void BlockOfCode::EnsurePatchLocationSize(CodePtr begin, size_t size) {
+    size_t current_size = getCurr<const u8*>() - reinterpret_cast<const u8*>(begin);
+    ASSERT(current_size <= size);
+    nop(size - current_size);
 }
 
 } // namespace BackendX64

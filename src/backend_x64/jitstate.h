@@ -15,7 +15,7 @@ namespace BackendX64 {
 
 class BlockOfCode;
 
-constexpr size_t SpillCount = 32;
+constexpr size_t SpillCount = 64;
 
 struct JitState {
     explicit JitState(const BlockOfCode* code) { ResetRSB(code); }
@@ -54,7 +54,7 @@ struct JitState {
     void SetFpscr(u32 FPSCR);
 };
 
-using CodePtr = const u8*;
+using CodePtr = const void*;
 
 } // namespace BackendX64
 } // namespace Dynarmic
