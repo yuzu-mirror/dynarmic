@@ -1944,7 +1944,7 @@ void EmitX64::EmitCondPrelude(const IR::Block& block) {
 
     // TODO: Improve, maybe.
     auto fixup = code->J_CC(cc, true);
-    EmitAddCycles(block.cycle_count);
+    EmitAddCycles(block.cond_failed_cycle_count);
     EmitTerminalLinkBlock(IR::Term::LinkBlock{block.cond_failed.get()}, block.location);
     code->SetJumpTarget(fixup);
 }

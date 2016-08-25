@@ -69,6 +69,8 @@ public:
     Arm::Cond cond = Arm::Cond::AL;
     /// Block to execute next if `cond` did not pass.
     boost::optional<Arm::LocationDescriptor> cond_failed = {};
+    /// Number of cycles this block takes to execute if the conditional fails.
+    size_t cond_failed_cycle_count = 0;
 
     /// List of instructions in this block.
     InstructionList instructions;

@@ -4,6 +4,8 @@
  * General Public License version 2 or any later version.
  */
 
+#include <algorithm>
+
 #include "common/assert.h"
 #include "frontend/arm_types.h"
 #include "frontend/decoder/arm.h"
@@ -15,11 +17,21 @@
 namespace Dynarmic {
 namespace Arm {
 
+static bool CondCanContinue(ConditionalState cond_state, IREmitter& ir) {
+    ASSERT_MSG(cond_state != ConditionalState::Break, "Should never happen.");
+
+    if (cond_state == ConditionalState::None)
+        return true;
+
+    // TODO: This is more conservative than necessary.
+    return std::all_of(ir.block.begin(), ir.block.end(), [](const IR::Inst& inst) { return !inst.WritesToCPSR(); });
+}
+
 IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
     ArmTranslatorVisitor visitor{descriptor};
 
     bool should_continue = true;
-    while (should_continue && visitor.cond_state == ConditionalState::None) {
+    while (should_continue && CondCanContinue(visitor.cond_state, visitor.ir)) {
         const u32 arm_pc = visitor.ir.current_location.PC();
         const u32 arm_instruction = memory_read_32(arm_pc);
 
@@ -39,11 +51,10 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
         visitor.ir.block.cycle_count++;
     }
 
-    if (visitor.cond_state == ConditionalState::Translating) {
+    if (visitor.cond_state == ConditionalState::Translating || visitor.cond_state == ConditionalState::Trailing) {
         if (should_continue) {
             visitor.ir.SetTerm(IR::Term::LinkBlockFast{visitor.ir.current_location});
         }
-        visitor.ir.block.cond_failed = { visitor.ir.current_location };
     }
 
     ASSERT_MSG(visitor.ir.block.terminal.which() != 0, "Terminal has not been set");
@@ -52,12 +63,26 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
 }
 
 bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
-    ASSERT_MSG(cond_state != ConditionalState::Translating,
-               "In the current impl, ConditionPassed should never be called again once a non-AL cond is hit. "
-                       "(i.e.: one and only one conditional instruction per block)");
     ASSERT_MSG(cond_state != ConditionalState::Break,
                "This should never happen. We requested a break but that wasn't honored.");
     ASSERT_MSG(cond != Cond::NV, "NV conditional is obsolete");
+
+    if (cond_state == ConditionalState::Translating) {
+        if (ir.block.cond_failed != ir.current_location || cond == Cond::AL) {
+            cond_state = ConditionalState::Trailing;
+        } else {
+            if (cond == ir.block.cond) {
+                ir.block.cond_failed = { ir.current_location.AdvancePC(4) };
+                ir.block.cond_failed_cycle_count++;
+                return true;
+            }
+
+            // cond has changed, abort
+            cond_state = ConditionalState::Break;
+            ir.SetTerm(IR::Term::LinkBlockFast{ir.current_location});
+            return false;
+        }
+    }
 
     if (cond == Cond::AL) {
         // Everything is fine with the world
@@ -78,6 +103,8 @@ bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
 
     cond_state = ConditionalState::Translating;
     ir.block.cond = cond;
+    ir.block.cond_failed = { ir.current_location.AdvancePC(4) };
+    ir.block.cond_failed_cycle_count = 1;
     return true;
 }
 

@@ -18,6 +18,8 @@ enum class ConditionalState {
     Break,
     /// This basic block is made up solely of conditional instructions.
     Translating,
+    /// This basic block is made up of conditional instructions followed by unconditional instructions.
+    Trailing,
 };
 
 struct ArmTranslatorVisitor final {
