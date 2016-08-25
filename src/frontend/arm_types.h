@@ -86,6 +86,10 @@ struct LocationDescriptor {
         return std::tie(arm_pc, tflag, eflag, fpscr) == std::tie(o.arm_pc, o.tflag, o.eflag, o.fpscr);
     }
 
+    bool operator != (const LocationDescriptor& o) const {
+        return !operator==(o);
+    }
+
     LocationDescriptor SetPC(u32 new_arm_pc) const {
         return LocationDescriptor(new_arm_pc, tflag, eflag, fpscr);
     }
