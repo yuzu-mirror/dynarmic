@@ -74,6 +74,8 @@ public:
     bool MayHaveSideEffects() const;
 
     bool HasUses() const { return use_count > 0; }
+    /// Gets a pseudo-operation associated with this instruction.
+    Inst* GetAssociatedPseudoOperation(Opcode opcode);
 
     /// Get the microop this microinstruction represents.
     Opcode GetOpcode() const { return op; }
@@ -90,8 +92,6 @@ public:
     void ReplaceUsesWith(Value& replacement);
 
     size_t use_count = 0;
-    Inst* carry_inst = nullptr;
-    Inst* overflow_inst = nullptr;
 
 private:
     void Use(Value& value);
@@ -99,6 +99,9 @@ private:
 
     Opcode op;
     std::array<Value, 3> args;
+
+    Inst* carry_inst = nullptr;
+    Inst* overflow_inst = nullptr;
 };
 
 } // namespace IR

@@ -214,6 +214,21 @@ bool Inst::MayHaveSideEffects() const {
 
 }
 
+Inst* Inst::GetAssociatedPseudoOperation(Opcode opcode) {
+    // This is faster than doing a search through the block.
+    switch (opcode) {
+    case IR::Opcode::GetCarryFromOp:
+        return carry_inst;
+    case IR::Opcode::GetOverflowFromOp:
+        return overflow_inst;
+    default:
+        break;
+    }
+
+    ASSERT_MSG(false, "Not a valid pseudo-operation");
+    return nullptr;
+}
+
 Type Inst::GetType() const {
     if (op == Opcode::Identity)
         return args[0].GetType();
@@ -266,9 +281,11 @@ void Inst::Use(Value& value) {
 
     switch (op){
     case Opcode::GetCarryFromOp:
+        ASSERT_MSG(!value.GetInst()->carry_inst, "Only one of each type of pseudo-op allowed");
         value.GetInst()->carry_inst = this;
         break;
     case Opcode::GetOverflowFromOp:
+        ASSERT_MSG(!value.GetInst()->overflow_inst, "Only one of each type of pseudo-op allowed");
         value.GetInst()->overflow_inst = this;
         break;
     default:

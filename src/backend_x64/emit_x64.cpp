@@ -41,20 +41,6 @@ static Xbyak::Address MJitStateCpsr() {
     return dword[r15 + offsetof(JitState, Cpsr)];
 }
 
-static IR::Inst* FindUseWithOpcode(IR::Inst* inst, IR::Opcode opcode) {
-    switch (opcode) {
-    case IR::Opcode::GetCarryFromOp:
-        return inst->carry_inst;
-    case IR::Opcode::GetOverflowFromOp:
-        return inst->overflow_inst;
-    default:
-        break;
-    }
-
-    ASSERT_MSG(false, "unreachable");
-    return nullptr;
-}
-
 static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
     block.Instructions().erase(block.Instructions().iterator_to(*inst));
 }
@@ -406,7 +392,7 @@ void EmitX64::EmitLeastSignificantWord(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitMostSignificantWord(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
     Xbyak::Reg64 result = reg_alloc.UseDefGpr(inst->GetArg(0), inst);
 
     code->shr(result, 32);
@@ -457,7 +443,7 @@ void EmitX64::EmitIsZero64(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     // TODO: Consider using BMI2 instructions like SHLX when arm-in-host flags is implemented.
 
@@ -552,7 +538,7 @@ void EmitX64::EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst) {
 }
 
 void EmitX64::EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     if (!carry_inst) {
         if (!inst->GetArg(2).IsImmediate()) {
@@ -657,7 +643,7 @@ void EmitX64::EmitLogicalShiftRight64(IR::Block& block, IR::Inst* inst) {
 }
 
 void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     if (!carry_inst) {
         if (!inst->GetArg(2).IsImmediate()) {
@@ -740,7 +726,7 @@ void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
 }
 
 void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     if (!carry_inst) {
         if (!inst->GetArg(2).IsImmediate()) {
@@ -814,7 +800,7 @@ void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
 }
 
 void EmitX64::EmitRotateRightExtended(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     Xbyak::Reg32 result = reg_alloc.UseDefGpr(inst->GetArg(0), inst).cvt32();
     Xbyak::Reg8 carry = carry_inst
@@ -842,8 +828,8 @@ static Xbyak::Reg8 DoCarry(RegAlloc& reg_alloc, const IR::Value& carry_in, IR::I
 }
 
 void EmitX64::EmitAddWithCarry(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
-    auto overflow_inst = FindUseWithOpcode(inst, IR::Opcode::GetOverflowFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
@@ -907,8 +893,8 @@ void EmitX64::EmitAdd64(IR::Block& block, IR::Inst* inst) {
 }
 
 void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
-    auto carry_inst = FindUseWithOpcode(inst, IR::Opcode::GetCarryFromOp);
-    auto overflow_inst = FindUseWithOpcode(inst, IR::Opcode::GetOverflowFromOp);
+    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
