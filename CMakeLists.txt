@@ -19,6 +19,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 # Compiler flags
 if (MSVC)
     add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
+    add_compile_options(/DNOMINMAX)
 else()
     add_compile_options(-Wall
                         -Werror
