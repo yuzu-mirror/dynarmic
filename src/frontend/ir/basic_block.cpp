@@ -13,22 +13,55 @@
 namespace Dynarmic {
 namespace IR {
 
+static std::string LocDescToString(const Arm::LocationDescriptor& loc) {
+    return Common::StringFromFormat("{%u,%s,%s,%u}",
+                                    loc.PC(),
+                                    loc.TFlag() ? "T" : "!T",
+                                    loc.EFlag() ? "E" : "!E",
+                                    loc.FPSCR().Value());
+}
+
+static std::string TerminalToString(const Terminal& terminal_variant) {
+    switch (terminal_variant.which()) {
+    case 1: {
+        auto terminal = boost::get<IR::Term::Interpret>(terminal_variant);
+        return Common::StringFromFormat("Interpret{%s}", LocDescToString(terminal.next).c_str());
+    }
+    case 2: {
+        return Common::StringFromFormat("ReturnToDispatch{}");
+    }
+    case 3: {
+        auto terminal = boost::get<IR::Term::LinkBlock>(terminal_variant);
+        return Common::StringFromFormat("LinkBlock{%s}", LocDescToString(terminal.next).c_str());
+    }
+    case 4: {
+        auto terminal = boost::get<IR::Term::LinkBlockFast>(terminal_variant);
+        return Common::StringFromFormat("LinkBlockFast{%s}", LocDescToString(terminal.next).c_str());
+    }
+    case 5: {
+        return Common::StringFromFormat("PopRSBHint{}");
+    }
+    case 6: {
+        auto terminal = boost::get<IR::Term::If>(terminal_variant);
+        return Common::StringFromFormat("If{%s, %s, %s}", CondToString(terminal.if_), TerminalToString(terminal.then_).c_str(), TerminalToString(terminal.else_).c_str());
+    }
+    case 7: {
+        auto terminal = boost::get<IR::Term::CheckHalt>(terminal_variant);
+        return Common::StringFromFormat("CheckHalt{%s}", TerminalToString(terminal.else_).c_str());
+    }
+    default:
+        return "<invalid terminal>";
+    }
+}
+
 std::string DumpBlock(const IR::Block& block) {
     std::string ret;
 
-    const auto loc_to_string = [](Arm::LocationDescriptor loc) -> std::string {
-        return Common::StringFromFormat("{%u,%s,%s,%u}",
-                                        loc.PC(),
-                                        loc.TFlag() ? "T" : "!T",
-                                        loc.EFlag() ? "E" : "!E",
-                                        loc.FPSCR().Value());
-    };
-
-    ret += Common::StringFromFormat("Block: location=%s\n", loc_to_string(block.location).c_str());
+    ret += Common::StringFromFormat("Block: location=%s\n", LocDescToString(block.location).c_str());
     ret += Common::StringFromFormat("cycles=%zu", block.cycle_count);
     ret += Common::StringFromFormat(", entry_cond=%s", Arm::CondToString(block.cond, true));
     if (block.cond != Arm::Cond::AL) {
-        ret += Common::StringFromFormat(", cond_fail=%s", loc_to_string(block.cond_failed.get()).c_str());
+        ret += Common::StringFromFormat(", cond_fail=%s", LocDescToString(block.cond_failed.get()).c_str());
     }
     ret += "\n";
 
@@ -85,6 +118,8 @@ std::string DumpBlock(const IR::Block& block) {
         ret += "\n";
         inst_to_index[&inst] = index++;
     }
+
+    ret += "terminal = " + TerminalToString(block.terminal) + "\n";
 
     return ret;
 }
