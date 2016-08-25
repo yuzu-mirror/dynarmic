@@ -87,6 +87,9 @@ if (DYNARMIC_USE_LLVM)
     llvm_map_components_to_libnames(llvm_libs x86desc x86disassembler)
 endif()
 
+# Pull in externals CMakeLists for libs where available
+add_subdirectory(externals)
+
 # Dynarmic project files
 add_subdirectory(src)
 add_subdirectory(tests)

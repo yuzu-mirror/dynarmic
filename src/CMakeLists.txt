@@ -81,3 +81,8 @@ set_target_properties(dynarmic PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(dynarmic
                            PUBLIC ../include
                            PRIVATE .)
+# Link fmt
+target_link_libraries(dynarmic PRIVATE fmt-header-only)
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    target_compile_definitions(dynarmic PRIVATE FMT_USE_WINDOWS_H=0)
+endif()
