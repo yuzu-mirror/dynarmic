@@ -21,6 +21,8 @@ BlockOfCode::BlockOfCode() : Xbyak::CodeGenerator(128 * 1024 * 1024) {
 }
 
 void BlockOfCode::ClearCache(bool poison_memory) {
+    consts.~Consts();
+    new (&consts) Consts();
     reset();
     GenConstants();
     GenRunCode();
@@ -42,49 +44,49 @@ void BlockOfCode::ReturnFromRunCode(bool MXCSR_switch) {
 
 void BlockOfCode::GenConstants() {
     align();
-    L(const_FloatNegativeZero32);
+    L(consts.FloatNegativeZero32);
     dd(0x80000000u);
 
     align();
-    L(const_FloatNaN32);
+    L(consts.FloatNaN32);
     dd(0x7fc00000u);
 
     align();
-    L(const_FloatNonSignMask32);
+    L(consts.FloatNonSignMask32);
     dq(0x7fffffffu);
 
     align();
-    L(const_FloatNegativeZero64);
+    L(consts.FloatNegativeZero64);
     dq(0x8000000000000000u);
 
     align();
-    L(const_FloatNaN64);
+    L(consts.FloatNaN64);
     dq(0x7ff8000000000000u);
 
     align();
-    L(const_FloatNonSignMask64);
+    L(consts.FloatNonSignMask64);
     dq(0x7fffffffffffffffu);
 
     align();
-    L(const_FloatPenultimatePositiveDenormal64);
+    L(consts.FloatPenultimatePositiveDenormal64);
     dq(0x000ffffffffffffeu);
 
     align();
-    L(const_FloatMinS32);
+    L(consts.FloatMinS32);
     dq(0xc1e0000000000000u); // -2147483648 as a double
 
     align();
-    L(const_FloatMaxS32);
+    L(consts.FloatMaxS32);
     dq(0x41dfffffffc00000u); // 2147483647 as a double
 
     align();
-    L(const_FloatPositiveZero32);
-    L(const_FloatPositiveZero64);
-    L(const_FloatMinU32);
+    L(consts.FloatPositiveZero32);
+    L(consts.FloatPositiveZero64);
+    L(consts.FloatMinU32);
     dq(0x0000000000000000u); // 0 as a double
 
     align();
-    L(const_FloatMaxU32);
+    L(consts.FloatMaxU32);
     dq(0x41efffffffe00000u); // 4294967295 as a double
 
     align();

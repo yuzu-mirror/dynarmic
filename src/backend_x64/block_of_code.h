@@ -36,43 +36,43 @@ public:
     void CallFunction(const void* fn);
 
     Xbyak::Address MFloatPositiveZero32() {
-        return xword[rip + const_FloatPositiveZero32];
+        return xword[rip + consts.FloatPositiveZero32];
     }
     Xbyak::Address MFloatNegativeZero32() {
-        return xword[rip + const_FloatNegativeZero32];
+        return xword[rip + consts.FloatNegativeZero32];
     }
     Xbyak::Address MFloatNaN32() {
-        return xword[rip + const_FloatNaN32];
+        return xword[rip + consts.FloatNaN32];
     }
     Xbyak::Address MFloatNonSignMask32() {
-        return xword[rip + const_FloatNonSignMask32];
+        return xword[rip + consts.FloatNonSignMask32];
     }
     Xbyak::Address MFloatPositiveZero64() {
-        return xword[rip + const_FloatPositiveZero64];
+        return xword[rip + consts.FloatPositiveZero64];
     }
     Xbyak::Address MFloatNegativeZero64() {
-        return xword[rip + const_FloatNegativeZero64];
+        return xword[rip + consts.FloatNegativeZero64];
     }
     Xbyak::Address MFloatNaN64() {
-        return xword[rip + const_FloatNaN64];
+        return xword[rip + consts.FloatNaN64];
     }
     Xbyak::Address MFloatNonSignMask64() {
-        return xword[rip + const_FloatNonSignMask64];
+        return xword[rip + consts.FloatNonSignMask64];
     }
     Xbyak::Address MFloatPenultimatePositiveDenormal64() {
-        return xword[rip + const_FloatPenultimatePositiveDenormal64];
+        return xword[rip + consts.FloatPenultimatePositiveDenormal64];
     }
     Xbyak::Address MFloatMinS32() {
-        return xword[rip + const_FloatMinS32];
+        return xword[rip + consts.FloatMinS32];
     }
     Xbyak::Address MFloatMaxS32() {
-        return xword[rip + const_FloatMaxS32];
+        return xword[rip + consts.FloatMaxS32];
     }
     Xbyak::Address MFloatMinU32() {
-        return xword[rip + const_FloatMinU32];
+        return xword[rip + consts.FloatMinU32];
     }
     Xbyak::Address MFloatMaxU32() {
-        return xword[rip + const_FloatMaxU32];
+        return xword[rip + consts.FloatMaxU32];
     }
 
     const void* GetReturnFromRunCodeAddress() const {
@@ -104,19 +104,21 @@ public:
 #endif
 
 private:
-    Xbyak::Label const_FloatPositiveZero32;
-    Xbyak::Label const_FloatNegativeZero32;
-    Xbyak::Label const_FloatNaN32;
-    Xbyak::Label const_FloatNonSignMask32;
-    Xbyak::Label const_FloatPositiveZero64;
-    Xbyak::Label const_FloatNegativeZero64;
-    Xbyak::Label const_FloatNaN64;
-    Xbyak::Label const_FloatNonSignMask64;
-    Xbyak::Label const_FloatPenultimatePositiveDenormal64;
-    Xbyak::Label const_FloatMinS32;
-    Xbyak::Label const_FloatMaxS32;
-    Xbyak::Label const_FloatMinU32;
-    Xbyak::Label const_FloatMaxU32;
+    struct Consts {
+        Xbyak::Label FloatPositiveZero32;
+        Xbyak::Label FloatNegativeZero32;
+        Xbyak::Label FloatNaN32;
+        Xbyak::Label FloatNonSignMask32;
+        Xbyak::Label FloatPositiveZero64;
+        Xbyak::Label FloatNegativeZero64;
+        Xbyak::Label FloatNaN64;
+        Xbyak::Label FloatNonSignMask64;
+        Xbyak::Label FloatPenultimatePositiveDenormal64;
+        Xbyak::Label FloatMinS32;
+        Xbyak::Label FloatMaxS32;
+        Xbyak::Label FloatMinU32;
+        Xbyak::Label FloatMaxU32;
+    } consts;
     void GenConstants();
 
     using RunCodeFuncType = void(*)(JitState*, CodePtr);
