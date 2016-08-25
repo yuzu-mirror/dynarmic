@@ -48,7 +48,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
         }
 
         visitor.ir.current_location = visitor.ir.current_location.AdvancePC(4);
-        visitor.ir.block.cycle_count++;
+        visitor.ir.block.CycleCount()++;
     }
 
     if (visitor.cond_state == ConditionalState::Translating || visitor.cond_state == ConditionalState::Trailing) {
@@ -57,7 +57,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryRead32FuncType memor
         }
     }
 
-    ASSERT_MSG(visitor.ir.block.terminal.which() != 0, "Terminal has not been set");
+    ASSERT_MSG(visitor.ir.block.HasTerminal(), "Terminal has not been set");
 
     return std::move(visitor.ir.block);
 }
@@ -68,12 +68,12 @@ bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
     ASSERT_MSG(cond != Cond::NV, "NV conditional is obsolete");
 
     if (cond_state == ConditionalState::Translating) {
-        if (ir.block.cond_failed != ir.current_location || cond == Cond::AL) {
+        if (ir.block.ConditionFailedLocation() != ir.current_location || cond == Cond::AL) {
             cond_state = ConditionalState::Trailing;
         } else {
-            if (cond == ir.block.cond) {
-                ir.block.cond_failed = { ir.current_location.AdvancePC(4) };
-                ir.block.cond_failed_cycle_count++;
+            if (cond == ir.block.GetCondition()) {
+                ir.block.SetConditionFailedLocation({ ir.current_location.AdvancePC(4) });
+                ir.block.ConditionFailedCycleCount()++;
                 return true;
             }
 
@@ -102,9 +102,9 @@ bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
     // We'll emit one instruction, and set the block-entry conditional appropriately.
 
     cond_state = ConditionalState::Translating;
-    ir.block.cond = cond;
-    ir.block.cond_failed = { ir.current_location.AdvancePC(4) };
-    ir.block.cond_failed_cycle_count = 1;
+    ir.block.SetCondition(cond);
+    ir.block.SetConditionFailedLocation({ ir.current_location.AdvancePC(4) });
+    ir.block.ConditionFailedCycleCount() = 1;
     return true;
 }
 

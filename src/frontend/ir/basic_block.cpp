@@ -4,14 +4,91 @@
  * General Public License version 2 or any later version.
  */
 
+#include <algorithm>
+#include <initializer_list>
 #include <map>
 #include <string>
 
+#include "common/assert.h"
 #include "common/string_util.h"
 #include "frontend/ir/basic_block.h"
+#include "frontend/ir/opcodes.h"
 
 namespace Dynarmic {
 namespace IR {
+
+void Block::AppendNewInst(Opcode opcode, std::initializer_list<IR::Value> args) {
+    IR::Inst* inst = new(instruction_alloc_pool->Alloc()) IR::Inst(opcode);
+    DEBUG_ASSERT(args.size() == inst->NumArgs());
+
+    std::for_each(args.begin(), args.end(), [&inst, index = size_t(0)](const auto& arg) mutable {
+        inst->SetArg(index, arg);
+        index++;
+    });
+
+    instructions.push_back(inst);
+}
+
+Arm::LocationDescriptor Block::Location() const {
+    return location;
+}
+
+Arm::Cond Block::GetCondition() const {
+    return cond;
+}
+
+void Block::SetCondition(Arm::Cond condition) {
+    cond = condition;
+}
+
+Arm::LocationDescriptor Block::ConditionFailedLocation() const {
+    return cond_failed.get();
+}
+
+void Block::SetConditionFailedLocation(Arm::LocationDescriptor location) {
+    cond_failed = location;
+}
+
+size_t& Block::ConditionFailedCycleCount() {
+    return cond_failed_cycle_count;
+}
+
+const size_t& Block::ConditionFailedCycleCount() const {
+    return cond_failed_cycle_count;
+}
+
+bool Block::HasConditionFailedLocation() const {
+    return cond_failed.is_initialized();
+}
+
+Block::InstructionList& Block::Instructions() {
+    return instructions;
+}
+
+const Block::InstructionList& Block::Instructions() const {
+    return instructions;
+}
+
+Terminal Block::GetTerminal() const {
+    return terminal;
+}
+
+void Block::SetTerminal(Terminal term) {
+    ASSERT_MSG(!HasTerminal(), "Terminal has already been set.");
+    terminal = term;
+}
+
+bool Block::HasTerminal() const {
+    return terminal.which() != 0;
+}
+
+size_t& Block::CycleCount() {
+    return cycle_count;
+}
+
+const size_t& Block::CycleCount() const {
+    return cycle_count;
+}
 
 static std::string LocDescToString(const Arm::LocationDescriptor& loc) {
     return Common::StringFromFormat("{%u,%s,%s,%u}",
@@ -57,11 +134,11 @@ static std::string TerminalToString(const Terminal& terminal_variant) {
 std::string DumpBlock(const IR::Block& block) {
     std::string ret;
 
-    ret += Common::StringFromFormat("Block: location=%s\n", LocDescToString(block.location).c_str());
-    ret += Common::StringFromFormat("cycles=%zu", block.cycle_count);
-    ret += Common::StringFromFormat(", entry_cond=%s", Arm::CondToString(block.cond, true));
-    if (block.cond != Arm::Cond::AL) {
-        ret += Common::StringFromFormat(", cond_fail=%s", LocDescToString(block.cond_failed.get()).c_str());
+    ret += Common::StringFromFormat("Block: location=%s\n", LocDescToString(block.Location()).c_str());
+    ret += Common::StringFromFormat("cycles=%zu", block.CycleCount());
+    ret += Common::StringFromFormat(", entry_cond=%s", Arm::CondToString(block.GetCondition(), true));
+    if (block.GetCondition() != Arm::Cond::AL) {
+        ret += Common::StringFromFormat(", cond_fail=%s", LocDescToString(block.ConditionFailedLocation()).c_str());
     }
     ret += "\n";
 
@@ -119,7 +196,7 @@ std::string DumpBlock(const IR::Block& block) {
         inst_to_index[&inst] = index++;
     }
 
-    ret += "terminal = " + TerminalToString(block.terminal) + "\n";
+    ret += "terminal = " + TerminalToString(block.GetTerminal()) + "\n";
 
     return ret;
 }

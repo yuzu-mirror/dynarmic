@@ -297,7 +297,7 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
                 Dynarmic::Optimization::VerificationPass(ir_block);
                 printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
                 printf("\n\nx86_64:\n%s", jit.Disassemble(descriptor).c_str());
-                num_insts += ir_block.cycle_count;
+                num_insts += ir_block.CycleCount();
             }
 
 #ifdef _MSC_VER

@@ -552,21 +552,12 @@ void IREmitter::Breakpoint() {
 }
 
 void IREmitter::SetTerm(const IR::Terminal& terminal) {
-    ASSERT_MSG(block.terminal.which() == 0, "Terminal has already been set.");
-    block.terminal = terminal;
+    block.SetTerminal(terminal);
 }
 
 IR::Value IREmitter::Inst(IR::Opcode op, std::initializer_list<IR::Value> args) {
-    IR::Inst* inst = new(block.instruction_alloc_pool->Alloc()) IR::Inst(op);
-    DEBUG_ASSERT(args.size() == inst->NumArgs());
-
-    std::for_each(args.begin(), args.end(), [&inst, op, index = size_t(0)](const auto& v) mutable {
-        inst->SetArg(index, v);
-        index++;
-    });
-
-    block.instructions.push_back(inst);
-    return IR::Value(inst);
+    block.AppendNewInst(op, args);
+    return IR::Value(&block.back());
 }
 
 } // namespace Arm

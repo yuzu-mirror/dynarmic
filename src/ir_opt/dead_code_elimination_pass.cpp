@@ -25,7 +25,7 @@ void DeadCodeElimination(IR::Block& block) {
         --iter;
         if (!iter->HasUses() && !iter->MayHaveSideEffects()) {
             iter->Invalidate();
-            iter = block.instructions.erase(iter);
+            iter = block.Instructions().erase(iter);
         }
     } while (iter != block.begin());
 }

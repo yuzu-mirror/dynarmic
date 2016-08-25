@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <initializer_list>
 #include <memory>
 #include <string>
 
@@ -17,9 +18,12 @@
 #include "frontend/arm_types.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/terminal.h"
+#include "frontend/ir/value.h"
 
 namespace Dynarmic {
 namespace IR {
+
+enum class Opcode;
 
 /**
  * A basic block. It consists of zero or more instructions followed by exactly one terminal.
@@ -63,6 +67,53 @@ public:
     const_reverse_iterator crbegin() const { return instructions.crbegin(); }
     const_reverse_iterator crend()   const { return instructions.crend();   }
 
+    /**
+     * Appends a new instruction to this basic block,
+     * handling any allocations necessary to do so.
+     *
+     * @param op   Opcode representing the instruction to add.
+     * @param args A sequence of Value instances used as arguments for the instruction.
+     */
+    void AppendNewInst(Opcode op, std::initializer_list<Value> args);
+
+    /// Gets the starting location for this basic block.
+    Arm::LocationDescriptor Location() const;
+
+    /// Gets the condition required to pass in order to execute this block.
+    Arm::Cond GetCondition() const;
+    /// Sets the condition required to pass in order to execute this block.
+    void SetCondition(Arm::Cond condition);
+
+    /// Gets the location of the block to execute if the predicated condition fails.
+    Arm::LocationDescriptor ConditionFailedLocation() const;
+    /// Sets the location of the block to execute if the predicated condition fails.
+    void SetConditionFailedLocation(Arm::LocationDescriptor location);
+    /// Determines whether or not a prediated condition failure block is present.
+    bool HasConditionFailedLocation() const;
+
+    /// Gets a mutable reference to the condition failed cycle count.
+    size_t& ConditionFailedCycleCount();
+    /// Gets an immutable reference to the condition failed cycle count.
+    const size_t& ConditionFailedCycleCount() const;
+
+    /// Gets a mutable reference to the instruction list for this basic block.
+    InstructionList& Instructions();
+    /// Gets an immutable reference to the instruction list for this basic block.
+    const InstructionList& Instructions() const;
+
+    /// Gets the terminal instruction for this basic block.
+    Terminal GetTerminal() const;
+    /// Sets the terminal instruction for this basic block.
+    void SetTerminal(Terminal term);
+    /// Determines whether or not this basic block has a terminal instruction.
+    bool HasTerminal() const;
+
+    /// Gets a mutable reference to the cycle count for this basic block.
+    size_t& CycleCount();
+    /// Gets an immutable reference to the cycle count for this basic block.
+    const size_t& CycleCount() const;
+
+private:
     /// Description of the starting location of this block
     Arm::LocationDescriptor location;
     /// Conditional to pass in order to execute this block

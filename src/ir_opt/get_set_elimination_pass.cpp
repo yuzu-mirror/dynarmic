@@ -33,7 +33,7 @@ void GetSetElimination(IR::Block& block) {
     const auto do_set = [&block](RegisterInfo& info, IR::Value value, Iterator set_inst) {
         if (info.set_instruction_present) {
             info.last_set_instruction->Invalidate();
-            block.instructions.erase(info.last_set_instruction);
+            block.Instructions().erase(info.last_set_instruction);
         }
 
         info.register_value = value;

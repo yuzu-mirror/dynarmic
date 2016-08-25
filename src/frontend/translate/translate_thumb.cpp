@@ -886,7 +886,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType mem
 
         s32 advance_pc = (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;
         visitor.ir.current_location = visitor.ir.current_location.AdvancePC(advance_pc);
-        visitor.ir.block.cycle_count++;
+        visitor.ir.block.CycleCount()++;
     }
 
     return std::move(visitor.ir.block);
