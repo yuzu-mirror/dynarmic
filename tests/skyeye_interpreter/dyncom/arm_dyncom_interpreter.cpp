@@ -746,7 +746,7 @@ static ThumbDecodeStatus DecodeThumbInstruction(u32 inst, u32 addr, u32* arm_ins
     ThumbDecodeStatus ret = TranslateThumbInstruction (addr, inst, arm_inst, inst_size);
     if (ret == ThumbDecodeStatus::BRANCH) {
         int inst_index;
-        int table_length = arm_instruction_trans_len;
+        int table_length = (int)arm_instruction_trans_len;
         u32 tinstr = GetThumbInstruction(inst, addr);
 
         switch ((tinstr & 0xF800) >> 11) {
@@ -837,7 +837,7 @@ static int InterpreterTranslateBlock(ARMul_State* cpu, int& bb_start, u32 addr) 
     ARM_INST_PTR inst_base = nullptr;
     TransExtData ret = TransExtData::NON_BRANCH;
     int size = 0; // instruction size of basic block
-    bb_start = trans_cache_buf_top;
+    bb_start = (int)trans_cache_buf_top;
 
     u32 phys_addr = addr;
     u32 pc_start = cpu->Reg[15];
@@ -864,7 +864,7 @@ static int InterpreterTranslateSingle(ARMul_State* cpu, int& bb_start, u32 addr)
 //    MICROPROFILE_SCOPE(DynCom_Decode);
 
     ARM_INST_PTR inst_base = nullptr;
-    bb_start = trans_cache_buf_top;
+    bb_start = (int)trans_cache_buf_top;
 
     u32 phys_addr = addr;
     u32 pc_start = cpu->Reg[15];
