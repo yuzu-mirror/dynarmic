@@ -144,7 +144,7 @@ void Jit::HaltExecution() {
 std::array<u32, 16>& Jit::Regs() {
     return impl->jit_state.Reg;
 }
-std::array<u32, 16> Jit::Regs() const {
+const std::array<u32, 16>& Jit::Regs() const {
     return impl->jit_state.Reg;
 }
 
@@ -152,7 +152,7 @@ std::array<u32, 64>& Jit::ExtRegs() {
     return impl->jit_state.ExtReg;
 }
 
-std::array<u32, 64> Jit::ExtRegs() const {
+const std::array<u32, 64>& Jit::ExtRegs() const {
     return impl->jit_state.ExtReg;
 }
 

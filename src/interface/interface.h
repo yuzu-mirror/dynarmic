@@ -72,9 +72,9 @@ public:
 
     /// View and modify registers.
     std::array<u32, 16>& Regs();
-    std::array<u32, 16> Regs() const;
+    const std::array<u32, 16>& Regs() const;
     std::array<u32, 64>& ExtRegs();
-    std::array<u32, 64> ExtRegs() const;
+    const std::array<u32, 64>& ExtRegs() const;
 
     /// View and modify CPSR.
     u32& Cpsr();
