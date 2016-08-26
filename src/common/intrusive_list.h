@@ -22,21 +22,33 @@ template <typename T> class IntrusiveListIterator;
 template <typename T>
 class IntrusiveListNode {
 public:
-    void UnlinkFromList() {
-        prev->next = next;
-        next->prev = prev;
-#if !defined(NDEBUG)
-        next = prev = nullptr;
-#endif
+    bool IsSentinel() const {
+        return is_sentinel;
     }
 
-private:
+protected:
+    IntrusiveListNode* next = nullptr;
+    IntrusiveListNode* prev = nullptr;
+    bool is_sentinel = false;
+
     friend class IntrusiveList<T>;
     friend class IntrusiveListIterator<T>;
     friend class IntrusiveListIterator<const T>;
+};
 
-    IntrusiveListNode* next = this;
-    IntrusiveListNode* prev = this;
+template <typename T>
+class IntrusiveListSentinel final : public IntrusiveListNode<T>
+{
+    using IntrusiveListNode<T>::next;
+    using IntrusiveListNode<T>::prev;
+    using IntrusiveListNode<T>::is_sentinel;
+
+public:
+    IntrusiveListSentinel() {
+        next = this;
+        prev = this;
+        is_sentinel = true;
+    }
 };
 
 template <typename T>
@@ -61,15 +73,19 @@ public:
     IntrusiveListIterator(const IntrusiveListIterator& other) = default;
     IntrusiveListIterator& operator=(const IntrusiveListIterator& other) = default;
 
-    IntrusiveListIterator(node_pointer list_root, node_pointer node) : root(list_root), node(node) {
+    explicit IntrusiveListIterator(node_pointer list_node) : node(list_node) {
+    }
+    explicit IntrusiveListIterator(pointer data) : node(data) {
+    }
+    explicit IntrusiveListIterator(reference data) : node(&data) {
     }
 
     IntrusiveListIterator& operator++() {
-        node = node == root ? node : node->next;
+        node = node->next;
         return *this;
     }
     IntrusiveListIterator& operator--() {
-        node = node->prev == root ? node : node->prev;
+        node = node->prev;
         return *this;
     }
     IntrusiveListIterator operator++(int) {
@@ -84,19 +100,17 @@ public:
     }
 
     bool operator==(const IntrusiveListIterator& other) const {
-        DEBUG_ASSERT(root == other.root);
         return node == other.node;
     }
     bool operator!=(const IntrusiveListIterator& other) const {
-        return !(*this == other);
+        return !operator==(other);
     }
 
     reference operator*() const {
-        DEBUG_ASSERT(node != root);
-        return static_cast<T&>(*node);
+        DEBUG_ASSERT(!node->IsSentinel());
+        return static_cast<reference>(*node);
     }
     pointer operator->() const {
-        DEBUG_ASSERT(node != root);
         return std::addressof(operator*());
     }
 
@@ -106,7 +120,6 @@ public:
 
 private:
     friend class IntrusiveList<T>;
-    node_pointer root = nullptr;
     node_pointer node = nullptr;
 };
 
@@ -150,7 +163,7 @@ public:
         existing_node->prev->next = new_node;
         existing_node->prev = new_node;
 
-        return iterator(root.get(), new_node);
+        return iterator(new_node);
     }
 
     /**
@@ -201,11 +214,47 @@ public:
     }
 
     /**
-     * Removes node from list
-     * @param node Node to remove from list.
+     * Removes a node from this list
+     * @param node An iterator that points to the node to remove from list.
      */
-    void remove(reference node) {
-        node.UnlinkFromList();
+    pointer remove(iterator& it) {
+        DEBUG_ASSERT(it != end());
+
+        pointer node = &*it++;
+
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
+    #if !defined(NDEBUG)
+        node->next = nullptr;
+        node->prev = nullptr;
+    #endif
+
+        return node;
+    }
+
+    /**
+     * Removes a node from this list
+     * @param node A constant iterator that points to the node to remove from list.
+     */
+    pointer remove(const iterator& it) {
+        iterator copy = it;
+        return remove(it);
+    }
+
+    /**
+     * Removes a node from this list.
+     * @param node A pointer to the node to remove.
+     */
+    pointer remove(pointer node) {
+        return remove(iterator(node));
+    }
+
+    /**
+     * Removes a node from this list.
+     * @param node A reference to the node to remove.
+     */
+    pointer remove(reference node) {
+        return remove(iterator(node));
     }
 
     /**
@@ -261,31 +310,45 @@ public:
     }
 
     // Iterator interface
-    iterator               begin()         { return iterator(root.get(), root->next);       }
-    const_iterator         begin()   const { return const_iterator(root.get(), root->next); }
-    const_iterator         cbegin()  const { return begin();                                }
+    iterator               begin()         { return iterator(root->next);            }
+    const_iterator         begin()   const { return const_iterator(root->next);      }
+    const_iterator         cbegin()  const { return begin();                         }
 
-    iterator               end()           { return iterator(root.get(), root.get());       }
-    const_iterator         end()     const { return const_iterator(root.get(), root.get()); }
-    const_iterator         cend()    const { return end();                                  }
+    iterator               end()           { return iterator(root.get());            }
+    const_iterator         end()     const { return const_iterator(root.get());      }
+    const_iterator         cend()    const { return end();                           }
 
-    reverse_iterator       rbegin()        { return reverse_iterator(end());                }
-    const_reverse_iterator rbegin()  const { return const_reverse_iterator(end());          }
-    const_reverse_iterator crbegin() const { return rbegin();                               }
+    reverse_iterator       rbegin()        { return reverse_iterator(end());         }
+    const_reverse_iterator rbegin()  const { return const_reverse_iterator(end());   }
+    const_reverse_iterator crbegin() const { return rbegin();                        }
 
-    reverse_iterator       rend()          { return reverse_iterator(begin());              }
-    const_reverse_iterator rend()    const { return const_reverse_iterator(begin());        }
-    const_reverse_iterator crend()   const { return rend();                                 }
+    reverse_iterator       rend()          { return reverse_iterator(begin());       }
+    const_reverse_iterator rend()    const { return const_reverse_iterator(begin()); }
+    const_reverse_iterator crend()   const { return rend();                          }
 
-    iterator       iterator_to(reference item)       { return iterator(root.get(), &item);       }
-    const_iterator iterator_to(reference item) const { return const_iterator(root.get(), &item); }
-
+    /**
+     * Erases a node from the list, indicated by an iterator.
+     * @param it The iterator that points to the node to erase.
+     */
     iterator erase(iterator it) {
-        DEBUG_ASSERT(it.root == root.get() && it.node != it.root);
-        IntrusiveListNode<T>* to_remove = it.node;
-        ++it;
-        to_remove->UnlinkFromList();
+        remove(it);
         return it;
+    }
+
+    /**
+     * Erases a node from this list.
+     * @param node A pointer to the node to erase from this list.
+     */
+    iterator erase(pointer node) {
+        return erase(iterator(node));
+    }
+
+    /**
+     * Erases a node from this list.
+     * @param node A reference to the node to erase from this list.
+     */
+    iterator erase(reference node) {
+        return erase(iterator(node));
     }
 
     /**
@@ -297,7 +360,7 @@ public:
     }
 
 private:
-    std::shared_ptr<IntrusiveListNode<T>> root = std::make_shared<IntrusiveListNode<T>>();
+    std::shared_ptr<IntrusiveListNode<T>> root = std::make_shared<IntrusiveListSentinel<T>>();
 };
 
 /**

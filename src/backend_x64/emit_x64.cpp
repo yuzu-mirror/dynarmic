@@ -42,7 +42,7 @@ static Xbyak::Address MJitStateCpsr() {
 }
 
 static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
-    block.Instructions().erase(block.Instructions().iterator_to(*inst));
+    block.Instructions().erase(inst);
 }
 
 EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
