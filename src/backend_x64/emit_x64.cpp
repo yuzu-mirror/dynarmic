@@ -1300,13 +1300,10 @@ static void DefaultNaN64(BlockOfCode* code, Xbyak::Xmm xmm_value) {
     code->L(end);
 }
 
-static void ZeroIfNaN64(BlockOfCode* code, Xbyak::Xmm xmm_value) {
-    Xbyak::Label end;
-
-    code->ucomisd(xmm_value, xmm_value);
-    code->jnp(end);
-    code->pxor(xmm_value, xmm_value);
-    code->L(end);
+static void ZeroIfNaN64(BlockOfCode* code, Xbyak::Xmm xmm_value, Xbyak::Xmm xmm_scratch) {
+    code->pxor(xmm_scratch, xmm_scratch);
+    code->cmpordsd(xmm_scratch, xmm_value); // true mask when ordered (i.e.: when not an NaN)
+    code->pand(xmm_value, xmm_scratch);
 }
 
 static void FPThreeOp32(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, void (Xbyak::CodeGenerator::*fn)(const Xbyak::Xmm&, const Xbyak::Operand&)) {
@@ -1532,6 +1529,7 @@ void EmitX64::EmitFPSingleToS32(IR::Block& block, IR::Inst* inst) {
     Xbyak::Xmm from = reg_alloc.UseScratchXmm(a);
     Xbyak::Xmm to = reg_alloc.DefXmm(inst);
     Xbyak::Reg32 gpr_scratch = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Xmm xmm_scratch = reg_alloc.ScratchXmm();
 
     // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
     // Conversion to double is lossless, and allows for clamping.
@@ -1547,7 +1545,7 @@ void EmitX64::EmitFPSingleToS32(IR::Block& block, IR::Inst* inst) {
         code->cvtsd2si(gpr_scratch, from); // 32 bit gpr
     }
     // Clamp to output range
-    ZeroIfNaN64(code, from);
+    ZeroIfNaN64(code, from, xmm_scratch);
     code->minsd(from, code->MFloatMaxS32());
     code->maxsd(from, code->MFloatMinS32());
     // Second time is for real
@@ -1566,6 +1564,7 @@ void EmitX64::EmitFPSingleToU32(IR::Block& block, IR::Inst* inst) {
     Xbyak::Xmm from = reg_alloc.UseScratchXmm(a);
     Xbyak::Xmm to = reg_alloc.DefXmm(inst);
     Xbyak::Reg32 gpr_scratch = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Xmm xmm_scratch = reg_alloc.ScratchXmm();
 
     // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
     // Conversion to double is lossless, and allows for accurate clamping.
@@ -1579,7 +1578,7 @@ void EmitX64::EmitFPSingleToU32(IR::Block& block, IR::Inst* inst) {
             DenormalsAreZero32(code, from, gpr_scratch);
         }
         code->cvtss2sd(from, from);
-        ZeroIfNaN64(code, from);
+        ZeroIfNaN64(code, from, xmm_scratch);
         // Bring into SSE range
         code->addsd(from, code->MFloatMinS32());
         // First time is to set flags
@@ -1600,7 +1599,7 @@ void EmitX64::EmitFPSingleToU32(IR::Block& block, IR::Inst* inst) {
             DenormalsAreZero32(code, from, gpr_scratch);
         }
         code->cvtss2sd(from, from);
-        ZeroIfNaN64(code, from);
+        ZeroIfNaN64(code, from, xmm_scratch);
         // Generate masks if out-of-signed-range
         code->movaps(xmm_mask, code->MFloatMaxS32());
         code->cmpltsd(xmm_mask, from);
@@ -1629,6 +1628,7 @@ void EmitX64::EmitFPDoubleToS32(IR::Block& block, IR::Inst* inst) {
     Xbyak::Xmm from = reg_alloc.UseScratchXmm(a);
     Xbyak::Xmm to = reg_alloc.DefXmm(inst);
     Xbyak::Reg32 gpr_scratch = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Xmm xmm_scratch = reg_alloc.ScratchXmm();
 
     // ARM saturates on conversion; this differs from x64 which returns a sentinel value.
 
@@ -1642,7 +1642,7 @@ void EmitX64::EmitFPDoubleToS32(IR::Block& block, IR::Inst* inst) {
         code->cvtsd2si(gpr_scratch, from); // 32 bit gpr
     }
     // Clamp to output range
-    ZeroIfNaN64(code, from);
+    ZeroIfNaN64(code, from, xmm_scratch);
     code->minsd(from, code->MFloatMaxS32());
     code->maxsd(from, code->MFloatMinS32());
     // Second time is for real
@@ -1671,7 +1671,7 @@ void EmitX64::EmitFPDoubleToU32(IR::Block& block, IR::Inst* inst) {
         if (block.Location().FPSCR().FTZ()) {
             DenormalsAreZero64(code, from, gpr_scratch.cvt64());
         }
-        ZeroIfNaN64(code, from);
+        ZeroIfNaN64(code, from, xmm_scratch);
         // Bring into SSE range
         code->addsd(from, code->MFloatMinS32());
         // First time is to set flags
@@ -1691,7 +1691,7 @@ void EmitX64::EmitFPDoubleToU32(IR::Block& block, IR::Inst* inst) {
         if (block.Location().FPSCR().FTZ()) {
             DenormalsAreZero64(code, from, gpr_scratch.cvt64());
         }
-        ZeroIfNaN64(code, from);
+        ZeroIfNaN64(code, from, xmm_scratch);
         // Generate masks if out-of-signed-range
         code->movaps(xmm_mask, code->MFloatMaxS32());
         code->cmpltsd(xmm_mask, from);
