@@ -100,7 +100,7 @@ private:
         Optimization::GetSetElimination(ir_block);
         Optimization::DeadCodeElimination(ir_block);
         Optimization::VerificationPass(ir_block);
-        return emitter.Emit(descriptor, ir_block);
+        return emitter.Emit(ir_block);
     }
 };
 

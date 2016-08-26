@@ -34,8 +34,11 @@ public:
         size_t size;      ///< Length in bytes of emitted code
     };
 
-    /// Emit host machine code for a basic block starting at `descriptor` with intermediate representation `ir`.
-    BlockDescriptor Emit(const Arm::LocationDescriptor descriptor, IR::Block& ir);
+    /**
+     * Emit host machine code for a basic block with intermediate representation `ir`.
+     * @note ir is modified.
+     */
+    BlockDescriptor Emit(IR::Block& ir);
 
     /// Looks up an emitted host block in the cache.
     boost::optional<BlockDescriptor> GetBasicBlock(Arm::LocationDescriptor descriptor) {

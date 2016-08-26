@@ -45,7 +45,9 @@ static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
     block.Instructions().erase(block.Instructions().iterator_to(*inst));
 }
 
-EmitX64::BlockDescriptor EmitX64::Emit(const Arm::LocationDescriptor descriptor, Dynarmic::IR::Block& block) {
+EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
+    const Arm::LocationDescriptor& descriptor = block.Location();
+
     reg_alloc.Reset();
 
     code->int3();
