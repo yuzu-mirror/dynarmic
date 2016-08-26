@@ -109,7 +109,7 @@ public:
         std::tie(op, host_loc) = UseDefOpArgHostLocReg(use_value, def_inst, desired_locations);
         return std::make_tuple(op, HostLocToReg64(host_loc));
     }
-    std::tuple<OpArg, Xbyak::Xmm> UseDefOpArgXmm(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
+    std::tuple<OpArg, Xbyak::Xmm> UseDefOpArgXmm(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_xmm) {
         OpArg op;
         HostLoc host_loc;
         std::tie(op, host_loc) = UseDefOpArgHostLocReg(use_value, def_inst, desired_locations);
