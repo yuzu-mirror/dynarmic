@@ -26,7 +26,7 @@ namespace BackendX64 {
 struct OpArg {
     OpArg() : type(OPERAND), inner_operand() {}
     OpArg(const Xbyak::Address& address) : type(ADDRESS), inner_address(address) {}
-    OpArg(const Xbyak::Operand& operand) : type(OPERAND), inner_operand(operand) {}
+    OpArg(const Xbyak::Reg& reg) : type(REG), inner_reg(reg) {}
 
     Xbyak::Operand& operator*() {
         switch (type) {
@@ -34,6 +34,8 @@ struct OpArg {
             return inner_address;
         case OPERAND:
             return inner_operand;
+        case REG:
+            return inner_reg;
         }
         ASSERT_MSG(false, "Unreachable");
     }
@@ -46,6 +48,24 @@ struct OpArg {
         case OPERAND:
             inner_operand.setBit(bits);
             return;
+        case REG:
+            switch (bits) {
+            case 8:
+                inner_reg = inner_reg.cvt8();
+                return;
+            case 16:
+                inner_reg = inner_reg.cvt16();
+                return;
+            case 32:
+                inner_reg = inner_reg.cvt32();
+                return;
+            case 64:
+                inner_reg = inner_reg.cvt64();
+                return;
+            default:
+                ASSERT_MSG(false, "Invalid bits");
+                return;
+            }
         }
         ASSERT_MSG(false, "Unreachable");
     }
@@ -54,11 +74,13 @@ private:
     enum {
         OPERAND,
         ADDRESS,
+        REG,
     } type;
 
     union {
         Xbyak::Operand inner_operand;
         Xbyak::Address inner_address;
+        Xbyak::Reg inner_reg;
     };
 };
 

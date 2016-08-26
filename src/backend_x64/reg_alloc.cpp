@@ -191,7 +191,8 @@ HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_location
 
 OpArg RegAlloc::UseOpArg(IR::Value use_value, HostLocList desired_locations) {
     if (use_value.IsImmediate()) {
-        return Xbyak::Operand(); // return a None
+        ASSERT_MSG(false, "UseOpArg does not support immediates");
+        return {}; // return a None
     }
 
     IR::Inst* use_inst = use_value.GetInst();
