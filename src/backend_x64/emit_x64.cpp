@@ -361,11 +361,11 @@ void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
 }
 
 void EmitX64::EmitGetCarryFromOp(IR::Block&, IR::Inst*) {
-    ASSERT_MSG(0, "should never happen");
+    ASSERT_MSG(false, "should never happen");
 }
 
 void EmitX64::EmitGetOverflowFromOp(IR::Block&, IR::Inst*) {
-    ASSERT_MSG(0, "should never happen");
+    ASSERT_MSG(false, "should never happen");
 }
 
 void EmitX64::EmitPack2x32To1x64(IR::Block&, IR::Inst* inst) {
@@ -2002,7 +2002,7 @@ static Xbyak::Label EmitCond(BlockOfCode* code, Arm::Cond cond) {
         break;
     }
     default:
-        ASSERT_MSG(0, "Unknown cond %zu", static_cast<size_t>(cond));
+        ASSERT_MSG(false, "Unknown cond %zu", static_cast<size_t>(cond));
         break;
     }
 
@@ -2047,7 +2047,7 @@ void EmitX64::EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initia
         EmitTerminalCheckHalt(boost::get<IR::Term::CheckHalt>(terminal), initial_location);
         return;
     default:
-        ASSERT_MSG(0, "Invalid Terminal. Bad programmer.");
+        ASSERT_MSG(false, "Invalid Terminal. Bad programmer.");
         return;
     }
 }

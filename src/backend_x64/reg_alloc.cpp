@@ -371,7 +371,7 @@ HostLoc RegAlloc::FindFreeSpill() const {
         if (!IsRegisterOccupied(HostLocSpill(i)))
             return HostLocSpill(i);
 
-    ASSERT_MSG(0, "All spill locations are full");
+    ASSERT_MSG(false, "All spill locations are full");
 }
 
 void RegAlloc::EndOfAllocScope() {
@@ -476,7 +476,7 @@ std::tuple<HostLoc, bool> RegAlloc::UseHostLoc(IR::Inst* use_inst, HostLocList d
         return std::make_tuple(new_location, false);
     }
 
-    ASSERT_MSG(0, "Invalid current_location");
+    ASSERT_MSG(false, "Invalid current_location");
     return std::make_tuple(static_cast<HostLoc>(-1), false);
 }
 
