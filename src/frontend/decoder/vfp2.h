@@ -96,6 +96,10 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     // VCMP
     // VCMPE
 
+    // Floating-point system register access
+    INST(&V::vfp2_VMSR,           "VMSR",                    "cccc111011100001tttt101000010000"),
+    INST(&V::vfp2_VMRS,           "VMRS",                    "cccc111011110001tttt101000010000"),
+
     // Extension register load-store instructions
     INST(&V::vfp2_VPUSH,          "VPUSH",                   "cccc11010D101101dddd101zvvvvvvvv"),
     INST(&V::vfp2_VPOP,           "VPOP",                    "cccc11001D111101dddd101zvvvvvvvv"),

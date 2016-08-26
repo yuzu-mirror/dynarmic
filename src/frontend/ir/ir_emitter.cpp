@@ -134,8 +134,23 @@ void IREmitter::OrQFlag(const Value& value) {
     Inst(Opcode::OrQFlag, {value});
 }
 
-Value IREmitter::Pack2x32To1x64(const Value& lo, const Value& hi)
-{
+Value IREmitter::GetFpscr() {
+    return Inst(Opcode::GetFpscr, {});
+}
+
+void IREmitter::SetFpscr(const Value& new_fpscr) {
+    Inst(Opcode::SetFpscr, {new_fpscr});
+}
+
+Value IREmitter::GetFpscrNZCV() {
+    return Inst(Opcode::GetFpscrNZCV, {});
+}
+
+void IREmitter::SetFpscrNZCV(const Value& new_fpscr_nzcv) {
+    Inst(Opcode::SetFpscrNZCV, {new_fpscr_nzcv});
+}
+
+Value IREmitter::Pack2x32To1x64(const Value& lo, const Value& hi) {
     return Inst(Opcode::Pack2x32To1x64, {lo, hi});
 }
 

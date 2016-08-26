@@ -327,6 +327,50 @@ void EmitX64::EmitCallSupervisor(IR::Block&, IR::Inst* inst) {
     code->SwitchMxcsrOnEntry();
 }
 
+static u32 GetFpscrImpl(JitState* jit_state) {
+    return jit_state->Fpscr();
+}
+
+void EmitX64::EmitGetFpscr(IR::Block&, IR::Inst* inst) {
+    reg_alloc.HostCall(inst);
+    code->mov(code->ABI_PARAM1, code->r15);
+
+    code->SwitchMxcsrOnExit();
+    code->CallFunction(reinterpret_cast<void*>(&GetFpscrImpl));
+    code->SwitchMxcsrOnEntry();
+}
+
+static void SetFpscrImpl(u32 value, JitState* jit_state) {
+    jit_state->SetFpscr(value);
+}
+
+void EmitX64::EmitSetFpscr(IR::Block&, IR::Inst* inst) {
+    auto a = inst->GetArg(0);
+
+    reg_alloc.HostCall(nullptr, a);
+    code->mov(code->ABI_PARAM2, code->r15);
+
+    code->SwitchMxcsrOnExit();
+    code->CallFunction(reinterpret_cast<void*>(&SetFpscrImpl));
+    code->SwitchMxcsrOnEntry();
+}
+
+void EmitX64::EmitGetFpscrNZCV(IR::Block&, IR::Inst* inst) {
+    using namespace Xbyak::util;
+
+    Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+
+    code->mov(result, dword[r15 + offsetof(JitState, guest_FPSCR_nzcv)]);
+}
+
+void EmitX64::EmitSetFpscrNZCV(IR::Block&, IR::Inst* inst) {
+    using namespace Xbyak::util;
+
+    Xbyak::Reg32 value = reg_alloc.UseGpr(inst->GetArg(0)).cvt32();
+
+    code->mov(dword[r15 + offsetof(JitState, guest_FPSCR_nzcv)], value);
+}
+
 void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
     using namespace Xbyak::util;
 

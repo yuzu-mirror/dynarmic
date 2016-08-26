@@ -77,6 +77,11 @@ public:
     void SetVFlag(const Value& value);
     void OrQFlag(const Value& value);
 
+    Value GetFpscr();
+    void SetFpscr(const Value& new_fpscr);
+    Value GetFpscrNZCV();
+    void SetFpscrNZCV(const Value& new_fpscr_nzcv);
+
     Value Pack2x32To1x64(const Value& lo, const Value& hi);
     Value LeastSignificantWord(const Value& value);
     ResultAndCarry MostSignificantWord(const Value& value);

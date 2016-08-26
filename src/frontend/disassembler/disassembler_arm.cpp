@@ -889,6 +889,17 @@ public:
         return fmt::format("vcvt{}{}.s32.{} {}, {}", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
     }
 
+    std::string vfp2_VMSR(Cond cond, Reg t) {
+        return fmt::format("vmsr{} fpscr, {}", CondToString(cond), RegToString(t));
+    }
+    std::string vfp2_VMRS(Cond cond, Reg t) {
+        if (t == Reg::R15) {
+            return fmt::format("vmrs{} apsr_nzcv, fpscr", CondToString(cond));
+        } else {
+            return fmt::format("vmrs{} {}, fpscr", CondToString(cond), RegToString(t));
+        }
+    }
+
     std::string vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
         return fmt::format("vpop{} {}(+{})", CondToString(cond), FPRegStr(sz, Vd, D), imm8 >> (sz ? 1 : 0));
     }

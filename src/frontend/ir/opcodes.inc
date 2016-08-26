@@ -23,6 +23,10 @@ OPCODE(SetVFlag,                T::Void,        T::U1                           
 OPCODE(OrQFlag,                 T::Void,        T::U1                                           )
 OPCODE(BXWritePC,               T::Void,        T::U32                                          )
 OPCODE(CallSupervisor,          T::Void,        T::U32                                          )
+OPCODE(GetFpscr,                T::U32,                                                         )
+OPCODE(SetFpscr,                T::Void,        T::U32,                                         )
+OPCODE(GetFpscrNZCV,            T::U32,                                                         )
+OPCODE(SetFpscrNZCV,            T::Void,        T::U32,                                         )
 
 // Hints
 OPCODE(PushRSB,                 T::Void,        T::U64                                          )

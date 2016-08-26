@@ -148,6 +148,8 @@ bool Inst::WritesToCoreRegister() const {
 
 bool Inst::ReadsFromFPSCR() const {
     switch (op) {
+    case Opcode::GetFpscr:
+    case Opcode::GetFpscrNZCV:
     case Opcode::FPAbs32:
     case Opcode::FPAbs64:
     case Opcode::FPAdd32:
@@ -171,6 +173,8 @@ bool Inst::ReadsFromFPSCR() const {
 
 bool Inst::WritesToFPSCR() const {
     switch (op) {
+    case Opcode::SetFpscr:
+    case Opcode::SetFpscrNZCV:
     case Opcode::FPAbs32:
     case Opcode::FPAbs64:
     case Opcode::FPAdd32:

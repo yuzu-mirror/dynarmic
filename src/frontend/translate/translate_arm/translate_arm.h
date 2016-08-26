@@ -364,6 +364,10 @@ struct ArmTranslatorVisitor final {
     bool vfp2_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
     bool vfp2_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
 
+    // Floating-point system register access
+    bool vfp2_VMSR(Cond cond, Reg t);
+    bool vfp2_VMRS(Cond cond, Reg t);
+
     // Floating-point load-store instructions
     bool vfp2_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8);
     bool vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm8 imm8);

@@ -425,6 +425,35 @@ bool ArmTranslatorVisitor::vfp2_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool s
     return true;
 }
 
+bool ArmTranslatorVisitor::vfp2_VMSR(Cond cond, Reg t) {
+    if (t == Reg::PC)
+        return UnpredictableInstruction();
+
+    // VMSR FPSCR, <Rt>
+    if (ConditionPassed(cond)) {
+        ir.PushRSB(ir.current_location.AdvancePC(4)); // TODO: Replace this with a local cache.
+        ir.SetFpscr(ir.GetRegister(t));
+        ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
+        ir.SetTerm(IR::Term::PopRSBHint{});
+        return false;
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::vfp2_VMRS(Cond cond, Reg t) {
+    // VMRS <Rt>, FPSCR
+    if (ConditionPassed(cond)) {
+        if (t == Reg::R15) {
+            // This encodes ASPR_nzcv access
+            auto nzcv = ir.GetFpscrNZCV();
+            auto old_cpsr = ir.And(ir.GetCpsr(), ir.Imm32(0x0FFFFFFF));
+            ir.SetCpsr(ir.Or(nzcv, old_cpsr));
+        } else {
+            ir.SetRegister(t, ir.GetFpscr());
+        }
+    }
+    return true;
+}
 
 bool ArmTranslatorVisitor::vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm8 imm8) {
     const ExtReg d = ToExtReg(sz, Vd, D);
