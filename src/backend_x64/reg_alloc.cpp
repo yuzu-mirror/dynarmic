@@ -9,6 +9,7 @@
 
 #include <xbyak.h>
 
+#include "backend_x64/abi.h"
 #include "backend_x64/jitstate.h"
 #include "backend_x64/reg_alloc.h"
 #include "common/assert.h"
@@ -273,42 +274,37 @@ HostLoc RegAlloc::ScratchHostLocReg(HostLocList desired_locations) {
 }
 
 void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1_use, IR::Value arg2_use, IR::Value arg3_use) {
-    constexpr HostLoc AbiReturn = HostLoc::RAX;
-#ifdef _WIN32
-    constexpr std::array<HostLoc, 4> AbiArgs = { HostLoc::RCX, HostLoc::RDX, HostLoc::R8, HostLoc::R9 };
-    /// Caller-saved registers other than AbiReturn or AbiArgs
-    constexpr std::array<HostLoc, 2> OtherCallerSave = { HostLoc::R10, HostLoc::R11 };
-#else
-    constexpr std::array<HostLoc, 4> AbiArgs = { HostLoc::RDI, HostLoc::RSI, HostLoc::RDX, HostLoc::RCX };
-    /// Caller-saved registers other than AbiReturn or AbiArgs
-    constexpr std::array<HostLoc, 4> OtherCallerSave = { HostLoc::R8, HostLoc::R9, HostLoc::R10, HostLoc::R11 };
-#endif
+    constexpr size_t args_count = 4;
+    constexpr std::array<HostLoc, args_count> args_hostloc = { ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4 };
+    const std::array<IR::Value*, args_count> args = {&arg0_use, &arg1_use, &arg2_use, &arg3_use};
 
-    const std::array<IR::Value*, 4> args = {&arg0_use, &arg1_use, &arg2_use, &arg3_use};
+    const static std::vector<HostLoc> other_caller_save = [](){
+        std::vector<HostLoc> ret(ABI_ALL_CALLER_SAVE.begin(), ABI_ALL_CALLER_SAVE.end());
+
+        for (auto hostloc : {ABI_RETURN, ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4})
+            ret.erase(std::find(ret.begin(), ret.end(), hostloc));
+
+        return ret;
+    }();
 
     // TODO: This works but almost certainly leads to suboptimal generated code.
 
-    for (HostLoc caller_save : OtherCallerSave) {
-        ScratchHostLocReg({caller_save});
-    }
-
     if (result_def) {
-        DefHostLocReg(result_def, {AbiReturn});
+        DefHostLocReg(result_def, {ABI_RETURN});
     } else {
-        ScratchHostLocReg({AbiReturn});
+        ScratchHostLocReg({ABI_RETURN});
     }
 
-    for (size_t i = 0; i < AbiArgs.size(); i++) {
+    for (size_t i = 0; i < args_count; i++) {
         if (!args[i]->IsEmpty()) {
-            UseScratchHostLocReg(*args[i], {AbiArgs[i]});
+            UseScratchHostLocReg(*args[i], {args_hostloc[i]});
         } else {
-            ScratchHostLocReg({AbiArgs[i]});
+            ScratchHostLocReg({args_hostloc[i]});
         }
     }
 
-    // Flush all xmm registers
-    for (auto xmm : any_xmm) {
-        ScratchHostLocReg({xmm});
+    for (HostLoc caller_saved : other_caller_save) {
+        ScratchHostLocReg({caller_saved});
     }
 }
 
