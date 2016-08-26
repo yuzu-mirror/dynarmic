@@ -68,18 +68,18 @@ public:
         node = node == root ? node : node->next;
         return *this;
     }
-    IntrusiveListIterator operator++(int) {
-        IntrusiveListIterator it(*this);
-        node = node == root ? node : node->next;
-        return it;
-    }
     IntrusiveListIterator& operator--() {
         node = node->prev == root ? node : node->prev;
         return *this;
     }
+    IntrusiveListIterator operator++(int) {
+        IntrusiveListIterator it(*this);
+        ++*this;
+        return it;
+    }
     IntrusiveListIterator operator--(int) {
         IntrusiveListIterator it(*this);
-        node = node->prev == root ? node : node->prev;
+        --*this;
         return it;
     }
 
