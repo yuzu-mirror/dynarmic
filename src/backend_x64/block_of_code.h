@@ -80,7 +80,7 @@ public:
     }
 
     void int3() { db(0xCC); }
-    void nop(size_t size = 0);
+    void nop(size_t size = 1);
 
     void SetCodePtr(CodePtr ptr);
     void EnsurePatchLocationSize(CodePtr begin, size_t size);
