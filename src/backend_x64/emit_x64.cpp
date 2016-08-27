@@ -50,7 +50,7 @@ EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
 
     reg_alloc.Reset();
 
-    code->int3();
+    code->align();
     const CodePtr code_ptr = code->getCurr();
     basic_blocks[descriptor].code_ptr = code_ptr;
     unique_hash_to_code_ptr[descriptor.UniqueHash()] = code_ptr;
@@ -80,6 +80,7 @@ EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
 
     EmitAddCycles(block.CycleCount());
     EmitTerminal(block.GetTerminal(), block.Location());
+    code->int3();
 
     reg_alloc.AssertNoMoreUses();
 
