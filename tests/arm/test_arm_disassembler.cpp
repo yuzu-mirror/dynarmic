@@ -314,3 +314,65 @@ TEST_CASE("Disassemble data processing instructions", "[arm][disassembler]") {
     REQUIRE(DisassembleArm(0xE1110332) == "tst r1, r2, lsr r3");
     REQUIRE(DisassembleArm(0xE1110372) == "tst r1, r2, ror r3");
 }
+
+TEST_CASE("Disassemble half-word multiply and multiply accumulate instructions", "[arm][disassembler]") {
+    REQUIRE(DisassembleArm(0xE1003281) == "smlabb r0, r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE10032C1) == "smlabt r0, r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE10032A1) == "smlatb r0, r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE10032E1) == "smlatt r0, r1, r2, r3");
+
+    REQUIRE(DisassembleArm(0xE1203281) == "smlawb r0, r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE12032C1) == "smlawt r0, r1, r2, r3");
+
+    REQUIRE(DisassembleArm(0xE12002A1) == "smulwb r0, r1, r2");
+    REQUIRE(DisassembleArm(0xE12002E1) == "smulwt r0, r1, r2");
+
+    REQUIRE(DisassembleArm(0xE1410382) == "smlalbb r0, r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE14103C2) == "smlalbt r0, r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE14103A2) == "smlaltb r0, r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE14103E2) == "smlaltt r0, r1, r2, r3");
+
+    REQUIRE(DisassembleArm(0xE1600281) == "smulbb r0, r1, r2");
+    REQUIRE(DisassembleArm(0xE16002C1) == "smulbt r0, r1, r2");
+    REQUIRE(DisassembleArm(0xE16002A1) == "smultb r0, r1, r2");
+    REQUIRE(DisassembleArm(0xE16002E1) == "smultt r0, r1, r2");
+}
+
+TEST_CASE("Disassemble multiply and multiply accumulate instructions", "[arm][disassembler]") {
+    REQUIRE(DisassembleArm(0xE0214392) == "mla r1, r2, r3, r4");
+    REQUIRE(DisassembleArm(0xE0314392) == "mlas r1, r2, r3, r4");
+
+    REQUIRE(DisassembleArm(0xE0010392) == "mul r1, r2, r3");
+    REQUIRE(DisassembleArm(0xE0110392) == "muls r1, r2, r3");
+
+    // TODO: MLS should be here whenever it's supported.
+
+    REQUIRE(DisassembleArm(0xE0E21493) == "smlal r1, r2, r3, r4");
+    REQUIRE(DisassembleArm(0xE0F21493) == "smlals r1, r2, r3, r4");
+
+    REQUIRE(DisassembleArm(0xE0C21493) == "smull r1, r2, r3, r4");
+    REQUIRE(DisassembleArm(0xE0D21493) == "smulls r1, r2, r3, r4");
+
+    REQUIRE(DisassembleArm(0xE0421493) == "umaal r1, r2, r3, r4");
+
+    REQUIRE(DisassembleArm(0xE0A21493) == "umlal r1, r2, r3, r4");
+    REQUIRE(DisassembleArm(0xE0B21493) == "umlals r1, r2, r3, r4");
+
+    REQUIRE(DisassembleArm(0xE0821493) == "umull r1, r2, r3, r4");
+    REQUIRE(DisassembleArm(0xE0921493) == "umulls r1, r2, r3, r4");
+}
+
+TEST_CASE("Disassemble synchronization primitive instructions", "[arm][disassembler]") {
+    REQUIRE(DisassembleArm(0xE1921F9F) == "ldrex r1, [r2]");
+    REQUIRE(DisassembleArm(0xE1D21F9F) == "ldrexb r1, [r2]");
+    REQUIRE(DisassembleArm(0xE1B31F9F) == "ldrexd r1, r2, [r3]");
+    REQUIRE(DisassembleArm(0xE1F21F9F) == "ldrexh r1, [r2]");
+
+    REQUIRE(DisassembleArm(0xE1831F92) == "strex r1, r2, [r3]");
+    REQUIRE(DisassembleArm(0xE1C31F92) == "strexb r1, r2, [r3]");
+    REQUIRE(DisassembleArm(0xE1A41F92) == "strexd r1, r2, r3, [r4]");
+    REQUIRE(DisassembleArm(0xE1E31F92) == "strexh r1, r2, [r3]");
+
+    REQUIRE(DisassembleArm(0xE1031092) == "swp r1, r2, [r3]");
+    REQUIRE(DisassembleArm(0xE1431092) == "swpb r1, r2, [r3]");
+}
