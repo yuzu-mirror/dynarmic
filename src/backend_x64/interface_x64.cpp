@@ -31,7 +31,7 @@ using namespace BackendX64;
 
 struct Jit::Impl {
     Impl(Jit* jit, UserCallbacks callbacks)
-            : block_of_code()
+            : block_of_code(callbacks)
             , jit_state()
             , emitter(&block_of_code, callbacks, jit)
             , callbacks(callbacks)

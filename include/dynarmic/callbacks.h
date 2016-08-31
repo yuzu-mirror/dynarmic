@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 
 namespace Dynarmic {
@@ -30,6 +32,11 @@ struct UserCallbacks {
     void (*InterpreterFallback)(std::uint32_t pc, Jit* jit);
 
     bool (*CallSVC)(std::uint32_t swi);
+
+    // Page Table
+    static constexpr std::size_t PAGE_BITS = 12;
+    static constexpr std::size_t NUM_PAGE_TABLE_ENTRIES = 1 << (32 - PAGE_BITS);
+    std::array<std::uint8_t*, NUM_PAGE_TABLE_ENTRIES>* page_table = nullptr;
 };
 
 } // namespace Dynarmic

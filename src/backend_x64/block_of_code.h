@@ -11,13 +11,14 @@
 
 #include "backend_x64/jitstate.h"
 #include "common/common_types.h"
+#include "dynarmic/callbacks.h"
 
 namespace Dynarmic {
 namespace BackendX64 {
 
 class BlockOfCode final : public Xbyak::CodeGenerator {
 public:
-    BlockOfCode();
+    explicit BlockOfCode(UserCallbacks cb);
 
     /// Clears this block of code and resets code pointer to beginning.
     void ClearCache(bool poison_memory);
@@ -93,6 +94,36 @@ public:
         return return_from_run_code;
     }
 
+    const void* GetMemoryReadCallback(size_t bit_size) const {
+        switch (bit_size) {
+        case 8:
+            return read_memory_8;
+        case 16:
+            return read_memory_16;
+        case 32:
+            return read_memory_32;
+        case 64:
+            return read_memory_64;
+        default:
+            return nullptr;
+        }
+    }
+
+    const void* GetMemoryWriteCallback(size_t bit_size) const {
+        switch (bit_size) {
+        case 8:
+            return write_memory_8;
+        case 16:
+            return write_memory_16;
+        case 32:
+            return write_memory_32;
+        case 64:
+            return write_memory_64;
+        default:
+            return nullptr;
+        }
+    }
+
     void int3() { db(0xCC); }
     void nop(size_t size = 1);
 
@@ -114,6 +145,8 @@ public:
 #endif
 
 private:
+    UserCallbacks cb;
+
     struct Consts {
         Xbyak::Label FloatPositiveZero32;
         Xbyak::Label FloatNegativeZero32;
@@ -138,6 +171,16 @@ private:
     const void* return_from_run_code = nullptr;
     const void* return_from_run_code_without_mxcsr_switch = nullptr;
     void GenReturnFromRunCode();
+
+    const void* read_memory_8 = nullptr;
+    const void* read_memory_16 = nullptr;
+    const void* read_memory_32 = nullptr;
+    const void* read_memory_64 = nullptr;
+    const void* write_memory_8 = nullptr;
+    const void* write_memory_16 = nullptr;
+    const void* write_memory_32 = nullptr;
+    const void* write_memory_64 = nullptr;
+    void GenMemoryAccessors();
 };
 
 } // namespace BackendX64

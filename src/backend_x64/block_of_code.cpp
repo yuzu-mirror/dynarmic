@@ -12,11 +12,12 @@
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/jitstate.h"
 #include "common/assert.h"
+#include "dynarmic/callbacks.h"
 
 namespace Dynarmic {
 namespace BackendX64 {
 
-BlockOfCode::BlockOfCode() : Xbyak::CodeGenerator(128 * 1024 * 1024) {
+BlockOfCode::BlockOfCode(UserCallbacks cb) : Xbyak::CodeGenerator(128 * 1024 * 1024), cb(cb) {
     ClearCache(false);
 }
 
@@ -27,6 +28,7 @@ void BlockOfCode::ClearCache(bool poison_memory) {
     GenConstants();
     GenRunCode();
     GenReturnFromRunCode();
+    GenMemoryAccessors();
 }
 
 size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const {
@@ -115,6 +117,64 @@ void BlockOfCode::GenReturnFromRunCode() {
     return_from_run_code_without_mxcsr_switch = getCurr<const void*>();
 
     ABI_PopCalleeSaveRegistersAndAdjustStack(this);
+    ret();
+}
+
+void BlockOfCode::GenMemoryAccessors() {
+    align();
+    read_memory_8 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryRead8);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
+    ret();
+
+    align();
+    read_memory_16 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryRead16);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
+    ret();
+
+    align();
+    read_memory_32 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryRead32);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
+    ret();
+    
+    align();
+    read_memory_64 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryRead64);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
+    ret();
+
+    align();
+    write_memory_8 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryWrite8);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
+    ret();
+
+    align();
+    write_memory_16 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryWrite16);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
+    ret();
+
+    align();
+    write_memory_32 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryWrite32);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
+    ret();
+
+    align();
+    write_memory_64 = getCurr<const void*>();
+    ABI_PushCallerSaveRegistersAndAdjustStack(this);
+    CallFunction(cb.MemoryWrite64);
+    ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 }
 
