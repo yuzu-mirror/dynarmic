@@ -32,7 +32,7 @@ using namespace BackendX64;
 struct Jit::Impl {
     Impl(Jit* jit, UserCallbacks callbacks)
             : block_of_code()
-            , jit_state(&block_of_code)
+            , jit_state()
             , emitter(&block_of_code, callbacks, jit)
             , callbacks(callbacks)
     {}
@@ -127,12 +127,12 @@ void Jit::ClearCache(bool poison_memory) {
     ASSERT(!is_executing);
     impl->block_of_code.ClearCache(poison_memory);
     impl->emitter.ClearCache();
-    impl->jit_state.ResetRSB(&impl->block_of_code);
+    impl->jit_state.ResetRSB();
 }
 
 void Jit::Reset() {
     ASSERT(!is_executing);
-    impl->jit_state = JitState(&impl->block_of_code);
+    impl->jit_state = {};
 }
 
 void Jit::HaltExecution() {

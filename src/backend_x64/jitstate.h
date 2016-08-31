@@ -18,7 +18,7 @@ class BlockOfCode;
 constexpr size_t SpillCount = 64;
 
 struct JitState {
-    explicit JitState(const BlockOfCode* code) { ResetRSB(code); }
+    JitState() { ResetRSB(); }
 
     u32 Cpsr = 0;
     std::array<u32, 16> Reg{}; // Current register file.
@@ -43,7 +43,7 @@ struct JitState {
     u32 rsb_ptr = 0;
     std::array<u64, RSBSize> rsb_location_descriptors;
     std::array<u64, RSBSize> rsb_codeptrs;
-    void ResetRSB(const BlockOfCode* code);
+    void ResetRSB();
 
     u32 FPSCR_IDC = 0;
     u32 FPSCR_UFC = 0;
