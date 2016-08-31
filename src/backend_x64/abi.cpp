@@ -91,7 +91,7 @@ void ABI_PopCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t
     FrameInfo frame_info = CalculateFrameInfo(num_gprs, num_xmms, frame_size);
 
     size_t xmm_offset = frame_info.xmm_offset;
-    for (HostLoc xmm : Common::Reverse(ABI_ALL_CALLEE_SAVE)) {
+    for (HostLoc xmm : ABI_ALL_CALLEE_SAVE) {
         if (HostLocIsXMM(xmm)) {
             code->movaps(HostLocToXmm(xmm), code->xword[rsp + xmm_offset]);
             xmm_offset += XMM_SIZE;
