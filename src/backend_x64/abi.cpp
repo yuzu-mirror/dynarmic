@@ -55,15 +55,16 @@ static FrameInfo CalculateFrameInfo(size_t num_gprs, size_t num_xmms, size_t fra
     return frame_info;
 }
 
-void ABI_PushCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size) {
+template<typename RegisterArrayT>
+void ABI_PushRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size, const RegisterArrayT& regs) {
     using namespace Xbyak::util;
 
-    const size_t num_gprs = std::count_if(ABI_ALL_CALLEE_SAVE.begin(), ABI_ALL_CALLEE_SAVE.end(), HostLocIsGPR);
-    const size_t num_xmms = std::count_if(ABI_ALL_CALLEE_SAVE.begin(), ABI_ALL_CALLEE_SAVE.end(), HostLocIsXMM);
+    const size_t num_gprs = std::count_if(regs.begin(), regs.end(), HostLocIsGPR);
+    const size_t num_xmms = std::count_if(regs.begin(), regs.end(), HostLocIsXMM);
 
     FrameInfo frame_info = CalculateFrameInfo(num_gprs, num_xmms, frame_size);
 
-    for (HostLoc gpr : ABI_ALL_CALLEE_SAVE) {
+    for (HostLoc gpr : regs) {
         if (HostLocIsGPR(gpr)) {
             code->push(HostLocToReg64(gpr));
         }
@@ -74,7 +75,7 @@ void ABI_PushCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_
     }
 
     size_t xmm_offset = frame_info.xmm_offset;
-    for (HostLoc xmm : ABI_ALL_CALLEE_SAVE) {
+    for (HostLoc xmm : regs) {
         if (HostLocIsXMM(xmm)) {
             code->movaps(code->xword[rsp + xmm_offset], HostLocToXmm(xmm));
             xmm_offset += XMM_SIZE;
@@ -82,16 +83,17 @@ void ABI_PushCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_
     }
 }
 
-void ABI_PopCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size) {
+template<typename RegisterArrayT>
+void ABI_PopRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size, const RegisterArrayT& regs) {
     using namespace Xbyak::util;
 
-    const size_t num_gprs = std::count_if(ABI_ALL_CALLEE_SAVE.begin(), ABI_ALL_CALLEE_SAVE.end(), HostLocIsGPR);
-    const size_t num_xmms = std::count_if(ABI_ALL_CALLEE_SAVE.begin(), ABI_ALL_CALLEE_SAVE.end(), HostLocIsXMM);
+    const size_t num_gprs = std::count_if(regs.begin(), regs.end(), HostLocIsGPR);
+    const size_t num_xmms = std::count_if(regs.begin(), regs.end(), HostLocIsXMM);
 
     FrameInfo frame_info = CalculateFrameInfo(num_gprs, num_xmms, frame_size);
 
     size_t xmm_offset = frame_info.xmm_offset;
-    for (HostLoc xmm : ABI_ALL_CALLEE_SAVE) {
+    for (HostLoc xmm : regs) {
         if (HostLocIsXMM(xmm)) {
             code->movaps(HostLocToXmm(xmm), code->xword[rsp + xmm_offset]);
             xmm_offset += XMM_SIZE;
@@ -102,11 +104,27 @@ void ABI_PopCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t
         code->add(rsp, u32(frame_info.stack_subtraction));
     }
 
-    for (HostLoc gpr : Common::Reverse(ABI_ALL_CALLEE_SAVE)) {
+    for (HostLoc gpr : Common::Reverse(regs)) {
         if (HostLocIsGPR(gpr)) {
             code->pop(HostLocToReg64(gpr));
         }
     }
+}
+
+void ABI_PushCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size) {
+    ABI_PushRegistersAndAdjustStack(code, frame_size, ABI_ALL_CALLEE_SAVE);
+}
+
+void ABI_PopCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size) {
+    ABI_PopRegistersAndAdjustStack(code, frame_size, ABI_ALL_CALLEE_SAVE);
+}
+
+void ABI_PushCallerSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size) {
+    ABI_PushRegistersAndAdjustStack(code, frame_size, ABI_ALL_CALLER_SAVE);
+}
+
+void ABI_PopCallerSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size) {
+    ABI_PopRegistersAndAdjustStack(code, frame_size, ABI_ALL_CALLER_SAVE);
 }
 
 } // namespace BackendX64

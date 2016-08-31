@@ -278,10 +278,10 @@ void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1
     constexpr std::array<HostLoc, args_count> args_hostloc = { ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4 };
     const std::array<IR::Value*, args_count> args = {&arg0_use, &arg1_use, &arg2_use, &arg3_use};
 
-    const static std::vector<HostLoc> other_caller_save = [](){
+    const static std::vector<HostLoc> other_caller_save = [args_hostloc](){
         std::vector<HostLoc> ret(ABI_ALL_CALLER_SAVE.begin(), ABI_ALL_CALLER_SAVE.end());
 
-        for (auto hostloc : {ABI_RETURN, ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4})
+        for (auto hostloc : args_hostloc)
             ret.erase(std::find(ret.begin(), ret.end(), hostloc));
 
         return ret;

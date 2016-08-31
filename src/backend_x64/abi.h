@@ -21,8 +21,7 @@ constexpr HostLoc ABI_PARAM2 = HostLoc::RDX;
 constexpr HostLoc ABI_PARAM3 = HostLoc::R8;
 constexpr HostLoc ABI_PARAM4 = HostLoc::R9;
 
-constexpr std::array<HostLoc, 13> ABI_ALL_CALLER_SAVE = {
-    HostLoc::RAX,
+constexpr std::array<HostLoc, 12> ABI_ALL_CALLER_SAVE = {
     HostLoc::RCX,
     HostLoc::RDX,
     HostLoc::R8,
@@ -69,8 +68,7 @@ constexpr HostLoc ABI_PARAM2 = HostLoc::RSI;
 constexpr HostLoc ABI_PARAM3 = HostLoc::RDX;
 constexpr HostLoc ABI_PARAM4 = HostLoc::RCX;
 
-constexpr std::array<HostLoc, 25> ABI_ALL_CALLER_SAVE = {
-    HostLoc::RAX,
+constexpr std::array<HostLoc, 24> ABI_ALL_CALLER_SAVE = {
     HostLoc::RCX,
     HostLoc::RDX,
     HostLoc::RDI,
@@ -110,10 +108,12 @@ constexpr size_t ABI_SHADOW_SPACE = 0; // bytes
 
 #endif
 
-static_assert(ABI_ALL_CALLER_SAVE.size() + ABI_ALL_CALLEE_SAVE.size() == 31, "Invalid total number of registers");
+static_assert(ABI_ALL_CALLER_SAVE.size() + ABI_ALL_CALLEE_SAVE.size() == 30, "Invalid total number of registers");
 
 void ABI_PushCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size = 0);
 void ABI_PopCalleeSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size = 0);
+void ABI_PushCallerSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size = 0);
+void ABI_PopCallerSaveRegistersAndAdjustStack(Xbyak::CodeGenerator* code, size_t frame_size = 0);
 
 } // namespace BackendX64
 } // namespace Dynarmic
