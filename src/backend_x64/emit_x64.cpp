@@ -324,7 +324,7 @@ void EmitX64::EmitCallSupervisor(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(nullptr, imm32);
 
     code->SwitchMxcsrOnExit();
-    code->CallFunction(reinterpret_cast<void*>(cb.CallSVC));
+    code->CallFunction(cb.CallSVC);
     code->SwitchMxcsrOnEntry();
 }
 
@@ -337,7 +337,7 @@ void EmitX64::EmitGetFpscr(IR::Block&, IR::Inst* inst) {
     code->mov(code->ABI_PARAM1, code->r15);
 
     code->SwitchMxcsrOnExit();
-    code->CallFunction(reinterpret_cast<void*>(&GetFpscrImpl));
+    code->CallFunction(&GetFpscrImpl);
     code->SwitchMxcsrOnEntry();
 }
 
@@ -352,7 +352,7 @@ void EmitX64::EmitSetFpscr(IR::Block&, IR::Inst* inst) {
     code->mov(code->ABI_PARAM2, code->r15);
 
     code->SwitchMxcsrOnExit();
-    code->CallFunction(reinterpret_cast<void*>(&SetFpscrImpl));
+    code->CallFunction(&SetFpscrImpl);
     code->SwitchMxcsrOnEntry();
 }
 
@@ -1832,52 +1832,53 @@ void EmitX64::EmitSetExclusive(IR::Block&, IR::Inst* inst) {
 void EmitX64::EmitReadMemory8(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(inst, inst->GetArg(0));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryRead8));
+    code->CallFunction(cb.MemoryRead8);
 }
 
 void EmitX64::EmitReadMemory16(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(inst, inst->GetArg(0));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryRead16));
+    code->CallFunction(cb.MemoryRead16);
 }
 
 void EmitX64::EmitReadMemory32(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(inst, inst->GetArg(0));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryRead32));
+    code->CallFunction(cb.MemoryRead32);
 }
 
 void EmitX64::EmitReadMemory64(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(inst, inst->GetArg(0));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryRead64));
+    code->CallFunction(cb.MemoryRead64);
 }
 
 void EmitX64::EmitWriteMemory8(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryWrite8));
+    code->CallFunction(cb.MemoryWrite8);
 }
 
 void EmitX64::EmitWriteMemory16(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryWrite16));
+    code->CallFunction(cb.MemoryWrite16);
 }
 
 void EmitX64::EmitWriteMemory32(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryWrite32));
+    code->CallFunction(cb.MemoryWrite32);
 }
 
 void EmitX64::EmitWriteMemory64(IR::Block&, IR::Inst* inst) {
     reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
 
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryWrite64));
+    code->CallFunction(cb.MemoryWrite64);
 }
 
-static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, void* fn) {
+template <typename FunctionPointer>
+static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, FunctionPointer fn) {
     using namespace Xbyak::util;
     Xbyak::Label end;
 
@@ -1899,15 +1900,15 @@ static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* ins
 }
 
 void EmitX64::EmitExclusiveWriteMemory8(IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, reinterpret_cast<void*>(cb.MemoryWrite8));
+    ExclusiveWrite(code, reg_alloc, inst, cb.MemoryWrite8);
 }
 
 void EmitX64::EmitExclusiveWriteMemory16(IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, reinterpret_cast<void*>(cb.MemoryWrite16));
+    ExclusiveWrite(code, reg_alloc, inst, cb.MemoryWrite16);
 }
 
 void EmitX64::EmitExclusiveWriteMemory32(IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, reinterpret_cast<void*>(cb.MemoryWrite32));
+    ExclusiveWrite(code, reg_alloc, inst, cb.MemoryWrite32);
 }
 
 void EmitX64::EmitExclusiveWriteMemory64(IR::Block&, IR::Inst* inst) {
@@ -1931,7 +1932,7 @@ void EmitX64::EmitExclusiveWriteMemory64(IR::Block&, IR::Inst* inst) {
     code->mov(value.cvt32(), value.cvt32()); // zero extend to 64-bits
     code->shl(value_hi, 32);
     code->or_(value, value_hi);
-    code->CallFunction(reinterpret_cast<void*>(cb.MemoryWrite64));
+    code->CallFunction(cb.MemoryWrite64);
     code->xor_(passed, passed);
     code->L(end);
 }
@@ -2107,7 +2108,7 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
     code->mov(code->ABI_PARAM2, reinterpret_cast<u64>(jit_interface));
     code->mov(MJitStateReg(Arm::Reg::PC), code->ABI_PARAM1.cvt32());
     code->SwitchMxcsrOnExit();
-    code->CallFunction(reinterpret_cast<void*>(cb.InterpreterFallback));
+    code->CallFunction(cb.InterpreterFallback);
     code->ReturnFromRunCode(false); // TODO: Check cycles
 }
 

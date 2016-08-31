@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <array>
-#include <vector>
-
+#include <type_traits>
 #include <xbyak.h>
 
 #include "backend_x64/jitstate.h"
@@ -32,8 +30,24 @@ public:
     void SwitchMxcsrOnEntry();
     /// Code emitter: Makes saved host MXCSR the current MXCSR
     void SwitchMxcsrOnExit();
+
     /// Code emitter: Calls the function
-    void CallFunction(const void* fn);
+    template <typename FunctionPointer>
+    void CallFunction(FunctionPointer fn) {
+        static_assert(std::is_pointer<FunctionPointer>() && std::is_function<std::remove_pointer_t<FunctionPointer>>(),
+                      "Supplied type must be a pointer to a function");
+
+        const u64 address  = reinterpret_cast<u64>(fn);
+        const u64 distance = address - (getCurr<u64>() + 5);
+
+        if (distance >= 0x0000000080000000ULL && distance < 0xFFFFFFFF80000000ULL) {
+            // Far call
+            mov(rax, address);
+            call(rax);
+        } else {
+            call(fn);
+        }
+    }
 
     Xbyak::Address MFloatPositiveZero32() {
         return xword[rip + consts.FloatPositiveZero32];

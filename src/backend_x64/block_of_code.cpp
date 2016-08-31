@@ -128,17 +128,6 @@ void BlockOfCode::SwitchMxcsrOnExit() {
     ldmxcsr(dword[r15 + offsetof(JitState, save_host_MXCSR)]);
 }
 
-void BlockOfCode::CallFunction(const void* fn) {
-    u64 distance = u64(fn) - (getCurr<u64>() + 5);
-    if (distance >= 0x0000000080000000ULL && distance < 0xFFFFFFFF80000000ULL) {
-        // Far call
-        mov(rax, u64(fn));
-        call(rax);
-    } else {
-        call(fn);
-    }
-}
-
 void BlockOfCode::nop(size_t size) {
     switch (size) {
     case 0:
