@@ -48,7 +48,7 @@ static void MemoryWrite8(u32 vaddr, u8 value);
 static void MemoryWrite16(u32 vaddr, u16 value);
 static void MemoryWrite32(u32 vaddr, u32 value);
 static void MemoryWrite64(u32 vaddr, u64 value);
-static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit);
+static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*);
 static Dynarmic::UserCallbacks GetUserCallbacks();
 
 static bool IsReadOnlyMemory(u32 vaddr) {
@@ -84,7 +84,7 @@ static void MemoryWrite64(u32 vaddr, u64 value){
     write_records.push_back({64, vaddr, value});
 }
 
-static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
+static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*) {
     ARMul_State interp_state{USER32MODE};
     interp_state.user_callbacks = GetUserCallbacks();
     interp_state.NumInstrsToExecute = 1;

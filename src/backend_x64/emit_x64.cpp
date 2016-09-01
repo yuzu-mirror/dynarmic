@@ -2188,6 +2188,7 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
 
     code->mov(code->ABI_PARAM1.cvt32(), terminal.next.PC());
     code->mov(code->ABI_PARAM2, reinterpret_cast<u64>(jit_interface));
+    code->mov(code->ABI_PARAM3, reinterpret_cast<u64>(cb.user_arg));
     code->mov(MJitStateReg(Arm::Reg::PC), code->ABI_PARAM1.cvt32());
     code->SwitchMxcsrOnExit();
     code->CallFunction(cb.InterpreterFallback);

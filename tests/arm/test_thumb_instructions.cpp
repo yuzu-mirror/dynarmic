@@ -15,7 +15,7 @@
 static std::array<u16, 1024> code_mem{};
 
 static u32 MemoryRead32(u32 vaddr);
-static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit);
+static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*);
 static Dynarmic::UserCallbacks GetUserCallbacks();
 
 static u32 MemoryRead32(u32 vaddr) {
@@ -26,7 +26,7 @@ static u32 MemoryRead32(u32 vaddr) {
     return vaddr;
 }
 
-static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit) {
+static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*) {
     ARMul_State interp_state{USER32MODE};
     interp_state.user_callbacks = GetUserCallbacks();
     interp_state.NumInstrsToExecute = 1;

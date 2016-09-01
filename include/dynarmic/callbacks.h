@@ -29,7 +29,8 @@ struct UserCallbacks {
     bool (*IsReadOnlyMemory)(std::uint32_t vaddr);
 
     /// The intrepreter must execute only one instruction at PC.
-    void (*InterpreterFallback)(std::uint32_t pc, Jit* jit);
+    void (*InterpreterFallback)(std::uint32_t pc, Jit* jit, void* user_arg);
+    void* user_arg = nullptr;
 
     bool (*CallSVC)(std::uint32_t swi);
 
