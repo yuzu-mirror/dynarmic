@@ -1,17 +1,17 @@
 # Dynarmic Design Documentation
 
-While Dynarmic is a primarily a dynamic recompiler for the ARMv6K architecture, the possibility of supporting 
-other versions of the ARM architecture, having a interpreter and/or static recompiler mode, or supporting 
-other architectures is kept open. This is done by having each component as modular as possible.
- 
-Users of this library interact with it primarily through [`src/interface/interface.h`](../src/interface/interface.h). 
-Users specify how dynarmic's CPU core interacts with the rest of their systems by setting members of the 
-`Dynarmic::UserCallbacks` structure as appropriate. Users setup the CPU state using member fucntions of 
-`Dynarmic::Jit`, then call `Dynarmic::Jit::Execute` to start CPU execution. The callbacks defined on `UserCallbacks` 
-may be called from dynamically generated code, so users of the library should not depend on the stack being in a 
+Dynarmic is a dynamic recompiler for the ARMv6K architecture. Future plans for dynarmic include
+support for other versions of the ARM architecture, having a interpreter mode, and adding support
+for other architectures.
+
+Users of this library interact with it primarily through [`include/dynarmic/dynarmic.h`](../include/dynarmic/dynarmic.h).
+Users specify how dynarmic's CPU core interacts with the rest of their systems by setting members of the
+[`Dynarmic::UserCallbacks`](../include/dynarmic/callbacks.h) structure as appropriate. Users setup the CPU state using member functions of
+`Dynarmic::Jit`, then call `Dynarmic::Jit::Execute` to start CPU execution. The callbacks defined on `UserCallbacks`
+may be called from dynamically generated code, so users of the library should not depend on the stack being in a
 walkable state for unwinding.
 
-Dynarmic reads instructions from memory by calling `UserCallbacks::MemoryRead32`. These instructions then pass 
+Dynarmic reads instructions from memory by calling `UserCallbacks::MemoryRead32`. These instructions then pass
 through several stages:
 
 1. Decoding (Identifying what type of instruction it is and breaking it up into fields)
@@ -22,11 +22,11 @@ through several stages:
 
 Using the x64 backend as an example:
 
-* Decoding is done by [double dispatch](https://en.wikipedia.org/wiki/Visitor_pattern) in 
-`src/frontend/decoder/{[arm.h](../src/frontend/decoder/arm.h),[thumb16.h](../src/frontend/decoder/thumb.h),[thumb32.h](../src/frontend/decoder/thumb32.h)}`.
+* Decoding is done by [double dispatch](https://en.wikipedia.org/wiki/Visitor_pattern) in
+[`src/frontend/decoder/{arm.h,thumb16.h,thumb32.h}`](../src/frontend/decoder/).
 * Translation is done by the visitors in `src/frontend/translate/translate_{arm,thumb}.cpp`.
 The function [`IR::Block Translate(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32)`](../src/frontend/translate/translate.h) takes a
-memory location and memory reader callback and returns a basic block of IR. 
+memory location, some CPU state, and memory reader callback and returns a basic block of IR.
 * The IR can be found under [`src/frontend/ir/`](../src/frontend/ir/).
 * Optimizations can be found under [`src/ir_opt/`](../src/ir_opt/).
 * Emission is done by `EmitX64` which can be found in `src/backend_x64/emit_x64.{h,cpp}`.
@@ -57,8 +57,8 @@ error results.
 
 ## Translator
 
-The translator is a visitor that uses the decoder to decode instructions. The translator generates IR code with the 
-help of the [`IRBuilder` class](../src/frontend/ir/ir_emitter.h). An example of a translation function follows:
+The translator is a visitor that uses the decoder to decode instructions. The translator generates IR code with the
+help of the [`IREmitter` class](../src/frontend/ir/ir_emitter.h). An example of a translation function follows:
 
     bool ArmTranslatorVisitor::arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {
         u32 imm32 = ArmExpandImm(rotate, imm8);
@@ -140,9 +140,8 @@ optimized away.
 
 Gets and sets bits in `JitState::Cpsr`. Similarly to registers redundant get/sets are optimized away.
 
-### Context: {ALU,BX}WritePC
+### Context: BXWritePC
 
-    <void> ALUWritePC(<u32> value)
     <void> BXWritePC(<u32> value)
     
 This should probably be the last instruction in a translation block unless you're doing something fancy.
