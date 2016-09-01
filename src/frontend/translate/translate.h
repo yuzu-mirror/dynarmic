@@ -6,7 +6,6 @@
 #pragma once
 
 #include "common/common_types.h"
-#include "frontend/arm_types.h"
 
 namespace Dynarmic {
 
@@ -15,6 +14,8 @@ namespace IR {
 } // namespace IR
 
 namespace Arm {
+
+struct LocationDescriptor;
 
 using MemoryRead32FuncType = u32 (*)(u32 vaddr);
 
