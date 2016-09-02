@@ -156,7 +156,7 @@ private:
     boost::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
     bool IsRegisterOccupied(HostLoc loc) const;
     bool IsRegisterAllocated(HostLoc loc) const;
-    bool IsLastUse(IR::Inst* inst) const;
+    bool IsLastUse(const IR::Inst* inst) const;
 
     HostLoc DefHostLocReg(IR::Inst* def_inst, HostLocList desired_locations);
     HostLoc UseDefHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations);

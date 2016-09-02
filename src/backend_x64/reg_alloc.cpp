@@ -130,7 +130,7 @@ std::tuple<OpArg, HostLoc> RegAlloc::UseDefOpArgHostLocReg(IR::Value use_value, 
     DEBUG_ASSERT_MSG(use_value.IsImmediate() || ValueLocation(use_value.GetInst()), "use_inst has not been defined");
 
     if (!use_value.IsImmediate()) {
-        IR::Inst* use_inst = use_value.GetInst();
+        const IR::Inst* use_inst = use_value.GetInst();
 
         if (IsLastUse(use_inst)) {
             HostLoc current_location = *ValueLocation(use_inst);
@@ -347,7 +347,7 @@ bool RegAlloc::IsRegisterAllocated(HostLoc loc) const {
     return LocInfo(loc).is_being_used;
 }
 
-bool RegAlloc::IsLastUse(IR::Inst* inst) const {
+bool RegAlloc::IsLastUse(const IR::Inst* inst) const {
     if (inst->use_count > 1)
         return false;
     return LocInfo(*ValueLocation(inst)).values.size() == 1;
