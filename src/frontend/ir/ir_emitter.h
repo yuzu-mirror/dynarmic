@@ -156,7 +156,7 @@ public:
     Value FPS32ToDouble(const Value& a, bool round_to_nearest, bool fpscr_controlled);
     Value FPU32ToDouble(const Value& a, bool round_to_nearest, bool fpscr_controlled);
 
-    void ClearExlcusive();
+    void ClearExclusive();
     void SetExclusive(const Value& vaddr, size_t byte_size);
     Value ReadMemory8(const Value& vaddr);
     Value ReadMemory16(const Value& vaddr);

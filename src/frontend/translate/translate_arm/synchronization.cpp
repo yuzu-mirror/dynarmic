@@ -11,7 +11,7 @@ namespace Arm {
 
 bool ArmTranslatorVisitor::arm_CLREX() {
     // CLREX
-    ir.ClearExlcusive();
+    ir.ClearExclusive();
     return true;
 }
 

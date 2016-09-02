@@ -471,7 +471,7 @@ Value IREmitter::FPU32ToDouble(const Value& a, bool round_to_nearest, bool fpscr
     return Inst(Opcode::FPU32ToDouble, {a, Imm1(round_to_nearest)});
 }
 
-void IREmitter::ClearExlcusive() {
+void IREmitter::ClearExclusive() {
     Inst(Opcode::ClearExclusive, {});
 }
 
