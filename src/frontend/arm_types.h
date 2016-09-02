@@ -128,7 +128,7 @@ private:
 
 struct LocationDescriptorHash {
     size_t operator()(const LocationDescriptor& x) const {
-        return static_cast<size_t>(x.UniqueHash());
+        return std::hash<u64>()(x.UniqueHash());
     }
 };
 
