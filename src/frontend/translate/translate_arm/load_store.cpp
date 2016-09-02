@@ -589,13 +589,26 @@ bool ArmTranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n
     return true;
 }
 
-bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b) {
+bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
+    if (size_t(t) % 2 != 0)
+        return UnpredictableInstruction();
+
+    if (!P && W)
+        return UnpredictableInstruction();
+
+    const Reg t2 = t + 1;
+
+    if (W && (n == Reg::PC || n == t || n == t2))
+        return UnpredictableInstruction();
+
+    if (t2 == Reg::PC)
+        return UnpredictableInstruction();
+
     if (ConditionPassed(cond)) {
         const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
         const auto address_b = ir.Add(address_a, ir.Imm32(4));
-        const auto value_a = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
-        const Reg reg_b = static_cast<Reg>(std::min(d + 1, Reg::R15));
-        const auto value_b = (reg_b == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(reg_b);
+        const auto value_a = ir.GetRegister(t);
+        const auto value_b = ir.GetRegister(t2);
         ir.WriteMemory32(address_a, value_a);
         ir.WriteMemory32(address_b, value_b);
     }
@@ -603,13 +616,26 @@ bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n
     return true;
 }
 
-bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m) {
+bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+    if (size_t(t) % 2 != 0)
+        return UnpredictableInstruction();
+
+    if (!P && W)
+        return UnpredictableInstruction();
+
+    const Reg t2 = t + 1;
+
+    if (t2 == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+
+    if (W && (n == Reg::PC || n == t || n == t2))
+        return UnpredictableInstruction();
+
     if (ConditionPassed(cond)) {
         const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
         const auto address_b = ir.Add(address_a, ir.Imm32(4));
-        const auto value_a = (d == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(d);
-        const Reg reg_b = static_cast<Reg>(std::min(d + 1, Reg::R15));
-        const auto value_b = (reg_b == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(reg_b);
+        const auto value_a = ir.GetRegister(t);
+        const auto value_b = ir.GetRegister(t2);
         ir.WriteMemory32(address_a, value_a);
         ir.WriteMemory32(address_b, value_b);
     }

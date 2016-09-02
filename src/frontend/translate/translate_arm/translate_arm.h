@@ -188,8 +188,8 @@ struct ArmTranslatorVisitor final {
     bool arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
     bool arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm12 imm12);
     bool arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm5 imm5, ShiftType shift, Reg m);
-    bool arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
-    bool arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
+    bool arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b);
+    bool arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m);
     bool arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Imm4 imm8a, Imm4 imm8b);
     bool arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg d, Reg m);
 
