@@ -1,5 +1,6 @@
 Dynarmic
 ========
+[![Travis CI Build Status](https://api.travis-ci.org/MerryMage/dynarmic.svg?branch=master)](https://travis-ci.org/MerryMage/dynarmic/branches)
 
 A dynamic recompiler for the ARMv6K architecture.
 
