@@ -17,7 +17,7 @@
 namespace Dynarmic {
 namespace Arm {
 
-static bool CondCanContinue(ConditionalState cond_state, IR::IREmitter& ir) {
+static bool CondCanContinue(ConditionalState cond_state, const IR::IREmitter& ir) {
     ASSERT_MSG(cond_state != ConditionalState::Break, "Should never happen.");
 
     if (cond_state == ConditionalState::None)
