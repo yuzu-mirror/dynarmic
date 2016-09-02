@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <bitset>
 #include <climits>
 
 #include "common/assert.h"
@@ -71,12 +72,9 @@ inline T SignExtend(const T value) {
     return value;
 }
 
-inline size_t BitCount(u32 value) {
-    // Portable SWAR algorithm for population count
-    value = value - ((value >> 1) & 0x55555555);                // Two-bit count
-    value = (value & 0x33333333) + ((value >> 2) & 0x33333333); // Nybble count
-    value = (value + (value >> 4)) & 0x0F0F0F0F;                // Byte count
-    return ((value * 0x01010101) >> 24) & 0xFF;                 // Summate the byte counts
+template <typename Integral>
+inline size_t BitCount(Integral value) {
+    return std::bitset<BitSize<Integral>()>(value).count();
 }
 
 } // namespace Common
