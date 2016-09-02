@@ -183,7 +183,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
     for (size_t run_number = 0; run_number < run_count; run_number++) {
         interp.instruction_cache.clear();
         InterpreterClearCache();
-        jit.ClearCache(false);
+        jit.ClearCache();
 
         // Setup initial state
 
