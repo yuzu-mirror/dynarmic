@@ -4,6 +4,7 @@ project(dynarmic CXX)
 # Dynarmic project options
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
+option(DYNARMIC_TESTS "Build tests" ON)
 
 # Set hard requirements for C++
 set(CMAKE_CXX_STANDARD 14)
@@ -92,4 +93,6 @@ add_subdirectory(externals)
 
 # Dynarmic project files
 add_subdirectory(src)
-add_subdirectory(tests)
+if (DYNARMIC_TESTS)
+    add_subdirectory(tests)
+endif()
