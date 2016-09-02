@@ -16,7 +16,7 @@ namespace Dynarmic {
 namespace Optimization {
 
 void GetSetElimination(IR::Block& block) {
-    using Iterator = decltype(block.begin());
+    using Iterator = IR::Block::iterator;
     struct RegisterInfo {
         IR::Value register_value;
         bool set_instruction_present = false;
