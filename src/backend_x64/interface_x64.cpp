@@ -42,6 +42,8 @@ struct Jit::Impl {
     EmitX64 emitter;
     const UserCallbacks callbacks;
 
+    bool clear_cache_required = false;
+
     size_t Execute(size_t cycle_count) {
         u32 pc = jit_state.Reg[15];
         bool TFlag = Common::Bit<5>(jit_state.Cpsr);
@@ -90,6 +92,13 @@ struct Jit::Impl {
         return result;
     }
 
+    void ClearCache() {
+        block_of_code.ClearCache();
+        emitter.ClearCache();
+        jit_state.ResetRSB();
+        clear_cache_required = false;
+    }
+
 private:
     EmitX64::BlockDescriptor GetBasicBlock(Arm::LocationDescriptor descriptor) {
         auto block = emitter.GetBasicBlock(descriptor);
@@ -120,14 +129,21 @@ size_t Jit::Run(size_t cycle_count) {
         cycles_executed += impl->Execute(cycle_count - cycles_executed);
     }
 
+    if (impl->clear_cache_required) {
+        impl->ClearCache();
+    }
+
     return cycles_executed;
 }
 
 void Jit::ClearCache() {
-    ASSERT(!is_executing);
-    impl->block_of_code.ClearCache();
-    impl->emitter.ClearCache();
-    impl->jit_state.ResetRSB();
+    if (is_executing) {
+        impl->jit_state.halt_requested = true;
+        impl->clear_cache_required = true;
+        return;
+    }
+
+    impl->ClearCache();
 }
 
 void Jit::Reset() {

@@ -34,7 +34,7 @@ public:
 
     /**
      * Clears the code cache of all compiled code.
-     * Cannot be called from a callback.
+     * Can be called at any time. Halts execution if called within a callback.
      */
     void ClearCache();
 
