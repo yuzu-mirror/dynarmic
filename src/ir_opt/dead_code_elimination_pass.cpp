@@ -4,9 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
-#include "common/assert.h"
 #include "frontend/ir/basic_block.h"
-#include "frontend/ir/opcodes.h"
 #include "ir_opt/passes.h"
 
 namespace Dynarmic {

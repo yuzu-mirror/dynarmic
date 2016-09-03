@@ -8,9 +8,9 @@
 
 #include <bitset>
 #include <climits>
+#include <cstddef>
 
 #include "common/assert.h"
-#include "common/common_types.h"
 
 #ifdef _MSC_VER
 #include <intrin.h>

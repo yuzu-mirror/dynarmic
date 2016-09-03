@@ -7,7 +7,6 @@
 #pragma once
 
 #include <array>
-#include <map>
 #include <vector>
 
 #include <boost/optional.hpp>
@@ -15,7 +14,6 @@
 
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/hostloc.h"
-#include "backend_x64/jitstate.h"
 #include "common/common_types.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/value.h"

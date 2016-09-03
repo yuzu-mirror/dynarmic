@@ -5,7 +5,8 @@
  */
 
 #include "common/assert.h"
-#include "ir_emitter.h"
+#include "frontend/ir/ir_emitter.h"
+#include "frontend/ir/opcodes.h"
 
 namespace Dynarmic {
 namespace IR {

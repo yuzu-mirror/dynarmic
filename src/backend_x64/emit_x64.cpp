@@ -4,14 +4,17 @@
  * General Public License version 2 or any later version.
  */
 
-#include <map>
 #include <unordered_map>
 #include <common/bit_util.h>
+
+#include <xbyak.h>
 
 #include "backend_x64/abi.h"
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
 #include "frontend/arm_types.h"
+#include "frontend/ir/basic_block.h"
+#include "frontend/ir/microinstruction.h"
 
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.

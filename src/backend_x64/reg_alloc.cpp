@@ -5,7 +5,6 @@
  */
 
 #include <algorithm>
-#include <map>
 
 #include <xbyak.h>
 

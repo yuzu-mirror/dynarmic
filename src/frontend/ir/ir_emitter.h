@@ -11,7 +11,6 @@
 #include "common/common_types.h"
 #include "frontend/arm_types.h"
 #include "frontend/ir/basic_block.h"
-#include "frontend/ir/opcodes.h"
 #include "frontend/ir/terminal.h"
 #include "frontend/ir/value.h"
 
@@ -24,6 +23,8 @@
 
 namespace Dynarmic {
 namespace IR {
+
+enum class Opcode;
 
 /**
  * Convenience class to construct a basic block of the intermediate representation.

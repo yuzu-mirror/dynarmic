@@ -17,11 +17,11 @@
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
 #include "common/assert.h"
-#include "common/bit_util.h"
 #include "common/common_types.h"
 #include "common/scope_exit.h"
 #include "dynarmic/dynarmic.h"
 #include "frontend/arm_types.h"
+#include "frontend/ir/basic_block.h"
 #include "frontend/translate/translate.h"
 #include "ir_opt/passes.h"
 

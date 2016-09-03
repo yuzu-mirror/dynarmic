@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <cstddef>
 #include <tuple>
-#include "common/common_types.h"
 
 namespace Dynarmic {
 namespace mp {
