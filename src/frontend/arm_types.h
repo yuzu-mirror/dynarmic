@@ -137,12 +137,6 @@ private:
     Arm::FPSCR fpscr; ///< Floating point status control register.
 };
 
-struct LocationDescriptorHash {
-    size_t operator()(const LocationDescriptor& x) const {
-        return std::hash<u64>()(x.UniqueHash());
-    }
-};
-
 const char* CondToString(Cond cond, bool explicit_al = false);
 const char* RegToString(Reg reg);
 const char* ExtRegToString(ExtReg reg);
@@ -183,3 +177,12 @@ inline ExtReg operator+(ExtReg reg, size_t number) {
 
 } // namespace Arm
 } // namespace Dynarmic
+
+namespace std {
+template <>
+struct hash<Dynarmic::Arm::LocationDescriptor> {
+    size_t operator()(const Dynarmic::Arm::LocationDescriptor& x) const {
+        return std::hash<u64>()(x.UniqueHash());
+    }
+};
+} // namespace std
