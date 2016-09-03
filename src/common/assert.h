@@ -18,11 +18,11 @@ template <typename Fn>
 #if defined(_MSC_VER)
 __declspec(noinline, noreturn)
 #elif defined(__GNUC__)
-__attribute__((noinline, noreturn, cold))
+[[noreturn, gnu::noinline, gnu::cold]]
 #endif
 static void assert_noinline_call(const Fn& fn) {
     fn();
-    exit(1); // Keeps GCC's mouth shut about this actually returning
+    exit(EXIT_FAILURE); // Keeps GCC's mouth shut about this actually returning
 }
 
 #define ASSERT(_a_) \
