@@ -24,17 +24,17 @@ namespace Dynarmic {
 namespace BackendX64 {
 
 struct OpArg {
-    OpArg() : type(OPERAND), inner_operand() {}
-    OpArg(const Xbyak::Address& address) : type(ADDRESS), inner_address(address) {}
-    OpArg(const Xbyak::Reg& reg) : type(REG), inner_reg(reg) {}
+    OpArg() : type(Type::Operand), inner_operand() {}
+    OpArg(const Xbyak::Address& address) : type(Type::Address), inner_address(address) {}
+    OpArg(const Xbyak::Reg& reg) : type(Type::Reg), inner_reg(reg) {}
 
     Xbyak::Operand& operator*() {
         switch (type) {
-        case ADDRESS:
+        case Type::Address:
             return inner_address;
-        case OPERAND:
+        case Type::Operand:
             return inner_operand;
-        case REG:
+        case Type::Reg:
             return inner_reg;
         }
         ASSERT_MSG(false, "Unreachable");
@@ -42,13 +42,13 @@ struct OpArg {
 
     void setBit(int bits) {
         switch (type) {
-        case ADDRESS:
+        case Type::Address:
             inner_address.setBit(bits);
             return;
-        case OPERAND:
+        case Type::Operand:
             inner_operand.setBit(bits);
             return;
-        case REG:
+        case Type::Reg:
             switch (bits) {
             case 8:
                 inner_reg = inner_reg.cvt8();
@@ -71,11 +71,13 @@ struct OpArg {
     }
 
 private:
-    enum {
-        OPERAND,
-        ADDRESS,
-        REG,
-    } type;
+    enum class Type {
+        Operand,
+        Address,
+        Reg,
+    };
+
+    Type type;
 
     union {
         Xbyak::Operand inner_operand;
