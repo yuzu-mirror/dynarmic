@@ -118,7 +118,7 @@ struct LocationDescriptor {
     }
 
     LocationDescriptor SetFPSCR(u32 new_fpscr) const {
-        return LocationDescriptor(arm_pc, cpsr, new_fpscr & FPSCR_MODE_MASK);
+        return LocationDescriptor(arm_pc, cpsr, Arm::FPSCR{new_fpscr & FPSCR_MODE_MASK});
     }
 
     u64 UniqueHash() const {

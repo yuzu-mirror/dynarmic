@@ -28,7 +28,7 @@ public:
     FPSCR() = default;
     FPSCR(const FPSCR&) = default;
     FPSCR(FPSCR&&) = default;
-    /* implicit */ FPSCR(u32 data) : value{data} {}
+    explicit FPSCR(u32 data) : value{data} {}
 
     FPSCR& operator=(const FPSCR&) = default;
     FPSCR& operator=(FPSCR&&) = default;

@@ -247,7 +247,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
             Dynarmic::Arm::PSR cpsr;
             cpsr.T(true);
 
-            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, cpsr, 0}, MemoryRead32);
+            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, cpsr, Dynarmic::Arm::FPSCR{}}, MemoryRead32);
             Dynarmic::Optimization::GetSetElimination(ir_block);
             Dynarmic::Optimization::DeadCodeElimination(ir_block);
             Dynarmic::Optimization::VerificationPass(ir_block);
