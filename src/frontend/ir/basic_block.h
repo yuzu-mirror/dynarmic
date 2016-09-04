@@ -87,7 +87,7 @@ public:
     /// Gets the location of the block to execute if the predicated condition fails.
     Arm::LocationDescriptor ConditionFailedLocation() const;
     /// Sets the location of the block to execute if the predicated condition fails.
-    void SetConditionFailedLocation(Arm::LocationDescriptor location);
+    void SetConditionFailedLocation(Arm::LocationDescriptor fail_location);
     /// Determines whether or not a prediated condition failure block is present.
     bool HasConditionFailedLocation() const;
 

@@ -127,7 +127,7 @@ public:
     void int3() { db(0xCC); }
     void nop(size_t size = 1);
 
-    void SetCodePtr(CodePtr ptr);
+    void SetCodePtr(CodePtr code_ptr);
     void EnsurePatchLocationSize(CodePtr begin, size_t size);
 
 #ifdef _WIN32

@@ -26,7 +26,16 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 # Compiler flags
 if (MSVC)
-    add_compile_options(/W3 /MP /Zi /Zo /EHsc /WX)
+    add_compile_options(/W3
+                        /w34456 # Declaration of 'var' hides previous local declaration
+                        /w34457 # Declaration of 'var' hides function parameter
+                        /w34458 # Declaration of 'var' hides class member
+                        /w34459 # Declaration of 'var' hides global definition
+                        /MP
+                        /Zi
+                        /Zo
+                        /EHsc
+                        /WX)
     add_compile_options(/DNOMINMAX)
 else()
     add_compile_options(-Wall

@@ -46,8 +46,8 @@ Arm::LocationDescriptor Block::ConditionFailedLocation() const {
     return cond_failed.get();
 }
 
-void Block::SetConditionFailedLocation(Arm::LocationDescriptor location) {
-    cond_failed = location;
+void Block::SetConditionFailedLocation(Arm::LocationDescriptor fail_location) {
+    cond_failed = fail_location;
 }
 
 size_t& Block::ConditionFailedCycleCount() {

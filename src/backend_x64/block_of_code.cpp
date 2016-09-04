@@ -227,9 +227,9 @@ void BlockOfCode::nop(size_t size) {
     }
 }
 
-void BlockOfCode::SetCodePtr(CodePtr ptr) {
+void BlockOfCode::SetCodePtr(CodePtr code_ptr) {
     // The "size" defines where top_, the insertion point, is.
-    size_t required_size = reinterpret_cast<const u8*>(ptr) - getCode();
+    size_t required_size = reinterpret_cast<const u8*>(code_ptr) - getCode();
     setSize(required_size);
 }
 
