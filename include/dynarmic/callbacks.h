@@ -32,7 +32,7 @@ struct UserCallbacks {
     void (*InterpreterFallback)(std::uint32_t pc, Jit* jit, void* user_arg);
     void* user_arg = nullptr;
 
-    bool (*CallSVC)(std::uint32_t swi);
+    void (*CallSVC)(std::uint32_t swi);
 
     // Page Table
     static constexpr std::size_t PAGE_BITS = 12;

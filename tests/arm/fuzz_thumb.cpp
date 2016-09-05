@@ -110,7 +110,7 @@ static void Fail() {
 static Dynarmic::UserCallbacks GetUserCallbacks() {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.InterpreterFallback = &InterpreterFallback;
-    user_callbacks.CallSVC = (bool (*)(u32)) &Fail;
+    user_callbacks.CallSVC = (void (*)(u32)) &Fail;
     user_callbacks.IsReadOnlyMemory = &IsReadOnlyMemory;
     user_callbacks.MemoryRead8 = &MemoryRead8;
     user_callbacks.MemoryRead16 = &MemoryRead16;
