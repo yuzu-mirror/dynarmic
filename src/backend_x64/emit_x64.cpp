@@ -12,7 +12,7 @@
 #include "backend_x64/abi.h"
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
-#include "frontend/arm_types.h"
+#include "frontend/arm/types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/location_descriptor.h"
 #include "frontend/ir/microinstruction.h"

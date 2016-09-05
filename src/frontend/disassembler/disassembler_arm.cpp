@@ -11,7 +11,7 @@
 
 #include "common/bit_util.h"
 #include "common/string_util.h"
-#include "frontend/arm_types.h"
+#include "frontend/arm/types.h"
 #include "frontend/decoder/arm.h"
 #include "frontend/decoder/vfp2.h"
 

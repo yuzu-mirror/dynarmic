@@ -7,7 +7,7 @@
 #include <algorithm>
 
 #include "common/assert.h"
-#include "frontend/arm_types.h"
+#include "frontend/arm/types.h"
 #include "frontend/decoder/arm.h"
 #include "frontend/decoder/vfp2.h"
 #include "frontend/ir/basic_block.h"

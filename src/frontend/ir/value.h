@@ -7,7 +7,7 @@
 #pragma once
 
 #include "common/common_types.h"
-#include "frontend/arm_types.h"
+#include "frontend/arm/types.h"
 
 namespace Dynarmic {
 namespace IR {

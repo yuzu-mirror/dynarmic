@@ -8,7 +8,7 @@
 
 #include "common/assert.h"
 #include "common/bit_util.h"
-#include "frontend/arm_types.h"
+#include "frontend/arm/types.h"
 #include "frontend/decoder/thumb16.h"
 #include "frontend/decoder/thumb32.h"
 #include "frontend/ir/ir_emitter.h"

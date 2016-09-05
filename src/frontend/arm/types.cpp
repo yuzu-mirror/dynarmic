@@ -7,7 +7,7 @@
 #include <array>
 
 #include "common/bit_util.h"
-#include "frontend/arm_types.h"
+#include "frontend/arm/types.h"
 
 namespace Dynarmic {
 namespace Arm {
