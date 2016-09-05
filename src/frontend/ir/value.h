@@ -18,7 +18,7 @@ class Inst;
  * A representation of a value in the IR.
  * A value may either be an immediate or the result of a microinstruction.
  */
-struct Value final {
+class Value final {
 public:
     Value() : type(Type::Void) {}
     explicit Value(Inst* value);
