@@ -10,7 +10,8 @@
 namespace Dynarmic {
 
 namespace IR {
-    class Block;
+class Block;
+class LocationDescriptor;
 } // namespace IR
 
 namespace Arm {
@@ -25,7 +26,7 @@ using MemoryRead32FuncType = u32 (*)(u32 vaddr);
  * @param memory_read_32 The function we should use to read emulated memory.
  * @return A translated basic block in the intermediate representation.
  */
-IR::Block Translate(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32);
+IR::Block Translate(IR::LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32);
 
 } // namespace Arm
 } // namespace Dynarmic

@@ -12,6 +12,7 @@
 #include "frontend/decoder/thumb16.h"
 #include "frontend/decoder/thumb32.h"
 #include "frontend/ir/ir_emitter.h"
+#include "frontend/ir/location_descriptor.h"
 #include "frontend/translate/translate.h"
 
 namespace Dynarmic {
@@ -20,7 +21,7 @@ namespace Arm {
 namespace {
 
 struct ThumbTranslatorVisitor final {
-    explicit ThumbTranslatorVisitor(LocationDescriptor descriptor) : ir(descriptor) {
+    explicit ThumbTranslatorVisitor(IR::LocationDescriptor descriptor) : ir(descriptor) {
         ASSERT_MSG(descriptor.TFlag(), "The processor must be in Thumb mode");
     }
 
@@ -857,7 +858,7 @@ std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRead32Func
 
 } // local namespace
 
-IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
+IR::Block TranslateThumb(IR::LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
     ThumbTranslatorVisitor visitor{descriptor};
 
     bool should_continue = true;

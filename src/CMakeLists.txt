@@ -64,6 +64,7 @@ set(HEADERS
     frontend/disassembler/disassembler.h
     frontend/ir/basic_block.h
     frontend/ir/ir_emitter.h
+    frontend/ir/location_descriptor.h
     frontend/ir/microinstruction.h
     frontend/ir/opcodes.h
     frontend/ir/terminal.h

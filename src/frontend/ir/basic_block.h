@@ -15,7 +15,7 @@
 #include "common/common_types.h"
 #include "common/intrusive_list.h"
 #include "common/memory_pool.h"
-#include "frontend/arm_types.h"
+#include "frontend/ir/location_descriptor.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/terminal.h"
 #include "frontend/ir/value.h"
@@ -40,7 +40,7 @@ public:
     using reverse_iterator       = InstructionList::reverse_iterator;
     using const_reverse_iterator = InstructionList::const_reverse_iterator;
 
-    explicit Block(const Arm::LocationDescriptor& location) : location(location) {}
+    explicit Block(const LocationDescriptor& location) : location(location) {}
 
     bool                   empty()   const { return instructions.empty();   }
     size_type              size()    const { return instructions.size();    }
@@ -77,7 +77,7 @@ public:
     void AppendNewInst(Opcode op, std::initializer_list<Value> args);
 
     /// Gets the starting location for this basic block.
-    Arm::LocationDescriptor Location() const;
+    LocationDescriptor Location() const;
 
     /// Gets the condition required to pass in order to execute this block.
     Arm::Cond GetCondition() const;
@@ -85,9 +85,9 @@ public:
     void SetCondition(Arm::Cond condition);
 
     /// Gets the location of the block to execute if the predicated condition fails.
-    Arm::LocationDescriptor ConditionFailedLocation() const;
+    LocationDescriptor ConditionFailedLocation() const;
     /// Sets the location of the block to execute if the predicated condition fails.
-    void SetConditionFailedLocation(Arm::LocationDescriptor fail_location);
+    void SetConditionFailedLocation(LocationDescriptor fail_location);
     /// Determines whether or not a prediated condition failure block is present.
     bool HasConditionFailedLocation() const;
 
@@ -115,11 +115,11 @@ public:
 
 private:
     /// Description of the starting location of this block
-    Arm::LocationDescriptor location;
+    LocationDescriptor location;
     /// Conditional to pass in order to execute this block
     Arm::Cond cond = Arm::Cond::AL;
     /// Block to execute next if `cond` did not pass.
-    boost::optional<Arm::LocationDescriptor> cond_failed = {};
+    boost::optional<LocationDescriptor> cond_failed = {};
     /// Number of cycles this block takes to execute if the conditional fails.
     size_t cond_failed_cycle_count = 0;
 

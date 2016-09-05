@@ -14,6 +14,7 @@
 #include "backend_x64/jitstate.h"
 #include "frontend/arm_types.h"
 #include "frontend/ir/basic_block.h"
+#include "frontend/ir/location_descriptor.h"
 #include "frontend/ir/microinstruction.h"
 
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
@@ -50,7 +51,7 @@ static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
 }
 
 EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
-    const Arm::LocationDescriptor descriptor = block.Location();
+    const IR::LocationDescriptor descriptor = block.Location();
 
     reg_alloc.Reset();
 
@@ -2156,7 +2157,7 @@ void EmitX64::EmitCondPrelude(const IR::Block& block) {
     code->L(pass);
 }
 
-void EmitX64::EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminal(IR::Terminal terminal, IR::LocationDescriptor initial_location) {
     switch (terminal.which()) {
     case 1:
         EmitTerminalInterpret(boost::get<IR::Term::Interpret>(terminal), initial_location);
@@ -2185,7 +2186,7 @@ void EmitX64::EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initia
     }
 }
 
-void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location) {
     ASSERT_MSG(terminal.next.TFlag() == initial_location.TFlag(), "Unimplemented");
     ASSERT_MSG(terminal.next.EFlag() == initial_location.EFlag(), "Unimplemented");
 
@@ -2198,11 +2199,11 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationD
     code->ReturnFromRunCode(false); // TODO: Check cycles
 }
 
-void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, IR::LocationDescriptor initial_location) {
     code->ReturnFromRunCode();
 }
 
-void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location) {
     using namespace Xbyak::util;
 
     if (terminal.next.TFlag() != initial_location.TFlag()) {
@@ -2233,7 +2234,7 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationD
     code->ReturnFromRunCode(); // TODO: Check cycles, Properly do a link
 }
 
-void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location) {
     using namespace Xbyak::util;
 
     if (terminal.next.TFlag() != initial_location.TFlag()) {
@@ -2263,7 +2264,7 @@ void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::L
     }
 }
 
-void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, IR::LocationDescriptor initial_location) {
     using namespace Xbyak::util;
 
     // This calculation has to match up with IREmitter::PushRSB
@@ -2284,14 +2285,14 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, Arm::LocationDescript
     code->jmp(rax);
 }
 
-void EmitX64::EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminalIf(IR::Term::If terminal, IR::LocationDescriptor initial_location) {
     Xbyak::Label pass = EmitCond(code, terminal.if_);
     EmitTerminal(terminal.else_, initial_location);
     code->L(pass);
     EmitTerminal(terminal.then_, initial_location);
 }
 
-void EmitX64::EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, Arm::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location) {
     using namespace Xbyak::util;
 
     code->cmp(code->byte[r15 + offsetof(JitState, halt_requested)], u8(0));
@@ -2299,7 +2300,7 @@ void EmitX64::EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, Arm::LocationD
     EmitTerminal(terminal.else_, initial_location);
 }
 
-void EmitX64::Patch(Arm::LocationDescriptor desc, CodePtr bb) {
+void EmitX64::Patch(IR::LocationDescriptor desc, CodePtr bb) {
     using namespace Xbyak::util;
 
     const CodePtr save_code_ptr = code->getCurr();

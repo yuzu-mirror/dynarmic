@@ -30,7 +30,7 @@ void Block::AppendNewInst(Opcode opcode, std::initializer_list<IR::Value> args) 
     instructions.push_back(inst);
 }
 
-Arm::LocationDescriptor Block::Location() const {
+LocationDescriptor Block::Location() const {
     return location;
 }
 
@@ -42,11 +42,11 @@ void Block::SetCondition(Arm::Cond condition) {
     cond = condition;
 }
 
-Arm::LocationDescriptor Block::ConditionFailedLocation() const {
+LocationDescriptor Block::ConditionFailedLocation() const {
     return cond_failed.get();
 }
 
-void Block::SetConditionFailedLocation(Arm::LocationDescriptor fail_location) {
+void Block::SetConditionFailedLocation(LocationDescriptor fail_location) {
     cond_failed = fail_location;
 }
 
@@ -91,7 +91,7 @@ const size_t& Block::CycleCount() const {
     return cycle_count;
 }
 
-static std::string LocDescToString(const Arm::LocationDescriptor& loc) {
+static std::string LocDescToString(const LocationDescriptor& loc) {
     return fmt::format("{{{},{},{},{}}}",
                        loc.PC(),
                        loc.TFlag() ? "T" : "!T",

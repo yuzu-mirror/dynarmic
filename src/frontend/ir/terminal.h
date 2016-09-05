@@ -9,7 +9,7 @@
 #include <boost/variant.hpp>
 
 #include "common/common_types.h"
-#include "frontend/arm_types.h"
+#include "frontend/ir/location_descriptor.h"
 
 namespace Dynarmic {
 namespace IR {
@@ -22,8 +22,8 @@ struct Invalid {};
  * The interpreter must interpret exactly one instruction.
  */
 struct Interpret {
-    explicit Interpret(const Arm::LocationDescriptor& next_) : next(next_) {}
-    Arm::LocationDescriptor next; ///< Location at which interpretation starts.
+    explicit Interpret(const LocationDescriptor& next_) : next(next_) {}
+    LocationDescriptor next; ///< Location at which interpretation starts.
 };
 
 /**
@@ -38,8 +38,8 @@ struct ReturnToDispatch {};
  * dispatcher, which will return control to the host.
  */
 struct LinkBlock {
-    explicit LinkBlock(const Arm::LocationDescriptor& next_) : next(next_) {}
-    Arm::LocationDescriptor next; ///< Location descriptor for next block.
+    explicit LinkBlock(const LocationDescriptor& next_) : next(next_) {}
+    LocationDescriptor next; ///< Location descriptor for next block.
 };
 
 /**
@@ -51,8 +51,8 @@ struct LinkBlock {
  * as LinkBlock.
  */
 struct LinkBlockFast {
-    explicit LinkBlockFast(const Arm::LocationDescriptor& next_) : next(next_) {}
-    Arm::LocationDescriptor next; ///< Location descriptor for next block.
+    explicit LinkBlockFast(const LocationDescriptor& next_) : next(next_) {}
+    LocationDescriptor next; ///< Location descriptor for next block.
 };
 
 /**

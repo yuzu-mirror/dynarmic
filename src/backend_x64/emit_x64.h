@@ -14,7 +14,7 @@
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/reg_alloc.h"
 #include "dynarmic/callbacks.h"
-#include "frontend/arm_types.h"
+#include "frontend/ir/location_descriptor.h"
 #include "frontend/ir/terminal.h"
 
 namespace Dynarmic {
@@ -45,7 +45,7 @@ public:
     BlockDescriptor Emit(IR::Block& ir);
 
     /// Looks up an emitted host block in the cache.
-    boost::optional<BlockDescriptor> GetBasicBlock(Arm::LocationDescriptor descriptor) {
+    boost::optional<BlockDescriptor> GetBasicBlock(IR::LocationDescriptor descriptor) {
         auto iter = basic_blocks.find(descriptor);
         if (iter == basic_blocks.end())
             return boost::none;
@@ -66,15 +66,15 @@ private:
     void EmitCondPrelude(const IR::Block& block);
 
     // Terminal instruction emitters
-    void EmitTerminal(IR::Terminal terminal, Arm::LocationDescriptor initial_location);
-    void EmitTerminalInterpret(IR::Term::Interpret terminal, Arm::LocationDescriptor initial_location);
-    void EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch terminal, Arm::LocationDescriptor initial_location);
-    void EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, Arm::LocationDescriptor initial_location);
-    void EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, Arm::LocationDescriptor initial_location);
-    void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, Arm::LocationDescriptor initial_location);
-    void EmitTerminalIf(IR::Term::If terminal, Arm::LocationDescriptor initial_location);
-    void EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, Arm::LocationDescriptor initial_location);
-    void Patch(Arm::LocationDescriptor desc, CodePtr bb);
+    void EmitTerminal(IR::Terminal terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminalInterpret(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminalIf(IR::Term::If terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location);
+    void Patch(IR::LocationDescriptor desc, CodePtr bb);
 
     // Per-block state
     RegAlloc reg_alloc;
@@ -85,9 +85,9 @@ private:
     Jit* jit_interface;
     std::unordered_map<u64, CodePtr> unique_hash_to_code_ptr;
     std::unordered_map<u64, std::vector<CodePtr>> patch_unique_hash_locations;
-    std::unordered_map<Arm::LocationDescriptor, BlockDescriptor> basic_blocks;
-    std::unordered_map<Arm::LocationDescriptor, std::vector<CodePtr>> patch_jg_locations;
-    std::unordered_map<Arm::LocationDescriptor, std::vector<CodePtr>> patch_jmp_locations;
+    std::unordered_map<IR::LocationDescriptor, BlockDescriptor> basic_blocks;
+    std::unordered_map<IR::LocationDescriptor, std::vector<CodePtr>> patch_jg_locations;
+    std::unordered_map<IR::LocationDescriptor, std::vector<CodePtr>> patch_jmp_locations;
 };
 
 } // namespace BackendX64

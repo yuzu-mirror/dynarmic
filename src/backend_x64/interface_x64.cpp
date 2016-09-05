@@ -20,8 +20,8 @@
 #include "common/common_types.h"
 #include "common/scope_exit.h"
 #include "dynarmic/dynarmic.h"
-#include "frontend/arm_types.h"
 #include "frontend/ir/basic_block.h"
+#include "frontend/ir/location_descriptor.h"
 #include "frontend/translate/translate.h"
 #include "ir_opt/passes.h"
 
@@ -47,13 +47,13 @@ struct Jit::Impl {
     size_t Execute(size_t cycle_count) {
         u32 pc = jit_state.Reg[15];
 
-        Arm::LocationDescriptor descriptor{pc, Arm::PSR{jit_state.Cpsr}, Arm::FPSCR{jit_state.guest_FPSCR_mode}};
+        IR::LocationDescriptor descriptor{pc, Arm::PSR{jit_state.Cpsr}, Arm::FPSCR{jit_state.guest_FPSCR_mode}};
 
         CodePtr code_ptr = GetBasicBlock(descriptor).code_ptr;
         return block_of_code.RunCode(&jit_state, code_ptr, cycle_count);
     }
 
-    std::string Disassemble(const Arm::LocationDescriptor& descriptor) {
+    std::string Disassemble(const IR::LocationDescriptor& descriptor) {
         auto block = GetBasicBlock(descriptor);
         std::string result = fmt::format("address: {}\nsize: {} bytes\n", block.code_ptr, block.size);
 
@@ -98,7 +98,7 @@ struct Jit::Impl {
     }
 
 private:
-    EmitX64::BlockDescriptor GetBasicBlock(Arm::LocationDescriptor descriptor) {
+    EmitX64::BlockDescriptor GetBasicBlock(IR::LocationDescriptor descriptor) {
         auto block = emitter.GetBasicBlock(descriptor);
         if (block)
             return *block;
@@ -187,7 +187,7 @@ void Jit::SetFpscr(u32 value) const {
     return impl->jit_state.SetFpscr(value);
 }
 
-std::string Jit::Disassemble(const Arm::LocationDescriptor& descriptor) {
+std::string Jit::Disassemble(const IR::LocationDescriptor& descriptor) {
     return impl->Disassemble(descriptor);
 }
 

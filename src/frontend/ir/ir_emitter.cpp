@@ -99,7 +99,7 @@ void IREmitter::CallSupervisor(const Value& value) {
     Inst(Opcode::CallSupervisor, {value});
 }
 
-void IREmitter::PushRSB(const Arm::LocationDescriptor& return_location) {
+void IREmitter::PushRSB(const LocationDescriptor& return_location) {
     Inst(Opcode::PushRSB, {Value(return_location.UniqueHash())});
 }
 

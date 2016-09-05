@@ -7,6 +7,7 @@
 #pragma once
 
 #include "frontend/ir/ir_emitter.h"
+#include "frontend/ir/location_descriptor.h"
 
 namespace Dynarmic {
 namespace Arm {
@@ -23,7 +24,7 @@ enum class ConditionalState {
 };
 
 struct ArmTranslatorVisitor final {
-    explicit ArmTranslatorVisitor(LocationDescriptor descriptor) : ir(descriptor) {
+    explicit ArmTranslatorVisitor(IR::LocationDescriptor descriptor) : ir(descriptor) {
         ASSERT_MSG(!descriptor.TFlag(), "The processor must be in Arm mode");
     }
 
