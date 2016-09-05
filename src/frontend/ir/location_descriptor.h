@@ -7,6 +7,7 @@
 #pragma once
 
 #include <functional>
+#include <iosfwd>
 #include <tuple>
 #include "common/common_types.h"
 #include "frontend/arm/FPSCR.h"
@@ -86,6 +87,14 @@ private:
     Arm::PSR cpsr;    ///< Current program status register.
     Arm::FPSCR fpscr; ///< Floating point status control register.
 };
+
+/**
+ * Provides a string representation of a LocationDescriptor.
+ *
+ * @param o          Output stream
+ * @param descriptor The descriptor to get a string representation of
+ */
+std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor);
 
 } // namespace IR
 } // namespace Dynarmic

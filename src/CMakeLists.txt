@@ -12,6 +12,7 @@ set(SRCS
     frontend/disassembler/disassembler_thumb.cpp
     frontend/ir/basic_block.cpp
     frontend/ir/ir_emitter.cpp
+    frontend/ir/location_descriptor.cpp
     frontend/ir/microinstruction.cpp
     frontend/ir/opcodes.cpp
     frontend/ir/value.cpp

@@ -91,30 +91,22 @@ const size_t& Block::CycleCount() const {
     return cycle_count;
 }
 
-static std::string LocDescToString(const LocationDescriptor& loc) {
-    return fmt::format("{{{},{},{},{}}}",
-                       loc.PC(),
-                       loc.TFlag() ? "T" : "!T",
-                       loc.EFlag() ? "E" : "!E",
-                       loc.FPSCR().Value());
-}
-
 static std::string TerminalToString(const Terminal& terminal_variant) {
     switch (terminal_variant.which()) {
     case 1: {
         auto terminal = boost::get<IR::Term::Interpret>(terminal_variant);
-        return fmt::format("Interpret{{{}}}", LocDescToString(terminal.next));
+        return fmt::format("Interpret{{{}}}", terminal.next);
     }
     case 2: {
         return "ReturnToDispatch{}";
     }
     case 3: {
         auto terminal = boost::get<IR::Term::LinkBlock>(terminal_variant);
-        return fmt::format("LinkBlock{{{}}}", LocDescToString(terminal.next));
+        return fmt::format("LinkBlock{{{}}}", terminal.next);
     }
     case 4: {
         auto terminal = boost::get<IR::Term::LinkBlockFast>(terminal_variant);
-        return fmt::format("LinkBlockFast{{{}}}", LocDescToString(terminal.next));
+        return fmt::format("LinkBlockFast{{{}}}", terminal.next);
     }
     case 5: {
         return "PopRSBHint{}";
@@ -135,11 +127,11 @@ static std::string TerminalToString(const Terminal& terminal_variant) {
 std::string DumpBlock(const IR::Block& block) {
     std::string ret;
 
-    ret += fmt::format("Block: location={}\n", LocDescToString(block.Location()));
+    ret += fmt::format("Block: location={}\n", block.Location());
     ret += fmt::format("cycles={}", block.CycleCount());
     ret += fmt::format(", entry_cond={}", Arm::CondToString(block.GetCondition(), true));
     if (block.GetCondition() != Arm::Cond::AL) {
-        ret += fmt::format(", cond_fail={}", LocDescToString(block.ConditionFailedLocation()));
+        ret += fmt::format(", cond_fail={}", block.ConditionFailedLocation());
     }
     ret += '\n';
 
