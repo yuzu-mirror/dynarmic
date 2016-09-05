@@ -366,7 +366,7 @@ void EmitX64::EmitGetFpscrNZCV(IR::Block&, IR::Inst* inst) {
 
     Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
 
-    code->mov(result, dword[r15 + offsetof(JitState, guest_FPSCR_nzcv)]);
+    code->mov(result, dword[r15 + offsetof(JitState, FPSCR_nzcv)]);
 }
 
 void EmitX64::EmitSetFpscrNZCV(IR::Block&, IR::Inst* inst) {
@@ -374,7 +374,7 @@ void EmitX64::EmitSetFpscrNZCV(IR::Block&, IR::Inst* inst) {
 
     Xbyak::Reg32 value = reg_alloc.UseGpr(inst->GetArg(0)).cvt32();
 
-    code->mov(dword[r15 + offsetof(JitState, guest_FPSCR_nzcv)], value);
+    code->mov(dword[r15 + offsetof(JitState, FPSCR_nzcv)], value);
 }
 
 void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
@@ -2272,7 +2272,7 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, IR::LocationDescripto
     code->mov(ecx, MJitStateReg(Arm::Reg::PC));
     code->and_(ebx, u32((1 << 5) | (1 << 9)));
     code->shr(ebx, 2);
-    code->or_(ebx, dword[r15 + offsetof(JitState, guest_FPSCR_mode)]);
+    code->or_(ebx, dword[r15 + offsetof(JitState, FPSCR_mode)]);
     code->shl(rbx, 32);
     code->or_(rbx, rcx);
 

@@ -47,7 +47,7 @@ struct Jit::Impl {
     size_t Execute(size_t cycle_count) {
         u32 pc = jit_state.Reg[15];
 
-        IR::LocationDescriptor descriptor{pc, Arm::PSR{jit_state.Cpsr}, Arm::FPSCR{jit_state.guest_FPSCR_mode}};
+        IR::LocationDescriptor descriptor{pc, Arm::PSR{jit_state.Cpsr}, Arm::FPSCR{jit_state.FPSCR_mode}};
 
         CodePtr code_ptr = GetBasicBlock(descriptor).code_ptr;
         return block_of_code.RunCode(&jit_state, code_ptr, cycle_count);

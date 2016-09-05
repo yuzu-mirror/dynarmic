@@ -47,8 +47,8 @@ struct JitState {
 
     u32 FPSCR_IDC = 0;
     u32 FPSCR_UFC = 0;
-    u32 guest_FPSCR_mode = 0;
-    u32 guest_FPSCR_nzcv = 0;
+    u32 FPSCR_mode = 0;
+    u32 FPSCR_nzcv = 0;
     u32 old_FPSCR = 0;
     u32 Fpscr() const;
     void SetFpscr(u32 FPSCR);

@@ -79,12 +79,12 @@ constexpr u32 FPSCR_MODE_MASK = IR::LocationDescriptor::FPSCR_MODE_MASK;
 constexpr u32 FPSCR_NZCV_MASK = 0xF0000000;
 
 u32 JitState::Fpscr() const {
-    ASSERT((guest_FPSCR_mode & ~FPSCR_MODE_MASK) == 0);
-    ASSERT((guest_FPSCR_nzcv & ~FPSCR_NZCV_MASK) == 0);
+    ASSERT((FPSCR_mode & ~FPSCR_MODE_MASK) == 0);
+    ASSERT((FPSCR_nzcv & ~FPSCR_NZCV_MASK) == 0);
     ASSERT((FPSCR_IDC & ~(1 << 7)) == 0);
     ASSERT((FPSCR_UFC & ~(1 << 3)) == 0);
 
-    u32 FPSCR = guest_FPSCR_mode | guest_FPSCR_nzcv;
+    u32 FPSCR = FPSCR_mode | FPSCR_nzcv;
     FPSCR |= (guest_MXCSR & 0b0000000000001);       // IOC = IE
     FPSCR |= (guest_MXCSR & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
     FPSCR |= FPSCR_IDC;
@@ -95,8 +95,8 @@ u32 JitState::Fpscr() const {
 
 void JitState::SetFpscr(u32 FPSCR) {
     old_FPSCR = FPSCR;
-    guest_FPSCR_mode = FPSCR & FPSCR_MODE_MASK;
-    guest_FPSCR_nzcv = FPSCR & FPSCR_NZCV_MASK;
+    FPSCR_mode = FPSCR & FPSCR_MODE_MASK;
+    FPSCR_nzcv = FPSCR & FPSCR_NZCV_MASK;
     guest_MXCSR = 0;
 
     // Exception masks / enables
