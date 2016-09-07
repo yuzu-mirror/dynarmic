@@ -215,7 +215,7 @@ public:
 
     /**
      * Removes a node from this list
-     * @param node An iterator that points to the node to remove from list.
+     * @param it An iterator that points to the node to remove from list.
      */
     pointer remove(iterator& it) {
         DEBUG_ASSERT(it != end());
@@ -234,7 +234,7 @@ public:
 
     /**
      * Removes a node from this list
-     * @param node A constant iterator that points to the node to remove from list.
+     * @param it A constant iterator that points to the node to remove from list.
      */
     pointer remove(const iterator& it) {
         iterator copy = it;
