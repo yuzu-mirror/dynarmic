@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <iosfwd>
 #include <string>
 #include <utility>
 
@@ -66,6 +67,10 @@ const char* CondToString(Cond cond, bool explicit_al = false);
 const char* RegToString(Reg reg);
 const char* ExtRegToString(ExtReg reg);
 std::string RegListToString(RegList reg_list);
+
+std::ostream& operator<<(std::ostream& o, Reg reg);
+std::ostream& operator<<(std::ostream& o, ExtReg reg);
+std::ostream& operator<<(std::ostream& o, RegList reg_list);
 
 constexpr bool IsSingleExtReg(ExtReg reg) {
     return reg >= ExtReg::S0 && reg <= ExtReg::S31;
