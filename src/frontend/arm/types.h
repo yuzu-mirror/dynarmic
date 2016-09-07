@@ -67,19 +67,29 @@ const char* RegToString(Reg reg);
 const char* ExtRegToString(ExtReg reg);
 std::string RegListToString(RegList reg_list);
 
+constexpr bool IsSingleExtReg(ExtReg reg) {
+    return reg >= ExtReg::S0 && reg <= ExtReg::S31;
+}
+
+constexpr bool IsDoubleExtReg(ExtReg reg) {
+    return reg >= ExtReg::D0 && reg <= ExtReg::D31;
+}
+
 inline size_t RegNumber(Reg reg) {
     ASSERT(reg != Reg::INVALID_REG);
     return static_cast<size_t>(reg);
 }
 
 inline size_t RegNumber(ExtReg reg) {
-    if (reg >= ExtReg::S0 && reg <= ExtReg::S31) {
+    if (IsSingleExtReg(reg)) {
         return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::S0);
-    } else if (reg >= ExtReg::D0 && reg <= ExtReg::D31) {
-        return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::D0);
-    } else {
-        ASSERT_MSG(false, "Invalid extended register");
     }
+
+    if (IsDoubleExtReg(reg)) {
+        return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::D0);
+    }
+
+    ASSERT_MSG(false, "Invalid extended register");
 }
 
 inline Reg operator+(Reg reg, size_t number) {
@@ -94,8 +104,8 @@ inline Reg operator+(Reg reg, size_t number) {
 inline ExtReg operator+(ExtReg reg, size_t number) {
     ExtReg new_reg = static_cast<ExtReg>(static_cast<size_t>(reg) + number);
 
-    ASSERT((reg >= ExtReg::S0 && reg <= ExtReg::S31 && new_reg >= ExtReg::S0 && new_reg <= ExtReg::S31)
-           || (reg >= ExtReg::D0 && reg <= ExtReg::D31 && new_reg >= ExtReg::D0 && new_reg <= ExtReg::D31));
+    ASSERT((IsSingleExtReg(reg) && IsSingleExtReg(new_reg)) ||
+           (IsDoubleExtReg(reg) && IsDoubleExtReg(new_reg)));
 
     return new_reg;
 }

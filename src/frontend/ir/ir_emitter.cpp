@@ -45,13 +45,15 @@ Value IREmitter::GetRegister(Arm::Reg reg) {
 }
 
 Value IREmitter::GetExtendedRegister(Arm::ExtReg reg) {
-    if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
+    if (Arm::IsSingleExtReg(reg)) {
         return Inst(Opcode::GetExtendedRegister32, {Value(reg)});
-    } else if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
-        return Inst(Opcode::GetExtendedRegister64, {Value(reg)});
-    } else {
-        ASSERT_MSG(false, "Invalid reg.");
     }
+
+    if (Arm::IsDoubleExtReg(reg)) {
+        return Inst(Opcode::GetExtendedRegister64, {Value(reg)});
+    }
+
+    ASSERT_MSG(false, "Invalid reg.");
 }
 
 void IREmitter::SetRegister(const Arm::Reg reg, const Value& value) {
@@ -60,9 +62,9 @@ void IREmitter::SetRegister(const Arm::Reg reg, const Value& value) {
 }
 
 void IREmitter::SetExtendedRegister(const Arm::ExtReg reg, const Value& value) {
-    if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
+    if (Arm::IsSingleExtReg(reg)) {
         Inst(Opcode::SetExtendedRegister32, {Value(reg), value});
-    } else if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
+    } else if (Arm::IsDoubleExtReg(reg)) {
         Inst(Opcode::SetExtendedRegister64, {Value(reg), value});
     } else {
         ASSERT_MSG(false, "Invalid reg.");

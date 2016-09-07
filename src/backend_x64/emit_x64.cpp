@@ -30,11 +30,11 @@ static Xbyak::Address MJitStateReg(Arm::Reg reg) {
 
 static Xbyak::Address MJitStateExtReg(Arm::ExtReg reg) {
     using namespace Xbyak::util;
-    if (reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31) {
+    if (Arm::IsSingleExtReg(reg)) {
         size_t index = static_cast<size_t>(reg) - static_cast<size_t>(Arm::ExtReg::S0);
         return dword[r15 + offsetof(JitState, ExtReg) + sizeof(u32) * index];
     }
-    if (reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31) {
+    if (Arm::IsDoubleExtReg(reg)) {
         size_t index = static_cast<size_t>(reg) - static_cast<size_t>(Arm::ExtReg::D0);
         return qword[r15 + offsetof(JitState, ExtReg) + sizeof(u64) * index];
     }
@@ -112,7 +112,7 @@ void EmitX64::EmitGetRegister(IR::Block&, IR::Inst* inst) {
 
 void EmitX64::EmitGetExtendedRegister32(IR::Block& block, IR::Inst* inst) {
     Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
-    ASSERT(reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31);
+    ASSERT(Arm::IsSingleExtReg(reg));
 
     Xbyak::Xmm result = reg_alloc.DefXmm(inst);
     code->movss(result, MJitStateExtReg(reg));
@@ -120,7 +120,7 @@ void EmitX64::EmitGetExtendedRegister32(IR::Block& block, IR::Inst* inst) {
 
 void EmitX64::EmitGetExtendedRegister64(IR::Block&, IR::Inst* inst) {
     Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
-    ASSERT(reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31);
+    ASSERT(Arm::IsDoubleExtReg(reg));
     Xbyak::Xmm result = reg_alloc.DefXmm(inst);
     code->movsd(result, MJitStateExtReg(reg));
 }
@@ -138,14 +138,14 @@ void EmitX64::EmitSetRegister(IR::Block&, IR::Inst* inst) {
 
 void EmitX64::EmitSetExtendedRegister32(IR::Block&, IR::Inst* inst) {
     Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
-    ASSERT(reg >= Arm::ExtReg::S0 && reg <= Arm::ExtReg::S31);
+    ASSERT(Arm::IsSingleExtReg(reg));
     Xbyak::Xmm source = reg_alloc.UseXmm(inst->GetArg(1));
     code->movss(MJitStateExtReg(reg), source);
 }
 
 void EmitX64::EmitSetExtendedRegister64(IR::Block&, IR::Inst* inst) {
     Arm::ExtReg reg = inst->GetArg(0).GetExtRegRef();
-    ASSERT(reg >= Arm::ExtReg::D0 && reg <= Arm::ExtReg::D31);
+    ASSERT(Arm::IsDoubleExtReg(reg));
     Xbyak::Xmm source = reg_alloc.UseXmm(inst->GetArg(1));
     code->movsd(MJitStateExtReg(reg), source);
 }
