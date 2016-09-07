@@ -94,7 +94,7 @@ struct If {
  * executed.
  */
 struct CheckHalt {
-    CheckHalt(Terminal else_) : else_(else_) {}
+    explicit CheckHalt(Terminal else_) : else_(else_) {}
     Terminal else_;
 };
 

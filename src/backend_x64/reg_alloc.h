@@ -23,8 +23,8 @@ namespace BackendX64 {
 
 struct OpArg {
     OpArg() : type(Type::Operand), inner_operand() {}
-    OpArg(const Xbyak::Address& address) : type(Type::Address), inner_address(address) {}
-    OpArg(const Xbyak::Reg& reg) : type(Type::Reg), inner_reg(reg) {}
+    /* implicit */ OpArg(const Xbyak::Address& address) : type(Type::Address), inner_address(address) {}
+    /* implicit */ OpArg(const Xbyak::Reg& reg) : type(Type::Reg), inner_reg(reg) {}
 
     Xbyak::Operand& operator*() {
         switch (type) {
@@ -86,7 +86,7 @@ private:
 
 class RegAlloc final {
 public:
-    RegAlloc(BlockOfCode* code) : code(code) {}
+    explicit RegAlloc(BlockOfCode* code) : code(code) {}
 
     /// Late-def
     Xbyak::Reg64 DefGpr(IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
