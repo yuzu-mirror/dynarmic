@@ -355,7 +355,7 @@ public:
      * Exchanges contents of this list with another list instance.
      * @param other The other list to swap with.
      */
-    void swap(IntrusiveList& other) {
+    void swap(IntrusiveList& other) noexcept {
         root.swap(other.root);
     }
 
@@ -370,7 +370,7 @@ private:
  * @param rhs The second list.
  */
 template <typename T>
-void swap(IntrusiveList<T>& lhs, IntrusiveList<T>& rhs) {
+void swap(IntrusiveList<T>& lhs, IntrusiveList<T>& rhs) noexcept {
     lhs.swap(rhs);
 }
 
