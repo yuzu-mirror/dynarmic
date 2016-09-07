@@ -215,7 +215,7 @@ public:
 
     /**
      * Removes a node from this list
-     * @param node An iterator that points to the node to remove from list.
+     * @param it An iterator that points to the node to remove from list.
      */
     pointer remove(iterator& it) {
         DEBUG_ASSERT(it != end());
@@ -234,11 +234,11 @@ public:
 
     /**
      * Removes a node from this list
-     * @param node A constant iterator that points to the node to remove from list.
+     * @param it A constant iterator that points to the node to remove from list.
      */
     pointer remove(const iterator& it) {
         iterator copy = it;
-        return remove(it);
+        return remove(copy);
     }
 
     /**
@@ -355,7 +355,7 @@ public:
      * Exchanges contents of this list with another list instance.
      * @param other The other list to swap with.
      */
-    void swap(IntrusiveList& other) {
+    void swap(IntrusiveList& other) noexcept {
         root.swap(other.root);
     }
 
@@ -370,7 +370,7 @@ private:
  * @param rhs The second list.
  */
 template <typename T>
-void swap(IntrusiveList<T>& lhs, IntrusiveList<T>& rhs) {
+void swap(IntrusiveList<T>& lhs, IntrusiveList<T>& rhs) noexcept {
     lhs.swap(rhs);
 }
 
