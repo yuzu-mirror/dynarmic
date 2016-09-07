@@ -238,7 +238,7 @@ public:
      */
     pointer remove(const iterator& it) {
         iterator copy = it;
-        return remove(it);
+        return remove(copy);
     }
 
     /**
