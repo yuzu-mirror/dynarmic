@@ -12,9 +12,7 @@ namespace Dynarmic {
 namespace Common {
 
 Pool::Pool(size_t object_size, size_t initial_pool_size) : object_size(object_size), slab_size(initial_pool_size) {
-    current_slab = (char*)std::malloc(object_size * slab_size);
-    current_ptr = current_slab;
-    remaining = slab_size;
+    AllocateNewSlab();
 }
 
 Pool::~Pool() {
@@ -28,17 +26,22 @@ Pool::~Pool() {
 void* Pool::Alloc() {
     if (remaining == 0) {
         slabs.emplace_back(current_slab);
-        current_slab = (char*)std::malloc(object_size * slab_size);
-        current_ptr = current_slab;
-        remaining = slab_size;
+        AllocateNewSlab();
     }
 
-    void* ret = (void*)current_ptr;
+    void* ret = static_cast<void*>(current_ptr);
     current_ptr += object_size;
     remaining--;
 
     return ret;
 }
+
+void Pool::AllocateNewSlab() {
+    current_slab = static_cast<char*>(std::malloc(object_size * slab_size));
+    current_ptr = current_slab;
+    remaining = slab_size;
+}
+
 
 } // namespace Common
 } // namespace Dynarmic
