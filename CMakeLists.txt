@@ -50,7 +50,7 @@ else()
     add_compile_options(-fno-operator-names)
 
     if (ARCHITECTURE_x86_64)
-        add_compile_options(-msse4.1)
+        add_compile_options(-msse3)
     endif()
 endif()
 
