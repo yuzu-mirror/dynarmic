@@ -13,6 +13,7 @@
 #include "common/string_util.h"
 #include "frontend/arm/types.h"
 #include "frontend/decoder/thumb16.h"
+#include "frontend/disassembler/disassembler.h"
 
 namespace Dynarmic {
 namespace Arm {

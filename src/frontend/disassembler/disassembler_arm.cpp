@@ -14,6 +14,7 @@
 #include "frontend/arm/types.h"
 #include "frontend/decoder/arm.h"
 #include "frontend/decoder/vfp2.h"
+#include "frontend/disassembler/disassembler.h"
 
 namespace Dynarmic {
 namespace Arm {
