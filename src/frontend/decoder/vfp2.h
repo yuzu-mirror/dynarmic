@@ -6,60 +6,25 @@
 
 #pragma once
 
-#include <array>
-#include <functional>
 #include <vector>
 
 #include <boost/optional.hpp>
 
 #include "common/common_types.h"
 #include "frontend/decoder/decoder_detail.h"
+#include "frontend/decoder/matcher.h"
 
 namespace Dynarmic {
 namespace Arm {
 
 template <typename Visitor>
-struct VFP2Matcher {
-    using CallRetT = mp::return_type_t<decltype(&Visitor::vfp2_VADD)>;
-
-    VFP2Matcher(const char* const name, u32 mask, u32 expect, std::function<CallRetT(Visitor&, u32)> fn)
-            : name(name), mask(mask), expect(expect), fn(fn) {}
-
-    /// Gets the name of this type of instruction.
-    const char* GetName() const {
-        return name;
-    }
-
-    /**
-     * Tests to see if the instruction is this type of instruction.
-     * @param instruction The instruction to test
-     * @returns true if the instruction is
-     */
-    bool Matches(u32 instruction) const {
-        return (instruction & mask) == expect;
-    }
-
-    /**
-     * Calls the corresponding instruction handler on visitor for this type of instruction.
-     * @param v The visitor to use
-     * @param instruction The instruction to decode.
-     */
-    CallRetT call(Visitor& v, u32 instruction) const {
-        assert(Matches(instruction));
-        return fn(v, instruction);
-    }
-
-private:
-    const char* name;
-    u32 mask, expect;
-    std::function<CallRetT(Visitor&, u32)> fn;
-};
+using VFP2Matcher = Matcher<Visitor, u32>;
 
 template<typename V>
 boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     const static std::vector<VFP2Matcher<V>> table = {
 
-#define INST(fn, name, bitstring) detail::detail<VFP2Matcher, u32, 32>::GetMatcher<decltype(fn)>(fn, name, bitstring)
+#define INST(fn, name, bitstring) detail::detail<VFP2Matcher<V>>::GetMatcher(fn, name, bitstring)
 
     // cccc1110________----101-__-0----
 

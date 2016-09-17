@@ -6,60 +6,25 @@
 
 #pragma once
 
-#include <array>
-#include <functional>
 #include <vector>
 
 #include <boost/optional.hpp>
 
 #include "common/common_types.h"
 #include "frontend/decoder/decoder_detail.h"
+#include "frontend/decoder/matcher.h"
 
 namespace Dynarmic {
 namespace Arm {
 
 template <typename Visitor>
-struct Thumb32Matcher {
-    using CallRetT = mp::return_type_t<decltype(&Visitor::thumb32_UDF)>;
-
-    Thumb32Matcher(const char* const name, u32 mask, u32 expect, std::function<CallRetT(Visitor&, u32)> fn)
-            : name(name), mask(mask), expect(expect), fn(fn) {}
-
-    /// Gets the name of this type of instruction.
-    const char* GetName() const {
-        return name;
-    }
-
-    /**
-     * Tests to see if the instruction is this type of instruction.
-     * @param instruction The instruction to test
-     * @returns true if the instruction is
-     */
-    bool Matches(u32 instruction) const {
-        return (instruction & mask) == expect;
-    }
-
-    /**
-     * Calls the corresponding instruction handler on visitor for this type of instruction.
-     * @param v The visitor to use
-     * @param instruction The instruction to decode.
-     */
-    CallRetT call(Visitor& v, u32 instruction) const {
-        ASSERT(Matches(instruction));
-        return fn(v, instruction);
-    }
-
-private:
-    const char* name;
-    u32 mask, expect;
-    std::function<CallRetT(Visitor&, u32)> fn;
-};
+using Thumb32Matcher = Matcher<Visitor, u32>;
 
 template<typename V>
 boost::optional<const Thumb32Matcher<V>&> DecodeThumb32(u32 instruction) {
     const static std::vector<Thumb32Matcher<V>> table = {
 
-#define INST(fn, name, bitstring) detail::detail<Thumb32Matcher, u32, 32>::GetMatcher<decltype(fn)>(fn, name, bitstring)
+#define INST(fn, name, bitstring) detail::detail<Thumb32Matcher<V>>::GetMatcher(fn, name, bitstring)
 
         // Branch instructions
         INST(&V::thumb32_BL_imm,         "BL (imm)",                 "11110vvvvvvvvvvv11111vvvvvvvvvvv"), // v4T

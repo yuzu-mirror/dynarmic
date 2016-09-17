@@ -59,6 +59,7 @@ set(HEADERS
     frontend/arm/types.h
     frontend/decoder/arm.h
     frontend/decoder/decoder_detail.h
+    frontend/decoder/matcher.h
     frontend/decoder/thumb16.h
     frontend/decoder/thumb32.h
     frontend/decoder/vfp2.h

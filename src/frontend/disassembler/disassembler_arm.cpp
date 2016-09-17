@@ -21,6 +21,8 @@ namespace Arm {
 
 class DisassemblerVisitor {
 public:
+    using instruction_return_type = std::string;
+
     u32 rotr(u32 x, int shift) {
         shift &= 31;
         if (!shift) return x;

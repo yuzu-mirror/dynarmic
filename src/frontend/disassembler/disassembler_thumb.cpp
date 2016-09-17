@@ -20,6 +20,8 @@ namespace Arm {
 
 class DisassemblerVisitor {
 public:
+    using instruction_return_type = std::string;
+
     std::string thumb16_LSL_imm(Imm5 imm5, Reg m, Reg d) {
         return fmt::format("lsls {}, {}, #{}", d, m, imm5);
     }

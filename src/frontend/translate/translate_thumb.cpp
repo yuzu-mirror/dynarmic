@@ -21,6 +21,8 @@ namespace Arm {
 namespace {
 
 struct ThumbTranslatorVisitor final {
+    using instruction_return_type = bool;
+
     explicit ThumbTranslatorVisitor(IR::LocationDescriptor descriptor) : ir(descriptor) {
         ASSERT_MSG(descriptor.TFlag(), "The processor must be in Thumb mode");
     }

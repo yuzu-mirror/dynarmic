@@ -11,6 +11,7 @@
 #include <tuple>
 
 #include "common/assert.h"
+#include "common/bit_util.h"
 #include "common/mp.h"
 
 namespace Dynarmic {
@@ -19,22 +20,25 @@ namespace detail {
 
 /**
  * Helper functions for the decoders.
- * @tparam MatcherT The type of the matcher. (ARM: ArmMatcher, Thumb16: Thumb16Matcher)
- * @tparam InstructionT The type that represents an instruction. (ARM: u32, Thumb16: u16)
- * @tparam instruction_bit_size Bit-size for an instruction. (ARM: 32, Thumb16: 16)
+ *
+ * @tparam MatcherT The type of the Matcher to use.
  */
-template<template<typename> class MatcherT, typename InstructionT, size_t instruction_bit_size>
+template<class MatcherT>
 struct detail {
 private:
+    using opcode_type = typename MatcherT::opcode_type;
+
+    static constexpr size_t opcode_bitsize = Common::BitSize<opcode_type>();
+
     /**
      * Generates the mask and the expected value after masking from a given bitstring.
      * A '0' in a bitstring indicates that a zero must be present at that bit position.
      * A '1' in a bitstring indicates that a one must be present at that bit position.
      */
     static auto GetMaskAndExpect(const char* const bitstring) {
-        InstructionT mask = 0, expect = 0;
-        for (size_t i = 0; i < instruction_bit_size; i++) {
-            const size_t bit_position = instruction_bit_size - i - 1;
+        opcode_type mask = 0, expect = 0;
+        for (size_t i = 0; i < opcode_bitsize; i++) {
+            const size_t bit_position = opcode_bitsize - i - 1;
             switch (bitstring[i]) {
             case '0':
                 mask |= 1 << bit_position;
@@ -58,13 +62,13 @@ private:
      */
     template<size_t N>
     static auto GetArgInfo(const char* const bitstring) {
-        std::array<InstructionT, N> masks = {};
+        std::array<opcode_type, N> masks = {};
         std::array<size_t, N> shifts = {};
         size_t arg_index = 0;
         char ch = 0;
 
-        for (size_t i = 0; i < instruction_bit_size; i++) {
-            const size_t bit_position = instruction_bit_size - i - 1;
+        for (size_t i = 0; i < opcode_bitsize; i++) {
+            const size_t bit_position = opcode_bitsize - i - 1;
 
             if (bitstring[i] == '0' || bitstring[i] == '1' || bitstring[i] == '-') {
                 if (ch != 0) {
@@ -107,9 +111,9 @@ private:
         template<size_t ...iota>
         static auto Make(std::integer_sequence<size_t, iota...>,
                          CallRetT (Visitor::* const fn)(Args...),
-                         const std::array<InstructionT, sizeof...(iota)> arg_masks,
+                         const std::array<opcode_type, sizeof...(iota)> arg_masks,
                          const std::array<size_t, sizeof...(iota)> arg_shifts) {
-            return [fn, arg_masks, arg_shifts](Visitor& v, InstructionT instruction) {
+            return [fn, arg_masks, arg_shifts](Visitor& v, opcode_type instruction) {
                 (void)instruction;
                 return (v.*fn)(static_cast<Args>((instruction & arg_masks[iota]) >> arg_shifts[iota])...);
             };
@@ -126,7 +130,6 @@ public:
      */
     template<typename FnT>
     static auto GetMatcher(FnT fn, const char* const name, const char* const bitstring) {
-        using Visitor = typename mp::FunctionInfo<FnT>::class_type;
         constexpr size_t args_count = mp::FunctionInfo<FnT>::args_count;
         using Iota = std::make_index_sequence<args_count>;
 
@@ -134,7 +137,7 @@ public:
         const auto arg_info = GetArgInfo<args_count>(bitstring);
         const auto proxy_fn = VisitorCaller<FnT>::Make(Iota(), fn, std::get<0>(arg_info), std::get<1>(arg_info));
 
-        return MatcherT<Visitor>(name, std::get<0>(mask_and_expect), std::get<1>(mask_and_expect), proxy_fn);
+        return MatcherT(name, std::get<0>(mask_and_expect), std::get<1>(mask_and_expect), proxy_fn);
     }
 };
 

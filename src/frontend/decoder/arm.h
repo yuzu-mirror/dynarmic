@@ -16,60 +16,19 @@
 
 #include "common/common_types.h"
 #include "frontend/decoder/decoder_detail.h"
+#include "frontend/decoder/matcher.h"
 
 namespace Dynarmic {
 namespace Arm {
 
 template <typename Visitor>
-struct ArmMatcher {
-    using CallRetT = mp::return_type_t<decltype(&Visitor::arm_UDF)>;
-
-    ArmMatcher(const char* const name, u32 mask, u32 expect, std::function<CallRetT(Visitor&, u32)> fn)
-            : name(name), mask(mask), expect(expect), fn(fn) {}
-
-    /// Gets the name of this type of instruction.
-    const char* GetName() const {
-        return name;
-    }
-
-    /**
-     * Tests to see if the instruction is this type of instruction.
-     * @param instruction The instruction to test
-     * @returns true if the instruction is
-     */
-    bool Matches(u32 instruction) const {
-        return (instruction & mask) == expect;
-    }
-
-    /**
-     * Calls the corresponding instruction handler on visitor for this type of instruction.
-     * @param v The visitor to use
-     * @param instruction The instruction to decode.
-     */
-    CallRetT call(Visitor& v, u32 instruction) const {
-        ASSERT(Matches(instruction));
-        return fn(v, instruction);
-    }
-
-    u32 GetMask() const {
-        return mask;
-    }
-
-    u32 GetExpect() const {
-        return expect;
-    }
-
-private:
-    const char* name;
-    u32 mask, expect;
-    std::function<CallRetT(Visitor&, u32)> fn;
-};
+using ArmMatcher = Matcher<Visitor, u32>;
 
 template <typename V>
 std::vector<ArmMatcher<V>> GetArmDecodeTable() {
     std::vector<ArmMatcher<V>> table = {
 
-#define INST(fn, name, bitstring) detail::detail<ArmMatcher, u32, 32>::GetMatcher<decltype(fn)>(fn, name, bitstring)
+#define INST(fn, name, bitstring) detail::detail<ArmMatcher<V>>::GetMatcher(fn, name, bitstring)
 
         // Branch instructions
         INST(&V::arm_BLX_imm,     "BLX (imm)",           "1111101hvvvvvvvvvvvvvvvvvvvvvvvv"), // v5

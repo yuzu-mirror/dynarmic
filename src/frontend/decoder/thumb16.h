@@ -6,60 +6,25 @@
 
 #pragma once
 
-#include <array>
-#include <functional>
 #include <vector>
 
 #include <boost/optional.hpp>
 
 #include "common/common_types.h"
 #include "frontend/decoder/decoder_detail.h"
+#include "frontend/decoder/matcher.h"
 
 namespace Dynarmic {
 namespace Arm {
 
 template <typename Visitor>
-struct Thumb16Matcher {
-    using CallRetT = mp::return_type_t<decltype(&Visitor::thumb16_UDF)>;
-
-    Thumb16Matcher(const char* const name, u16 mask, u16 expect, std::function<CallRetT(Visitor&, u16)> fn)
-            : name(name), mask(mask), expect(expect), fn(fn) {}
-
-    /// Gets the name of this type of instruction.
-    const char* GetName() const {
-        return name;
-    }
-
-    /**
-     * Tests to see if the instruction is this type of instruction.
-     * @param instruction The instruction to test
-     * @returns true if the instruction is
-     */
-    bool Matches(u16 instruction) const {
-        return (instruction & mask) == expect;
-    }
-
-    /**
-     * Calls the corresponding instruction handler on visitor for this type of instruction.
-     * @param v The visitor to use
-     * @param instruction The instruction to decode.
-     */
-    CallRetT call(Visitor& v, u16 instruction) const {
-        ASSERT(Matches(instruction));
-        return fn(v, instruction);
-    }
-
-private:
-    const char* name;
-    u16 mask, expect;
-    std::function<CallRetT(Visitor&, u16)> fn;
-};
+using Thumb16Matcher = Matcher<Visitor, u16>;
 
 template<typename V>
 boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
     const static std::vector<Thumb16Matcher<V>> table = {
 
-#define INST(fn, name, bitstring) detail::detail<Thumb16Matcher, u16, 16>::GetMatcher<decltype(fn)>(fn, name, bitstring)
+#define INST(fn, name, bitstring) detail::detail<Thumb16Matcher<V>>::GetMatcher(fn, name, bitstring)
 
         // Shift (immediate), add, subtract, move and compare instructions
         INST(&V::thumb16_LSL_imm,        "LSL (imm)",                "00000vvvvvmmmddd"),
