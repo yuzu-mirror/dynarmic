@@ -119,12 +119,6 @@ bool ArmTranslatorVisitor::UnpredictableInstruction() {
     return false;
 }
 
-bool ArmTranslatorVisitor::LinkToNextInstruction() {
-    auto next_location = ir.current_location.AdvancePC(4);
-    ir.SetTerm(IR::Term::LinkBlock{next_location});
-    return false;
-}
-
 IR::IREmitter::ResultAndCarry ArmTranslatorVisitor::EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in) {
     switch (type) {
     case ShiftType::LSL:
