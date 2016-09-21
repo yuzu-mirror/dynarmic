@@ -28,12 +28,12 @@ public:
     FPSCR() = default;
     FPSCR(const FPSCR&) = default;
     FPSCR(FPSCR&&) = default;
-    explicit FPSCR(u32 data) : value{data} {}
+    explicit FPSCR(u32 data) : value{data & mask} {}
 
     FPSCR& operator=(const FPSCR&) = default;
     FPSCR& operator=(FPSCR&&) = default;
     FPSCR& operator=(u32 data) {
-        value = data;
+        value = data & mask;
         return *this;
     }
 
@@ -161,10 +161,10 @@ public:
      *   - All exception enable bits are cleared.
      */
     bool InRunFastMode() const {
-        constexpr u32 mask     = 0x03001F00;
-        constexpr u32 expected = 0x03000000;
+        constexpr u32 runfast_mask = 0x03001F00;
+        constexpr u32 expected     = 0x03000000;
 
-        return (value & mask) == expected;
+        return (value & runfast_mask) == expected;
     }
 
     /// Gets the underlying raw value within the FPSCR.
@@ -173,6 +173,8 @@ public:
     }
 
 private:
+    // Bits 5-6, 13-14, and 19 are reserved.
+    static constexpr u32 mask = 0xFFF79F9F;
     u32 value = 0;
 };
 
