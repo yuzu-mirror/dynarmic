@@ -14,6 +14,5 @@ if [ "$TRAVIS_OS_NAME" = "linux" -o -z "$TRAVIS_OS_NAME" ]; then
         | tar -xz -C $HOME/.local --strip-components=1
 elif [ "$TRAVIS_OS_NAME" = "osx" ]; then
     brew update > /dev/null # silence the very verbose output
-    brew unlink cmake || true
     brew install cmake
 fi
