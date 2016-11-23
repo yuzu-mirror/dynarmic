@@ -930,3 +930,23 @@ TEST_CASE("Test ARM SEL instruction", "[JitX64]") {
         });
     }
 }
+
+TEST_CASE("Fuzz ARM packing instructions", "[JitX64]") {
+    auto is_pkh_valid = [](u32 inst) -> bool {
+        // R15 as Rd, Rn, or Rm is UNPREDICTABLE
+        return Bits<16, 19>(inst) != 0b1111 &&
+               Bits<12, 15>(inst) != 0b1111 &&
+               Bits<0, 3>(inst) != 0b1111;
+    };
+
+    const std::array<InstructionGenerator, 2> instructions = {{
+        InstructionGenerator("cccc01101000nnnnddddvvvvv001mmmm", is_pkh_valid), // PKHBT
+        InstructionGenerator("cccc01101000nnnnddddvvvvv101mmmm", is_pkh_valid), // PKHTB
+    }};
+
+    SECTION("Packing") {
+        FuzzJitArm(1, 1, 10000, [&instructions]() -> u32 {
+            return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+        });
+    }
+}

@@ -24,6 +24,7 @@ set(SRCS
     frontend/translate/translate_arm/extension.cpp
     frontend/translate/translate_arm/load_store.cpp
     frontend/translate/translate_arm/multiply.cpp
+    frontend/translate/translate_arm/packing.cpp
     frontend/translate/translate_arm/parallel.cpp
     frontend/translate/translate_arm/reversal.cpp
     frontend/translate/translate_arm/status_register_access.cpp

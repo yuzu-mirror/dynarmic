@@ -218,8 +218,8 @@ struct ArmTranslatorVisitor final {
     bool arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) { return InterpretThisInstruction(); }
 
     // Packing instructions
-    bool arm_PKHBT(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) { return InterpretThisInstruction(); }
-    bool arm_PKHTB(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m) { return InterpretThisInstruction(); }
+    bool arm_PKHBT(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m);
+    bool arm_PKHTB(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m);
 
     // Reversal instructions
     bool arm_REV(Cond cond, Reg d, Reg m);
