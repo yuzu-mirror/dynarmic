@@ -904,3 +904,29 @@ TEST_CASE("VFP: VPUSH, VPOP", "[JitX64][vfp]") {
         return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
     });
 }
+
+TEST_CASE("Test ARM SEL instruction", "[JitX64]") {
+    const auto is_sel_valid = [](u32 instr) -> bool {
+        // R15 as Rd, Rn, or Rm is UNPREDICTABLE
+        return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111 && Bits<16, 19>(instr) != 0b1111;
+    };
+
+    const auto is_msr_valid = [](u32 instr) -> bool {
+        // Mask can not be 0
+        return Bits<18, 19>(instr) != 0b00;
+    };
+
+    const InstructionGenerator cpsr_setter = InstructionGenerator("11100011001001001111rrrrvvvvvvvv", is_msr_valid); // MSR_Imm write GE
+    const InstructionGenerator sel_instr = InstructionGenerator("111001101000nnnndddd11111011mmmm", is_sel_valid); // SEL
+
+    SECTION("Fuzz SEL") {
+        // Alternate between a SEL and a MSR to change the CPSR, thus changing the expected result of the next SEL
+        bool set_cpsr = true;
+        FuzzJitArm(5, 6, 10000, [&sel_instr, &cpsr_setter, &set_cpsr]() -> u32 {
+            set_cpsr ^= true;
+            if (set_cpsr)
+                return cpsr_setter.Generate(false);
+            return sel_instr.Generate(false);
+        });
+    }
+}
