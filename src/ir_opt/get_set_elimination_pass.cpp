@@ -25,10 +25,12 @@ void GetSetElimination(IR::Block& block) {
     std::array<RegisterInfo, 15> reg_info;
     std::array<RegisterInfo, 32> ext_reg_singles_info;
     std::array<RegisterInfo, 32> ext_reg_doubles_info;
-    RegisterInfo n_info;
-    RegisterInfo z_info;
-    RegisterInfo c_info;
-    RegisterInfo v_info;
+    struct CpsrInfo {
+        RegisterInfo n;
+        RegisterInfo z;
+        RegisterInfo c;
+        RegisterInfo v;
+    } cpsr_info;
 
     const auto do_set = [&block](RegisterInfo& info, IR::Value value, Iterator set_inst) {
         if (info.set_instruction_present) {
@@ -113,47 +115,43 @@ void GetSetElimination(IR::Block& block) {
             break;
         }
         case IR::Opcode::SetNFlag: {
-            do_set(n_info, inst->GetArg(0), inst);
+            do_set(cpsr_info.n, inst->GetArg(0), inst);
             break;
         }
         case IR::Opcode::GetNFlag: {
-            do_get(n_info, inst);
+            do_get(cpsr_info.n, inst);
             break;
         }
         case IR::Opcode::SetZFlag: {
-            do_set(z_info, inst->GetArg(0), inst);
+            do_set(cpsr_info.z, inst->GetArg(0), inst);
             break;
         }
         case IR::Opcode::GetZFlag: {
-            do_get(z_info, inst);
+            do_get(cpsr_info.z, inst);
             break;
         }
         case IR::Opcode::SetCFlag: {
-            do_set(c_info, inst->GetArg(0), inst);
+            do_set(cpsr_info.c, inst->GetArg(0), inst);
             break;
         }
         case IR::Opcode::GetCFlag: {
-            do_get(c_info, inst);
+            do_get(cpsr_info.c, inst);
             break;
         }
         case IR::Opcode::SetVFlag: {
-            do_set(v_info, inst->GetArg(0), inst);
+            do_set(cpsr_info.v, inst->GetArg(0), inst);
             break;
         }
         case IR::Opcode::GetVFlag: {
-            do_get(v_info, inst);
+            do_get(cpsr_info.v, inst);
             break;
         }
-        case IR::Opcode::SetCpsr:
-        case IR::Opcode::GetCpsr: {
-            n_info = {};
-            z_info = {};
-            c_info = {};
-            v_info = {};
+        default: {
+            if (inst->ReadsFromCPSR() || inst->WritesToCPSR()) {
+                cpsr_info = {};
+            }
             break;
         }
-        default:
-            break;
         }
     }
 }
