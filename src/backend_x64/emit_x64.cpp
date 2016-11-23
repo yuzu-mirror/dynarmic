@@ -278,6 +278,31 @@ void EmitX64::EmitOrQFlag(IR::Block&, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitGetGEFlags(IR::Block&, IR::Inst* inst) {
+    Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+    code->mov(result, MJitStateCpsr());
+    code->shr(result, 16);
+    code->and_(result, 0xF);
+}
+
+void EmitX64::EmitSetGEFlags(IR::Block&, IR::Inst* inst) {
+    constexpr size_t flag_bit = 16;
+    constexpr u32 flag_mask = 0xFu << flag_bit;
+    IR::Value arg = inst->GetArg(0);
+    if (arg.IsImmediate()) {
+        u32 imm = (arg.GetU32() << flag_bit) & flag_mask;
+        code->and_(MJitStateCpsr(), ~flag_mask);
+        code->or_(MJitStateCpsr(), imm);
+    } else {
+        Xbyak::Reg32 to_store = reg_alloc.UseScratchGpr(arg).cvt32();
+
+        code->shl(to_store, flag_bit);
+        code->and_(to_store, flag_mask);
+        code->and_(MJitStateCpsr(), ~flag_mask);
+        code->or_(MJitStateCpsr(), to_store);
+    }
+}
+
 void EmitX64::EmitBXWritePC(IR::Block&, IR::Inst* inst) {
     const u32 T_bit = 1 << 5;
     auto arg = inst->GetArg(0);

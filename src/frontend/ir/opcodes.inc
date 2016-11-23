@@ -21,6 +21,8 @@ OPCODE(SetCFlag,                T::Void,        T::U1                           
 OPCODE(GetVFlag,                T::U1,                                                          )
 OPCODE(SetVFlag,                T::Void,        T::U1                                           )
 OPCODE(OrQFlag,                 T::Void,        T::U1                                           )
+OPCODE(GetGEFlags,              T::U32,                                                         )
+OPCODE(SetGEFlags,              T::Void,        T::U32                                          )
 OPCODE(BXWritePC,               T::Void,        T::U32                                          )
 OPCODE(CallSupervisor,          T::Void,        T::U32                                          )
 OPCODE(GetFpscr,                T::U32,                                                         )

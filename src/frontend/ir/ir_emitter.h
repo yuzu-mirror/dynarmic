@@ -77,6 +77,8 @@ public:
     void SetCFlag(const Value& value);
     void SetVFlag(const Value& value);
     void OrQFlag(const Value& value);
+    Value GetGEFlags();
+    void SetGEFlags(const Value& value);
 
     Value GetFpscr();
     void SetFpscr(const Value& new_fpscr);

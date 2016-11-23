@@ -137,6 +137,14 @@ void IREmitter::OrQFlag(const Value& value) {
     Inst(Opcode::OrQFlag, {value});
 }
 
+Value IREmitter::GetGEFlags() {
+    return Inst(Opcode::GetGEFlags, {});
+}
+
+void IREmitter::SetGEFlags(const Value& value) {
+    Inst(Opcode::SetGEFlags, {value});
+}
+
 Value IREmitter::GetFpscr() {
     return Inst(Opcode::GetFpscr, {});
 }

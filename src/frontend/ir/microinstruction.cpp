@@ -99,6 +99,7 @@ bool Inst::ReadsFromCPSR() const {
     case Opcode::GetZFlag:
     case Opcode::GetCFlag:
     case Opcode::GetVFlag:
+    case Opcode::GetGEFlags:
         return true;
 
     default:
@@ -114,6 +115,7 @@ bool Inst::WritesToCPSR() const {
     case Opcode::SetCFlag:
     case Opcode::SetVFlag:
     case Opcode::OrQFlag:
+    case Opcode::SetGEFlags:
         return true;
 
     default:

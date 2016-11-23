@@ -30,6 +30,7 @@ void GetSetElimination(IR::Block& block) {
         RegisterInfo z;
         RegisterInfo c;
         RegisterInfo v;
+        RegisterInfo ge;
     } cpsr_info;
 
     const auto do_set = [&block](RegisterInfo& info, IR::Value value, Iterator set_inst) {
@@ -144,6 +145,14 @@ void GetSetElimination(IR::Block& block) {
         }
         case IR::Opcode::GetVFlag: {
             do_get(cpsr_info.v, inst);
+            break;
+        }
+        case IR::Opcode::SetGEFlags: {
+            do_set(cpsr_info.ge, inst->GetArg(0), inst);
+            break;
+        }
+        case IR::Opcode::GetGEFlags: {
+            do_get(cpsr_info.ge, inst);
             break;
         }
         default: {
