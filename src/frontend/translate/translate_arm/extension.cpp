@@ -121,7 +121,16 @@ bool ArmTranslatorVisitor::arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate,
 }
 
 bool ArmTranslatorVisitor::arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto rotated = SignZeroExtendRor(m, rotate);
+        auto lower_half = ir.ZeroExtendByteToWord(ir.LeastSignificantByte(rotated));
+        auto upper_half = ir.And(rotated, ir.Imm32(0x00FF0000));
+        auto result = ir.Or(lower_half, upper_half);
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
