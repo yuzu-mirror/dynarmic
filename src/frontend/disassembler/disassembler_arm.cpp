@@ -8,6 +8,7 @@
 #include <string>
 
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 
 #include "common/bit_util.h"
 #include "common/string_util.h"

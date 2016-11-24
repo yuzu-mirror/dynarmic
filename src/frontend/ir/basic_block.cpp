@@ -10,6 +10,7 @@
 #include <string>
 
 #include <fmt/format.h>
+#include <fmt/ostream.h>
 
 #include "common/assert.h"
 #include "frontend/ir/basic_block.h"
