@@ -11,6 +11,8 @@
 
 #include <boost/optional.hpp>
 
+#include <xbyak_util.h>
+
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/reg_alloc.h"
 #include "dynarmic/callbacks.h"
@@ -75,6 +77,9 @@ private:
     void EmitTerminalIf(IR::Term::If terminal, IR::LocationDescriptor initial_location);
     void EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location);
     void Patch(IR::LocationDescriptor desc, CodePtr bb);
+
+    // Global CPU information
+    Xbyak::util::Cpu cpu_info;
 
     // Per-block state
     RegAlloc reg_alloc;

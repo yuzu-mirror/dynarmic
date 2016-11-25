@@ -7,8 +7,6 @@
 #include <unordered_map>
 #include <common/bit_util.h>
 
-#include <xbyak.h>
-
 #include "backend_x64/abi.h"
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
@@ -1256,6 +1254,68 @@ static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst
     (code->*fn)(xmm_scratch_a, xmm_scratch_b);
 
     code->movd(result, xmm_scratch_a);
+}
+
+void EmitX64::EmitPackedHalvingAddU8(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    // This code path requires SSSE3 because of the PSHUFB instruction.
+    // A fallback implementation is provided below.
+    if (cpu_info.has(Xbyak::util::Cpu::tSSSE3)) {
+        Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
+        Xbyak::Reg32 arg = reg_alloc.UseGpr(b).cvt32();
+
+        // Load the operands into Xmm registers
+        Xbyak::Xmm xmm_scratch_a = reg_alloc.ScratchXmm();
+        Xbyak::Xmm xmm_scratch_b = reg_alloc.ScratchXmm();
+
+        Xbyak::Xmm xmm_mask = reg_alloc.ScratchXmm();
+        Xbyak::Reg64 mask = reg_alloc.ScratchGpr();
+
+        code->movd(xmm_scratch_a, result);
+        code->movd(xmm_scratch_b, arg);
+
+        // Set the mask to expand the values
+        // 0xAABBCCDD becomes 0x00AA00BB00CC00DD
+        code->mov(mask, 0x8003800280018000);
+        code->movq(xmm_mask, mask);
+
+        // Expand each 8-bit value to 16-bit
+        code->pshufb(xmm_scratch_a, xmm_mask);
+        code->pshufb(xmm_scratch_b, xmm_mask);
+
+        // Add the individual 16-bit values
+        code->paddw(xmm_scratch_a, xmm_scratch_b);
+
+        // Shift the 16-bit values to the right to halve them
+        code->psrlw(xmm_scratch_a, 1);
+
+        // Set the mask to pack the values again
+        // 0x00AA00BB00CC00DD becomes 0xAABBCCDD
+        code->mov(mask, 0x06040200);
+        code->movq(xmm_mask, mask);
+
+        // Shuffle them back to 8-bit values
+        code->pshufb(xmm_scratch_a, xmm_mask);
+
+        code->movd(result, xmm_scratch_a);
+        return;
+    }
+
+    // Fallback implementation in case the CPU doesn't support SSSE3
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 xor_a_b = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Reg32 and_a_b = reg_a;
+    Xbyak::Reg32 result = reg_a;
+
+    code->mov(xor_a_b, reg_a);
+    code->and(and_a_b, reg_b);
+    code->xor(xor_a_b, reg_b);
+    code->shr(xor_a_b, 1);
+    code->and(xor_a_b, 0x7F7F7F7F);
+    code->add(result, xor_a_b);
 }
 
 void EmitX64::EmitPackedSaturatedAddU8(IR::Block& block, IR::Inst* inst) {

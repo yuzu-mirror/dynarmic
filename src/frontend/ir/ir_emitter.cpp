@@ -320,6 +320,10 @@ Value IREmitter::ByteReverseDual(const Value& a) {
     return Inst(Opcode::ByteReverseDual, {a});
 }
 
+Value IREmitter::PackedHalvingAddU8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingAddU8, { a, b });
+}
+
 Value IREmitter::PackedSaturatedAddU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedSaturatedAddU8, {a, b});
 }
