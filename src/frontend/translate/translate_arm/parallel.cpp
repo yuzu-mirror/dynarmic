@@ -219,11 +219,23 @@ bool ArmTranslatorVisitor::arm_UHSAX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UHSUB8(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingSubU8(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_UHSUB16(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingSubU16(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 } // namespace Arm
