@@ -155,11 +155,23 @@ bool ArmTranslatorVisitor::arm_UQSUB16(Cond cond, Reg n, Reg d, Reg m) {
 
 // Parallel Add/Subtract (Halving) instructions
 bool ArmTranslatorVisitor::arm_SHADD8(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingAddS8(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SHADD16(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingAddS16(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SHASX(Cond cond, Reg n, Reg d, Reg m) {

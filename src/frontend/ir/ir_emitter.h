@@ -122,7 +122,9 @@ public:
     Value ByteReverseHalf(const Value& a);
     Value ByteReverseDual(const Value& a);
     Value PackedHalvingAddU8(const Value& a, const Value& b);
+    Value PackedHalvingAddS8(const Value& a, const Value& b);
     Value PackedHalvingAddU16(const Value& a, const Value& b);
+    Value PackedHalvingAddS16(const Value& a, const Value& b);
     Value PackedSaturatedAddU8(const Value& a, const Value& b);
     Value PackedSaturatedAddS8(const Value& a, const Value& b);
     Value PackedSaturatedSubU8(const Value& a, const Value& b);

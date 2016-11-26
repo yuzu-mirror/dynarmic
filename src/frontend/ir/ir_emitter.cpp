@@ -321,11 +321,19 @@ Value IREmitter::ByteReverseDual(const Value& a) {
 }
 
 Value IREmitter::PackedHalvingAddU8(const Value& a, const Value& b) {
-    return Inst(Opcode::PackedHalvingAddU8, { a, b });
+    return Inst(Opcode::PackedHalvingAddU8, {a, b});
+}
+
+Value IREmitter::PackedHalvingAddS8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingAddS8, {a, b});
 }
 
 Value IREmitter::PackedHalvingAddU16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingAddU16, {a, b});
+}
+
+Value IREmitter::PackedHalvingAddS16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingAddS16, {a, b});
 }
 
 Value IREmitter::PackedSaturatedAddU8(const Value& a, const Value& b) {
