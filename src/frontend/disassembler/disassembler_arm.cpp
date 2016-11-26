@@ -717,24 +717,56 @@ public:
     }
 
     // Parallel Add/Subtract (Halving) instructions
-    std::string arm_SHADD8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SHADD16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SHASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SHSAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SHSUB8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SHSUB16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UHADD8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UHADD16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UHASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UHSAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UHSUB8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UHSUB16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_SHADD8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("shadd8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SHADD16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("shadd16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SHASX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("shasx{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SHSAX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("shsax{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SHSUB8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("shsub8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SHSUB16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("shsub16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UHADD8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uhadd8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UHADD16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uhadd16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UHASX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uhasx{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UHSAX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uhsax{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UHSUB8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uhsub8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UHSUB16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uhsub16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
 
     // Saturated Add/Subtract instructions
-    std::string arm_QADD(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_QSUB(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_QDADD(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("qadd{} {}, {}, {}", CondToString(cond), d, m, n);
+    }
+    std::string arm_QSUB(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("qsub{} {}, {}, {}", CondToString(cond), d, m, n);
+    }
+    std::string arm_QDADD(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("qdadd{} {}, {}, {}", CondToString(cond), d, m, n);
+    }
+    std::string arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("qdsub{} {}, {}, {}", CondToString(cond), d, m, n);
+    }
 
     // Synchronization Primitive instructions
     std::string arm_CLREX() {
