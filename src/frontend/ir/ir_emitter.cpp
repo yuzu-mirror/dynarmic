@@ -324,6 +324,10 @@ Value IREmitter::PackedHalvingAddU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingAddU8, { a, b });
 }
 
+Value IREmitter::PackedHalvingAddU16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingAddU16, {a, b});
+}
+
 Value IREmitter::PackedSaturatedAddU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedSaturatedAddU8, {a, b});
 }

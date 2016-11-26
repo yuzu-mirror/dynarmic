@@ -1318,6 +1318,29 @@ void EmitX64::EmitPackedHalvingAddU8(IR::Block& block, IR::Inst* inst) {
     code->add(result, xor_a_b);
 }
 
+void EmitX64::EmitPackedHalvingAddU16(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 xor_a_b = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Reg32 and_a_b = reg_a;
+    Xbyak::Reg32 result = reg_a;
+
+    // This relies on the equality x+y == ((x&y) << 1) + (x^y).
+    // Note that x^y always contains the LSB of the result.
+    // Since we want to calculate (x+y)/2, we can instead calculate (x&y) + ((x^y)>>1).
+    // We mask by 0x7FFF to remove the LSB so that it doesn't leak into the field below.
+
+    code->mov(xor_a_b, reg_a);
+    code->and(and_a_b, reg_b);
+    code->xor(xor_a_b, reg_b);
+    code->shr(xor_a_b, 1);
+    code->and(xor_a_b, 0x7FFF7FFF);
+    code->add(result, xor_a_b);
+}
+
 void EmitX64::EmitPackedSaturatedAddU8(IR::Block& block, IR::Inst* inst) {
     EmitPackedOperation(code, reg_alloc, inst, &Xbyak::CodeGenerator::paddusb);
 }
