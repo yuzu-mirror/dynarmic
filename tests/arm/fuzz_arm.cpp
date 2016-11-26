@@ -850,9 +850,30 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
         InstructionGenerator("cccc01100110nnnndddd11110111mmmm", is_valid), // UQSUB16
     }};
 
+    const std::array<InstructionGenerator, 12> halving_instructions = {{
+        InstructionGenerator("cccc01100011nnnndddd11111001mmmm", is_valid), // SHADD8
+        InstructionGenerator("cccc01100011nnnndddd11110001mmmm", is_valid), // SHADD16
+        InstructionGenerator("cccc01100011nnnndddd11110011mmmm", is_valid), // SHASX
+        InstructionGenerator("cccc01100011nnnndddd11110101mmmm", is_valid), // SHSAX
+        InstructionGenerator("cccc01100011nnnndddd11111111mmmm", is_valid), // SHSUB8
+        InstructionGenerator("cccc01100011nnnndddd11110111mmmm", is_valid), // SHSUB16
+        InstructionGenerator("cccc01100111nnnndddd11111001mmmm", is_valid), // UHADD8
+        InstructionGenerator("cccc01100111nnnndddd11110001mmmm", is_valid), // UHADD16
+        InstructionGenerator("cccc01100111nnnndddd11110011mmmm", is_valid), // UHASX
+        InstructionGenerator("cccc01100111nnnndddd11110101mmmm", is_valid), // UHSAX
+        InstructionGenerator("cccc01100111nnnndddd11111111mmmm", is_valid), // UHSUB8
+        InstructionGenerator("cccc01100111nnnndddd11110111mmmm", is_valid), // UHSUB16
+    }};
+
     SECTION("Parallel Add/Subtract (Saturating)") {
         FuzzJitArm(1, 1, 10000, [&saturating_instructions]() -> u32 {
             return saturating_instructions[RandInt<size_t>(0, saturating_instructions.size() - 1)].Generate();
+        });
+    }
+
+    SECTION("Parallel Add/Subtract (Halving)") {
+        FuzzJitArm(1, 1, 10000, [&halving_instructions]() -> u32 {
+            return halving_instructions[RandInt<size_t>(0, halving_instructions.size() - 1)].Generate();
         });
     }
 }
