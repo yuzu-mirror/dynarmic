@@ -425,6 +425,43 @@ bool ArmTranslatorVisitor::vfp2_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool s
     return true;
 }
 
+bool ArmTranslatorVisitor::vfp2_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
+    ExtReg d = ToExtReg(sz, Vd, D);
+    ExtReg m = ToExtReg(sz, Vm, M);
+    bool quiet = E;
+    // VCMP{E}.F32 <Sd>, <Sm>
+    // VCMP{E}.F64 <Dd>, <Dm>
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(d);
+        auto b = ir.GetExtendedRegister(m);
+        if (sz) {
+            ir.FPCompare64(a, b, quiet, true);
+        } else {
+            ir.FPCompare32(a, b, quiet, true);
+        }
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::vfp2_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
+    ExtReg d = ToExtReg(sz, Vd, D);
+    bool quiet = E;
+    // VCMP{E}.F32 <Sd>, #0.0
+    // VCMP{E}.F64 <Dd>, #0.0
+    if (ConditionPassed(cond)) {
+        auto a = ir.GetExtendedRegister(d);
+        auto b = sz
+                 ? ir.TransferToFP64(ir.Imm64(0))
+                 : ir.TransferToFP32(ir.Imm32(0));
+        if (sz) {
+            ir.FPCompare64(a, b, quiet, true);
+        } else {
+            ir.FPCompare32(a, b, quiet, true);
+        }
+    }
+    return true;
+}
+
 bool ArmTranslatorVisitor::vfp2_VMSR(Cond cond, Reg t) {
     if (t == Reg::PC)
         return UnpredictableInstruction();

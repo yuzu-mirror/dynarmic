@@ -58,8 +58,8 @@ boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
     INST(&V::vfp2_VCVT_to_float,  "VCVT (to float)",         "cccc11101D111000dddd101zs1M0mmmm"),
     INST(&V::vfp2_VCVT_to_u32,    "VCVT (to u32)",           "cccc11101D111100dddd101zr1M0mmmm"),
     INST(&V::vfp2_VCVT_to_s32,    "VCVT (to s32)",           "cccc11101D111101dddd101zr1M0mmmm"),
-    // VCMP
-    // VCMPE
+    INST(&V::vfp2_VCMP,           "VCMP",                    "cccc11101D110100dddd101zE1M0mmmm"),
+    INST(&V::vfp2_VCMP_zero,      "VCMP (with zero)",        "cccc11101D110101dddd101zE1000000"),
 
     // Floating-point system register access
     INST(&V::vfp2_VMSR,           "VMSR",                    "cccc111011100001tttt101000010000"),

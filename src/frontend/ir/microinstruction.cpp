@@ -156,6 +156,8 @@ bool Inst::ReadsFromFPSCR() const {
     case Opcode::FPAbs64:
     case Opcode::FPAdd32:
     case Opcode::FPAdd64:
+    case Opcode::FPCompare32:
+    case Opcode::FPCompare64:
     case Opcode::FPDiv32:
     case Opcode::FPDiv64:
     case Opcode::FPMul32:
@@ -181,6 +183,8 @@ bool Inst::WritesToFPSCR() const {
     case Opcode::FPAbs64:
     case Opcode::FPAdd32:
     case Opcode::FPAdd64:
+    case Opcode::FPCompare32:
+    case Opcode::FPCompare64:
     case Opcode::FPDiv32:
     case Opcode::FPDiv64:
     case Opcode::FPMul32:

@@ -949,6 +949,14 @@ public:
         return fmt::format("vcvt{}{}.s32.{} {}, {}", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
     }
 
+    std::string vfp2_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
+        return fmt::format("vcmp{}{}.{} {}, {}", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
+    }
+
+    std::string vfp2_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
+        return fmt::format("vcmp{}{}.{} {}, #0.0", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D));
+    }
+
     std::string vfp2_VMSR(Cond cond, Reg t) {
         return fmt::format("vmsr{} fpscr, {}", CondToString(cond), t);
     }

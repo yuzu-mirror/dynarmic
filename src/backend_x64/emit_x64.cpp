@@ -1762,6 +1762,70 @@ void EmitX64::EmitFPSub64(IR::Block& block, IR::Inst* inst) {
     FPThreeOp64(code, reg_alloc, block, inst, &Xbyak::CodeGenerator::subsd);
 }
 
+static void SetFpscrNzcvFromLahf(JitState* jit_state, u8 lahf) {
+    switch (lahf) {
+    case 0b01000111:
+        jit_state->FPSCR_nzcv = 0x30000000;
+        return;
+    case 0b00000010:
+        jit_state->FPSCR_nzcv = 0x20000000;
+        return;
+    case 0b00000011:
+        jit_state->FPSCR_nzcv = 0x80000000;
+        return;
+    case 0b01000010:
+        jit_state->FPSCR_nzcv = 0x60000000;
+        return;
+    }
+    ASSERT_MSG(false, "<internal error>");
+}
+
+void EmitX64::EmitFPCompare32(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+    bool quiet = inst->GetArg(2).GetU1();
+
+    Xbyak::Xmm reg_a = reg_alloc.UseXmm(a);
+    Xbyak::Xmm reg_b = reg_alloc.UseXmm(b);
+
+    if (quiet) {
+        code->ucomiss(reg_a, reg_b);
+    } else {
+        code->comiss(reg_a, reg_b);
+    }
+
+    reg_alloc.EndOfAllocScope();
+    reg_alloc.HostCall();
+
+    code->lahf();
+    code->mov(code->ABI_PARAM1, code->r15);
+    code->mov(code->ABI_PARAM2.cvt8(), code->ah);
+    code->CallFunction(&SetFpscrNzcvFromLahf);
+}
+
+void EmitX64::EmitFPCompare64(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+    bool quiet = inst->GetArg(2).GetU1();
+
+    Xbyak::Xmm reg_a = reg_alloc.UseXmm(a);
+    Xbyak::Xmm reg_b = reg_alloc.UseXmm(b);
+
+    if (quiet) {
+        code->ucomisd(reg_a, reg_b);
+    } else {
+        code->comisd(reg_a, reg_b);
+    }
+
+    reg_alloc.EndOfAllocScope();
+    reg_alloc.HostCall();
+
+    code->lahf();
+    code->mov(code->ABI_PARAM1, code->r15);
+    code->mov(code->ABI_PARAM2.cvt8(), code->ah);
+    code->CallFunction(&SetFpscrNzcvFromLahf);
+}
+
 void EmitX64::EmitFPSingleToDouble(IR::Block& block, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
 

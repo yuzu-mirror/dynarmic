@@ -414,6 +414,16 @@ Value IREmitter::FPAdd64(const Value& a, const Value& b, bool fpscr_controlled) 
     return Inst(Opcode::FPAdd64, {a, b});
 }
 
+void IREmitter::FPCompare32(const Value& a, const Value& b, bool quiet, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    Inst(Opcode::FPCompare32, {a, b, Imm1(quiet)});
+}
+
+void IREmitter::FPCompare64(const Value& a, const Value& b, bool quiet, bool fpscr_controlled) {
+    ASSERT(fpscr_controlled);
+    Inst(Opcode::FPCompare64, {a, b, Imm1(quiet)});
+}
+
 Value IREmitter::FPDiv32(const Value& a, const Value& b, bool fpscr_controlled) {
     ASSERT(fpscr_controlled);
     return Inst(Opcode::FPDiv32, {a, b});
