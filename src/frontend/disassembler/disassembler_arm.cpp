@@ -673,18 +673,42 @@ public:
     }
 
     // Parallel Add/Subtract (Modulo arithmetic) instructions
-    std::string arm_SADD8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SADD16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SSAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SSUB8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_SSUB16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UADD8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UADD16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_USAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_USUB8(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_USUB16(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_SADD8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("sadd8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SADD16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("sadd16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SASX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("sasx{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SSAX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("ssax{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SSUB8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("ssub8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_SSUB16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("ssub16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UADD8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uadd8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UADD16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uadd16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UASX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uasx{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_USAX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("usax{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_USUB8(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("usub8{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_USUB16(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("usub16{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
 
     // Parallel Add/Subtract (Saturating) instructions
     std::string arm_QADD8(Cond cond, Reg n, Reg d, Reg m) {
