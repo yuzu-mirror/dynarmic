@@ -2009,9 +2009,10 @@ void EmitX64::EmitFPU32ToSingle(IR::Block& block, IR::Inst* inst) {
 
     Xbyak::Xmm from = reg_alloc.UseXmm(a);
     Xbyak::Xmm to = reg_alloc.DefXmm(inst);
-    Xbyak::Reg32 gpr_scratch = reg_alloc.ScratchGpr().cvt32();
+    // Use a 64-bit register to ensure we don't end up treating the input as signed
+    Xbyak::Reg64 gpr_scratch = reg_alloc.ScratchGpr();
 
-    code->movd(gpr_scratch, from);
+    code->movq(gpr_scratch, from);
     code->cvtsi2ss(to, gpr_scratch);
 }
 
@@ -2035,9 +2036,10 @@ void EmitX64::EmitFPU32ToDouble(IR::Block& block, IR::Inst* inst) {
 
     Xbyak::Xmm from = reg_alloc.UseXmm(a);
     Xbyak::Xmm to = reg_alloc.DefXmm(inst);
-    Xbyak::Reg32 gpr_scratch = reg_alloc.ScratchGpr().cvt32();
+    // Use a 64-bit register to ensure we don't end up treating the input as signed
+    Xbyak::Reg64 gpr_scratch = reg_alloc.ScratchGpr();
 
-    code->movd(gpr_scratch, from);
+    code->movq(gpr_scratch, from);
     code->cvtsi2sd(to, gpr_scratch);
 }
 
