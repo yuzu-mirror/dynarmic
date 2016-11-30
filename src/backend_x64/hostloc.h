@@ -26,7 +26,7 @@ enum class HostLoc {
 constexpr size_t HostLocCount = static_cast<size_t>(HostLoc::FirstSpill) + SpillCount;
 
 inline bool HostLocIsGPR(HostLoc reg) {
-    return reg >= HostLoc::RAX && reg <= HostLoc::R14;
+    return reg >= HostLoc::RAX && reg <= HostLoc::R15;
 }
 
 inline bool HostLocIsXMM(HostLoc reg) {
