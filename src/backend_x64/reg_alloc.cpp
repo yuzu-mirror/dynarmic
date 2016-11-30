@@ -34,6 +34,7 @@ static u32 ImmediateToU32(const IR::Value& imm) {
 
 static Xbyak::Reg HostLocToX64(HostLoc hostloc) {
     if (HostLocIsGPR(hostloc)) {
+        DEBUG_ASSERT(hostloc != HostLoc::RSP && hostloc != HostLoc::R15);
         return HostLocToReg64(hostloc);
     }
     if (HostLocIsXMM(hostloc)) {

@@ -11,8 +11,6 @@ namespace BackendX64 {
 
 Xbyak::Reg64 HostLocToReg64(HostLoc loc) {
     DEBUG_ASSERT(HostLocIsGPR(loc));
-    DEBUG_ASSERT(loc != HostLoc::RSP);
-    DEBUG_ASSERT(loc != HostLoc::R15);
     return Xbyak::Reg64(static_cast<int>(loc));
 }
 

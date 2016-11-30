@@ -201,9 +201,11 @@ private:
     };
     std::array<HostLocInfo, HostLocCount> hostloc_info;
     HostLocInfo& LocInfo(HostLoc loc) {
+        DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
         return hostloc_info[static_cast<size_t>(loc)];
     }
     const HostLocInfo& LocInfo(HostLoc loc) const {
+        DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
         return hostloc_info[static_cast<size_t>(loc)];
     }
 };
