@@ -37,6 +37,13 @@ if (MSVC)
                         /EHsc
                         /WX)
     add_compile_options(/DNOMINMAX)
+
+    if (CMAKE_VS_PLATFORM_TOOLSET MATCHES "LLVM-vs[0-9]+")
+        add_compile_options(-Qunused-arguments
+                            -Wno-unused-parameter
+                            -Wno-missing-braces)
+        add_compile_options(-Xclang -fno-operator-names)
+    endif()
 else()
     add_compile_options(-Wall
                         -Werror
