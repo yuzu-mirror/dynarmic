@@ -1677,17 +1677,27 @@ void EmitX64::EmitTransferFromFP64(IR::Block& block, IR::Inst* inst) {
 }
 
 void EmitX64::EmitTransferToFP32(IR::Block& block, IR::Inst* inst) {
-    Xbyak::Xmm result = reg_alloc.DefXmm(inst);
-    Xbyak::Reg32 source = reg_alloc.UseGpr(inst->GetArg(0)).cvt32();
-    // TODO: Eliminate this.
-    code->movd(result, source);
+    if (inst->GetArg(0).IsImmediate() && inst->GetArg(0).GetU32() == 0) {
+        Xbyak::Xmm result = reg_alloc.DefXmm(inst);
+        code->xorps(result, result);
+    } else {
+        Xbyak::Xmm result = reg_alloc.DefXmm(inst);
+        Xbyak::Reg32 source = reg_alloc.UseGpr(inst->GetArg(0)).cvt32();
+        // TODO: Eliminate this.
+        code->movd(result, source);
+    }
 }
 
 void EmitX64::EmitTransferToFP64(IR::Block& block, IR::Inst* inst) {
-    Xbyak::Xmm result = reg_alloc.DefXmm(inst);
-    Xbyak::Reg64 source = reg_alloc.UseGpr(inst->GetArg(0));
-    // TODO: Eliminate this.
-    code->movq(result, source);
+    if (inst->GetArg(0).IsImmediate() && inst->GetArg(0).GetU64() == 0) {
+        Xbyak::Xmm result = reg_alloc.DefXmm(inst);
+        code->xorpd(result, result);
+    } else {
+        Xbyak::Xmm result = reg_alloc.DefXmm(inst);
+        Xbyak::Reg64 source = reg_alloc.UseGpr(inst->GetArg(0));
+        // TODO: Eliminate this.
+        code->movq(result, source);
+    }
 }
 
 void EmitX64::EmitFPAbs32(IR::Block&, IR::Inst* inst) {
