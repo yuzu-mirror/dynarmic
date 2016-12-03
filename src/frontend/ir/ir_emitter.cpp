@@ -37,6 +37,10 @@ Value IREmitter::Imm32(u32 imm32) {
     return Value(imm32);
 }
 
+Value IREmitter::Imm64(u64 imm64) {
+    return Value(imm64);
+}
+
 Value IREmitter::GetRegister(Arm::Reg reg) {
     if (reg == Arm::Reg::PC) {
         return Imm32(PC());

@@ -56,6 +56,7 @@ public:
     Value Imm1(bool value);
     Value Imm8(u8 value);
     Value Imm32(u32 value);
+    Value Imm64(u64 value);
 
     Value GetRegister(Arm::Reg source_reg);
     Value GetExtendedRegister(Arm::ExtReg source_reg);

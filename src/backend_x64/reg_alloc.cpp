@@ -16,14 +16,16 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
-static u32 ImmediateToU32(const IR::Value& imm) {
+static u64 ImmediateToU64(const IR::Value& imm) {
     switch (imm.GetType()) {
     case IR::Type::U1:
-        return u32(imm.GetU1());
+        return u64(imm.GetU1());
     case IR::Type::U8:
-        return u32(imm.GetU8());
+        return u64(imm.GetU8());
     case IR::Type::U32:
-        return u32(imm.GetU32());
+        return u64(imm.GetU32());
+    case IR::Type::U64:
+        return u64(imm.GetU64());
     default:
         ASSERT_MSG(false, "This should never happen.");
     }
@@ -477,11 +479,11 @@ HostLoc RegAlloc::LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc host_loc) {
 
     Xbyak::Reg64 reg = HostLocToReg64(host_loc);
 
-    u32 imm_value = ImmediateToU32(imm);
+    u64 imm_value = ImmediateToU64(imm);
     if (imm_value == 0)
-        code->xor_(reg, reg);
+        code->xor_(reg.cvt32(), reg.cvt32());
     else
-        code->mov(reg.cvt32(), imm_value);
+        code->mov(reg, imm_value);
     return host_loc;
 }
 
