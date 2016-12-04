@@ -839,6 +839,21 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
         return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111 && Bits<16, 19>(instr) != 0b1111;
     };
 
+    const std::array<InstructionGenerator, 12> modulo_instructions = {{
+        InstructionGenerator("cccc01100001nnnndddd11111001mmmm", is_valid), // SADD8
+        InstructionGenerator("cccc01100001nnnndddd11110001mmmm", is_valid), // SADD16
+        InstructionGenerator("cccc01100001nnnndddd11110011mmmm", is_valid), // SASX
+        InstructionGenerator("cccc01100001nnnndddd11110101mmmm", is_valid), // SSAX
+        InstructionGenerator("cccc01100001nnnndddd11111111mmmm", is_valid), // SSUB8
+        InstructionGenerator("cccc01100001nnnndddd11110111mmmm", is_valid), // SSUB16
+        InstructionGenerator("cccc01100101nnnndddd11111001mmmm", is_valid), // UADD8
+        InstructionGenerator("cccc01100101nnnndddd11110001mmmm", is_valid), // UADD16
+        InstructionGenerator("cccc01100101nnnndddd11110011mmmm", is_valid), // UASX
+        InstructionGenerator("cccc01100101nnnndddd11110101mmmm", is_valid), // USAX
+        InstructionGenerator("cccc01100101nnnndddd11111111mmmm", is_valid), // USUB8
+        InstructionGenerator("cccc01100101nnnndddd11110111mmmm", is_valid), // USUB16
+    }};
+
     const std::array<InstructionGenerator, 8> saturating_instructions = {{
         InstructionGenerator("cccc01100010nnnndddd11111001mmmm", is_valid), // QADD8
         InstructionGenerator("cccc01100010nnnndddd11111111mmmm", is_valid), // QSUB8
@@ -864,6 +879,12 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
         InstructionGenerator("cccc01100111nnnndddd11111111mmmm", is_valid), // UHSUB8
         InstructionGenerator("cccc01100111nnnndddd11110111mmmm", is_valid), // UHSUB16
     }};
+
+    SECTION("Parallel Add/Subtract (Modulo)") {
+        FuzzJitArm(1, 1, 10000, [&modulo_instructions]() -> u32 {
+            return modulo_instructions[RandInt<size_t>(0, modulo_instructions.size() - 1)].Generate();
+        });
+    }
 
     SECTION("Parallel Add/Subtract (Saturating)") {
         FuzzJitArm(1, 1, 10000, [&saturating_instructions]() -> u32 {
