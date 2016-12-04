@@ -49,6 +49,11 @@ public:
         Value overflow;
     };
 
+    struct ResultAndGE {
+        Value result;
+        Value ge;
+    };
+
     void Unimplemented();
     u32 PC();
     u32 AlignPC(size_t alignment);
@@ -122,6 +127,7 @@ public:
     Value ByteReverseWord(const Value& a);
     Value ByteReverseHalf(const Value& a);
     Value ByteReverseDual(const Value& a);
+    ResultAndGE PackedAddU8(const Value& a, const Value& b);
     Value PackedHalvingAddU8(const Value& a, const Value& b);
     Value PackedHalvingAddS8(const Value& a, const Value& b);
     Value PackedHalvingSubU8(const Value& a, const Value& b);

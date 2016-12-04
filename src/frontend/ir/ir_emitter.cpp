@@ -324,6 +324,12 @@ Value IREmitter::ByteReverseDual(const Value& a) {
     return Inst(Opcode::ByteReverseDual, {a});
 }
 
+IREmitter::ResultAndGE IREmitter::PackedAddU8(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedAddU8, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
 Value IREmitter::PackedHalvingAddU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingAddU8, {a, b});
 }

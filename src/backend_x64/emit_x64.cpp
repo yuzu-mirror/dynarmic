@@ -1242,22 +1242,51 @@ void EmitX64::EmitByteReverseDual(IR::Block&, IR::Inst* inst) {
     code->bswap(result);
 }
 
-static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, void (Xbyak::CodeGenerator::*fn)(const Xbyak::Mmx& mmx, const Xbyak::Operand&)) {
+void EmitX64::EmitPackedAddU8(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);
 
-    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
-    Xbyak::Reg32 arg = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 reg_a = reg_alloc.UseScratchGpr(a).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseScratchGpr(b).cvt32();
+    Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+    Xbyak::Reg32 reg_ge, tmp;
 
-    Xbyak::Xmm xmm_scratch_a = reg_alloc.ScratchXmm();
-    Xbyak::Xmm xmm_scratch_b = reg_alloc.ScratchXmm();
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
 
-    code->movd(xmm_scratch_a, result);
-    code->movd(xmm_scratch_b, arg);
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+        tmp = reg_alloc.ScratchGpr().cvt32();
 
-    (code->*fn)(xmm_scratch_a, xmm_scratch_b);
+        code->mov(reg_ge, reg_a);
+        code->and_(reg_ge, reg_b);
+    }
 
-    code->movd(result, xmm_scratch_a);
+    // SWAR Arithmetic
+    code->mov(result, reg_a);
+    code->xor_(result, reg_b);
+    code->and_(result, 0x80808080);
+    code->and_(reg_a, 0x7F7F7F7F);
+    code->and_(reg_b, 0x7F7F7F7F);
+    code->add(reg_a, reg_b);
+    if (ge_inst) {
+        code->mov(tmp, result);
+        code->and_(tmp, reg_a);
+        code->or_(reg_ge, tmp);
+    }
+    code->xor_(result, reg_a);
+    if (ge_inst) {
+        if (cpu_info.has(Xbyak::util::Cpu::tBMI2)) {
+            code->mov(tmp, 0x80808080);
+            code->pext(reg_ge, reg_ge, tmp);
+        } else {
+            code->and_(reg_ge, 0x80808080);
+            code->imul(reg_ge, reg_ge, 0x0204081);
+            code->shr(reg_ge, 28);
+        }
+    }
 }
 
 void EmitX64::EmitPackedHalvingAddU8(IR::Block& block, IR::Inst* inst) {
@@ -1459,6 +1488,24 @@ void EmitX64::EmitPackedHalvingSubU16(IR::Block& block, IR::Inst* inst) {
     code->xor(minuend, 0x80008000);
 
     // minuend now contains the desired result.
+}
+
+static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, void (Xbyak::CodeGenerator::*fn)(const Xbyak::Mmx& mmx, const Xbyak::Operand&)) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 arg = reg_alloc.UseGpr(b).cvt32();
+
+    Xbyak::Xmm xmm_scratch_a = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_scratch_b = reg_alloc.ScratchXmm();
+
+    code->movd(xmm_scratch_a, result);
+    code->movd(xmm_scratch_b, arg);
+
+    (code->*fn)(xmm_scratch_a, xmm_scratch_b);
+
+    code->movd(result, xmm_scratch_a);
 }
 
 void EmitX64::EmitPackedSaturatedAddU8(IR::Block& block, IR::Inst* inst) {
