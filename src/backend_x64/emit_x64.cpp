@@ -1772,22 +1772,27 @@ void EmitX64::EmitFPSub64(IR::Block& block, IR::Inst* inst) {
     FPThreeOp64(code, reg_alloc, block, inst, &Xbyak::CodeGenerator::subsd);
 }
 
-static void SetFpscrNzcvFromLahf(JitState* jit_state, u8 lahf) {
-    switch (lahf) {
-    case 0b01000111:
-        jit_state->FPSCR_nzcv = 0x30000000;
-        return;
-    case 0b00000010:
-        jit_state->FPSCR_nzcv = 0x20000000;
-        return;
-    case 0b00000011:
-        jit_state->FPSCR_nzcv = 0x80000000;
-        return;
-    case 0b01000010:
-        jit_state->FPSCR_nzcv = 0x60000000;
-        return;
-    }
-    ASSERT_MSG(false, "<internal error>");
+static void SetFpscrNzcvFromFlags(BlockOfCode* code, RegAlloc& reg_alloc) {
+    reg_alloc.ScratchGpr({HostLoc::RAX}); // lahf requires use of ah
+    Xbyak::Reg32 nzcv_imm = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Reg32 nzcv = reg_alloc.ScratchGpr().cvt32();
+
+    using namespace Xbyak::util;
+
+    code->lahf();
+    code->mov(nzcv_imm, 0x30000000);
+    code->cmp(ah, 0b01000111);
+    code->cmove(nzcv, nzcv_imm);
+    code->mov(nzcv_imm, 0x20000000);
+    code->cmp(ah, 0b00000010);
+    code->cmove(nzcv, nzcv_imm);
+    code->mov(nzcv_imm, 0x80000000);
+    code->cmp(ah, 0b00000011);
+    code->cmove(nzcv, nzcv_imm);
+    code->mov(nzcv_imm, 0x60000000);
+    code->cmp(ah, 0b01000010);
+    code->cmove(nzcv, nzcv_imm);
+    code->mov(dword[r15 + offsetof(JitState, FPSCR_nzcv)], nzcv);
 }
 
 void EmitX64::EmitFPCompare32(IR::Block& block, IR::Inst* inst) {
@@ -1804,13 +1809,7 @@ void EmitX64::EmitFPCompare32(IR::Block& block, IR::Inst* inst) {
         code->comiss(reg_a, reg_b);
     }
 
-    reg_alloc.EndOfAllocScope();
-    reg_alloc.HostCall();
-
-    code->lahf();
-    code->mov(code->ABI_PARAM1, code->r15);
-    code->mov(code->ABI_PARAM2.cvt8(), code->ah);
-    code->CallFunction(&SetFpscrNzcvFromLahf);
+    SetFpscrNzcvFromFlags(code, reg_alloc);
 }
 
 void EmitX64::EmitFPCompare64(IR::Block& block, IR::Inst* inst) {
@@ -1827,13 +1826,7 @@ void EmitX64::EmitFPCompare64(IR::Block& block, IR::Inst* inst) {
         code->comisd(reg_a, reg_b);
     }
 
-    reg_alloc.EndOfAllocScope();
-    reg_alloc.HostCall();
-
-    code->lahf();
-    code->mov(code->ABI_PARAM1, code->r15);
-    code->mov(code->ABI_PARAM2.cvt8(), code->ah);
-    code->CallFunction(&SetFpscrNzcvFromLahf);
+    SetFpscrNzcvFromFlags(code, reg_alloc);
 }
 
 void EmitX64::EmitFPSingleToDouble(IR::Block& block, IR::Inst* inst) {
