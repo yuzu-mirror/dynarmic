@@ -947,7 +947,7 @@ TEST_CASE("VFP: VPUSH, VPOP", "[JitX64][vfp]") {
     });
 }
 
-TEST_CASE("Test ARM SEL instruction", "[JitX64]") {
+TEST_CASE("Test ARM misc instructions", "[JitX64]") {
     const auto is_sel_valid = [](u32 instr) -> bool {
         // R15 as Rd, Rn, or Rm is UNPREDICTABLE
         return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111 && Bits<16, 19>(instr) != 0b1111;
@@ -958,8 +958,14 @@ TEST_CASE("Test ARM SEL instruction", "[JitX64]") {
         return Bits<18, 19>(instr) != 0b00;
     };
 
+    const auto is_clz_valid = [](u32 instr) -> bool {
+        // R15 as Rd, or Rm is UNPREDICTABLE
+        return Bits<0, 3>(instr) != 0b1111 && Bits<12, 15>(instr) != 0b1111;
+    };
+
     const InstructionGenerator cpsr_setter = InstructionGenerator("11100011001001001111rrrrvvvvvvvv", is_msr_valid); // MSR_Imm write GE
     const InstructionGenerator sel_instr = InstructionGenerator("111001101000nnnndddd11111011mmmm", is_sel_valid); // SEL
+    const InstructionGenerator clz_instr = InstructionGenerator("cccc000101101111dddd11110001mmmm", is_clz_valid); // CLZ
 
     SECTION("Fuzz SEL") {
         // Alternate between a SEL and a MSR to change the CPSR, thus changing the expected result of the next SEL
@@ -969,6 +975,12 @@ TEST_CASE("Test ARM SEL instruction", "[JitX64]") {
             if (set_cpsr)
                 return cpsr_setter.Generate(false);
             return sel_instr.Generate(false);
+        });
+    }
+
+    SECTION("Fuzz CLZ") {
+        FuzzJitArm(1, 1, 1000, [&clz_instr]() -> u32 {
+            return clz_instr.Generate();
         });
     }
 }

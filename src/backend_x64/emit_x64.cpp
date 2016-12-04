@@ -1540,6 +1540,27 @@ void EmitX64::EmitPackedSaturatedSubS16(IR::Block& block, IR::Inst* inst) {
     EmitPackedOperation(code, reg_alloc, inst, &Xbyak::CodeGenerator::psubsw);
 }
 
+void EmitX64::EmitCountLeadingZeros(IR::Block& block, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    if (cpu_info.has(Xbyak::util::Cpu::tLZCNT)) {
+        Xbyak::Reg32 source = reg_alloc.UseGpr(a).cvt32();
+        Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+
+        code->lzcnt(result, source);
+    } else {
+        Xbyak::Reg32 source = reg_alloc.UseScratchGpr(a).cvt32();
+        Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+
+        // The result of a bsr of zero is undefined, but zf is set after it.
+        code->bsr(result, source);
+        code->mov(source, 0xFFFFFFFF);
+        code->cmovz(result, source);
+        code->neg(result);
+        code->add(result, 31);
+    }
+}
+
 static void DenormalsAreZero32(BlockOfCode* code, Xbyak::Xmm xmm_value, Xbyak::Reg32 gpr_scratch) {
     using namespace Xbyak::util;
     Xbyak::Label end;

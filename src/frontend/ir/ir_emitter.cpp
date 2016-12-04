@@ -386,6 +386,10 @@ Value IREmitter::PackedSaturatedSubS16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedSaturatedSubS16, {a, b});
 }
 
+Value IREmitter::CountLeadingZeros(const Value& a) {
+    return Inst(Opcode::CountLeadingZeros, {a});
+}
+
 Value IREmitter::TransferToFP32(const Value& a) {
     return Inst(Opcode::TransferToFP32, {a});
 }
