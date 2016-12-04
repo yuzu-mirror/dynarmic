@@ -443,6 +443,10 @@ void EmitX64::EmitGetOverflowFromOp(IR::Block&, IR::Inst*) {
     ASSERT_MSG(false, "should never happen");
 }
 
+void EmitX64::EmitGetGEFromOp(IR::Block&, IR::Inst*) {
+    ASSERT_MSG(false, "should never happen");
+}
+
 void EmitX64::EmitPack2x32To1x64(IR::Block&, IR::Inst* inst) {
     OpArg lo;
     Xbyak::Reg64 result;

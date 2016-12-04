@@ -232,9 +232,14 @@ Inst* Inst::GetAssociatedPseudoOperation(Opcode opcode) {
     // This is faster than doing a search through the block.
     switch (opcode) {
     case IR::Opcode::GetCarryFromOp:
+        DEBUG_ASSERT(!carry_inst || carry_inst->GetOpcode() == Opcode::GetCarryFromOp);
         return carry_inst;
     case IR::Opcode::GetOverflowFromOp:
+        DEBUG_ASSERT(!overflow_inst || overflow_inst->GetOpcode() == Opcode::GetOverflowFromOp);
         return overflow_inst;
+    case IR::Opcode::GetGEFromOp:
+        DEBUG_ASSERT(!ge_inst || ge_inst->GetOpcode() == Opcode::GetGEFromOp);
+        return ge_inst;
     default:
         break;
     }
@@ -302,6 +307,10 @@ void Inst::Use(Value& value) {
         ASSERT_MSG(!value.GetInst()->overflow_inst, "Only one of each type of pseudo-op allowed");
         value.GetInst()->overflow_inst = this;
         break;
+    case Opcode::GetGEFromOp:
+        ASSERT_MSG(!value.GetInst()->ge_inst, "Only one of each type of pseudo-op allowed");
+        value.GetInst()->ge_inst = this;
+        break;
     default:
         break;
     }
@@ -312,10 +321,16 @@ void Inst::UndoUse(Value& value) {
 
     switch (op){
     case Opcode::GetCarryFromOp:
+        DEBUG_ASSERT(value.GetInst()->carry_inst->GetOpcode() == Opcode::GetCarryFromOp);
         value.GetInst()->carry_inst = nullptr;
         break;
     case Opcode::GetOverflowFromOp:
+        DEBUG_ASSERT(value.GetInst()->overflow_inst->GetOpcode() == Opcode::GetOverflowFromOp);
         value.GetInst()->overflow_inst = nullptr;
+        break;
+    case Opcode::GetGEFromOp:
+        DEBUG_ASSERT(value.GetInst()->ge_inst->GetOpcode() == Opcode::GetGEFromOp);
+        value.GetInst()->ge_inst = nullptr;
         break;
     default:
         break;

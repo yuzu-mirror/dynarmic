@@ -102,7 +102,12 @@ private:
     size_t use_count = 0;
     std::array<Value, 3> args;
 
-    Inst* carry_inst = nullptr;
+    // Pointers to related pseudooperations:
+    // Since not all combinations are possible, we use a union to save space
+    union {
+        Inst* carry_inst = nullptr;
+        Inst* ge_inst;
+    };
     Inst* overflow_inst = nullptr;
 };
 

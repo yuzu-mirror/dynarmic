@@ -36,6 +36,7 @@ OPCODE(PushRSB,                 T::Void,        T::U64                          
 // Pseudo-operation, handled specially at final emit
 OPCODE(GetCarryFromOp,          T::U1,          T::U32                                          )
 OPCODE(GetOverflowFromOp,       T::U1,          T::U32                                          )
+OPCODE(GetGEFromOp,             T::U32,         T::U32                                          )
 
 // Calculations
 OPCODE(Pack2x32To1x64,          T::U64,         T::U32,         T::U32                          )
