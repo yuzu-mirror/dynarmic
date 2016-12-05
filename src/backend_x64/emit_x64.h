@@ -13,7 +13,6 @@
 
 #include <xbyak_util.h>
 
-#include "backend_x64/block_of_code.h"
 #include "backend_x64/reg_alloc.h"
 #include "dynarmic/callbacks.h"
 #include "frontend/ir/location_descriptor.h"
@@ -29,6 +28,8 @@ class Inst;
 } // namespace IR
 
 namespace BackendX64 {
+
+class BlockOfCode;
 
 class EmitX64 final {
 public:

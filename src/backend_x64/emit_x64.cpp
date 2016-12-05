@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 #include "backend_x64/abi.h"
+#include "backend_x64/block_of_code.h"
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
 #include "common/assert.h"
