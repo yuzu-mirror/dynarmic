@@ -1314,7 +1314,7 @@ void EmitX64::EmitPackedSubU8(IR::Block& block, IR::Inst* inst) {
     code->movd(xmm_a, reg_a);
     code->movd(xmm_b, reg_b);
     if (ge_inst) {
-        code->movaps(xmm_ge, xmm_a);
+        code->movdqa(xmm_ge, xmm_a);
         code->pmaxub(xmm_ge, xmm_b);
         code->pcmpeqb(xmm_ge, xmm_a);
         code->movd(reg_ge, xmm_ge);
