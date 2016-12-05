@@ -5,15 +5,17 @@
  */
 
 #include <unordered_map>
-#include <common/bit_util.h>
 
 #include "backend_x64/abi.h"
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
+#include "common/assert.h"
+#include "common/bit_util.h"
 #include "frontend/arm/types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/location_descriptor.h"
 #include "frontend/ir/microinstruction.h"
+#include "frontend/ir/opcodes.h"
 
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.
