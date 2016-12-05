@@ -51,6 +51,10 @@ static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
     block.Instructions().erase(inst);
 }
 
+EmitX64::EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface)
+    : reg_alloc(code), code(code), cb(cb), jit_interface(jit_interface) {
+}
+
 EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
     const IR::LocationDescriptor descriptor = block.Location();
 
@@ -93,6 +97,13 @@ EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
     Patch(descriptor, code_ptr);
     basic_blocks[descriptor].size = std::intptr_t(code->getCurr()) - std::intptr_t(code_ptr);
     return basic_blocks[descriptor];
+}
+
+boost::optional<EmitX64::BlockDescriptor> EmitX64::GetBasicBlock(IR::LocationDescriptor descriptor) {
+    auto iter = basic_blocks.find(descriptor);
+    if (iter == basic_blocks.end())
+        return boost::none;
+    return boost::make_optional<BlockDescriptor>(iter->second);
 }
 
 void EmitX64::EmitBreakpoint(IR::Block&, IR::Inst*) {

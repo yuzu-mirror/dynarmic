@@ -33,13 +33,12 @@ class BlockOfCode;
 
 class EmitX64 final {
 public:
-    EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface)
-            : reg_alloc(code), code(code), cb(cb), jit_interface(jit_interface) {}
-
     struct BlockDescriptor {
         CodePtr code_ptr; ///< Entrypoint of emitted code
         size_t size;      ///< Length in bytes of emitted code
     };
+
+    EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface);
 
     /**
      * Emit host machine code for a basic block with intermediate representation `ir`.
@@ -48,12 +47,7 @@ public:
     BlockDescriptor Emit(IR::Block& ir);
 
     /// Looks up an emitted host block in the cache.
-    boost::optional<BlockDescriptor> GetBasicBlock(IR::LocationDescriptor descriptor) {
-        auto iter = basic_blocks.find(descriptor);
-        if (iter == basic_blocks.end())
-            return boost::none;
-        return boost::make_optional<BlockDescriptor>(iter->second);
-    }
+    boost::optional<BlockDescriptor> GetBasicBlock(IR::LocationDescriptor descriptor);
 
     /// Empties the cache.
     void ClearCache();
