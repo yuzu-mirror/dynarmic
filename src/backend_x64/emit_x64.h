@@ -47,7 +47,7 @@ public:
     BlockDescriptor Emit(IR::Block& ir);
 
     /// Looks up an emitted host block in the cache.
-    boost::optional<BlockDescriptor> GetBasicBlock(IR::LocationDescriptor descriptor);
+    boost::optional<BlockDescriptor> GetBasicBlock(IR::LocationDescriptor descriptor) const;
 
     /// Empties the cache.
     void ClearCache();

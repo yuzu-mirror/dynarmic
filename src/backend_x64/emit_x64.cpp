@@ -99,7 +99,7 @@ EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
     return basic_blocks[descriptor];
 }
 
-boost::optional<EmitX64::BlockDescriptor> EmitX64::GetBasicBlock(IR::LocationDescriptor descriptor) {
+boost::optional<EmitX64::BlockDescriptor> EmitX64::GetBasicBlock(IR::LocationDescriptor descriptor) const {
     auto iter = basic_blocks.find(descriptor);
     if (iter == basic_blocks.end())
         return boost::none;
