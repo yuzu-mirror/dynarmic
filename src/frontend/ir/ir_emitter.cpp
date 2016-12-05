@@ -330,6 +330,12 @@ IREmitter::ResultAndGE IREmitter::PackedAddU8(const Value& a, const Value& b) {
     return {result, ge};
 }
 
+IREmitter::ResultAndGE IREmitter::PackedSubU8(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedSubU8, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
 Value IREmitter::PackedHalvingAddU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingAddU8, {a, b});
 }

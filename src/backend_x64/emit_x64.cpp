@@ -1289,6 +1289,52 @@ void EmitX64::EmitPackedAddU8(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitPackedSubU8(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 reg_ge;
+
+    Xbyak::Xmm xmm_a = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_b = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_ge;
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
+
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+        xmm_ge = reg_alloc.ScratchXmm();
+    }
+
+    code->movd(xmm_a, reg_a);
+    code->movd(xmm_b, reg_b);
+    if (ge_inst) {
+        code->movaps(xmm_ge, xmm_a);
+        code->pmaxub(xmm_ge, xmm_b);
+        code->pcmpeqb(xmm_ge, xmm_a);
+        code->movd(reg_ge, xmm_ge);
+    }
+    code->psubb(xmm_a, xmm_b);
+    code->movd(reg_a, xmm_a);
+
+    if (ge_inst) {
+        if (cpu_info.has(Xbyak::util::Cpu::tBMI2)) {
+            Xbyak::Reg32 tmp = reg_alloc.ScratchGpr().cvt32();
+            code->mov(tmp, 0x80808080);
+            code->pext(reg_ge, reg_ge, tmp);
+        } else {
+            code->and_(reg_ge, 0x80808080);
+            code->imul(reg_ge, reg_ge, 0x0204081);
+            code->shr(reg_ge, 28);
+        }
+    }
+}
+
 void EmitX64::EmitPackedHalvingAddU8(IR::Block& block, IR::Inst* inst) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);

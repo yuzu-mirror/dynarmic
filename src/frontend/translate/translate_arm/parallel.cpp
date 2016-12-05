@@ -58,7 +58,14 @@ bool ArmTranslatorVisitor::arm_USAX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_USUB8(Cond cond, Reg n, Reg d, Reg m) {
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedSubU8(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result.result);
+        ir.SetGEFlags(result.ge);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_USUB16(Cond cond, Reg n, Reg d, Reg m) {

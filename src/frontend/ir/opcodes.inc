@@ -73,6 +73,7 @@ OPCODE(ByteReverseWord,         T::U32,         T::U32                          
 OPCODE(ByteReverseHalf,         T::U16,         T::U16                                          )
 OPCODE(ByteReverseDual,         T::U64,         T::U64                                          )
 OPCODE(PackedAddU8,             T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSubU8,             T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingAddU8,      T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingAddS8,      T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingSubU8,      T::U32,         T::U32,         T::U32                          )
