@@ -431,10 +431,10 @@ void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
     code->add(index_reg, 1);
     code->and_(index_reg, u32(JitState::RSBSize - 1));
 
-    code->mov(loc_desc_reg, u64(imm64));
+    code->mov(loc_desc_reg, imm64);
     CodePtr patch_location = code->getCurr<CodePtr>();
     patch_unique_hash_locations[imm64].emplace_back(patch_location);
-    code->mov(code_ptr_reg, u64(code_ptr)); // This line has to match up with EmitX64::Patch.
+    code->mov(code_ptr_reg, code_ptr); // This line has to match up with EmitX64::Patch.
     code->EnsurePatchLocationSize(patch_location, 10);
 
     Xbyak::Label label;
