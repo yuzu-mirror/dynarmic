@@ -424,8 +424,8 @@ void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
     Xbyak::Reg64 loc_desc_reg = reg_alloc.ScratchGpr();
     Xbyak::Reg32 index_reg = reg_alloc.ScratchGpr().cvt32();
     u64 code_ptr = unique_hash_to_code_ptr.find(imm64) != unique_hash_to_code_ptr.end()
-                    ? u64(unique_hash_to_code_ptr[imm64])
-                    : u64(code->GetReturnFromRunCodeAddress());
+                    ? reinterpret_cast<u64>(unique_hash_to_code_ptr[imm64])
+                    : reinterpret_cast<u64>(code->GetReturnFromRunCodeAddress());
 
     code->mov(index_reg, dword[r15 + offsetof(JitState, rsb_ptr)]);
     code->add(index_reg, 1);
@@ -2276,7 +2276,7 @@ static void ReadMemory(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, U
 
     Xbyak::Label abort, end;
 
-    code->mov(rax, u64(cb.page_table));
+    code->mov(rax, reinterpret_cast<u64>(cb.page_table));
     code->mov(page_index.cvt32(), vaddr);
     code->shr(page_index.cvt32(), 12);
     code->mov(rax, qword[rax + page_index * 8]);
@@ -2325,7 +2325,7 @@ static void WriteMemory(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, 
 
     Xbyak::Label abort, end;
 
-    code->mov(rax, u64(cb.page_table));
+    code->mov(rax, reinterpret_cast<u64>(cb.page_table));
     code->mov(page_index.cvt32(), vaddr);
     code->shr(page_index.cvt32(), 12);
     code->mov(rax, qword[rax + page_index * 8]);
@@ -2701,7 +2701,7 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, IR::LocationDescripto
     code->shl(rbx, 32);
     code->or_(rbx, rcx);
 
-    code->mov(rax, u64(code->GetReturnFromRunCodeAddress()));
+    code->mov(rax, reinterpret_cast<u64>(code->GetReturnFromRunCodeAddress()));
     for (size_t i = 0; i < JitState::RSBSize; ++i) {
         code->cmp(rbx, qword[r15 + offsetof(JitState, rsb_location_descriptors) + i * sizeof(u64)]);
         code->cmove(rax, qword[r15 + offsetof(JitState, rsb_codeptrs) + i * sizeof(u64)]);
@@ -2744,7 +2744,7 @@ void EmitX64::Patch(IR::LocationDescriptor desc, CodePtr bb) {
 
     for (CodePtr location : patch_unique_hash_locations[desc.UniqueHash()]) {
         code->SetCodePtr(location);
-        code->mov(rcx, u64(bb));
+        code->mov(rcx, reinterpret_cast<u64>(bb));
         code->EnsurePatchLocationSize(location, 10);
     }
 
