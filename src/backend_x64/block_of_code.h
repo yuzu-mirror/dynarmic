@@ -127,6 +127,7 @@ public:
     void int3() { db(0xCC); }
     void nop(size_t size = 1);
 
+    void* alloc(size_t size);
     void SetCodePtr(CodePtr code_ptr);
     void EnsurePatchLocationSize(CodePtr begin, size_t size);
 

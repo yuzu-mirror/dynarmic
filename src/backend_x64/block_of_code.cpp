@@ -4,6 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
+#include <cstring>
 #include <limits>
 
 #include <xbyak.h>
@@ -225,6 +226,17 @@ void BlockOfCode::nop(size_t size) {
         nop(size - 10);
         return;
     }
+}
+
+void* BlockOfCode::alloc(size_t alloc_size) {
+    if (size_ + alloc_size >= maxSize_) {
+        throw Xbyak::Error(Xbyak::ERR_CODE_IS_TOO_BIG);
+    }
+
+    void* ret = getCurr<void*>();
+    size_ += alloc_size;
+    memset(ret, 0, alloc_size);
+    return ret;
 }
 
 void BlockOfCode::SetCodePtr(CodePtr code_ptr) {
