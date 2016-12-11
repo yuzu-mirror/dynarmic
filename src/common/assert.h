@@ -5,7 +5,6 @@
 #pragma once
 
 #include <cstdio>
-#include <cstdlib>
 
 // For asserts we'd like to keep all the junk executed when an assert happens away from the
 // important code in the function. One way of doing this is to put all the relevant code inside a
@@ -22,19 +21,19 @@ __declspec(noinline, noreturn)
 #endif
 static void assert_noinline_call(const Fn& fn) {
     fn();
-    exit(EXIT_FAILURE); // Keeps GCC's mouth shut about this actually returning
+    throw "";
 }
 
 #define ASSERT(_a_) \
     do if (!(_a_)) { assert_noinline_call([] { \
-        fprintf(stderr, "Assertion Failed!\n" #_a_); \
-        throw ""; \
+        fprintf(stderr, "Assertion Failed!: %s\n", #_a_); \
     }); } while (false)
 
 #define ASSERT_MSG(_a_, ...) \
     do if (!(_a_)) { assert_noinline_call([&] { \
-        fprintf(stderr, "Assertion Failed!\n" #_a_ "\n" __VA_ARGS__); \
-        throw ""; \
+        fprintf(stderr, "Assertion Failed!: %s\n", #_a_); \
+        fprintf(stderr, "Message: " __VA_ARGS__); \
+        fprintf(stderr, "\n"); \
     }); } while (false)
 
 #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
