@@ -19,17 +19,15 @@ namespace Dynarmic {
 namespace BackendX64 {
 
 BlockOfCode::BlockOfCode(UserCallbacks cb) : Xbyak::CodeGenerator(128 * 1024 * 1024), cb(cb) {
-    ClearCache();
-}
-
-void BlockOfCode::ClearCache() {
-    consts.~Consts();
-    new (&consts) Consts();
-    reset();
     GenConstants();
     GenRunCode();
     GenReturnFromRunCode();
     GenMemoryAccessors();
+    user_code_begin = getCurr<CodePtr>();
+}
+
+void BlockOfCode::ClearCache() {
+    SetCodePtr(user_code_begin);
 }
 
 size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const {

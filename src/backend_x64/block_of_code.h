@@ -147,6 +147,7 @@ public:
 
 private:
     UserCallbacks cb;
+    CodePtr user_code_begin;
 
     struct Consts {
         Xbyak::Label FloatPositiveZero32;
