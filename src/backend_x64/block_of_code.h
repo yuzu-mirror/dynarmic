@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <memory>
 #include <type_traits>
+
 #include <xbyak.h>
 
 #include "backend_x64/jitstate.h"
@@ -183,6 +185,18 @@ private:
     const void* write_memory_32 = nullptr;
     const void* write_memory_64 = nullptr;
     void GenMemoryAccessors();
+
+    class UnwindHandler final {
+    public:
+        UnwindHandler();
+        ~UnwindHandler();
+
+        void Register(BlockOfCode* code);
+    private:
+        struct Impl;
+        std::unique_ptr<Impl> impl;
+    };
+    UnwindHandler unwind_handler;
 };
 
 } // namespace BackendX64

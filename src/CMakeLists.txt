@@ -84,6 +84,12 @@ if (ARCHITECTURE_x86_64)
          backend_x64/jitstate.h
          backend_x64/reg_alloc.h
          )
+
+    if (WIN32)
+        list(APPEND SRCS backend_x64/unwind_windows.cpp)
+    else()
+        list(APPEND SRCS backend_x64/unwind_generic.cpp)
+    endif()
 else()
     message(FATAL_ERROR "Unsupported architecture")
 endif()

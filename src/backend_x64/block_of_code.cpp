@@ -23,6 +23,7 @@ BlockOfCode::BlockOfCode(UserCallbacks cb) : Xbyak::CodeGenerator(128 * 1024 * 1
     GenRunCode();
     GenReturnFromRunCode();
     GenMemoryAccessors();
+    unwind_handler.Register(this);
     user_code_begin = getCurr<CodePtr>();
 }
 
