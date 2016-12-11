@@ -1,11 +1,4 @@
 set(SRCS
-    backend_x64/abi.cpp
-    backend_x64/block_of_code.cpp
-    backend_x64/emit_x64.cpp
-    backend_x64/hostloc.cpp
-    backend_x64/interface_x64.cpp
-    backend_x64/jitstate.cpp
-    backend_x64/reg_alloc.cpp
     common/memory_pool.cpp
     frontend/arm/types.cpp
     frontend/disassembler/disassembler_arm.cpp
@@ -41,12 +34,6 @@ set(HEADERS
     ../include/dynarmic/dynarmic.h
     ../include/dynarmic/callbacks.h
     ../include/dynarmic/disassembler.h
-    backend_x64/abi.h
-    backend_x64/block_of_code.h
-    backend_x64/emit_x64.h
-    backend_x64/hostloc.h
-    backend_x64/jitstate.h
-    backend_x64/reg_alloc.h
     common/assert.h
     common/bit_util.h
     common/common_types.h
@@ -77,6 +64,29 @@ set(HEADERS
     frontend/translate/translate_arm/translate_arm.h
     ir_opt/passes.h
     )
+
+if (ARCHITECTURE_x86_64)
+    list(APPEND SRCS
+         backend_x64/abi.cpp
+         backend_x64/block_of_code.cpp
+         backend_x64/emit_x64.cpp
+         backend_x64/hostloc.cpp
+         backend_x64/interface_x64.cpp
+         backend_x64/jitstate.cpp
+         backend_x64/reg_alloc.cpp
+         )
+
+    list(APPEND HEADERS
+         backend_x64/abi.h
+         backend_x64/block_of_code.h
+         backend_x64/emit_x64.h
+         backend_x64/hostloc.h
+         backend_x64/jitstate.h
+         backend_x64/reg_alloc.h
+         )
+else()
+    message(FATAL_ERROR "Unsupported architecture")
+endif()
 
 include(CreateDirectoryGroups)
 create_directory_groups(${SRCS} ${HEADERS})
