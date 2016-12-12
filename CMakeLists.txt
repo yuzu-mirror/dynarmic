@@ -96,9 +96,6 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(externals/catch)
 enable_testing(true)  # Enables unit-testing.
 
-# Include Xbyak
-include_directories(externals/xbyak/xbyak)
-
 # Include LLVM
 if (DYNARMIC_USE_LLVM)
     find_package(LLVM REQUIRED CONFIG)
