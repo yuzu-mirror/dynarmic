@@ -51,6 +51,8 @@
  * ===========================================================================
  */
 
+#pragma warning(disable : 4100 4244 4245)
+
 #include <algorithm>
 //#include "common/logging/log.h"
 #include "skyeye_interpreter/skyeye_common/vfp/vfp.h"

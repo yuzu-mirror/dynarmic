@@ -2,6 +2,8 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#pragma warning(disable : 4244)
+
 #include <algorithm>
 #include "common/assert.h"
 #include "skyeye_interpreter/skyeye_common/armstate.h"

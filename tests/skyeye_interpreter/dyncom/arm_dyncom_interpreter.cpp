@@ -4,6 +4,8 @@
 
 #define CITRA_IGNORE_EXIT(x)
 
+#pragma warning(disable : 4244)
+
 #include <algorithm>
 #include <cstdio>
 

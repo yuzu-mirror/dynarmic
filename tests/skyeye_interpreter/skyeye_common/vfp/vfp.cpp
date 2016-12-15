@@ -20,6 +20,8 @@
 
 /* Note: this file handles interface with arm core and vfp registers */
 
+#pragma warning(disable : 4100)
+
 #include "common/assert.h"
 //#include "common/common_funcs.h"
 #include "common/common_types.h"
