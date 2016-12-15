@@ -20,7 +20,9 @@
 
 /* Note: this file handles interface with arm core and vfp registers */
 
+#ifdef _MSC_VER
 #pragma warning(disable : 4100)
+#endif
 
 #include "common/assert.h"
 //#include "common/common_funcs.h"

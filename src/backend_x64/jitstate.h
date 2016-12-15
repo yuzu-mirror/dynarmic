@@ -17,6 +17,11 @@ class BlockOfCode;
 
 constexpr size_t SpillCount = 64;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4324) // Structure was padded due to alignment specifier
+#endif
+
 struct JitState {
     JitState() { ResetRSB(); }
 
@@ -24,7 +29,6 @@ struct JitState {
     std::array<u32, 16> Reg{}; // Current register file.
     // TODO: Mode-specific register sets unimplemented.
 
-    #pragma warning (suppress : 4324) // Structure was padded due to alignment specifier
     alignas(u64) std::array<u32, 64> ExtReg{}; // Extension registers.
 
     std::array<u64, SpillCount> Spill{}; // Spill.
@@ -54,6 +58,10 @@ struct JitState {
     u32 Fpscr() const;
     void SetFpscr(u32 FPSCR);
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 using CodePtr = const void*;
 

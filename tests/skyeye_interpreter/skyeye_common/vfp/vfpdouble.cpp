@@ -51,7 +51,9 @@
  * ===========================================================================
  */
 
+#ifdef _MSC_VER
 #pragma warning(disable : 4100 4244 4245)
+#endif
 
 #include <algorithm>
 //#include "common/logging/log.h"

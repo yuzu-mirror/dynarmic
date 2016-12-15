@@ -2,7 +2,9 @@
 // Licensed under GPLv2 or any later version
 // Refer to the license.txt file included.
 
+#ifdef _MSC_VER
 #pragma warning(disable : 4244)
+#endif
 
 #include <algorithm>
 #include "common/assert.h"
