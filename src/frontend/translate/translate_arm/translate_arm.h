@@ -215,11 +215,11 @@ struct ArmTranslatorVisitor final {
 
     // Unsigned sum of absolute difference functions
     bool arm_USAD8(Cond cond, Reg d, Reg m, Reg n) {
-        (void)(cond, d, m, n); // Unused
+        UNUSED(cond, d, m, n);
         return InterpretThisInstruction();
     }
     bool arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) {
-        (void)(cond, d, a, m, n); // Unused
+        UNUSED(cond, d, a, m, n);
         return InterpretThisInstruction();
     }
 
@@ -234,19 +234,19 @@ struct ArmTranslatorVisitor final {
 
     // Saturation instructions
     bool arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
-        (void)(cond, sat_imm, d, imm5, sh, n); // Unused
+        UNUSED(cond, sat_imm, d, imm5, sh, n);
         return InterpretThisInstruction();
     }
     bool arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
-        (void)(cond, sat_imm, d, n); // Unused
+        UNUSED(cond, sat_imm, d, n);
         return InterpretThisInstruction();
     }
     bool arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
-        (void)(cond, sat_imm, d, imm5, sh, n); // Unused
+        UNUSED(cond, sat_imm, d, imm5, sh, n);
         return InterpretThisInstruction();
     }
     bool arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
-        (void)(cond, sat_imm, d, n); // Unused
+        UNUSED(cond, sat_imm, d, n);
         return InterpretThisInstruction();
     }
 
@@ -327,19 +327,19 @@ struct ArmTranslatorVisitor final {
 
     // Saturated Add/Subtract instructions
     bool arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
-        (void)(cond, d, m, n); // Unused
+        UNUSED(cond, d, m, n);
         return InterpretThisInstruction();
     }
     bool arm_QSUB(Cond cond, Reg n, Reg d, Reg m) {
-        (void)(cond, d, m, n); // Unused
+        UNUSED(cond, d, m, n);
         return InterpretThisInstruction();
     }
     bool arm_QDADD(Cond cond, Reg n, Reg d, Reg m) {
-        (void)(cond, d, m, n); // Unused
+        UNUSED(cond, d, m, n);
         return InterpretThisInstruction();
     }
     bool arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
-        (void)(cond, d, m, n); // Unused
+        UNUSED(cond, d, m, n);
         return InterpretThisInstruction();
     }
 

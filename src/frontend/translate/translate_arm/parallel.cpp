@@ -11,32 +11,32 @@ namespace Arm {
 
 // Parallel Add/Subtract (Modulo arithmetic) instructions
 bool ArmTranslatorVisitor::arm_SADD8(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SADD16(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SASX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SSAX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SSUB8(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SSUB16(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
@@ -52,17 +52,17 @@ bool ArmTranslatorVisitor::arm_UADD8(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UADD16(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_UASX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_USAX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
@@ -78,7 +78,7 @@ bool ArmTranslatorVisitor::arm_USUB8(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_USUB16(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
@@ -105,12 +105,12 @@ bool ArmTranslatorVisitor::arm_QADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_QASX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
@@ -151,12 +151,12 @@ bool ArmTranslatorVisitor::arm_UQADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UQASX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
@@ -203,22 +203,22 @@ bool ArmTranslatorVisitor::arm_SHADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_SHASX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SHSAX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SHSUB8(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_SHSUB16(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
@@ -243,12 +243,12 @@ bool ArmTranslatorVisitor::arm_UHADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UHASX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_UHSAX(Cond cond, Reg n, Reg d, Reg m) {
-    (void)(cond, n, d, m); // Unused
+    UNUSED(cond, n, d, m);
     return InterpretThisInstruction();
 }
 
