@@ -326,22 +326,10 @@ struct ArmTranslatorVisitor final {
     bool arm_UHSUB16(Cond cond, Reg n, Reg d, Reg m);
 
     // Saturated Add/Subtract instructions
-    bool arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
-        UNUSED(cond, d, m, n);
-        return InterpretThisInstruction();
-    }
-    bool arm_QSUB(Cond cond, Reg n, Reg d, Reg m) {
-        UNUSED(cond, d, m, n);
-        return InterpretThisInstruction();
-    }
-    bool arm_QDADD(Cond cond, Reg n, Reg d, Reg m) {
-        UNUSED(cond, d, m, n);
-        return InterpretThisInstruction();
-    }
-    bool arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
-        UNUSED(cond, d, m, n);
-        return InterpretThisInstruction();
-    }
+    bool arm_QADD(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QSUB(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QDADD(Cond cond, Reg n, Reg d, Reg m);
+    bool arm_QDSUB(Cond cond, Reg n, Reg d, Reg m);
 
     // Synchronization Primitive instructions
     bool arm_CLREX();

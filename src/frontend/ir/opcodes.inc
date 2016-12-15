@@ -72,6 +72,13 @@ OPCODE(ZeroExtendByteToWord,    T::U32,         T::U8                           
 OPCODE(ByteReverseWord,         T::U32,         T::U32                                          )
 OPCODE(ByteReverseHalf,         T::U16,         T::U16                                          )
 OPCODE(ByteReverseDual,         T::U64,         T::U64                                          )
+OPCODE(CountLeadingZeros,       T::U32,         T::U32                                          )
+
+// Saturated instructions
+OPCODE(SignedSaturatedAdd,      T::U32,         T::U32,         T::U32                          )
+OPCODE(SignedSaturatedSub,      T::U32,         T::U32,         T::U32                          )
+
+// Packed instructions
 OPCODE(PackedAddU8,             T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSubU8,             T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingAddU8,      T::U32,         T::U32,         T::U32                          )
@@ -88,7 +95,6 @@ OPCODE(PackedSaturatedAddU16,   T::U32,         T::U32,         T::U32          
 OPCODE(PackedSaturatedAddS16,   T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubU16,   T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubS16,   T::U32,         T::U32,         T::U32                          )
-OPCODE(CountLeadingZeros,       T::U32,         T::U32                                          )
 
 // Floating-point operations
 OPCODE(TransferToFP32,          T::F32,         T::U32                                          )

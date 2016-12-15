@@ -43,6 +43,11 @@ public:
         Value carry;
     };
 
+    struct ResultAndOverflow {
+        Value result;
+        Value overflow;
+    };
+
     struct ResultAndCarryAndOverflow {
         Value result;
         Value carry;
@@ -127,6 +132,11 @@ public:
     Value ByteReverseWord(const Value& a);
     Value ByteReverseHalf(const Value& a);
     Value ByteReverseDual(const Value& a);
+    Value CountLeadingZeros(const Value& a);
+
+    ResultAndOverflow SignedSaturatedAdd(const Value& a, const Value& b);
+    ResultAndOverflow SignedSaturatedSub(const Value& a, const Value& b);
+
     ResultAndGE PackedAddU8(const Value& a, const Value& b);
     ResultAndGE PackedSubU8(const Value& a, const Value& b);
     Value PackedHalvingAddU8(const Value& a, const Value& b);
@@ -143,7 +153,6 @@ public:
     Value PackedSaturatedAddS16(const Value& a, const Value& b);
     Value PackedSaturatedSubU16(const Value& a, const Value& b);
     Value PackedSaturatedSubS16(const Value& a, const Value& b);
-    Value CountLeadingZeros(const Value& a);
 
     Value TransferToFP32(const Value& a);
     Value TransferToFP64(const Value& a);

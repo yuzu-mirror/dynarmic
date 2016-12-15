@@ -1256,6 +1256,77 @@ void EmitX64::EmitByteReverseDual(IR::Block&, IR::Inst* inst) {
     code->bswap(result);
 }
 
+void EmitX64::EmitCountLeadingZeros(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    if (cpu_info.has(Xbyak::util::Cpu::tLZCNT)) {
+        Xbyak::Reg32 source = reg_alloc.UseGpr(a).cvt32();
+        Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+
+        code->lzcnt(result, source);
+    } else {
+        Xbyak::Reg32 source = reg_alloc.UseScratchGpr(a).cvt32();
+        Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+
+        // The result of a bsr of zero is undefined, but zf is set after it.
+        code->bsr(result, source);
+        code->mov(source, 0xFFFFFFFF);
+        code->cmovz(result, source);
+        code->neg(result);
+        code->add(result, 31);
+    }
+}
+
+void EmitX64::EmitSignedSaturatedAdd(IR::Block& block, IR::Inst* inst) {
+    auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 addend = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 overflow = overflow_inst ? reg_alloc.DefGpr(overflow_inst).cvt32() : reg_alloc.ScratchGpr().cvt32();
+
+    code->mov(overflow, result);
+    code->shr(overflow, 31);
+    code->add(overflow, 0x7FFFFFFF);
+    // overflow now contains 0x7FFFFFFF if a was positive, or 0x80000000 if a was negative
+    code->add(result, addend);
+    code->cmovo(result, overflow);
+
+    if (overflow_inst) {
+        EraseInstruction(block, overflow_inst);
+        inst->DecrementRemainingUses();
+
+        code->seto(overflow.cvt8());
+    }
+}
+
+void EmitX64::EmitSignedSaturatedSub(IR::Block& block, IR::Inst* inst) {
+    auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 subend = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 overflow = overflow_inst ? reg_alloc.DefGpr(overflow_inst).cvt32() : reg_alloc.ScratchGpr().cvt32();
+
+    code->mov(overflow, result);
+    code->shr(overflow, 31);
+    code->add(overflow, 0x7FFFFFFF);
+    // overflow now contains 0x7FFFFFFF if a was positive, or 0x80000000 if a was negative
+    code->sub(result, subend);
+    code->cmovo(result, overflow);
+
+    if (overflow_inst) {
+        EraseInstruction(block, overflow_inst);
+        inst->DecrementRemainingUses();
+
+        code->seto(overflow.cvt8());
+    }
+}
+
 void EmitX64::EmitPackedAddU8(IR::Block& block, IR::Inst* inst) {
     auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
@@ -1598,27 +1669,6 @@ void EmitX64::EmitPackedSaturatedSubU16(IR::Block&, IR::Inst* inst) {
 
 void EmitX64::EmitPackedSaturatedSubS16(IR::Block&, IR::Inst* inst) {
     EmitPackedOperation(code, reg_alloc, inst, &Xbyak::CodeGenerator::psubsw);
-}
-
-void EmitX64::EmitCountLeadingZeros(IR::Block&, IR::Inst* inst) {
-    IR::Value a = inst->GetArg(0);
-
-    if (cpu_info.has(Xbyak::util::Cpu::tLZCNT)) {
-        Xbyak::Reg32 source = reg_alloc.UseGpr(a).cvt32();
-        Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
-
-        code->lzcnt(result, source);
-    } else {
-        Xbyak::Reg32 source = reg_alloc.UseScratchGpr(a).cvt32();
-        Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
-
-        // The result of a bsr of zero is undefined, but zf is set after it.
-        code->bsr(result, source);
-        code->mov(source, 0xFFFFFFFF);
-        code->cmovz(result, source);
-        code->neg(result);
-        code->add(result, 31);
-    }
 }
 
 static void DenormalsAreZero32(BlockOfCode* code, Xbyak::Xmm xmm_value, Xbyak::Reg32 gpr_scratch) {

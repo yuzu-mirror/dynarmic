@@ -985,6 +985,29 @@ TEST_CASE("Test ARM misc instructions", "[JitX64]") {
     }
 }
 
+TEST_CASE("Fuzz ARM saturated instructions", "[JitX64]") {
+    auto is_valid = [](u32 inst) -> bool {
+        // R15 as Rd, Rn, or Rm is UNPREDICTABLE
+        return Bits<16, 19>(inst) != 0b1111 &&
+               Bits<12, 15>(inst) != 0b1111 &&
+               Bits<0, 3>(inst) != 0b1111;
+    };
+
+    const std::array<InstructionGenerator, 4> instructions = {{
+        InstructionGenerator("cccc00010000nnnndddd00000101mmmm", is_valid), // QADD
+        InstructionGenerator("cccc00010010nnnndddd00000101mmmm", is_valid), // QSUB
+        InstructionGenerator("cccc00010100nnnndddd00000101mmmm", is_valid), // QDADD
+        InstructionGenerator("cccc00010110nnnndddd00000101mmmm", is_valid), // QDSUB
+    }};
+
+    SECTION("Saturated") {
+        FuzzJitArm(4, 5, 10000, [&instructions]() -> u32 {
+            return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+        });
+    }
+}
+
+
 TEST_CASE("Fuzz ARM packing instructions", "[JitX64]") {
     auto is_pkh_valid = [](u32 inst) -> bool {
         // R15 as Rd, Rn, or Rm is UNPREDICTABLE

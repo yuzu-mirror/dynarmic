@@ -324,6 +324,22 @@ Value IREmitter::ByteReverseDual(const Value& a) {
     return Inst(Opcode::ByteReverseDual, {a});
 }
 
+Value IREmitter::CountLeadingZeros(const Value& a) {
+    return Inst(Opcode::CountLeadingZeros, {a});
+}
+
+IREmitter::ResultAndOverflow IREmitter::SignedSaturatedAdd(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::SignedSaturatedAdd, {a, b});
+    auto overflow = Inst(Opcode::GetOverflowFromOp, {result});
+    return {result, overflow};
+}
+
+IREmitter::ResultAndOverflow IREmitter::SignedSaturatedSub(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::SignedSaturatedSub, {a, b});
+    auto overflow = Inst(Opcode::GetOverflowFromOp, {result});
+    return {result, overflow};
+}
+
 IREmitter::ResultAndGE IREmitter::PackedAddU8(const Value& a, const Value& b) {
     auto result = Inst(Opcode::PackedAddU8, {a, b});
     auto ge = Inst(Opcode::GetGEFromOp, {result});
@@ -390,10 +406,6 @@ Value IREmitter::PackedSaturatedSubU16(const Value& a, const Value& b) {
 
 Value IREmitter::PackedSaturatedSubS16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedSaturatedSubS16, {a, b});
-}
-
-Value IREmitter::CountLeadingZeros(const Value& a) {
-    return Inst(Opcode::CountLeadingZeros, {a});
 }
 
 Value IREmitter::TransferToFP32(const Value& a) {
