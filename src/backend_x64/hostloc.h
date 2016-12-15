@@ -54,7 +54,6 @@ using HostLocList = std::initializer_list<HostLoc>;
 
 // RSP is preserved for function calls
 // R15 contains the JitState pointer
-#pragma warning (suppress : 4592) // Symbol will be dynamically initialized (implementation limitation)
 const HostLocList any_gpr = {
     HostLoc::RAX,
     HostLoc::RBX,
@@ -72,7 +71,6 @@ const HostLocList any_gpr = {
     HostLoc::R14,
 };
 
-#pragma warning (suppress : 4592) // Symbol will be dynamically initialized (implementation limitation)
 const HostLocList any_xmm = {
     HostLoc::XMM0,
     HostLoc::XMM1,

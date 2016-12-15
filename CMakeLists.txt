@@ -34,6 +34,7 @@ if (MSVC)
                         /w34458 # Declaration of 'var' hides class member
                         /w34459 # Declaration of 'var' hides global definition
                         /w34946 # Reinterpret-cast between related types
+                        /wd4592 # Symbol will be dynamically initialized (implementation limitation)
                         /MP
                         /Zi
                         /Zo
