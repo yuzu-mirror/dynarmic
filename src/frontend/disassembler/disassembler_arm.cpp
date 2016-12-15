@@ -283,7 +283,7 @@ public:
 
     // Exception generation instructions
     std::string arm_BKPT(Cond cond, Imm12 imm12, Imm4 imm4) {
-        return fmt::format("bkpt #{}", imm12 << 4 | imm4);
+        return fmt::format("bkpt{} #{}", CondToString(cond), imm12 << 4 | imm4);
     }
     std::string arm_SVC(Cond cond, Imm24 imm24) {
         return fmt::format("svc{} #{}", CondToString(cond), imm24);
@@ -717,8 +717,12 @@ public:
     std::string arm_QADD16(Cond cond, Reg n, Reg d, Reg m) {
         return fmt::format("qadd16{} {}, {}, {}", CondToString(cond), d, n, m);
     }
-    std::string arm_QASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_QSAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_QASX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("qasx{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("qsax{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
     std::string arm_QSUB8(Cond cond, Reg n, Reg d, Reg m) {
         return fmt::format("qsub8{} {}, {}, {}", CondToString(cond), d, n, m);
     }
@@ -731,8 +735,12 @@ public:
     std::string arm_UQADD16(Cond cond, Reg n, Reg d, Reg m) {
         return fmt::format("uqadd16{} {}, {}, {}", CondToString(cond), d, n, m);
     }
-    std::string arm_UQASX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
-    std::string arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) { return "ice"; }
+    std::string arm_UQASX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uqasx{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
+    std::string arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("uqsax{} {}, {}, {}", CondToString(cond), d, n, m);
+    }
     std::string arm_UQSUB8(Cond cond, Reg n, Reg d, Reg m) {
         return fmt::format("uqsub8{} {}, {}, {}", CondToString(cond), d, n, m);
     }
