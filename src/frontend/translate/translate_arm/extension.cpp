@@ -40,6 +40,7 @@ bool ArmTranslatorVisitor::arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 bool ArmTranslatorVisitor::arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+    (void)(cond, n, d, rotate, m); // Unused
     return InterpretThisInstruction();
 }
 
@@ -67,6 +68,7 @@ bool ArmTranslatorVisitor::arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate,
 }
 
 bool ArmTranslatorVisitor::arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+    (void)(cond, d, rotate, m); // Unused
     return InterpretThisInstruction();
 }
 
@@ -94,6 +96,7 @@ bool ArmTranslatorVisitor::arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 bool ArmTranslatorVisitor::arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+    (void)(cond, n, d, rotate, m); // Unused
     return InterpretThisInstruction();
 }
 

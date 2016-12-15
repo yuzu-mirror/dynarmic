@@ -586,7 +586,7 @@ bool ArmTranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n
 
     if (ConditionPassed(cond)) {
         const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12));
-        const auto value = (t == Reg::PC) ? ir.Imm8(ir.PC() - 8) : ir.GetRegister(t);
+        const auto value = (t == Reg::PC) ? ir.Imm8(static_cast<u8>(ir.PC() - 8)) : ir.GetRegister(t);
         ir.WriteMemory8(address, ir.LeastSignificantByte(value));
     }
 
@@ -603,7 +603,7 @@ bool ArmTranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n
     if (ConditionPassed(cond)) {
         const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
         const auto address = GetAddressingMode(ir, P, U, W, n, shifted.result);
-        const auto value = (t == Reg::PC) ? ir.Imm8(ir.PC() - 8) : ir.GetRegister(t);
+        const auto value = (t == Reg::PC) ? ir.Imm8(static_cast<u8>(ir.PC() - 8)) : ir.GetRegister(t);
         ir.WriteMemory8(address, ir.LeastSignificantByte(value));
     }
 

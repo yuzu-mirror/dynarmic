@@ -10,6 +10,7 @@ namespace Dynarmic {
 namespace Arm {
 
 bool ArmTranslatorVisitor::arm_BKPT(Cond cond, Imm12 imm12, Imm4 imm4) {
+    (void)(cond, imm12, imm4); // Unused
     return InterpretThisInstruction();
 }
 
