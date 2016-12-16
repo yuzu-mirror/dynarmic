@@ -141,7 +141,7 @@ void BlockOfCode::GenMemoryAccessors() {
     CallFunction(cb.MemoryRead32);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
-    
+
     align();
     read_memory_64 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
@@ -227,7 +227,7 @@ void BlockOfCode::nop(size_t size) {
     }
 }
 
-void* BlockOfCode::alloc(size_t alloc_size) {
+void* BlockOfCode::AllocateFromCodeSpace(size_t alloc_size) {
     if (size_ + alloc_size >= maxSize_) {
         throw Xbyak::Error(Xbyak::ERR_CODE_IS_TOO_BIG);
     }

@@ -129,7 +129,11 @@ public:
     void int3() { db(0xCC); }
     void nop(size_t size = 1);
 
-    void* alloc(size_t size);
+    /// Allocate memory of `size` bytes from the same block of memory the code is in.
+    /// This is useful for objects that need to be placed close to or within code.
+    /// The lifetime of this memory is the same as the code around it.
+    void* AllocateFromCodeSpace(size_t size);
+
     void SetCodePtr(CodePtr code_ptr);
     void EnsurePatchLocationSize(CodePtr begin, size_t size);
 

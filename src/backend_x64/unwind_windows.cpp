@@ -177,7 +177,7 @@ void BlockOfCode::UnwindHandler::Register(BlockOfCode* code) {
     const auto prolog_info = GetPrologueInformation();
 
     code->align(16);
-    UNWIND_INFO* unwind_info = static_cast<UNWIND_INFO*>(code->alloc(sizeof(UNWIND_INFO)));
+    UNWIND_INFO* unwind_info = static_cast<UNWIND_INFO*>(code->AllocateFromCodeSpace(sizeof(UNWIND_INFO)));
     unwind_info->Version = 1;
     unwind_info->Flags = 0; // No special exception handling required.
     unwind_info->SizeOfProlog = prolog_info.prolog_size;
@@ -186,11 +186,11 @@ void BlockOfCode::UnwindHandler::Register(BlockOfCode* code) {
     unwind_info->FrameOffset = 0; // Unused because FrameRegister == 0
     // UNWIND_INFO::UnwindCode field:
     const size_t size_of_unwind_code = sizeof(UNWIND_CODE) * prolog_info.unwind_code.size();
-    UNWIND_CODE* unwind_code = static_cast<UNWIND_CODE*>(code->alloc(size_of_unwind_code));
+    UNWIND_CODE* unwind_code = static_cast<UNWIND_CODE*>(code->AllocateFromCodeSpace(size_of_unwind_code));
     memcpy(unwind_code, prolog_info.unwind_code.data(), size_of_unwind_code);
 
     code->align(16);
-    RUNTIME_FUNCTION* rfuncs = static_cast<RUNTIME_FUNCTION*>(code->alloc(sizeof(RUNTIME_FUNCTION)));
+    RUNTIME_FUNCTION* rfuncs = static_cast<RUNTIME_FUNCTION*>(code->AllocateFromCodeSpace(sizeof(RUNTIME_FUNCTION)));
     rfuncs->BeginAddress = static_cast<DWORD>(reinterpret_cast<u8*>(code->run_code) - code->getCode());
     rfuncs->EndAddress = static_cast<DWORD>(code->maxSize_);
     rfuncs->UnwindData = static_cast<DWORD>(reinterpret_cast<u8*>(unwind_info) - code->getCode());
