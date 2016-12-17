@@ -1672,6 +1672,10 @@ void EmitX64::EmitPackedSaturatedSubS16(IR::Block&, IR::Inst* inst) {
     EmitPackedOperation(code, reg_alloc, inst, &Xbyak::CodeGenerator::psubsw);
 }
 
+void EmitX64::EmitPackedAbsDiffSumS8(IR::Block&, IR::Inst* inst) {
+    EmitPackedOperation(code, reg_alloc, inst, &Xbyak::CodeGenerator::psadbw);
+}
+
 static void DenormalsAreZero32(BlockOfCode* code, Xbyak::Xmm xmm_value, Xbyak::Reg32 gpr_scratch) {
     using namespace Xbyak::util;
     Xbyak::Label end;

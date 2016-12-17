@@ -153,6 +153,7 @@ public:
     Value PackedSaturatedAddS16(const Value& a, const Value& b);
     Value PackedSaturatedSubU16(const Value& a, const Value& b);
     Value PackedSaturatedSubS16(const Value& a, const Value& b);
+    Value PackedAbsDiffSumS8(const Value& a, const Value& b);
 
     Value TransferToFP32(const Value& a);
     Value TransferToFP64(const Value& a);

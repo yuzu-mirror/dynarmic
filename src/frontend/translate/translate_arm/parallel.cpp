@@ -66,6 +66,27 @@ bool ArmTranslatorVisitor::arm_USAX(Cond cond, Reg n, Reg d, Reg m) {
     return InterpretThisInstruction();
 }
 
+bool ArmTranslatorVisitor::arm_USAD8(Cond cond, Reg d, Reg m, Reg n) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedAbsDiffSumS8(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n){
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto tmp = ir.PackedAbsDiffSumS8(ir.GetRegister(n), ir.GetRegister(m));
+        auto result = ir.AddWithCarry(ir.GetRegister(a), tmp, ir.Imm1(0));
+        ir.SetRegister(d, result.result);
+    }
+    return true;
+}
+
 bool ArmTranslatorVisitor::arm_USUB8(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();

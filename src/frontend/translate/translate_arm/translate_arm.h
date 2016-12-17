@@ -214,14 +214,8 @@ struct ArmTranslatorVisitor final {
     bool arm_SEL(Cond cond, Reg n, Reg d, Reg m);
 
     // Unsigned sum of absolute difference functions
-    bool arm_USAD8(Cond cond, Reg d, Reg m, Reg n) {
-        UNUSED(cond, d, m, n);
-        return InterpretThisInstruction();
-    }
-    bool arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) {
-        UNUSED(cond, d, a, m, n);
-        return InterpretThisInstruction();
-    }
+    bool arm_USAD8(Cond cond, Reg d, Reg m, Reg n);
+    bool arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n);
 
     // Packing instructions
     bool arm_PKHBT(Cond cond, Reg n, Reg d, Imm5 imm5, Reg m);

@@ -961,6 +961,29 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64]") {
     }
 }
 
+TEST_CASE("Fuzz ARM sum of absolute differences", "[JitX64]") {
+    auto validate_d_m_n = [](u32 inst) -> bool {
+        return Bits<16, 19>(inst) != 15 &&
+               Bits<8, 11>(inst) != 15 &&
+               Bits<0, 3>(inst) != 15;
+    };
+    auto validate_d_a_m_n = [&](u32 inst) -> bool {
+        return validate_d_m_n(inst) &&
+               Bits<12, 15>(inst) != 15;
+    };
+
+    const std::array<InstructionGenerator, 2> differences_instructions = {{
+        InstructionGenerator("cccc01111000dddd1111mmmm0001nnnn", validate_d_m_n), // USAD8
+        InstructionGenerator("cccc01111000ddddaaaammmm0001nnnn", validate_d_a_m_n), // USADA8
+    }};
+
+    SECTION("Sum of Absolute Differences (Differences)") {
+        FuzzJitArm(1, 1, 10000, [&differences_instructions]() -> u32 {
+            return differences_instructions[RandInt<size_t>(0, differences_instructions.size() - 1)].Generate();
+        });
+    }
+}
+
 TEST_CASE( "SMUAD", "[JitX64]" ) {
     Dynarmic::Jit jit{GetUserCallbacks()};
     code_mem.fill({});

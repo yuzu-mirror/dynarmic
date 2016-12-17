@@ -408,6 +408,10 @@ Value IREmitter::PackedSaturatedSubS16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedSaturatedSubS16, {a, b});
 }
 
+Value IREmitter::PackedAbsDiffSumS8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedAbsDiffSumS8, {a, b});
+}
+
 Value IREmitter::TransferToFP32(const Value& a) {
     return Inst(Opcode::TransferToFP32, {a});
 }
@@ -654,4 +658,3 @@ Value IREmitter::Inst(Opcode op, std::initializer_list<Value> args) {
 
 } // namespace IR
 } // namespace Dynarmic
-

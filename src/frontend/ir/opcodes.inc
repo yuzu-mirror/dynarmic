@@ -95,6 +95,7 @@ OPCODE(PackedSaturatedAddU16,   T::U32,         T::U32,         T::U32          
 OPCODE(PackedSaturatedAddS16,   T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubU16,   T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubS16,   T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedAbsDiffSumS8,      T::U32,         T::U32,         T::U32                          )
 
 // Floating-point operations
 OPCODE(TransferToFP32,          T::F32,         T::U32                                          )
