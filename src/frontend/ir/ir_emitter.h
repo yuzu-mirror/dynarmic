@@ -133,12 +133,20 @@ public:
     Value ByteReverseHalf(const Value& a);
     Value ByteReverseDual(const Value& a);
     Value CountLeadingZeros(const Value& a);
+    Value NegateLowWord(const Value& a);
+    Value NegateHighWord(const Value& a);
 
     ResultAndOverflow SignedSaturatedAdd(const Value& a, const Value& b);
     ResultAndOverflow SignedSaturatedSub(const Value& a, const Value& b);
 
     ResultAndGE PackedAddU8(const Value& a, const Value& b);
+    ResultAndGE PackedAddS8(const Value& a, const Value& b);
+    ResultAndGE PackedAddU16(const Value& a, const Value& b);
+    ResultAndGE PackedAddS16(const Value& a, const Value& b);
     ResultAndGE PackedSubU8(const Value& a, const Value& b);
+    ResultAndGE PackedSubS8(const Value& a, const Value& b);
+    ResultAndGE PackedSubU16(const Value& a, const Value& b);
+    ResultAndGE PackedSubS16(const Value& a, const Value& b);
     Value PackedHalvingAddU8(const Value& a, const Value& b);
     Value PackedHalvingAddS8(const Value& a, const Value& b);
     Value PackedHalvingSubU8(const Value& a, const Value& b);

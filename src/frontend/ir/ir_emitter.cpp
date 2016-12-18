@@ -328,6 +328,14 @@ Value IREmitter::CountLeadingZeros(const Value& a) {
     return Inst(Opcode::CountLeadingZeros, {a});
 }
 
+Value IREmitter::NegateLowWord(const Value& a) {
+    return Inst(Opcode::NegateLowWord, {a});
+}
+
+Value IREmitter::NegateHighWord(const Value& a) {
+    return Inst(Opcode::NegateHighWord, {a});
+}
+
 IREmitter::ResultAndOverflow IREmitter::SignedSaturatedAdd(const Value& a, const Value& b) {
     auto result = Inst(Opcode::SignedSaturatedAdd, {a, b});
     auto overflow = Inst(Opcode::GetOverflowFromOp, {result});
@@ -346,8 +354,44 @@ IREmitter::ResultAndGE IREmitter::PackedAddU8(const Value& a, const Value& b) {
     return {result, ge};
 }
 
+IREmitter::ResultAndGE IREmitter::PackedAddS8(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedAddS8, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedAddU16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedAddU16, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedAddS16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedAddS16, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
 IREmitter::ResultAndGE IREmitter::PackedSubU8(const Value& a, const Value& b) {
     auto result = Inst(Opcode::PackedSubU8, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedSubS8(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedSubS8, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedSubU16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedSubU16, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedSubS16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedSubS16, {a, b});
     auto ge = Inst(Opcode::GetGEFromOp, {result});
     return {result, ge};
 }

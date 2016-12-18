@@ -1278,6 +1278,26 @@ void EmitX64::EmitCountLeadingZeros(IR::Block&, IR::Inst* inst) {
     }
 }
 
+void EmitX64::EmitNegateLowWord(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
+
+    code->ror(result, 16);
+    code->xor(result, 0xFFFF0000);
+    code->add(result, 0x00010000);
+    code->ror(result, 16);
+}
+
+void EmitX64::EmitNegateHighWord(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+
+    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
+
+    code->xor(result, 0xFFFF0000);
+    code->add(result, 0x00010000);
+}
+
 void EmitX64::EmitSignedSaturatedAdd(IR::Block& block, IR::Inst* inst) {
     auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
@@ -1328,6 +1348,25 @@ void EmitX64::EmitSignedSaturatedSub(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+static void ExtractMostSignificantBitFromPackedBytes(const Xbyak::util::Cpu& cpu_info, BlockOfCode* code, RegAlloc& reg_alloc, Xbyak::Reg32 value, boost::optional<Xbyak::Reg32> a_tmp = boost::none) {
+    if (cpu_info.has(Xbyak::util::Cpu::tBMI2)) {
+        Xbyak::Reg32 tmp = a_tmp ? *a_tmp : reg_alloc.ScratchGpr().cvt32();
+        code->mov(tmp, 0x80808080);
+        code->pext(value, value, tmp);
+    } else {
+        code->and_(value, 0x80808080);
+        code->imul(value, value, 0x00204081);
+        code->shr(value, 28);
+    }
+}
+
+static void ExtractAndDuplicateMostSignificantBitFromPackedWords(BlockOfCode* code, Xbyak::Reg32 value) {
+    code->and_(value, 0x80008000);
+    code->shr(value, 1);
+    code->imul(value, value, 0xC003);
+    code->shr(value, 28);
+}
+
 void EmitX64::EmitPackedAddU8(IR::Block& block, IR::Inst* inst) {
     auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
@@ -1364,14 +1403,119 @@ void EmitX64::EmitPackedAddU8(IR::Block& block, IR::Inst* inst) {
     }
     code->xor_(result, reg_a);
     if (ge_inst) {
-        if (cpu_info.has(Xbyak::util::Cpu::tBMI2)) {
-            code->mov(tmp, 0x80808080);
-            code->pext(reg_ge, reg_ge, tmp);
-        } else {
-            code->and_(reg_ge, 0x80808080);
-            code->imul(reg_ge, reg_ge, 0x0204081);
-            code->shr(reg_ge, 28);
-        }
+        ExtractMostSignificantBitFromPackedBytes(cpu_info, code, reg_alloc, reg_ge);
+    }
+}
+
+void EmitX64::EmitPackedAddS8(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 reg_ge;
+
+    Xbyak::Xmm xmm_a = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_b = reg_alloc.ScratchXmm();
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
+
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+    }
+
+    code->movd(xmm_a, reg_a);
+    code->movd(xmm_b, reg_b);
+    if (ge_inst) {
+        Xbyak::Xmm saturated_sum = reg_alloc.ScratchXmm();
+        code->movdqa(saturated_sum, xmm_a);
+        code->paddsb(saturated_sum, xmm_b);
+        code->movd(reg_ge, saturated_sum);
+    }
+    code->paddb(xmm_a, xmm_b);
+    code->movd(reg_a, xmm_a);
+    if (ge_inst) {
+        code->not_(reg_ge);
+        ExtractMostSignificantBitFromPackedBytes(cpu_info, code, reg_alloc, reg_ge);
+    }
+}
+
+void EmitX64::EmitPackedAddU16(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseScratchGpr(a).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseScratchGpr(b).cvt32();
+    Xbyak::Reg32 result = reg_alloc.DefGpr(inst).cvt32();
+    Xbyak::Reg32 reg_ge, tmp;
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
+
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+
+        code->mov(reg_ge, reg_a);
+        code->and_(reg_ge, reg_b);
+    }
+
+    // SWAR Arithmetic
+    code->mov(result, reg_a);
+    code->xor_(result, reg_b);
+    code->and_(result, 0x80008000);
+    code->and_(reg_a, 0x7FFF7FFF);
+    code->and_(reg_b, 0x7FFF7FFF);
+    code->add(reg_a, reg_b);
+    if (ge_inst) {
+        tmp = reg_alloc.ScratchGpr().cvt32();
+        code->mov(tmp, result);
+        code->and_(tmp, reg_a);
+        code->or_(reg_ge, tmp);
+    }
+    code->xor_(result, reg_a);
+    if (ge_inst) {
+        ExtractAndDuplicateMostSignificantBitFromPackedWords(code, reg_ge);
+    }
+}
+
+void EmitX64::EmitPackedAddS16(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 reg_ge;
+
+    Xbyak::Xmm xmm_a = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_b = reg_alloc.ScratchXmm();
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
+
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+    }
+
+    code->movd(xmm_a, reg_a);
+    code->movd(xmm_b, reg_b);
+    if (ge_inst) {
+        Xbyak::Xmm saturated_sum = reg_alloc.ScratchXmm();
+        code->movdqa(saturated_sum, xmm_a);
+        code->paddsw(saturated_sum, xmm_b);
+        code->movd(reg_ge, saturated_sum);
+    }
+    code->paddw(xmm_a, xmm_b);
+    code->movd(reg_a, xmm_a);
+    if (ge_inst) {
+        code->not_(reg_ge);
+        ExtractAndDuplicateMostSignificantBitFromPackedWords(code, reg_ge);
     }
 }
 
@@ -1409,15 +1553,115 @@ void EmitX64::EmitPackedSubU8(IR::Block& block, IR::Inst* inst) {
     code->movd(reg_a, xmm_a);
 
     if (ge_inst) {
-        if (cpu_info.has(Xbyak::util::Cpu::tBMI2)) {
-            Xbyak::Reg32 tmp = reg_alloc.ScratchGpr().cvt32();
-            code->mov(tmp, 0x80808080);
-            code->pext(reg_ge, reg_ge, tmp);
-        } else {
-            code->and_(reg_ge, 0x80808080);
-            code->imul(reg_ge, reg_ge, 0x0204081);
-            code->shr(reg_ge, 28);
-        }
+        ExtractMostSignificantBitFromPackedBytes(cpu_info, code, reg_alloc, reg_ge);
+    }
+}
+
+
+void EmitX64::EmitPackedSubS8(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 reg_ge;
+
+    Xbyak::Xmm xmm_a = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_b = reg_alloc.ScratchXmm();
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+    }
+    code->movd(xmm_b, reg_b);
+    code->movd(xmm_a, reg_a);
+    if (ge_inst) {
+        Xbyak::Xmm xmm_ge = reg_alloc.ScratchXmm();
+        code->movdqa(xmm_ge, xmm_a);
+        code->psubsb(xmm_ge, xmm_b);
+        code->movd(reg_ge, xmm_ge);
+    }
+    code->psubb(xmm_a, xmm_b);
+    code->movd(reg_a, xmm_a);
+    if (ge_inst) {
+        code->not_(reg_ge);
+        ExtractMostSignificantBitFromPackedBytes(cpu_info, code, reg_alloc, reg_ge);
+    }
+}
+
+void EmitX64::EmitPackedSubU16(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 reg_ge;
+
+    Xbyak::Xmm xmm_a = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_b = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_ge;
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
+
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+        xmm_ge = reg_alloc.ScratchXmm();
+    }
+
+    code->movd(xmm_a, reg_a);
+    code->movd(xmm_b, reg_b);
+    if (ge_inst) {
+        code->movdqa(xmm_ge, xmm_a);
+        code->pmaxuw(xmm_ge, xmm_b);
+        code->pcmpeqw(xmm_ge, xmm_a);
+        code->movd(reg_ge, xmm_ge);
+    }
+    code->psubw(xmm_a, xmm_b);
+    code->movd(reg_a, xmm_a);
+    if (ge_inst) {
+        ExtractAndDuplicateMostSignificantBitFromPackedWords(code, reg_ge);
+    }
+}
+
+void EmitX64::EmitPackedSubS16(IR::Block& block, IR::Inst* inst) {
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    Xbyak::Reg32 reg_a = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b = reg_alloc.UseGpr(b).cvt32();
+    Xbyak::Reg32 reg_ge;
+
+    Xbyak::Xmm xmm_a = reg_alloc.ScratchXmm();
+    Xbyak::Xmm xmm_b = reg_alloc.ScratchXmm();
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+        inst->DecrementRemainingUses();
+
+        reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
+    }
+
+    code->movd(xmm_b, reg_b);
+    code->movd(xmm_a, reg_a);
+    if (ge_inst) {
+        Xbyak::Xmm xmm_ge = reg_alloc.ScratchXmm();
+        code->movdqa(xmm_ge, xmm_a);
+        code->psubsw(xmm_ge, xmm_b);
+        code->movd(reg_ge, xmm_ge);
+    }
+    code->psubw(xmm_a, xmm_b);
+    code->movd(reg_a, xmm_a);
+    if (ge_inst) {
+        code->not_(reg_ge);
+        ExtractAndDuplicateMostSignificantBitFromPackedWords(code, reg_ge);
     }
 }
 

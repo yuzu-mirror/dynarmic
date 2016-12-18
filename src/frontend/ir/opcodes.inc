@@ -73,6 +73,8 @@ OPCODE(ByteReverseWord,         T::U32,         T::U32                          
 OPCODE(ByteReverseHalf,         T::U16,         T::U16                                          )
 OPCODE(ByteReverseDual,         T::U64,         T::U64                                          )
 OPCODE(CountLeadingZeros,       T::U32,         T::U32                                          )
+OPCODE(NegateLowWord,           T::U32,         T::U32                                          )
+OPCODE(NegateHighWord,          T::U32,         T::U32                                          )
 
 // Saturated instructions
 OPCODE(SignedSaturatedAdd,      T::U32,         T::U32,         T::U32                          )
@@ -80,7 +82,13 @@ OPCODE(SignedSaturatedSub,      T::U32,         T::U32,         T::U32          
 
 // Packed instructions
 OPCODE(PackedAddU8,             T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedAddS8,             T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSubU8,             T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSubS8,             T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedAddU16,            T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedAddS16,            T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSubU16,            T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedSubS16,            T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingAddU8,      T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingAddS8,      T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingSubU8,      T::U32,         T::U32,         T::U32                          )
