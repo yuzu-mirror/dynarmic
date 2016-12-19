@@ -71,7 +71,18 @@ private:
     void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, IR::LocationDescriptor initial_location);
     void EmitTerminalIf(IR::Term::If terminal, IR::LocationDescriptor initial_location);
     void EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location);
-    void Patch(IR::LocationDescriptor desc, CodePtr bb);
+
+    // Patching
+    struct PatchInformation {
+        std::vector<CodePtr> jg;
+        std::vector<CodePtr> jmp;
+        std::vector<CodePtr> mov_rcx;
+    };
+    void Patch(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr);
+    void Unpatch(const IR::LocationDescriptor& target_desc);
+    void EmitPatchJg(CodePtr target_code_ptr = nullptr);
+    void EmitPatchJmp(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr = nullptr);
+    void EmitPatchMovRcx(CodePtr target_code_ptr = nullptr);
 
     // Global CPU information
     Xbyak::util::Cpu cpu_info;
@@ -83,11 +94,8 @@ private:
     BlockOfCode* code;
     UserCallbacks cb;
     Jit* jit_interface;
-    std::unordered_map<u64, CodePtr> unique_hash_to_code_ptr;
-    std::unordered_map<u64, std::vector<CodePtr>> patch_unique_hash_locations;
-    std::unordered_map<IR::LocationDescriptor, BlockDescriptor> basic_blocks;
-    std::unordered_map<IR::LocationDescriptor, std::vector<CodePtr>> patch_jg_locations;
-    std::unordered_map<IR::LocationDescriptor, std::vector<CodePtr>> patch_jmp_locations;
+    std::unordered_map<u64, BlockDescriptor> block_descriptors;
+    std::unordered_map<u64, PatchInformation> patch_information;
 };
 
 } // namespace BackendX64

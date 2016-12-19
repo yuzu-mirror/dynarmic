@@ -62,8 +62,8 @@ EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
 
     code->align();
     const CodePtr code_ptr = code->getCurr();
-    basic_blocks[descriptor].code_ptr = code_ptr;
-    unique_hash_to_code_ptr[descriptor.UniqueHash()] = code_ptr;
+    EmitX64::BlockDescriptor& block_desc = block_descriptors[descriptor.UniqueHash()];
+    block_desc.code_ptr = code_ptr;
 
     EmitCondPrelude(block);
 
@@ -95,13 +95,13 @@ EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
     reg_alloc.AssertNoMoreUses();
 
     Patch(descriptor, code_ptr);
-    basic_blocks[descriptor].size = std::intptr_t(code->getCurr()) - std::intptr_t(code_ptr);
-    return basic_blocks[descriptor];
+    block_desc.size = std::intptr_t(code->getCurr()) - std::intptr_t(code_ptr);
+    return block_desc;
 }
 
 boost::optional<EmitX64::BlockDescriptor> EmitX64::GetBasicBlock(IR::LocationDescriptor descriptor) const {
-    auto iter = basic_blocks.find(descriptor);
-    if (iter == basic_blocks.end())
+    auto iter = block_descriptors.find(descriptor.UniqueHash());
+    if (iter == block_descriptors.end())
         return boost::none;
     return boost::make_optional<BlockDescriptor>(iter->second);
 }
@@ -418,24 +418,25 @@ void EmitX64::EmitPushRSB(IR::Block&, IR::Inst* inst) {
     using namespace Xbyak::util;
 
     ASSERT(inst->GetArg(0).IsImmediate());
-    u64 imm64 = inst->GetArg(0).GetU64();
+    u64 unique_hash_of_target = inst->GetArg(0).GetU64();
+
+    auto iter = block_descriptors.find(unique_hash_of_target);
+    CodePtr target_code_ptr = iter != block_descriptors.end()
+                            ? iter->second.code_ptr
+                            : code->GetReturnFromRunCodeAddress();
 
     Xbyak::Reg64 code_ptr_reg = reg_alloc.ScratchGpr({HostLoc::RCX});
     Xbyak::Reg64 loc_desc_reg = reg_alloc.ScratchGpr();
     Xbyak::Reg32 index_reg = reg_alloc.ScratchGpr().cvt32();
-    u64 code_ptr = unique_hash_to_code_ptr.find(imm64) != unique_hash_to_code_ptr.end()
-                    ? reinterpret_cast<u64>(unique_hash_to_code_ptr[imm64])
-                    : reinterpret_cast<u64>(code->GetReturnFromRunCodeAddress());
 
     code->mov(index_reg, dword[r15 + offsetof(JitState, rsb_ptr)]);
     code->add(index_reg, 1);
     code->and_(index_reg, u32(JitState::RSBSize - 1));
 
-    code->mov(loc_desc_reg, imm64);
-    CodePtr patch_location = code->getCurr<CodePtr>();
-    patch_unique_hash_locations[imm64].emplace_back(patch_location);
-    code->mov(code_ptr_reg, code_ptr); // This line has to match up with EmitX64::Patch.
-    code->EnsurePatchLocationSize(patch_location, 10);
+    code->mov(loc_desc_reg, unique_hash_of_target);
+
+    patch_information[unique_hash_of_target].mov_rcx.emplace_back(code->getCurr());
+    EmitPatchMovRcx(target_code_ptr);
 
     Xbyak::Label label;
     for (size_t i = 0; i < JitState::RSBSize; ++i) {
@@ -2698,12 +2699,12 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, IR::LocationDe
 
     code->cmp(qword[r15 + offsetof(JitState, cycles_remaining)], 0);
 
-    CodePtr patch_location = code->getCurr();
-    patch_jg_locations[terminal.next].emplace_back(patch_location);
+    patch_information[terminal.next.UniqueHash()].jg.emplace_back(code->getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
-        code->jg(next_bb->code_ptr);
+        EmitPatchJg(next_bb->code_ptr);
+    } else {
+        EmitPatchJg();
     }
-    code->EnsurePatchLocationSize(patch_location, 6);
 
     code->mov(MJitStateReg(Arm::Reg::PC), terminal.next.PC());
     code->ReturnFromRunCode(); // TODO: Check cycles, Properly do a link
@@ -2727,15 +2728,11 @@ void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, IR::Lo
         }
     }
 
-    CodePtr patch_location = code->getCurr();
-    patch_jmp_locations[terminal.next].emplace_back(patch_location);
+    patch_information[terminal.next.UniqueHash()].jmp.emplace_back(code->getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
-        code->jmp(next_bb->code_ptr);
-        code->EnsurePatchLocationSize(patch_location, 5);
+        EmitPatchJmp(terminal.next, next_bb->code_ptr);
     } else {
-        code->mov(MJitStateReg(Arm::Reg::PC), terminal.next.PC());
-        code->jmp(code->GetReturnFromRunCodeAddress());
-        code->nop(3);
+        EmitPatchJmp(terminal.next);
     }
 }
 
@@ -2775,38 +2772,63 @@ void EmitX64::EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, IR::LocationDe
     EmitTerminal(terminal.else_, initial_location);
 }
 
-void EmitX64::Patch(IR::LocationDescriptor desc, CodePtr bb) {
-    using namespace Xbyak::util;
-
+void EmitX64::Patch(const IR::LocationDescriptor& desc, CodePtr bb) {
     const CodePtr save_code_ptr = code->getCurr();
+    const PatchInformation& patch_info = patch_information[desc.UniqueHash()];
 
-    for (CodePtr location : patch_jg_locations[desc]) {
+    for (CodePtr location : patch_info.jg) {
         code->SetCodePtr(location);
-        code->jg(bb);
-        code->EnsurePatchLocationSize(location, 6);
+        EmitPatchJg(bb);
     }
 
-    for (CodePtr location : patch_jmp_locations[desc]) {
+    for (CodePtr location : patch_info.jmp) {
         code->SetCodePtr(location);
-        code->jmp(bb);
-        code->EnsurePatchLocationSize(location, 5);
+        EmitPatchJmp(desc, bb);
     }
 
-    for (CodePtr location : patch_unique_hash_locations[desc.UniqueHash()]) {
+    for (CodePtr location : patch_info.mov_rcx) {
         code->SetCodePtr(location);
-        code->mov(rcx, reinterpret_cast<u64>(bb));
-        code->EnsurePatchLocationSize(location, 10);
+        EmitPatchMovRcx(bb);
     }
 
     code->SetCodePtr(save_code_ptr);
 }
 
+void EmitX64::Unpatch(const IR::LocationDescriptor& desc) {
+    Patch(desc, nullptr);
+}
+
+void EmitX64::EmitPatchJg(CodePtr target_code_ptr) {
+    const CodePtr patch_location = code->getCurr();
+    if (target_code_ptr) {
+        code->jg(target_code_ptr);
+    }
+    code->EnsurePatchLocationSize(patch_location, 6);
+}
+
+void EmitX64::EmitPatchJmp(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr) {
+    const CodePtr patch_location = code->getCurr();
+    if (target_code_ptr) {
+        code->jmp(target_code_ptr);
+    } else {
+        code->mov(MJitStateReg(Arm::Reg::PC), target_desc.PC());
+        code->jmp(code->GetReturnFromRunCodeAddress());
+    }
+    code->EnsurePatchLocationSize(patch_location, 13);
+}
+
+void EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
+    if (!target_code_ptr) {
+        target_code_ptr = code->GetReturnFromRunCodeAddress();
+    }
+    const CodePtr patch_location = code->getCurr();
+    code->mov(code->rcx, reinterpret_cast<u64>(target_code_ptr));
+    code->EnsurePatchLocationSize(patch_location, 10);
+}
+
 void EmitX64::ClearCache() {
-    unique_hash_to_code_ptr.clear();
-    patch_unique_hash_locations.clear();
-    basic_blocks.clear();
-    patch_jg_locations.clear();
-    patch_jmp_locations.clear();
+    block_descriptors.clear();
+    patch_information.clear();
 }
 
 } // namespace BackendX64
