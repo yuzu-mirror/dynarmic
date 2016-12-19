@@ -26,42 +26,46 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
 
 # Compiler flags
 if (MSVC)
-    add_compile_options(/W4
-                        /w34263 # Non-virtual member function hides base class virtual function
-                        /w44265 # Class has virtual functions, but destructor is not virtual
-                        /w34456 # Declaration of 'var' hides previous local declaration
-                        /w34457 # Declaration of 'var' hides function parameter
-                        /w34458 # Declaration of 'var' hides class member
-                        /w34459 # Declaration of 'var' hides global definition
-                        /w34946 # Reinterpret-cast between related types
-                        /wd4592 # Symbol will be dynamically initialized (implementation limitation)
-                        /MP
-                        /Zi
-                        /Zo
-                        /EHsc
-                        /WX)
-    add_compile_options(/DNOMINMAX)
+    set(DYNARMIC_CXX_FLAGS
+        /W4
+        /w34263 # Non-virtual member function hides base class virtual function
+        /w44265 # Class has virtual functions, but destructor is not virtual
+        /w34456 # Declaration of 'var' hides previous local declaration
+        /w34457 # Declaration of 'var' hides function parameter
+        /w34458 # Declaration of 'var' hides class member
+        /w34459 # Declaration of 'var' hides global definition
+        /w34946 # Reinterpret-cast between related types
+        /wd4592 # Symbol will be dynamically initialized (implementation limitation)
+        /MP
+        /Zi
+        /Zo
+        /EHsc
+        /WX
+        /DNOMINMAX)
 
     if (CMAKE_VS_PLATFORM_TOOLSET MATCHES "LLVM-vs[0-9]+")
-        add_compile_options(-Qunused-arguments
-                            -Wno-unused-parameter
-                            -Wno-missing-braces)
-        add_compile_options(-Xclang -fno-operator-names)
+        list(APPEND DYNARMIC_CXX_FLAGS
+             -Qunused-arguments
+             -Wno-unused-parameter
+             -Wno-missing-braces
+             -Xclang -fno-operator-names)
     endif()
 else()
-    add_compile_options(-Wall
-                        -Werror
-                        -Wextra
-                        -Wcast-qual
-                        -pedantic
-                        -pedantic-errors
-                        -Wfatal-errors
-                        -Wno-unused-parameter
-                        -Wno-missing-braces)
-    add_compile_options(-fno-operator-names)
+    set(DYNARMIC_CXX_FLAGS
+        -Wall
+        -Werror
+        -Wextra
+        -Wcast-qual
+        -pedantic
+        -pedantic-errors
+        -Wfatal-errors
+        -Wno-unused-parameter
+        -Wno-missing-braces
+        -fno-operator-names)
 
     if (ARCHITECTURE_x86_64)
-        add_compile_options(-msse3)
+        list(APPEND DYNARMIC_CXX_FLAGS
+             -msse3)
     endif()
 endif()
 
