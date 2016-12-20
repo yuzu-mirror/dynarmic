@@ -411,6 +411,30 @@ TEST_CASE( "arm: shsax r11, sp, r9 (Edge-case)", "[arm]" ) {
     REQUIRE( jit.Cpsr() == 0x000001d0 );
 }
 
+TEST_CASE( "arm: uasx (Edge-case)", "[arm]" ) {
+    // UASX's Rm<31:16> == 0x0000.
+    // An implementation that depends on addition overflow to detect
+    // if diff >= 0 will fail this testcase.
+
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xe6549f35; // uasx r9, r4, r5
+    code_mem[1] = 0xeafffffe; // b +#0
+
+    jit.Regs()[4] = 0x8ed38f4c;
+    jit.Regs()[5] = 0x0000261d;
+    jit.Regs()[15] = 0x00000000;
+    jit.Cpsr() = 0x000001d0; // User-mode
+
+    jit.Run(2);
+
+    REQUIRE( jit.Regs()[4] == 0x8ed38f4c );
+    REQUIRE( jit.Regs()[5] == 0x0000261d );
+    REQUIRE( jit.Regs()[9] == 0xb4f08f4c );
+    REQUIRE( jit.Regs()[15] == 0x00000004 );
+    REQUIRE( jit.Cpsr() == 0x000301d0 );
+}
+
 struct VfpTest {
     u32 initial_fpscr;
     u32 a;
