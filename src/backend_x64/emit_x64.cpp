@@ -1369,6 +1369,14 @@ static void ExtractMostSignificantBitFromPackedBytes(const Xbyak::util::Cpu& cpu
     }
 }
 
+/**
+ * Extracts the most significant bits from each of the packed words, duplicates them, and packs them together.
+ *
+ *     value before:    a---------------b---------------
+ *     value after:     0000000000000000000000000000aabb
+ *
+ * @param value The register containing the value to operate on. Result will be stored in the same register.
+ */
 static void ExtractAndDuplicateMostSignificantBitFromPackedWords(BlockOfCode* code, Xbyak::Reg32 value) {
     code->and_(value, 0x80008000);
     code->shr(value, 1);
