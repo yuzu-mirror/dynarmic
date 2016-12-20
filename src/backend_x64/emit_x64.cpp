@@ -1348,6 +1348,15 @@ void EmitX64::EmitSignedSaturatedSub(IR::Block& block, IR::Inst* inst) {
     }
 }
 
+/**
+ * Extracts the most significant bits from each of the packed bytes, and packs them together.
+ *
+ *     value before:    a-------b-------c-------d-------
+ *     value after:     0000000000000000000000000000abcd
+ *
+ * @param value The register containing the value to operate on. Result will be stored in the same register.
+ * @param a_tmp A register which can be used as a scratch register.
+ */
 static void ExtractMostSignificantBitFromPackedBytes(const Xbyak::util::Cpu& cpu_info, BlockOfCode* code, RegAlloc& reg_alloc, Xbyak::Reg32 value, boost::optional<Xbyak::Reg32> a_tmp = boost::none) {
     if (cpu_info.has(Xbyak::util::Cpu::tBMI2)) {
         Xbyak::Reg32 tmp = a_tmp ? *a_tmp : reg_alloc.ScratchGpr().cvt32();
