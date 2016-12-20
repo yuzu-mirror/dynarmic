@@ -922,7 +922,7 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64][parallel]") {
         InstructionGenerator("cccc01100101nnnndddd11110101mmmm", is_valid), // USAX
     }};
 
-    const std::array<InstructionGenerator, 8> saturating_instructions = {{
+    const std::array<InstructionGenerator, 12> saturating_instructions = {{
         InstructionGenerator("cccc01100010nnnndddd11111001mmmm", is_valid), // QADD8
         InstructionGenerator("cccc01100010nnnndddd11111111mmmm", is_valid), // QSUB8
         InstructionGenerator("cccc01100110nnnndddd11111001mmmm", is_valid), // UQADD8
@@ -931,6 +931,10 @@ TEST_CASE("Fuzz ARM parallel instructions", "[JitX64][parallel]") {
         InstructionGenerator("cccc01100010nnnndddd11110111mmmm", is_valid), // QSUB16
         InstructionGenerator("cccc01100110nnnndddd11110001mmmm", is_valid), // UQADD16
         InstructionGenerator("cccc01100110nnnndddd11110111mmmm", is_valid), // UQSUB16
+        InstructionGenerator("cccc01100010nnnndddd11110011mmmm", is_valid), // QASX
+        InstructionGenerator("cccc01100010nnnndddd11110101mmmm", is_valid), // QSAX
+        InstructionGenerator("cccc01100110nnnndddd11110011mmmm", is_valid), // UQASX
+        InstructionGenerator("cccc01100110nnnndddd11110101mmmm", is_valid), // UQSAX
     }};
 
     const std::array<InstructionGenerator, 12> halving_instructions = {{
