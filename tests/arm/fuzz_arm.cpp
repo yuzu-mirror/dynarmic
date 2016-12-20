@@ -373,6 +373,44 @@ TEST_CASE( "arm: Optimization Failure (Randomized test case)", "[arm]" ) {
     REQUIRE( jit.Cpsr() == 0x200001d0 );
 }
 
+TEST_CASE( "arm: shsax r11, sp, r9 (Edge-case)", "[arm]" ) {
+    // This was a randomized test-case that was failing.
+    //
+    // The issue here was one of the words to be subtracted was 0x8000.
+    // When the 2s complement was calculated by (~a + 1), it was 0x8000.
+
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xe63dbf59; // shsax r11, sp, r9
+    code_mem[1] = 0xeafffffe; // b +#0
+
+    jit.Regs() = {
+            0x3a3b8b18, 0x96156555, 0xffef039f, 0xafb946f2, 0x2030a69a, 0xafe09b2a, 0x896823c8, 0xabde0ded,
+            0x9825d6a6, 0x17498000, 0x999d2c95, 0x8b812a59, 0x209bdb58, 0x2f7fb1d4, 0x0f378107, 0x00000000
+    };
+    jit.Cpsr() = 0x000001d0; // User-mode
+
+    jit.Run(2);
+
+    REQUIRE( jit.Regs()[0] == 0x3a3b8b18 );
+    REQUIRE( jit.Regs()[1] == 0x96156555 );
+    REQUIRE( jit.Regs()[2] == 0xffef039f );
+    REQUIRE( jit.Regs()[3] == 0xafb946f2 );
+    REQUIRE( jit.Regs()[4] == 0x2030a69a );
+    REQUIRE( jit.Regs()[5] == 0xafe09b2a );
+    REQUIRE( jit.Regs()[6] == 0x896823c8 );
+    REQUIRE( jit.Regs()[7] == 0xabde0ded );
+    REQUIRE( jit.Regs()[8] == 0x9825d6a6 );
+    REQUIRE( jit.Regs()[9] == 0x17498000 );
+    REQUIRE( jit.Regs()[10] == 0x999d2c95 );
+    REQUIRE( jit.Regs()[11] == 0x57bfe48e );
+    REQUIRE( jit.Regs()[12] == 0x209bdb58 );
+    REQUIRE( jit.Regs()[13] == 0x2f7fb1d4 );
+    REQUIRE( jit.Regs()[14] == 0x0f378107 );
+    REQUIRE( jit.Regs()[15] == 0x00000004 );
+    REQUIRE( jit.Cpsr() == 0x000001d0 );
+}
+
 struct VfpTest {
     u32 initial_fpscr;
     u32 a;
