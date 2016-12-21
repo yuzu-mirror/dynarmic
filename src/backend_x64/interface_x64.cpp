@@ -103,7 +103,7 @@ private:
         if (block)
             return *block;
 
-        IR::Block ir_block = Arm::Translate(descriptor, callbacks.MemoryRead32);
+        IR::Block ir_block = Arm::Translate(descriptor, callbacks.MemoryReadCode);
         Optimization::GetSetElimination(ir_block);
         Optimization::DeadCodeElimination(ir_block);
         Optimization::VerificationPass(ir_block);

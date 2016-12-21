@@ -16,6 +16,10 @@ class Jit;
 
 /// These function pointers may be inserted into compiled code.
 struct UserCallbacks {
+    // All reads through this callback are 4-byte aligned.
+    // Memory must be interpreted as little endian.
+    std::uint32_t (*MemoryReadCode)(std::uint32_t vaddr);
+
     // Reads through these callbacks may not be aligned.
     // Memory must be interpreted as if ENDIANSTATE == 0, endianness will be corrected by the JIT.
     std::uint8_t (*MemoryRead8)(std::uint32_t vaddr);

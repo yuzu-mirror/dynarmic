@@ -70,6 +70,13 @@ static u32 MemoryRead32(u32 vaddr) {
 static u64 MemoryRead64(u32 vaddr) {
     return vaddr;
 }
+static u32 MemoryReadCode(u32 vaddr) {
+    if (vaddr < code_mem.size() * sizeof(u16)) {
+        size_t index = vaddr / sizeof(u16);
+        return code_mem[index] | (code_mem[index + 1] << 16);
+    }
+    return 0xE7FEE7FE; // b +#0, b +#0
+}
 
 static void MemoryWrite8(u32 vaddr, u8 value){
     write_records.push_back({8, vaddr, value});
@@ -116,6 +123,7 @@ static Dynarmic::UserCallbacks GetUserCallbacks() {
     user_callbacks.MemoryRead16 = &MemoryRead16;
     user_callbacks.MemoryRead32 = &MemoryRead32;
     user_callbacks.MemoryRead64 = &MemoryRead64;
+    user_callbacks.MemoryReadCode = &MemoryReadCode;
     user_callbacks.MemoryWrite8 = &MemoryWrite8;
     user_callbacks.MemoryWrite16 = &MemoryWrite16;
     user_callbacks.MemoryWrite32 = &MemoryWrite32;
@@ -247,7 +255,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
             Dynarmic::Arm::PSR cpsr;
             cpsr.T(true);
 
-            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, cpsr, Dynarmic::Arm::FPSCR{}}, MemoryRead32);
+            Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate({0, cpsr, Dynarmic::Arm::FPSCR{}}, MemoryReadCode);
             Dynarmic::Optimization::GetSetElimination(ir_block);
             Dynarmic::Optimization::DeadCodeElimination(ir_block);
             Dynarmic::Optimization::VerificationPass(ir_block);

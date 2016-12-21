@@ -52,6 +52,7 @@ static u8 MemoryRead8(u32 vaddr);
 static u16 MemoryRead16(u32 vaddr);
 static u32 MemoryRead32(u32 vaddr);
 static u64 MemoryRead64(u32 vaddr);
+static u32 MemoryReadCode(u32 vaddr);
 static void MemoryWrite8(u32 vaddr, u8 value);
 static void MemoryWrite16(u32 vaddr, u16 value);
 static void MemoryWrite32(u32 vaddr, u32 value);
@@ -69,14 +70,17 @@ static u16 MemoryRead16(u32 vaddr) {
     return static_cast<u16>(vaddr);
 }
 static u32 MemoryRead32(u32 vaddr) {
-    if (vaddr < code_mem.size() * sizeof(u32)) {
-        size_t index = vaddr / sizeof(u32);
-        return code_mem[index];
-    }
     return vaddr;
 }
 static u64 MemoryRead64(u32 vaddr) {
     return MemoryRead32(vaddr) | (u64(MemoryRead32(vaddr+4)) << 32);
+}
+static u32 MemoryReadCode(u32 vaddr) {
+    if (vaddr < code_mem.size() * sizeof(u32)) {
+        size_t index = vaddr / sizeof(u32);
+        return code_mem[index];
+    }
+    return 0xeafffffe; // b +#0
 }
 
 static void MemoryWrite8(u32 vaddr, u8 value){
@@ -128,6 +132,7 @@ static Dynarmic::UserCallbacks GetUserCallbacks() {
     user_callbacks.MemoryRead16 = &MemoryRead16;
     user_callbacks.MemoryRead32 = &MemoryRead32;
     user_callbacks.MemoryRead64 = &MemoryRead64;
+    user_callbacks.MemoryReadCode = &MemoryReadCode;
     user_callbacks.MemoryWrite8 = &MemoryWrite8;
     user_callbacks.MemoryWrite16 = &MemoryWrite16;
     user_callbacks.MemoryWrite32 = &MemoryWrite32;
@@ -292,7 +297,7 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
             size_t num_insts = 0;
             while (num_insts < instructions_to_execute_count) {
                 Dynarmic::IR::LocationDescriptor descriptor = {u32(num_insts * 4), Dynarmic::Arm::PSR{}, Dynarmic::Arm::FPSCR{}};
-                Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate(descriptor, &MemoryRead32);
+                Dynarmic::IR::Block ir_block = Dynarmic::Arm::Translate(descriptor, &MemoryReadCode);
                 Dynarmic::Optimization::GetSetElimination(ir_block);
                 Dynarmic::Optimization::DeadCodeElimination(ir_block);
                 Dynarmic::Optimization::VerificationPass(ir_block);

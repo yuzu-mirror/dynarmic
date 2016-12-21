@@ -15,15 +15,19 @@
 static std::array<u16, 1024> code_mem{};
 
 static u32 MemoryRead32(u32 vaddr);
+static u32 MemoryReadCode(u32 vaddr);
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*);
 static Dynarmic::UserCallbacks GetUserCallbacks();
 
 static u32 MemoryRead32(u32 vaddr) {
+    return vaddr;
+}
+static u32 MemoryReadCode(u32 vaddr) {
     if (vaddr < code_mem.size() * sizeof(u16)) {
         size_t index = vaddr / sizeof(u16);
         return code_mem[index] | (code_mem[index+1] << 16);
     }
-    return vaddr;
+    return 0xE7FEE7FE; //b +#0, b +#0
 }
 
 static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*) {
@@ -45,6 +49,7 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*) {
 static Dynarmic::UserCallbacks GetUserCallbacks() {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.MemoryRead32 = &MemoryRead32;
+    user_callbacks.MemoryReadCode = &MemoryReadCode;
     user_callbacks.InterpreterFallback = &InterpreterFallback;
     return user_callbacks;
 }

@@ -803,7 +803,7 @@ enum {
 
 static unsigned int InterpreterTranslateInstruction(const ARMul_State* cpu, const u32 phys_addr, ARM_INST_PTR& inst_base) {
     unsigned int inst_size = 4;
-    unsigned int inst = (*cpu->user_callbacks.MemoryRead32)(phys_addr & 0xFFFFFFFC);
+    unsigned int inst = (*cpu->user_callbacks.MemoryReadCode)(phys_addr & 0xFFFFFFFC);
 
     // If we are in Thumb mode, we'll translate one Thumb instruction to the corresponding ARM instruction
     if (cpu->TFlag) {

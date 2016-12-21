@@ -836,8 +836,8 @@ enum class ThumbInstSize {
     Thumb16, Thumb32
 };
 
-std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRead32FuncType memory_read_32) {
-    u32 first_part = memory_read_32(arm_pc & 0xFFFFFFFC);
+std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryReadCodeFuncType memory_read_code) {
+    u32 first_part = memory_read_code(arm_pc & 0xFFFFFFFC);
     if ((arm_pc & 0x2) != 0)
         first_part >>= 16;
     first_part &= 0xFFFF;
@@ -850,7 +850,7 @@ std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRead32Func
     // 32-bit thumb instruction
     // These always start with 0b11101, 0b11110 or 0b11111.
 
-    u32 second_part = memory_read_32((arm_pc + 2) & 0xFFFFFFFC);
+    u32 second_part = memory_read_code((arm_pc + 2) & 0xFFFFFFFC);
     if (((arm_pc + 2) & 0x2) != 0)
         second_part >>= 16;
     second_part &= 0xFFFF;
@@ -860,7 +860,7 @@ std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryRead32Func
 
 } // local namespace
 
-IR::Block TranslateThumb(IR::LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
+IR::Block TranslateThumb(IR::LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code) {
     ThumbTranslatorVisitor visitor{descriptor};
 
     bool should_continue = true;
@@ -869,7 +869,7 @@ IR::Block TranslateThumb(IR::LocationDescriptor descriptor, MemoryRead32FuncType
 
         u32 thumb_instruction;
         ThumbInstSize inst_size;
-        std::tie(thumb_instruction, inst_size) = ReadThumbInstruction(arm_pc, memory_read_32);
+        std::tie(thumb_instruction, inst_size) = ReadThumbInstruction(arm_pc, memory_read_code);
 
         if (inst_size == ThumbInstSize::Thumb16) {
             auto decoder = DecodeThumb16<ThumbTranslatorVisitor>(static_cast<u16>(thumb_instruction));

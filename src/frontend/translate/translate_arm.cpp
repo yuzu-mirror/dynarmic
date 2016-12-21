@@ -28,13 +28,13 @@ static bool CondCanContinue(ConditionalState cond_state, const IR::IREmitter& ir
     return std::all_of(ir.block.begin(), ir.block.end(), [](const IR::Inst& inst) { return !inst.WritesToCPSR(); });
 }
 
-IR::Block TranslateArm(IR::LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
+IR::Block TranslateArm(IR::LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code) {
     ArmTranslatorVisitor visitor{descriptor};
 
     bool should_continue = true;
     while (should_continue && CondCanContinue(visitor.cond_state, visitor.ir)) {
         const u32 arm_pc = visitor.ir.current_location.PC();
-        const u32 arm_instruction = memory_read_32(arm_pc);
+        const u32 arm_instruction = memory_read_code(arm_pc);
 
         if (auto vfp_decoder = DecodeVFP2<ArmTranslatorVisitor>(arm_instruction)) {
             should_continue = vfp_decoder->call(visitor, arm_instruction);

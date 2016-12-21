@@ -11,11 +11,11 @@
 namespace Dynarmic {
 namespace Arm {
 
-IR::Block TranslateArm(IR::LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32);
-IR::Block TranslateThumb(IR::LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32);
+IR::Block TranslateArm(IR::LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code);
+IR::Block TranslateThumb(IR::LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code);
 
-IR::Block Translate(IR::LocationDescriptor descriptor, MemoryRead32FuncType memory_read_32) {
-    return (descriptor.TFlag() ? TranslateThumb : TranslateArm)(descriptor, memory_read_32);
+IR::Block Translate(IR::LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code) {
+    return (descriptor.TFlag() ? TranslateThumb : TranslateArm)(descriptor, memory_read_code);
 }
 
 } // namespace Arm
