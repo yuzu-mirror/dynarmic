@@ -59,13 +59,26 @@ constexpr bool Bit(size_t bit_position, const T value) {
 #pragma warning(pop)
 #endif
 
-/// Sign-extends a value that has NBits bits to the full bitwidth of type T.
+/// Sign-extends a value that has bit_count bits to the full bitwidth of type T.
 template<size_t bit_count, typename T>
 inline T SignExtend(const T value) {
     static_assert(bit_count <= BitSize<T>(), "bit_count larger than bitsize of T");
 
     constexpr T mask = static_cast<T>(1ULL << bit_count) - 1;
     const bool signbit = Bit<bit_count - 1, T>(value);
+    if (signbit) {
+        return value | ~mask;
+    }
+    return value;
+}
+
+/// Sign-extends a value that has bit_count bits to the full bitwidth of type T.
+template<typename T>
+inline T SignExtend(const size_t bit_count, const T value) {
+    ASSERT_MSG(bit_count <= BitSize<T>(), "bit_count larger than bitsize of T");
+
+    const T mask = static_cast<T>(1ULL << bit_count) - 1;
+    const bool signbit = Bit<T>(bit_count - 1, value);
     if (signbit) {
         return value | ~mask;
     }
