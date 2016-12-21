@@ -348,6 +348,20 @@ IREmitter::ResultAndOverflow IREmitter::SignedSaturatedSub(const Value& a, const
     return {result, overflow};
 }
 
+IREmitter::ResultAndOverflow IREmitter::UnsignedSaturation(const Value& a, size_t bit_size_to_saturate_to) {
+    ASSERT(bit_size_to_saturate_to <= 31);
+    auto result = Inst(Opcode::UnsignedSaturation, {a, Imm8(static_cast<u8>(bit_size_to_saturate_to))});
+    auto overflow = Inst(Opcode::GetOverflowFromOp, {result});
+    return {result, overflow};
+}
+
+IREmitter::ResultAndOverflow IREmitter::SignedSaturation(const Value& a, size_t bit_size_to_saturate_to) {
+    ASSERT(bit_size_to_saturate_to >= 1 && bit_size_to_saturate_to <= 32);
+    auto result = Inst(Opcode::SignedSaturation, {a, Imm8(static_cast<u8>(bit_size_to_saturate_to))});
+    auto overflow = Inst(Opcode::GetOverflowFromOp, {result});
+    return {result, overflow};
+}
+
 IREmitter::ResultAndGE IREmitter::PackedAddU8(const Value& a, const Value& b) {
     auto result = Inst(Opcode::PackedAddU8, {a, b});
     auto ge = Inst(Opcode::GetGEFromOp, {result});

@@ -138,6 +138,8 @@ public:
 
     ResultAndOverflow SignedSaturatedAdd(const Value& a, const Value& b);
     ResultAndOverflow SignedSaturatedSub(const Value& a, const Value& b);
+    ResultAndOverflow UnsignedSaturation(const Value& a, size_t bit_size_to_saturate_to);
+    ResultAndOverflow SignedSaturation(const Value& a, size_t bit_size_to_saturate_to);
 
     ResultAndGE PackedAddU8(const Value& a, const Value& b);
     ResultAndGE PackedAddS8(const Value& a, const Value& b);

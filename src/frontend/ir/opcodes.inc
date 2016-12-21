@@ -79,6 +79,8 @@ OPCODE(NegateHighWord,          T::U32,         T::U32                          
 // Saturated instructions
 OPCODE(SignedSaturatedAdd,      T::U32,         T::U32,         T::U32                          )
 OPCODE(SignedSaturatedSub,      T::U32,         T::U32,         T::U32                          )
+OPCODE(UnsignedSaturation,      T::U32,         T::U32,         T::U8                           )
+OPCODE(SignedSaturation,        T::U32,         T::U32,         T::U8                           )
 
 // Packed instructions
 OPCODE(PackedAddU8,             T::U32,         T::U32,         T::U32                          )
