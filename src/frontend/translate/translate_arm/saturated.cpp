@@ -9,6 +9,54 @@
 namespace Dynarmic {
 namespace Arm {
 
+// Saturation instructions
+
+bool ArmTranslatorVisitor::arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
+    if (d == Reg::PC || n == Reg::PC)
+        return UnpredictableInstruction();
+
+    size_t saturate_to = static_cast<size_t>(sat_imm) + 1;
+    ShiftType shift = !sh ? ShiftType::LSL : ShiftType::ASR;
+
+    // SSAT <Rd>, #<saturate_to>, <Rn>
+    if (ConditionPassed(cond)) {
+        auto operand = EmitImmShift(ir.GetRegister(n), shift, imm5, ir.GetCFlag());
+        auto result = ir.SignedSaturation(operand.result, saturate_to);
+        ir.SetRegister(d, result.result);
+        ir.OrQFlag(result.overflow);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
+    UNUSED(cond, sat_imm, d, n);
+    return InterpretThisInstruction();
+}
+
+bool ArmTranslatorVisitor::arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
+    if (d == Reg::PC || n == Reg::PC)
+        return UnpredictableInstruction();
+
+    size_t saturate_to = static_cast<size_t>(sat_imm);
+    ShiftType shift = !sh ? ShiftType::LSL : ShiftType::ASR;
+
+    // USAT <Rd>, #<saturate_to>, <Rn>
+    if (ConditionPassed(cond)) {
+        auto operand = EmitImmShift(ir.GetRegister(n), shift, imm5, ir.GetCFlag());
+        auto result = ir.UnsignedSaturation(operand.result, saturate_to);
+        ir.SetRegister(d, result.result);
+        ir.OrQFlag(result.overflow);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
+    UNUSED(cond, sat_imm, d, n);
+    return InterpretThisInstruction();
+}
+
+// Saturated Add/Subtract instructions
+
 bool ArmTranslatorVisitor::arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();

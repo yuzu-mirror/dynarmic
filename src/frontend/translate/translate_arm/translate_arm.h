@@ -227,22 +227,10 @@ struct ArmTranslatorVisitor final {
     bool arm_REVSH(Cond cond, Reg d, Reg m);
 
     // Saturation instructions
-    bool arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
-        UNUSED(cond, sat_imm, d, imm5, sh, n);
-        return InterpretThisInstruction();
-    }
-    bool arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
-        UNUSED(cond, sat_imm, d, n);
-        return InterpretThisInstruction();
-    }
-    bool arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
-        UNUSED(cond, sat_imm, d, imm5, sh, n);
-        return InterpretThisInstruction();
-    }
-    bool arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
-        UNUSED(cond, sat_imm, d, n);
-        return InterpretThisInstruction();
-    }
+    bool arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n);
+    bool arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n);
+    bool arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n);
+    bool arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n);
 
     // Multiply (Normal) instructions
     bool arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n);
