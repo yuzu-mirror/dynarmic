@@ -806,8 +806,6 @@ TEST_CASE("Fuzz ARM reversal instructions", "[JitX64]") {
     }
 }
 
-
-
 TEST_CASE("Fuzz ARM extension instructions", "[JitX64]") {
     const auto is_valid = [](u32 instr) -> bool {
         // R15 as Rd or Rm is UNPREDICTABLE
@@ -1092,7 +1090,7 @@ TEST_CASE("Test ARM misc instructions", "[JitX64]") {
     }
 }
 
-TEST_CASE("Fuzz ARM saturated instructions", "[JitX64]") {
+TEST_CASE("Fuzz ARM saturated add/sub instructions", "[JitX64]") {
     auto is_valid = [](u32 inst) -> bool {
         // R15 as Rd, Rn, or Rm is UNPREDICTABLE
         return Bits<16, 19>(inst) != 0b1111 &&
@@ -1114,6 +1112,24 @@ TEST_CASE("Fuzz ARM saturated instructions", "[JitX64]") {
     }
 }
 
+TEST_CASE("Fuzz ARM saturation instructions", "[JitX64]") {
+    auto is_valid = [](u32 inst) -> bool {
+        // R15 as Rd or Rn is UNPREDICTABLE
+        return Bits<12, 15>(inst) != 0b1111 &&
+               Bits<0, 3>(inst) != 0b1111;
+    };
+
+    const std::array<InstructionGenerator, 4> instructions = {{
+        InstructionGenerator("cccc0110101vvvvvddddvvvvvr01nnnn", is_valid), // SSAT
+        InstructionGenerator("cccc01101010vvvvdddd11110011nnnn", is_valid), // SSAT16
+        InstructionGenerator("cccc0110111vvvvvddddvvvvvr01nnnn", is_valid), // USAT
+        InstructionGenerator("cccc01101110vvvvdddd11110011nnnn", is_valid), // USAT16
+    }};
+
+    FuzzJitArm(4, 5, 10000, [&instructions]() -> u32 {
+        return instructions[RandInt<size_t>(0, instructions.size() - 1)].Generate();
+    });
+}
 
 TEST_CASE("Fuzz ARM packing instructions", "[JitX64]") {
     auto is_pkh_valid = [](u32 inst) -> bool {
