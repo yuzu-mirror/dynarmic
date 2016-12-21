@@ -274,6 +274,10 @@ public:
         return fmt::format("setend {}", E ? "BE" : "LE");
     }
 
+    std::string thumb16_CPS(bool im, bool a, bool i, bool f) {
+        return fmt::format("cps{} {}{}{}", im ? "id" : "ie", a ? "a" : "", i ? "i" : "", f ? "f" : "");
+    }
+
     std::string thumb16_REV(Reg m, Reg d) {
         return fmt::format("rev {}, {}", d, m);
     }

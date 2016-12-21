@@ -95,7 +95,7 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
         INST(&V::thumb16_PUSH,           "PUSH",                     "1011010Mxxxxxxxx"), // v4T
         INST(&V::thumb16_POP,            "POP",                      "1011110Pxxxxxxxx"), // v4T
         INST(&V::thumb16_SETEND,         "SETEND",                   "101101100101x000"), // v6
-        //INST(&V::thumb16_CPS,            "CPS",                      "10110110011m0aif"), // v6
+        INST(&V::thumb16_CPS,            "CPS",                      "10110110011m0aif"), // v6
         INST(&V::thumb16_REV,            "REV",                      "1011101000mmmddd"), // v6
         INST(&V::thumb16_REV16,          "REV16",                    "1011101001mmmddd"), // v6
         INST(&V::thumb16_REVSH,          "REVSH",                    "1011101011mmmddd"), // v6

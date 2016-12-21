@@ -699,6 +699,12 @@ struct ThumbTranslatorVisitor final {
         return false;
     }
 
+    bool thumb16_CPS(bool, bool, bool, bool) {
+        // CPS{IE,ID} <a,i,f>
+        // A CPS is treated as a NOP in User mode.
+        return true;
+    }
+
     bool thumb16_REV(Reg m, Reg d) {
         // REV <Rd>, <Rm>
         // Rd cannot encode R15.
