@@ -120,6 +120,10 @@ public:
         return fmt::format("orrs {}, {}", d_n, m);
     }
 
+    std::string thumb16_MUL_reg(Reg n, Reg d_m) {
+        return fmt::format("muls {}, {}, {}", d_m, n, d_m);
+    }
+
     std::string thumb16_BIC_reg(Reg m, Reg d_n) {
         return fmt::format("bics {}, {}", d_n, m);
     }

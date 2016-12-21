@@ -53,7 +53,7 @@ boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
         INST(&V::thumb16_CMP_reg_t1,     "CMP (reg, T1)",            "0100001010mmmnnn"),
         INST(&V::thumb16_CMN_reg,        "CMN (reg)",                "0100001011mmmnnn"),
         INST(&V::thumb16_ORR_reg,        "ORR (reg)",                "0100001100mmmddd"),
-        //INST(&V::thumb16_MULS_rr,        "MULS (rr)",                "0100001101mmmddd"),
+        INST(&V::thumb16_MUL_reg,        "MUL (reg)",                "0100001101nnnddd"),
         INST(&V::thumb16_BIC_reg,        "BIC (reg)",                "0100001110mmmddd"),
         INST(&V::thumb16_MVN_reg,        "MVN (reg)",                "0100001111mmmddd"),
 

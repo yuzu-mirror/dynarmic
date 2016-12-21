@@ -328,6 +328,17 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    bool thumb16_MUL_reg(Reg n, Reg d_m) {
+        Reg d = d_m, m = d_m;
+        // MULS <Rdn>, <Rm>, <Rdn>
+        // Rd cannot encode R15.
+        auto result = ir.Mul(ir.GetRegister(m), ir.GetRegister(n));
+        ir.SetRegister(d, result);
+        ir.SetNFlag(ir.MostSignificantBit(result));
+        ir.SetZFlag(ir.IsZero(result));
+        return true;
+    }
+
     bool thumb16_BIC_reg(Reg m, Reg d_n) {
         Reg d = d_n, n = d_n;
         // BICS <Rdn>, <Rm>
