@@ -422,6 +422,10 @@ Value IREmitter::PackedHalvingSubU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingSubU8, {a, b});
 }
 
+Value IREmitter::PackedHalvingSubS8(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingSubS8, {a, b});
+}
+
 Value IREmitter::PackedHalvingAddU16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingAddU16, {a, b});
 }
@@ -432,6 +436,10 @@ Value IREmitter::PackedHalvingAddS16(const Value& a, const Value& b) {
 
 Value IREmitter::PackedHalvingSubU16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingSubU16, {a, b});
+}
+
+Value IREmitter::PackedHalvingSubS16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingSubS16, {a, b});
 }
 
 Value IREmitter::PackedSaturatedAddU8(const Value& a, const Value& b) {
