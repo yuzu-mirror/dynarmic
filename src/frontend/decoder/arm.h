@@ -14,6 +14,7 @@
 
 #include <boost/optional.hpp>
 
+#include "common/bit_util.h"
 #include "common/common_types.h"
 #include "frontend/decoder/decoder_detail.h"
 #include "frontend/decoder/matcher.h"
@@ -318,7 +319,10 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
 
     };
 
-    std::stable_partition(table.begin(), table.end(), [](const auto& matcher) { return (matcher.GetMask() & 0xF0000000) != 0; });
+    // If a matcher has more bits in its mask it is more specific, so it should come first.
+    std::stable_sort(table.begin(), table.end(), [](const auto& matcher1, const auto& matcher2) {
+        return Common::BitCount(matcher1.GetMask()) > Common::BitCount(matcher2.GetMask());
+    });
 
     return table;
 }
