@@ -49,6 +49,7 @@ static Xbyak::Address MJitStateCpsr() {
 
 static void EraseInstruction(IR::Block& block, IR::Inst* inst) {
     block.Instructions().erase(inst);
+    inst->Invalidate();
 }
 
 EmitX64::EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface)
@@ -492,7 +493,7 @@ void EmitX64::EmitMostSignificantWord(IR::Block& block, IR::Inst* inst) {
 
     if (carry_inst) {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
+
         Xbyak::Reg64 carry = reg_alloc.DefGpr(carry_inst);
 
         code->setc(carry.cvt8());
@@ -572,7 +573,6 @@ void EmitX64::EmitLogicalShiftLeft(IR::Block& block, IR::Inst* inst) {
         }
     } else {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
 
         auto shift_arg = inst->GetArg(1);
 
@@ -665,7 +665,6 @@ void EmitX64::EmitLogicalShiftRight(IR::Block& block, IR::Inst* inst) {
         }
     } else {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
 
         auto shift_arg = inst->GetArg(1);
 
@@ -768,7 +767,6 @@ void EmitX64::EmitArithmeticShiftRight(IR::Block& block, IR::Inst* inst) {
         }
     } else {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
 
         auto shift_arg = inst->GetArg(1);
 
@@ -843,7 +841,6 @@ void EmitX64::EmitRotateRight(IR::Block& block, IR::Inst* inst) {
         }
     } else {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
 
         auto shift_arg = inst->GetArg(1);
 
@@ -905,7 +902,7 @@ void EmitX64::EmitRotateRightExtended(IR::Block& block, IR::Inst* inst) {
 
     if (carry_inst) {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
+
         code->setc(carry);
     }
 }
@@ -965,12 +962,12 @@ void EmitX64::EmitAddWithCarry(IR::Block& block, IR::Inst* inst) {
 
     if (carry_inst) {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
+
         code->setc(carry);
     }
     if (overflow_inst) {
         EraseInstruction(block, overflow_inst);
-        inst->DecrementRemainingUses();
+
         code->seto(overflow);
     }
 }
@@ -1034,12 +1031,12 @@ void EmitX64::EmitSubWithCarry(IR::Block& block, IR::Inst* inst) {
 
     if (carry_inst) {
         EraseInstruction(block, carry_inst);
-        inst->DecrementRemainingUses();
+
         code->setnc(carry);
     }
     if (overflow_inst) {
         EraseInstruction(block, overflow_inst);
-        inst->DecrementRemainingUses();
+
         code->seto(overflow);
     }
 }
@@ -1317,7 +1314,6 @@ void EmitX64::EmitSignedSaturatedAdd(IR::Block& block, IR::Inst* inst) {
 
     if (overflow_inst) {
         EraseInstruction(block, overflow_inst);
-        inst->DecrementRemainingUses();
 
         code->seto(overflow.cvt8());
     }
@@ -1342,7 +1338,6 @@ void EmitX64::EmitSignedSaturatedSub(IR::Block& block, IR::Inst* inst) {
 
     if (overflow_inst) {
         EraseInstruction(block, overflow_inst);
-        inst->DecrementRemainingUses();
 
         code->seto(overflow.cvt8());
     }
@@ -1370,7 +1365,6 @@ void EmitX64::EmitUnsignedSaturation(IR::Block& block, IR::Inst* inst) {
 
     if (overflow_inst) {
         EraseInstruction(block, overflow_inst);
-        inst->DecrementRemainingUses();
 
         code->seta(overflow.cvt8());
     }
@@ -1417,7 +1411,6 @@ void EmitX64::EmitSignedSaturation(IR::Block& block, IR::Inst* inst) {
 
     if (overflow_inst) {
         EraseInstruction(block, overflow_inst);
-        inst->DecrementRemainingUses();
 
         code->seta(overflow.cvt8());
     }
@@ -1472,7 +1465,6 @@ void EmitX64::EmitPackedAddU8(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
 
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
         tmp = reg_alloc.ScratchGpr().cvt32();
@@ -1514,7 +1506,6 @@ void EmitX64::EmitPackedAddS8(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
 
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
     }
@@ -1548,7 +1539,6 @@ void EmitX64::EmitPackedAddU16(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
 
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
 
@@ -1590,7 +1580,6 @@ void EmitX64::EmitPackedAddS16(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
 
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
     }
@@ -1627,7 +1616,6 @@ void EmitX64::EmitPackedSubU8(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
 
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
         xmm_ge = reg_alloc.ScratchXmm();
@@ -1665,7 +1653,7 @@ void EmitX64::EmitPackedSubS8(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
+
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
     }
     code->movd(xmm_b, reg_b);
@@ -1700,7 +1688,6 @@ void EmitX64::EmitPackedSubU16(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
 
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
         xmm_ge = reg_alloc.ScratchXmm();
@@ -1736,7 +1723,6 @@ void EmitX64::EmitPackedSubS16(IR::Block& block, IR::Inst* inst) {
 
     if (ge_inst) {
         EraseInstruction(block, ge_inst);
-        inst->DecrementRemainingUses();
 
         reg_ge = reg_alloc.DefGpr(ge_inst).cvt32();
     }
