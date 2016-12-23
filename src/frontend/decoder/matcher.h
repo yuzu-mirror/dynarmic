@@ -27,6 +27,7 @@ template <typename Visitor, typename OpcodeType>
 class Matcher {
 public:
     using opcode_type         = OpcodeType;
+    using visitor_type        = Visitor;
     using handler_return_type = typename Visitor::instruction_return_type;
     using handler_function    = std::function<handler_return_type(Visitor&, opcode_type)>;
 
