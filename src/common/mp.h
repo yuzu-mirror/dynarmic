@@ -48,6 +48,13 @@ struct FunctionInfo<R(C::*)(Args...)> : public FunctionInfo<R(Args...)>
     using class_type = C;
 };
 
+/// Partial specialization for const member function pointers.
+template <typename C, typename R, typename... Args>
+struct FunctionInfo<R(C::*)(Args...) const> : public FunctionInfo<R(Args...)>
+{
+    using class_type = C;
+};
+
 /**
  * Helper template for retrieving the type of a function parameter.
  *
