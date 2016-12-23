@@ -121,6 +121,21 @@ private:
             };
         }
     };
+
+    template<typename Visitor, typename ...Args, typename CallRetT>
+    struct VisitorCaller<CallRetT(Visitor::*)(Args...) const> {
+        template<size_t ...iota>
+        static auto Make(std::integer_sequence<size_t, iota...>,
+                         CallRetT (Visitor::* const fn)(Args...) const,
+                         const std::array<opcode_type, sizeof...(iota)> arg_masks,
+                         const std::array<size_t, sizeof...(iota)> arg_shifts) {
+            static_assert(std::is_same<visitor_type, const Visitor>::value, "Member function is not from Matcher's Visitor");
+            return [fn, arg_masks, arg_shifts](const Visitor& v, opcode_type instruction) {
+                (void)instruction;
+                return (v.*fn)(static_cast<Args>((instruction & arg_masks[iota]) >> arg_shifts[iota])...);
+            };
+        }
+    };
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
