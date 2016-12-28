@@ -157,6 +157,8 @@ public:
     Value PackedHalvingAddS16(const Value& a, const Value& b);
     Value PackedHalvingSubU16(const Value& a, const Value& b);
     Value PackedHalvingSubS16(const Value& a, const Value& b);
+    Value PackedHalvingSubAddU16(const Value& a, const Value& b, bool asx);
+    Value PackedHalvingSubAddS16(const Value& a, const Value& b, bool asx);
     Value PackedSaturatedAddU8(const Value& a, const Value& b);
     Value PackedSaturatedAddS8(const Value& a, const Value& b);
     Value PackedSaturatedSubU8(const Value& a, const Value& b);

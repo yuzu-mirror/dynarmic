@@ -2012,6 +2012,88 @@ void EmitX64::EmitPackedHalvingSubS16(IR::Block&, IR::Inst* inst) {
     code->xor(minuend, carry);
 }
 
+void EmitX64::EmitPackedHalvingSubAddU16(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    // If asx is true, the high word contains the sum and the low word the difference.
+    // If false, the high word contains the difference and the low word the sum.
+    bool asx = inst->GetArg(2).GetU1();
+
+    Xbyak::Reg32 reg_a_hi = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b_hi = reg_alloc.UseScratchGpr(b).cvt32();
+    Xbyak::Reg32 reg_a_lo = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Reg32 reg_b_lo = reg_alloc.ScratchGpr().cvt32();
+
+    code->movzx(reg_a_lo, reg_a_hi.cvt16());
+    code->movzx(reg_b_lo, reg_b_hi.cvt16());
+    code->shr(reg_a_hi, 16);
+    code->shr(reg_b_hi, 16);
+
+    if (asx) {
+        // Calculate diff such that reg_a_lo<31:16> contains diff<16:1>.
+        code->sub(reg_a_lo, reg_b_hi);
+        code->shl(reg_a_lo, 15);
+
+        // Calculate sum such that reg_a_hi<15:0> contains sum<16:1>.
+        code->add(reg_a_hi, reg_b_lo);
+        code->shr(reg_a_hi, 1);
+    } else {
+        // Calculate sum such that reg_a_lo<31:16> contains sum<16:1>.
+        code->add(reg_a_lo, reg_b_hi);
+        code->shl(reg_a_lo, 15);
+
+        // Calculate diff such that reg_a_hi<15:0> contains diff<16:1>.
+        code->sub(reg_a_hi, reg_b_lo);
+        code->shr(reg_a_hi, 1);
+    }
+
+    // reg_a_lo now contains the low word and reg_a_hi now contains the high word.
+    // Merge them.
+    code->shld(reg_a_hi, reg_a_lo, 16);
+}
+
+void EmitX64::EmitPackedHalvingSubAddS16(IR::Block&, IR::Inst* inst) {
+    IR::Value a = inst->GetArg(0);
+    IR::Value b = inst->GetArg(1);
+
+    // If asx is true, the high word contains the sum and the low word the difference.
+    // If false, the high word contains the difference and the low word the sum.
+    bool asx = inst->GetArg(2).GetU1();
+
+    Xbyak::Reg32 reg_a_hi = reg_alloc.UseDefGpr(a, inst).cvt32();
+    Xbyak::Reg32 reg_b_hi = reg_alloc.UseScratchGpr(b).cvt32();
+    Xbyak::Reg32 reg_a_lo = reg_alloc.ScratchGpr().cvt32();
+    Xbyak::Reg32 reg_b_lo = reg_alloc.ScratchGpr().cvt32();
+
+    code->movsx(reg_a_lo, reg_a_hi.cvt16());
+    code->movsx(reg_b_lo, reg_b_hi.cvt16());
+    code->sar(reg_a_hi, 16);
+    code->sar(reg_b_hi, 16);
+
+    if (asx) {
+        // Calculate diff such that reg_a_lo<31:16> contains diff<16:1>.
+        code->sub(reg_a_lo, reg_b_hi);
+        code->shl(reg_a_lo, 15);
+
+        // Calculate sum such that reg_a_hi<15:0> contains sum<16:1>.
+        code->add(reg_a_hi, reg_b_lo);
+        code->shr(reg_a_hi, 1);
+    } else {
+        // Calculate sum such that reg_a_lo<31:16> contains sum<16:1>.
+        code->add(reg_a_lo, reg_b_hi);
+        code->shl(reg_a_lo, 15);
+
+        // Calculate diff such that reg_a_hi<15:0> contains diff<16:1>.
+        code->sub(reg_a_hi, reg_b_lo);
+        code->shr(reg_a_hi, 1);
+    }
+
+    // reg_a_lo now contains the low word and reg_a_hi now contains the high word.
+    // Merge them.
+    code->shld(reg_a_hi, reg_a_lo, 16);
+}
+
 static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, void (Xbyak::CodeGenerator::*fn)(const Xbyak::Mmx& mmx, const Xbyak::Operand&)) {
     IR::Value a = inst->GetArg(0);
     IR::Value b = inst->GetArg(1);

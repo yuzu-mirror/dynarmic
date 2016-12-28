@@ -258,13 +258,23 @@ bool ArmTranslatorVisitor::arm_SHADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_SHASX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingSubAddS16(ir.GetRegister(n), ir.GetRegister(m), true);
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SHSAX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingSubAddS16(ir.GetRegister(n), ir.GetRegister(m), false);
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SHSUB8(Cond cond, Reg n, Reg d, Reg m) {
@@ -308,13 +318,23 @@ bool ArmTranslatorVisitor::arm_UHADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UHASX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingSubAddU16(ir.GetRegister(n), ir.GetRegister(m), true);
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_UHSAX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedHalvingSubAddU16(ir.GetRegister(n), ir.GetRegister(m), false);
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_UHSUB8(Cond cond, Reg n, Reg d, Reg m) {

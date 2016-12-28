@@ -442,6 +442,14 @@ Value IREmitter::PackedHalvingSubS16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingSubS16, {a, b});
 }
 
+Value IREmitter::PackedHalvingSubAddU16(const Value& a, const Value& b, bool asx) {
+    return Inst(Opcode::PackedHalvingSubAddU16, {a, b, Imm1(asx)});
+}
+
+Value IREmitter::PackedHalvingSubAddS16(const Value& a, const Value& b, bool asx) {
+    return Inst(Opcode::PackedHalvingSubAddS16, {a, b, Imm1(asx)});
+}
+
 Value IREmitter::PackedSaturatedAddU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedSaturatedAddU8, {a, b});
 }

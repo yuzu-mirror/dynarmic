@@ -99,6 +99,8 @@ OPCODE(PackedHalvingAddU16,     T::U32,         T::U32,         T::U32          
 OPCODE(PackedHalvingAddS16,     T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingSubU16,     T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedHalvingSubS16,     T::U32,         T::U32,         T::U32                          )
+OPCODE(PackedHalvingSubAddU16,  T::U32,         T::U32,         T::U32,         T::U1           )
+OPCODE(PackedHalvingSubAddS16,  T::U32,         T::U32,         T::U32,         T::U1           )
 OPCODE(PackedSaturatedAddU8,    T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedAddS8,    T::U32,         T::U32,         T::U32                          )
 OPCODE(PackedSaturatedSubU8,    T::U32,         T::U32,         T::U32                          )
