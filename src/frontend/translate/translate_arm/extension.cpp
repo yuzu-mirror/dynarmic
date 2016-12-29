@@ -96,8 +96,16 @@ bool ArmTranslatorVisitor::arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 bool ArmTranslatorVisitor::arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
-    UNUSED(cond, n, d, rotate, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || m == Reg::PC || n == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto rotated = SignZeroExtendRor(m, rotate);
+        auto result = ir.And(rotated, ir.Imm32(0x00FF00FF));
+        auto reg_n = ir.GetRegister(n);
+        result = ir.PackedAddU16(reg_n, result).result;
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {

@@ -831,7 +831,7 @@ TEST_CASE("Fuzz ARM extension instructions", "[JitX64]") {
         InstructionGenerator("cccc011011001111ddddrr000111mmmm", is_valid),
         InstructionGenerator("cccc011011111111ddddrr000111mmmm", is_valid),
         InstructionGenerator("cccc01101110nnnnddddrr000111mmmm", is_valid),
-        InstructionGenerator("cccc01101100nnnnddddrr000111mmmm", is_valid),
+        InstructionGenerator("cccc01101100nnnnddddrr000111mmmm", is_valid), //UXTAB16
         InstructionGenerator("cccc01101111nnnnddddrr000111mmmm", is_valid),
     }};
 
