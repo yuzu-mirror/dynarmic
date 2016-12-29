@@ -50,7 +50,7 @@ constexpr bool Bit(const T value) {
 
 /// Extracts a single bit at bit_position from value of type T.
 template<typename T>
-constexpr bool Bit(size_t bit_position, const T value) {
+inline bool Bit(size_t bit_position, const T value) {
     ASSERT_MSG(bit_position < BitSize<T>(), "bit_position must be smaller than size of T");
 
     return ((value >> bit_position) & 1) != 0;
