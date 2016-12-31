@@ -28,6 +28,7 @@ public:
     explicit Value(u8 value);
     explicit Value(u32 value);
     explicit Value(u64 value);
+    explicit Value(std::array<u8, 8> value);
 
     bool IsEmpty() const;
     bool IsImmediate() const;
@@ -40,6 +41,7 @@ public:
     u8 GetU8() const;
     u32 GetU32() const;
     u64 GetU64() const;
+    std::array<u8, 8> GetCoprocInfo() const;
 
 private:
     Type type;
@@ -52,8 +54,10 @@ private:
         u8 imm_u8;
         u32 imm_u32;
         u64 imm_u64;
+        std::array<u8, 8> imm_coproc;
     } inner;
 };
+static_assert(sizeof(Value) <= 2 * sizeof(u64), "IR::Value should be kept small in size");
 
 } // namespace IR
 } // namespace Dynarmic

@@ -29,7 +29,7 @@ static const std::map<Opcode, Meta> opcode_info {{
 #define OPCODE(name, type, ...) { Opcode::name, { #name, type, { __VA_ARGS__ } } },
 #include "opcodes.inc"
 #undef OPCODE
-                                                 }};
+}};
 
 } // namespace OpcodeInfo
 
@@ -50,8 +50,8 @@ const char* GetNameOf(Opcode op) {
 }
 
 const char* GetNameOf(Type type) {
-    const static std::array<const char*, 11> names = {
-        "Void", "RegRef", "ExtRegRef", "Opaque", "U1", "U8", "U16", "U32", "U64", "F32", "F64"
+    const static std::array<const char*, 12> names = {
+        "Void", "RegRef", "ExtRegRef", "Opaque", "U1", "U8", "U16", "U32", "U64", "F32", "F64", "CoprocInfo"
     };
     return names.at(static_cast<size_t>(type));
 }
