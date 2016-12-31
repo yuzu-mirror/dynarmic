@@ -9,9 +9,11 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace Dynarmic {
 
+class Coprocessor;
 class Jit;
 
 /// These function pointers may be inserted into compiled code.
@@ -53,6 +55,9 @@ struct UserCallbacks {
     static constexpr std::size_t PAGE_BITS = 12;
     static constexpr std::size_t NUM_PAGE_TABLE_ENTRIES = 1 << (32 - PAGE_BITS);
     std::array<std::uint8_t*, NUM_PAGE_TABLE_ENTRIES>* page_table = nullptr;
+
+    // Coprocessors
+    std::array<std::shared_ptr<Coprocessor>, 16> coprocessors;
 };
 
 } // namespace Dynarmic

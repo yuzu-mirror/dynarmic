@@ -32,9 +32,11 @@ set(SRCS
     )
 
 set(HEADERS
-    ../include/dynarmic/dynarmic.h
     ../include/dynarmic/callbacks.h
+    ../include/dynarmic/coprocessor.h
+    ../include/dynarmic/coprocessor_util.h
     ../include/dynarmic/disassembler.h
+    ../include/dynarmic/dynarmic.h
     common/assert.h
     common/bit_util.h
     common/common_types.h
