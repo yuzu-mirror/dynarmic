@@ -10,6 +10,8 @@
 #include <string>
 #include <utility>
 
+#include <dynarmic/coprocessor_util.h>
+
 #include "common/assert.h"
 #include "common/common_types.h"
 
@@ -66,10 +68,12 @@ enum class SignExtendRotation {
 const char* CondToString(Cond cond, bool explicit_al = false);
 const char* RegToString(Reg reg);
 const char* ExtRegToString(ExtReg reg);
+const char* CoprocRegToString(CoprocReg reg);
 std::string RegListToString(RegList reg_list);
 
 std::ostream& operator<<(std::ostream& o, Reg reg);
 std::ostream& operator<<(std::ostream& o, ExtReg reg);
+std::ostream& operator<<(std::ostream& o, CoprocReg reg);
 std::ostream& operator<<(std::ostream& o, RegList reg_list);
 
 constexpr bool IsSingleExtReg(ExtReg reg) {

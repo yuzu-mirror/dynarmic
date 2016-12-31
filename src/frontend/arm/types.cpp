@@ -15,7 +15,7 @@ namespace Arm {
 
 const char* CondToString(Cond cond, bool explicit_al) {
     constexpr std::array<const char*, 15> cond_strs = {
-            "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc", "hi", "ls", "ge", "lt", "gt", "le", "al"
+        "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc", "hi", "ls", "ge", "lt", "gt", "le", "al"
     };
     return (!explicit_al && cond == Cond::AL) ? "" : cond_strs.at(static_cast<size_t>(cond));
 }
@@ -33,6 +33,13 @@ const char* ExtRegToString(ExtReg reg) {
         "s16", "s17", "s18", "s19", "s20", "s21", "s22", "s23", "s24", "s25", "s26", "s27", "s28", "s29", "s30", "s31",
         "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15",
         "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31",
+    };
+    return reg_strs.at(static_cast<size_t>(reg));
+}
+
+const char* CoprocRegToString(CoprocReg reg) {
+    constexpr std::array<const char*, 16> reg_strs = {
+        "c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15"
     };
     return reg_strs.at(static_cast<size_t>(reg));
 }
@@ -58,6 +65,11 @@ std::ostream& operator<<(std::ostream& o, Reg reg) {
 
 std::ostream& operator<<(std::ostream& o, ExtReg reg) {
     o << ExtRegToString(reg);
+    return o;
+}
+
+std::ostream& operator<<(std::ostream& o, CoprocReg reg) {
+    o << CoprocRegToString(reg);
     return o;
 }
 
