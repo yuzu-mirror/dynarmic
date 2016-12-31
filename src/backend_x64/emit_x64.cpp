@@ -3017,12 +3017,27 @@ void EmitX64::EmitCoprocSendOneWord(IR::Block&, IR::Inst* inst) {
     }
 
     auto action = coproc->CompileSendOneWord(two, opc1, CRn, CRm, opc2);
-    if (!action) {
+    switch (action.which()) {
+    case 0:
         EmitCoprocessorException();
         return;
-    }
+    case 1:
+        CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), nullptr, word);
+        return;
+    case 2: {
+        u32* destination_ptr = boost::get<u32*>(action);
 
-    CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), nullptr, word);
+        Xbyak::Reg32 reg_word = reg_alloc.UseGpr(word).cvt32();
+        Xbyak::Reg64 reg_destination_addr = reg_alloc.ScratchGpr();
+
+        code->mov(reg_destination_addr, reinterpret_cast<u64>(destination_ptr));
+        code->mov(code->dword[reg_destination_addr], reg_word);
+
+        return;
+    }
+    default:
+        ASSERT_MSG(false, "Unreachable");
+    }
 }
 
 void EmitX64::EmitCoprocSendTwoWords(IR::Block&, IR::Inst* inst) {
@@ -3043,13 +3058,31 @@ void EmitX64::EmitCoprocSendTwoWords(IR::Block&, IR::Inst* inst) {
     }
 
     auto action = coproc->CompileSendTwoWords(two, opc, CRm);
-    if (!action) {
+    switch (action.which()) {
+    case 0:
         EmitCoprocessorException();
         return;
-    }
+    case 1:
+        CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), nullptr, word1, word2);
+        return;
+    case 2: {
+        auto destination_ptrs = boost::get<std::array<u32*, 2>>(action);
 
-    CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), nullptr, word1, word2);
- }
+        Xbyak::Reg32 reg_word1 = reg_alloc.UseGpr(word1).cvt32();
+        Xbyak::Reg32 reg_word2 = reg_alloc.UseGpr(word2).cvt32();
+        Xbyak::Reg64 reg_destination_addr = reg_alloc.ScratchGpr();
+
+        code->mov(reg_destination_addr, reinterpret_cast<u64>(destination_ptrs[0]));
+        code->mov(code->dword[reg_destination_addr], reg_word1);
+        code->mov(reg_destination_addr, reinterpret_cast<u64>(destination_ptrs[1]));
+        code->mov(code->dword[reg_destination_addr], reg_word2);
+
+        return;
+    }
+    default:
+        ASSERT_MSG(false, "Unreachable");
+    }
+}
 
 void EmitX64::EmitCoprocGetOneWord(IR::Block&, IR::Inst* inst) {
     auto coproc_info = inst->GetArg(0).GetCoprocInfo();
@@ -3068,12 +3101,27 @@ void EmitX64::EmitCoprocGetOneWord(IR::Block&, IR::Inst* inst) {
     }
 
     auto action = coproc->CompileGetOneWord(two, opc1, CRn, CRm, opc2);
-    if (!action) {
+    switch (action.which()) {
+    case 0:
         EmitCoprocessorException();
         return;
-    }
+    case 1:
+        CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), inst);
+        return;
+    case 2: {
+        u32* source_ptr = boost::get<u32*>(action);
 
-    CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), inst);
+        Xbyak::Reg32 reg_word = reg_alloc.DefGpr(inst).cvt32();
+        Xbyak::Reg64 reg_source_addr = reg_alloc.ScratchGpr();
+
+        code->mov(reg_source_addr, reinterpret_cast<u64>(source_ptr));
+        code->mov(reg_word, code->dword[reg_source_addr]);
+
+        return;
+    }
+    default:
+        ASSERT_MSG(false, "Unreachable");
+    }
 }
 
 void EmitX64::EmitCoprocGetTwoWords(IR::Block&, IR::Inst* inst) {
@@ -3091,12 +3139,32 @@ void EmitX64::EmitCoprocGetTwoWords(IR::Block&, IR::Inst* inst) {
     }
 
     auto action = coproc->CompileGetTwoWords(two, opc, CRm);
-    if (!action) {
+    switch (action.which()) {
+    case 0:
         EmitCoprocessorException();
         return;
-    }
+    case 1:
+        CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), inst);
+        return;
+    case 2: {
+        auto source_ptrs = boost::get<std::array<u32*, 2>>(action);
 
-    CallCoprocCallback(code, reg_alloc, jit_interface, boost::get<Coprocessor::Callback>(action), inst);
+        Xbyak::Reg64 reg_result = reg_alloc.DefGpr(inst);
+        Xbyak::Reg64 reg_destination_addr = reg_alloc.ScratchGpr();
+        Xbyak::Reg64 reg_tmp = reg_alloc.ScratchGpr();
+
+        code->mov(reg_destination_addr, reinterpret_cast<u64>(source_ptrs[1]));
+        code->mov(reg_result.cvt32(), code->dword[reg_destination_addr]);
+        code->shl(reg_result, 32);
+        code->mov(reg_destination_addr, reinterpret_cast<u64>(source_ptrs[0]));
+        code->mov(reg_tmp.cvt32(), code->dword[reg_destination_addr]);
+        code->or_(reg_result, reg_tmp);
+
+        return;
+    }
+    default:
+        ASSERT_MSG(false, "Unreachable");
+    }
 }
 
 void EmitX64::EmitCoprocLoadWords(IR::Block&, IR::Inst* inst) {

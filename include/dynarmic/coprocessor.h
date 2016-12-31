@@ -37,6 +37,20 @@ public:
     };
 
     /**
+     * boost::blank: coprocessor exception will be compiled
+     * Callback: a call to the Callback will be compiled
+     * std::uint32_t*: a write/read to that memory address will be compiled
+     */
+    using CallbackOrAccessOneWord = boost::variant<boost::blank, Callback, std::uint32_t*>;
+
+    /**
+     * boost::blank: coprocessor exception will be compiled
+     * Callback: a call to the Callback will be compiled
+     * std::array<std::uint32_t*, 2>: a write/read to those memory addresses will be compiled
+     */
+    using CallbackOrAccessTwoWords = boost::variant<boost::blank, Callback, std::array<std::uint32_t*, 2>>;
+
+    /**
      * Called when compiling CDP or CDP2 for this coprocessor.
      * A return value of boost::none will cause a coprocessor exception to be compiled.
      * arg0, arg1 and return value of callback are ignored.
@@ -45,38 +59,38 @@ public:
 
     /**
      * Called when compiling MCR or MCR2 for this coprocessor.
-     * A return value of boost::none will cause a coprocessor exception to be compiled.
+     * A return value of boost::blank will cause a coprocessor exception to be compiled.
      * arg0 of the callback will contain the word sent to the coprocessor.
      * arg1 and return value of the callback are ignored.
      */
-    virtual boost::optional<Callback> CompileSendOneWord(bool two, unsigned opc1, CoprocReg CRn, CoprocReg CRm, unsigned opc2) = 0;
+    virtual CallbackOrAccessOneWord CompileSendOneWord(bool two, unsigned opc1, CoprocReg CRn, CoprocReg CRm, unsigned opc2) = 0;
 
     /**
      * Called when compiling MCRR or MCRR2 for this coprocessor.
-     * A return value of boost::none will cause a coprocessor exception to be compiled.
+     * A return value of boost::blank will cause a coprocessor exception to be compiled.
      * arg0 and arg1 of the callback will contain the words sent to the coprocessor.
      * The return value of the callback is ignored.
      */
-    virtual boost::optional<Callback> CompileSendTwoWords(bool two, unsigned opc, CoprocReg CRm) = 0;
+    virtual CallbackOrAccessTwoWords CompileSendTwoWords(bool two, unsigned opc, CoprocReg CRm) = 0;
 
     /**
      * Called when compiling MRC or MRC2 for this coprocessor.
-     * A return value of boost::none will cause a coprocessor exception to be compiled.
+     * A return value of boost::blank will cause a coprocessor exception to be compiled.
      * The return value of the callback should contain word from coprocessor.
      * The low word of the return value will be stored in Rt.
      * arg0 and arg1 of the callback are ignored.
      */
-    virtual boost::optional<Callback> CompileGetOneWord(bool two, unsigned opc1, CoprocReg CRn, CoprocReg CRm, unsigned opc2) = 0;
+    virtual CallbackOrAccessOneWord CompileGetOneWord(bool two, unsigned opc1, CoprocReg CRn, CoprocReg CRm, unsigned opc2) = 0;
 
     /**
      * Called when compiling MRRC or MRRC2 for this coprocessor.
-     * A return value of boost::none will cause a coprocessor exception to be compiled.
+     * A return value of boost::blank will cause a coprocessor exception to be compiled.
      * The return value of the callback should contain words from coprocessor.
      * The low word of the return value will be stored in Rt.
      * The high word of the return value will be stored in Rt2.
      * arg0 and arg1 of the callback are ignored.
      */
-    virtual boost::optional<Callback> CompileGetTwoWords(bool two, unsigned opc, CoprocReg CRm) = 0;
+    virtual CallbackOrAccessTwoWords CompileGetTwoWords(bool two, unsigned opc, CoprocReg CRm) = 0;
 
     /**
      * Called when compiling LDC or LDC2 for this coprocessor.
