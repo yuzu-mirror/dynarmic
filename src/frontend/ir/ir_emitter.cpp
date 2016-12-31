@@ -709,6 +709,80 @@ Value IREmitter::ExclusiveWriteMemory64(const Value& vaddr, const Value& value_l
     }
 }
 
+void IREmitter::CoprocInternalOperation(size_t coproc_no, bool two, size_t opc1, Arm::CoprocReg CRd, Arm::CoprocReg CRn, Arm::CoprocReg CRm, size_t opc2) {
+    ASSERT(coproc_no <= 15);
+    std::array<u8, 8> coproc_info{static_cast<u8>(coproc_no),
+                                  static_cast<u8>(two ? 1 : 0),
+                                  static_cast<u8>(opc1),
+                                  static_cast<u8>(CRd),
+                                  static_cast<u8>(CRn),
+                                  static_cast<u8>(CRm),
+                                  static_cast<u8>(opc2)};
+    Inst(Opcode::CoprocInternalOperation, {Value(coproc_info)});
+}
+
+void IREmitter::CoprocSendOneWord(size_t coproc_no, bool two, size_t opc1, Arm::CoprocReg CRn, Arm::CoprocReg CRm, size_t opc2, const Value& word) {
+    ASSERT(coproc_no <= 15);
+    std::array<u8, 8> coproc_info{static_cast<u8>(coproc_no),
+                                  static_cast<u8>(two ? 1 : 0),
+                                  static_cast<u8>(opc1),
+                                  static_cast<u8>(CRn),
+                                  static_cast<u8>(CRm),
+                                  static_cast<u8>(opc2)};
+    Inst(Opcode::CoprocSendOneWord, {Value(coproc_info), word});
+}
+
+void IREmitter::CoprocSendTwoWords(size_t coproc_no, bool two, size_t opc, Arm::CoprocReg CRm, const Value& word1, const Value& word2) {
+    ASSERT(coproc_no <= 15);
+    std::array<u8, 8> coproc_info{static_cast<u8>(coproc_no),
+                                  static_cast<u8>(two ? 1 : 0),
+                                  static_cast<u8>(opc),
+                                  static_cast<u8>(CRm)};
+    Inst(Opcode::CoprocSendTwoWords, {Value(coproc_info), word1, word2});
+}
+
+Value IREmitter::CoprocGetOneWord(size_t coproc_no, bool two, size_t opc1, Arm::CoprocReg CRn, Arm::CoprocReg CRm, size_t opc2) {
+    ASSERT(coproc_no <= 15);
+    std::array<u8, 8> coproc_info{static_cast<u8>(coproc_no),
+                                  static_cast<u8>(two ? 1 : 0),
+                                  static_cast<u8>(opc1),
+                                  static_cast<u8>(CRn),
+                                  static_cast<u8>(CRm),
+                                  static_cast<u8>(opc2)};
+    return Inst(Opcode::CoprocGetOneWord, {Value(coproc_info)});
+}
+
+Value IREmitter::CoprocGetTwoWords(size_t coproc_no, bool two, size_t opc, Arm::CoprocReg CRm) {
+    ASSERT(coproc_no <= 15);
+    std::array<u8, 8> coproc_info{static_cast<u8>(coproc_no),
+                                  static_cast<u8>(two ? 1 : 0),
+                                  static_cast<u8>(opc),
+                                  static_cast<u8>(CRm)};
+    return Inst(Opcode::CoprocGetTwoWords, {Value(coproc_info)});
+}
+
+void IREmitter::CoprocLoadWords(size_t coproc_no, bool two, bool long_transfer, Arm::CoprocReg CRd, const Value& address, bool has_option, u8 option) {
+    ASSERT(coproc_no <= 15);
+    std::array<u8, 8> coproc_info{static_cast<u8>(coproc_no),
+                                  static_cast<u8>(two ? 1 : 0),
+                                  static_cast<u8>(long_transfer ? 1 : 0),
+                                  static_cast<u8>(CRd),
+                                  static_cast<u8>(has_option ? 1 : 0),
+                                  static_cast<u8>(option)};
+    Inst(Opcode::CoprocLoadWords, {Value(coproc_info), address});
+}
+
+void IREmitter::CoprocStoreWords(size_t coproc_no, bool two, bool long_transfer, Arm::CoprocReg CRd, const Value& address, bool has_option, u8 option) {
+    ASSERT(coproc_no <= 15);
+    std::array<u8, 8> coproc_info{static_cast<u8>(coproc_no),
+                                  static_cast<u8>(two ? 1 : 0),
+                                  static_cast<u8>(long_transfer ? 1 : 0),
+                                  static_cast<u8>(CRd),
+                                  static_cast<u8>(has_option ? 1 : 0),
+                                  static_cast<u8>(option)};
+    Inst(Opcode::CoprocStoreWords, {Value(coproc_info), address});
+}
+
 void IREmitter::Breakpoint() {
     Inst(Opcode::Breakpoint, {});
 }

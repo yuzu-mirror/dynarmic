@@ -213,6 +213,22 @@ bool Inst::AltersExclusiveState() const {
            IsExclusiveMemoryWrite();
 }
 
+bool Inst::IsCoprocessorInstruction() const {
+    switch (op) {
+    case Opcode::CoprocInternalOperation:
+    case Opcode::CoprocSendOneWord:
+    case Opcode::CoprocSendTwoWords:
+    case Opcode::CoprocGetOneWord:
+    case Opcode::CoprocGetTwoWords:
+    case Opcode::CoprocLoadWords:
+    case Opcode::CoprocStoreWords:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 bool Inst::MayHaveSideEffects() const {
     return op == Opcode::PushRSB  ||
            CausesCPUException()   ||
@@ -220,7 +236,8 @@ bool Inst::MayHaveSideEffects() const {
            WritesToCPSR()         ||
            WritesToFPSCR()        ||
            AltersExclusiveState() ||
-           IsMemoryWrite();
+           IsMemoryWrite()        ||
+           IsCoprocessorInstruction();
 }
 
 void Inst::DecrementRemainingUses() {

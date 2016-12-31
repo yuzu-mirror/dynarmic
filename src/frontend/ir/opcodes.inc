@@ -158,3 +158,12 @@ OPCODE(ExclusiveWriteMemory8,   T::U32,         T::U32,         T::U8           
 OPCODE(ExclusiveWriteMemory16,  T::U32,         T::U32,         T::U16                          )
 OPCODE(ExclusiveWriteMemory32,  T::U32,         T::U32,         T::U32                          )
 OPCODE(ExclusiveWriteMemory64,  T::U32,         T::U32,         T::U32,         T::U32          )
+
+// Coprocessor
+OPCODE(CoprocInternalOperation, T::Void,        T::CoprocInfo                                   )
+OPCODE(CoprocSendOneWord,       T::Void,        T::CoprocInfo,  T::U32                          )
+OPCODE(CoprocSendTwoWords,      T::Void,        T::CoprocInfo,  T::U32,         T::U32          )
+OPCODE(CoprocGetOneWord,        T::U32,         T::CoprocInfo                                   )
+OPCODE(CoprocGetTwoWords,       T::U64,         T::CoprocInfo                                   )
+OPCODE(CoprocLoadWords,         T::Void,        T::CoprocInfo,  T::U32                          )
+OPCODE(CoprocStoreWords,        T::Void,        T::CoprocInfo,  T::U32                          )

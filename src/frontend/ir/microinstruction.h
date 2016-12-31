@@ -67,6 +67,9 @@ public:
     /// Determines whether or not this instruction alters memory-exclusivity.
     bool AltersExclusiveState() const;
 
+    /// Determines whether or not this instruction accesses a coprocessor.
+    bool IsCoprocessorInstruction() const;
+
     /// Determines whether or not this instruction causes a CPU exception.
     bool CausesCPUException() const;
 

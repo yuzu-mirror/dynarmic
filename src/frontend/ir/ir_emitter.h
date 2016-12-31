@@ -8,6 +8,8 @@
 
 #include <initializer_list>
 
+#include <dynarmic/coprocessor_util.h>
+
 #include "common/common_types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/location_descriptor.h"
@@ -212,6 +214,14 @@ public:
     Value ExclusiveWriteMemory16(const Value& vaddr, const Value& value);
     Value ExclusiveWriteMemory32(const Value& vaddr, const Value& value);
     Value ExclusiveWriteMemory64(const Value& vaddr, const Value& value_lo, const Value& value_hi);
+
+    void CoprocInternalOperation(size_t coproc_no, bool two, size_t opc1, Arm::CoprocReg CRd, Arm::CoprocReg CRn, Arm::CoprocReg CRm, size_t opc2);
+    void CoprocSendOneWord(size_t coproc_no, bool two, size_t opc1, Arm::CoprocReg CRn, Arm::CoprocReg CRm, size_t opc2, const Value& word);
+    void CoprocSendTwoWords(size_t coproc_no, bool two, size_t opc, Arm::CoprocReg CRm, const Value& word1, const Value& word2);
+    Value CoprocGetOneWord(size_t coproc_no, bool two, size_t opc1, Arm::CoprocReg CRn, Arm::CoprocReg CRm, size_t opc2);
+    Value CoprocGetTwoWords(size_t coproc_no, bool two, size_t opc, Arm::CoprocReg CRm);
+    void CoprocLoadWords(size_t coproc_no, bool two, bool long_transfer, Arm::CoprocReg CRd, const Value& address, bool has_option, u8 option);
+    void CoprocStoreWords(size_t coproc_no, bool two, bool long_transfer, Arm::CoprocReg CRd, const Value& address, bool has_option, u8 option);
 
     void Breakpoint();
 
