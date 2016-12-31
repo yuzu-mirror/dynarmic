@@ -103,6 +103,10 @@ public:
         return fmt::format("{}{}", dp_operation ? 'd' : 's', reg_num + 1);
     }
 
+    std::string CondOrTwo(Cond cond) {
+        return cond == Cond::NV ? "2" : CondToString(cond);
+    }
+
     // Branch instructions
     std::string arm_B(Cond cond, Imm24 imm24) {
         s32 offset = Common::SignExtend<26, s32>(imm24 << 2) + 8;
@@ -127,13 +131,53 @@ public:
     }
 
     // Coprocessor instructions
-    std::string arm_CDP() { return "cdp <unimplemented>"; }
-    std::string arm_LDC() { return "ldc <unimplemented>"; }
-    std::string arm_MCR() { return "mcr <unimplemented>"; }
-    std::string arm_MCRR() { return "mcrr <unimplemented>"; }
-    std::string arm_MRC() { return "mrc <unimplemented>"; }
-    std::string arm_MRRC() { return "mrrc <unimplemented>"; }
-    std::string arm_STC() { return "stc <unimplemented>"; }
+    std::string arm_CDP(Cond cond, size_t opc1, CoprocReg CRn, CoprocReg CRd, size_t coproc_no, size_t opc2, CoprocReg CRm) {
+        return fmt::format("cdp{} p{}, #{}, {}, {}, {}, #{}", CondToString(cond), coproc_no, opc1, CRd, CRn, CRm, opc2);
+    }
+
+    std::string arm_LDC(Cond cond, bool p, bool u, bool d, bool w, Reg n, CoprocReg CRd, size_t coproc_no, Imm8 imm8) {
+        const u32 imm32 = static_cast<u32>(imm8) << 2;
+        if (!p && !u && !d && !w)
+            return "<undefined>";
+        if (p)
+            return fmt::format("ldc{}{} {}, {}, [{}, #{}{}]{}", d ? "l" : "", CondOrTwo(cond), coproc_no, CRd, n, u ? "+" : "-", imm32, w ? "!" : "");
+        if (!p && w)
+            return fmt::format("ldc{}{} {}, {}, [{}], #{}{}", d ? "l" : "", CondOrTwo(cond), coproc_no, CRd, n, u ? "+" : "-", imm32);
+        if (!p && !w && u)
+            return fmt::format("ldc{}{} {}, {}, [{}], {}", d ? "l" : "", CondOrTwo(cond), coproc_no, CRd, n, imm8);
+        UNREACHABLE();
+        return "<internal error>";
+    }
+
+    std::string arm_MCR(Cond cond, size_t opc1, CoprocReg CRn, Reg t, size_t coproc_no, size_t opc2, CoprocReg CRm) {
+        return fmt::format("mcr{} p{}, #{}, {}, {}, {}, #{}", CondOrTwo(cond), coproc_no, opc1, t, CRn, CRm, opc2);
+    }
+
+    std::string arm_MCRR(Cond cond, Reg t2, Reg t, size_t coproc_no, size_t opc, CoprocReg CRm) {
+        return fmt::format("mcr{} p{}, #{}, {}, {}, {}", CondOrTwo(cond), coproc_no, opc, t, t2, CRm);
+    }
+
+    std::string arm_MRC(Cond cond, size_t opc1, CoprocReg CRn, Reg t, size_t coproc_no, size_t opc2, CoprocReg CRm) {
+        return fmt::format("mrc{} p{}, #{}, {}, {}, {}, #{}", CondOrTwo(cond), coproc_no, opc1, t, CRn, CRm, opc2);
+    }
+
+    std::string arm_MRRC(Cond cond, Reg t2, Reg t, size_t coproc_no, size_t opc, CoprocReg CRm) {
+        return fmt::format("mrrc{} p{}, #{}, {}, {}, {}", CondOrTwo(cond), coproc_no, opc, t, t2, CRm);
+    }
+
+    std::string arm_STC(Cond cond, bool p, bool u, bool d, bool w, Reg n, CoprocReg CRd, size_t coproc_no, Imm8 imm8) {
+        const u32 imm32 = static_cast<u32>(imm8) << 2;
+        if (!p && !u && !d && !w)
+            return "<undefined>";
+        if (p)
+            return fmt::format("stc{}{} {}, {}, [{}, #{}{}]{}", d ? "l" : "", CondOrTwo(cond), coproc_no, CRd, n, u ? "+" : "-", imm32, w ? "!" : "");
+        if (!p && w)
+            return fmt::format("stc{}{} {}, {}, [{}], #{}{}", d ? "l" : "", CondOrTwo(cond), coproc_no, CRd, n, u ? "+" : "-", imm32);
+        if (!p && !w && u)
+            return fmt::format("stc{}{} {}, {}, [{}], {}", d ? "l" : "", CondOrTwo(cond), coproc_no, CRd, n, imm8);
+        UNREACHABLE();
+        return "<internal error>";
+    }
 
     // Data processing instructions
     std::string arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8) {

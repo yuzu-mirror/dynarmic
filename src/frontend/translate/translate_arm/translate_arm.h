@@ -75,13 +75,13 @@ struct ArmTranslatorVisitor final {
     bool arm_BXJ(Cond cond, Reg m);
 
     // Coprocessor instructions
-    bool arm_CDP() { return InterpretThisInstruction(); }
-    bool arm_LDC() { return InterpretThisInstruction(); }
-    bool arm_MCR() { return InterpretThisInstruction(); }
-    bool arm_MCRR() { return InterpretThisInstruction(); }
-    bool arm_MRC() { return InterpretThisInstruction(); }
-    bool arm_MRRC() { return InterpretThisInstruction(); }
-    bool arm_STC() { return InterpretThisInstruction(); }
+    bool arm_CDP(Cond cond, size_t opc1, CoprocReg CRn, CoprocReg CRd, size_t coproc_no, size_t opc2, CoprocReg CRm);
+    bool arm_LDC(Cond cond, bool p, bool u, bool d, bool w, Reg n, CoprocReg CRd, size_t coproc_no, Imm8 imm8);
+    bool arm_MCR(Cond cond, size_t opc1, CoprocReg CRn, Reg t, size_t coproc_no, size_t opc2, CoprocReg CRm);
+    bool arm_MCRR(Cond cond, Reg t2, Reg t, size_t coproc_no, size_t opc, CoprocReg CRm);
+    bool arm_MRC(Cond cond, size_t opc1, CoprocReg CRn, Reg t, size_t coproc_no, size_t opc2, CoprocReg CRm);
+    bool arm_MRRC(Cond cond, Reg t2, Reg t, size_t coproc_no, size_t opc, CoprocReg CRm);
+    bool arm_STC(Cond cond, bool p, bool u, bool d, bool w, Reg n, CoprocReg CRd, size_t coproc_no, Imm8 imm8);
 
     // Data processing instructions
     bool arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm8 imm8);

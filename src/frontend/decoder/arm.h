@@ -40,20 +40,13 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
         INST(&V::arm_BXJ,         "BXJ",                 "cccc000100101111111111110010mmmm"), // v5J
 
         // Coprocessor instructions
-        INST(&V::arm_CDP,         "CDP2",                "11111110-------------------1----"), // v5
-        INST(&V::arm_CDP,         "CDP",                 "----1110-------------------0----"), // v2
-        INST(&V::arm_LDC,         "LDC2",                "1111110----1--------------------"), // v5
-        INST(&V::arm_LDC,         "LDC",                 "----110----1--------------------"), // v2
-        INST(&V::arm_MCR,         "MCR2",                "11111110---0---------------1----"), // v5
-        INST(&V::arm_MCR,         "MCR",                 "----1110---0---------------1----"), // v2
-        INST(&V::arm_MCRR,        "MCRR2",               "111111000100--------------------"), // v6
-        INST(&V::arm_MCRR,        "MCRR",                "----11000100--------------------"), // v5E
-        INST(&V::arm_MRC,         "MRC2",                "11111110---1---------------1----"), // v5
-        INST(&V::arm_MRC,         "MRC",                 "----1110---1---------------1----"), // v2
-        INST(&V::arm_MRRC,        "MRRC2",               "111111000101--------------------"), // v6
-        INST(&V::arm_MRRC,        "MRRC",                "----11000101--------------------"), // v5E
-        INST(&V::arm_STC,         "STC2",                "1111110----0--------------------"), // v5
-        INST(&V::arm_STC,         "STC",                 "----110----0--------------------"), // v2
+        INST(&V::arm_CDP,         "CDP",                 "cccc1110ooooNNNNDDDDppppooo0MMMM"), // v2  (CDP2:  v5)
+        INST(&V::arm_LDC,         "LDC",                 "cccc110pudw1nnnnDDDDppppvvvvvvvv"), // v2  (LDC2:  v5)
+        INST(&V::arm_MCR,         "MCR",                 "cccc1110ooo0NNNNttttppppooo1MMMM"), // v2  (MCR2:  v5)
+        INST(&V::arm_MCRR,        "MCRR",                "cccc11000100uuuuttttppppooooMMMM"), // v5E (MCRR2: v6)
+        INST(&V::arm_MRC,         "MRC",                 "cccc1110ooo1NNNNttttppppooo1MMMM"), // v2  (MRC2:  v5)
+        INST(&V::arm_MRRC,        "MRRC",                "cccc11000101uuuuttttppppooooMMMM"), // v5E (MRRC2: v6)
+        INST(&V::arm_STC,         "STC",                 "cccc110pudw0nnnnDDDDppppvvvvvvvv"), // v2  (STC2:  v5)
 
         // Data Processing instructions
         INST(&V::arm_ADC_imm,     "ADC (imm)",           "cccc0010101Snnnnddddrrrrvvvvvvvv"), // all
