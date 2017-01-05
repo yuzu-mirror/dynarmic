@@ -328,14 +328,6 @@ Value IREmitter::CountLeadingZeros(const Value& a) {
     return Inst(Opcode::CountLeadingZeros, {a});
 }
 
-Value IREmitter::NegateLowWord(const Value& a) {
-    return Inst(Opcode::NegateLowWord, {a});
-}
-
-Value IREmitter::NegateHighWord(const Value& a) {
-    return Inst(Opcode::NegateHighWord, {a});
-}
-
 IREmitter::ResultAndOverflow IREmitter::SignedSaturatedAdd(const Value& a, const Value& b) {
     auto result = Inst(Opcode::SignedSaturatedAdd, {a, b});
     auto overflow = Inst(Opcode::GetOverflowFromOp, {result});

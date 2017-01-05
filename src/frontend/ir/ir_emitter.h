@@ -133,8 +133,6 @@ public:
     Value ByteReverseHalf(const Value& a);
     Value ByteReverseDual(const Value& a);
     Value CountLeadingZeros(const Value& a);
-    Value NegateLowWord(const Value& a);
-    Value NegateHighWord(const Value& a);
 
     ResultAndOverflow SignedSaturatedAdd(const Value& a, const Value& b);
     ResultAndOverflow SignedSaturatedSub(const Value& a, const Value& b);

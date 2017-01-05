@@ -1275,26 +1275,6 @@ void EmitX64::EmitCountLeadingZeros(IR::Block&, IR::Inst* inst) {
     }
 }
 
-void EmitX64::EmitNegateLowWord(IR::Block&, IR::Inst* inst) {
-    IR::Value a = inst->GetArg(0);
-
-    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
-
-    code->ror(result, 16);
-    code->xor(result, 0xFFFF0000);
-    code->add(result, 0x00010000);
-    code->ror(result, 16);
-}
-
-void EmitX64::EmitNegateHighWord(IR::Block&, IR::Inst* inst) {
-    IR::Value a = inst->GetArg(0);
-
-    Xbyak::Reg32 result = reg_alloc.UseDefGpr(a, inst).cvt32();
-
-    code->xor(result, 0xFFFF0000);
-    code->add(result, 0x00010000);
-}
-
 void EmitX64::EmitSignedSaturatedAdd(IR::Block& block, IR::Inst* inst) {
     auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
