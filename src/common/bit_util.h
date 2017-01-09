@@ -12,10 +12,6 @@
 
 #include "common/assert.h"
 
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
-
 namespace Dynarmic {
 namespace Common {
 
