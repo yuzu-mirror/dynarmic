@@ -95,7 +95,7 @@ public:
 
     void Invalidate();
 
-    void ReplaceUsesWith(Value& replacement);
+    void ReplaceUsesWith(Value replacement);
 
 private:
     void Use(Value& value);

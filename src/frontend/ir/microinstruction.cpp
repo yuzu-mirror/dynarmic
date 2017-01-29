@@ -300,7 +300,7 @@ void Inst::Invalidate() {
     }
 }
 
-void Inst::ReplaceUsesWith(Value& replacement) {
+void Inst::ReplaceUsesWith(Value replacement) {
     Invalidate();
 
     op = Opcode::Identity;
