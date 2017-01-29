@@ -98,8 +98,8 @@ public:
     void ReplaceUsesWith(Value replacement);
 
 private:
-    void Use(Value& value);
-    void UndoUse(Value& value);
+    void Use(const Value& value);
+    void UndoUse(const Value& value);
 
     Opcode op;
     size_t use_count = 0;

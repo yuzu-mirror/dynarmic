@@ -312,7 +312,7 @@ void Inst::ReplaceUsesWith(Value replacement) {
     args[0] = replacement;
 }
 
-void Inst::Use(Value& value) {
+void Inst::Use(const Value& value) {
     value.GetInst()->use_count++;
 
     switch (op){
@@ -333,7 +333,7 @@ void Inst::Use(Value& value) {
     }
 }
 
-void Inst::UndoUse(Value& value) {
+void Inst::UndoUse(const Value& value) {
     value.GetInst()->use_count--;
 
     switch (op){
