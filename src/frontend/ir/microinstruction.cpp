@@ -4,6 +4,8 @@
  * General Public License version 2 or any later version.
  */
 
+#include <algorithm>
+
 #include "common/assert.h"
 #include "frontend/ir/microinstruction.h"
 
@@ -238,6 +240,10 @@ bool Inst::MayHaveSideEffects() const {
            AltersExclusiveState() ||
            IsMemoryWrite()        ||
            IsCoprocessorInstruction();
+}
+
+bool Inst::AreAllArgsImmediates() const {
+    return std::all_of(args.begin(), args.begin() + NumArgs(), [](const auto& value){ return value.IsImmediate(); });
 }
 
 void Inst::DecrementRemainingUses() {

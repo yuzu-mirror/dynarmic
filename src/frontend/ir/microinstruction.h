@@ -76,6 +76,9 @@ public:
     /// Determines whether or not this instruction may have side-effects.
     bool MayHaveSideEffects() const;
 
+    /// Determines if all arguments of this instruction are immediates.
+    bool AreAllArgsImmediates() const;
+
     size_t UseCount() const { return use_count; }
     bool HasUses() const { return use_count > 0; }
     void DecrementRemainingUses();
