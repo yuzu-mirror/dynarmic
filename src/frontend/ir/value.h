@@ -26,6 +26,7 @@ public:
     explicit Value(Arm::ExtReg value);
     explicit Value(bool value);
     explicit Value(u8 value);
+    explicit Value(u16 value);
     explicit Value(u32 value);
     explicit Value(u64 value);
     explicit Value(std::array<u8, 8> value);
@@ -39,6 +40,7 @@ public:
     Arm::ExtReg GetExtRegRef() const;
     bool GetU1() const;
     u8 GetU8() const;
+    u16 GetU16() const;
     u32 GetU32() const;
     u64 GetU64() const;
     std::array<u8, 8> GetCoprocInfo() const;
@@ -52,6 +54,7 @@ private:
         Arm::ExtReg imm_extregref;
         bool imm_u1;
         u8 imm_u8;
+        u16 imm_u16;
         u32 imm_u32;
         u64 imm_u64;
         std::array<u8, 8> imm_coproc;

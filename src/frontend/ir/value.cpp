@@ -31,6 +31,10 @@ Value::Value(u8 value) : type(Type::U8) {
     inner.imm_u8 = value;
 }
 
+Value::Value(u16 value) : type(Type::U16) {
+    inner.imm_u16 = value;
+}
+
 Value::Value(u32 value) : type(Type::U32) {
     inner.imm_u32 = value;
 }
@@ -91,6 +95,13 @@ u8 Value::GetU8() const {
         return inner.inst->GetArg(0).GetU8();
     DEBUG_ASSERT(type == Type::U8);
     return inner.imm_u8;
+}
+
+u16 Value::GetU16() const {
+    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+        return inner.inst->GetArg(0).GetU16();
+    DEBUG_ASSERT(type == Type::U16);
+    return inner.imm_u16;
 }
 
 u32 Value::GetU32() const {
