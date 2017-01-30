@@ -48,8 +48,8 @@ static void InterpreterFallback(u32 pc, Dynarmic::Jit* jit, void*) {
 
 static Dynarmic::UserCallbacks GetUserCallbacks() {
     Dynarmic::UserCallbacks user_callbacks{};
-    user_callbacks.MemoryRead32 = &MemoryRead32;
-    user_callbacks.MemoryReadCode = &MemoryReadCode;
+    user_callbacks.memory.Read32 = &MemoryRead32;
+    user_callbacks.memory.ReadCode = &MemoryReadCode;
     user_callbacks.InterpreterFallback = &InterpreterFallback;
     return user_callbacks;
 }

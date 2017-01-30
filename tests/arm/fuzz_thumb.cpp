@@ -118,16 +118,16 @@ static Dynarmic::UserCallbacks GetUserCallbacks() {
     Dynarmic::UserCallbacks user_callbacks{};
     user_callbacks.InterpreterFallback = &InterpreterFallback;
     user_callbacks.CallSVC = (void (*)(u32)) &Fail;
-    user_callbacks.IsReadOnlyMemory = &IsReadOnlyMemory;
-    user_callbacks.MemoryRead8 = &MemoryRead8;
-    user_callbacks.MemoryRead16 = &MemoryRead16;
-    user_callbacks.MemoryRead32 = &MemoryRead32;
-    user_callbacks.MemoryRead64 = &MemoryRead64;
-    user_callbacks.MemoryReadCode = &MemoryReadCode;
-    user_callbacks.MemoryWrite8 = &MemoryWrite8;
-    user_callbacks.MemoryWrite16 = &MemoryWrite16;
-    user_callbacks.MemoryWrite32 = &MemoryWrite32;
-    user_callbacks.MemoryWrite64 = &MemoryWrite64;
+    user_callbacks.memory.IsReadOnlyMemory = &IsReadOnlyMemory;
+    user_callbacks.memory.Read8 = &MemoryRead8;
+    user_callbacks.memory.Read16 = &MemoryRead16;
+    user_callbacks.memory.Read32 = &MemoryRead32;
+    user_callbacks.memory.Read64 = &MemoryRead64;
+    user_callbacks.memory.ReadCode = &MemoryReadCode;
+    user_callbacks.memory.Write8 = &MemoryWrite8;
+    user_callbacks.memory.Write16 = &MemoryWrite16;
+    user_callbacks.memory.Write32 = &MemoryWrite32;
+    user_callbacks.memory.Write64 = &MemoryWrite64;
     return user_callbacks;
 }
 

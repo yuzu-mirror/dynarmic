@@ -2866,35 +2866,35 @@ static void WriteMemory(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, 
 }
 
 void EmitX64::EmitReadMemory8(IR::Block&, IR::Inst* inst) {
-    ReadMemory(code, reg_alloc, inst, cb, 8, cb.MemoryRead8);
+    ReadMemory(code, reg_alloc, inst, cb, 8, cb.memory.Read8);
 }
 
 void EmitX64::EmitReadMemory16(IR::Block&, IR::Inst* inst) {
-    ReadMemory(code, reg_alloc, inst, cb, 16, cb.MemoryRead16);
+    ReadMemory(code, reg_alloc, inst, cb, 16, cb.memory.Read16);
 }
 
 void EmitX64::EmitReadMemory32(IR::Block&, IR::Inst* inst) {
-    ReadMemory(code, reg_alloc, inst, cb, 32, cb.MemoryRead32);
+    ReadMemory(code, reg_alloc, inst, cb, 32, cb.memory.Read32);
 }
 
 void EmitX64::EmitReadMemory64(IR::Block&, IR::Inst* inst) {
-    ReadMemory(code, reg_alloc, inst, cb, 64, cb.MemoryRead64);
+    ReadMemory(code, reg_alloc, inst, cb, 64, cb.memory.Read64);
 }
 
 void EmitX64::EmitWriteMemory8(IR::Block&, IR::Inst* inst) {
-    WriteMemory(code, reg_alloc, inst, cb, 8, cb.MemoryWrite8);
+    WriteMemory(code, reg_alloc, inst, cb, 8, cb.memory.Write8);
 }
 
 void EmitX64::EmitWriteMemory16(IR::Block&, IR::Inst* inst) {
-    WriteMemory(code, reg_alloc, inst, cb, 16, cb.MemoryWrite16);
+    WriteMemory(code, reg_alloc, inst, cb, 16, cb.memory.Write16);
 }
 
 void EmitX64::EmitWriteMemory32(IR::Block&, IR::Inst* inst) {
-    WriteMemory(code, reg_alloc, inst, cb, 32, cb.MemoryWrite32);
+    WriteMemory(code, reg_alloc, inst, cb, 32, cb.memory.Write32);
 }
 
 void EmitX64::EmitWriteMemory64(IR::Block&, IR::Inst* inst) {
-    WriteMemory(code, reg_alloc, inst, cb, 64, cb.MemoryWrite64);
+    WriteMemory(code, reg_alloc, inst, cb, 64, cb.memory.Write64);
 }
 
 template <typename FunctionPointer>
@@ -2920,15 +2920,15 @@ static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* ins
 }
 
 void EmitX64::EmitExclusiveWriteMemory8(IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, cb.MemoryWrite8);
+    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write8);
 }
 
 void EmitX64::EmitExclusiveWriteMemory16(IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, cb.MemoryWrite16);
+    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write16);
 }
 
 void EmitX64::EmitExclusiveWriteMemory32(IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, cb.MemoryWrite32);
+    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write32);
 }
 
 void EmitX64::EmitExclusiveWriteMemory64(IR::Block&, IR::Inst* inst) {
@@ -2952,7 +2952,7 @@ void EmitX64::EmitExclusiveWriteMemory64(IR::Block&, IR::Inst* inst) {
     code->mov(value.cvt32(), value.cvt32()); // zero extend to 64-bits
     code->shl(value_hi, 32);
     code->or_(value, value_hi);
-    code->CallFunction(cb.MemoryWrite64);
+    code->CallFunction(cb.memory.Write64);
     code->xor_(passed, passed);
     code->L(end);
 }

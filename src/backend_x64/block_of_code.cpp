@@ -124,56 +124,56 @@ void BlockOfCode::GenMemoryAccessors() {
     align();
     read_memory_8 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryRead8);
+    CallFunction(cb.memory.Read8);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 
     align();
     read_memory_16 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryRead16);
+    CallFunction(cb.memory.Read16);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 
     align();
     read_memory_32 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryRead32);
+    CallFunction(cb.memory.Read32);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 
     align();
     read_memory_64 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryRead64);
+    CallFunction(cb.memory.Read64);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 
     align();
     write_memory_8 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryWrite8);
+    CallFunction(cb.memory.Write8);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 
     align();
     write_memory_16 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryWrite16);
+    CallFunction(cb.memory.Write16);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 
     align();
     write_memory_32 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryWrite32);
+    CallFunction(cb.memory.Write32);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 
     align();
     write_memory_64 = getCurr<const void*>();
     ABI_PushCallerSaveRegistersAndAdjustStack(this);
-    CallFunction(cb.MemoryWrite64);
+    CallFunction(cb.memory.Write64);
     ABI_PopCallerSaveRegistersAndAdjustStack(this);
     ret();
 }
