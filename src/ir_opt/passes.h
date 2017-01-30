@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <dynarmic/callbacks.h>
+
 namespace Dynarmic {
 namespace IR {
 class Block;
@@ -16,6 +18,7 @@ namespace Dynarmic {
 namespace Optimization {
 
 void GetSetElimination(IR::Block& block);
+void ConstantPropagation(IR::Block& block, const UserCallbacks::Memory& memory_callbacks);
 void DeadCodeElimination(IR::Block& block);
 void VerificationPass(const IR::Block& block);
 

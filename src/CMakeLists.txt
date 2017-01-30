@@ -27,6 +27,7 @@ set(SRCS
     frontend/translate/translate_arm/synchronization.cpp
     frontend/translate/translate_arm/vfp2.cpp
     frontend/translate/translate_thumb.cpp
+    ir_opt/constant_propagation_pass.cpp
     ir_opt/dead_code_elimination_pass.cpp
     ir_opt/get_set_elimination_pass.cpp
     ir_opt/verification_pass.cpp
