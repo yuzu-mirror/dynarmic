@@ -19,7 +19,7 @@ class Jit;
 
 class Coprocessor {
 public:
-    virtual ~Coprocessor() = 0;
+    virtual ~Coprocessor() = default;
 
     using CoprocReg = Arm::CoprocReg;
 
