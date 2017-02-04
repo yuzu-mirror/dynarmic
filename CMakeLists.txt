@@ -1,10 +1,18 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(dynarmic CXX)
 
+# Determine if we're built as a subproject (using add_subdirectory)
+# or if this is the master project.
+set(MASTER_PROJECT OFF)
+if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  set(MASTER_PROJECT ON)
+endif()
+
 # Dynarmic project options
 option(DYNARMIC_USE_SYSTEM_BOOST "Use the system boost libraries" ON)
 option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
-option(DYNARMIC_TESTS "Build tests" ON)
+option(DYNARMIC_TESTS "Build tests" ${MASTER_PROJECT})
+option(DYNARMIC_WARNINGS_AS_ERRORS "Warnings as errors" ${MASTER_PROJECT})
 
 # Set hard requirements for C++
 set(CMAKE_CXX_STANDARD 14)
@@ -40,8 +48,12 @@ if (MSVC)
         /Zi
         /Zo
         /EHsc
-        /WX
         /DNOMINMAX)
+
+    if (DYNARMIC_WARNINGS_AS_ERRORS)
+        list(APPEND DYNARMIC_CXX_FLAGS
+             /WX)
+    endif()
 
     if (CMAKE_VS_PLATFORM_TOOLSET MATCHES "LLVM-vs[0-9]+")
         list(APPEND DYNARMIC_CXX_FLAGS
@@ -53,7 +65,6 @@ if (MSVC)
 else()
     set(DYNARMIC_CXX_FLAGS
         -Wall
-        -Werror
         -Wextra
         -Wcast-qual
         -pedantic
@@ -62,6 +73,11 @@ else()
         -Wno-unused-parameter
         -Wno-missing-braces
         -fno-operator-names)
+
+    if (DYNARMIC_WARNINGS_AS_ERRORS)
+        list(APPEND DYNARMIC_CXX_FLAGS
+             -Werror)
+    endif()
 
     if (ARCHITECTURE_x86_64)
         list(APPEND DYNARMIC_CXX_FLAGS
