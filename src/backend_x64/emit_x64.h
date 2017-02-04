@@ -54,7 +54,7 @@ public:
 
 private:
     // Microinstruction emitters
-#define OPCODE(name, type, ...) void Emit##name(IR::Block& block, IR::Inst* inst);
+#define OPCODE(name, type, ...) void Emit##name(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst);
 #include "frontend/ir/opcodes.inc"
 #undef OPCODE
 
@@ -86,9 +86,6 @@ private:
 
     // Global CPU information
     Xbyak::util::Cpu cpu_info;
-
-    // Per-block state
-    RegAlloc reg_alloc;
 
     // State
     BlockOfCode* code;
