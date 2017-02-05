@@ -17,177 +17,241 @@ static ExtReg ToExtReg(bool sz, size_t base, bool bit) {
     }
 }
 
-bool ArmTranslatorVisitor::vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
+template <typename FnT>
+bool ArmTranslatorVisitor::EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtReg m, const FnT& fn) {
+    // VFP register banks are 8 single-precision registers in size.
+    const size_t register_bank_size = sz ? 4 : 8;
 
+    if (!ir.current_location.FPSCR().Stride()) {
+        return UnpredictableInstruction();
+    }
+
+    size_t vector_length = ir.current_location.FPSCR().Len();
+    size_t vector_stride = *ir.current_location.FPSCR().Stride();
+
+    // Unpredictable case
+    if (vector_stride * vector_length > register_bank_size) {
+        return UnpredictableInstruction();
+    }
+
+    // Scalar case
+    if (vector_length == 1) {
+        if (vector_stride != 1)
+            return UnpredictableInstruction();
+
+        fn(d, n, m);
+        return true;
+    }
+
+    // The VFP register file is divided into banks each containing:
+    // * eight single-precision registers, or
+    // * four double-precision reigsters.
+    // VFP vector instructions access these registers in a circular manner.
+    const auto bank_increment = [register_bank_size](ExtReg reg, size_t stride) -> ExtReg {
+        size_t reg_number = static_cast<size_t>(reg);
+        size_t bank_index = reg_number % register_bank_size;
+        size_t bank_start = reg_number - bank_index;
+        size_t next_reg_number = bank_start + ((bank_index + stride) % register_bank_size);
+        return static_cast<ExtReg>(next_reg_number);
+    };
+
+    // The first and fifth banks in the register file are scalar banks.
+    // All the other banks are vector banks.
+    const auto belongs_to_scalar_bank = [](ExtReg reg) -> bool {
+        return (reg >= ExtReg::D0 && reg <= ExtReg::D3)
+            || (reg >= ExtReg::D16 && reg <= ExtReg::D19)
+            || (reg >= ExtReg::S0 && reg <= ExtReg::S7);
+    };
+
+    const bool d_is_scalar = belongs_to_scalar_bank(d);
+    const bool m_is_scalar = belongs_to_scalar_bank(m);
+
+    if (d_is_scalar) {
+        // If destination register is in a scalar bank, the operands and results are all scalars.
+        vector_length = 1;
+    }
+
+    for (size_t i = 0; i < vector_length; i++) {
+        fn(d, n, m);
+
+        d = bank_increment(d, vector_stride);
+        n = bank_increment(n, vector_stride);
+        if (!m_is_scalar)
+            m = bank_increment(m, vector_stride);
+    }
+
+    return true;
+}
+
+template <typename FnT>
+bool ArmTranslatorVisitor::EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg m, const FnT& fn) {
+    return EmitVfpVectorOperation(sz, d, ExtReg::S0, m, [fn](ExtReg d, ExtReg, ExtReg m){
+        fn(d, m);
+    });
+}
+
+bool ArmTranslatorVisitor::vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VADD.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPAdd64(reg_n, reg_m, true)
-                      : ir.FPAdd32(reg_n, reg_m, true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPAdd64(reg_n, reg_m, true)
+                          : ir.FPAdd32(reg_n, reg_m, true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VSUB.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPSub64(reg_n, reg_m, true)
-                      : ir.FPSub32(reg_n, reg_m, true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPSub64(reg_n, reg_m, true)
+                          : ir.FPSub32(reg_n, reg_m, true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VMUL.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPMul64(reg_n, reg_m, true)
-                      : ir.FPMul32(reg_n, reg_m, true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPMul64(reg_n, reg_m, true)
+                          : ir.FPMul32(reg_n, reg_m, true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VMLA.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto reg_d = ir.GetExtendedRegister(d);
-        auto result = sz
-                      ? ir.FPAdd64(reg_d, ir.FPMul64(reg_n, reg_m, true), true)
-                      : ir.FPAdd32(reg_d, ir.FPMul32(reg_n, reg_m, true), true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto reg_d = ir.GetExtendedRegister(d);
+            auto result = sz
+                          ? ir.FPAdd64(reg_d, ir.FPMul64(reg_n, reg_m, true), true)
+                          : ir.FPAdd32(reg_d, ir.FPMul32(reg_n, reg_m, true), true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VMLS.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto reg_d = ir.GetExtendedRegister(d);
-        auto result = sz
-                      ? ir.FPAdd64(reg_d, ir.FPNeg64(ir.FPMul64(reg_n, reg_m, true)), true)
-                      : ir.FPAdd32(reg_d, ir.FPNeg32(ir.FPMul32(reg_n, reg_m, true)), true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto reg_d = ir.GetExtendedRegister(d);
+            auto result = sz
+                          ? ir.FPAdd64(reg_d, ir.FPNeg64(ir.FPMul64(reg_n, reg_m, true)), true)
+                          : ir.FPAdd32(reg_d, ir.FPNeg32(ir.FPMul32(reg_n, reg_m, true)), true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VNMUL.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPNeg64(ir.FPMul64(reg_n, reg_m, true))
-                      : ir.FPNeg32(ir.FPMul32(reg_n, reg_m, true));
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPNeg64(ir.FPMul64(reg_n, reg_m, true))
+                          : ir.FPNeg32(ir.FPMul32(reg_n, reg_m, true));
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VNMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VNMLA.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto reg_d = ir.GetExtendedRegister(d);
-        auto result = sz
-                      ? ir.FPAdd64(ir.FPNeg64(reg_d), ir.FPNeg64(ir.FPMul64(reg_n, reg_m, true)), true)
-                      : ir.FPAdd32(ir.FPNeg32(reg_d), ir.FPNeg32(ir.FPMul32(reg_n, reg_m, true)), true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto reg_d = ir.GetExtendedRegister(d);
+            auto result = sz
+                          ? ir.FPAdd64(ir.FPNeg64(reg_d), ir.FPNeg64(ir.FPMul64(reg_n, reg_m, true)), true)
+                          : ir.FPAdd32(ir.FPNeg32(reg_d), ir.FPNeg32(ir.FPMul32(reg_n, reg_m, true)), true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VNMLS.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto reg_d = ir.GetExtendedRegister(d);
-        auto result = sz
-                      ? ir.FPAdd64(ir.FPNeg64(reg_d), ir.FPMul64(reg_n, reg_m, true), true)
-                      : ir.FPAdd32(ir.FPNeg32(reg_d), ir.FPMul32(reg_n, reg_m, true), true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto reg_d = ir.GetExtendedRegister(d);
+            auto result = sz
+                          ? ir.FPAdd64(ir.FPNeg64(reg_d), ir.FPMul64(reg_n, reg_m, true), true)
+                          : ir.FPAdd32(ir.FPNeg32(reg_d), ir.FPMul32(reg_n, reg_m, true), true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg n = ToExtReg(sz, Vn, N);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VDIV.{F32,F64} <{S,D}d>, <{S,D}n>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_n = ir.GetExtendedRegister(n);
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPDiv64(reg_n, reg_m, true)
-                      : ir.FPDiv32(reg_n, reg_m, true);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, n, m, [sz, this](ExtReg d, ExtReg n, ExtReg m) {
+            auto reg_n = ir.GetExtendedRegister(n);
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPDiv64(reg_n, reg_m, true)
+                          : ir.FPDiv32(reg_n, reg_m, true);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
@@ -297,65 +361,61 @@ bool ArmTranslatorVisitor::vfp2_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, 
 }
 
 bool ArmTranslatorVisitor::vfp2_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VMOV.{F32,F64} <{S,D}d>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        ir.SetExtendedRegister(d, ir.GetExtendedRegister(m));
+        return EmitVfpVectorOperation(sz, d, m, [this](ExtReg d, ExtReg m) {
+            ir.SetExtendedRegister(d, ir.GetExtendedRegister(m));
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VABS.{F32,F64} <{S,D}d>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPAbs64(reg_m)
-                      : ir.FPAbs32(reg_m);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, m, [sz, this](ExtReg d, ExtReg m) {
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPAbs64(reg_m)
+                          : ir.FPAbs32(reg_m);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VNEG.{F32,F64} <{S,D}d>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPNeg64(reg_m)
-                      : ir.FPNeg32(reg_m);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, m, [sz, this](ExtReg d, ExtReg m) {
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPNeg64(reg_m)
+                          : ir.FPNeg32(reg_m);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
 
 bool ArmTranslatorVisitor::vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
-    if (ir.current_location.FPSCR().Len() != 1 || ir.current_location.FPSCR().Stride() != boost::optional<size_t>{1})
-        return InterpretThisInstruction(); // TODO: Vectorised floating point instructions
-
     ExtReg d = ToExtReg(sz, Vd, D);
     ExtReg m = ToExtReg(sz, Vm, M);
     // VSQRT.{F32,F64} <{S,D}d>, <{S,D}m>
     if (ConditionPassed(cond)) {
-        auto reg_m = ir.GetExtendedRegister(m);
-        auto result = sz
-                      ? ir.FPSqrt64(reg_m)
-                      : ir.FPSqrt32(reg_m);
-        ir.SetExtendedRegister(d, result);
+        return EmitVfpVectorOperation(sz, d, m, [sz, this](ExtReg d, ExtReg m) {
+            auto reg_m = ir.GetExtendedRegister(m);
+            auto result = sz
+                          ? ir.FPSqrt64(reg_m)
+                          : ir.FPSqrt32(reg_m);
+            ir.SetExtendedRegister(d, result);
+        });
     }
     return true;
 }
