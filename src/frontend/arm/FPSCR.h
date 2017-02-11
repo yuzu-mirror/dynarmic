@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
+
 #include "common/bit_util.h"
 #include "common/common_types.h"
 
@@ -83,12 +85,19 @@ public:
     }
 
     /// Indicates the stride of a vector.
-    u32 Stride() const {
-        return Common::Bits<20, 21>(value) + 1;
+    boost::optional<size_t> Stride() const {
+        switch (Common::Bits<20, 21>(value)) {
+        case 0b00:
+            return 1;
+        case 0b11:
+            return 2;
+        default:
+            return boost::none;
+        }
     }
 
     /// Indicates the length of a vector.
-    u32 Len() const {
+    size_t Len() const {
         return Common::Bits<16, 18>(value) + 1;
     }
 
