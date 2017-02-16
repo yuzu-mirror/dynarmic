@@ -41,50 +41,38 @@ bool ArmTranslatorVisitor::arm_STRT() {
     ASSERT_MSG(false, "System instructions unimplemented");
 }
 
-static IR::Value GetAddressingMode(IR::IREmitter& ir, bool P, bool U, bool W, Reg n, IR::Value index) {
-    IR::Value address;
-    if (P) {
-        // Pre-indexed addressing
-        if (n == Reg::PC && index.IsImmediate()) {
-            address = U ? ir.Imm32(ir.AlignPC(4) + index.GetU32()) : ir.Imm32(ir.AlignPC(4) - index.GetU32());
-        } else {
-            address = U ? ir.Add(ir.GetRegister(n), index) : ir.Sub(ir.GetRegister(n), index);
-        }
+static IR::Value GetAddress(IR::IREmitter& ir, bool P, bool U, bool W, Reg n, IR::Value offset) {
+    const bool index = P;
+    const bool add = U;
+    const bool wback = !P || W;
 
-        // Wrote calculated address back to the base register
-        if (W) {
-            ir.SetRegister(n, address);
-        }
-    } else {
-        // Post-indexed addressing
-        address = (n == Reg::PC) ? ir.Imm32(ir.AlignPC(4)) : ir.GetRegister(n);
+    const auto offset_addr = add ? ir.Add(ir.GetRegister(n), offset) : ir.Sub(ir.GetRegister(n), offset);
+    const auto address = index ? offset_addr : ir.GetRegister(n);
 
-        if (U) {
-            ir.SetRegister(n, ir.Add(ir.GetRegister(n), index));
-        } else {
-            ir.SetRegister(n, ir.Sub(ir.GetRegister(n), index));
-        }
-
-        // TODO(bunnei): Handle W=1 mode, which in this scenario does an unprivileged (User mode) access.
+    if (wback) {
+        ir.SetRegister(n, offset_addr);
     }
+
     return address;
 }
 
 bool ArmTranslatorVisitor::arm_LDR_lit(Cond cond, bool U, Reg t, Imm12 imm12) {
-    bool P = true, W = false;
+    const bool add = U;
 
+    // LDR <Rt>, [PC, #+/-<imm>]
     if (ConditionPassed(cond)) {
-        const auto data = ir.ReadMemory32(GetAddressingMode(ir, P, U, W, Reg::PC, ir.Imm32(imm12)));
+        const u32 base = ir.AlignPC(4);
+        const u32 address = add ? (base + imm12) : (base - imm12);
+        const auto data = ir.ReadMemory32(ir.Imm32(address));
 
         if (t == Reg::PC) {
-            ir.BXWritePC(data);
+            ir.LoadWritePC(data);
             ir.SetTerm(IR::Term::ReturnToDispatch{});
             return false;
         }
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -95,11 +83,17 @@ bool ArmTranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n,
     if ((!P || W) && n == t)
         return UnpredictableInstruction();
 
+    const u32 imm32 = imm12;
+
+    // LDR <Rt>, [<Rn>, #+/-<imm>]{!}
+    // LDR <Rt>, [<Rn>], #+/-<imm>
     if (ConditionPassed(cond)) {
-        const auto data = ir.ReadMemory32(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12)));
+        const auto offset = ir.Imm32(imm32);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.ReadMemory32(address);
 
         if (t == Reg::PC) {
-            ir.BXWritePC(data);
+            ir.LoadWritePC(data);
             if (!P && W && n == Reg::R13)
                 ir.SetTerm(IR::Term::PopRSBHint{});
             else
@@ -109,7 +103,6 @@ bool ArmTranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n,
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -120,19 +113,21 @@ bool ArmTranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n,
     if ((!P || W) && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // LDR <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // LDR <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
-        const auto data = ir.ReadMemory32(GetAddressingMode(ir, P, U, W, n, shifted.result));
+        const auto offset = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag()).result;
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.ReadMemory32(address);
 
         if (t == Reg::PC) {
-            ir.BXWritePC(data);
+            ir.LoadWritePC(data);
             ir.SetTerm(IR::Term::ReturnToDispatch{});
             return false;
         }
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -140,19 +135,17 @@ bool ArmTranslatorVisitor::arm_LDRB_lit(Cond cond, bool U, Reg t, Imm12 imm12) {
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    bool P = true, W = false;
-    if (ConditionPassed(cond)) {
-        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, Reg::PC, ir.Imm32(imm12))));
+    const u32 imm32 = imm12;
+    const bool add = U;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRB <Rt>, [PC, #+/-<imm>]
+    if (ConditionPassed(cond)) {
+        const u32 base = ir.AlignPC(4);
+        const u32 address = add ? (base + imm32) : (base - imm32);
+        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(ir.Imm32(address)));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -165,18 +158,17 @@ bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    if (ConditionPassed(cond)) {
-        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12))));
+    const u32 imm32 = imm12;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRB <Rt>, [<Rn>, #+/-<imm>]{!}
+    // LDRB <Rt>, [<Rn>], #+/-<imm>
+    if (ConditionPassed(cond)) {
+        const auto offset = ir.Imm32(imm32);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -187,19 +179,15 @@ bool ArmTranslatorVisitor::arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n
     if ((!P || W) && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // LDRB <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // LDRB <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
-        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, shifted.result)));
-
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+        const auto offset = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag()).result;
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.ZeroExtendByteToWord(ir.ReadMemory8(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -209,43 +197,20 @@ bool ArmTranslatorVisitor::arm_LDRD_lit(Cond cond, bool U, Reg t, Imm4 imm8a, Im
     if (t+1 == Reg::PC)
         return UnpredictableInstruction();
 
-    bool P = true, W = false;
+    const Reg t2 = t+1;
+    const u32 imm32 = (imm8a << 4) | imm8b;
+    const bool add = U;
+
+    // LDRD <Rt>, <Rt2>, [PC, #+/-<imm>]
     if (ConditionPassed(cond)) {
-        const auto address_a = GetAddressingMode(ir, P, U, W, Reg::PC, ir.Imm32(imm8a << 4 | imm8b));
-        const auto address_b = ir.Add(address_a, ir.Imm32(4));
-        auto data_a = ir.ReadMemory32(address_a);
-        auto data_b = ir.ReadMemory32(address_b);
+        const u32 base = ir.AlignPC(4);
+        const u32 address = add ? (base + imm32) : (base - imm32);
+        const auto data_a = ir.ReadMemory32(ir.Imm32(address));
+        const auto data_b = ir.ReadMemory32(ir.Imm32(address + 4));
 
-        switch (t) {
-        case Reg::PC:
-            data_a = ir.Add(data_a, ir.Imm32(4));
-            break;
-        case Reg::LR:
-            data_b = ir.Add(data_b, ir.Imm32(4));
-            break;
-        default:
-            break;
-        }
-
-        if (t == Reg::PC) {
-            ir.ALUWritePC(data_a);
-        } else {
-            ir.SetRegister(t, data_a);
-        }
-
-        const Reg reg_b = static_cast<Reg>(std::min(t + 1, Reg::R15));
-        if (reg_b == Reg::PC) {
-            ir.ALUWritePC(data_b);
-        } else {
-            ir.SetRegister(reg_b, data_b);
-        }
-
-        if (t == Reg::PC || reg_b == Reg::PC) {
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+        ir.SetRegister(t, data_a);
+        ir.SetRegister(t2, data_b);
     }
-
     return true;
 }
 
@@ -261,42 +226,21 @@ bool ArmTranslatorVisitor::arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n
     if (t+1 == Reg::PC)
         return UnpredictableInstruction();
 
+    const Reg t2 = t+1;
+    const u32 imm32 = (imm8a << 4) | imm8b;
+
+    // LDRD <Rt>, [<Rn>, #+/-<imm>]{!}
+    // LDRD <Rt>, [<Rn>], #+/-<imm>
     if (ConditionPassed(cond)) {
-        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
+        const auto offset = ir.Imm32(imm32);
+        const auto address_a = GetAddress(ir, P, U, W, n, offset);
         const auto address_b = ir.Add(address_a, ir.Imm32(4));
-        auto data_a = ir.ReadMemory32(address_a);
-        auto data_b = ir.ReadMemory32(address_b);
+        const auto data_a = ir.ReadMemory32(address_a);
+        const auto data_b = ir.ReadMemory32(address_b);
 
-        switch (t) {
-        case Reg::PC:
-            data_a = ir.Add(data_a, ir.Imm32(4));
-            break;
-        case Reg::LR:
-            data_b = ir.Add(data_b, ir.Imm32(4));
-            break;
-        default:
-            break;
-        }
-
-        if (t == Reg::PC) {
-            ir.ALUWritePC(data_a);
-        } else {
-            ir.SetRegister(t, data_a);
-        }
-
-        const Reg reg_b = static_cast<Reg>(std::min(t + 1, Reg::R15));
-        if (reg_b == Reg::PC) {
-            ir.ALUWritePC(data_b);
-        } else {
-            ir.SetRegister(reg_b, data_b);
-        }
-
-        if (t == Reg::PC || reg_b == Reg::PC) {
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+        ir.SetRegister(t, data_a);
+        ir.SetRegister(t2, data_b);
     }
-
     return true;
 }
 
@@ -310,42 +254,20 @@ bool ArmTranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n
     if ((!P || W) && (n == Reg::PC || n == t || n == t+1))
         return UnpredictableInstruction();
 
+    const Reg t2 = t+1;
+
+    // LDRD <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // LDRD <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
+        const auto offset = ir.GetRegister(m);
+        const auto address_a = GetAddress(ir, P, U, W, n, offset);
         const auto address_b = ir.Add(address_a, ir.Imm32(4));
-        auto data_a = ir.ReadMemory32(address_a);
-        auto data_b = ir.ReadMemory32(address_b);
+        const auto data_a = ir.ReadMemory32(address_a);
+        const auto data_b = ir.ReadMemory32(address_b);
 
-        switch (t) {
-        case Reg::PC:
-            data_a = ir.Add(data_a, ir.Imm32(4));
-            break;
-        case Reg::LR:
-            data_b = ir.Add(data_b, ir.Imm32(4));
-            break;
-        default:
-            break;
-        }
-
-        if (t == Reg::PC) {
-            ir.ALUWritePC(data_a);
-        } else {
-            ir.SetRegister(t, data_a);
-        }
-
-        const Reg reg_b = static_cast<Reg>(std::min(t + 1, Reg::R15));
-        if (reg_b == Reg::PC) {
-            ir.ALUWritePC(data_b);
-        } else {
-            ir.SetRegister(reg_b, data_b);
-        }
-
-        if (t == Reg::PC || reg_b == Reg::PC) {
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+        ir.SetRegister(t, data_a);
+        ir.SetRegister(t2, data_b);
     }
-
     return true;
 }
 
@@ -356,18 +278,17 @@ bool ArmTranslatorVisitor::arm_LDRH_lit(Cond cond, bool P, bool U, bool W, Reg t
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    if (ConditionPassed(cond)) {
-        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, Reg::PC, ir.Imm32(imm8a << 4 | imm8b))));
+    const u32 imm32 = (imm8a << 4) | imm8b;
+    const bool add = U;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRH <Rt>, [PC, #-/+<imm>]
+    if (ConditionPassed(cond)) {
+        const u32 base = ir.AlignPC(4);
+        const u32 address = add ? (base + imm32) : (base - imm32);
+        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(ir.Imm32(address)));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -380,18 +301,17 @@ bool ArmTranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    if (ConditionPassed(cond)) {
-        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b))));
+    const u32 imm32 = (imm8a << 4) | imm8b;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRH <Rt>, [<Rn>, #+/-<imm>]{!}
+    // LDRH <Rt>, [<Rn>], #+/-<imm>
+    if (ConditionPassed(cond)) {
+        const auto offset = ir.Imm32(imm32);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -402,18 +322,15 @@ bool ArmTranslatorVisitor::arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n
     if ((!P || W) && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // LDRH <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // LDRH <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m))));
-
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+        const auto offset = ir.GetRegister(m);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.ZeroExtendHalfToWord(ir.ReadMemory16(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -421,19 +338,17 @@ bool ArmTranslatorVisitor::arm_LDRSB_lit(Cond cond, bool U, Reg t, Imm4 imm8a, I
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    bool P = true, W = false;
-    if (ConditionPassed(cond)) {
-        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, Reg::PC, ir.Imm32(imm8a << 4 | imm8b))));
+    const u32 imm32 = (imm8a << 4) | imm8b;
+    const bool add = U;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRSB <Rt>, [PC, #+/-<imm>]
+    if (ConditionPassed(cond)) {
+        const u32 base = ir.AlignPC(4);
+        const u32 address = add ? (base + imm32) : (base - imm32);
+        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(ir.Imm32(address)));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -446,18 +361,17 @@ bool ArmTranslatorVisitor::arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg 
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    if (ConditionPassed(cond)) {
-        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b))));
+    const u32 imm32 = (imm8a << 4) | imm8b;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRSB <Rt>, [<Rn>, #+/-<imm>]{!}
+    // LDRSB <Rt>, [<Rn>], #+/-<imm>
+    if (ConditionPassed(cond)) {
+        const auto offset = ir.Imm32(imm32);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -468,18 +382,15 @@ bool ArmTranslatorVisitor::arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg 
     if ((!P || W) && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // LDRSB <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // LDRSB <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m))));
-
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+        const auto offset = ir.GetRegister(m);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.SignExtendByteToWord(ir.ReadMemory8(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -487,19 +398,17 @@ bool ArmTranslatorVisitor::arm_LDRSH_lit(Cond cond, bool U, Reg t, Imm4 imm8a, I
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    bool P = true, W = false;
-    if (ConditionPassed(cond)) {
-        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, Reg::PC, ir.Imm32(imm8a << 4 | imm8b))));
+    const u32 imm32 = (imm8a << 4) | imm8b;
+    const bool add = U;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRSH <Rt>, [PC, #-/+<imm>]
+    if (ConditionPassed(cond)) {
+        const u32 base = ir.AlignPC(4);
+        const u32 address = add ? (base + imm32) : (base - imm32);
+        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(ir.Imm32(address)));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -512,18 +421,17 @@ bool ArmTranslatorVisitor::arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg 
     if (t == Reg::PC)
         return UnpredictableInstruction();
 
-    if (ConditionPassed(cond)) {
-        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b))));
+    const u32 imm32 = (imm8a << 4) | imm8b;
 
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+    // LDRSH <Rt>, [<Rn>, #+/-<imm>]{!}
+    // LDRSH <Rt>, [<Rn>], #+/-<imm>
+    if (ConditionPassed(cond)) {
+        const auto offset = ir.Imm32(imm32);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -534,18 +442,15 @@ bool ArmTranslatorVisitor::arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg 
     if ((!P || W) && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // LDRSH <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // LDRSH <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m))));
-
-        if (t == Reg::PC) {
-            ir.ALUWritePC(ir.Add(data, ir.Imm32(4)));
-            ir.SetTerm(IR::Term::ReturnToDispatch{});
-            return false;
-        }
+        const auto offset = ir.GetRegister(m);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        const auto data = ir.SignExtendHalfToWord(ir.ReadMemory16(address));
 
         ir.SetRegister(t, data);
     }
-
     return true;
 }
 
@@ -553,11 +458,13 @@ bool ArmTranslatorVisitor::arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n,
     if (W && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // STR <Rt>, [<Rn>, #+/-<imm>]{!}
+    // STR <Rt>, [<Rn>], #+/-<imm>
     if (ConditionPassed(cond)) {
-        const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12));
+        const auto offset = ir.Imm32(imm12);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
         ir.WriteMemory32(address, ir.GetRegister(t));
     }
-
     return true;
 }
 
@@ -568,12 +475,13 @@ bool ArmTranslatorVisitor::arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n,
     if (W && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // STR <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // STR <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
-        const auto address = GetAddressingMode(ir, P, U, W, n, shifted.result);
+        const auto offset = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag()).result;
+        const auto address = GetAddress(ir, P, U, W, n, offset);
         ir.WriteMemory32(address, ir.GetRegister(t));
     }
-
     return true;
 }
 
@@ -584,12 +492,13 @@ bool ArmTranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n
     if (W && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // STRB <Rt>, [<Rn>, #+/-<imm>]{!}
+    // STRB <Rt>, [<Rn>], #+/-<imm>
     if (ConditionPassed(cond)) {
-        const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm12));
-        const auto value = (t == Reg::PC) ? ir.Imm8(static_cast<u8>(ir.PC() - 8)) : ir.GetRegister(t);
-        ir.WriteMemory8(address, ir.LeastSignificantByte(value));
+        const auto offset = ir.Imm32(imm12);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        ir.WriteMemory8(address, ir.LeastSignificantByte(ir.GetRegister(t)));
     }
-
     return true;
 }
 
@@ -600,47 +509,47 @@ bool ArmTranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n
     if (W && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // STRB <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // STRB <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto shifted = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag());
-        const auto address = GetAddressingMode(ir, P, U, W, n, shifted.result);
-        const auto value = (t == Reg::PC) ? ir.Imm8(static_cast<u8>(ir.PC() - 8)) : ir.GetRegister(t);
-        ir.WriteMemory8(address, ir.LeastSignificantByte(value));
+        const auto offset = EmitImmShift(ir.GetRegister(m), shift, imm5, ir.GetCFlag()).result;
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        ir.WriteMemory8(address, ir.LeastSignificantByte(ir.GetRegister(t)));
     }
-
     return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
     if (size_t(t) % 2 != 0)
         return UnpredictableInstruction();
-
     if (!P && W)
         return UnpredictableInstruction();
 
+    const u32 imm32 = imm8a << 4 | imm8b;
     const Reg t2 = t + 1;
 
     if (W && (n == Reg::PC || n == t || n == t2))
         return UnpredictableInstruction();
-
     if (t2 == Reg::PC)
         return UnpredictableInstruction();
 
+    // STRD <Rt>, [<Rn>, #+/-<imm>]{!}
+    // STRD <Rt>, [<Rn>], #+/-<imm>
     if (ConditionPassed(cond)) {
-        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
+        const auto offset = ir.Imm32(imm32);
+        const auto address_a = GetAddress(ir, P, U, W, n, offset);
         const auto address_b = ir.Add(address_a, ir.Imm32(4));
         const auto value_a = ir.GetRegister(t);
         const auto value_b = ir.GetRegister(t2);
         ir.WriteMemory32(address_a, value_a);
         ir.WriteMemory32(address_b, value_b);
     }
-
     return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     if (size_t(t) % 2 != 0)
         return UnpredictableInstruction();
-
     if (!P && W)
         return UnpredictableInstruction();
 
@@ -648,51 +557,54 @@ bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n
 
     if (t2 == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
-
     if (W && (n == Reg::PC || n == t || n == t2))
         return UnpredictableInstruction();
 
+    // STRD <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // STRD <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto address_a = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
+        const auto offset = ir.GetRegister(m);
+        const auto address_a = GetAddress(ir, P, U, W, n, offset);
         const auto address_b = ir.Add(address_a, ir.Imm32(4));
         const auto value_a = ir.GetRegister(t);
         const auto value_b = ir.GetRegister(t2);
         ir.WriteMemory32(address_a, value_a);
         ir.WriteMemory32(address_b, value_b);
     }
-
     return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm4 imm8a, Imm4 imm8b) {
     if (t == Reg::PC)
         return UnpredictableInstruction();
-
     if (W && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
-    if (ConditionPassed(cond)) {
-        const auto address = GetAddressingMode(ir, P, U, W, n, ir.Imm32(imm8a << 4 | imm8b));
-        const auto value = (t == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(t);
-        ir.WriteMemory16(address, ir.LeastSignificantHalf(value));
-    }
+    const u32 imm32 = imm8a << 4 | imm8b;
 
+    // STRH <Rt>, [<Rn>, #+/-<imm>]{!}
+    // STRH <Rt>, [<Rn>], #+/-<imm>
+    if (ConditionPassed(cond)) {
+        const auto offset = ir.Imm32(imm32);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        ir.WriteMemory16(address, ir.LeastSignificantHalf(ir.GetRegister(t)));
+    }
     return true;
 }
 
 bool ArmTranslatorVisitor::arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     if (t == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
-
     if (W && (n == Reg::PC || n == t))
         return UnpredictableInstruction();
 
+    // STRH <Rt>, [<Rn>, #+/-<Rm>]{!}
+    // STRH <Rt>, [<Rn>], #+/-<Rm>
     if (ConditionPassed(cond)) {
-        const auto address = GetAddressingMode(ir, P, U, W, n, ir.GetRegister(m));
-        const auto value = (t == Reg::PC) ? ir.Imm32(ir.PC() - 8) : ir.GetRegister(t);
-        ir.WriteMemory16(address, ir.LeastSignificantHalf(value));
+        const auto offset = ir.GetRegister(m);
+        const auto address = GetAddress(ir, P, U, W, n, offset);
+        ir.WriteMemory16(address, ir.LeastSignificantHalf(ir.GetRegister(t)));
     }
-
     return true;
 }
 
