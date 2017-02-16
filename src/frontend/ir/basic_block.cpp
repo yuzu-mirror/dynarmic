@@ -35,6 +35,14 @@ LocationDescriptor Block::Location() const {
     return location;
 }
 
+LocationDescriptor Block::EndLocation() const {
+    return end_location;
+}
+
+void Block::SetEndLocation(const LocationDescriptor& descriptor) {
+    end_location = descriptor;
+}
+
 Arm::Cond Block::GetCondition() const {
     return cond;
 }

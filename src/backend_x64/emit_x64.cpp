@@ -12,8 +12,10 @@
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/emit_x64.h"
 #include "backend_x64/jitstate.h"
+#include "common/address_range.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
+#include "common/common_types.h"
 #include "common/variant_util.h"
 #include "frontend/arm/types.h"
 #include "frontend/ir/basic_block.h"
@@ -74,8 +76,9 @@ EmitX64::EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface)
 
 EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
     code->align();
-    const u8* const emitted_code_start_ptr = code->getCurr();
+    const u8* const entrypoint = code->getCurr();
 
+    // Start emitting.
     EmitCondPrelude(block);
 
     RegAlloc reg_alloc{code};
@@ -108,11 +111,12 @@ EmitX64::BlockDescriptor EmitX64::Emit(IR::Block& block) {
     code->int3();
 
     const IR::LocationDescriptor descriptor = block.Location();
-    Patch(descriptor, emitted_code_start_ptr);
+    Patch(descriptor, entrypoint);
 
-    EmitX64::BlockDescriptor& block_desc = block_descriptors[descriptor.UniqueHash()];
-    size_t emitted_code_size = static_cast<size_t>(code->getCurr() - emitted_code_start_ptr);
-    block_desc = {emitted_code_start_ptr, emitted_code_size};
+    const size_t size = static_cast<size_t>(code->getCurr() - entrypoint);
+    EmitX64::BlockDescriptor block_desc{entrypoint, size, block.Location(), block.EndLocation().PC()};
+    block_descriptors.emplace(descriptor.UniqueHash(), block_desc);
+
     return block_desc;
 }
 
@@ -459,7 +463,7 @@ void EmitX64::EmitPushRSB(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
 
     auto iter = block_descriptors.find(unique_hash_of_target);
     CodePtr target_code_ptr = iter != block_descriptors.end()
-                            ? iter->second.code_ptr
+                            ? iter->second.entrypoint
                             : code->GetReturnFromRunCodeAddress();
 
     Xbyak::Reg64 code_ptr_reg = reg_alloc.ScratchGpr({HostLoc::RCX});
@@ -3345,7 +3349,7 @@ void EmitX64::EmitTerminal(IR::Term::LinkBlock terminal, IR::LocationDescriptor 
 
     patch_information[terminal.next.UniqueHash()].jg.emplace_back(code->getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
-        EmitPatchJg(next_bb->code_ptr);
+        EmitPatchJg(next_bb->entrypoint);
     } else {
         EmitPatchJg();
     }
@@ -3374,7 +3378,7 @@ void EmitX64::EmitTerminal(IR::Term::LinkBlockFast terminal, IR::LocationDescrip
 
     patch_information[terminal.next.UniqueHash()].jmp.emplace_back(code->getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
-        EmitPatchJmp(terminal.next, next_bb->code_ptr);
+        EmitPatchJmp(terminal.next, next_bb->entrypoint);
     } else {
         EmitPatchJmp(terminal.next);
     }
@@ -3473,6 +3477,35 @@ void EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
 void EmitX64::ClearCache() {
     block_descriptors.clear();
     patch_information.clear();
+}
+
+void EmitX64::InvalidateCacheRange(const Common::AddressRange& range) {
+    // Remove cached block descriptors and patch information overlapping with the given range.
+
+    switch (range.which()) {
+    case 0: // FullAddressRange
+        ClearCache();
+        break;
+
+    case 1: // AddressInterval
+        auto interval = boost::get<Common::AddressInterval>(range);
+        for (auto it = std::begin(block_descriptors); it != std::end(block_descriptors);) {
+            const IR::LocationDescriptor& descriptor = it->second.start_location;
+            u32 start = descriptor.PC();
+            u32 end = it->second.end_location_pc;
+            if (interval.Overlaps(start, end)) {
+                it = block_descriptors.erase(it);
+
+                auto patch_it = patch_information.find(descriptor.UniqueHash());
+                if (patch_it != patch_information.end()) {
+                    Unpatch(descriptor);
+                }
+            } else {
+                ++it;
+            }
+        }
+        break;
+    }
 }
 
 } // namespace BackendX64

@@ -40,7 +40,8 @@ public:
     using reverse_iterator       = InstructionList::reverse_iterator;
     using const_reverse_iterator = InstructionList::const_reverse_iterator;
 
-    explicit Block(const LocationDescriptor& location) : location(location) {}
+    explicit Block(const LocationDescriptor& location)
+        : location(location), end_location(location) {}
 
     bool                   empty()   const { return instructions.empty();   }
     size_type              size()    const { return instructions.size();    }
@@ -78,6 +79,10 @@ public:
 
     /// Gets the starting location for this basic block.
     LocationDescriptor Location() const;
+    /// Gets the end location for this basic block.
+    LocationDescriptor EndLocation() const;
+    /// Sets the end location for this basic block.
+    void SetEndLocation(const LocationDescriptor& descriptor);
 
     /// Gets the condition required to pass in order to execute this block.
     Arm::Cond GetCondition() const;
@@ -116,6 +121,8 @@ public:
 private:
     /// Description of the starting location of this block
     LocationDescriptor location;
+    /// Description of the end location of this block
+    LocationDescriptor end_location;
     /// Conditional to pass in order to execute this block
     Arm::Cond cond = Arm::Cond::AL;
     /// Block to execute next if `cond` did not pass.

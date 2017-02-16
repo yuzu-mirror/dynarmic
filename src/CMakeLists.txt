@@ -39,6 +39,7 @@ set(HEADERS
     ../include/dynarmic/coprocessor_util.h
     ../include/dynarmic/disassembler.h
     ../include/dynarmic/dynarmic.h
+    common/address_range.h
     common/assert.h
     common/bit_util.h
     common/common_types.h

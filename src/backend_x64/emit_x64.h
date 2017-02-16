@@ -14,6 +14,7 @@
 #include <xbyak_util.h>
 
 #include "backend_x64/reg_alloc.h"
+#include "common/address_range.h"
 #include "dynarmic/callbacks.h"
 #include "frontend/ir/location_descriptor.h"
 #include "frontend/ir/terminal.h"
@@ -34,8 +35,11 @@ class BlockOfCode;
 class EmitX64 final {
 public:
     struct BlockDescriptor {
-        CodePtr code_ptr; ///< Entrypoint of emitted code
-        size_t size;      ///< Length in bytes of emitted code
+        CodePtr entrypoint;  // Entrypoint of emitted code
+        size_t size;         // Length in bytes of emitted code
+
+        IR::LocationDescriptor start_location;
+        u32 end_location_pc;
     };
 
     EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface);
@@ -49,8 +53,15 @@ public:
     /// Looks up an emitted host block in the cache.
     boost::optional<BlockDescriptor> GetBasicBlock(IR::LocationDescriptor descriptor) const;
 
-    /// Empties the cache.
+    /// Empties the entire cache.
     void ClearCache();
+
+    /**
+     * Invalidate the cache at a range of addresses.
+     * @param start_address The starting address of the range to invalidate.
+     * @param length The length (in bytes) of the range to invalidate.
+     */
+    void InvalidateCacheRange(const Common::AddressRange& range);
 
 private:
     // Microinstruction emitters

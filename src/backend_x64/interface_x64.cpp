@@ -5,6 +5,7 @@
  */
 
 #include <memory>
+#include <queue>
 
 #include <fmt/format.h>
 
@@ -35,6 +36,7 @@ struct Jit::Impl {
             , jit_state()
             , emitter(&block_of_code, callbacks, jit)
             , callbacks(callbacks)
+            , jit_interface(jit)
     {}
 
     BlockOfCode block_of_code;
@@ -42,20 +44,21 @@ struct Jit::Impl {
     EmitX64 emitter;
     const UserCallbacks callbacks;
 
-    bool clear_cache_required = false;
+    // Requests made during execution to invalidate the cache are queued up here.
+    std::queue<Common::AddressRange> invalid_cache_ranges;
 
     size_t Execute(size_t cycle_count) {
         u32 pc = jit_state.Reg[15];
 
         IR::LocationDescriptor descriptor{pc, Arm::PSR{jit_state.Cpsr}, Arm::FPSCR{jit_state.FPSCR_mode}};
 
-        CodePtr code_ptr = GetBasicBlock(descriptor).code_ptr;
-        return block_of_code.RunCode(&jit_state, code_ptr, cycle_count);
+        CodePtr entrypoint = GetBasicBlock(descriptor).entrypoint;
+        return block_of_code.RunCode(&jit_state, entrypoint, cycle_count);
     }
 
     std::string Disassemble(const IR::LocationDescriptor& descriptor) {
         auto block = GetBasicBlock(descriptor);
-        std::string result = fmt::format("address: {}\nsize: {} bytes\n", block.code_ptr, block.size);
+        std::string result = fmt::format("address: {}\nsize: {} bytes\n", block.entrypoint, block.size);
 
 #ifdef DYNARMIC_USE_LLVM
         LLVMInitializeX86TargetInfo();
@@ -64,7 +67,7 @@ struct Jit::Impl {
         LLVMDisasmContextRef llvm_ctx = LLVMCreateDisasm("x86_64", nullptr, 0, nullptr, nullptr);
         LLVMSetDisasmOptions(llvm_ctx, LLVMDisassembler_Option_AsmPrinterVariant);
 
-        const u8* pos = static_cast<const u8*>(block.code_ptr);
+        const u8* pos = static_cast<const u8*>(block.entrypoint);
         const u8* end = pos + block.size;
         size_t remaining = block.size;
 
@@ -91,14 +94,31 @@ struct Jit::Impl {
         return result;
     }
 
-    void ClearCache() {
-        block_of_code.ClearCache();
-        emitter.ClearCache();
+    void PerformCacheInvalidation() {
+        if (invalid_cache_ranges.empty()) {
+            return;
+        }
+
         jit_state.ResetRSB();
-        clear_cache_required = false;
+        block_of_code.ClearCache();
+        while (!invalid_cache_ranges.empty()) {
+            emitter.InvalidateCacheRange(invalid_cache_ranges.front());
+            invalid_cache_ranges.pop();
+        }
+    }
+
+    void HandleNewCacheRange() {
+        if (jit_interface->is_executing) {
+            jit_state.halt_requested = true;
+            return;
+        }
+
+        PerformCacheInvalidation();
     }
 
 private:
+    Jit* jit_interface;
+
     EmitX64::BlockDescriptor GetBasicBlock(IR::LocationDescriptor descriptor) {
         auto block = emitter.GetBasicBlock(descriptor);
         if (block)
@@ -130,21 +150,19 @@ size_t Jit::Run(size_t cycle_count) {
         cycles_executed += impl->Execute(cycle_count - cycles_executed);
     }
 
-    if (impl->clear_cache_required) {
-        impl->ClearCache();
-    }
+    impl->PerformCacheInvalidation();
 
     return cycles_executed;
 }
 
 void Jit::ClearCache() {
-    if (is_executing) {
-        impl->jit_state.halt_requested = true;
-        impl->clear_cache_required = true;
-        return;
-    }
+    impl->invalid_cache_ranges.push(Common::FullAddressRange{});
+    impl->HandleNewCacheRange();
+}
 
-    impl->ClearCache();
+void Jit::InvalidateCacheRange(std::uint32_t start_address, std::size_t length) {
+    impl->invalid_cache_ranges.push(Common::AddressInterval{start_address, length});
+    impl->HandleNewCacheRange();
 }
 
 void Jit::Reset() {

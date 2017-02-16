@@ -1166,3 +1166,38 @@ TEST_CASE("Fuzz ARM packing instructions", "[JitX64]") {
         });
     }
 }
+
+TEST_CASE("arm: Test InvalidateCacheRange", "[arm]") {
+    Dynarmic::Jit jit{GetUserCallbacks()};
+    code_mem.fill({});
+    code_mem[0] = 0xe3a00005; // mov r0, #5
+    code_mem[1] = 0xe3a0100D; // mov r1, #13
+    code_mem[2] = 0xe0812000; // add r2, r1, r0
+    code_mem[3] = 0xeafffffe; // b +#0 (infinite loop)
+
+    jit.Regs() = {};
+    jit.Cpsr() = 0x000001d0; // User-mode
+
+    jit.Run(4);
+
+    REQUIRE(jit.Regs()[0] == 5);
+    REQUIRE(jit.Regs()[1] == 13);
+    REQUIRE(jit.Regs()[2] == 18);
+    REQUIRE(jit.Regs()[15] == 0x0000000c);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+
+    // Change the code
+    code_mem[1] = 0xe3a01007; // mov r1, #7
+    jit.InvalidateCacheRange(/*start_memory_location = */ 4, /* length_in_bytes = */ 4);
+
+    // Reset position of PC
+    jit.Regs()[15] = 0;
+
+    jit.Run(4);
+
+    REQUIRE(jit.Regs()[0] == 5);
+    REQUIRE(jit.Regs()[1] == 7);
+    REQUIRE(jit.Regs()[2] == 12);
+    REQUIRE(jit.Regs()[15] == 0x0000000c);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}

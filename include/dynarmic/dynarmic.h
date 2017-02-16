@@ -8,8 +8,8 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <string>
 #include <memory>
+#include <string>
 
 #include <dynarmic/callbacks.h>
 
@@ -37,6 +37,13 @@ public:
      * Can be called at any time. Halts execution if called within a callback.
      */
     void ClearCache();
+
+    /**
+     * Invalidate the code cache at a range of addresses.
+     * @param start_address The starting address of the range to invalidate.
+     * @param length The length (in bytes) of the range to invalidate.
+     */
+    void InvalidateCacheRange(std::uint32_t start_address, std::size_t length);
 
     /**
      * Reset CPU state to state at startup. Does not clear code cache.

@@ -60,6 +60,8 @@ IR::Block TranslateArm(IR::LocationDescriptor descriptor, MemoryReadCodeFuncType
 
     ASSERT_MSG(visitor.ir.block.HasTerminal(), "Terminal has not been set");
 
+    visitor.ir.block.SetEndLocation(visitor.ir.current_location);
+
     return std::move(visitor.ir.block);
 }
 
