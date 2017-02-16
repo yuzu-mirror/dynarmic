@@ -48,6 +48,7 @@ set(HEADERS
     common/mp.h
     common/scope_exit.h
     common/string_util.h
+    common/variant_util.h
     frontend/arm/FPSCR.h
     frontend/arm/PSR.h
     frontend/arm/types.h
