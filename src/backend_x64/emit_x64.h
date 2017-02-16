@@ -64,13 +64,13 @@ private:
 
     // Terminal instruction emitters
     void EmitTerminal(IR::Terminal terminal, IR::LocationDescriptor initial_location);
-    void EmitTerminalInterpret(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location);
-    void EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch terminal, IR::LocationDescriptor initial_location);
-    void EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location);
-    void EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location);
-    void EmitTerminalPopRSBHint(IR::Term::PopRSBHint terminal, IR::LocationDescriptor initial_location);
-    void EmitTerminalIf(IR::Term::If terminal, IR::LocationDescriptor initial_location);
-    void EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminal(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminal(IR::Term::ReturnToDispatch terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminal(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminal(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminal(IR::Term::PopRSBHint terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminal(IR::Term::If terminal, IR::LocationDescriptor initial_location);
+    void EmitTerminal(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location);
 
     // Patching
     struct PatchInformation {

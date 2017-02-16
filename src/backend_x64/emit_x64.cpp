@@ -14,6 +14,7 @@
 #include "backend_x64/jitstate.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
+#include "common/variant_util.h"
 #include "frontend/arm/types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/location_descriptor.h"
@@ -3351,40 +3352,17 @@ void EmitX64::EmitCondPrelude(const IR::Block& block) {
 
     Xbyak::Label pass = EmitCond(code, block.GetCondition());
     EmitAddCycles(block.ConditionFailedCycleCount());
-    EmitTerminalLinkBlock(IR::Term::LinkBlock{block.ConditionFailedLocation()}, block.Location());
+    EmitTerminal(IR::Term::LinkBlock{block.ConditionFailedLocation()}, block.Location());
     code->L(pass);
 }
 
 void EmitX64::EmitTerminal(IR::Terminal terminal, IR::LocationDescriptor initial_location) {
-    switch (terminal.which()) {
-    case 1:
-        EmitTerminalInterpret(boost::get<IR::Term::Interpret>(terminal), initial_location);
-        return;
-    case 2:
-        EmitTerminalReturnToDispatch(boost::get<IR::Term::ReturnToDispatch>(terminal), initial_location);
-        return;
-    case 3:
-        EmitTerminalLinkBlock(boost::get<IR::Term::LinkBlock>(terminal), initial_location);
-        return;
-    case 4:
-        EmitTerminalLinkBlockFast(boost::get<IR::Term::LinkBlockFast>(terminal), initial_location);
-        return;
-    case 5:
-        EmitTerminalPopRSBHint(boost::get<IR::Term::PopRSBHint>(terminal), initial_location);
-        return;
-    case 6:
-        EmitTerminalIf(boost::get<IR::Term::If>(terminal), initial_location);
-        return;
-    case 7:
-        EmitTerminalCheckHalt(boost::get<IR::Term::CheckHalt>(terminal), initial_location);
-        return;
-    default:
-        ASSERT_MSG(false, "Invalid Terminal. Bad programmer.");
-        return;
-    }
+    Common::VisitVariant<void>(terminal, [this, &initial_location](auto x) {
+        this->EmitTerminal(x, initial_location);
+    });
 }
 
-void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminal(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location) {
     ASSERT_MSG(terminal.next.TFlag() == initial_location.TFlag(), "Unimplemented");
     ASSERT_MSG(terminal.next.EFlag() == initial_location.EFlag(), "Unimplemented");
 
@@ -3397,11 +3375,11 @@ void EmitX64::EmitTerminalInterpret(IR::Term::Interpret terminal, IR::LocationDe
     code->ReturnFromRunCode(false); // TODO: Check cycles
 }
 
-void EmitX64::EmitTerminalReturnToDispatch(IR::Term::ReturnToDispatch, IR::LocationDescriptor) {
+void EmitX64::EmitTerminal(IR::Term::ReturnToDispatch, IR::LocationDescriptor) {
     code->ReturnFromRunCode();
 }
 
-void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminal(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location) {
     using namespace Xbyak::util;
 
     if (terminal.next.TFlag() != initial_location.TFlag()) {
@@ -3432,7 +3410,7 @@ void EmitX64::EmitTerminalLinkBlock(IR::Term::LinkBlock terminal, IR::LocationDe
     code->ReturnFromRunCode(); // TODO: Check cycles, Properly do a link
 }
 
-void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminal(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location) {
     using namespace Xbyak::util;
 
     if (terminal.next.TFlag() != initial_location.TFlag()) {
@@ -3458,7 +3436,7 @@ void EmitX64::EmitTerminalLinkBlockFast(IR::Term::LinkBlockFast terminal, IR::Lo
     }
 }
 
-void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, IR::LocationDescriptor) {
+void EmitX64::EmitTerminal(IR::Term::PopRSBHint, IR::LocationDescriptor) {
     using namespace Xbyak::util;
 
     // This calculation has to match up with IREmitter::PushRSB
@@ -3479,14 +3457,14 @@ void EmitX64::EmitTerminalPopRSBHint(IR::Term::PopRSBHint, IR::LocationDescripto
     code->jmp(rax);
 }
 
-void EmitX64::EmitTerminalIf(IR::Term::If terminal, IR::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminal(IR::Term::If terminal, IR::LocationDescriptor initial_location) {
     Xbyak::Label pass = EmitCond(code, terminal.if_);
     EmitTerminal(terminal.else_, initial_location);
     code->L(pass);
     EmitTerminal(terminal.then_, initial_location);
 }
 
-void EmitX64::EmitTerminalCheckHalt(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location) {
+void EmitX64::EmitTerminal(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location) {
     using namespace Xbyak::util;
 
     code->cmp(code->byte[r15 + offsetof(JitState, halt_requested)], u8(0));
