@@ -1,5 +1,6 @@
 //     opcode name,             return type,    arg1 type,      arg2 type,      arg3 type,      ...
 
+OPCODE(Void,                    T::Void,                                                        )
 OPCODE(Identity,                T::Opaque,      T::Opaque                                       )
 OPCODE(Breakpoint,              T::Void,                                                        )
 

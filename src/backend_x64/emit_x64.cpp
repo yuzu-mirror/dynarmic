@@ -110,6 +110,9 @@ boost::optional<EmitX64::BlockDescriptor> EmitX64::GetBasicBlock(IR::LocationDes
     return boost::make_optional<BlockDescriptor>(iter->second);
 }
 
+void EmitX64::EmitVoid(RegAlloc&, IR::Block&, IR::Inst*) {
+}
+
 void EmitX64::EmitBreakpoint(RegAlloc&, IR::Block&, IR::Inst*) {
     code->int3();
 }
@@ -546,7 +549,6 @@ void EmitX64::EmitLogicalShiftLeft(RegAlloc& reg_alloc, IR::Block& block, IR::In
 
     if (!carry_inst) {
         if (!inst->GetArg(2).IsImmediate()) {
-            // TODO: Remove redundant argument.
             inst->GetArg(2).GetInst()->DecrementRemainingUses();
         }
 
@@ -638,7 +640,6 @@ void EmitX64::EmitLogicalShiftRight(RegAlloc& reg_alloc, IR::Block& block, IR::I
 
     if (!carry_inst) {
         if (!inst->GetArg(2).IsImmediate()) {
-            // TODO: Remove redundant argument.
             inst->GetArg(2).GetInst()->DecrementRemainingUses();
         }
 
@@ -742,7 +743,6 @@ void EmitX64::EmitArithmeticShiftRight(RegAlloc& reg_alloc, IR::Block& block, IR
 
     if (!carry_inst) {
         if (!inst->GetArg(2).IsImmediate()) {
-            // TODO: Remove redundant argument.
             inst->GetArg(2).GetInst()->DecrementRemainingUses();
         }
 
@@ -824,7 +824,6 @@ void EmitX64::EmitRotateRight(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* i
 
     if (!carry_inst) {
         if (!inst->GetArg(2).IsImmediate()) {
-            // TODO: Remove redundant argument.
             inst->GetArg(2).GetInst()->DecrementRemainingUses();
         }
 

@@ -15,11 +15,36 @@ namespace Optimization {
 
 void ConstantPropagation(IR::Block& block, const UserCallbacks::Memory& memory_callbacks) {
     for (auto& inst : block) {
-        if (!inst.AreAllArgsImmediates())
-            continue;
-
         switch (inst.GetOpcode()) {
+        case IR::Opcode::SetCFlag: {
+            IR::Value arg = inst.GetArg(0);
+            if (!arg.IsImmediate() && arg.GetInst()->GetOpcode() == IR::Opcode::GetCFlag) {
+                inst.Invalidate();
+            }
+            break;
+        }
+        case IR::Opcode::LogicalShiftLeft:
+        case IR::Opcode::LogicalShiftRight:
+        case IR::Opcode::ArithmeticShiftRight:
+        case IR::Opcode::RotateRight: {
+            if (!inst.GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp)) {
+                inst.SetArg(2, IR::Value(false));
+            }
+
+            auto shift_amount = inst.GetArg(1);
+            if (shift_amount.IsImmediate() && shift_amount.GetU8() == 0) {
+                IR::Inst* carry_inst = inst.GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+                if (carry_inst) {
+                    carry_inst->ReplaceUsesWith(inst.GetArg(2));
+                }
+                inst.ReplaceUsesWith(inst.GetArg(0));
+            }
+            break;
+        }
         case IR::Opcode::ReadMemory8: {
+            if (!inst.AreAllArgsImmediates())
+                break;
+
             u32 vaddr = inst.GetArg(0).GetU32();
             if (memory_callbacks.IsReadOnlyMemory(vaddr)) {
                 u8 value_from_memory = memory_callbacks.Read8(vaddr);
@@ -28,6 +53,9 @@ void ConstantPropagation(IR::Block& block, const UserCallbacks::Memory& memory_c
             break;
         }
         case IR::Opcode::ReadMemory16: {
+            if (!inst.AreAllArgsImmediates())
+                break;
+
             u32 vaddr = inst.GetArg(0).GetU32();
             if (memory_callbacks.IsReadOnlyMemory(vaddr)) {
                 u16 value_from_memory = memory_callbacks.Read16(vaddr);
@@ -36,6 +64,9 @@ void ConstantPropagation(IR::Block& block, const UserCallbacks::Memory& memory_c
             break;
         }
         case IR::Opcode::ReadMemory32: {
+            if (!inst.AreAllArgsImmediates())
+                break;
+
             u32 vaddr = inst.GetArg(0).GetU32();
             if (memory_callbacks.IsReadOnlyMemory(vaddr)) {
                 u32 value_from_memory = memory_callbacks.Read32(vaddr);
@@ -44,6 +75,9 @@ void ConstantPropagation(IR::Block& block, const UserCallbacks::Memory& memory_c
             break;
         }
         case IR::Opcode::ReadMemory64: {
+            if (!inst.AreAllArgsImmediates())
+                break;
+
             u32 vaddr = inst.GetArg(0).GetU32();
             if (memory_callbacks.IsReadOnlyMemory(vaddr)) {
                 u64 value_from_memory = memory_callbacks.Read64(vaddr);
@@ -52,12 +86,18 @@ void ConstantPropagation(IR::Block& block, const UserCallbacks::Memory& memory_c
             break;
         }
         case IR::Opcode::ZeroExtendByteToWord: {
+            if (!inst.AreAllArgsImmediates())
+                break;
+
             u8 byte = inst.GetArg(0).GetU8();
             u32 value = static_cast<u32>(byte);
             inst.ReplaceUsesWith(IR::Value{value});
             break;
         }
         case IR::Opcode::ZeroExtendHalfToWord: {
+            if (!inst.AreAllArgsImmediates())
+                break;
+
             u16 half = inst.GetArg(0).GetU16();
             u32 value = static_cast<u32>(half);
             inst.ReplaceUsesWith(IR::Value{value});

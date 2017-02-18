@@ -305,6 +305,7 @@ void Inst::Invalidate() {
         }
         value = {};
     }
+    op = Opcode::Void;
 }
 
 void Inst::ReplaceUsesWith(Value replacement) {
