@@ -141,9 +141,7 @@ bool ArmTranslatorVisitor::arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotat
     // UXTB16 <Rd>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
         auto rotated = Rotate(ir, m, rotate);
-        auto lower_half = ir.ZeroExtendByteToWord(ir.LeastSignificantByte(rotated));
-        auto upper_half = ir.And(rotated, ir.Imm32(0x00FF0000));
-        auto result = ir.Or(lower_half, upper_half);
+        auto result = ir.And(rotated, ir.Imm32(0x00FF00FF));
         ir.SetRegister(d, result);
     }
     return true;
