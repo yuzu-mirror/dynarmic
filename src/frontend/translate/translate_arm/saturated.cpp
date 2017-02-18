@@ -9,6 +9,14 @@
 namespace Dynarmic {
 namespace Arm {
 
+static IR::Value Pack2x16To1x32(IR::IREmitter& ir, IR::Value lo, IR::Value hi) {
+    return ir.Or(ir.And(lo, ir.Imm32(0xFFFF)), ir.LogicalShiftLeft(hi, ir.Imm8(16), ir.Imm1(0)).result);
+}
+
+static IR::Value MostSignificantHalf(IR::IREmitter& ir, IR::Value value) {
+    return ir.LeastSignificantHalf(ir.LogicalShiftRight(value, ir.Imm8(16), ir.Imm1(0)).result);
+}
+
 // Saturation instructions
 
 bool ArmTranslatorVisitor::arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
@@ -29,8 +37,22 @@ bool ArmTranslatorVisitor::arm_SSAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, b
 }
 
 bool ArmTranslatorVisitor::arm_SSAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
-    UNUSED(cond, sat_imm, d, n);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC)
+        return UnpredictableInstruction();
+
+    size_t saturate_to = static_cast<size_t>(sat_imm) + 1;
+
+    // SSAT16 <Rd>, #<saturate_to>, <Rn>
+    if (ConditionPassed(cond)) {
+        auto lo_operand = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(ir.GetRegister(n)));
+        auto hi_operand = ir.SignExtendHalfToWord(MostSignificantHalf(ir, ir.GetRegister(n)));
+        auto lo_result = ir.SignedSaturation(lo_operand, saturate_to);
+        auto hi_result = ir.SignedSaturation(hi_operand, saturate_to);
+        ir.SetRegister(d, Pack2x16To1x32(ir, lo_result.result, hi_result.result));
+        ir.OrQFlag(lo_result.overflow);
+        ir.OrQFlag(hi_result.overflow);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, bool sh, Reg n) {
@@ -51,8 +73,23 @@ bool ArmTranslatorVisitor::arm_USAT(Cond cond, Imm5 sat_imm, Reg d, Imm5 imm5, b
 }
 
 bool ArmTranslatorVisitor::arm_USAT16(Cond cond, Imm4 sat_imm, Reg d, Reg n) {
-    UNUSED(cond, sat_imm, d, n);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC)
+        return UnpredictableInstruction();
+
+    size_t saturate_to = static_cast<size_t>(sat_imm);
+
+    // USAT16 <Rd>, #<saturate_to>, <Rn>
+    if (ConditionPassed(cond)) {
+        // UnsignedSaturation takes a *signed* value as input, hence sign extension is required.
+        auto lo_operand = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(ir.GetRegister(n)));
+        auto hi_operand = ir.SignExtendHalfToWord(MostSignificantHalf(ir, ir.GetRegister(n)));
+        auto lo_result = ir.UnsignedSaturation(lo_operand, saturate_to);
+        auto hi_result = ir.UnsignedSaturation(hi_operand, saturate_to);
+        ir.SetRegister(d, Pack2x16To1x32(ir, lo_result.result, hi_result.result));
+        ir.OrQFlag(lo_result.overflow);
+        ir.OrQFlag(hi_result.overflow);
+    }
+    return true;
 }
 
 // Saturated Add/Subtract instructions
