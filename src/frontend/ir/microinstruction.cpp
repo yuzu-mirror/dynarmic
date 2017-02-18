@@ -303,6 +303,7 @@ void Inst::Invalidate() {
         if (!value.IsImmediate()) {
             UndoUse(value);
         }
+        value = {};
     }
 }
 
