@@ -9,29 +9,18 @@
 namespace Dynarmic {
 namespace Arm {
 
-IR::Value ArmTranslatorVisitor::SignZeroExtendRor(Reg m, SignExtendRotation rotate) {
-    IR::Value rotated, reg_m = ir.GetRegister(m);
-    switch (rotate) {
-    case SignExtendRotation::ROR_0:
-        rotated = reg_m;
-        break;
-    case SignExtendRotation::ROR_8:
-        rotated = ir.RotateRight(reg_m, ir.Imm8(8), ir.Imm1(0)).result;
-        break;
-    case SignExtendRotation::ROR_16:
-        rotated = ir.RotateRight(reg_m, ir.Imm8(16), ir.Imm1(0)).result;
-        break;
-    case SignExtendRotation::ROR_24:
-        rotated = ir.RotateRight(reg_m, ir.Imm8(24), ir.Imm1(0)).result;
-    }
-    return rotated;
+static IR::Value Rotate(IR::IREmitter& ir, Reg m, SignExtendRotation rotate) {
+    const u8 rotate_by = static_cast<u8>(static_cast<size_t>(rotate) * 8);
+    return ir.RotateRight(ir.GetRegister(m), ir.Imm8(rotate_by), ir.Imm1(0)).result;
 }
 
 bool ArmTranslatorVisitor::arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // SXTAB <Rd>, <Rn>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto reg_n = ir.GetRegister(n);
         auto result = ir.Add(reg_n, ir.SignExtendByteToWord(ir.LeastSignificantByte(rotated)));
         ir.SetRegister(d, result);
@@ -47,8 +36,10 @@ bool ArmTranslatorVisitor::arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotati
 bool ArmTranslatorVisitor::arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // SXTAH <Rd>, <Rn>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto reg_n = ir.GetRegister(n);
         auto result = ir.Add(reg_n, ir.SignExtendHalfToWord(ir.LeastSignificantHalf(rotated)));
         ir.SetRegister(d, result);
@@ -59,8 +50,10 @@ bool ArmTranslatorVisitor::arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation
 bool ArmTranslatorVisitor::arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // SXTB <Rd>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto result = ir.SignExtendByteToWord(ir.LeastSignificantByte(rotated));
         ir.SetRegister(d, result);
     }
@@ -75,8 +68,10 @@ bool ArmTranslatorVisitor::arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotat
 bool ArmTranslatorVisitor::arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // SXTH <Rd>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto result = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(rotated));
         ir.SetRegister(d, result);
     }
@@ -86,8 +81,10 @@ bool ArmTranslatorVisitor::arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate,
 bool ArmTranslatorVisitor::arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // UXTAB <Rd>, <Rn>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto reg_n = ir.GetRegister(n);
         auto result = ir.Add(reg_n, ir.ZeroExtendByteToWord(ir.LeastSignificantByte(rotated)));
         ir.SetRegister(d, result);
@@ -98,8 +95,10 @@ bool ArmTranslatorVisitor::arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation
 bool ArmTranslatorVisitor::arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC || n == Reg::PC)
         return UnpredictableInstruction();
+
+    // UXTAB16 <Rd>, <Rn>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto result = ir.And(rotated, ir.Imm32(0x00FF00FF));
         auto reg_n = ir.GetRegister(n);
         result = ir.PackedAddU16(reg_n, result).result;
@@ -111,8 +110,10 @@ bool ArmTranslatorVisitor::arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotati
 bool ArmTranslatorVisitor::arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // UXTAH <Rd>, <Rn>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto reg_n = ir.GetRegister(n);
         auto result = ir.Add(reg_n, ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(rotated)));
         ir.SetRegister(d, result);
@@ -123,8 +124,10 @@ bool ArmTranslatorVisitor::arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation
 bool ArmTranslatorVisitor::arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // UXTB <Rd>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto result = ir.ZeroExtendByteToWord(ir.LeastSignificantByte(rotated));
         ir.SetRegister(d, result);
     }
@@ -134,8 +137,10 @@ bool ArmTranslatorVisitor::arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate,
 bool ArmTranslatorVisitor::arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // UXTB16 <Rd>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto lower_half = ir.ZeroExtendByteToWord(ir.LeastSignificantByte(rotated));
         auto upper_half = ir.And(rotated, ir.Imm32(0x00FF0000));
         auto result = ir.Or(lower_half, upper_half);
@@ -147,8 +152,10 @@ bool ArmTranslatorVisitor::arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotat
 bool ArmTranslatorVisitor::arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
+
+    // UXTH <Rd>, <Rm>, <rotate>
     if (ConditionPassed(cond)) {
-        auto rotated = SignZeroExtendRor(m, rotate);
+        auto rotated = Rotate(ir, m, rotate);
         auto result = ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(rotated));
         ir.SetRegister(d, result);
     }

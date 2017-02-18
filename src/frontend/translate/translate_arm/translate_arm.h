@@ -64,7 +64,6 @@ struct ArmTranslatorVisitor final {
 
     IR::IREmitter::ResultAndCarry EmitImmShift(IR::Value value, ShiftType type, Imm5 imm5, IR::Value carry_in);
     IR::IREmitter::ResultAndCarry EmitRegShift(IR::Value value, ShiftType type, IR::Value amount, IR::Value carry_in);
-    IR::Value SignZeroExtendRor(Reg m, SignExtendRotation rotate);
     template <typename FnT> bool EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtReg m, const FnT& fn);
     template <typename FnT> bool EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg m, const FnT& fn);
 
