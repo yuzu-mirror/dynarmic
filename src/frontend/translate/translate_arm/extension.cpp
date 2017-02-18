@@ -29,8 +29,19 @@ bool ArmTranslatorVisitor::arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 bool ArmTranslatorVisitor::arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
-    UNUSED(cond, n, d, rotate, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+
+    // SXTAB16 <Rd>, <Rn>, <Rm>, <rotate>
+    if (ConditionPassed(cond)) {
+        auto rotated = Rotate(ir, m, rotate);
+        auto low_byte = ir.And(rotated, ir.Imm32(0x00FF00FF));
+        auto sign_bit = ir.And(rotated, ir.Imm32(0x00800080));
+        auto addend = ir.Or(low_byte, ir.Mul(sign_bit, ir.Imm32(0x1FE)));
+        auto result = ir.PackedAddU16(addend, ir.GetRegister(n)).result;
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
@@ -61,8 +72,18 @@ bool ArmTranslatorVisitor::arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate,
 }
 
 bool ArmTranslatorVisitor::arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
-    UNUSED(cond, d, rotate, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+
+    // SXTB16 <Rd>, <Rm>, <rotate>
+    if (ConditionPassed(cond)) {
+        auto rotated = Rotate(ir, m, rotate);
+        auto low_byte = ir.And(rotated, ir.Imm32(0x00FF00FF));
+        auto sign_bit = ir.And(rotated, ir.Imm32(0x00800080));
+        auto result = ir.Or(low_byte, ir.Mul(sign_bit, ir.Imm32(0x1FE)));
+        ir.SetRegister(d, result);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
