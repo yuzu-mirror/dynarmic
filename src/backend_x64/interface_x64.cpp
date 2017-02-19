@@ -105,6 +105,7 @@ private:
 
         IR::Block ir_block = Arm::Translate(descriptor, callbacks.memory.ReadCode);
         Optimization::GetSetElimination(ir_block);
+        Optimization::DeadCodeElimination(ir_block);
         Optimization::ConstantPropagation(ir_block, callbacks.memory);
         Optimization::DeadCodeElimination(ir_block);
         Optimization::VerificationPass(ir_block);
