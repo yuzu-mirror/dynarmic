@@ -4,6 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
+#include "common/iterator_util.h"
 #include "frontend/ir/basic_block.h"
 #include "ir_opt/passes.h"
 
@@ -13,19 +14,11 @@ namespace Optimization {
 void DeadCodeElimination(IR::Block& block) {
     // We iterate over the instructions in reverse order.
     // This is because removing an instruction reduces the number of uses for earlier instructions.
-
-    if (block.empty()) {
-        return;
-    }
-
-    auto iter = block.end();
-    do {
-        --iter;
-        if (!iter->HasUses() && !iter->MayHaveSideEffects()) {
-            iter->Invalidate();
-            iter = block.Instructions().erase(iter);
+    for (auto& inst : Common::Reverse(block)) {
+        if (!inst.HasUses() && !inst.MayHaveSideEffects()) {
+            inst.Invalidate();
         }
-    } while (iter != block.begin());
+    }
 }
 
 } // namespace Optimization
