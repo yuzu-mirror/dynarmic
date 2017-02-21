@@ -88,6 +88,7 @@ if (ARCHITECTURE_x86_64)
          backend_x64/emit_x64.h
          backend_x64/hostloc.h
          backend_x64/jitstate.h
+         backend_x64/oparg.h
          backend_x64/reg_alloc.h
          )
 
