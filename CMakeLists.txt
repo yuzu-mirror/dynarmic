@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.2)
 project(dynarmic CXX)
 
 # Determine if we're built as a subproject (using add_subdirectory)
