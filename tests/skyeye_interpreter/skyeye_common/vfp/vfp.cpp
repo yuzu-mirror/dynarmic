@@ -23,6 +23,12 @@
 #ifdef _MSC_VER
 #pragma warning(disable : 4100)
 #endif
+#ifdef __GNUC__
+#pragma GCC diagnostic warning "-Wunused-parameter"
+#endif
+#ifdef __clang__
+#pragma clang diagnostic warning "-Wunused-parameter"
+#endif
 
 #include "common/assert.h"
 //#include "common/common_funcs.h"

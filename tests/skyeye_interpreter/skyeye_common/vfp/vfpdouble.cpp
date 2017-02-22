@@ -54,6 +54,12 @@
 #ifdef _MSC_VER
 #pragma warning(disable : 4100 4244 4245)
 #endif
+#ifdef __GNUC__
+#pragma GCC diagnostic warning "-Wunused-parameter"
+#endif
+#ifdef __clang__
+#pragma clang diagnostic warning "-Wunused-parameter"
+#endif
 
 #include <algorithm>
 //#include "common/logging/log.h"
