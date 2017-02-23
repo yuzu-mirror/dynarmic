@@ -29,8 +29,8 @@ if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
     message(SEND_ERROR "In-source builds are not allowed.")
 endif()
 
-# Signify where the module directories are
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/CMakeModules)
+# Add the module directory to the list of paths
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 
 # Compiler flags
 if (MSVC)
