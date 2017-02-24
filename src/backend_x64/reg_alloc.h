@@ -156,6 +156,7 @@ private:
     HostLoc LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc reg);
 
     void Move(HostLoc to, HostLoc from);
+    void CopyToScratch(HostLoc to, HostLoc from);
     void Exchange(HostLoc a, HostLoc b);
     void MoveOutOfTheWay(HostLoc reg);
 

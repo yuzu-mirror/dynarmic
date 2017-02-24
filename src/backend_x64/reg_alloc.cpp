@@ -182,40 +182,22 @@ HostLoc RegAlloc::UseScratchHostLocReg(IR::Value use_value, HostLocList desired_
 }
 
 HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_locations) {
-    DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
-    DEBUG_ASSERT_MSG(ValueLocation(use_inst), "use_inst has not been defined");
-    ASSERT_MSG(use_inst->HasUses(), "use_inst ran out of uses. (Use-d an IR::Inst* too many times)");
+    use_inst->DecrementRemainingUses();
 
-    HostLoc current_location = *ValueLocation(use_inst);
-    HostLoc new_location = SelectARegister(desired_locations);
-    if (IsRegisterOccupied(new_location)) {
-        SpillRegister(new_location);
+    const HostLoc current_location = *ValueLocation(use_inst);
+
+    const bool can_use_current_location = std::find(desired_locations.begin(), desired_locations.end(), current_location) != desired_locations.end();
+    if (can_use_current_location && !LocInfo(current_location).IsLocked()) {
+        MoveOutOfTheWay(current_location);
+        LocInfo(current_location).Lock();
+        return current_location;
     }
 
-    if (HostLocIsSpill(current_location)) {
-        EmitMove(code, new_location, current_location);
-        LocInfo(new_location).Lock();
-        use_inst->DecrementRemainingUses();
-        DEBUG_ASSERT(LocInfo(new_location).IsScratch());
-        return new_location;
-    } else if (HostLocIsRegister(current_location)) {
-        ASSERT(LocInfo(current_location).IsIdle()
-                || LocInfo(current_location).IsUse());
-
-        if (current_location != new_location) {
-            EmitMove(code, new_location, current_location);
-        } else {
-            ASSERT(LocInfo(current_location).IsIdle());
-        }
-
-        LocInfo(new_location) = {};
-        LocInfo(new_location).Lock();
-        use_inst->DecrementRemainingUses();
-        DEBUG_ASSERT(LocInfo(new_location).IsScratch());
-        return new_location;
-    }
-
-    ASSERT_MSG(false, "Invalid current_location");
+    const HostLoc destination_location = SelectARegister(desired_locations);
+    MoveOutOfTheWay(destination_location);
+    CopyToScratch(destination_location, current_location);
+    LocInfo(destination_location).Lock();
+    return destination_location;
 }
 
 HostLoc RegAlloc::ScratchHostLocReg(HostLocList desired_locations) {
@@ -414,6 +396,12 @@ void RegAlloc::Move(HostLoc to, HostLoc from) {
 
     LocInfo(to) = LocInfo(from);
     LocInfo(from) = {};
+
+    EmitMove(code, to, from);
+}
+
+void RegAlloc::CopyToScratch(HostLoc to, HostLoc from) {
+    ASSERT(LocInfo(to).IsEmpty() && !LocInfo(from).IsEmpty());
 
     EmitMove(code, to, from);
 }
