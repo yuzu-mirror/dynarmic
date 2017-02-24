@@ -22,6 +22,64 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+struct HostLocInfo {
+public:
+    bool IsIdle() const {
+        return !is_being_used;
+    }
+    bool IsLocked() const {
+        return is_being_used;
+    }
+    bool IsEmpty() const {
+        return !is_being_used && !def && values.empty();
+    }
+    bool IsScratch() const {
+        return is_being_used && !def && values.empty();
+    }
+    bool IsUse() const {
+        return is_being_used && !def && !values.empty();
+    }
+    bool IsDef() const {
+        return is_being_used && def && values.empty();
+    }
+    bool IsUseDef() const {
+        return is_being_used && def && !values.empty();
+    }
+
+    bool ContainsValue(const IR::Inst* inst) const {
+        return std::find(values.begin(), values.end(), inst) != values.end();
+    }
+
+    void Lock() {
+        is_being_used = true;
+    }
+    void AddValue(IR::Inst* inst) {
+        values.push_back(inst);
+    }
+    void Def(IR::Inst* inst) {
+        ASSERT(!def);
+        def = inst;
+    }
+
+    void EndOfAllocScope() {
+        const auto to_erase = std::remove_if(values.begin(), values.end(), [](const auto& inst){ return !inst->HasUses(); });
+        values.erase(to_erase, values.end());
+
+        if (def) {
+            ASSERT(values.empty());
+            AddValue(def);
+            def = nullptr;
+        }
+
+        is_being_used = false;
+    }
+
+private:
+    std::vector<IR::Inst*> values; // early value
+    IR::Inst* def = nullptr; // late value
+    bool is_being_used = false;
+};
+
 class RegAlloc final {
 public:
     explicit RegAlloc(BlockOfCode* code) : code(code) {}
@@ -114,27 +172,6 @@ private:
 
     BlockOfCode* code = nullptr;
 
-    struct HostLocInfo {
-        std::vector<IR::Inst*> values; // early value
-        IR::Inst* def = nullptr; // late value
-        bool is_being_used = false;
-
-        bool IsIdle() const {
-            return !is_being_used;
-        }
-        bool IsScratch() const {
-            return is_being_used && !def && values.empty();
-        }
-        bool IsUse() const {
-            return is_being_used && !def && !values.empty();
-        }
-        bool IsDef() const {
-            return is_being_used && def && values.empty();
-        }
-        bool IsUseDef() const {
-            return is_being_used && def && !values.empty();
-        }
-    };
     std::array<HostLocInfo, HostLocCount> hostloc_info;
     HostLocInfo& LocInfo(HostLoc loc) {
         DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
