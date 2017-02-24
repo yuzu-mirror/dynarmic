@@ -2820,7 +2820,7 @@ static void ReadMemory(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, U
 template<typename FunctionPointer>
 static void WriteMemory(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, UserCallbacks& cb, size_t bit_size, FunctionPointer fn) {
     if (!cb.page_table) {
-        reg_alloc.HostCall(inst, inst->GetArg(0), inst->GetArg(1));
+        reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
         code->CallFunction(fn);
         return;
     }
