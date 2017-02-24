@@ -56,9 +56,9 @@ static void EmitMove(BlockOfCode* code, HostLoc to, HostLoc from) {
     } else if (HostLocIsGPR(to) && HostLocIsGPR(from)) {
         code->mov(HostLocToReg64(to), HostLocToReg64(from));
     } else if (HostLocIsXMM(to) && HostLocIsGPR(from)) {
-        ASSERT_MSG(false, "TODO");
+        code->movq(HostLocToXmm(to), HostLocToReg64(from));
     } else if (HostLocIsGPR(to) && HostLocIsXMM(from)) {
-        ASSERT_MSG(false, "TODO");
+        code->movq(HostLocToReg64(to), HostLocToXmm(from));
     } else if (HostLocIsXMM(to) && HostLocIsSpill(from)) {
         code->movsd(HostLocToXmm(to), SpillToOpArg(from));
     } else if (HostLocIsSpill(to) && HostLocIsXMM(from)) {
@@ -80,6 +80,10 @@ static void EmitExchange(BlockOfCode* code, HostLoc a, HostLoc b) {
     } else {
         ASSERT_MSG(false, "Invalid RegAlloc::EmitExchange");
     }
+}
+
+bool Argument::GetImmediateU1() const {
+    return value.GetU1();
 }
 
 u8 Argument::GetImmediateU8() const {

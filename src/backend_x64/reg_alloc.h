@@ -76,6 +76,7 @@ public:
         return value.IsImmediate();
     }
 
+    bool GetImmediateU1() const;
     u8 GetImmediateU8() const;
     u16 GetImmediateU16() const;
     u32 GetImmediateU32() const;
@@ -113,6 +114,9 @@ public:
         arg.allocated = true;
         return HostLocToXmm(UseHostLocReg(arg.value, any_xmm));
     }
+    OpArg UseOpArg(Argument& arg) {
+        return UseGpr(arg);
+    }
     void Use(Argument& arg, HostLoc host_loc) {
         ASSERT(!arg.allocated);
         arg.allocated = true;
@@ -135,12 +139,9 @@ public:
         UseScratchHostLocReg(arg.value, {host_loc});
     }
 
-    void DefineValue(IR::Inst* inst, const Xbyak::Reg64& reg) {
-        HostLoc hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(HostLoc::RAX));
-        DefineValue(inst, hostloc);
-    }
-    void DefineValue(IR::Inst* inst, const Xbyak::Xmm& reg) {
-        HostLoc hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(HostLoc::XMM0));
+    void DefineValue(IR::Inst* inst, const Xbyak::Reg& reg) {
+        ASSERT(reg.getKind() == Xbyak::Operand::XMM || reg.getKind() == Xbyak::Operand::REG);
+        HostLoc hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(reg.getKind() == Xbyak::Operand::XMM ? HostLoc::XMM0 : HostLoc::RAX));
         DefineValue(inst, hostloc);
     }
     void DefineValue(IR::Inst* inst, Argument& arg) {
