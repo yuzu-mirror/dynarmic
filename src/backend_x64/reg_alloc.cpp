@@ -124,7 +124,7 @@ HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_location
 
     const bool can_use_current_location = std::find(desired_locations.begin(), desired_locations.end(), current_location) != desired_locations.end();
     if (can_use_current_location) {
-        LocInfo(current_location).Lock();
+        LocInfo(current_location).ReadLock();
         return current_location;
     }
 
@@ -139,7 +139,7 @@ HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_location
         MoveOutOfTheWay(destination_location);
         Move(destination_location, current_location);
     }
-    LocInfo(destination_location).Lock();
+    LocInfo(destination_location).ReadLock();
     return destination_location;
 }
 
@@ -169,21 +169,21 @@ HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_l
     const bool can_use_current_location = std::find(desired_locations.begin(), desired_locations.end(), current_location) != desired_locations.end();
     if (can_use_current_location && !LocInfo(current_location).IsLocked()) {
         MoveOutOfTheWay(current_location);
-        LocInfo(current_location).Lock();
+        LocInfo(current_location).WriteLock();
         return current_location;
     }
 
     const HostLoc destination_location = SelectARegister(desired_locations);
     MoveOutOfTheWay(destination_location);
     CopyToScratch(destination_location, current_location);
-    LocInfo(destination_location).Lock();
+    LocInfo(destination_location).WriteLock();
     return destination_location;
 }
 
 HostLoc RegAlloc::ScratchHostLocReg(HostLocList desired_locations) {
     HostLoc location = SelectARegister(desired_locations);
     MoveOutOfTheWay(location);
-    LocInfo(location).Lock();
+    LocInfo(location).WriteLock();
     return location;
 }
 
@@ -261,11 +261,7 @@ void RegAlloc::SpillRegister(HostLoc loc) {
     ASSERT_MSG(!LocInfo(loc).IsLocked(), "Registers that have been allocated must not be spilt");
 
     HostLoc new_loc = FindFreeSpill();
-
-    EmitMove(code, new_loc, loc);
-
-    LocInfo(new_loc) = LocInfo(loc);
-    LocInfo(loc) = {};
+    Move(new_loc, loc);
 }
 
 HostLoc RegAlloc::FindFreeSpill() const {

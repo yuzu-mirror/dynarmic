@@ -38,8 +38,14 @@ public:
         return std::find(values.begin(), values.end(), inst) != values.end();
     }
 
-    void Lock() {
+    void ReadLock() {
+        ASSERT(!is_scratch);
         is_being_used = true;
+    }
+    void WriteLock() {
+        ASSERT(!is_being_used);
+        is_being_used = true;
+        is_scratch = true;
     }
     void AddValue(IR::Inst* inst) {
         values.push_back(inst);
@@ -50,11 +56,13 @@ public:
         values.erase(to_erase, values.end());
 
         is_being_used = false;
+        is_scratch = false;
     }
 
 private:
     std::vector<IR::Inst*> values;
     bool is_being_used = false;
+    bool is_scratch = false;
 };
 
 class RegAlloc final {
