@@ -169,19 +169,8 @@ OpArg RegAlloc::UseOpArg(IR::Value use_value, HostLocList desired_locations) {
         return {}; // return a None
     }
 
-    IR::Inst* use_inst = use_value.GetInst();
-
-    HostLoc current_location;
-    bool was_being_used;
-    std::tie(current_location, was_being_used) = UseHostLoc(use_inst, desired_locations);
-
-    if (HostLocIsRegister(current_location)) {
-        return HostLocToX64(current_location);
-    } else if (HostLocIsSpill(current_location)) {
-        return SpillToOpArg(current_location);
-    }
-
-    ASSERT_MSG(false, "Unknown current_location type");
+    // TODO: Reimplement properly
+    return HostLocToX64(UseHostLocReg(use_value.GetInst(), desired_locations));
 }
 
 HostLoc RegAlloc::UseScratchHostLocReg(IR::Value use_value, HostLocList desired_locations) {
