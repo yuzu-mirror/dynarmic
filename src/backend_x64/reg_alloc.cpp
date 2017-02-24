@@ -22,6 +22,8 @@ static u64 ImmediateToU64(const IR::Value& imm) {
         return u64(imm.GetU1());
     case IR::Type::U8:
         return u64(imm.GetU8());
+    case IR::Type::U16:
+        return u64(imm.GetU16());
     case IR::Type::U32:
         return u64(imm.GetU32());
     case IR::Type::U64:
@@ -78,6 +80,49 @@ static void EmitExchange(BlockOfCode* code, HostLoc a, HostLoc b) {
     } else {
         ASSERT_MSG(false, "Invalid RegAlloc::EmitExchange");
     }
+}
+
+u8 Argument::GetImmediateU8() const {
+    u64 imm = ImmediateToU64(value);
+    ASSERT(imm < 0x100);
+    return u8(imm);
+}
+
+u16 Argument::GetImmediateU16() const {
+    u64 imm = ImmediateToU64(value);
+    ASSERT(imm < 0x10000);
+    return u16(imm);
+}
+
+u32 Argument::GetImmediateU32() const {
+    u64 imm = ImmediateToU64(value);
+    ASSERT(imm < 0x100000000);
+    return u32(imm);
+}
+
+u64 Argument::GetImmediateU64() const {
+    return ImmediateToU64(value);
+}
+
+bool Argument::IsInGpr() const {
+    return HostLocIsGPR(*reg_alloc.ValueLocation(value.GetInst()));
+}
+
+bool Argument::IsInXmm() const {
+    return HostLocIsXMM(*reg_alloc.ValueLocation(value.GetInst()));
+}
+
+bool Argument::IsInMemory() const {
+    return HostLocIsSpill(*reg_alloc.ValueLocation(value.GetInst()));
+}
+
+std::array<Argument, 3> RegAlloc::GetArgumentInfo(IR::Inst* inst) {
+    std::array<Argument, 3> ret = { Argument{*this}, Argument{*this}, Argument{*this}};
+    for (size_t i = 0; i < inst->NumArgs(); i++) {
+        IR::Value arg = inst->GetArg(i);
+        ret[i].value = arg;
+    }
+    return ret;
 }
 
 void RegAlloc::RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst) {

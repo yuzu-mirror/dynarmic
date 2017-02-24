@@ -22,6 +22,8 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+class RegAlloc;
+
 struct HostLocInfo {
 public:
     bool IsLocked() const {
@@ -65,9 +67,87 @@ private:
     bool is_scratch = false;
 };
 
+struct Argument {
+public:
+    IR::Type GetType() const {
+        return value.GetType();
+    }
+    bool IsImmediate() const {
+        return value.IsImmediate();
+    }
+
+    u8 GetImmediateU8() const;
+    u16 GetImmediateU16() const;
+    u32 GetImmediateU32() const;
+    u64 GetImmediateU64() const;
+
+    /// Is this value currently in a GPR?
+    bool IsInGpr() const;
+    /// Is this value currently in a XMM?
+    bool IsInXmm() const;
+    /// Is this value currently in memory?
+    bool IsInMemory() const;
+
+private:
+    friend class RegAlloc;
+    Argument(RegAlloc& reg_alloc) : reg_alloc(reg_alloc) {}
+
+    bool allocated = false;
+    RegAlloc& reg_alloc;
+    IR::Value value;
+};
+
 class RegAlloc final {
 public:
     explicit RegAlloc(BlockOfCode* code) : code(code) {}
+
+    std::array<Argument, 3> GetArgumentInfo(IR::Inst* inst);
+
+    Xbyak::Reg64 UseGpr(Argument& arg) {
+        ASSERT(!arg.allocated);
+        arg.allocated = true;
+        return HostLocToReg64(UseHostLocReg(arg.value, any_gpr));
+    }
+    Xbyak::Xmm UseXmm(Argument& arg) {
+        ASSERT(!arg.allocated);
+        arg.allocated = true;
+        return HostLocToXmm(UseHostLocReg(arg.value, any_xmm));
+    }
+    void Use(Argument& arg, HostLoc host_loc) {
+        ASSERT(!arg.allocated);
+        arg.allocated = true;
+        UseHostLocReg(arg.value, {host_loc});
+    }
+
+    Xbyak::Reg64 UseScratchGpr(Argument& arg) {
+        ASSERT(!arg.allocated);
+        arg.allocated = true;
+        return HostLocToReg64(UseScratchHostLocReg(arg.value, any_gpr));
+    }
+    Xbyak::Xmm UseScratchXmm(Argument& arg) {
+        ASSERT(!arg.allocated);
+        arg.allocated = true;
+        return HostLocToXmm(UseScratchHostLocReg(arg.value, any_xmm));
+    }
+    void UseScratch(Argument& arg, HostLoc host_loc) {
+        ASSERT(!arg.allocated);
+        arg.allocated = true;
+        UseScratchHostLocReg(arg.value, {host_loc});
+    }
+
+    void DefineValue(IR::Inst* inst, const Xbyak::Reg64& reg) {
+        HostLoc hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(HostLoc::RAX));
+        DefineValue(inst, hostloc);
+    }
+    void DefineValue(IR::Inst* inst, const Xbyak::Xmm& reg) {
+        HostLoc hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(HostLoc::XMM0));
+        DefineValue(inst, hostloc);
+    }
+    void DefineValue(IR::Inst* inst, Argument& arg) {
+        ASSERT(!arg.allocated);
+        arg.allocated = true;
+        RegisterAddDef(inst, arg.value);
+    }
 
     /// Late-def
     Xbyak::Reg64 DefGpr(IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
@@ -139,6 +219,8 @@ public:
     void Reset();
 
 private:
+    friend struct Argument;
+
     HostLoc SelectARegister(HostLocList desired_locations) const;
     boost::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
 
