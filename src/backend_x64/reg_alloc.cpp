@@ -201,18 +201,9 @@ HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_l
 }
 
 HostLoc RegAlloc::ScratchHostLocReg(HostLocList desired_locations) {
-    DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
-
     HostLoc location = SelectARegister(desired_locations);
-
-    if (IsRegisterOccupied(location)) {
-        SpillRegister(location);
-    }
-
-    // Update state
+    MoveOutOfTheWay(location);
     LocInfo(location).Lock();
-
-    DEBUG_ASSERT(LocInfo(location).IsScratch());
     return location;
 }
 
