@@ -148,7 +148,6 @@ private:
     std::tuple<OpArg, HostLoc> UseDefOpArgHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations);
     HostLoc UseHostLocReg(IR::Value use_value, HostLocList desired_locations);
     HostLoc UseHostLocReg(IR::Inst* use_inst, HostLocList desired_locations);
-    std::tuple<HostLoc, bool> UseHostLoc(IR::Inst* use_inst, HostLocList desired_locations);
     HostLoc UseScratchHostLocReg(IR::Value use_value, HostLocList desired_locations);
     HostLoc UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_locations);
     HostLoc ScratchHostLocReg(HostLocList desired_locations);

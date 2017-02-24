@@ -338,42 +338,6 @@ void RegAlloc::Reset() {
     hostloc_info.fill({});
 }
 
-std::tuple<HostLoc, bool> RegAlloc::UseHostLoc(IR::Inst* use_inst, HostLocList desired_locations) {
-    DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
-    DEBUG_ASSERT_MSG(ValueLocation(use_inst), "use_inst has not been defined");
-
-    HostLoc current_location = *ValueLocation(use_inst);
-    auto iter = std::find(desired_locations.begin(), desired_locations.end(), current_location);
-    if (iter != desired_locations.end()) {
-        bool was_being_used = LocInfo(current_location).IsLocked();
-        ASSERT(LocInfo(current_location).IsUse() || LocInfo(current_location).IsIdle());
-        LocInfo(current_location).Lock();
-        use_inst->DecrementRemainingUses();
-        DEBUG_ASSERT(LocInfo(current_location).IsUse());
-        return std::make_tuple(current_location, was_being_used);
-    }
-
-    if (HostLocIsSpill(current_location)) {
-        bool was_being_used = LocInfo(current_location).IsLocked();
-        LocInfo(current_location).Lock();
-        use_inst->DecrementRemainingUses();
-        DEBUG_ASSERT(LocInfo(current_location).IsUse());
-        return std::make_tuple(current_location, was_being_used);
-    } else if (HostLocIsRegister(current_location)) {
-        HostLoc new_location = SelectARegister(desired_locations);
-        ASSERT(LocInfo(current_location).IsIdle());
-        EmitExchange(code, new_location, current_location);
-        std::swap(LocInfo(new_location), LocInfo(current_location));
-        LocInfo(new_location).Lock();
-        use_inst->DecrementRemainingUses();
-        DEBUG_ASSERT(LocInfo(new_location).IsUse());
-        return std::make_tuple(new_location, false);
-    }
-
-    ASSERT_MSG(false, "Invalid current_location");
-    return std::make_tuple(static_cast<HostLoc>(-1), false);
-}
-
 HostLoc RegAlloc::LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc host_loc) {
     ASSERT_MSG(imm.IsImmediate(), "imm is not an immediate");
 
