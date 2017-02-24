@@ -42,85 +42,20 @@ static Xbyak::Reg HostLocToX64(HostLoc hostloc) {
     ASSERT_MSG(false, "This should never happen.");
 }
 
-HostLoc RegAlloc::DefHostLocReg(IR::Inst* def_inst, HostLocList desired_locations) {
-    DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
-    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
-
-    HostLoc location = SelectARegister(desired_locations);
-
-    if (IsRegisterOccupied(location)) {
-        SpillRegister(location);
-    }
-
-    LocInfo(location).Lock();
-    LocInfo(location).Def(def_inst);
-
-    DEBUG_ASSERT(LocInfo(location).IsDef());
-    return location;
-}
-
 void RegAlloc::RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst) {
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
 
     if (use_inst.IsImmediate()) {
-        LoadImmediateIntoHostLocReg(use_inst, DefHostLocReg(def_inst, any_gpr));
+        HostLoc location = ScratchHostLocReg(any_gpr);
+        DefineValue(def_inst, location);
+        LoadImmediateIntoHostLocReg(use_inst, location);
         return;
     }
 
+    use_inst.GetInst()->DecrementRemainingUses();
     DEBUG_ASSERT_MSG(ValueLocation(use_inst.GetInst()), "use_inst must already be defined");
     HostLoc location = *ValueLocation(use_inst.GetInst());
-    LocInfo(location).AddValue(def_inst);
-    use_inst.GetInst()->DecrementRemainingUses();
-    DEBUG_ASSERT(LocInfo(location).IsIdle());
-}
-
-HostLoc RegAlloc::UseDefHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations) {
-    if (!use_value.IsImmediate()) {
-        return UseDefHostLocReg(use_value.GetInst(), def_inst, desired_locations);
-    }
-
-    return LoadImmediateIntoHostLocReg(use_value, DefHostLocReg(def_inst, desired_locations));
-}
-
-HostLoc RegAlloc::UseDefHostLocReg(IR::Inst* use_inst, IR::Inst* def_inst, HostLocList desired_locations) {
-    DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
-    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
-    DEBUG_ASSERT_MSG(ValueLocation(use_inst), "use_inst has not been defined");
-
-    if (IsLastUse(use_inst)) {
-        HostLoc current_location = *ValueLocation(use_inst);
-        auto& loc_info = LocInfo(current_location);
-        if (loc_info.IsIdle()) {
-            loc_info.Lock();
-            loc_info.Def(def_inst);
-            DEBUG_ASSERT(loc_info.IsUseDef());
-            if (HostLocIsSpill(current_location)) {
-                HostLoc new_location = SelectARegister(desired_locations);
-                if (IsRegisterOccupied(new_location)) {
-                    SpillRegister(new_location);
-                }
-                EmitMove(new_location, current_location);
-                LocInfo(new_location) = LocInfo(current_location);
-                LocInfo(current_location) = {};
-                return new_location;
-            } else {
-                return current_location;
-            }
-        }
-    }
-
-    bool is_floating_point = HostLocIsXMM(*desired_locations.begin());
-    if (is_floating_point) {
-        DEBUG_ASSERT(use_inst->GetType() == IR::Type::F32 || use_inst->GetType() == IR::Type::F64);
-    }
-    HostLoc use_reg = UseHostLocReg(use_inst, is_floating_point ? any_xmm : any_gpr);
-    HostLoc def_reg = DefHostLocReg(def_inst, desired_locations);
-    if (is_floating_point) {
-        code->movapd(HostLocToXmm(def_reg), HostLocToXmm(use_reg));
-    } else {
-        code->mov(HostLocToReg64(def_reg), HostLocToReg64(use_reg));
-    }
-    return def_reg;
+    DefineValue(def_inst, location);
 }
 
 std::tuple<OpArg, HostLoc> RegAlloc::UseDefOpArgHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations) {
@@ -138,11 +73,12 @@ std::tuple<OpArg, HostLoc> RegAlloc::UseDefOpArgHostLocReg(IR::Value use_value, 
                 if (HostLocIsSpill(current_location)) {
                     loc_info.Lock();
                     DEBUG_ASSERT(loc_info.IsUse());
-                    return std::make_tuple(SpillToOpArg(current_location), DefHostLocReg(def_inst, desired_locations));
+                    HostLoc location = ScratchHostLocReg(desired_locations);
+                    DefineValue(def_inst, location);
+                    return std::make_tuple(SpillToOpArg(current_location), location);
                 } else {
                     loc_info.Lock();
-                    loc_info.Def(def_inst);
-                    DEBUG_ASSERT(loc_info.IsUseDef());
+                    DefineValue(def_inst, current_location);
                     return std::make_tuple(HostLocToX64(current_location), current_location);
                 }
             }
@@ -150,7 +86,8 @@ std::tuple<OpArg, HostLoc> RegAlloc::UseDefOpArgHostLocReg(IR::Value use_value, 
     }
 
     OpArg use_oparg = UseOpArg(use_value, any_gpr);
-    HostLoc def_reg = DefHostLocReg(def_inst, desired_locations);
+    HostLoc def_reg = ScratchHostLocReg(desired_locations);
+    DefineValue(def_inst, def_reg);
     return std::make_tuple(use_oparg, def_reg);
 }
 
@@ -237,8 +174,7 @@ HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_l
         return new_location;
     } else if (HostLocIsRegister(current_location)) {
         ASSERT(LocInfo(current_location).IsIdle()
-                || LocInfo(current_location).IsUse()
-                || LocInfo(current_location).IsUseDef());
+                || LocInfo(current_location).IsUse());
 
         if (current_location != new_location) {
             EmitMove(new_location, current_location);
@@ -289,7 +225,7 @@ void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1
     // TODO: This works but almost certainly leads to suboptimal generated code.
 
     if (result_def) {
-        DefHostLocReg(result_def, {ABI_RETURN});
+        DefineValue(result_def, ScratchHostLocReg({ABI_RETURN}));
     } else {
         ScratchHostLocReg({ABI_RETURN});
     }
@@ -350,6 +286,11 @@ bool RegAlloc::IsLastUse(const IR::Inst*) const {
     //    return false;
     //return LocInfo(*ValueLocation(inst)).values.size() == 1;
     return false;
+}
+
+void RegAlloc::DefineValue(IR::Inst* def_inst, HostLoc host_loc) {
+    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
+    LocInfo(host_loc).AddValue(def_inst);
 }
 
 void RegAlloc::SpillRegister(HostLoc loc) {
@@ -424,25 +365,12 @@ std::tuple<HostLoc, bool> RegAlloc::UseHostLoc(IR::Inst* use_inst, HostLocList d
     HostLoc current_location = *ValueLocation(use_inst);
     auto iter = std::find(desired_locations.begin(), desired_locations.end(), current_location);
     if (iter != desired_locations.end()) {
-        if (LocInfo(current_location).IsDef()) {
-            HostLoc new_location = SelectARegister(desired_locations);
-            if (IsRegisterOccupied(new_location)) {
-                SpillRegister(new_location);
-            }
-            EmitMove(new_location, current_location);
-            LocInfo(new_location).Lock();
-            LocInfo(new_location).AddValue(use_inst);
-            use_inst->DecrementRemainingUses();
-            DEBUG_ASSERT(LocInfo(new_location).IsUse());
-            return std::make_tuple(new_location, false);
-        } else {
-            bool was_being_used = LocInfo(current_location).IsLocked();
-            ASSERT(LocInfo(current_location).IsUse() || LocInfo(current_location).IsIdle());
-            LocInfo(current_location).Lock();
-            use_inst->DecrementRemainingUses();
-            DEBUG_ASSERT(LocInfo(current_location).IsUse());
-            return std::make_tuple(current_location, was_being_used);
-        }
+        bool was_being_used = LocInfo(current_location).IsLocked();
+        ASSERT(LocInfo(current_location).IsUse() || LocInfo(current_location).IsIdle());
+        LocInfo(current_location).Lock();
+        use_inst->DecrementRemainingUses();
+        DEBUG_ASSERT(LocInfo(current_location).IsUse());
+        return std::make_tuple(current_location, was_being_used);
     }
 
     if (HostLocIsSpill(current_location)) {

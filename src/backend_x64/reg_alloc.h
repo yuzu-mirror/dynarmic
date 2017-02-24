@@ -31,19 +31,13 @@ public:
         return is_being_used;
     }
     bool IsEmpty() const {
-        return !is_being_used && !def && values.empty();
+        return !is_being_used && values.empty();
     }
     bool IsScratch() const {
-        return is_being_used && !def && values.empty();
+        return is_being_used && values.empty();
     }
     bool IsUse() const {
-        return is_being_used && !def && !values.empty();
-    }
-    bool IsDef() const {
-        return is_being_used && def && values.empty();
-    }
-    bool IsUseDef() const {
-        return is_being_used && def && !values.empty();
+        return is_being_used && !values.empty();
     }
 
     bool ContainsValue(const IR::Inst* inst) const {
@@ -56,27 +50,16 @@ public:
     void AddValue(IR::Inst* inst) {
         values.push_back(inst);
     }
-    void Def(IR::Inst* inst) {
-        ASSERT(!def);
-        def = inst;
-    }
 
     void EndOfAllocScope() {
         const auto to_erase = std::remove_if(values.begin(), values.end(), [](const auto& inst){ return !inst->HasUses(); });
         values.erase(to_erase, values.end());
 
-        if (def) {
-            ASSERT(values.empty());
-            AddValue(def);
-            def = nullptr;
-        }
-
         is_being_used = false;
     }
 
 private:
-    std::vector<IR::Inst*> values; // early value
-    IR::Inst* def = nullptr; // late value
+    std::vector<IR::Inst*> values;
     bool is_being_used = false;
 };
 
@@ -86,18 +69,26 @@ public:
 
     /// Late-def
     Xbyak::Reg64 DefGpr(IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
-        return HostLocToReg64(DefHostLocReg(def_inst, desired_locations));
+        HostLoc location = ScratchHostLocReg(desired_locations);
+        DefineValue(def_inst, location);
+        return HostLocToReg64(location);
     }
     Xbyak::Xmm DefXmm(IR::Inst* def_inst, HostLocList desired_locations = any_xmm) {
-        return HostLocToXmm(DefHostLocReg(def_inst, desired_locations));
+        HostLoc location = ScratchHostLocReg(desired_locations);
+        DefineValue(def_inst, location);
+        return HostLocToXmm(location);
     }
     void RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst);
     /// Early-use, Late-def
     Xbyak::Reg64 UseDefGpr(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
-        return HostLocToReg64(UseDefHostLocReg(use_value, def_inst, desired_locations));
+        HostLoc location = UseScratchHostLocReg(use_value, desired_locations);
+        DefineValue(def_inst, location);
+        return HostLocToReg64(location);
     }
     Xbyak::Xmm UseDefXmm(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_xmm) {
-        return HostLocToXmm(UseDefHostLocReg(use_value, def_inst, desired_locations));
+        HostLoc location = UseScratchHostLocReg(use_value, desired_locations);
+        DefineValue(def_inst, location);
+        return HostLocToXmm(location);
     }
     std::tuple<OpArg, Xbyak::Reg64> UseDefOpArgGpr(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
         OpArg op;
@@ -152,9 +143,8 @@ private:
     bool IsRegisterAllocated(HostLoc loc) const;
     bool IsLastUse(const IR::Inst* inst) const;
 
-    HostLoc DefHostLocReg(IR::Inst* def_inst, HostLocList desired_locations);
-    HostLoc UseDefHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations);
-    HostLoc UseDefHostLocReg(IR::Inst* use_inst, IR::Inst* def_inst, HostLocList desired_locations);
+    void DefineValue(IR::Inst* def_inst, HostLoc host_loc);
+
     std::tuple<OpArg, HostLoc> UseDefOpArgHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations);
     HostLoc UseHostLocReg(IR::Value use_value, HostLocList desired_locations);
     HostLoc UseHostLocReg(IR::Inst* use_inst, HostLocList desired_locations);
