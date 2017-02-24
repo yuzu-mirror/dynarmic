@@ -101,27 +101,7 @@ std::tuple<OpArg, HostLoc> RegAlloc::UseDefOpArgHostLocReg(IR::Value use_value, 
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
     DEBUG_ASSERT_MSG(use_value.IsImmediate() || ValueLocation(use_value.GetInst()), "use_inst has not been defined");
 
-    if (!use_value.IsImmediate()) {
-        const IR::Inst* use_inst = use_value.GetInst();
-
-        if (IsLastUse(use_inst)) {
-            HostLoc current_location = *ValueLocation(use_inst);
-            auto& loc_info = LocInfo(current_location);
-            if (!loc_info.IsIdle()) {
-                if (HostLocIsSpill(current_location)) {
-                    loc_info.Lock();
-                    DEBUG_ASSERT(loc_info.IsUse());
-                    HostLoc location = ScratchHostLocReg(desired_locations);
-                    DefineValue(def_inst, location);
-                    return std::make_tuple(SpillToOpArg(current_location), location);
-                } else {
-                    loc_info.Lock();
-                    DefineValue(def_inst, current_location);
-                    return std::make_tuple(HostLocToX64(current_location), current_location);
-                }
-            }
-        }
-    }
+    // TODO: IsLastUse optimization
 
     OpArg use_oparg = UseOpArg(use_value, any_gpr);
     HostLoc def_reg = ScratchHostLocReg(desired_locations);
@@ -247,7 +227,7 @@ HostLoc RegAlloc::SelectARegister(HostLocList desired_locations) const {
 
     // Find all locations that have not been allocated..
     auto allocated_locs = std::partition(candidates.begin(), candidates.end(), [this](auto loc){
-        return !this->IsRegisterAllocated(loc);
+        return !this->LocInfo(loc).IsLocked();
     });
     candidates.erase(allocated_locs, candidates.end());
     ASSERT_MSG(!candidates.empty(), "All candidate registers have already been allocated");
@@ -256,7 +236,7 @@ HostLoc RegAlloc::SelectARegister(HostLocList desired_locations) const {
     // TODO: Actually do LRU or something. Currently we just try to pick something without a value if possible.
 
     std::partition(candidates.begin(), candidates.end(), [this](auto loc){
-        return !this->IsRegisterOccupied(loc);
+        return this->LocInfo(loc).IsEmpty();
     });
 
     return candidates.front();
@@ -270,23 +250,6 @@ boost::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {
     return boost::none;
 }
 
-bool RegAlloc::IsRegisterOccupied(HostLoc loc) const {
-    const auto& info = LocInfo(loc);
-
-    return !info.IsEmpty();
-}
-
-bool RegAlloc::IsRegisterAllocated(HostLoc loc) const {
-    return !LocInfo(loc).IsIdle();
-}
-
-bool RegAlloc::IsLastUse(const IR::Inst*) const {
-    //if (inst->UseCount() > 1)
-    //    return false;
-    //return LocInfo(*ValueLocation(inst)).values.size() == 1;
-    return false;
-}
-
 void RegAlloc::DefineValue(IR::Inst* def_inst, HostLoc host_loc) {
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
     LocInfo(host_loc).AddValue(def_inst);
@@ -294,8 +257,8 @@ void RegAlloc::DefineValue(IR::Inst* def_inst, HostLoc host_loc) {
 
 void RegAlloc::SpillRegister(HostLoc loc) {
     ASSERT_MSG(HostLocIsRegister(loc), "Only registers can be spilled");
-    ASSERT_MSG(IsRegisterOccupied(loc), "There is no need to spill unoccupied registers");
-    ASSERT_MSG(!IsRegisterAllocated(loc), "Registers that have been allocated must not be spilt");
+    ASSERT_MSG(!LocInfo(loc).IsEmpty(), "There is no need to spill unoccupied registers");
+    ASSERT_MSG(!LocInfo(loc).IsLocked(), "Registers that have been allocated must not be spilt");
 
     HostLoc new_loc = FindFreeSpill();
 
@@ -307,7 +270,7 @@ void RegAlloc::SpillRegister(HostLoc loc) {
 
 HostLoc RegAlloc::FindFreeSpill() const {
     for (size_t i = 0; i < SpillCount; i++)
-        if (!IsRegisterOccupied(HostLocSpill(i)))
+        if (LocInfo(HostLocSpill(i)).IsEmpty())
             return HostLocSpill(i);
 
     ASSERT_MSG(false, "All spill locations are full");
@@ -381,11 +344,10 @@ void RegAlloc::Exchange(HostLoc a, HostLoc b) {
 
 void RegAlloc::MoveOutOfTheWay(HostLoc reg) {
     ASSERT(!LocInfo(reg).IsLocked());
-    if (IsRegisterOccupied(reg)) {
+    if (!LocInfo(reg).IsEmpty()) {
         SpillRegister(reg);
     }
 }
-
 
 } // namespace BackendX64
 } // namespace Dynarmic

@@ -24,20 +24,14 @@ namespace BackendX64 {
 
 struct HostLocInfo {
 public:
-    bool IsIdle() const {
-        return !is_being_used;
-    }
     bool IsLocked() const {
         return is_being_used;
     }
     bool IsEmpty() const {
         return !is_being_used && values.empty();
     }
-    bool IsScratch() const {
-        return is_being_used && values.empty();
-    }
-    bool IsUse() const {
-        return is_being_used && !values.empty();
+    bool IsLastUse() const {
+        return !is_being_used && std::all_of(values.begin(), values.end(), [](const auto& inst) { return !inst->HasUses(); });
     }
 
     bool ContainsValue(const IR::Inst* inst) const {
@@ -139,9 +133,6 @@ public:
 private:
     HostLoc SelectARegister(HostLocList desired_locations) const;
     boost::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
-    bool IsRegisterOccupied(HostLoc loc) const;
-    bool IsRegisterAllocated(HostLoc loc) const;
-    bool IsLastUse(const IR::Inst* inst) const;
 
     void DefineValue(IR::Inst* def_inst, HostLoc host_loc);
 
