@@ -42,6 +42,44 @@ static Xbyak::Reg HostLocToX64(HostLoc hostloc) {
     ASSERT_MSG(false, "This should never happen.");
 }
 
+static bool IsSameHostLocClass(HostLoc a, HostLoc b) {
+    return (HostLocIsGPR(a) && HostLocIsGPR(b))
+           || (HostLocIsXMM(a) && HostLocIsXMM(b))
+           || (HostLocIsSpill(a) && HostLocIsSpill(b));
+}
+
+static void EmitMove(BlockOfCode* code, HostLoc to, HostLoc from) {
+    if (HostLocIsXMM(to) && HostLocIsXMM(from)) {
+        code->movaps(HostLocToXmm(to), HostLocToXmm(from));
+    } else if (HostLocIsGPR(to) && HostLocIsGPR(from)) {
+        code->mov(HostLocToReg64(to), HostLocToReg64(from));
+    } else if (HostLocIsXMM(to) && HostLocIsGPR(from)) {
+        ASSERT_MSG(false, "TODO");
+    } else if (HostLocIsGPR(to) && HostLocIsXMM(from)) {
+        ASSERT_MSG(false, "TODO");
+    } else if (HostLocIsXMM(to) && HostLocIsSpill(from)) {
+        code->movsd(HostLocToXmm(to), SpillToOpArg(from));
+    } else if (HostLocIsSpill(to) && HostLocIsXMM(from)) {
+        code->movsd(SpillToOpArg(to), HostLocToXmm(from));
+    } else if (HostLocIsGPR(to) && HostLocIsSpill(from)) {
+        code->mov(HostLocToReg64(to), SpillToOpArg(from));
+    } else if (HostLocIsSpill(to) && HostLocIsGPR(from)) {
+        code->mov(SpillToOpArg(to), HostLocToReg64(from));
+    } else {
+        ASSERT_MSG(false, "Invalid RegAlloc::EmitMove");
+    }
+}
+
+static void EmitExchange(BlockOfCode* code, HostLoc a, HostLoc b) {
+    if (HostLocIsGPR(a) && HostLocIsGPR(b)) {
+        code->xchg(HostLocToReg64(a), HostLocToReg64(b));
+    } else if (HostLocIsXMM(a) && HostLocIsXMM(b)) {
+        ASSERT_MSG(false, "Check your code: Exchanging XMM registers is unnecessary");
+    } else {
+        ASSERT_MSG(false, "Invalid RegAlloc::EmitExchange");
+    }
+}
+
 void RegAlloc::RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst) {
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
 
@@ -100,30 +138,29 @@ HostLoc RegAlloc::UseHostLocReg(IR::Value use_value, HostLocList desired_locatio
 }
 
 HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_locations) {
-    HostLoc current_location;
-    bool was_being_used;
-    std::tie(current_location, was_being_used) = UseHostLoc(use_inst, desired_locations);
+    use_inst->DecrementRemainingUses();
 
-    if (HostLocIsRegister(current_location)) {
+    const HostLoc current_location = *ValueLocation(use_inst);
+
+    const bool can_use_current_location = std::find(desired_locations.begin(), desired_locations.end(), current_location) != desired_locations.end();
+    if (can_use_current_location) {
+        LocInfo(current_location).Lock();
         return current_location;
-    } else if (HostLocIsSpill(current_location)) {
-        HostLoc new_location = SelectARegister(desired_locations);
-        if (IsRegisterOccupied(new_location)) {
-            SpillRegister(new_location);
-        }
-        EmitMove(new_location, current_location);
-        if (!was_being_used) {
-            LocInfo(new_location) = LocInfo(current_location);
-            LocInfo(current_location) = {};
-            DEBUG_ASSERT(LocInfo(new_location).IsUse());
-        } else {
-            LocInfo(new_location).Lock();
-            DEBUG_ASSERT(LocInfo(new_location).IsScratch());
-        }
-        return new_location;
     }
 
-    ASSERT_MSG(false, "Unknown current_location type");
+    if (LocInfo(current_location).IsLocked()) {
+        return UseScratchHostLocReg(use_inst, desired_locations);
+    }
+
+    const HostLoc destination_location = SelectARegister(desired_locations);
+    if (IsSameHostLocClass(destination_location, current_location)) {
+        Exchange(destination_location, current_location);
+    } else {
+        MoveOutOfTheWay(destination_location);
+        Move(destination_location, current_location);
+    }
+    LocInfo(destination_location).Lock();
+    return destination_location;
 }
 
 OpArg RegAlloc::UseOpArg(IR::Value use_value, HostLocList desired_locations) {
@@ -167,7 +204,7 @@ HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_l
     }
 
     if (HostLocIsSpill(current_location)) {
-        EmitMove(new_location, current_location);
+        EmitMove(code, new_location, current_location);
         LocInfo(new_location).Lock();
         use_inst->DecrementRemainingUses();
         DEBUG_ASSERT(LocInfo(new_location).IsScratch());
@@ -177,7 +214,7 @@ HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_l
                 || LocInfo(current_location).IsUse());
 
         if (current_location != new_location) {
-            EmitMove(new_location, current_location);
+            EmitMove(code, new_location, current_location);
         } else {
             ASSERT(LocInfo(current_location).IsIdle());
         }
@@ -300,7 +337,7 @@ void RegAlloc::SpillRegister(HostLoc loc) {
 
     HostLoc new_loc = FindFreeSpill();
 
-    EmitMove(new_loc, loc);
+    EmitMove(code, new_loc, loc);
 
     LocInfo(new_loc) = LocInfo(loc);
     LocInfo(loc) = {};
@@ -330,34 +367,6 @@ void RegAlloc::Reset() {
     hostloc_info.fill({});
 }
 
-void RegAlloc::EmitMove(HostLoc to, HostLoc from) {
-    if (HostLocIsXMM(to) && HostLocIsSpill(from)) {
-        code->movsd(HostLocToXmm(to), SpillToOpArg(from));
-    } else if (HostLocIsSpill(to) && HostLocIsXMM(from)) {
-        code->movsd(SpillToOpArg(to), HostLocToXmm(from));
-    } else if (HostLocIsXMM(to) && HostLocIsXMM(from)) {
-        code->movaps(HostLocToXmm(to), HostLocToXmm(from));
-    } else if (HostLocIsGPR(to) && HostLocIsSpill(from)) {
-        code->mov(HostLocToReg64(to), SpillToOpArg(from));
-    } else if (HostLocIsSpill(to) && HostLocIsGPR(from)) {
-        code->mov(SpillToOpArg(to), HostLocToReg64(from));
-    } else if (HostLocIsGPR(to) && HostLocIsGPR(from)){
-        code->mov(HostLocToReg64(to), HostLocToReg64(from));
-    } else {
-        ASSERT_MSG(false, "Invalid RegAlloc::EmitMove");
-    }
-}
-
-void RegAlloc::EmitExchange(HostLoc a, HostLoc b) {
-    if (HostLocIsGPR(a) && HostLocIsGPR(b)) {
-        code->xchg(HostLocToReg64(a), HostLocToReg64(b));
-    } else if (HostLocIsXMM(a) && HostLocIsXMM(b)) {
-        ASSERT_MSG(false, "Exchange is unnecessary for XMM registers");
-    } else {
-        ASSERT_MSG(false, "Invalid RegAlloc::EmitExchange");
-    }
-}
-
 std::tuple<HostLoc, bool> RegAlloc::UseHostLoc(IR::Inst* use_inst, HostLocList desired_locations) {
     DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
     DEBUG_ASSERT_MSG(ValueLocation(use_inst), "use_inst has not been defined");
@@ -382,7 +391,7 @@ std::tuple<HostLoc, bool> RegAlloc::UseHostLoc(IR::Inst* use_inst, HostLocList d
     } else if (HostLocIsRegister(current_location)) {
         HostLoc new_location = SelectARegister(desired_locations);
         ASSERT(LocInfo(current_location).IsIdle());
-        EmitExchange(new_location, current_location);
+        EmitExchange(code, new_location, current_location);
         std::swap(LocInfo(new_location), LocInfo(current_location));
         LocInfo(new_location).Lock();
         use_inst->DecrementRemainingUses();
@@ -406,6 +415,45 @@ HostLoc RegAlloc::LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc host_loc) {
         code->mov(reg, imm_value);
     return host_loc;
 }
+
+void RegAlloc::Move(HostLoc to, HostLoc from) {
+    ASSERT(LocInfo(to).IsEmpty() && !LocInfo(from).IsLocked());
+
+    if (LocInfo(from).IsEmpty()) {
+        return;
+    }
+
+    LocInfo(to) = LocInfo(from);
+    LocInfo(from) = {};
+
+    EmitMove(code, to, from);
+}
+
+void RegAlloc::Exchange(HostLoc a, HostLoc b) {
+    ASSERT(!LocInfo(a).IsLocked() && !LocInfo(b).IsLocked());
+
+    if (LocInfo(a).IsEmpty()) {
+        Move(a, b);
+        return;
+    }
+
+    if (LocInfo(b).IsEmpty()) {
+        Move(b, a);
+        return;
+    }
+
+    std::swap(LocInfo(a), LocInfo(b));
+
+    EmitExchange(code, a, b);
+}
+
+void RegAlloc::MoveOutOfTheWay(HostLoc reg) {
+    ASSERT(!LocInfo(reg).IsLocked());
+    if (IsRegisterOccupied(reg)) {
+        SpillRegister(reg);
+    }
+}
+
 
 } // namespace BackendX64
 } // namespace Dynarmic

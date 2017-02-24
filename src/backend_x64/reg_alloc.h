@@ -153,9 +153,11 @@ private:
     HostLoc UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_locations);
     HostLoc ScratchHostLocReg(HostLocList desired_locations);
 
-    void EmitMove(HostLoc to, HostLoc from);
-    void EmitExchange(HostLoc a, HostLoc b);
     HostLoc LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc reg);
+
+    void Move(HostLoc to, HostLoc from);
+    void Exchange(HostLoc a, HostLoc b);
+    void MoveOutOfTheWay(HostLoc reg);
 
     void SpillRegister(HostLoc loc);
     HostLoc FindFreeSpill() const;
