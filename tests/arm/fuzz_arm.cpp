@@ -239,9 +239,10 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
         // Run interpreter
         write_records.clear();
+        std::vector<WriteRecord> interp_write_records;
         interp.NumInstrsToExecute = static_cast<unsigned>(instructions_to_execute_count);
         InterpreterMainLoop(&interp);
-        auto interp_write_records = write_records;
+        interp_write_records = write_records;
         {
             bool T = Dynarmic::Common::Bit<5>(interp.Cpsr);
             interp.Reg[15] &= T ? 0xFFFFFFFE : 0xFFFFFFFC;
@@ -249,12 +250,20 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
 
         // Run jit
         write_records.clear();
-        jit.Run(static_cast<unsigned>(instructions_to_execute_count));
-        auto jit_write_records = write_records;
+        std::vector<WriteRecord> jit_write_records;
+        try {
+           jit.Run(static_cast<unsigned>(instructions_to_execute_count));
+           jit_write_records = write_records;
+        } catch (...) {
+            printf("Caught something!\n");
+            goto dump_state;
+        }
 
         // Compare
         if (!DoesBehaviorMatch(interp, jit, interp_write_records, jit_write_records)) {
             printf("Failed at execution number %zu\n", run_number);
+
+        dump_state:
 
             printf("\nInstruction Listing: \n");
             for (size_t i = 0; i < instruction_count; i++) {
@@ -305,6 +314,8 @@ void FuzzJitArm(const size_t instruction_count, const size_t instructions_to_exe
                 printf("\n\nx86_64:\n%s", jit.Disassemble(descriptor).c_str());
                 num_insts += ir_block.CycleCount();
             }
+
+            fflush(stdout);
 
 #ifdef _MSC_VER
             __debugbreak();
