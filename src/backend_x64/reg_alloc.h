@@ -150,57 +150,6 @@ public:
         RegisterAddDef(inst, arg.value);
     }
 
-    /// Late-def
-    Xbyak::Reg64 DefGpr(IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
-        HostLoc location = ScratchHostLocReg(desired_locations);
-        DefineValue(def_inst, location);
-        return HostLocToReg64(location);
-    }
-    Xbyak::Xmm DefXmm(IR::Inst* def_inst, HostLocList desired_locations = any_xmm) {
-        HostLoc location = ScratchHostLocReg(desired_locations);
-        DefineValue(def_inst, location);
-        return HostLocToXmm(location);
-    }
-    void RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst);
-    /// Early-use, Late-def
-    Xbyak::Reg64 UseDefGpr(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
-        HostLoc location = UseScratchHostLocReg(use_value, desired_locations);
-        DefineValue(def_inst, location);
-        return HostLocToReg64(location);
-    }
-    Xbyak::Xmm UseDefXmm(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_xmm) {
-        HostLoc location = UseScratchHostLocReg(use_value, desired_locations);
-        DefineValue(def_inst, location);
-        return HostLocToXmm(location);
-    }
-    std::tuple<OpArg, Xbyak::Reg64> UseDefOpArgGpr(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_gpr) {
-        OpArg op;
-        HostLoc host_loc;
-        std::tie(op, host_loc) = UseDefOpArgHostLocReg(use_value, def_inst, desired_locations);
-        return std::make_tuple(op, HostLocToReg64(host_loc));
-    }
-    std::tuple<OpArg, Xbyak::Xmm> UseDefOpArgXmm(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations = any_xmm) {
-        OpArg op;
-        HostLoc host_loc;
-        std::tie(op, host_loc) = UseDefOpArgHostLocReg(use_value, def_inst, desired_locations);
-        return std::make_tuple(op, HostLocToXmm(host_loc));
-    }
-    /// Early-use
-    Xbyak::Reg64 UseGpr(IR::Value use_value, HostLocList desired_locations = any_gpr) {
-        return HostLocToReg64(UseHostLocReg(use_value, desired_locations));
-    }
-    Xbyak::Xmm UseXmm(IR::Value use_value, HostLocList desired_locations = any_xmm) {
-        return HostLocToXmm(UseHostLocReg(use_value, desired_locations));
-    }
-    OpArg UseOpArg(IR::Value use_value, HostLocList desired_locations);
-    /// Early-use, Destroyed
-    Xbyak::Reg64 UseScratchGpr(IR::Value use_value, HostLocList desired_locations = any_gpr) {
-        return HostLocToReg64(UseScratchHostLocReg(use_value, desired_locations));
-    }
-    Xbyak::Xmm UseScratchXmm(IR::Value use_value, HostLocList desired_locations = any_xmm) {
-        return HostLocToXmm(UseScratchHostLocReg(use_value, desired_locations));
-    }
-    /// Early-def, Late-use, single-use
     Xbyak::Reg64 ScratchGpr(HostLocList desired_locations = any_gpr) {
         return HostLocToReg64(ScratchHostLocReg(desired_locations));
     }
@@ -226,8 +175,8 @@ private:
     boost::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
 
     void DefineValue(IR::Inst* def_inst, HostLoc host_loc);
+    void RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst);
 
-    std::tuple<OpArg, HostLoc> UseDefOpArgHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations);
     HostLoc UseHostLocReg(IR::Value use_value, HostLocList desired_locations);
     HostLoc UseHostLocReg(IR::Inst* use_inst, HostLocList desired_locations);
     HostLoc UseScratchHostLocReg(IR::Value use_value, HostLocList desired_locations);

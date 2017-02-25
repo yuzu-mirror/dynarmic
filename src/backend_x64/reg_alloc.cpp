@@ -33,17 +33,6 @@ static u64 ImmediateToU64(const IR::Value& imm) {
     }
 }
 
-static Xbyak::Reg HostLocToX64(HostLoc hostloc) {
-    if (HostLocIsGPR(hostloc)) {
-        DEBUG_ASSERT(hostloc != HostLoc::RSP && hostloc != HostLoc::R15);
-        return HostLocToReg64(hostloc);
-    }
-    if (HostLocIsXMM(hostloc)) {
-        return HostLocToXmm(hostloc);
-    }
-    ASSERT_MSG(false, "This should never happen.");
-}
-
 static bool IsSameHostLocClass(HostLoc a, HostLoc b) {
     return (HostLocIsGPR(a) && HostLocIsGPR(b))
            || (HostLocIsXMM(a) && HostLocIsXMM(b))
@@ -145,19 +134,6 @@ void RegAlloc::RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst) {
     DefineValue(def_inst, location);
 }
 
-std::tuple<OpArg, HostLoc> RegAlloc::UseDefOpArgHostLocReg(IR::Value use_value, IR::Inst* def_inst, HostLocList desired_locations) {
-    DEBUG_ASSERT(std::all_of(desired_locations.begin(), desired_locations.end(), HostLocIsRegister));
-    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
-    DEBUG_ASSERT_MSG(use_value.IsImmediate() || ValueLocation(use_value.GetInst()), "use_inst has not been defined");
-
-    // TODO: IsLastUse optimization
-
-    OpArg use_oparg = UseOpArg(use_value, any_gpr);
-    HostLoc def_reg = ScratchHostLocReg(desired_locations);
-    DefineValue(def_inst, def_reg);
-    return std::make_tuple(use_oparg, def_reg);
-}
-
 HostLoc RegAlloc::UseHostLocReg(IR::Value use_value, HostLocList desired_locations) {
     if (!use_value.IsImmediate()) {
         return UseHostLocReg(use_value.GetInst(), desired_locations);
@@ -190,16 +166,6 @@ HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_location
     }
     LocInfo(destination_location).ReadLock();
     return destination_location;
-}
-
-OpArg RegAlloc::UseOpArg(IR::Value use_value, HostLocList desired_locations) {
-    if (use_value.IsImmediate()) {
-        ASSERT_MSG(false, "UseOpArg does not support immediates");
-        return {}; // return a None
-    }
-
-    // TODO: Reimplement properly
-    return HostLocToX64(UseHostLocReg(use_value.GetInst(), desired_locations));
 }
 
 HostLoc RegAlloc::UseScratchHostLocReg(IR::Value use_value, HostLocList desired_locations) {
