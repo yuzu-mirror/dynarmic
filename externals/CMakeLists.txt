@@ -13,3 +13,7 @@ if (NOT TARGET xbyak)
         target_include_directories(xbyak INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/xbyak/xbyak)
     endif()
 endif()
+
+add_library(catch INTERFACE)
+target_include_directories(catch INTERFACE
+                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/catch>)

@@ -111,9 +111,8 @@ else()
 endif()
 include_directories(${Boost_INCLUDE_DIRS})
 
-# Include Catch
-include_directories(externals/catch)
-enable_testing(true)  # Enables unit-testing.
+# Enable unit-testing.
+enable_testing(true)
 
 # Include LLVM
 if (DYNARMIC_USE_LLVM)
