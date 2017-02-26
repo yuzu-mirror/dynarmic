@@ -2901,11 +2901,15 @@ void EmitX64::EmitWriteMemory64(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst)
 }
 
 template <typename FunctionPointer>
-static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, FunctionPointer fn) {
+static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, FunctionPointer fn, bool prepend_high_word) {
     using namespace Xbyak::util;
     Xbyak::Label end;
 
-    reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
+    if (prepend_high_word) {
+        reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1), inst->GetArg(2));
+    } else {
+        reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
+    }
     Xbyak::Reg32 passed = reg_alloc.DefGpr(inst).cvt32();
     Xbyak::Reg32 tmp = code->ABI_RETURN.cvt32(); // Use one of the unusued HostCall registers.
 
@@ -2917,47 +2921,30 @@ static void ExclusiveWrite(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* ins
     code->test(tmp, JitState::RESERVATION_GRANULE_MASK);
     code->jne(end);
     code->mov(code->byte[r15 + offsetof(JitState, exclusive_state)], u8(0));
+    if (prepend_high_word) {
+        code->mov(code->ABI_PARAM2.cvt32(), code->ABI_PARAM2.cvt32()); // zero extend to 64-bits
+        code->shl(code->ABI_PARAM3, 32);
+        code->or_(code->ABI_PARAM2, code->ABI_PARAM3);
+    }
     code->CallFunction(fn);
     code->xor_(passed, passed);
     code->L(end);
 }
 
 void EmitX64::EmitExclusiveWriteMemory8(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write8);
+    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write8, false);
 }
 
 void EmitX64::EmitExclusiveWriteMemory16(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write16);
+    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write16, false);
 }
 
 void EmitX64::EmitExclusiveWriteMemory32(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
-    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write32);
+    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write32, false);
 }
 
 void EmitX64::EmitExclusiveWriteMemory64(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
-    using namespace Xbyak::util;
-    Xbyak::Label end;
-
-    reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
-    Xbyak::Reg32 passed = reg_alloc.DefGpr(inst).cvt32();
-    Xbyak::Reg64 value_hi = reg_alloc.UseScratchGpr(inst->GetArg(2));
-    Xbyak::Reg64 value = code->ABI_PARAM2;
-    Xbyak::Reg32 tmp = code->ABI_RETURN.cvt32(); // Use one of the unusued HostCall registers.
-
-    code->mov(passed, u32(1));
-    code->cmp(code->byte[r15 + offsetof(JitState, exclusive_state)], u8(0));
-    code->je(end);
-    code->mov(tmp, code->ABI_PARAM1);
-    code->xor_(tmp, dword[r15 + offsetof(JitState, exclusive_address)]);
-    code->test(tmp, JitState::RESERVATION_GRANULE_MASK);
-    code->jne(end);
-    code->mov(code->byte[r15 + offsetof(JitState, exclusive_state)], u8(0));
-    code->mov(value.cvt32(), value.cvt32()); // zero extend to 64-bits
-    code->shl(value_hi, 32);
-    code->or_(value, value_hi);
-    code->CallFunction(cb.memory.Write64);
-    code->xor_(passed, passed);
-    code->L(end);
+    ExclusiveWrite(code, reg_alloc, inst, cb.memory.Write64, true);
 }
 
 static void EmitCoprocessorException() {
