@@ -110,7 +110,7 @@ bool Argument::IsInMemory() const {
 }
 
 std::array<Argument, 3> RegAlloc::GetArgumentInfo(IR::Inst* inst) {
-    std::array<Argument, 3> ret = { Argument{*this}, Argument{*this}, Argument{*this}};
+    std::array<Argument, 3> ret = { Argument{*this}, Argument{*this}, Argument{*this} };
     for (size_t i = 0; i < inst->NumArgs(); i++) {
         IR::Value arg = inst->GetArg(i);
         ret[i].value = arg;
@@ -118,33 +118,72 @@ std::array<Argument, 3> RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     return ret;
 }
 
-void RegAlloc::RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst) {
-    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
-
-    if (use_inst.IsImmediate()) {
-        HostLoc location = ScratchHostLocReg(any_gpr);
-        DefineValue(def_inst, location);
-        LoadImmediateIntoHostLocReg(use_inst, location);
-        return;
-    }
-
-    use_inst.GetInst()->DecrementRemainingUses();
-    DEBUG_ASSERT_MSG(ValueLocation(use_inst.GetInst()), "use_inst must already be defined");
-    HostLoc location = *ValueLocation(use_inst.GetInst());
-    DefineValue(def_inst, location);
+Xbyak::Reg64 RegAlloc::UseGpr(Argument& arg) {
+    ASSERT(!arg.allocated);
+    arg.allocated = true;
+    return HostLocToReg64(UseImpl(arg.value, any_gpr));
 }
 
-HostLoc RegAlloc::UseHostLocReg(IR::Value use_value, HostLocList desired_locations) {
-    if (!use_value.IsImmediate()) {
-        return UseHostLocReg(use_value.GetInst(), desired_locations);
-    }
-
-    return LoadImmediateIntoHostLocReg(use_value, ScratchHostLocReg(desired_locations));
+Xbyak::Xmm RegAlloc::UseXmm(Argument& arg) {
+    ASSERT(!arg.allocated);
+    arg.allocated = true;
+    return HostLocToXmm(UseImpl(arg.value, any_xmm));
 }
 
-HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_locations) {
-    use_inst->DecrementRemainingUses();
+OpArg RegAlloc::UseOpArg(Argument& arg) {
+    return UseGpr(arg);
+}
 
+void RegAlloc::Use(Argument& arg, HostLoc host_loc) {
+    ASSERT(!arg.allocated);
+    arg.allocated = true;
+    UseImpl(arg.value, {host_loc});
+}
+
+Xbyak::Reg64 RegAlloc::UseScratchGpr(Argument& arg) {
+    ASSERT(!arg.allocated);
+    arg.allocated = true;
+    return HostLocToReg64(UseScratchImpl(arg.value, any_gpr));
+}
+
+Xbyak::Xmm RegAlloc::UseScratchXmm(Argument& arg) {
+    ASSERT(!arg.allocated);
+    arg.allocated = true;
+    return HostLocToXmm(UseScratchImpl(arg.value, any_xmm));
+}
+
+void RegAlloc::UseScratch(Argument& arg, HostLoc host_loc) {
+    ASSERT(!arg.allocated);
+    arg.allocated = true;
+    UseScratchImpl(arg.value, {host_loc});
+}
+
+void RegAlloc::DefineValue(IR::Inst* inst, const Xbyak::Reg& reg) {
+    ASSERT(reg.getKind() == Xbyak::Operand::XMM || reg.getKind() == Xbyak::Operand::REG);
+    HostLoc hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(reg.getKind() == Xbyak::Operand::XMM ? HostLoc::XMM0 : HostLoc::RAX));
+    DefineValueImpl(inst, hostloc);
+}
+
+void RegAlloc::DefineValue(IR::Inst* inst, Argument& arg) {
+    ASSERT(!arg.allocated);
+    arg.allocated = true;
+    DefineValueImpl(inst, arg.value);
+}
+
+Xbyak::Reg64 RegAlloc::ScratchGpr(HostLocList desired_locations) {
+    return HostLocToReg64(ScratchImpl(desired_locations));
+}
+
+Xbyak::Xmm RegAlloc::ScratchXmm(HostLocList desired_locations) {
+    return HostLocToXmm(ScratchImpl(desired_locations));
+}
+
+HostLoc RegAlloc::UseImpl(IR::Value use_value, HostLocList desired_locations) {
+    if (use_value.IsImmediate()) {
+        return LoadImmediate(use_value, ScratchImpl(desired_locations));
+    }
+
+    IR::Inst* use_inst = use_value.GetInst();
     const HostLoc current_location = *ValueLocation(use_inst);
 
     const bool can_use_current_location = std::find(desired_locations.begin(), desired_locations.end(), current_location) != desired_locations.end();
@@ -154,7 +193,7 @@ HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_location
     }
 
     if (LocInfo(current_location).IsLocked()) {
-        return UseScratchHostLocReg(use_inst, desired_locations);
+        return UseScratchImpl(use_value, desired_locations);
     }
 
     const HostLoc destination_location = SelectARegister(desired_locations);
@@ -168,17 +207,12 @@ HostLoc RegAlloc::UseHostLocReg(IR::Inst* use_inst, HostLocList desired_location
     return destination_location;
 }
 
-HostLoc RegAlloc::UseScratchHostLocReg(IR::Value use_value, HostLocList desired_locations) {
-    if (!use_value.IsImmediate()) {
-        return UseScratchHostLocReg(use_value.GetInst(), desired_locations);
+HostLoc RegAlloc::UseScratchImpl(IR::Value use_value, HostLocList desired_locations) {
+    if (use_value.IsImmediate()) {
+        return LoadImmediate(use_value, ScratchImpl(desired_locations));
     }
 
-    return LoadImmediateIntoHostLocReg(use_value, ScratchHostLocReg(desired_locations));
-}
-
-HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_locations) {
-    use_inst->DecrementRemainingUses();
-
+    IR::Inst* use_inst = use_value.GetInst();
     const HostLoc current_location = *ValueLocation(use_inst);
 
     const bool can_use_current_location = std::find(desired_locations.begin(), desired_locations.end(), current_location) != desired_locations.end();
@@ -195,19 +229,19 @@ HostLoc RegAlloc::UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_l
     return destination_location;
 }
 
-HostLoc RegAlloc::ScratchHostLocReg(HostLocList desired_locations) {
+HostLoc RegAlloc::ScratchImpl(HostLocList desired_locations) {
     HostLoc location = SelectARegister(desired_locations);
     MoveOutOfTheWay(location);
     LocInfo(location).WriteLock();
     return location;
 }
 
-void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1_use, IR::Value arg2_use, IR::Value arg3_use) {
+void RegAlloc::HostCall(IR::Inst* result_def, boost::optional<Argument&> arg0, boost::optional<Argument&> arg1, boost::optional<Argument&> arg2, boost::optional<Argument&> arg3) {
     constexpr size_t args_count = 4;
     constexpr std::array<HostLoc, args_count> args_hostloc = { ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4 };
-    const std::array<IR::Value*, args_count> args = {&arg0_use, &arg1_use, &arg2_use, &arg3_use};
+    const std::array<boost::optional<Argument&>, args_count> args = { arg0, arg1, arg2, arg3 };
 
-    const static std::vector<HostLoc> other_caller_save = [args_hostloc](){
+    const static std::vector<HostLoc> other_caller_save = [args_hostloc]() {
         std::vector<HostLoc> ret(ABI_ALL_CALLER_SAVE.begin(), ABI_ALL_CALLER_SAVE.end());
 
         for (auto hostloc : args_hostloc)
@@ -216,25 +250,37 @@ void RegAlloc::HostCall(IR::Inst* result_def, IR::Value arg0_use, IR::Value arg1
         return ret;
     }();
 
-    // TODO: This works but almost certainly leads to suboptimal generated code.
-
+    ScratchGpr({ABI_RETURN});
     if (result_def) {
-        DefineValue(result_def, ScratchHostLocReg({ABI_RETURN}));
-    } else {
-        ScratchHostLocReg({ABI_RETURN});
+        DefineValueImpl(result_def, ABI_RETURN);
     }
 
     for (size_t i = 0; i < args_count; i++) {
-        if (!args[i]->IsEmpty()) {
-            UseScratchHostLocReg(*args[i], {args_hostloc[i]});
-        } else {
-            ScratchHostLocReg({args_hostloc[i]});
+        if (args[i]) {
+            UseScratch(*args[i], args_hostloc[i]);
+        }
+    }
+
+    for (size_t i = 0; i < args_count; i++) {
+        if (!args[i]) {
+            // TODO: Force spill
+            ScratchGpr({args_hostloc[i]});
         }
     }
 
     for (HostLoc caller_saved : other_caller_save) {
-        ScratchHostLocReg({caller_saved});
+        ScratchImpl({caller_saved});
     }
+}
+
+void RegAlloc::EndOfAllocScope() {
+    for (auto& iter : hostloc_info) {
+        iter.EndOfAllocScope();
+    }
+}
+
+void RegAlloc::AssertNoMoreUses() {
+    ASSERT(std::all_of(hostloc_info.begin(), hostloc_info.end(), [](const auto& i) { return i.IsEmpty(); }));
 }
 
 HostLoc RegAlloc::SelectARegister(HostLocList desired_locations) const {
@@ -265,45 +311,28 @@ boost::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {
     return boost::none;
 }
 
-void RegAlloc::DefineValue(IR::Inst* def_inst, HostLoc host_loc) {
+void RegAlloc::DefineValueImpl(IR::Inst* def_inst, HostLoc host_loc) {
     DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
     LocInfo(host_loc).AddValue(def_inst);
 }
 
-void RegAlloc::SpillRegister(HostLoc loc) {
-    ASSERT_MSG(HostLocIsRegister(loc), "Only registers can be spilled");
-    ASSERT_MSG(!LocInfo(loc).IsEmpty(), "There is no need to spill unoccupied registers");
-    ASSERT_MSG(!LocInfo(loc).IsLocked(), "Registers that have been allocated must not be spilt");
+void RegAlloc::DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst) {
+    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
 
-    HostLoc new_loc = FindFreeSpill();
-    Move(new_loc, loc);
-}
-
-HostLoc RegAlloc::FindFreeSpill() const {
-    for (size_t i = 0; i < SpillCount; i++)
-        if (LocInfo(HostLocSpill(i)).IsEmpty())
-            return HostLocSpill(i);
-
-    ASSERT_MSG(false, "All spill locations are full");
-}
-
-void RegAlloc::EndOfAllocScope() {
-    for (auto& iter : hostloc_info) {
-        iter.EndOfAllocScope();
+    if (use_inst.IsImmediate()) {
+        HostLoc location = ScratchImpl(any_gpr);
+        DefineValueImpl(def_inst, location);
+        LoadImmediate(use_inst, location);
+        return;
     }
+
+    use_inst.GetInst()->DecrementRemainingUses();
+    DEBUG_ASSERT_MSG(ValueLocation(use_inst.GetInst()), "use_inst must already be defined");
+    HostLoc location = *ValueLocation(use_inst.GetInst());
+    DefineValueImpl(def_inst, location);
 }
 
-void RegAlloc::AssertNoMoreUses() {
-    if (!std::all_of(hostloc_info.begin(), hostloc_info.end(), [](const auto& i){ return i.IsEmpty(); })) {
-        ASSERT_MSG(false, "bad");
-    }
-}
-
-void RegAlloc::Reset() {
-    hostloc_info.fill({});
-}
-
-HostLoc RegAlloc::LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc host_loc) {
+HostLoc RegAlloc::LoadImmediate(IR::Value imm, HostLoc host_loc) {
     ASSERT_MSG(imm.IsImmediate(), "imm is not an immediate");
 
     Xbyak::Reg64 reg = HostLocToReg64(host_loc);
@@ -358,6 +387,33 @@ void RegAlloc::MoveOutOfTheWay(HostLoc reg) {
     if (!LocInfo(reg).IsEmpty()) {
         SpillRegister(reg);
     }
+}
+
+void RegAlloc::SpillRegister(HostLoc loc) {
+    ASSERT_MSG(HostLocIsRegister(loc), "Only registers can be spilled");
+    ASSERT_MSG(!LocInfo(loc).IsEmpty(), "There is no need to spill unoccupied registers");
+    ASSERT_MSG(!LocInfo(loc).IsLocked(), "Registers that have been allocated must not be spilt");
+
+    HostLoc new_loc = FindFreeSpill();
+    Move(new_loc, loc);
+}
+
+HostLoc RegAlloc::FindFreeSpill() const {
+    for (size_t i = 0; i < SpillCount; i++)
+        if (LocInfo(HostLocSpill(i)).IsEmpty())
+            return HostLocSpill(i);
+
+    ASSERT_MSG(false, "All spill locations are full");
+}
+
+HostLocInfo& RegAlloc::LocInfo(HostLoc loc) {
+    DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
+    return hostloc_info[static_cast<size_t>(loc)];
+}
+
+const HostLocInfo& RegAlloc::LocInfo(HostLoc loc) const {
+    DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
+    return hostloc_info[static_cast<size_t>(loc)];
 }
 
 } // namespace BackendX64

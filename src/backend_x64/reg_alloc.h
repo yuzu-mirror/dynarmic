@@ -104,61 +104,22 @@ public:
 
     std::array<Argument, 3> GetArgumentInfo(IR::Inst* inst);
 
-    Xbyak::Reg64 UseGpr(Argument& arg) {
-        ASSERT(!arg.allocated);
-        arg.allocated = true;
-        return HostLocToReg64(UseHostLocReg(arg.value, any_gpr));
-    }
-    Xbyak::Xmm UseXmm(Argument& arg) {
-        ASSERT(!arg.allocated);
-        arg.allocated = true;
-        return HostLocToXmm(UseHostLocReg(arg.value, any_xmm));
-    }
-    OpArg UseOpArg(Argument& arg) {
-        return UseGpr(arg);
-    }
-    void Use(Argument& arg, HostLoc host_loc) {
-        ASSERT(!arg.allocated);
-        arg.allocated = true;
-        UseHostLocReg(arg.value, {host_loc});
-    }
+    Xbyak::Reg64 UseGpr(Argument& arg);
+    Xbyak::Xmm UseXmm(Argument& arg);
+    OpArg UseOpArg(Argument& arg);
+    void Use(Argument& arg, HostLoc host_loc);
 
-    Xbyak::Reg64 UseScratchGpr(Argument& arg) {
-        ASSERT(!arg.allocated);
-        arg.allocated = true;
-        return HostLocToReg64(UseScratchHostLocReg(arg.value, any_gpr));
-    }
-    Xbyak::Xmm UseScratchXmm(Argument& arg) {
-        ASSERT(!arg.allocated);
-        arg.allocated = true;
-        return HostLocToXmm(UseScratchHostLocReg(arg.value, any_xmm));
-    }
-    void UseScratch(Argument& arg, HostLoc host_loc) {
-        ASSERT(!arg.allocated);
-        arg.allocated = true;
-        UseScratchHostLocReg(arg.value, {host_loc});
-    }
+    Xbyak::Reg64 UseScratchGpr(Argument& arg);
+    Xbyak::Xmm UseScratchXmm(Argument& arg);
+    void UseScratch(Argument& arg, HostLoc host_loc);
 
-    void DefineValue(IR::Inst* inst, const Xbyak::Reg& reg) {
-        ASSERT(reg.getKind() == Xbyak::Operand::XMM || reg.getKind() == Xbyak::Operand::REG);
-        HostLoc hostloc = static_cast<HostLoc>(reg.getIdx() + static_cast<size_t>(reg.getKind() == Xbyak::Operand::XMM ? HostLoc::XMM0 : HostLoc::RAX));
-        DefineValue(inst, hostloc);
-    }
-    void DefineValue(IR::Inst* inst, Argument& arg) {
-        ASSERT(!arg.allocated);
-        arg.allocated = true;
-        RegisterAddDef(inst, arg.value);
-    }
+    void DefineValue(IR::Inst* inst, const Xbyak::Reg& reg);
+    void DefineValue(IR::Inst* inst, Argument& arg);
 
-    Xbyak::Reg64 ScratchGpr(HostLocList desired_locations = any_gpr) {
-        return HostLocToReg64(ScratchHostLocReg(desired_locations));
-    }
-    Xbyak::Xmm ScratchXmm(HostLocList desired_locations = any_xmm) {
-        return HostLocToXmm(ScratchHostLocReg(desired_locations));
-    }
+    Xbyak::Reg64 ScratchGpr(HostLocList desired_locations = any_gpr);
+    Xbyak::Xmm ScratchXmm(HostLocList desired_locations = any_xmm);
 
-    /// Late-def for result register, Early-use for all arguments, Each value is placed into registers according to host ABI.
-    void HostCall(IR::Inst* result_def = nullptr, IR::Value arg0_use = {}, IR::Value arg1_use = {}, IR::Value arg2_use = {}, IR::Value arg3_use = {});
+    void HostCall(IR::Inst* result_def = nullptr, boost::optional<Argument&> arg0 = {}, boost::optional<Argument&> arg1 = {}, boost::optional<Argument&> arg2 = {}, boost::optional<Argument&> arg3 = {});
 
     // TODO: Values in host flags
 
@@ -166,25 +127,21 @@ public:
 
     void AssertNoMoreUses();
 
-    void Reset();
-
 private:
     friend struct Argument;
 
     HostLoc SelectARegister(HostLocList desired_locations) const;
     boost::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
 
-    void DefineValue(IR::Inst* def_inst, HostLoc host_loc);
-    void RegisterAddDef(IR::Inst* def_inst, const IR::Value& use_inst);
+    HostLoc UseImpl(IR::Value use_value, HostLocList desired_locations);
+    HostLoc UseScratchImpl(IR::Value use_value, HostLocList desired_locations);
+    HostLoc ScratchImpl(HostLocList desired_locations);
+    void DefineValueImpl(IR::Inst* def_inst, HostLoc host_loc);
+    void DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst);
 
-    HostLoc UseHostLocReg(IR::Value use_value, HostLocList desired_locations);
-    HostLoc UseHostLocReg(IR::Inst* use_inst, HostLocList desired_locations);
-    HostLoc UseScratchHostLocReg(IR::Value use_value, HostLocList desired_locations);
-    HostLoc UseScratchHostLocReg(IR::Inst* use_inst, HostLocList desired_locations);
-    HostLoc ScratchHostLocReg(HostLocList desired_locations);
+    BlockOfCode* code = nullptr;
 
-    HostLoc LoadImmediateIntoHostLocReg(IR::Value imm, HostLoc reg);
-
+    HostLoc LoadImmediate(IR::Value imm, HostLoc reg);
     void Move(HostLoc to, HostLoc from);
     void CopyToScratch(HostLoc to, HostLoc from);
     void Exchange(HostLoc a, HostLoc b);
@@ -193,17 +150,9 @@ private:
     void SpillRegister(HostLoc loc);
     HostLoc FindFreeSpill() const;
 
-    BlockOfCode* code = nullptr;
-
     std::array<HostLocInfo, HostLocCount> hostloc_info;
-    HostLocInfo& LocInfo(HostLoc loc) {
-        DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
-        return hostloc_info[static_cast<size_t>(loc)];
-    }
-    const HostLocInfo& LocInfo(HostLoc loc) const {
-        DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
-        return hostloc_info[static_cast<size_t>(loc)];
-    }
+    HostLocInfo& LocInfo(HostLoc loc);
+    const HostLocInfo& LocInfo(HostLoc loc) const;
 };
 
 } // namespace BackendX64
