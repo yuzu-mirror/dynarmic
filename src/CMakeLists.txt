@@ -104,7 +104,7 @@ endif()
 include(CreateDirectoryGroups)
 create_directory_groups(${SRCS} ${HEADERS})
 
-add_library(dynarmic STATIC ${SRCS} ${HEADERS})
+add_library(dynarmic ${SRCS} ${HEADERS})
 set_target_properties(dynarmic PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(dynarmic
                            PUBLIC ../include
