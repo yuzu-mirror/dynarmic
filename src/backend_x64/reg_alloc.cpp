@@ -114,6 +114,9 @@ std::array<Argument, 3> RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     for (size_t i = 0; i < inst->NumArgs(); i++) {
         IR::Value arg = inst->GetArg(i);
         ret[i].value = arg;
+        if (!arg.IsImmediate()) {
+            arg.GetInst()->DecrementRemainingUses();
+        }
     }
     return ret;
 }
@@ -326,7 +329,6 @@ void RegAlloc::DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst) {
         return;
     }
 
-    use_inst.GetInst()->DecrementRemainingUses();
     DEBUG_ASSERT_MSG(ValueLocation(use_inst.GetInst()), "use_inst must already be defined");
     HostLoc location = *ValueLocation(use_inst.GetInst());
     DefineValueImpl(def_inst, location);

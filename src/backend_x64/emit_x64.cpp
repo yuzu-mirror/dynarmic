@@ -567,10 +567,6 @@ void EmitX64::EmitLogicalShiftLeft(RegAlloc& reg_alloc, IR::Block& block, IR::In
     // TODO: Consider using BMI2 instructions like SHLX when arm-in-host flags is implemented.
 
     if (!carry_inst) {
-        if (!carry_arg.IsImmediate()) {
-            inst->GetArg(2).GetInst()->DecrementRemainingUses();
-        }
-
         if (shift_arg.IsImmediate()) {
             Xbyak::Reg32 result = reg_alloc.UseScratchGpr(operand_arg).cvt32();
             u8 shift = shift_arg.GetImmediateU8();
@@ -669,10 +665,6 @@ void EmitX64::EmitLogicalShiftRight(RegAlloc& reg_alloc, IR::Block& block, IR::I
     auto& carry_arg = args[2];
 
     if (!carry_inst) {
-        if (!carry_arg.IsImmediate()) {
-            inst->GetArg(2).GetInst()->DecrementRemainingUses();
-        }
-
         if (shift_arg.IsImmediate()) {
             Xbyak::Reg32 result = reg_alloc.UseScratchGpr(operand_arg).cvt32();
             u8 shift = shift_arg.GetImmediateU8();
@@ -788,10 +780,6 @@ void EmitX64::EmitArithmeticShiftRight(RegAlloc& reg_alloc, IR::Block& block, IR
     auto& carry_arg = args[2];
 
     if (!carry_inst) {
-        if (!carry_arg.IsImmediate()) {
-            inst->GetArg(2).GetInst()->DecrementRemainingUses();
-        }
-
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetImmediateU8();
             Xbyak::Reg32 result = reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -880,10 +868,6 @@ void EmitX64::EmitRotateRight(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* i
     auto& carry_arg = args[2];
 
     if (!carry_inst) {
-        if (!carry_arg.IsImmediate()) {
-            inst->GetArg(2).GetInst()->DecrementRemainingUses();
-        }
-
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetImmediateU8();
             Xbyak::Reg32 result = reg_alloc.UseScratchGpr(operand_arg).cvt32();
