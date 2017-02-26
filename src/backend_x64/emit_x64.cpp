@@ -2778,10 +2778,12 @@ static void ReadMemory(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, U
 
     using namespace Xbyak::util;
 
-    Xbyak::Reg64 result = reg_alloc.DefGpr(inst, { ABI_RETURN });
-    Xbyak::Reg32 vaddr = reg_alloc.UseScratchGpr(inst->GetArg(0), { ABI_PARAM1 }).cvt32();
-    Xbyak::Reg64 page_index = reg_alloc.ScratchGpr();
-    Xbyak::Reg64 page_offset = reg_alloc.ScratchGpr();
+    reg_alloc.HostCall(inst, inst->GetArg(0));
+
+    Xbyak::Reg64 result = code->ABI_RETURN;
+    Xbyak::Reg32 vaddr = code->ABI_PARAM1.cvt32();
+    Xbyak::Reg64 page_index = code->ABI_PARAM3;
+    Xbyak::Reg64 page_offset = code->ABI_PARAM4;
 
     Xbyak::Label abort, end;
 
@@ -2826,11 +2828,12 @@ static void WriteMemory(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, 
 
     using namespace Xbyak::util;
 
-    reg_alloc.ScratchGpr({ HostLoc::RAX });
-    Xbyak::Reg32 vaddr = reg_alloc.UseScratchGpr(inst->GetArg(0), { ABI_PARAM1 }).cvt32();
-    Xbyak::Reg64 value = reg_alloc.UseScratchGpr(inst->GetArg(1), { ABI_PARAM2 });
-    Xbyak::Reg64 page_index = reg_alloc.ScratchGpr();
-    Xbyak::Reg64 page_offset = reg_alloc.ScratchGpr();
+    reg_alloc.HostCall(nullptr, inst->GetArg(0), inst->GetArg(1));
+
+    Xbyak::Reg32 vaddr = code->ABI_PARAM1.cvt32();
+    Xbyak::Reg64 value = code->ABI_PARAM2;
+    Xbyak::Reg64 page_index = code->ABI_PARAM3;
+    Xbyak::Reg64 page_offset = code->ABI_PARAM4;
 
     Xbyak::Label abort, end;
 
