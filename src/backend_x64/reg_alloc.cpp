@@ -71,6 +71,53 @@ static void EmitExchange(BlockOfCode* code, HostLoc a, HostLoc b) {
     }
 }
 
+bool HostLocInfo::IsLocked() const {
+    return is_being_used;
+}
+
+bool HostLocInfo::IsEmpty() const {
+    return !is_being_used && values.empty();
+}
+
+bool HostLocInfo::IsLastUse() const {
+    return !is_being_used && std::all_of(values.begin(), values.end(), [](const auto& inst) { return !inst->HasUses(); });
+}
+
+bool HostLocInfo::ContainsValue(const IR::Inst* inst) const {
+    return std::find(values.begin(), values.end(), inst) != values.end();
+}
+
+void HostLocInfo::ReadLock() {
+    ASSERT(!is_scratch);
+    is_being_used = true;
+}
+
+void HostLocInfo::WriteLock() {
+    ASSERT(!is_being_used);
+    is_being_used = true;
+    is_scratch = true;
+}
+
+void HostLocInfo::AddValue(IR::Inst* inst) {
+    values.push_back(inst);
+}
+
+void HostLocInfo::EndOfAllocScope() {
+    const auto to_erase = std::remove_if(values.begin(), values.end(), [](const auto& inst) { return !inst->HasUses(); });
+    values.erase(to_erase, values.end());
+
+    is_being_used = false;
+    is_scratch = false;
+}
+
+IR::Type Argument::GetType() const {
+    return value.GetType();
+}
+
+bool Argument::IsImmediate() const {
+    return value.IsImmediate();
+}
+
 bool Argument::GetImmediateU1() const {
     return value.GetU1();
 }

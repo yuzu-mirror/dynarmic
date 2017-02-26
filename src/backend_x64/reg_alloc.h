@@ -26,40 +26,18 @@ class RegAlloc;
 
 struct HostLocInfo {
 public:
-    bool IsLocked() const {
-        return is_being_used;
-    }
-    bool IsEmpty() const {
-        return !is_being_used && values.empty();
-    }
-    bool IsLastUse() const {
-        return !is_being_used && std::all_of(values.begin(), values.end(), [](const auto& inst) { return !inst->HasUses(); });
-    }
+    bool IsLocked() const;
+    bool IsEmpty() const;
+    bool IsLastUse() const;
 
-    bool ContainsValue(const IR::Inst* inst) const {
-        return std::find(values.begin(), values.end(), inst) != values.end();
-    }
+    bool ContainsValue(const IR::Inst* inst) const;
 
-    void ReadLock() {
-        ASSERT(!is_scratch);
-        is_being_used = true;
-    }
-    void WriteLock() {
-        ASSERT(!is_being_used);
-        is_being_used = true;
-        is_scratch = true;
-    }
-    void AddValue(IR::Inst* inst) {
-        values.push_back(inst);
-    }
+    void ReadLock();
+    void WriteLock();
 
-    void EndOfAllocScope() {
-        const auto to_erase = std::remove_if(values.begin(), values.end(), [](const auto& inst){ return !inst->HasUses(); });
-        values.erase(to_erase, values.end());
+    void AddValue(IR::Inst* inst);
 
-        is_being_used = false;
-        is_scratch = false;
-    }
+    void EndOfAllocScope();
 
 private:
     std::vector<IR::Inst*> values;
@@ -69,12 +47,8 @@ private:
 
 struct Argument {
 public:
-    IR::Type GetType() const {
-        return value.GetType();
-    }
-    bool IsImmediate() const {
-        return value.IsImmediate();
-    }
+    IR::Type GetType() const;
+    bool IsImmediate() const;
 
     bool GetImmediateU1() const;
     u8 GetImmediateU8() const;
