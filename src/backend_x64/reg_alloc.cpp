@@ -362,12 +362,12 @@ boost::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {
 }
 
 void RegAlloc::DefineValueImpl(IR::Inst* def_inst, HostLoc host_loc) {
-    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
+    ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
     LocInfo(host_loc).AddValue(def_inst);
 }
 
 void RegAlloc::DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst) {
-    DEBUG_ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
+    ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
 
     if (use_inst.IsImmediate()) {
         HostLoc location = ScratchImpl(any_gpr);
@@ -376,7 +376,7 @@ void RegAlloc::DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst) {
         return;
     }
 
-    DEBUG_ASSERT_MSG(ValueLocation(use_inst.GetInst()), "use_inst must already be defined");
+    ASSERT_MSG(ValueLocation(use_inst.GetInst()), "use_inst must already be defined");
     HostLoc location = *ValueLocation(use_inst.GetInst());
     DefineValueImpl(def_inst, location);
 }
@@ -456,12 +456,12 @@ HostLoc RegAlloc::FindFreeSpill() const {
 }
 
 HostLocInfo& RegAlloc::LocInfo(HostLoc loc) {
-    DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
+    ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
     return hostloc_info[static_cast<size_t>(loc)];
 }
 
 const HostLocInfo& RegAlloc::LocInfo(HostLoc loc) const {
-    DEBUG_ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
+    ASSERT(loc != HostLoc::RSP && loc != HostLoc::R15);
     return hostloc_info[static_cast<size_t>(loc)];
 }
 
