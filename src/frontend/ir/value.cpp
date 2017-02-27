@@ -69,59 +69,59 @@ Type Value::GetType() const {
 }
 
 Arm::Reg Value::GetRegRef() const {
-    DEBUG_ASSERT(type == Type::RegRef);
+    ASSERT(type == Type::RegRef);
     return inner.imm_regref;
 }
 
 Arm::ExtReg Value::GetExtRegRef() const {
-    DEBUG_ASSERT(type == Type::ExtRegRef);
+    ASSERT(type == Type::ExtRegRef);
     return inner.imm_extregref;
 }
 
 Inst* Value::GetInst() const {
-    DEBUG_ASSERT(type == Type::Opaque);
+    ASSERT(type == Type::Opaque);
     return inner.inst;
 }
 
 bool Value::GetU1() const {
     if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
         return inner.inst->GetArg(0).GetU1();
-    DEBUG_ASSERT(type == Type::U1);
+    ASSERT(type == Type::U1);
     return inner.imm_u1;
 }
 
 u8 Value::GetU8() const {
     if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
         return inner.inst->GetArg(0).GetU8();
-    DEBUG_ASSERT(type == Type::U8);
+    ASSERT(type == Type::U8);
     return inner.imm_u8;
 }
 
 u16 Value::GetU16() const {
     if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
         return inner.inst->GetArg(0).GetU16();
-    DEBUG_ASSERT(type == Type::U16);
+    ASSERT(type == Type::U16);
     return inner.imm_u16;
 }
 
 u32 Value::GetU32() const {
     if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
         return inner.inst->GetArg(0).GetU32();
-    DEBUG_ASSERT(type == Type::U32);
+    ASSERT(type == Type::U32);
     return inner.imm_u32;
 }
 
 u64 Value::GetU64() const {
     if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
         return inner.inst->GetArg(0).GetU64();
-    DEBUG_ASSERT(type == Type::U64);
+    ASSERT(type == Type::U64);
     return inner.imm_u64;
 }
 
 std::array<u8, 8> Value::GetCoprocInfo() const {
     if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
         return inner.inst->GetArg(0).GetCoprocInfo();
-    DEBUG_ASSERT(type == Type::CoprocInfo);
+    ASSERT(type == Type::CoprocInfo);
     return inner.imm_coproc;
 }
 
