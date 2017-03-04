@@ -109,7 +109,8 @@ else()
         message(FATAL_ERROR "Please provide a path to a boost installation using Boost_INCLUDE_DIRS")
     endif()
 endif()
-include_directories(${Boost_INCLUDE_DIRS})
+add_library(boost INTERFACE IMPORTED)
+set_property(TARGET boost PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIRS})
 
 # Enable unit-testing.
 enable_testing(true)

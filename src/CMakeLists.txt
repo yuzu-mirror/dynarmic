@@ -111,9 +111,7 @@ target_include_directories(dynarmic
                            PRIVATE .)
 target_compile_options(dynarmic PRIVATE ${DYNARMIC_CXX_FLAGS})
 
-# Link fmt
-target_link_libraries(dynarmic PRIVATE fmt-header-only)
+target_link_libraries(dynarmic PRIVATE boost fmt-header-only xbyak)
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(dynarmic PRIVATE FMT_USE_WINDOWS_H=0)
 endif()
-target_link_libraries(dynarmic PRIVATE xbyak)
