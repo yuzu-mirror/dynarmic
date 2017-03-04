@@ -36,7 +36,6 @@ create_directory_groups(${SRCS} ${HEADERS})
 
 add_executable(dynarmic_tests ${SRCS})
 target_link_libraries(dynarmic_tests PRIVATE dynarmic boost catch ${llvm_libs})
-set_target_properties(dynarmic_tests PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(dynarmic_tests PRIVATE . ../src)
 target_compile_options(dynarmic_tests PRIVATE ${DYNARMIC_CXX_FLAGS})
 
