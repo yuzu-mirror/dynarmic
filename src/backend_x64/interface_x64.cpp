@@ -58,20 +58,21 @@ struct Jit::Impl {
         std::string result = fmt::format("address: {}\nsize: {} bytes\n", block.code_ptr, block.size);
 
 #ifdef DYNARMIC_USE_LLVM
-        CodePtr end = block.code_ptr + block.size;
-        size_t remaining = block.size;
-
         LLVMInitializeX86TargetInfo();
         LLVMInitializeX86TargetMC();
         LLVMInitializeX86Disassembler();
         LLVMDisasmContextRef llvm_ctx = LLVMCreateDisasm("x86_64", nullptr, 0, nullptr, nullptr);
         LLVMSetDisasmOptions(llvm_ctx, LLVMDisassembler_Option_AsmPrinterVariant);
 
-        for (CodePtr pos = block.code_ptr; pos < end;) {
+        const u8* pos = static_cast<const u8*>(block.code_ptr);
+        const u8* end = pos + block.size;
+        size_t remaining = block.size;
+
+        while (pos < end) {
             char buffer[80];
             size_t inst_size = LLVMDisasmInstruction(llvm_ctx, const_cast<u8*>(pos), remaining, (u64)pos, buffer, sizeof(buffer));
             ASSERT(inst_size);
-            for (CodePtr i = pos; i < pos + inst_size; i++)
+            for (const u8* i = pos; i < pos + inst_size; i++)
                 result += fmt::format("{:02x} ", *i);
             for (size_t i = inst_size; i < 10; i++)
                 result += "   ";
