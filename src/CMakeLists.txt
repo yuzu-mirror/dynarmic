@@ -75,6 +75,7 @@ if (ARCHITECTURE_x86_64)
     list(APPEND SRCS
          backend_x64/abi.cpp
          backend_x64/block_of_code.cpp
+         backend_x64/constant_pool.cpp
          backend_x64/emit_x64.cpp
          backend_x64/hostloc.cpp
          backend_x64/interface_x64.cpp
@@ -85,6 +86,7 @@ if (ARCHITECTURE_x86_64)
     list(APPEND HEADERS
          backend_x64/abi.h
          backend_x64/block_of_code.h
+         backend_x64/constant_pool.h
          backend_x64/emit_x64.h
          backend_x64/hostloc.h
          backend_x64/jitstate.h

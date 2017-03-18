@@ -27,6 +27,19 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+constexpr u64 f32_negative_zero = 0x80000000u;
+constexpr u64 f32_nan = 0x7fc00000u;
+constexpr u64 f32_non_sign_mask = 0x7fffffffu;
+
+constexpr u64 f64_negative_zero = 0x8000000000000000u;
+constexpr u64 f64_nan = 0x7ff8000000000000u;
+constexpr u64 f64_non_sign_mask = 0x7fffffffffffffffu;
+
+constexpr u64 f64_penultimate_positive_denormal = 0x000ffffffffffffeu;
+constexpr u64 f64_min_s32 = 0xc1e0000000000000u; // -2147483648 as a double
+constexpr u64 f64_max_s32 = 0x41dfffffffc00000u; // 2147483647 as a double
+constexpr u64 f64_min_u32 = 0x0000000000000000u; // 0 as a double
+
 static Xbyak::Address MJitStateReg(Arm::Reg reg) {
     using namespace Xbyak::util;
     return dword[r15 + offsetof(JitState, Reg) + sizeof(u32) * static_cast<size_t>(reg)];
@@ -2094,9 +2107,9 @@ static void DenormalsAreZero64(BlockOfCode* code, Xbyak::Xmm xmm_value, Xbyak::R
     using namespace Xbyak::util;
     Xbyak::Label end;
 
-    auto mask = code->MFloatNonSignMask64();
+    auto mask = code->MConst(f64_non_sign_mask);
     mask.setBit(64);
-    auto penult_denormal = code->MFloatPenultimatePositiveDenormal64();
+    auto penult_denormal = code->MConst(f64_penultimate_positive_denormal);
     penult_denormal.setBit(64);
 
     code->movq(gpr_scratch, xmm_value);
@@ -2127,9 +2140,9 @@ static void FlushToZero64(BlockOfCode* code, Xbyak::Xmm xmm_value, Xbyak::Reg64 
     using namespace Xbyak::util;
     Xbyak::Label end;
 
-    auto mask = code->MFloatNonSignMask64();
+    auto mask = code->MConst(f64_non_sign_mask);
     mask.setBit(64);
-    auto penult_denormal = code->MFloatPenultimatePositiveDenormal64();
+    auto penult_denormal = code->MConst(f64_penultimate_positive_denormal);
     penult_denormal.setBit(64);
 
     code->movq(gpr_scratch, xmm_value);
@@ -2147,7 +2160,7 @@ static void DefaultNaN32(BlockOfCode* code, Xbyak::Xmm xmm_value) {
 
     code->ucomiss(xmm_value, xmm_value);
     code->jnp(end);
-    code->movaps(xmm_value, code->MFloatNaN32());
+    code->movaps(xmm_value, code->MConst(f32_nan));
     code->L(end);
 }
 
@@ -2156,7 +2169,7 @@ static void DefaultNaN64(BlockOfCode* code, Xbyak::Xmm xmm_value) {
 
     code->ucomisd(xmm_value, xmm_value);
     code->jnp(end);
-    code->movaps(xmm_value, code->MFloatNaN64());
+    code->movaps(xmm_value, code->MConst(f64_nan));
     code->L(end);
 }
 
@@ -2288,7 +2301,7 @@ void EmitX64::EmitFPAbs32(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
     auto args = reg_alloc.GetArgumentInfo(inst);
     Xbyak::Xmm result = reg_alloc.UseScratchXmm(args[0]);
 
-    code->pand(result, code->MFloatNonSignMask32());
+    code->pand(result, code->MConst(f32_non_sign_mask));
 
     reg_alloc.DefineValue(inst, result);
 }
@@ -2297,7 +2310,7 @@ void EmitX64::EmitFPAbs64(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
     auto args = reg_alloc.GetArgumentInfo(inst);
     Xbyak::Xmm result = reg_alloc.UseScratchXmm(args[0]);
 
-    code->pand(result, code->MFloatNonSignMask64());
+    code->pand(result, code->MConst(f64_non_sign_mask));
 
     reg_alloc.DefineValue(inst, result);
 }
@@ -2306,7 +2319,7 @@ void EmitX64::EmitFPNeg32(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
     auto args = reg_alloc.GetArgumentInfo(inst);
     Xbyak::Xmm result = reg_alloc.UseScratchXmm(args[0]);
 
-    code->pxor(result, code->MFloatNegativeZero32());
+    code->pxor(result, code->MConst(f32_negative_zero));
 
     reg_alloc.DefineValue(inst, result);
 }
@@ -2315,7 +2328,7 @@ void EmitX64::EmitFPNeg64(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
     auto args = reg_alloc.GetArgumentInfo(inst);
     Xbyak::Xmm result = reg_alloc.UseScratchXmm(args[0]);
 
-    code->pxor(result, code->MFloatNegativeZero64());
+    code->pxor(result, code->MConst(f64_negative_zero));
 
     reg_alloc.DefineValue(inst, result);
 }
@@ -2473,8 +2486,8 @@ void EmitX64::EmitFPSingleToS32(RegAlloc& reg_alloc, IR::Block& block, IR::Inst*
     }
     // Clamp to output range
     ZeroIfNaN64(code, from, xmm_scratch);
-    code->minsd(from, code->MFloatMaxS32());
-    code->maxsd(from, code->MFloatMinS32());
+    code->minsd(from, code->MConst(f64_max_s32));
+    code->maxsd(from, code->MConst(f64_min_s32));
     // Second time is for real
     if (round_towards_zero) {
         code->cvttsd2si(to, from); // 32 bit gpr
@@ -2506,12 +2519,12 @@ void EmitX64::EmitFPSingleToU32(RegAlloc& reg_alloc, IR::Block& block, IR::Inst*
         code->cvtss2sd(from, from);
         ZeroIfNaN64(code, from, xmm_scratch);
         // Bring into SSE range
-        code->addsd(from, code->MFloatMinS32());
+        code->addsd(from, code->MConst(f64_min_s32));
         // First time is to set flags
         code->cvtsd2si(to, from); // 32 bit gpr
         // Clamp to output range
-        code->minsd(from, code->MFloatMaxS32());
-        code->maxsd(from, code->MFloatMinS32());
+        code->minsd(from, code->MConst(f64_max_s32));
+        code->maxsd(from, code->MConst(f64_min_s32));
         // Actually convert
         code->cvtsd2si(to, from); // 32 bit gpr
         // Bring back into original range
@@ -2526,18 +2539,18 @@ void EmitX64::EmitFPSingleToU32(RegAlloc& reg_alloc, IR::Block& block, IR::Inst*
         code->cvtss2sd(from, from);
         ZeroIfNaN64(code, from, xmm_scratch);
         // Generate masks if out-of-signed-range
-        code->movaps(xmm_mask, code->MFloatMaxS32());
+        code->movaps(xmm_mask, code->MConst(f64_max_s32));
         code->cmpltsd(xmm_mask, from);
         code->movd(gpr_mask, xmm_mask);
-        code->pand(xmm_mask, code->MFloatMinS32());
+        code->pand(xmm_mask, code->MConst(f64_min_s32));
         code->and_(gpr_mask, u32(2147483648u));
         // Bring into range if necessary
         code->addsd(from, xmm_mask);
         // First time is to set flags
         code->cvttsd2si(to, from); // 32 bit gpr
         // Clamp to output range
-        code->minsd(from, code->MFloatMaxS32());
-        code->maxsd(from, code->MFloatMinU32());
+        code->minsd(from, code->MConst(f64_max_s32));
+        code->maxsd(from, code->MConst(f64_min_u32));
         // Actually convert
         code->cvttsd2si(to, from); // 32 bit gpr
         // Bring back into original range if necessary
@@ -2568,8 +2581,8 @@ void EmitX64::EmitFPDoubleToS32(RegAlloc& reg_alloc, IR::Block& block, IR::Inst*
     }
     // Clamp to output range
     ZeroIfNaN64(code, from, xmm_scratch);
-    code->minsd(from, code->MFloatMaxS32());
-    code->maxsd(from, code->MFloatMinS32());
+    code->minsd(from, code->MConst(f64_max_s32));
+    code->maxsd(from, code->MConst(f64_min_s32));
     // Second time is for real
     if (round_towards_zero) {
         code->cvttsd2si(to, from); // 32 bit gpr
@@ -2598,12 +2611,12 @@ void EmitX64::EmitFPDoubleToU32(RegAlloc& reg_alloc, IR::Block& block, IR::Inst*
         }
         ZeroIfNaN64(code, from, xmm_scratch);
         // Bring into SSE range
-        code->addsd(from, code->MFloatMinS32());
+        code->addsd(from, code->MConst(f64_min_s32));
         // First time is to set flags
         code->cvtsd2si(gpr_scratch, from); // 32 bit gpr
         // Clamp to output range
-        code->minsd(from, code->MFloatMaxS32());
-        code->maxsd(from, code->MFloatMinS32());
+        code->minsd(from, code->MConst(f64_max_s32));
+        code->maxsd(from, code->MConst(f64_min_s32));
         // Actually convert
         code->cvtsd2si(to, from); // 32 bit gpr
         // Bring back into original range
@@ -2617,18 +2630,18 @@ void EmitX64::EmitFPDoubleToU32(RegAlloc& reg_alloc, IR::Block& block, IR::Inst*
         }
         ZeroIfNaN64(code, from, xmm_scratch);
         // Generate masks if out-of-signed-range
-        code->movaps(xmm_mask, code->MFloatMaxS32());
+        code->movaps(xmm_mask, code->MConst(f64_max_s32));
         code->cmpltsd(xmm_mask, from);
         code->movd(gpr_mask, xmm_mask);
-        code->pand(xmm_mask, code->MFloatMinS32());
+        code->pand(xmm_mask, code->MConst(f64_min_s32));
         code->and_(gpr_mask, u32(2147483648u));
         // Bring into range if necessary
         code->addsd(from, xmm_mask);
         // First time is to set flags
         code->cvttsd2si(gpr_scratch, from); // 32 bit gpr
         // Clamp to output range
-        code->minsd(from, code->MFloatMaxS32());
-        code->maxsd(from, code->MFloatMinU32());
+        code->minsd(from, code->MConst(f64_max_s32));
+        code->maxsd(from, code->MConst(f64_min_u32));
         // Actually convert
         code->cvttsd2si(to, from); // 32 bit gpr
         // Bring back into original range if necessary

@@ -11,6 +11,7 @@
 
 #include <xbyak.h>
 
+#include "backend_x64/constant_pool.h"
 #include "backend_x64/jitstate.h"
 #include "common/common_types.h"
 #include "dynarmic/callbacks.h"
@@ -52,45 +53,7 @@ public:
         }
     }
 
-    Xbyak::Address MFloatPositiveZero32() {
-        return xword[rip + consts.FloatPositiveZero32];
-    }
-    Xbyak::Address MFloatNegativeZero32() {
-        return xword[rip + consts.FloatNegativeZero32];
-    }
-    Xbyak::Address MFloatNaN32() {
-        return xword[rip + consts.FloatNaN32];
-    }
-    Xbyak::Address MFloatNonSignMask32() {
-        return xword[rip + consts.FloatNonSignMask32];
-    }
-    Xbyak::Address MFloatPositiveZero64() {
-        return xword[rip + consts.FloatPositiveZero64];
-    }
-    Xbyak::Address MFloatNegativeZero64() {
-        return xword[rip + consts.FloatNegativeZero64];
-    }
-    Xbyak::Address MFloatNaN64() {
-        return xword[rip + consts.FloatNaN64];
-    }
-    Xbyak::Address MFloatNonSignMask64() {
-        return xword[rip + consts.FloatNonSignMask64];
-    }
-    Xbyak::Address MFloatPenultimatePositiveDenormal64() {
-        return xword[rip + consts.FloatPenultimatePositiveDenormal64];
-    }
-    Xbyak::Address MFloatMinS32() {
-        return xword[rip + consts.FloatMinS32];
-    }
-    Xbyak::Address MFloatMaxS32() {
-        return xword[rip + consts.FloatMaxS32];
-    }
-    Xbyak::Address MFloatMinU32() {
-        return xword[rip + consts.FloatMinU32];
-    }
-    Xbyak::Address MFloatMaxU32() {
-        return xword[rip + consts.FloatMaxU32];
-    }
+    Xbyak::Address MConst(u64 constant);
 
     const void* GetReturnFromRunCodeAddress() const {
         return return_from_run_code;
@@ -155,22 +118,7 @@ private:
     UserCallbacks cb;
     CodePtr user_code_begin;
 
-    struct Consts {
-        Xbyak::Label FloatPositiveZero32;
-        Xbyak::Label FloatNegativeZero32;
-        Xbyak::Label FloatNaN32;
-        Xbyak::Label FloatNonSignMask32;
-        Xbyak::Label FloatPositiveZero64;
-        Xbyak::Label FloatNegativeZero64;
-        Xbyak::Label FloatNaN64;
-        Xbyak::Label FloatNonSignMask64;
-        Xbyak::Label FloatPenultimatePositiveDenormal64;
-        Xbyak::Label FloatMinS32;
-        Xbyak::Label FloatMaxS32;
-        Xbyak::Label FloatMinU32;
-        Xbyak::Label FloatMaxU32;
-    } consts;
-    void GenConstants();
+    ConstantPool constant_pool;
 
     using RunCodeFuncType = void(*)(JitState*, CodePtr);
     RunCodeFuncType run_code = nullptr;

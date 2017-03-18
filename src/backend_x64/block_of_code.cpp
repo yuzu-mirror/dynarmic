@@ -18,8 +18,7 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
-BlockOfCode::BlockOfCode(UserCallbacks cb) : Xbyak::CodeGenerator(128 * 1024 * 1024), cb(cb) {
-    GenConstants();
+BlockOfCode::BlockOfCode(UserCallbacks cb) : Xbyak::CodeGenerator(128 * 1024 * 1024), cb(cb), constant_pool(this, 256) {
     GenRunCode();
     GenReturnFromRunCode();
     GenMemoryAccessors();
@@ -42,56 +41,6 @@ size_t BlockOfCode::RunCode(JitState* jit_state, CodePtr basic_block, size_t cyc
 
 void BlockOfCode::ReturnFromRunCode(bool MXCSR_switch) {
     jmp(MXCSR_switch ? return_from_run_code : return_from_run_code_without_mxcsr_switch);
-}
-
-void BlockOfCode::GenConstants() {
-    align();
-    L(consts.FloatNegativeZero32);
-    dd(0x80000000u);
-
-    align();
-    L(consts.FloatNaN32);
-    dd(0x7fc00000u);
-
-    align();
-    L(consts.FloatNonSignMask32);
-    dq(0x7fffffffu);
-
-    align();
-    L(consts.FloatNegativeZero64);
-    dq(0x8000000000000000u);
-
-    align();
-    L(consts.FloatNaN64);
-    dq(0x7ff8000000000000u);
-
-    align();
-    L(consts.FloatNonSignMask64);
-    dq(0x7fffffffffffffffu);
-
-    align();
-    L(consts.FloatPenultimatePositiveDenormal64);
-    dq(0x000ffffffffffffeu);
-
-    align();
-    L(consts.FloatMinS32);
-    dq(0xc1e0000000000000u); // -2147483648 as a double
-
-    align();
-    L(consts.FloatMaxS32);
-    dq(0x41dfffffffc00000u); // 2147483647 as a double
-
-    align();
-    L(consts.FloatPositiveZero32);
-    L(consts.FloatPositiveZero64);
-    L(consts.FloatMinU32);
-    dq(0x0000000000000000u); // 0 as a double
-
-    align();
-    L(consts.FloatMaxU32);
-    dq(0x41efffffffe00000u); // 4294967295 as a double
-
-    align();
 }
 
 void BlockOfCode::GenRunCode() {
@@ -186,6 +135,10 @@ void BlockOfCode::SwitchMxcsrOnEntry() {
 void BlockOfCode::SwitchMxcsrOnExit() {
     stmxcsr(dword[r15 + offsetof(JitState, guest_MXCSR)]);
     ldmxcsr(dword[r15 + offsetof(JitState, save_host_MXCSR)]);
+}
+
+Xbyak::Address BlockOfCode::MConst(u64 constant) {
+    return constant_pool.GetConstant(constant);
 }
 
 void BlockOfCode::nop(size_t size) {
