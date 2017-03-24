@@ -149,6 +149,10 @@ public:
     ResultAndGE PackedSubS8(const Value& a, const Value& b);
     ResultAndGE PackedSubU16(const Value& a, const Value& b);
     ResultAndGE PackedSubS16(const Value& a, const Value& b);
+    ResultAndGE PackedAddSubU16(const Value& a, const Value& b);
+    ResultAndGE PackedAddSubS16(const Value& a, const Value& b);
+    ResultAndGE PackedSubAddU16(const Value& a, const Value& b);
+    ResultAndGE PackedSubAddS16(const Value& a, const Value& b);
     Value PackedHalvingAddU8(const Value& a, const Value& b);
     Value PackedHalvingAddS8(const Value& a, const Value& b);
     Value PackedHalvingSubU8(const Value& a, const Value& b);
@@ -157,8 +161,10 @@ public:
     Value PackedHalvingAddS16(const Value& a, const Value& b);
     Value PackedHalvingSubU16(const Value& a, const Value& b);
     Value PackedHalvingSubS16(const Value& a, const Value& b);
-    Value PackedHalvingSubAddU16(const Value& a, const Value& b, bool asx);
-    Value PackedHalvingSubAddS16(const Value& a, const Value& b, bool asx);
+    Value PackedHalvingAddSubU16(const Value& a, const Value& b);
+    Value PackedHalvingAddSubS16(const Value& a, const Value& b);
+    Value PackedHalvingSubAddU16(const Value& a, const Value& b);
+    Value PackedHalvingSubAddS16(const Value& a, const Value& b);
     Value PackedSaturatedAddU8(const Value& a, const Value& b);
     Value PackedSaturatedAddS8(const Value& a, const Value& b);
     Value PackedSaturatedSubU8(const Value& a, const Value& b);

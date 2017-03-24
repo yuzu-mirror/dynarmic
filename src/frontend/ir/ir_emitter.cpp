@@ -402,6 +402,30 @@ IREmitter::ResultAndGE IREmitter::PackedSubS16(const Value& a, const Value& b) {
     return {result, ge};
 }
 
+IREmitter::ResultAndGE IREmitter::PackedAddSubU16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedAddSubU16, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedAddSubS16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedAddSubS16, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedSubAddU16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedSubAddU16, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
+IREmitter::ResultAndGE IREmitter::PackedSubAddS16(const Value& a, const Value& b) {
+    auto result = Inst(Opcode::PackedSubAddS16, {a, b});
+    auto ge = Inst(Opcode::GetGEFromOp, {result});
+    return {result, ge};
+}
+
 Value IREmitter::PackedHalvingAddU8(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingAddU8, {a, b});
 }
@@ -434,12 +458,20 @@ Value IREmitter::PackedHalvingSubS16(const Value& a, const Value& b) {
     return Inst(Opcode::PackedHalvingSubS16, {a, b});
 }
 
-Value IREmitter::PackedHalvingSubAddU16(const Value& a, const Value& b, bool asx) {
-    return Inst(Opcode::PackedHalvingSubAddU16, {a, b, Imm1(asx)});
+Value IREmitter::PackedHalvingAddSubU16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingAddSubU16, {a, b});
 }
 
-Value IREmitter::PackedHalvingSubAddS16(const Value& a, const Value& b, bool asx) {
-    return Inst(Opcode::PackedHalvingSubAddS16, {a, b, Imm1(asx)});
+Value IREmitter::PackedHalvingAddSubS16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingAddSubS16, {a, b});
+}
+
+Value IREmitter::PackedHalvingSubAddU16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingSubAddU16, {a, b});
+}
+
+Value IREmitter::PackedHalvingSubAddS16(const Value& a, const Value& b) {
+    return Inst(Opcode::PackedHalvingSubAddS16, {a, b});
 }
 
 Value IREmitter::PackedSaturatedAddU8(const Value& a, const Value& b) {

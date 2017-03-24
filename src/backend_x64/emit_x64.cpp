@@ -1986,17 +1986,15 @@ void EmitX64::EmitPackedHalvingSubS16(RegAlloc& reg_alloc, IR::Block&, IR::Inst*
     reg_alloc.DefineValue(inst, minuend);
 }
 
-void EmitPackedHalvingSubAdd(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, bool is_signed) {
+void EmitPackedSubAdd(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst, bool hi_is_sum, bool is_signed, bool is_halving) {
     auto args = reg_alloc.GetArgumentInfo(inst);
+    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     Xbyak::Reg32 reg_a_hi = reg_alloc.UseScratchGpr(args[0]).cvt32();
     Xbyak::Reg32 reg_b_hi = reg_alloc.UseScratchGpr(args[1]).cvt32();
     Xbyak::Reg32 reg_a_lo = reg_alloc.ScratchGpr().cvt32();
     Xbyak::Reg32 reg_b_lo = reg_alloc.ScratchGpr().cvt32();
-
-    // If asx is true, the high word contains the sum and the low word the difference.
-    // If false, the high word contains the difference and the low word the sum.
-    bool asx = args[2].GetImmediateU1();
+    Xbyak::Reg32 reg_sum, reg_diff;
 
     if (is_signed) {
         code->movsx(reg_a_lo, reg_a_hi.cvt16());
@@ -2010,22 +2008,48 @@ void EmitPackedHalvingSubAdd(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* i
         code->shr(reg_b_hi, 16);
     }
 
-    if (asx) {
-        // Calculate diff such that reg_a_lo<31:16> contains diff<16:1>.
+    if (hi_is_sum) {
         code->sub(reg_a_lo, reg_b_hi);
-        code->shl(reg_a_lo, 15);
-
-        // Calculate sum such that reg_a_hi<15:0> contains sum<16:1>.
         code->add(reg_a_hi, reg_b_lo);
+        reg_diff = reg_a_lo;
+        reg_sum = reg_a_hi;
+    } else {
+        code->add(reg_a_lo, reg_b_hi);
+        code->sub(reg_a_hi, reg_b_lo);
+        reg_diff = reg_a_hi;
+        reg_sum = reg_a_lo;
+    }
+
+    if (ge_inst) {
+        EraseInstruction(block, ge_inst);
+
+        // The reg_b registers are no longer required.
+        Xbyak::Reg32 ge_sum = reg_b_hi;
+        Xbyak::Reg32 ge_diff = reg_b_lo;
+
+        code->mov(ge_sum, reg_sum);
+        code->mov(ge_diff, reg_diff);
+
+        if (!is_signed) {
+            code->shl(ge_sum, 15);
+            code->sar(ge_sum, 16);
+        } else {
+            code->not(ge_sum);
+        }
+        code->not(ge_diff);
+        code->and(ge_sum, hi_is_sum ? 0xC0000000 : 0x30000000);
+        code->and(ge_diff, hi_is_sum ? 0x30000000 : 0xC0000000);
+        code->or_(ge_sum, ge_diff);
+        code->shr(ge_sum, 28);
+
+        reg_alloc.DefineValue(ge_inst, ge_sum);
+    }
+
+    if (is_halving) {
+        code->shl(reg_a_lo, 15);
         code->shr(reg_a_hi, 1);
     } else {
-        // Calculate sum such that reg_a_lo<31:16> contains sum<16:1>.
-        code->add(reg_a_lo, reg_b_hi);
-        code->shl(reg_a_lo, 15);
-
-        // Calculate diff such that reg_a_hi<15:0> contains diff<16:1>.
-        code->sub(reg_a_hi, reg_b_lo);
-        code->shr(reg_a_hi, 1);
+        code->shl(reg_a_lo, 16);
     }
 
     // reg_a_lo now contains the low word and reg_a_hi now contains the high word.
@@ -2035,12 +2059,36 @@ void EmitPackedHalvingSubAdd(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* i
     reg_alloc.DefineValue(inst, reg_a_hi);
 }
 
-void EmitX64::EmitPackedHalvingSubAddU16(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
-    EmitPackedHalvingSubAdd(code, reg_alloc, inst, false);
+void EmitX64::EmitPackedAddSubU16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, true, false, false);
 }
 
-void EmitX64::EmitPackedHalvingSubAddS16(RegAlloc& reg_alloc, IR::Block&, IR::Inst* inst) {
-    EmitPackedHalvingSubAdd(code, reg_alloc, inst, true);
+void EmitX64::EmitPackedAddSubS16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, true, true, false);
+}
+
+void EmitX64::EmitPackedSubAddU16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, false, false, false);
+}
+
+void EmitX64::EmitPackedSubAddS16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, false, true, false);
+}
+
+void EmitX64::EmitPackedHalvingAddSubU16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, true, false, true);
+}
+
+void EmitX64::EmitPackedHalvingAddSubS16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, true, true, true);
+}
+
+void EmitX64::EmitPackedHalvingSubAddU16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, false, false, true);
+}
+
+void EmitX64::EmitPackedHalvingSubAddS16(RegAlloc& reg_alloc, IR::Block& block, IR::Inst* inst) {
+    EmitPackedSubAdd(code, reg_alloc, block, inst, false, true, true);
 }
 
 static void EmitPackedOperation(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* inst, void (Xbyak::CodeGenerator::*fn)(const Xbyak::Mmx& mmx, const Xbyak::Operand&)) {

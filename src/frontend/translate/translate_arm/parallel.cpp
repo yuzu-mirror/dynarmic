@@ -33,13 +33,25 @@ bool ArmTranslatorVisitor::arm_SADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_SASX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedAddSubS16(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result.result);
+        ir.SetGEFlags(result.ge);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SSAX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedSubAddS16(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result.result);
+        ir.SetGEFlags(result.ge);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_SSUB8(Cond cond, Reg n, Reg d, Reg m) {
@@ -87,13 +99,25 @@ bool ArmTranslatorVisitor::arm_UADD16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UASX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedAddSubU16(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result.result);
+        ir.SetGEFlags(result.ge);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_USAX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+    if (ConditionPassed(cond)) {
+        auto result = ir.PackedSubAddU16(ir.GetRegister(n), ir.GetRegister(m));
+        ir.SetRegister(d, result.result);
+        ir.SetGEFlags(result.ge);
+    }
+    return true;
 }
 
 bool ArmTranslatorVisitor::arm_USAD8(Cond cond, Reg d, Reg m, Reg n) {
@@ -261,7 +285,7 @@ bool ArmTranslatorVisitor::arm_SHASX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
-        auto result = ir.PackedHalvingSubAddS16(ir.GetRegister(n), ir.GetRegister(m), true);
+        auto result = ir.PackedHalvingAddSubS16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
     }
     return true;
@@ -271,7 +295,7 @@ bool ArmTranslatorVisitor::arm_SHSAX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
-        auto result = ir.PackedHalvingSubAddS16(ir.GetRegister(n), ir.GetRegister(m), false);
+        auto result = ir.PackedHalvingSubAddS16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
     }
     return true;
@@ -321,7 +345,7 @@ bool ArmTranslatorVisitor::arm_UHASX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
-        auto result = ir.PackedHalvingSubAddU16(ir.GetRegister(n), ir.GetRegister(m), true);
+        auto result = ir.PackedHalvingAddSubU16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
     }
     return true;
@@ -331,7 +355,7 @@ bool ArmTranslatorVisitor::arm_UHSAX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
-        auto result = ir.PackedHalvingSubAddU16(ir.GetRegister(n), ir.GetRegister(m), false);
+        auto result = ir.PackedHalvingSubAddU16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
     }
     return true;
