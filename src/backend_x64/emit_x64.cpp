@@ -2235,7 +2235,7 @@ static void FPThreeOp32(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block
     auto args = reg_alloc.GetArgumentInfo(inst);
 
     Xbyak::Xmm result = reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm operand = reg_alloc.UseXmm(args[1]);
+    Xbyak::Xmm operand = reg_alloc.UseScratchXmm(args[1]);
     Xbyak::Reg32 gpr_scratch = reg_alloc.ScratchGpr().cvt32();
 
     if (block.Location().FPSCR().FTZ()) {
@@ -2257,7 +2257,7 @@ static void FPThreeOp64(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block
     auto args = reg_alloc.GetArgumentInfo(inst);
 
     Xbyak::Xmm result = reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm operand = reg_alloc.UseXmm(args[1]);
+    Xbyak::Xmm operand = reg_alloc.UseScratchXmm(args[1]);
     Xbyak::Reg64 gpr_scratch = reg_alloc.ScratchGpr();
 
     if (block.Location().FPSCR().FTZ()) {
