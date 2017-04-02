@@ -459,32 +459,56 @@ struct VfpTest {
     u32 final_fpscr;
 };
 
-TEST_CASE("vfp: vadd", "[vfp]") {
+static void RunVfpTests(u32 instr, std::vector<VfpTest> tests) {
     Dynarmic::Jit jit{GetUserCallbacks()};
     code_mem.fill({});
-    code_mem[0] = 0xee323a01; // vadd.f32 s6, s4, s2
+    code_mem[0] = instr;
     code_mem[1] = 0xeafffffe; // b +#0
 
-    std::vector<VfpTest> tests {
-#include "vadd.vfp_tests.inc"
-    };
+    printf("vfp test 0x%08x\r", instr);
 
     for (const auto& test : tests) {
         jit.Regs()[15] = 0;
         jit.Cpsr() = 0x000001d0;
         jit.ExtRegs()[4] = test.a;
-        jit.ExtRegs()[2] = test.b;
+        jit.ExtRegs()[6] = test.b;
         jit.SetFpscr(test.initial_fpscr);
 
         jit.Run(2);
 
+        const auto check = [&test, &jit](bool p) {
+            if (!p) {
+                printf("Failed test:\n");
+                printf("initial_fpscr: 0x%08x\n", test.initial_fpscr);
+                printf("a:             0x%08x (jit: 0x%08x)\n", test.a, jit.ExtRegs()[4]);
+                printf("b:             0x%08x (jit: 0x%08x)\n", test.b, jit.ExtRegs()[6]);
+                printf("result:        0x%08x (jit: 0x%08x)\n", test.result, jit.ExtRegs()[2]);
+                printf("final_fpscr:   0x%08x (jit: 0x%08x)\n", test.final_fpscr, jit.Fpscr());
+                FAIL();
+            }
+        };
+
         REQUIRE( jit.Regs()[15] == 4 );
         REQUIRE( jit.Cpsr() == 0x000001d0 );
-        REQUIRE( jit.ExtRegs()[6] == test.result );
-        REQUIRE( jit.ExtRegs()[4] == test.a );
-        REQUIRE( jit.ExtRegs()[2] == test.b );
-        REQUIRE( jit.Fpscr() == test.final_fpscr );
+        check( jit.ExtRegs()[2] == test.result );
+        check( jit.ExtRegs()[4] == test.a );
+        check( jit.ExtRegs()[6] == test.b );
+        check( jit.Fpscr() == test.final_fpscr );
     }
+}
+
+TEST_CASE("vfp: vadd", "[vfp]") {
+    // vadd.f32 s2, s4, s6
+    RunVfpTests(0xEE321A03, {
+#include "vfp_vadd_f32.inc"
+    });
+}
+
+TEST_CASE("vfp: vsub", "[vfp]") {
+    // vsub.f32 s2, s4, s6
+    RunVfpTests(0xEE321A43, {
+#include "vfp_vsub_f32.inc"
+    });
 }
 
 TEST_CASE("VFP: VMOV", "[JitX64][vfp]") {
