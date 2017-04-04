@@ -251,6 +251,10 @@ void Inst::DecrementRemainingUses() {
     use_count--;
 }
 
+bool Inst::HasAssociatedPseudoOperation() const {
+    return carry_inst || overflow_inst || ge_inst;
+}
+
 Inst* Inst::GetAssociatedPseudoOperation(Opcode opcode) {
     // This is faster than doing a search through the block.
     switch (opcode) {

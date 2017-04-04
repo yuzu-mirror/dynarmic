@@ -83,6 +83,8 @@ public:
     bool HasUses() const { return use_count > 0; }
     void DecrementRemainingUses();
 
+    /// Determines if there is a pseudo-operation associated with this instruction.
+    bool HasAssociatedPseudoOperation() const;
     /// Gets a pseudo-operation associated with this instruction.
     Inst* GetAssociatedPseudoOperation(Opcode opcode);
 
