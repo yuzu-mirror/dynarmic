@@ -19,17 +19,21 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+using LookupBlockCallback = CodePtr(*)(void*);
+
 class BlockOfCode final : public Xbyak::CodeGenerator {
 public:
-    explicit BlockOfCode(UserCallbacks cb);
+    BlockOfCode(UserCallbacks cb, LookupBlockCallback lookup_block, void* lookup_block_arg);
 
     /// Clears this block of code and resets code pointer to beginning.
     void ClearCache();
 
     /// Runs emulated code for approximately `cycles_to_run` cycles.
-    size_t RunCode(JitState* jit_state, CodePtr basic_block, size_t cycles_to_run) const;
-    /// Code emitter: Returns to host
+    size_t RunCode(JitState* jit_state, size_t cycles_to_run) const;
+    /// Code emitter: Returns to dispatcher
     void ReturnFromRunCode(bool MXCSR_switch = true);
+    /// Code emitter: Returns to dispatcher, forces return to host
+    void ForceReturnFromRunCode(bool MXCSR_switch = true);
     /// Code emitter: Makes guest MXCSR the current MXCSR
     void SwitchMxcsrOnEntry();
     /// Code emitter: Makes saved host MXCSR the current MXCSR
@@ -56,7 +60,11 @@ public:
     Xbyak::Address MConst(u64 constant);
 
     const void* GetReturnFromRunCodeAddress() const {
-        return return_from_run_code;
+        return return_from_run_code[0];
+    }
+
+    const void* GetForceReturnFromRunCodeAddress() const {
+        return return_from_run_code[FORCE_RETURN];
     }
 
     const void* GetMemoryReadCallback(size_t bit_size) const {
@@ -116,17 +124,19 @@ public:
 
 private:
     UserCallbacks cb;
+    LookupBlockCallback lookup_block;
+    void* lookup_block_arg;
+
     CodePtr user_code_begin;
 
     ConstantPool constant_pool;
 
-    using RunCodeFuncType = void(*)(JitState*, CodePtr);
+    using RunCodeFuncType = void(*)(JitState*);
     RunCodeFuncType run_code = nullptr;
+    static constexpr size_t NO_SWITCH_MXCSR = 1 << 0;
+    static constexpr size_t FORCE_RETURN = 1 << 1;
+    std::array<const void*, 4> return_from_run_code;
     void GenRunCode();
-
-    const void* return_from_run_code = nullptr;
-    const void* return_from_run_code_without_mxcsr_switch = nullptr;
-    void GenReturnFromRunCode();
 
     const void* read_memory_8 = nullptr;
     const void* read_memory_16 = nullptr;

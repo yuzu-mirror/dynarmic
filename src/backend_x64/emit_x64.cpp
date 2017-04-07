@@ -3403,7 +3403,7 @@ void EmitX64::EmitTerminal(IR::Term::LinkBlock terminal, IR::LocationDescriptor 
     }
 
     code->mov(MJitStateReg(Arm::Reg::PC), terminal.next.PC());
-    code->ReturnFromRunCode(); // TODO: Check cycles, Properly do a link
+    code->ForceReturnFromRunCode(); // TODO: Check cycles, Properly do a link
 }
 
 void EmitX64::EmitTerminal(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location) {
@@ -3464,7 +3464,7 @@ void EmitX64::EmitTerminal(IR::Term::CheckHalt terminal, IR::LocationDescriptor 
     using namespace Xbyak::util;
 
     code->cmp(code->byte[r15 + offsetof(JitState, halt_requested)], u8(0));
-    code->jne(code->GetReturnFromRunCodeAddress());
+    code->jne(code->GetForceReturnFromRunCodeAddress());
     EmitTerminal(terminal.else_, initial_location);
 }
 
