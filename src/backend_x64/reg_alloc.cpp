@@ -308,6 +308,20 @@ void RegAlloc::HostCall(IR::Inst* result_def, boost::optional<Argument&> arg0, b
     for (size_t i = 0; i < args_count; i++) {
         if (args[i]) {
             UseScratch(*args[i], args_hostloc[i]);
+#if defined(__llvm__) && !defined(_WIN32)
+            // LLVM puts the burden of zero-extension of 8 and 16 bit values on the caller instead of the callee
+            Xbyak::Reg64 reg = HostLocToReg64(args_hostloc[i]);
+            switch (args[i]->GetType()) {
+            case IR::Type::U8:
+                code->movzx(reg.cvt32(), reg.cvt8());
+                break;
+            case IR::Type::U16:
+                code->movzx(reg.cvt32(), reg.cvt16());
+                break;
+            default:
+                break; // Nothing needs to be done
+            }
+#endif
         }
     }
 
