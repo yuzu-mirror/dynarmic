@@ -3397,9 +3397,9 @@ void EmitX64::EmitTerminal(IR::Term::LinkBlock terminal, IR::LocationDescriptor 
 
     patch_information[terminal.next.UniqueHash()].jg.emplace_back(code->getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
-        EmitPatchJg(next_bb->entrypoint);
+        EmitPatchJg(terminal.next, next_bb->entrypoint);
     } else {
-        EmitPatchJg();
+        EmitPatchJg(terminal.next);
     }
 
     code->mov(MJitStateReg(Arm::Reg::PC), terminal.next.PC());
@@ -3474,7 +3474,7 @@ void EmitX64::Patch(const IR::LocationDescriptor& desc, CodePtr bb) {
 
     for (CodePtr location : patch_info.jg) {
         code->SetCodePtr(location);
-        EmitPatchJg(bb);
+        EmitPatchJg(desc, bb);
     }
 
     for (CodePtr location : patch_info.jmp) {
@@ -3494,12 +3494,15 @@ void EmitX64::Unpatch(const IR::LocationDescriptor& desc) {
     Patch(desc, nullptr);
 }
 
-void EmitX64::EmitPatchJg(CodePtr target_code_ptr) {
+void EmitX64::EmitPatchJg(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr) {
     const CodePtr patch_location = code->getCurr();
     if (target_code_ptr) {
         code->jg(target_code_ptr);
+    } else {
+        code->mov(MJitStateReg(Arm::Reg::PC), target_desc.PC());
+        code->jg(code->GetReturnFromRunCodeAddress());
     }
-    code->EnsurePatchLocationSize(patch_location, 6);
+    code->EnsurePatchLocationSize(patch_location, 14);
 }
 
 void EmitX64::EmitPatchJmp(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr) {

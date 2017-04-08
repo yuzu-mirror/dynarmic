@@ -91,7 +91,7 @@ private:
     };
     void Patch(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr);
     void Unpatch(const IR::LocationDescriptor& target_desc);
-    void EmitPatchJg(CodePtr target_code_ptr = nullptr);
+    void EmitPatchJg(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr = nullptr);
     void EmitPatchJmp(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr = nullptr);
     void EmitPatchMovRcx(CodePtr target_code_ptr = nullptr);
 

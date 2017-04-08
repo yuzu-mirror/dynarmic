@@ -152,10 +152,7 @@ size_t Jit::Run(size_t cycle_count) {
 
     impl->jit_state.halt_requested = false;
 
-    size_t cycles_executed = 0;
-    while (cycles_executed < cycle_count && !impl->jit_state.halt_requested) {
-        cycles_executed += impl->Execute(cycle_count - cycles_executed);
-    }
+    size_t cycles_executed = impl->Execute(cycle_count);
 
     impl->PerformCacheInvalidation();
 
