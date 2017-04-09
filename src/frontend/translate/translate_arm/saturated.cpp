@@ -158,6 +158,87 @@ bool ArmTranslatorVisitor::arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
     return true;
 }
 
+// Parallel saturated instructions
+
+bool ArmTranslatorVisitor::arm_QASX(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+
+    // QASX <Rd>, <Rn>, <Rm>
+    if (ConditionPassed(cond)) {
+        auto Rn = ir.GetRegister(n);
+        auto Rm = ir.GetRegister(m);
+        auto Rn_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(Rn));
+        auto Rn_hi = ir.SignExtendHalfToWord(MostSignificantHalf(ir, Rn));
+        auto Rm_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(Rm));
+        auto Rm_hi = ir.SignExtendHalfToWord(MostSignificantHalf(ir, Rm));
+        auto diff = ir.SignedSaturation(ir.Sub(Rn_lo, Rm_hi), 16).result;
+        auto sum = ir.SignedSaturation(ir.Add(Rn_hi, Rm_lo), 16).result;
+        auto result = Pack2x16To1x32(ir, diff, sum);
+        ir.SetRegister(d, result);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+
+    // QSAX <Rd>, <Rn>, <Rm>
+    if (ConditionPassed(cond)) {
+        auto Rn = ir.GetRegister(n);
+        auto Rm = ir.GetRegister(m);
+        auto Rn_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(Rn));
+        auto Rn_hi = ir.SignExtendHalfToWord(MostSignificantHalf(ir, Rn));
+        auto Rm_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(Rm));
+        auto Rm_hi = ir.SignExtendHalfToWord(MostSignificantHalf(ir, Rm));
+        auto sum = ir.SignedSaturation(ir.Add(Rn_lo, Rm_hi), 16).result;
+        auto diff = ir.SignedSaturation(ir.Sub(Rn_hi, Rm_lo), 16).result;
+        auto result = Pack2x16To1x32(ir, sum, diff);
+        ir.SetRegister(d, result);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_UQASX(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+
+    // UQASX <Rd>, <Rn>, <Rm>
+    if (ConditionPassed(cond)) {
+        auto Rn = ir.GetRegister(n);
+        auto Rm = ir.GetRegister(m);
+        auto Rn_lo = ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(Rn));
+        auto Rn_hi = ir.ZeroExtendHalfToWord(MostSignificantHalf(ir, Rn));
+        auto Rm_lo = ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(Rm));
+        auto Rm_hi = ir.ZeroExtendHalfToWord(MostSignificantHalf(ir, Rm));
+        auto diff = ir.UnsignedSaturation(ir.Sub(Rn_lo, Rm_hi), 16).result;
+        auto sum = ir.UnsignedSaturation(ir.Add(Rn_hi, Rm_lo), 16).result;
+        auto result = Pack2x16To1x32(ir, diff, sum);
+        ir.SetRegister(d, result);
+    }
+    return true;
+}
+
+bool ArmTranslatorVisitor::arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
+
+    // UQSAX <Rd>, <Rn>, <Rm>
+    if (ConditionPassed(cond)) {
+        auto Rn = ir.GetRegister(n);
+        auto Rm = ir.GetRegister(m);
+        auto Rn_lo = ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(Rn));
+        auto Rn_hi = ir.ZeroExtendHalfToWord(MostSignificantHalf(ir, Rn));
+        auto Rm_lo = ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(Rm));
+        auto Rm_hi = ir.ZeroExtendHalfToWord(MostSignificantHalf(ir, Rm));
+        auto sum = ir.UnsignedSaturation(ir.Add(Rn_lo, Rm_hi), 16).result;
+        auto diff = ir.UnsignedSaturation(ir.Sub(Rn_hi, Rm_lo), 16).result;
+        auto result = Pack2x16To1x32(ir, sum, diff);
+        ir.SetRegister(d, result);
+    }
+    return true;
+}
 
 } // namespace Arm
 } // namespace Dynarmic

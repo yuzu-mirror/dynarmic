@@ -184,16 +184,6 @@ bool ArmTranslatorVisitor::arm_QADD16(Cond cond, Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ArmTranslatorVisitor::arm_QASX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
-}
-
-bool ArmTranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
-}
-
 bool ArmTranslatorVisitor::arm_QSUB8(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
         return UnpredictableInstruction();
@@ -228,16 +218,6 @@ bool ArmTranslatorVisitor::arm_UQADD16(Cond cond, Reg n, Reg d, Reg m) {
         ir.SetRegister(d, result);
     }
     return true;
-}
-
-bool ArmTranslatorVisitor::arm_UQASX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
-}
-
-bool ArmTranslatorVisitor::arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
-    UNUSED(cond, n, d, m);
-    return InterpretThisInstruction();
 }
 
 bool ArmTranslatorVisitor::arm_UQSUB8(Cond cond, Reg n, Reg d, Reg m) {
