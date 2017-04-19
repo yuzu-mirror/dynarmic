@@ -59,6 +59,11 @@ public:
 
     Xbyak::Address MConst(u64 constant);
 
+    /// Far code sits far away from the near code. Execution remains primarily in near code.
+    /// "Cold" / Rarely executed instructions sit in far code, so the CPU doesn't fetch them unless necessary.
+    void SwitchToFarCode();
+    void SwitchToNearCode();
+
     const void* GetReturnFromRunCodeAddress() const {
         return return_from_run_code[0];
     }
@@ -127,9 +132,14 @@ private:
     LookupBlockCallback lookup_block;
     void* lookup_block_arg;
 
-    CodePtr user_code_begin;
+    CodePtr near_code_begin;
+    CodePtr far_code_begin;
 
     ConstantPool constant_pool;
+
+    bool in_far_code = false;
+    CodePtr near_code_ptr;
+    CodePtr far_code_ptr;
 
     using RunCodeFuncType = void(*)(JitState*);
     RunCodeFuncType run_code = nullptr;

@@ -18,8 +18,11 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+constexpr size_t TOTAL_CODE_SIZE = 128 * 1024 * 1024;
+constexpr size_t FAR_CODE_OFFSET = 100 * 1024 * 1024;
+
 BlockOfCode::BlockOfCode(UserCallbacks cb, LookupBlockCallback lookup_block, void* lookup_block_arg)
-        : Xbyak::CodeGenerator(128 * 1024 * 1024)
+        : Xbyak::CodeGenerator(TOTAL_CODE_SIZE)
         , cb(cb)
         , lookup_block(lookup_block)
         , lookup_block_arg(lookup_block_arg)
@@ -28,11 +31,16 @@ BlockOfCode::BlockOfCode(UserCallbacks cb, LookupBlockCallback lookup_block, voi
     GenRunCode();
     GenMemoryAccessors();
     unwind_handler.Register(this);
-    user_code_begin = getCurr<CodePtr>();
+    near_code_begin = getCurr();
+    far_code_begin = getCurr() + FAR_CODE_OFFSET;
+    ClearCache();
 }
 
 void BlockOfCode::ClearCache() {
-    SetCodePtr(user_code_begin);
+    in_far_code = false;
+    near_code_ptr = near_code_begin;
+    far_code_ptr = far_code_begin;
+    SetCodePtr(near_code_begin);
 }
 
 size_t BlockOfCode::RunCode(JitState* jit_state, size_t cycles_to_run) const {
@@ -181,6 +189,22 @@ void BlockOfCode::SwitchMxcsrOnExit() {
 
 Xbyak::Address BlockOfCode::MConst(u64 constant) {
     return constant_pool.GetConstant(constant);
+}
+
+void BlockOfCode::SwitchToFarCode() {
+    ASSERT(!in_far_code);
+    in_far_code = true;
+    near_code_ptr = getCurr();
+    SetCodePtr(far_code_ptr);
+
+    ASSERT_MSG(near_code_ptr < far_code_begin, "Near code has overwritten far code!");
+}
+
+void BlockOfCode::SwitchToNearCode() {
+    ASSERT(in_far_code);
+    in_far_code = false;
+    far_code_ptr = getCurr();
+    SetCodePtr(near_code_ptr);
 }
 
 void BlockOfCode::nop(size_t size) {
