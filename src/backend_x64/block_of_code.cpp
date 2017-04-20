@@ -30,7 +30,7 @@ BlockOfCode::BlockOfCode(UserCallbacks cb, LookupBlockCallback lookup_block, voi
 {
     GenRunCode();
     GenMemoryAccessors();
-    unwind_handler.Register(this);
+    exception_handler.Register(this);
     near_code_begin = getCurr();
     far_code_begin = getCurr() + FAR_CODE_OFFSET;
     ClearCache();

@@ -157,7 +157,7 @@ static PrologueInformation GetPrologueInformation() {
     return ret;
 }
 
-struct BlockOfCode::UnwindHandler::Impl final {
+struct BlockOfCode::ExceptionHandler::Impl final {
     Impl(RUNTIME_FUNCTION* rfuncs_, const u8* base_ptr) : rfuncs(rfuncs_) {
         RtlAddFunctionTable(rfuncs, 1, reinterpret_cast<DWORD64>(base_ptr));
     }
@@ -170,10 +170,10 @@ private:
     RUNTIME_FUNCTION* rfuncs = nullptr;
 };
 
-BlockOfCode::UnwindHandler::UnwindHandler() = default;
-BlockOfCode::UnwindHandler::~UnwindHandler() = default;
+BlockOfCode::ExceptionHandler::ExceptionHandler() = default;
+BlockOfCode::ExceptionHandler::~ExceptionHandler() = default;
 
-void BlockOfCode::UnwindHandler::Register(BlockOfCode* code) {
+void BlockOfCode::ExceptionHandler::Register(BlockOfCode* code) {
     const auto prolog_info = GetPrologueInformation();
 
     code->align(16);

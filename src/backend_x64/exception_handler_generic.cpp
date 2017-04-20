@@ -9,13 +9,13 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
-struct BlockOfCode::UnwindHandler::Impl final {
+struct BlockOfCode::ExceptionHandler::Impl final {
 };
 
-BlockOfCode::UnwindHandler::UnwindHandler() = default;
-BlockOfCode::UnwindHandler::~UnwindHandler() = default;
+BlockOfCode::ExceptionHandler::ExceptionHandler() = default;
+BlockOfCode::ExceptionHandler::~ExceptionHandler() = default;
 
-void BlockOfCode::UnwindHandler::Register(BlockOfCode*) {
+void BlockOfCode::ExceptionHandler::Register(BlockOfCode*) {
     // Do nothing
 }
 

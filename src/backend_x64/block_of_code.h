@@ -158,17 +158,17 @@ private:
     const void* write_memory_64 = nullptr;
     void GenMemoryAccessors();
 
-    class UnwindHandler final {
+    class ExceptionHandler final {
     public:
-        UnwindHandler();
-        ~UnwindHandler();
+        ExceptionHandler();
+        ~ExceptionHandler();
 
         void Register(BlockOfCode* code);
     private:
         struct Impl;
         std::unique_ptr<Impl> impl;
     };
-    UnwindHandler unwind_handler;
+    ExceptionHandler exception_handler;
 };
 
 } // namespace BackendX64
