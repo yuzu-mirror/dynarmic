@@ -33,7 +33,7 @@ bool ArmTranslatorVisitor::arm_LDC(Cond cond, bool p, bool u, bool d, bool w, Re
     const bool index = p;
     const bool add = u;
     const bool wback = w;
-    const bool has_option = !p & !w & u;
+    const bool has_option = !p && !w && u;
 
     // LDC{2}{L} <coproc_no>, <CRd>, [<Rn>, #+/-<imm32>]{!}
     // LDC{2}{L} <coproc_no>, <CRd>, [<Rn>], #+/-<imm32>
@@ -130,7 +130,7 @@ bool ArmTranslatorVisitor::arm_STC(Cond cond, bool p, bool u, bool d, bool w, Re
     const bool index = p;
     const bool add = u;
     const bool wback = w;
-    const bool has_option = !p & !w & u;
+    const bool has_option = !p && !w && u;
 
     // STC{2}{L} <coproc>, <CRd>, [<Rn>, #+/-<imm32>]{!}
     // STC{2}{L} <coproc>, <CRd>, [<Rn>], #+/-<imm32>
