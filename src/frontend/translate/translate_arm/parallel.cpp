@@ -205,6 +205,8 @@ bool ArmTranslatorVisitor::arm_QSUB16(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UQADD8(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedAddU8(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
@@ -213,6 +215,8 @@ bool ArmTranslatorVisitor::arm_UQADD8(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 bool ArmTranslatorVisitor::arm_UQADD16(Cond cond, Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC)
+        return UnpredictableInstruction();
     if (ConditionPassed(cond)) {
         auto result = ir.PackedSaturatedAddU16(ir.GetRegister(n), ir.GetRegister(m));
         ir.SetRegister(d, result);
