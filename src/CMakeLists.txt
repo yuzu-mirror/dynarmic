@@ -115,7 +115,7 @@ target_compile_options(dynarmic PRIVATE ${DYNARMIC_CXX_FLAGS})
 target_link_libraries(dynarmic
     PRIVATE
         boost
-        fmt-header-only
+        fmt
         xbyak
         $<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>
 )
