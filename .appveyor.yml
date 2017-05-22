@@ -1,7 +1,12 @@
 # shallow clone
 clone_depth: 5
 
-os: Visual Studio 2015
+environment:
+  matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      cmake_generator: "Visual Studio 14 2015 Win64"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      cmake_generator: "Visual Studio 15 2017 Win64"
 
 platform:
   - x64
@@ -18,7 +23,7 @@ install:
 before_build:
   - mkdir build
   - cd build
-  - cmake .. -G "Visual Studio 14 2015 Win64" -DDYNARMIC_USE_SYSTEM_BOOST=0 -DBoost_INCLUDE_DIRS=%cd%/../externals/boost
+  - cmake .. -G "%cmake_generator%" -DDYNARMIC_USE_SYSTEM_BOOST=0 -DBoost_INCLUDE_DIRS=%cd%/../externals/boost
   - cd ..
 
 build:
