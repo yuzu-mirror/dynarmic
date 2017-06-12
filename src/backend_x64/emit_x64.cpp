@@ -1763,10 +1763,10 @@ void EmitX64::EmitPackedHalvingAddU8(RegAlloc& reg_alloc, IR::Block&, IR::Inst* 
         Xbyak::Reg32 result = reg_a;
 
         code->mov(xor_a_b, reg_a);
-        code->and(and_a_b, reg_b);
-        code->xor(xor_a_b, reg_b);
+        code->and_(and_a_b, reg_b);
+        code->xor_(xor_a_b, reg_b);
         code->shr(xor_a_b, 1);
-        code->and(xor_a_b, 0x7F7F7F7F);
+        code->and_(xor_a_b, 0x7F7F7F7F);
         code->add(result, xor_a_b);
 
         reg_alloc.DefineValue(inst, result);
@@ -1788,10 +1788,10 @@ void EmitX64::EmitPackedHalvingAddU16(RegAlloc& reg_alloc, IR::Block&, IR::Inst*
     // We mask by 0x7FFF to remove the LSB so that it doesn't leak into the field below.
 
     code->mov(xor_a_b, reg_a);
-    code->and(and_a_b, reg_b);
-    code->xor(xor_a_b, reg_b);
+    code->and_(and_a_b, reg_b);
+    code->xor_(xor_a_b, reg_b);
     code->shr(xor_a_b, 1);
-    code->and(xor_a_b, 0x7FFF7FFF);
+    code->and_(xor_a_b, 0x7FFF7FFF);
     code->add(result, xor_a_b);
 
     reg_alloc.DefineValue(inst, result);
@@ -1814,14 +1814,14 @@ void EmitX64::EmitPackedHalvingAddS8(RegAlloc& reg_alloc, IR::Block&, IR::Inst* 
     // carry propagates the sign bit from (x^y)>>1 upwards by one.
 
     code->mov(xor_a_b, reg_a);
-    code->and(and_a_b, reg_b);
-    code->xor(xor_a_b, reg_b);
+    code->and_(and_a_b, reg_b);
+    code->xor_(xor_a_b, reg_b);
     code->mov(carry, xor_a_b);
-    code->and(carry, 0x80808080);
+    code->and_(carry, 0x80808080);
     code->shr(xor_a_b, 1);
-    code->and(xor_a_b, 0x7F7F7F7F);
+    code->and_(xor_a_b, 0x7F7F7F7F);
     code->add(result, xor_a_b);
-    code->xor(result, carry);
+    code->xor_(result, carry);
 
     reg_alloc.DefineValue(inst, result);
 }
@@ -1843,14 +1843,14 @@ void EmitX64::EmitPackedHalvingAddS16(RegAlloc& reg_alloc, IR::Block&, IR::Inst*
     // carry propagates the sign bit from (x^y)>>1 upwards by one.
 
     code->mov(xor_a_b, reg_a);
-    code->and(and_a_b, reg_b);
-    code->xor(xor_a_b, reg_b);
+    code->and_(and_a_b, reg_b);
+    code->xor_(xor_a_b, reg_b);
     code->mov(carry, xor_a_b);
-    code->and(carry, 0x80008000);
+    code->and_(carry, 0x80008000);
     code->shr(xor_a_b, 1);
-    code->and(xor_a_b, 0x7FFF7FFF);
+    code->and_(xor_a_b, 0x7FFF7FFF);
     code->add(result, xor_a_b);
-    code->xor(result, carry);
+    code->xor_(result, carry);
 
     reg_alloc.DefineValue(inst, result);
 }
@@ -1865,8 +1865,8 @@ void EmitX64::EmitPackedHalvingSubU8(RegAlloc& reg_alloc, IR::Block&, IR::Inst* 
     // Note that x^y always contains the LSB of the result.
     // Since we want to calculate (x+y)/2, we can instead calculate ((x^y)>>1) - ((x^y)&y).
 
-    code->xor(minuend, subtrahend);
-    code->and(subtrahend, minuend);
+    code->xor_(minuend, subtrahend);
+    code->and_(subtrahend, minuend);
     code->shr(minuend, 1);
 
     // At this point,
@@ -1877,9 +1877,9 @@ void EmitX64::EmitPackedHalvingSubU8(RegAlloc& reg_alloc, IR::Block&, IR::Inst* 
     // We can do this because minuend contains 7 bit fields.
     // We use the extra bit in minuend as a bit to borrow from; we set this bit.
     // We invert this bit at the end as this tells us if that bit was borrowed from.
-    code->or(minuend, 0x80808080);
+    code->or_(minuend, 0x80808080);
     code->sub(minuend, subtrahend);
-    code->xor(minuend, 0x80808080);
+    code->xor_(minuend, 0x80808080);
 
     // minuend now contains the desired result.
     reg_alloc.DefineValue(inst, minuend);
@@ -1897,10 +1897,10 @@ void EmitX64::EmitPackedHalvingSubS8(RegAlloc& reg_alloc, IR::Block&, IR::Inst* 
     // Note that x^y always contains the LSB of the result.
     // Since we want to calculate (x-y)/2, we can instead calculate ((x^y)>>1) - ((x^y)&y).
 
-    code->xor(minuend, subtrahend);
-    code->and(subtrahend, minuend);
+    code->xor_(minuend, subtrahend);
+    code->and_(subtrahend, minuend);
     code->mov(carry, minuend);
-    code->and(carry, 0x80808080);
+    code->and_(carry, 0x80808080);
     code->shr(minuend, 1);
 
     // At this point,
@@ -1913,10 +1913,10 @@ void EmitX64::EmitPackedHalvingSubS8(RegAlloc& reg_alloc, IR::Block&, IR::Inst* 
     // We use the extra bit in minuend as a bit to borrow from; we set this bit.
     // We invert this bit at the end as this tells us if that bit was borrowed from.
     // We then sign extend the result into this bit.
-    code->or(minuend, 0x80808080);
+    code->or_(minuend, 0x80808080);
     code->sub(minuend, subtrahend);
-    code->xor(minuend, 0x80808080);
-    code->xor(minuend, carry);
+    code->xor_(minuend, 0x80808080);
+    code->xor_(minuend, carry);
 
     reg_alloc.DefineValue(inst, minuend);
 }
@@ -1931,8 +1931,8 @@ void EmitX64::EmitPackedHalvingSubU16(RegAlloc& reg_alloc, IR::Block&, IR::Inst*
     // Note that x^y always contains the LSB of the result.
     // Since we want to calculate (x+y)/2, we can instead calculate ((x^y)>>1) - ((x^y)&y).
 
-    code->xor(minuend, subtrahend);
-    code->and(subtrahend, minuend);
+    code->xor_(minuend, subtrahend);
+    code->and_(subtrahend, minuend);
     code->shr(minuend, 1);
 
     // At this point,
@@ -1943,9 +1943,9 @@ void EmitX64::EmitPackedHalvingSubU16(RegAlloc& reg_alloc, IR::Block&, IR::Inst*
     // We can do this because minuend contains 15 bit fields.
     // We use the extra bit in minuend as a bit to borrow from; we set this bit.
     // We invert this bit at the end as this tells us if that bit was borrowed from.
-    code->or(minuend, 0x80008000);
+    code->or_(minuend, 0x80008000);
     code->sub(minuend, subtrahend);
-    code->xor(minuend, 0x80008000);
+    code->xor_(minuend, 0x80008000);
 
     reg_alloc.DefineValue(inst, minuend);
 }
@@ -1962,10 +1962,10 @@ void EmitX64::EmitPackedHalvingSubS16(RegAlloc& reg_alloc, IR::Block&, IR::Inst*
     // Note that x^y always contains the LSB of the result.
     // Since we want to calculate (x-y)/2, we can instead calculate ((x^y)>>1) - ((x^y)&y).
 
-    code->xor(minuend, subtrahend);
-    code->and(subtrahend, minuend);
+    code->xor_(minuend, subtrahend);
+    code->and_(subtrahend, minuend);
     code->mov(carry, minuend);
-    code->and(carry, 0x80008000);
+    code->and_(carry, 0x80008000);
     code->shr(minuend, 1);
 
     // At this point,
@@ -1978,10 +1978,10 @@ void EmitX64::EmitPackedHalvingSubS16(RegAlloc& reg_alloc, IR::Block&, IR::Inst*
     // We use the extra bit in minuend as a bit to borrow from; we set this bit.
     // We invert this bit at the end as this tells us if that bit was borrowed from.
     // We then sign extend the result into this bit.
-    code->or(minuend, 0x80008000);
+    code->or_(minuend, 0x80008000);
     code->sub(minuend, subtrahend);
-    code->xor(minuend, 0x80008000);
-    code->xor(minuend, carry);
+    code->xor_(minuend, 0x80008000);
+    code->xor_(minuend, carry);
 
     reg_alloc.DefineValue(inst, minuend);
 }
@@ -2034,11 +2034,11 @@ void EmitPackedSubAdd(BlockOfCode* code, RegAlloc& reg_alloc, IR::Block& block, 
             code->shl(ge_sum, 15);
             code->sar(ge_sum, 16);
         } else {
-            code->not(ge_sum);
+            code->not_(ge_sum);
         }
-        code->not(ge_diff);
-        code->and(ge_sum, hi_is_sum ? 0xC0000000 : 0x30000000);
-        code->and(ge_diff, hi_is_sum ? 0x30000000 : 0xC0000000);
+        code->not_(ge_diff);
+        code->and_(ge_sum, hi_is_sum ? 0xC0000000 : 0x30000000);
+        code->and_(ge_diff, hi_is_sum ? 0x30000000 : 0xC0000000);
         code->or_(ge_sum, ge_diff);
         code->shr(ge_sum, 28);
 

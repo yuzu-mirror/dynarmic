@@ -11,6 +11,7 @@ if (NOT TARGET xbyak)
     if (ARCHITECTURE_x86 OR ARCHITECTURE_x86_64)
         add_library(xbyak INTERFACE)
         target_include_directories(xbyak INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/xbyak/xbyak)
+        target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
     endif()
 endif()
 

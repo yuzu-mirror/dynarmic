@@ -58,8 +58,7 @@ if (MSVC)
     if (CMAKE_VS_PLATFORM_TOOLSET MATCHES "LLVM-vs[0-9]+")
         list(APPEND DYNARMIC_CXX_FLAGS
              -Qunused-arguments
-             -Wno-missing-braces
-             -Xclang -fno-operator-names)
+             -Wno-missing-braces)
     endif()
 else()
     set(DYNARMIC_CXX_FLAGS
@@ -69,8 +68,7 @@ else()
         -pedantic
         -pedantic-errors
         -Wfatal-errors
-        -Wno-missing-braces
-        -fno-operator-names)
+        -Wno-missing-braces)
 
     if (DYNARMIC_WARNINGS_AS_ERRORS)
         list(APPEND DYNARMIC_CXX_FLAGS
