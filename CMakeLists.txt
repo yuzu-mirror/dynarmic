@@ -44,10 +44,13 @@ if (MSVC)
         /w34459 # Declaration of 'var' hides global definition
         /w34946 # Reinterpret-cast between related types
         /wd4592 # Symbol will be dynamically initialized (implementation limitation)
+        /permissive- # Stricter C++ standards conformance
         /MP
         /Zi
         /Zo
         /EHsc
+        /Zc:throwingNew # Assumes new never returns null
+        /Zc:inline # Omits inline functions from object-file output
         /DNOMINMAX)
 
     if (DYNARMIC_WARNINGS_AS_ERRORS)
