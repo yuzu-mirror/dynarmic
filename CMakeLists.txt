@@ -77,11 +77,6 @@ else()
         list(APPEND DYNARMIC_CXX_FLAGS
              -Werror)
     endif()
-
-    if (ARCHITECTURE_x86_64)
-        list(APPEND DYNARMIC_CXX_FLAGS
-             -msse3)
-    endif()
 endif()
 
 # Arch detection
