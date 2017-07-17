@@ -5,18 +5,18 @@ matrix:
     - os: linux
       sudo: required
       dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-6
+            - g++-6
+            - lib32stdc++6 # For CMake
+      install: ./.travis/deps-x86_64-linux.sh
+      script: ./.travis/build-x86_64-linux.sh
     - os: osx
       sudo: false
       osx_image: xcode7.3
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-6
-      - g++-6
-      - lib32stdc++6 # For CMake
-
-install: ./.travis/deps.sh
-script: ./.travis/build.sh
+      install: ./.travis/deps-x86_64-macos.sh
+      script: ./.travis/build-x86_64-macos.sh
