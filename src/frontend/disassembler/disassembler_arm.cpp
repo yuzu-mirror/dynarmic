@@ -451,9 +451,9 @@ public:
     }
     std::string arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
         if (P) {
-            return fmt::format("ldrd{} {}, [{}, {}{}]{}", CondToString(cond), t, n, U ? '+' : '-', m, W ? "!" : "");
+            return fmt::format("ldrh{} {}, [{}, {}{}]{}", CondToString(cond), t, n, U ? '+' : '-', m, W ? "!" : "");
         } else {
-            return fmt::format("ldrd{} {}, [{}], {}{}{}", CondToString(cond), t, n, U ? '+' : '-', m, W ? " (err: W == 1!!!)" : "");
+            return fmt::format("ldrh{} {}, [{}], {}{}{}", CondToString(cond), t, n, U ? '+' : '-', m, W ? " (err: W == 1!!!)" : "");
         }
     }
     std::string arm_LDRHT() { return "ice"; }
