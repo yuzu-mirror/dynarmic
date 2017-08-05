@@ -376,3 +376,7 @@ TEST_CASE("Disassemble synchronization primitive instructions", "[arm][disassemb
     REQUIRE(DisassembleArm(0xE1031092) == "swp r1, r2, [r3]");
     REQUIRE(DisassembleArm(0xE1431092) == "swpb r1, r2, [r3]");
 }
+
+TEST_CASE("Disassemble load / store multiple instructions", "[arm][disassembler]") {
+    REQUIRE(DisassembleArm(0xE92D500F) == "stmdb sp!, {r0, r1, r2, r3, r12, lr}");
+}

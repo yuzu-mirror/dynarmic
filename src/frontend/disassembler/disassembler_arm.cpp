@@ -562,30 +562,30 @@ public:
 
     // Load/Store multiple instructions
     std::string arm_LDM(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("ldm{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("ldm{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("ldmda{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("ldmda{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("ldmdb{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("ldmdb{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("ldmib{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("ldmib{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_LDM_usr() { return "ice"; }
     std::string arm_LDM_eret() { return "ice"; }
     std::string arm_STM(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("stm{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("stm{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_STMDA(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("stmda{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("stmda{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_STMDB(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("stmdb{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("stmdb{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_STMIB(Cond cond, bool W, Reg n, RegList list) {
-        return fmt::format("stmib{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", list);
+        return fmt::format("stmib{} {}{}, {{{}}}", CondToString(cond), n, W ? "!" : "", RegListToString(list));
     }
     std::string arm_STM_usr() { return "ice"; }
 

@@ -262,12 +262,12 @@ public:
 
     std::string thumb16_PUSH(bool M, RegList reg_list) {
         if (M) reg_list |= 1 << 14;
-        return fmt::format("push {}", reg_list);
+        return fmt::format("push {{{}}}", RegListToString(reg_list));
     }
 
     std::string thumb16_POP(bool P, RegList reg_list) {
         if (P) reg_list |= 1 << 15;
-        return fmt::format("pop {}", reg_list);
+        return fmt::format("pop {{{}}}", RegListToString(reg_list));
     }
 
     std::string thumb16_SETEND(bool E) {
@@ -291,12 +291,12 @@ public:
     }
 
     std::string thumb16_STMIA(Reg n, RegList reg_list) {
-        return fmt::format("stm {}!, {}", n, reg_list);
+        return fmt::format("stm {}!, {{{}}}", n, RegListToString(reg_list));
     }
 
     std::string thumb16_LDMIA(Reg n, RegList reg_list) {
         bool write_back = !Common::Bit(static_cast<size_t>(n), reg_list);
-        return fmt::format("ldm {}{}, {}", n, write_back ? "!" : "", reg_list);
+        return fmt::format("ldm {}{}, {{{}}}", n, write_back ? "!" : "", RegListToString(reg_list));
     }
 
     std::string thumb16_BX(Reg m) {
