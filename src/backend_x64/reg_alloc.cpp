@@ -398,14 +398,27 @@ void RegAlloc::DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst) {
 HostLoc RegAlloc::LoadImmediate(IR::Value imm, HostLoc host_loc) {
     ASSERT_MSG(imm.IsImmediate(), "imm is not an immediate");
 
-    Xbyak::Reg64 reg = HostLocToReg64(host_loc);
+    if (HostLocIsGPR(host_loc)) {
+        Xbyak::Reg64 reg = HostLocToReg64(host_loc);
+        u64 imm_value = ImmediateToU64(imm);
+        if (imm_value == 0)
+            code->xor_(reg.cvt32(), reg.cvt32());
+        else
+            code->mov(reg, imm_value);
+        return host_loc;
+    }
 
-    u64 imm_value = ImmediateToU64(imm);
-    if (imm_value == 0)
-        code->xor_(reg.cvt32(), reg.cvt32());
-    else
-        code->mov(reg, imm_value);
-    return host_loc;
+    if (HostLocIsXMM(host_loc)) {
+        Xbyak::Xmm reg = HostLocToXmm(host_loc);
+        u64 imm_value = ImmediateToU64(imm);
+        if (imm_value == 0)
+            code->pxor(reg, reg);
+        else
+            code->movdqa(reg, code->MConst(imm_value)); // TODO: movaps/movapd more appropriate sometimes
+        return host_loc;
+    }
+
+    UNREACHABLE();
 }
 
 void RegAlloc::Move(HostLoc to, HostLoc from) {
