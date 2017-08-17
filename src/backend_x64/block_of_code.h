@@ -103,7 +103,6 @@ public:
     }
 
     void int3() { db(0xCC); }
-    void nop(size_t size = 1);
 
     /// Allocate memory of `size` bytes from the same block of memory the code is in.
     /// This is useful for objects that need to be placed close to or within code.

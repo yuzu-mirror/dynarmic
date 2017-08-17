@@ -207,45 +207,6 @@ void BlockOfCode::SwitchToNearCode() {
     SetCodePtr(near_code_ptr);
 }
 
-void BlockOfCode::nop(size_t size) {
-    switch (size) {
-    case 0:
-        return;
-    case 1:
-        db(0x90);
-        return;
-    case 2:
-        db(0x66); db(0x90);
-        return;
-    case 3:
-        db(0x0f); db(0x1f); db(0x00);
-        return;
-    case 4:
-        db(0x0f); db(0x1f); db(0x40); db(0x00);
-        return;
-    case 5:
-        db(0x0f); db(0x1f); db(0x44); db(0x00); db(0x00);
-        return;
-    case 6:
-        db(0x66); db(0x0f); db(0x1f); db(0x44); db(0x00); db(0x00);
-        return;
-    case 7:
-        db(0x0f); db(0x1f); db(0x80); db(0x00); db(0x00); db(0x00); db(0x00);
-        return;
-    case 8:
-        db(0x0f); db(0x1f); db(0x84); db(0x00); db(0x00); db(0x00); db(0x00); db(0x00);
-        return;
-    case 9:
-        db(0x66); db(0x0f); db(0x1f); db(0x84); db(0x00); db(0x00); db(0x00); db(0x00); db(0x00);
-        return;
-    case 10:
-    default:
-        db(0x66); db(0x2e); db(0x0f); db(0x1f); db(0x84); db(0x00); db(0x00); db(0x00); db(0x00); db(0x00);
-        nop(size - 10);
-        return;
-    }
-}
-
 void* BlockOfCode::AllocateFromCodeSpace(size_t alloc_size) {
     if (size_ + alloc_size >= maxSize_) {
         throw Xbyak::Error(Xbyak::ERR_CODE_IS_TOO_BIG);
