@@ -4,8 +4,8 @@
  * General Public License version 2 or any later version.
  */
 
+#include <deque>
 #include <memory>
-#include <queue>
 
 #include <fmt/format.h>
 
@@ -45,7 +45,8 @@ struct Jit::Impl {
     const UserCallbacks callbacks;
 
     // Requests made during execution to invalidate the cache are queued up here.
-    std::queue<Common::AddressRange> invalid_cache_ranges;
+    std::deque<Common::AddressRange> invalid_cache_ranges;
+    bool invalidate_entire_cache = false;
 
     size_t Execute(size_t cycle_count) {
         return block_of_code.RunCode(&jit_state, cycle_count);
@@ -90,19 +91,28 @@ struct Jit::Impl {
     }
 
     void PerformCacheInvalidation() {
+        if (invalidate_entire_cache) {
+            jit_state.ResetRSB();
+            block_of_code.ClearCache();
+            emitter.ClearCache();
+
+            invalid_cache_ranges.clear();
+            invalidate_entire_cache = false;
+            return;
+        }
+
         if (invalid_cache_ranges.empty()) {
             return;
         }
 
         jit_state.ResetRSB();
-        block_of_code.ClearCache();
         while (!invalid_cache_ranges.empty()) {
             emitter.InvalidateCacheRange(invalid_cache_ranges.front());
-            invalid_cache_ranges.pop();
+            invalid_cache_ranges.pop_front();
         }
     }
 
-    void HandleNewCacheRange() {
+    void RequestCacheInvalidation() {
         if (jit_interface->is_executing) {
             jit_state.halt_requested = true;
             return;
@@ -160,13 +170,13 @@ size_t Jit::Run(size_t cycle_count) {
 }
 
 void Jit::ClearCache() {
-    impl->invalid_cache_ranges.push(Common::FullAddressRange{});
-    impl->HandleNewCacheRange();
+    impl->invalidate_entire_cache = true;
+    impl->RequestCacheInvalidation();
 }
 
 void Jit::InvalidateCacheRange(std::uint32_t start_address, std::size_t length) {
-    impl->invalid_cache_ranges.push(Common::AddressInterval{start_address, length});
-    impl->HandleNewCacheRange();
+    impl->invalid_cache_ranges.emplace_back(Common::AddressRange{start_address, length});
+    impl->RequestCacheInvalidation();
 }
 
 void Jit::Reset() {

@@ -3532,30 +3532,19 @@ void EmitX64::ClearCache() {
 
 void EmitX64::InvalidateCacheRange(const Common::AddressRange& range) {
     // Remove cached block descriptors and patch information overlapping with the given range.
+    for (auto it = block_descriptors.begin(); it != block_descriptors.end();) {
+        IR::LocationDescriptor descriptor = it->second.start_location;
+        u32 start = descriptor.PC();
+        u32 end = it->second.end_location_pc;
+        if (range.Overlaps(start, end)) {
+            it = block_descriptors.erase(it);
 
-    switch (range.which()) {
-    case 0: // FullAddressRange
-        ClearCache();
-        break;
-
-    case 1: // AddressInterval
-        auto interval = boost::get<Common::AddressInterval>(range);
-        for (auto it = std::begin(block_descriptors); it != std::end(block_descriptors);) {
-            const IR::LocationDescriptor& descriptor = it->second.start_location;
-            u32 start = descriptor.PC();
-            u32 end = it->second.end_location_pc;
-            if (interval.Overlaps(start, end)) {
-                it = block_descriptors.erase(it);
-
-                auto patch_it = patch_information.find(descriptor.UniqueHash());
-                if (patch_it != patch_information.end()) {
-                    Unpatch(descriptor);
-                }
-            } else {
-                ++it;
+            if (patch_information.count(descriptor.UniqueHash())) {
+                Unpatch(descriptor);
             }
+        } else {
+            ++it;
         }
-        break;
     }
 }
 
