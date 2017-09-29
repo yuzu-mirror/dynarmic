@@ -18,6 +18,20 @@
 namespace Dynarmic {
 namespace BackendX64 {
 
+#ifdef _WIN32
+const Xbyak::Reg64 BlockOfCode::ABI_RETURN = Xbyak::util::rax;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM1 = Xbyak::util::rcx;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM2 = Xbyak::util::rdx;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM3 = Xbyak::util::r8;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM4 = Xbyak::util::r9;
+#else
+const Xbyak::Reg64 BlockOfCode::ABI_RETURN = Xbyak::util::rax;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM1 = Xbyak::util::rdi;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM2 = Xbyak::util::rsi;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM3 = Xbyak::util::rdx;
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM4 = Xbyak::util::rcx;
+#endif
+
 constexpr size_t TOTAL_CODE_SIZE = 128 * 1024 * 1024;
 constexpr size_t FAR_CODE_OFFSET = 100 * 1024 * 1024;
 

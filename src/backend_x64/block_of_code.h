@@ -112,19 +112,11 @@ public:
     void SetCodePtr(CodePtr code_ptr);
     void EnsurePatchLocationSize(CodePtr begin, size_t size);
 
-#ifdef _WIN32
-    Xbyak::Reg64 ABI_RETURN = rax;
-    Xbyak::Reg64 ABI_PARAM1 = rcx;
-    Xbyak::Reg64 ABI_PARAM2 = rdx;
-    Xbyak::Reg64 ABI_PARAM3 = r8;
-    Xbyak::Reg64 ABI_PARAM4 = r9;
-#else
-    Xbyak::Reg64 ABI_RETURN = rax;
-    Xbyak::Reg64 ABI_PARAM1 = rdi;
-    Xbyak::Reg64 ABI_PARAM2 = rsi;
-    Xbyak::Reg64 ABI_PARAM3 = rdx;
-    Xbyak::Reg64 ABI_PARAM4 = rcx;
-#endif
+    static const Xbyak::Reg64 ABI_RETURN;
+    static const Xbyak::Reg64 ABI_PARAM1;
+    static const Xbyak::Reg64 ABI_PARAM2;
+    static const Xbyak::Reg64 ABI_PARAM3;
+    static const Xbyak::Reg64 ABI_PARAM4;
 
 private:
     UserCallbacks cb;
