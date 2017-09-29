@@ -22,7 +22,7 @@ using VFP2Matcher = Matcher<Visitor, u32>;
 
 template<typename V>
 boost::optional<const VFP2Matcher<V>&> DecodeVFP2(u32 instruction) {
-    const static std::vector<VFP2Matcher<V>> table = {
+    static const std::vector<VFP2Matcher<V>> table = {
 
 #define INST(fn, name, bitstring) detail::detail<VFP2Matcher<V>>::GetMatcher(fn, name, bitstring)
 

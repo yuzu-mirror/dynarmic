@@ -322,7 +322,7 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
 
 template<typename V>
 boost::optional<const ArmMatcher<V>&> DecodeArm(u32 instruction) {
-    const static auto table = GetArmDecodeTable<V>();
+    static const auto table = GetArmDecodeTable<V>();
 
     const auto matches_instruction = [instruction](const auto& matcher) { return matcher.Matches(instruction); };
 

@@ -22,7 +22,7 @@ using Thumb16Matcher = Matcher<Visitor, u16>;
 
 template<typename V>
 boost::optional<const Thumb16Matcher<V>&> DecodeThumb16(u16 instruction) {
-    const static std::vector<Thumb16Matcher<V>> table = {
+    static const std::vector<Thumb16Matcher<V>> table = {
 
 #define INST(fn, name, bitstring) detail::detail<Thumb16Matcher<V>>::GetMatcher(fn, name, bitstring)
 

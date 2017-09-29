@@ -22,7 +22,7 @@ using Thumb32Matcher = Matcher<Visitor, u32>;
 
 template<typename V>
 boost::optional<const Thumb32Matcher<V>&> DecodeThumb32(u32 instruction) {
-    const static std::vector<Thumb32Matcher<V>> table = {
+    static const std::vector<Thumb32Matcher<V>> table = {
 
 #define INST(fn, name, bitstring) detail::detail<Thumb32Matcher<V>>::GetMatcher(fn, name, bitstring)
 

@@ -28,7 +28,7 @@ public:
     Xbyak::Address GetConstant(u64 constant);
 
 private:
-    constexpr static size_t align_size = 16; // bytes
+    static constexpr size_t align_size = 16; // bytes
 
     std::map<u64, void*> constant_info;
 
