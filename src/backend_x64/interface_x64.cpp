@@ -185,10 +185,7 @@ void Jit::Reset() {
 }
 
 void Jit::HaltExecution() {
-    ASSERT(is_executing);
     impl->jit_state.halt_requested = true;
-
-    // TODO: Uh do other stuff to JitState pls.
 }
 
 std::array<u32, 16>& Jit::Regs() {
