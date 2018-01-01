@@ -3464,7 +3464,7 @@ void A32EmitX64::EmitTerminal(IR::Term::LinkBlock terminal, A32::LocationDescrip
 
     code->cmp(qword[r15 + offsetof(JitState, cycles_remaining)], 0);
 
-    patch_information[terminal.next.value].jg.emplace_back(code->getCurr());
+    patch_information[terminal.next.Value()].jg.emplace_back(code->getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
         EmitPatchJg(terminal.next, next_bb->entrypoint);
     } else {
@@ -3477,7 +3477,7 @@ void A32EmitX64::EmitTerminal(IR::Term::LinkBlock terminal, A32::LocationDescrip
     code->align(16);
     code->L(dest);
     code->mov(MJitStateReg(A32::Reg::PC), A32::LocationDescriptor{terminal.next}.PC());
-    PushRSBHelper(rax, rbx, terminal.next.value);
+    PushRSBHelper(rax, rbx, terminal.next.Value());
     code->ForceReturnFromRunCode();
     code->SwitchToNearCode();
 }
@@ -3487,7 +3487,7 @@ void A32EmitX64::EmitTerminal(IR::Term::LinkBlockFast terminal, A32::LocationDes
         code->mov(dword[r15 + offsetof(JitState, CPSR_et)], CalculateCpsr_et(terminal.next));
     }
 
-    patch_information[terminal.next.value].jmp.emplace_back(code->getCurr());
+    patch_information[terminal.next.Value()].jmp.emplace_back(code->getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
         EmitPatchJmp(terminal.next, next_bb->entrypoint);
     } else {
