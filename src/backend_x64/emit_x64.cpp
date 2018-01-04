@@ -6,8 +6,6 @@
 
 #include <unordered_map>
 
-#include <dynarmic/coprocessor.h>
-
 #include "backend_x64/abi.h"
 #include "backend_x64/block_of_code.h"
 #include "backend_x64/emit_x64.h"
@@ -50,9 +48,8 @@ void EmitContext::EraseInstruction(IR::Inst* inst) {
 }
 
 template <typename JST>
-EmitX64<JST>::EmitX64(BlockOfCode* code, UserCallbacks cb, Jit* jit_interface)
-    : code(code), cb(cb), jit_interface(jit_interface) {
-}
+EmitX64<JST>::EmitX64(BlockOfCode* code)
+    : code(code) {}
 
 template <typename JST>
 EmitX64<JST>::~EmitX64() {}
