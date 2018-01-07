@@ -132,6 +132,11 @@ void EmitX64<JST>::EmitGetGEFromOp(EmitContext&, IR::Inst*) {
 }
 
 template <typename JST>
+void EmitX64<JST>::EmitGetNZCVFromOp(EmitContext&, IR::Inst*) {
+    ASSERT_MSG(false, "should never happen");
+}
+
+template <typename JST>
 void EmitX64<JST>::EmitPack2x32To1x64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     Xbyak::Reg64 lo = ctx.reg_alloc.UseScratchGpr(args[0]);
@@ -738,21 +743,31 @@ static Xbyak::Reg8 DoCarry(RegAlloc& reg_alloc, Argument& carry_in, IR::Inst* ca
     }
 }
 
-template <typename JST>
-void EmitX64<JST>::EmitAddWithCarry(EmitContext& ctx, IR::Inst* inst) {
+static Xbyak::Reg64 DoNZCV(BlockOfCode* code, RegAlloc& reg_alloc, IR::Inst* nzcv_out) {
+    if (!nzcv_out)
+        return INVALID_REG;
+
+    Xbyak::Reg64 nzcv = reg_alloc.ScratchGpr({HostLoc::RAX});
+    code->xor_(nzcv.cvt32(), nzcv.cvt32());
+    return nzcv;
+}
+
+static void EmitAdd(BlockOfCode* code, EmitContext& ctx, IR::Inst* inst, size_t bitsize) {
     auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
     auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
+    auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& carry_in = args[2];
 
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    Xbyak::Reg64 nzcv = DoNZCV(code, ctx.reg_alloc, nzcv_inst);
+    Xbyak::Reg result = ctx.reg_alloc.UseScratchGpr(args[0]).changeBit(bitsize);
     Xbyak::Reg8 carry = DoCarry(ctx.reg_alloc, carry_in, carry_inst);
     Xbyak::Reg8 overflow = overflow_inst ? ctx.reg_alloc.ScratchGpr().cvt8() : INVALID_REG.cvt8();
 
     // TODO: Consider using LEA.
 
-    if (args[1].IsImmediate()) {
+    if (args[1].IsImmediate() && args[1].GetType() == IR::Type::U32) {
         u32 op_arg = args[1].GetImmediateU32();
         if (carry_in.IsImmediate()) {
             if (carry_in.GetImmediateU1()) {
@@ -767,7 +782,7 @@ void EmitX64<JST>::EmitAddWithCarry(EmitContext& ctx, IR::Inst* inst) {
         }
     } else {
         OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
-        op_arg.setBit(32);
+        op_arg.setBit(bitsize);
         if (carry_in.IsImmediate()) {
             if (carry_in.GetImmediateU1()) {
                 code->stc();
@@ -781,6 +796,12 @@ void EmitX64<JST>::EmitAddWithCarry(EmitContext& ctx, IR::Inst* inst) {
         }
     }
 
+    if (nzcv_inst) {
+        ctx.EraseInstruction(nzcv_inst);
+        code->lahf();
+        code->seto(code->al);
+        ctx.reg_alloc.DefineValue(nzcv_inst, nzcv);
+    }
     if (carry_inst) {
         ctx.EraseInstruction(carry_inst);
         code->setc(carry);
@@ -796,26 +817,25 @@ void EmitX64<JST>::EmitAddWithCarry(EmitContext& ctx, IR::Inst* inst) {
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitAdd64(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    Xbyak::Reg64 op_arg = ctx.reg_alloc.UseGpr(args[1]);
-
-    code->add(result, op_arg);
-
-    ctx.reg_alloc.DefineValue(inst, result);
+void EmitX64<JST>::EmitAdd32(EmitContext& ctx, IR::Inst* inst) {
+    EmitAdd(code, ctx, inst, 32);
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitSubWithCarry(EmitContext& ctx, IR::Inst* inst) {
+void EmitX64<JST>::EmitAdd64(EmitContext& ctx, IR::Inst* inst) {
+    EmitAdd(code, ctx, inst, 64);
+}
+
+static void EmitSub(BlockOfCode* code, EmitContext& ctx, IR::Inst* inst, size_t bitsize) {
     auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
     auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
+    auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& carry_in = args[2];
 
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    Xbyak::Reg64 nzcv = DoNZCV(code, ctx.reg_alloc, nzcv_inst);
+    Xbyak::Reg result = ctx.reg_alloc.UseScratchGpr(args[0]).changeBit(bitsize);
     Xbyak::Reg8 carry = DoCarry(ctx.reg_alloc, carry_in, carry_inst);
     Xbyak::Reg8 overflow = overflow_inst ? ctx.reg_alloc.ScratchGpr().cvt8() : INVALID_REG.cvt8();
 
@@ -823,7 +843,7 @@ void EmitX64<JST>::EmitSubWithCarry(EmitContext& ctx, IR::Inst* inst) {
     // TODO: Optimize CMP case.
     // Note that x64 CF is inverse of what the ARM carry flag is here.
 
-    if (args[1].IsImmediate()) {
+    if (args[1].IsImmediate() && args[1].GetType() == IR::Type::U32) {
         u32 op_arg = args[1].GetImmediateU32();
         if (carry_in.IsImmediate()) {
             if (carry_in.GetImmediateU1()) {
@@ -839,7 +859,7 @@ void EmitX64<JST>::EmitSubWithCarry(EmitContext& ctx, IR::Inst* inst) {
         }
     } else {
         OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
-        op_arg.setBit(32);
+        op_arg.setBit(bitsize);
         if (carry_in.IsImmediate()) {
             if (carry_in.GetImmediateU1()) {
                 code->sub(result, *op_arg);
@@ -854,6 +874,12 @@ void EmitX64<JST>::EmitSubWithCarry(EmitContext& ctx, IR::Inst* inst) {
         }
     }
 
+    if (nzcv_inst) {
+        ctx.EraseInstruction(nzcv_inst);
+        code->lahf();
+        code->seto(code->al);
+        ctx.reg_alloc.DefineValue(nzcv_inst, nzcv);
+    }
     if (carry_inst) {
         ctx.EraseInstruction(carry_inst);
         code->setnc(carry);
@@ -869,19 +895,17 @@ void EmitX64<JST>::EmitSubWithCarry(EmitContext& ctx, IR::Inst* inst) {
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitSub64(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    Xbyak::Reg64 op_arg = ctx.reg_alloc.UseGpr(args[1]);
-
-    code->sub(result, op_arg);
-
-    ctx.reg_alloc.DefineValue(inst, result);
+void EmitX64<JST>::EmitSub32(EmitContext& ctx, IR::Inst* inst) {
+    EmitSub(code, ctx, inst, 32);
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitMul(EmitContext& ctx, IR::Inst* inst) {
+void EmitX64<JST>::EmitSub64(EmitContext& ctx, IR::Inst* inst) {
+    EmitSub(code, ctx, inst, 64);
+}
+
+template <typename JST>
+void EmitX64<JST>::EmitMul32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
@@ -984,10 +1008,10 @@ void EmitX64<JST>::EmitNot(EmitContext& ctx, IR::Inst* inst) {
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitSignExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
+void EmitX64<JST>::EmitSignExtendByteToWord(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    code->movsxd(result.cvt64(), result.cvt32());
+    code->movsx(result.cvt32(), result.cvt8());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
@@ -1000,18 +1024,34 @@ void EmitX64<JST>::EmitSignExtendHalfToWord(EmitContext& ctx, IR::Inst* inst) {
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitSignExtendByteToWord(EmitContext& ctx, IR::Inst* inst) {
+void EmitX64<JST>::EmitSignExtendByteToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    code->movsx(result.cvt32(), result.cvt8());
+    code->movsx(result.cvt64(), result.cvt8());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitZeroExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
+void EmitX64<JST>::EmitSignExtendHalfToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    code->mov(result.cvt32(), result.cvt32()); // x64 zeros upper 32 bits on a 32-bit move
+    code->movsx(result.cvt64(), result.cvt16());
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+template <typename JST>
+void EmitX64<JST>::EmitSignExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    code->movsxd(result.cvt64(), result.cvt32());
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+template <typename JST>
+void EmitX64<JST>::EmitZeroExtendByteToWord(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    code->movzx(result.cvt32(), result.cvt8());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
@@ -1024,10 +1064,26 @@ void EmitX64<JST>::EmitZeroExtendHalfToWord(EmitContext& ctx, IR::Inst* inst) {
 }
 
 template <typename JST>
-void EmitX64<JST>::EmitZeroExtendByteToWord(EmitContext& ctx, IR::Inst* inst) {
+void EmitX64<JST>::EmitZeroExtendByteToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    code->movzx(result.cvt32(), result.cvt8());
+    code->movzx(result.cvt32(), result.cvt8()); // x64 zeros upper 32 bits on a 32-bit move
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+template <typename JST>
+void EmitX64<JST>::EmitZeroExtendHalfToLong(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    code->movzx(result.cvt32(), result.cvt16()); // x64 zeros upper 32 bits on a 32-bit move
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+template <typename JST>
+void EmitX64<JST>::EmitZeroExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    code->mov(result.cvt32(), result.cvt32()); // x64 zeros upper 32 bits on a 32-bit move
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
