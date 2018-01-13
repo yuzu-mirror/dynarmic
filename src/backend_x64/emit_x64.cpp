@@ -993,8 +993,8 @@ void EmitX64<JST>::EmitAnd64(EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
 
-    if (args[1].FitsInImmediateU32()) {
-        u32 op_arg = args[1].GetImmediateU32();
+    if (args[1].FitsInImmediateS32()) {
+        u32 op_arg = u32(args[1].GetImmediateS32());
 
         code->and_(result, op_arg);
     } else {
@@ -1033,8 +1033,8 @@ void EmitX64<JST>::EmitEor64(EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
 
-    if (args[1].FitsInImmediateU32()) {
-        u32 op_arg = args[1].GetImmediateU32();
+    if (args[1].FitsInImmediateS32()) {
+        u32 op_arg = u32(args[1].GetImmediateS32());
 
         code->xor_(result, op_arg);
     } else {
@@ -1073,8 +1073,8 @@ void EmitX64<JST>::EmitOr64(EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
 
-    if (args[1].FitsInImmediateU32()) {
-        u32 op_arg = args[1].GetImmediateU32();
+    if (args[1].FitsInImmediateS32()) {
+        u32 op_arg = u32(args[1].GetImmediateS32());
 
         code->or_(result, op_arg);
     } else {
