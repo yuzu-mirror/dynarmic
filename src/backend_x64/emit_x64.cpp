@@ -44,7 +44,7 @@ EmitContext::EmitContext(RegAlloc& reg_alloc, IR::Block& block)
 
 void EmitContext::EraseInstruction(IR::Inst* inst) {
     block.Instructions().erase(inst);
-    inst->Invalidate();
+    inst->ClearArgs();
 }
 
 template <typename JST>
@@ -187,10 +187,10 @@ void EmitX64<JST>::EmitMostSignificantWord(EmitContext& ctx, IR::Inst* inst) {
     code->shr(result, 32);
 
     if (carry_inst) {
-        ctx.EraseInstruction(carry_inst);
         Xbyak::Reg64 carry = ctx.reg_alloc.ScratchGpr();
         code->setc(carry.cvt8());
         ctx.reg_alloc.DefineValue(carry_inst, carry);
+        ctx.EraseInstruction(carry_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -370,8 +370,6 @@ void EmitX64<JST>::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         }
     } else {
-        ctx.EraseInstruction(carry_inst);
-
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetImmediateU8();
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -392,8 +390,9 @@ void EmitX64<JST>::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
                 code->and_(carry, 1);
             }
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -426,8 +425,9 @@ void EmitX64<JST>::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
 
             code->outLocalLabel();
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         }
     }
 }
@@ -503,8 +503,6 @@ void EmitX64<JST>::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         }
     } else {
-        ctx.EraseInstruction(carry_inst);
-
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetImmediateU8();
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -524,8 +522,9 @@ void EmitX64<JST>::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
                 code->xor_(carry, carry);
             }
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -560,8 +559,9 @@ void EmitX64<JST>::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
 
             code->outLocalLabel();
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         }
     }
 }
@@ -635,8 +635,6 @@ void EmitX64<JST>::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) 
             ctx.reg_alloc.DefineValue(inst, result);
         }
     } else {
-        ctx.EraseInstruction(carry_inst);
-
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetImmediateU8();
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -653,8 +651,9 @@ void EmitX64<JST>::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) 
                 code->setc(carry);
             }
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -683,8 +682,9 @@ void EmitX64<JST>::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) 
 
             code->outLocalLabel();
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         }
     }
 }
@@ -748,8 +748,6 @@ void EmitX64<JST>::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         }
     } else {
-        ctx.EraseInstruction(carry_inst);
-
         if (shift_arg.IsImmediate()) {
             u8 shift = shift_arg.GetImmediateU8();
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -765,8 +763,9 @@ void EmitX64<JST>::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
                 code->setc(carry);
             }
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
             Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -795,8 +794,9 @@ void EmitX64<JST>::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
 
             code->outLocalLabel();
 
-            ctx.reg_alloc.DefineValue(inst, result);
             ctx.reg_alloc.DefineValue(carry_inst, carry);
+            ctx.EraseInstruction(carry_inst);
+            ctx.reg_alloc.DefineValue(inst, result);
         }
     }
 }
@@ -838,11 +838,10 @@ void EmitX64<JST>::EmitRotateRightExtended(EmitContext& ctx, IR::Inst* inst) {
     code->rcr(result, 1);
 
     if (carry_inst) {
-        ctx.EraseInstruction(carry_inst);
-
         code->setc(carry);
 
         ctx.reg_alloc.DefineValue(carry_inst, carry);
+        ctx.EraseInstruction(carry_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -912,20 +911,20 @@ static void EmitAdd(BlockOfCode* code, EmitContext& ctx, IR::Inst* inst, int bit
     }
 
     if (nzcv_inst) {
-        ctx.EraseInstruction(nzcv_inst);
         code->lahf();
         code->seto(code->al);
         ctx.reg_alloc.DefineValue(nzcv_inst, nzcv);
+        ctx.EraseInstruction(nzcv_inst);
     }
     if (carry_inst) {
-        ctx.EraseInstruction(carry_inst);
         code->setc(carry);
         ctx.reg_alloc.DefineValue(carry_inst, carry);
+        ctx.EraseInstruction(carry_inst);
     }
     if (overflow_inst) {
-        ctx.EraseInstruction(overflow_inst);
         code->seto(overflow);
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
+        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -990,21 +989,21 @@ static void EmitSub(BlockOfCode* code, EmitContext& ctx, IR::Inst* inst, int bit
     }
 
     if (nzcv_inst) {
-        ctx.EraseInstruction(nzcv_inst);
         code->cmc();
         code->lahf();
         code->seto(code->al);
         ctx.reg_alloc.DefineValue(nzcv_inst, nzcv);
+        ctx.EraseInstruction(nzcv_inst);
     }
     if (carry_inst) {
-        ctx.EraseInstruction(carry_inst);
         code->setnc(carry);
         ctx.reg_alloc.DefineValue(carry_inst, carry);
+        ctx.EraseInstruction(carry_inst);
     }
     if (overflow_inst) {
-        ctx.EraseInstruction(overflow_inst);
         code->seto(overflow);
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
+        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1345,11 +1344,10 @@ void EmitX64<JST>::EmitSignedSaturatedAdd(EmitContext& ctx, IR::Inst* inst) {
     code->cmovo(result, overflow);
 
     if (overflow_inst) {
-        ctx.EraseInstruction(overflow_inst);
-
         code->seto(overflow.cvt8());
 
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
+        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1373,11 +1371,10 @@ void EmitX64<JST>::EmitSignedSaturatedSub(EmitContext& ctx, IR::Inst* inst) {
     code->cmovo(result, overflow);
 
     if (overflow_inst) {
-        ctx.EraseInstruction(overflow_inst);
-
         code->seto(overflow.cvt8());
 
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
+        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1405,11 +1402,10 @@ void EmitX64<JST>::EmitUnsignedSaturation(EmitContext& ctx, IR::Inst* inst) {
     code->cmovbe(result, reg_a);
 
     if (overflow_inst) {
-        ctx.EraseInstruction(overflow_inst);
-
         code->seta(overflow.cvt8());
 
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
+        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1456,11 +1452,10 @@ void EmitX64<JST>::EmitSignedSaturation(EmitContext& ctx, IR::Inst* inst) {
     code->cmovbe(result, reg_a);
 
     if (overflow_inst) {
-        ctx.EraseInstruction(overflow_inst);
-
         code->seta(overflow.cvt8());
 
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
+        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1477,8 +1472,6 @@ void EmitX64<JST>::EmitPackedAddU8(EmitContext& ctx, IR::Inst* inst) {
     code->paddb(xmm_a, xmm_b);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
         Xbyak::Xmm ones = ctx.reg_alloc.ScratchXmm();
 
@@ -1490,6 +1483,7 @@ void EmitX64<JST>::EmitPackedAddU8(EmitContext& ctx, IR::Inst* inst) {
         code->pxor(xmm_ge, ones);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+        ctx.EraseInstruction(ge_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, xmm_a);
@@ -1504,8 +1498,6 @@ void EmitX64<JST>::EmitPackedAddS8(EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         Xbyak::Xmm saturated_sum = ctx.reg_alloc.ScratchXmm();
         Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
 
@@ -1517,6 +1509,7 @@ void EmitX64<JST>::EmitPackedAddS8(EmitContext& ctx, IR::Inst* inst) {
         code->pxor(xmm_ge, saturated_sum);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+        ctx.EraseInstruction(ge_inst);
     }
 
     code->paddb(xmm_a, xmm_b);
@@ -1535,8 +1528,6 @@ void EmitX64<JST>::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
     code->paddw(xmm_a, xmm_b);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         if (code->DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
             Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
             Xbyak::Xmm ones = ctx.reg_alloc.ScratchXmm();
@@ -1549,6 +1540,7 @@ void EmitX64<JST>::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
             code->pxor(xmm_ge, ones);
 
             ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+            ctx.EraseInstruction(ge_inst);
         } else {
             Xbyak::Xmm tmp_a = ctx.reg_alloc.ScratchXmm();
             Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
@@ -1561,6 +1553,7 @@ void EmitX64<JST>::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
             code->pcmpgtw(tmp_b, tmp_a); // *Signed* comparison!
 
             ctx.reg_alloc.DefineValue(ge_inst, tmp_b);
+            ctx.EraseInstruction(ge_inst);
         }
     }
 
@@ -1576,8 +1569,6 @@ void EmitX64<JST>::EmitPackedAddS16(EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         Xbyak::Xmm saturated_sum = ctx.reg_alloc.ScratchXmm();
         Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
 
@@ -1589,6 +1580,7 @@ void EmitX64<JST>::EmitPackedAddS16(EmitContext& ctx, IR::Inst* inst) {
         code->pxor(xmm_ge, saturated_sum);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+        ctx.EraseInstruction(ge_inst);
     }
 
     code->paddw(xmm_a, xmm_b);
@@ -1605,8 +1597,6 @@ void EmitX64<JST>::EmitPackedSubU8(EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
 
         code->movdqa(xmm_ge, xmm_a);
@@ -1614,6 +1604,7 @@ void EmitX64<JST>::EmitPackedSubU8(EmitContext& ctx, IR::Inst* inst) {
         code->pcmpeqb(xmm_ge, xmm_a);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+        ctx.EraseInstruction(ge_inst);
     }
 
     code->psubb(xmm_a, xmm_b);
@@ -1630,8 +1621,6 @@ void EmitX64<JST>::EmitPackedSubS8(EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         Xbyak::Xmm saturated_sum = ctx.reg_alloc.ScratchXmm();
         Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
 
@@ -1643,6 +1632,7 @@ void EmitX64<JST>::EmitPackedSubS8(EmitContext& ctx, IR::Inst* inst) {
         code->pxor(xmm_ge, saturated_sum);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+        ctx.EraseInstruction(ge_inst);
     }
 
     code->psubb(xmm_a, xmm_b);
@@ -1659,8 +1649,6 @@ void EmitX64<JST>::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         if (code->DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
             Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
 
@@ -1669,6 +1657,7 @@ void EmitX64<JST>::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
             code->pcmpeqw(xmm_ge, xmm_a);
 
             ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+            ctx.EraseInstruction(ge_inst);
         } else {
             Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
             Xbyak::Xmm ones = ctx.reg_alloc.ScratchXmm();
@@ -1682,6 +1671,7 @@ void EmitX64<JST>::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
             code->pxor(xmm_ge, ones);
 
             ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+            ctx.EraseInstruction(ge_inst);
         }
     }
 
@@ -1699,8 +1689,6 @@ void EmitX64<JST>::EmitPackedSubS16(EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         Xbyak::Xmm saturated_diff = ctx.reg_alloc.ScratchXmm();
         Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
 
@@ -1712,6 +1700,7 @@ void EmitX64<JST>::EmitPackedSubS16(EmitContext& ctx, IR::Inst* inst) {
         code->pxor(xmm_ge, saturated_diff);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
+        ctx.EraseInstruction(ge_inst);
     }
 
     code->psubw(xmm_a, xmm_b);
@@ -2005,8 +1994,6 @@ void EmitPackedSubAdd(BlockOfCode* code, EmitContext& ctx, IR::Inst* inst, bool 
     }
 
     if (ge_inst) {
-        ctx.EraseInstruction(ge_inst);
-
         // The reg_b registers are no longer required.
         Xbyak::Reg32 ge_sum = reg_b_hi;
         Xbyak::Reg32 ge_diff = reg_b_lo;
@@ -2028,6 +2015,7 @@ void EmitPackedSubAdd(BlockOfCode* code, EmitContext& ctx, IR::Inst* inst, bool 
         code->or_(ge_sum, ge_diff);
 
         ctx.reg_alloc.DefineValue(ge_inst, ge_sum);
+        ctx.EraseInstruction(ge_inst);
     }
 
     if (is_halving) {
