@@ -18,8 +18,7 @@
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.
 
-namespace Dynarmic {
-namespace BackendX64 {
+namespace Dynarmic::BackendX64 {
 
 using namespace Xbyak::util;
 
@@ -318,5 +317,4 @@ void EmitX64::InvalidateBasicBlocks(const std::unordered_set<IR::LocationDescrip
     }
 }
 
-} // namespace BackendX64
-} // namespace Dynarmic
+} // namespace Dynarmic::BackendX64
