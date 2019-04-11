@@ -19,8 +19,8 @@ namespace Dynarmic::Optimization {
 void VerificationPass(const IR::Block& block) {
     for (const auto& inst : block) {
         for (size_t i = 0; i < inst.NumArgs(); i++) {
-            IR::Type t1 = inst.GetArg(i).GetType();
-            IR::Type t2 = IR::GetArgTypeOf(inst.GetOpcode(), i);
+            const IR::Type t1 = inst.GetArg(i).GetType();
+            const IR::Type t2 = IR::GetArgTypeOf(inst.GetOpcode(), i);
             if (!IR::AreTypesCompatible(t1, t2)) {
                 puts(IR::DumpBlock(block).c_str());
                 ASSERT(false);
