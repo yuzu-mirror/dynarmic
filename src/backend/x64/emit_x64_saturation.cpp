@@ -34,13 +34,9 @@ void EmitSignedSaturatedOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) 
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    Xbyak::Reg addend = ctx.reg_alloc.UseGpr(args[1]);
-    Xbyak::Reg overflow = ctx.reg_alloc.ScratchGpr();
-
-    result.setBit(size);
-    addend.setBit(size);
-    overflow.setBit(size);
+    Xbyak::Reg result = ctx.reg_alloc.UseScratchGpr(args[0]).changeBit(size);
+    Xbyak::Reg addend = ctx.reg_alloc.UseGpr(args[1]).changeBit(size);
+    Xbyak::Reg overflow = ctx.reg_alloc.ScratchGpr().changeBit(size);
 
     constexpr u64 int_max = static_cast<u64>(std::numeric_limits<mp::signed_integer_of_size<size>>::max());
     if constexpr (size < 64) {
@@ -61,7 +57,7 @@ void EmitSignedSaturatedOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) 
         code.sub(result, addend);
     }
 
-    if constexpr (size < 64) {
+    if constexpr (size == 8) {
         code.cmovo(result.cvt32(), overflow.cvt32());
     } else {
         code.cmovo(result, overflow);
@@ -83,23 +79,18 @@ void EmitUnsignedSaturatedOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg op_result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    Xbyak::Reg addend = ctx.reg_alloc.UseScratchGpr(args[1]);
+    Xbyak::Reg op_result = ctx.reg_alloc.UseScratchGpr(args[0]).changeBit(size);
+    Xbyak::Reg addend = ctx.reg_alloc.UseScratchGpr(args[1]).changeBit(size);
 
-    op_result.setBit(size);
-    addend.setBit(size);
+    constexpr u64 boundary = op == Op::Add ? std::numeric_limits<mp::unsigned_integer_of_size<size>>::max() : 0;
 
     if constexpr (op == Op::Add) {
         code.add(op_result, addend);
     } else {
         code.sub(op_result, addend);
     }
-
-    constexpr u64 boundary = op == Op::Add ? std::numeric_limits<mp::unsigned_integer_of_size<size>>::max()
-                                           : 0;
     code.mov(addend, boundary);
-
-    if constexpr (size < 64) {
+    if constexpr (size == 8) {
         code.cmovae(addend.cvt32(), op_result.cvt32());
     } else {
         code.cmovae(addend, op_result);
