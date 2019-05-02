@@ -259,9 +259,13 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         FuzzJitThumb(5, 6, 3000, instruction_select);
     }
 
+    // TODO: Test longer blocks when Unicorn can consistently
+    //       run these without going into an infinite loop.
+#if 0
     SECTION("long blocks") {
         FuzzJitThumb(1024, 1025, 1000, instruction_select);
     }
+#endif
 }
 
 TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
