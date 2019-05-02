@@ -14,7 +14,7 @@
 #include "common/string_util.h"
 #include "frontend/imm.h"
 #include "frontend/A32/decoder/arm.h"
-#include "frontend/A32/decoder/vfp2.h"
+#include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/disassembler/disassembler.h"
 #include "frontend/A32/types.h"
 
@@ -1140,118 +1140,118 @@ public:
     std::string arm_SRS() { return "ice"; }
 
     // Floating point arithmetic instructions
-    std::string vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vadd{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vsub{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vmul{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vmla{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vmls{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vnmul{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VNMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VNMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vnmla{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vnmls{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+    std::string vfp_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
         return fmt::format("vdiv{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D){
+    std::string vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D){
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), FPRegStr(true, Vd, D), t);
     }
 
-    std::string vfp2_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N){
+    std::string vfp_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N){
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), t, FPRegStr(true, Vn, N));
     }
 
-    std::string vfp2_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N){
+    std::string vfp_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N){
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), FPRegStr(false, Vn, N), t);
     }
 
-    std::string vfp2_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N){
+    std::string vfp_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N){
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), t, FPRegStr(false, Vn, N));
     }
 
-    std::string vfp2_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
         return fmt::format("vmov{} {}, {}, {}, {}", CondToString(cond), FPRegStr(false, Vm, M), FPNextRegStr(false, Vm, M), t, t2);
     }
 
-    std::string vfp2_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
         return fmt::format("vmov{} {}, {}, {}, {}", CondToString(cond), t, t2, FPRegStr(false, Vm, M), FPNextRegStr(false, Vm, M));
     }
 
-    std::string vfp2_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
         return fmt::format("vmov{} {}, {}, {}", CondToString(cond), FPRegStr(true, Vm, M), t, t2);
     }
 
-    std::string vfp2_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
         return fmt::format("vmov{} {}, {}, {}", CondToString(cond), t, t2, FPRegStr(true, Vm, M));
     }
 
-    std::string vfp2_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm){
+    std::string vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm){
         return fmt::format("vmov{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+    std::string vfp_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vadd{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+    std::string vfp_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vneg{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+    std::string vfp_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vsqrt{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+    std::string vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vcvt{}.{}.{} {}, {}", CondToString(cond), !sz ? "f64" : "f32", sz ? "f64" : "f32", FPRegStr(!sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VCVT_to_float(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm) {
+    std::string vfp_VCVT_to_float(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm) {
         return fmt::format("vcvt{}.{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", is_signed ? "s32" : "u32", FPRegStr(sz, Vd, D), FPRegStr(false, Vm, M));
     }
 
-    std::string vfp2_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
+    std::string vfp_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
         return fmt::format("vcvt{}{}.u32.{} {}, {}", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
+    std::string vfp_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
         return fmt::format("vcvt{}{}.s32.{} {}, {}", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
+    std::string vfp_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
         return fmt::format("vcmp{}{}.{} {}, {}", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp2_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
+    std::string vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
         return fmt::format("vcmp{}{}.{} {}, #0.0", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D));
     }
 
-    std::string vfp2_VMSR(Cond cond, Reg t) {
+    std::string vfp_VMSR(Cond cond, Reg t) {
         return fmt::format("vmsr{} fpscr, {}", CondToString(cond), t);
     }
-    std::string vfp2_VMRS(Cond cond, Reg t) {
+    std::string vfp_VMRS(Cond cond, Reg t) {
         if (t == Reg::R15) {
             return fmt::format("vmrs{} apsr_nzcv, fpscr", CondToString(cond));
         } else {
@@ -1259,33 +1259,33 @@ public:
         }
     }
 
-    std::string vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8) {
+    std::string vfp_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8) {
         return fmt::format("vpop{} {}(+{})",
                            CondToString(cond), FPRegStr(sz, Vd, D),
                            imm8.ZeroExtend() >> (sz ? 1 : 0));
     }
 
-    std::string vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8) {
+    std::string vfp_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8) {
         return fmt::format("vpush{} {}(+{})",
                            CondToString(cond), FPRegStr(sz, Vd, D),
                            imm8.ZeroExtend() >> (sz ? 1 : 0));
     }
 
-    std::string vfp2_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8) {
+    std::string vfp_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8) {
         const u32 imm32 = imm8.ZeroExtend() << 2;
         const char sign = U ? '+' : '-';
         return fmt::format("vldr{} {}, [{}, #{}{}]",
                            CondToString(cond), FPRegStr(sz, Vd, D), n, sign, imm32);
     }
 
-    std::string vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8) {
+    std::string vfp_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8) {
         const u32 imm32 = imm8.ZeroExtend() << 2;
         const char sign = U ? '+' : '-';
         return fmt::format("vstr{} {}, [{}, #{}{}]",
                            CondToString(cond), FPRegStr(sz, Vd, D), n, sign, imm32);
     }
 
-    std::string vfp2_VSTM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
+    std::string vfp_VSTM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
         const char* mode = "<invalid mode>";
         if (!p && u) {
             mode = "ia";
@@ -1298,7 +1298,7 @@ public:
                            FPRegStr(true, Vd, D), imm8.ZeroExtend());
     }
 
-    std::string vfp2_VSTM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
+    std::string vfp_VSTM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
         const char* mode = "<invalid mode>";
         if (!p && u) {
             mode = "ia";
@@ -1311,7 +1311,7 @@ public:
                            FPRegStr(false, Vd, D), imm8.ZeroExtend());
     }
 
-    std::string vfp2_VLDM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
+    std::string vfp_VLDM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
         const char* mode = "<invalid mode>";
         if (!p && u) {
             mode = "ia";
@@ -1324,7 +1324,7 @@ public:
                            FPRegStr(true, Vd, D), imm8.ZeroExtend());
     }
 
-    std::string vfp2_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
+    std::string vfp_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8) {
         const char* mode = "<invalid mode>";
         if (!p && u) {
             mode = "ia";
@@ -1340,7 +1340,7 @@ public:
 
 std::string DisassembleArm(u32 instruction) {
     DisassemblerVisitor visitor;
-    if (auto vfp_decoder = DecodeVFP2<DisassemblerVisitor>(instruction)) {
+    if (auto vfp_decoder = DecodeVFP<DisassemblerVisitor>(instruction)) {
         return vfp_decoder->get().call(visitor, instruction);
     } else if (auto decoder = DecodeArm<DisassemblerVisitor>(instruction)) {
         return decoder->get().call(visitor, instruction);

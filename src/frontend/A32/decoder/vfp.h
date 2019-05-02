@@ -19,14 +19,14 @@
 namespace Dynarmic::A32 {
 
 template <typename Visitor>
-using VFP2Matcher = Decoder::Matcher<Visitor, u32>;
+using VFPMatcher = Decoder::Matcher<Visitor, u32>;
 
 template<typename V>
-std::optional<std::reference_wrapper<const VFP2Matcher<V>>> DecodeVFP2(u32 instruction) {
-    static const std::vector<VFP2Matcher<V>> table = {
+std::optional<std::reference_wrapper<const VFPMatcher<V>>> DecodeVFP(u32 instruction) {
+    static const std::vector<VFPMatcher<V>> table = {
 
-#define INST(fn, name, bitstring) Decoder::detail::detail<VFP2Matcher<V>>::GetMatcher(&V::fn, name, bitstring),
-#include "vfp2.inc"
+#define INST(fn, name, bitstring) Decoder::detail::detail<VFPMatcher<V>>::GetMatcher(&V::fn, name, bitstring),
+#include "vfp.inc"
 #undef INST
 
     };
@@ -37,7 +37,7 @@ std::optional<std::reference_wrapper<const VFP2Matcher<V>>> DecodeVFP2(u32 instr
     const auto matches_instruction = [instruction](const auto& matcher){ return matcher.Matches(instruction); };
 
     auto iter = std::find_if(table.begin(), table.end(), matches_instruction);
-    return iter != table.end() ? std::optional<std::reference_wrapper<const VFP2Matcher<V>>>(*iter) : std::nullopt;
+    return iter != table.end() ? std::optional<std::reference_wrapper<const VFPMatcher<V>>>(*iter) : std::nullopt;
 }
 
 } // namespace Dynarmic::A32
