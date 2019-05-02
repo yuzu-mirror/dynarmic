@@ -106,7 +106,7 @@ void EmitUnsignedSaturatedOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst
     }
 
     if (overflow_inst) {
-        Xbyak::Reg overflow = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg overflow = ctx.reg_alloc.ScratchGpr();
         code.setb(overflow.cvt8());
 
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
