@@ -214,27 +214,27 @@ void EmitX64::EmitSignedSaturation(EmitContext& ctx, IR::Inst* inst) {
     auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    size_t N = args[1].GetImmediateU8();
+    const size_t N = args[1].GetImmediateU8();
     ASSERT(N >= 1 && N <= 32);
 
     if (N == 32) {
         if (overflow_inst) {
-            auto no_overflow = IR::Value(false);
+            const auto no_overflow = IR::Value(false);
             overflow_inst->ReplaceUsesWith(no_overflow);
         }
         ctx.reg_alloc.DefineValue(inst, args[0]);
         return;
     }
 
-    u32 mask = (1u << N) - 1;
-    u32 positive_saturated_value = (1u << (N - 1)) - 1;
-    u32 negative_saturated_value = 1u << (N - 1);
-    u32 sext_negative_satured_value = Common::SignExtend(N, negative_saturated_value);
+    const u32 mask = (1u << N) - 1;
+    const u32 positive_saturated_value = (1u << (N - 1)) - 1;
+    const u32 negative_saturated_value = 1u << (N - 1);
+    const u32 sext_negative_satured_value = Common::SignExtend(N, negative_saturated_value);
 
-    Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
-    Xbyak::Reg32 reg_a = ctx.reg_alloc.UseGpr(args[0]).cvt32();
-    Xbyak::Reg32 overflow = ctx.reg_alloc.ScratchGpr().cvt32();
-    Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 reg_a = ctx.reg_alloc.UseGpr(args[0]).cvt32();
+    const Xbyak::Reg32 overflow = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
 
     // overflow now contains a value between 0 and mask if it was originally between {negative,positive}_saturated_value.
     code.lea(overflow, code.ptr[reg_a.cvt64() + negative_saturated_value]);
@@ -295,14 +295,14 @@ void EmitX64::EmitUnsignedSaturation(EmitContext& ctx, IR::Inst* inst) {
     auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    size_t N = args[1].GetImmediateU8();
+    const size_t N = args[1].GetImmediateU8();
     ASSERT(N <= 31);
 
-    u32 saturated_value = (1u << N) - 1;
+    const u32 saturated_value = (1u << N) - 1;
 
-    Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
-    Xbyak::Reg32 reg_a = ctx.reg_alloc.UseGpr(args[0]).cvt32();
-    Xbyak::Reg32 overflow = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 reg_a = ctx.reg_alloc.UseGpr(args[0]).cvt32();
+    const Xbyak::Reg32 overflow = ctx.reg_alloc.ScratchGpr().cvt32();
 
     // Pseudocode: result = clamp(reg_a, 0, saturated_value);
     code.xor_(overflow, overflow);
