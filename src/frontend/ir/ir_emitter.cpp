@@ -2195,9 +2195,9 @@ U32 IREmitter::FPSignedFixedToSingle(const U32U64& a, size_t fbits, FP::Rounding
 
     switch (a.GetType()) {
     case Type::U32:
-        return Inst<U32>(Opcode::FPFixedS32ToSingle, fbits_imm, rounding_imm);
+        return Inst<U32>(Opcode::FPFixedS32ToSingle, a, fbits_imm, rounding_imm);
     case Type::U64:
-        return Inst<U32>(Opcode::FPFixedS64ToSingle, fbits_imm, rounding_imm);
+        return Inst<U32>(Opcode::FPFixedS64ToSingle, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
         return U32{};
@@ -2212,9 +2212,9 @@ U32 IREmitter::FPUnsignedFixedToSingle(const U32U64& a, size_t fbits, FP::Roundi
 
     switch (a.GetType()) {
     case Type::U32:
-        return Inst<U32>(Opcode::FPFixedU32ToSingle, fbits_imm, rounding_imm);
+        return Inst<U32>(Opcode::FPFixedU32ToSingle, a, fbits_imm, rounding_imm);
     case Type::U64:
-        return Inst<U32>(Opcode::FPFixedU64ToSingle, fbits_imm, rounding_imm);
+        return Inst<U32>(Opcode::FPFixedU64ToSingle, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
         return U32{};
@@ -2229,9 +2229,9 @@ U64 IREmitter::FPSignedFixedToDouble(const U32U64& a, size_t fbits, FP::Rounding
 
     switch (a.GetType()) {
     case Type::U32:
-        return Inst<U64>(Opcode::FPFixedS32ToDouble, fbits_imm, rounding_imm);
+        return Inst<U64>(Opcode::FPFixedS32ToDouble, a, fbits_imm, rounding_imm);
     case Type::U64:
-        return Inst<U64>(Opcode::FPFixedS64ToDouble, fbits_imm, rounding_imm);
+        return Inst<U64>(Opcode::FPFixedS64ToDouble, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
         return U64{};
@@ -2246,9 +2246,9 @@ U64 IREmitter::FPUnsignedFixedToDouble(const U32U64& a, size_t fbits, FP::Roundi
 
     switch (a.GetType()) {
     case Type::U32:
-        return Inst<U64>(Opcode::FPFixedU32ToDouble, fbits_imm, rounding_imm);
+        return Inst<U64>(Opcode::FPFixedU32ToDouble, a, fbits_imm, rounding_imm);
     case Type::U64:
-        return Inst<U64>(Opcode::FPFixedU64ToDouble, fbits_imm, rounding_imm);
+        return Inst<U64>(Opcode::FPFixedU64ToDouble, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
         return U64{};
