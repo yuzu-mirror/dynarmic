@@ -16,7 +16,16 @@
 namespace Dynarmic::IR {
 
 std::string GetNameOf(Type type) {
-    static const std::array<const char*, 15> names{"A32Reg", "A32ExtReg", "A64Reg", "A64Vec", "Opaque", "U1", "U8", "U16", "U32", "U64", "U128", "CoprocInfo", "NZCVFlags", "Cond", "Table"};
+    static constexpr std::array names{
+        "A32Reg", "A32ExtReg",
+        "A64Reg", "A64Vec",
+        "Opaque",
+        "U1", "U8", "U16", "U32", "U64", "U128",
+        "CoprocInfo",
+        "NZCVFlags",
+        "Cond",
+        "Table"
+    };
 
     const size_t bits = static_cast<size_t>(type);
     if (bits == 0) {
