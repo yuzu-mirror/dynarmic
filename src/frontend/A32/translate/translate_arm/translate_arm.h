@@ -358,51 +358,51 @@ struct ArmTranslatorVisitor final {
     bool arm_SRS();
 
     // Floating-point three-register data processing instructions
-    bool vfp2_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VNMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
-    bool vfp2_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VADD(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VSUB(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VNMUL(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VNMLA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VNMLS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VDIV(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
 
     // Floating-point move instructions
-    bool vfp2_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D);
-    bool vfp2_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N);
-    bool vfp2_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N);
-    bool vfp2_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N);
-    bool vfp2_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
-    bool vfp2_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
-    bool vfp2_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
-    bool vfp2_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
-    bool vfp2_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D);
+    bool vfp_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N);
+    bool vfp_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N);
+    bool vfp_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N);
+    bool vfp_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
 
     // Floating-point misc instructions
-    bool vfp2_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
-    bool vfp2_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
-    bool vfp2_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
-    bool vfp2_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
-    bool vfp2_VCVT_to_float(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm);
-    bool vfp2_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
-    bool vfp2_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
-    bool vfp2_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm);
-    bool vfp2_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E);
+    bool vfp_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VCVT_to_float(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm);
+    bool vfp_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
+    bool vfp_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
+    bool vfp_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm);
+    bool vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E);
 
     // Floating-point system register access
-    bool vfp2_VMSR(Cond cond, Reg t);
-    bool vfp2_VMRS(Cond cond, Reg t);
+    bool vfp_VMSR(Cond cond, Reg t);
+    bool vfp_VMRS(Cond cond, Reg t);
 
     // Floating-point load-store instructions
-    bool vfp2_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8);
-    bool vfp2_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8);
-    bool vfp2_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8);
-    bool vfp2_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8);
-    bool vfp2_VSTM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
-    bool vfp2_VSTM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
-    bool vfp2_VLDM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
-    bool vfp2_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
+    bool vfp_VLDR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8);
+    bool vfp_VSTR(Cond cond, bool U, bool D, Reg n, size_t Vd, bool sz, Imm<8> imm8);
+    bool vfp_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8);
+    bool vfp_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm<8> imm8);
+    bool vfp_VSTM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
+    bool vfp_VSTM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
+    bool vfp_VLDM_a1(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
+    bool vfp_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
 };
 
 } // namespace Dynarmic::A32

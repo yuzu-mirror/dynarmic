@@ -9,7 +9,7 @@
 #include "common/assert.h"
 #include "dynarmic/A32/config.h"
 #include "frontend/A32/decoder/arm.h"
-#include "frontend/A32/decoder/vfp2.h"
+#include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A32/translate/translate_arm/translate_arm.h"
@@ -37,7 +37,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType mem
         const u32 arm_pc = visitor.ir.current_location.PC();
         const u32 arm_instruction = memory_read_code(arm_pc);
 
-        if (const auto vfp_decoder = DecodeVFP2<ArmTranslatorVisitor>(arm_instruction)) {
+        if (const auto vfp_decoder = DecodeVFP<ArmTranslatorVisitor>(arm_instruction)) {
             should_continue = vfp_decoder->get().call(visitor, arm_instruction);
         } else if (const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction)) {
             should_continue = decoder->get().call(visitor, arm_instruction);
@@ -72,7 +72,7 @@ bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descript
     // TODO: Proper cond handling
 
     bool should_continue = true;
-    if (const auto vfp_decoder = DecodeVFP2<ArmTranslatorVisitor>(arm_instruction)) {
+    if (const auto vfp_decoder = DecodeVFP<ArmTranslatorVisitor>(arm_instruction)) {
         should_continue = vfp_decoder->get().call(visitor, arm_instruction);
     } else if (const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction)) {
         should_continue = decoder->get().call(visitor, arm_instruction);

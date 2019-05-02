@@ -82,8 +82,8 @@ add_library(dynarmic
     frontend/A32/decoder/arm.inc
     frontend/A32/decoder/thumb16.h
     frontend/A32/decoder/thumb32.h
-    frontend/A32/decoder/vfp2.h
-    frontend/A32/decoder/vfp2.inc
+    frontend/A32/decoder/vfp.h
+    frontend/A32/decoder/vfp.inc
     frontend/A32/disassembler/disassembler.h
     frontend/A32/disassembler/disassembler_arm.cpp
     frontend/A32/disassembler/disassembler_thumb.cpp
@@ -115,7 +115,7 @@ add_library(dynarmic
     frontend/A32/translate/translate_arm/status_register_access.cpp
     frontend/A32/translate/translate_arm/synchronization.cpp
     frontend/A32/translate/translate_arm/translate_arm.h
-    frontend/A32/translate/translate_arm/vfp2.cpp
+    frontend/A32/translate/translate_arm/vfp.cpp
     frontend/A32/translate/translate_thumb.cpp
     frontend/A32/types.cpp
     frontend/A32/types.h
