@@ -40,24 +40,25 @@ bool TranslatorVisitor::RaiseException(Exception exception) {
 }
 
 std::optional<TranslatorVisitor::BitMasks> TranslatorVisitor::DecodeBitMasks(bool immN, Imm<6> imms, Imm<6> immr, bool immediate) {
-    int len = Common::HighestSetBit((immN ? 1 << 6 : 0) | (imms.ZeroExtend() ^ 0b111111));
-    if (len < 1)
+    const int len = Common::HighestSetBit((immN ? 1 << 6 : 0) | (imms.ZeroExtend() ^ 0b111111));
+    if (len < 1) {
         return std::nullopt;
+    }
 
-    size_t levels = Common::Ones<size_t>(len);
-
-    if (immediate && (imms.ZeroExtend() & levels) == levels)
+    const size_t levels = Common::Ones<size_t>(len);
+    if (immediate && (imms.ZeroExtend() & levels) == levels) {
         return std::nullopt;
+    }
 
-    s32 S = s32(imms.ZeroExtend() & levels);
-    s32 R = s32(immr.ZeroExtend() & levels);
-    u64 d = u64(S - R) & levels;
+    const s32 S = s32(imms.ZeroExtend() & levels);
+    const s32 R = s32(immr.ZeroExtend() & levels);
+    const u64 d = u64(S - R) & levels;
 
-    size_t esize = static_cast<size_t>(1) << len;
-    u64 welem = Common::Ones<u64>(S + 1);
-    u64 telem = Common::Ones<u64>(d + 1);
-    u64 wmask = Common::RotateRight(Common::Replicate(welem, esize), R);
-    u64 tmask = Common::Replicate(telem, esize);
+    const size_t esize = size_t{1} << len;
+    const u64 welem = Common::Ones<u64>(S + 1);
+    const u64 telem = Common::Ones<u64>(d + 1);
+    const u64 wmask = Common::RotateRight(Common::Replicate(welem, esize), R);
+    const u64 tmask = Common::Replicate(telem, esize);
 
     return BitMasks{wmask, tmask};
 }
