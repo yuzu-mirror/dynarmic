@@ -48,11 +48,11 @@ std::string VecToString(Vec vec);
 std::ostream& operator<<(std::ostream& o, Reg reg);
 std::ostream& operator<<(std::ostream& o, Vec vec);
 
-inline size_t RegNumber(Reg reg) {
+constexpr size_t RegNumber(Reg reg) {
     return static_cast<size_t>(reg);
 }
 
-inline size_t VecNumber(Vec vec) {
+constexpr size_t VecNumber(Vec vec) {
     return static_cast<size_t>(vec);
 }
 
