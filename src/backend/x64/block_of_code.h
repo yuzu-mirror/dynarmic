@@ -31,6 +31,8 @@ struct RunCodeCallbacks {
 class BlockOfCode final : public Xbyak::CodeGenerator {
 public:
     BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi);
+    BlockOfCode(const BlockOfCode&) = delete;
+
     /// Call when external emitters have finished emitting their preludes.
     void PreludeComplete();
 
