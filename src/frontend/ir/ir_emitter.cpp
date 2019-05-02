@@ -1805,80 +1805,122 @@ U16U32U64 IREmitter::FPAbs(const U16U32U64& a) {
 U32U64 IREmitter::FPAdd(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPAdd32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPAdd64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
 NZCV IREmitter::FPCompare(const U32U64& a, const U32U64& b, bool exc_on_qnan, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
-        return Inst<NZCV>(Opcode::FPCompare32, a, b, Imm1(exc_on_qnan));
-    } else {
-        return Inst<NZCV>(Opcode::FPCompare64, a, b, Imm1(exc_on_qnan));
+
+    const IR::U1 exc_on_qnan_imm = Imm1(exc_on_qnan);
+
+    switch (a.GetType()) {
+    case Type::U32:
+        return Inst<NZCV>(Opcode::FPCompare32, a, b, exc_on_qnan_imm);
+    case Type::U64:
+        return Inst<NZCV>(Opcode::FPCompare64, a, b, exc_on_qnan_imm);
+    default:
+        UNREACHABLE();
+        return NZCV{};
     }
 }
 
 U32U64 IREmitter::FPDiv(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPDiv32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPDiv64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
 U32U64 IREmitter::FPMax(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPMax32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPMax64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
 U32U64 IREmitter::FPMaxNumeric(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPMaxNumeric32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPMaxNumeric64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
 U32U64 IREmitter::FPMin(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPMin32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPMin64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
 U32U64 IREmitter::FPMinNumeric(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPMinNumeric32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPMinNumeric64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
 U32U64 IREmitter::FPMul(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPMul32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPMul64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
@@ -1901,10 +1943,15 @@ U16U32U64 IREmitter::FPMulAdd(const U16U32U64& a, const U16U32U64& b, const U16U
 
 U32U64 IREmitter::FPMulX(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPMulX32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPMulX64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
@@ -2014,20 +2061,29 @@ U16U32U64 IREmitter::FPRSqrtStepFused(const U16U32U64& a, const U16U32U64& b) {
 }
 
 U32U64 IREmitter::FPSqrt(const U32U64& a) {
-    if (a.GetType() == Type::U32) {
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPSqrt32, a);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPSqrt64, a);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
 U32U64 IREmitter::FPSub(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
     ASSERT(fpcr_controlled);
     ASSERT(a.GetType() == b.GetType());
-    if (a.GetType() == Type::U32) {
+
+    switch (a.GetType()) {
+    case Type::U32:
         return Inst<U32>(Opcode::FPSub32, a, b);
-    } else {
+    case Type::U64:
         return Inst<U64>(Opcode::FPSub64, a, b);
+    default:
+        UNREACHABLE();
+        return U32U64{};
     }
 }
 
@@ -2133,26 +2189,70 @@ U64 IREmitter::FPToFixedU64(const U16U32U64& a, size_t fbits, FP::RoundingMode r
 
 U32 IREmitter::FPSignedFixedToSingle(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
     ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
-    const Opcode opcode = a.GetType() == Type::U32 ? Opcode::FPFixedS32ToSingle : Opcode::FPFixedS64ToSingle;
-    return Inst<U32>(opcode, a, Imm8(static_cast<u8>(fbits)), Imm8(static_cast<u8>(rounding)));
+
+    const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
+    const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
+
+    switch (a.GetType()) {
+    case Type::U32:
+        return Inst<U32>(Opcode::FPFixedS32ToSingle, fbits_imm, rounding_imm);
+    case Type::U64:
+        return Inst<U32>(Opcode::FPFixedS64ToSingle, fbits_imm, rounding_imm);
+    default:
+        UNREACHABLE();
+        return U32{};
+    }
 }
 
 U32 IREmitter::FPUnsignedFixedToSingle(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
     ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
-    const Opcode opcode = a.GetType() == Type::U32 ? Opcode::FPFixedU32ToSingle : Opcode::FPFixedU64ToSingle;
-    return Inst<U32>(opcode, a, Imm8(static_cast<u8>(fbits)), Imm8(static_cast<u8>(rounding)));
+
+    const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
+    const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
+
+    switch (a.GetType()) {
+    case Type::U32:
+        return Inst<U32>(Opcode::FPFixedU32ToSingle, fbits_imm, rounding_imm);
+    case Type::U64:
+        return Inst<U32>(Opcode::FPFixedU64ToSingle, fbits_imm, rounding_imm);
+    default:
+        UNREACHABLE();
+        return U32{};
+    }
 }
 
 U64 IREmitter::FPSignedFixedToDouble(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
     ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
-    const Opcode opcode = a.GetType() == Type::U32 ? Opcode::FPFixedS32ToDouble : Opcode::FPFixedS64ToDouble;
-    return Inst<U64>(opcode, a, Imm8(static_cast<u8>(fbits)), Imm8(static_cast<u8>(rounding)));
+
+    const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
+    const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
+
+    switch (a.GetType()) {
+    case Type::U32:
+        return Inst<U64>(Opcode::FPFixedS32ToDouble, fbits_imm, rounding_imm);
+    case Type::U64:
+        return Inst<U64>(Opcode::FPFixedS64ToDouble, fbits_imm, rounding_imm);
+    default:
+        UNREACHABLE();
+        return U64{};
+    }
 }
 
 U64 IREmitter::FPUnsignedFixedToDouble(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
     ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
-    const Opcode opcode = a.GetType() == Type::U32 ? Opcode::FPFixedU32ToDouble : Opcode::FPFixedU64ToDouble;
-    return Inst<U64>(opcode, a, Imm8(static_cast<u8>(fbits)), Imm8(static_cast<u8>(rounding)));
+
+    const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
+    const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
+
+    switch (a.GetType()) {
+    case Type::U32:
+        return Inst<U64>(Opcode::FPFixedU32ToDouble, fbits_imm, rounding_imm);
+    case Type::U64:
+        return Inst<U64>(Opcode::FPFixedU64ToDouble, fbits_imm, rounding_imm);
+    default:
+        UNREACHABLE();
+        return U64{};
+    }
 }
 
 U128 IREmitter::FPVectorAbs(size_t esize, const U128& a) {
