@@ -18,8 +18,8 @@ using namespace Xbyak::util;
 
 void EmitX64::EmitPack2x32To1x64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 lo = ctx.reg_alloc.UseScratchGpr(args[0]);
-    Xbyak::Reg64 hi = ctx.reg_alloc.UseScratchGpr(args[1]);
+    const Xbyak::Reg64 lo = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 hi = ctx.reg_alloc.UseScratchGpr(args[1]);
 
     code.shl(hi, 32);
     code.mov(lo.cvt32(), lo.cvt32()); // Zero extend to 64-bits
@@ -30,9 +30,9 @@ void EmitX64::EmitPack2x32To1x64(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPack2x64To1x128(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 lo = ctx.reg_alloc.UseGpr(args[0]);
-    Xbyak::Reg64 hi = ctx.reg_alloc.UseGpr(args[1]);
-    Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Reg64 lo = ctx.reg_alloc.UseGpr(args[0]);
+    const Xbyak::Reg64 hi = ctx.reg_alloc.UseGpr(args[1]);
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
         code.movq(result, lo);
@@ -56,11 +56,11 @@ void EmitX64::EmitMostSignificantWord(EmitContext& ctx, IR::Inst* inst) {
     auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.shr(result, 32);
 
     if (carry_inst) {
-        Xbyak::Reg64 carry = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 carry = ctx.reg_alloc.ScratchGpr();
         code.setc(carry.cvt8());
         ctx.reg_alloc.DefineValue(carry_inst, carry);
         ctx.EraseInstruction(carry_inst);
@@ -81,7 +81,7 @@ void EmitX64::EmitLeastSignificantByte(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitMostSignificantBit(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
     // TODO: Flag optimization
     code.shr(result, 31);
     ctx.reg_alloc.DefineValue(inst, result);
@@ -89,7 +89,7 @@ void EmitX64::EmitMostSignificantBit(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitIsZero32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
     // TODO: Flag optimization
     code.test(result, result);
     code.sete(result.cvt8());
@@ -99,7 +99,7 @@ void EmitX64::EmitIsZero32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitIsZero64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     // TODO: Flag optimization
     code.test(result, result);
     code.sete(result.cvt8());
@@ -109,7 +109,7 @@ void EmitX64::EmitIsZero64(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitTestBit(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     ASSERT(args[1].IsImmediate());
     // TODO: Flag optimization
     code.bt(result, args[1].GetImmediateU8());
@@ -119,9 +119,9 @@ void EmitX64::EmitTestBit(EmitContext& ctx, IR::Inst* inst) {
 
 static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bitsize) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg32 nzcv = ctx.reg_alloc.ScratchGpr({HostLoc::RAX}).cvt32();
-    Xbyak::Reg then_ = ctx.reg_alloc.UseGpr(args[1]).changeBit(bitsize);
-    Xbyak::Reg else_ = ctx.reg_alloc.UseScratchGpr(args[2]).changeBit(bitsize);
+    const Xbyak::Reg32 nzcv = ctx.reg_alloc.ScratchGpr({HostLoc::RAX}).cvt32();
+    const Xbyak::Reg then_ = ctx.reg_alloc.UseGpr(args[1]).changeBit(bitsize);
+    const Xbyak::Reg else_ = ctx.reg_alloc.UseScratchGpr(args[2]).changeBit(bitsize);
 
     code.mov(nzcv, dword[r15 + code.GetJitStateInfo().offsetof_CPSR_nzcv]);
     // TODO: Flag optimization
@@ -231,8 +231,8 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
 
     if (!carry_inst) {
         if (shift_arg.IsImmediate()) {
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const u8 shift = shift_arg.GetImmediateU8();
 
             if (shift <= 31) {
                 code.shl(result, shift);
@@ -243,8 +243,8 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg32 zero = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 zero = ctx.reg_alloc.ScratchGpr().cvt32();
 
             // The 32-bit x64 SHL instruction masks the shift count by 0x1F before performing the shift.
             // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -258,9 +258,9 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
         }
     } else {
         if (shift_arg.IsImmediate()) {
-            u8 shift = shift_arg.GetImmediateU8();
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
+            const u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -282,8 +282,8 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
 
             // TODO: Optimize this.
 
@@ -325,8 +325,8 @@ void EmitX64::EmitLogicalShiftLeft64(EmitContext& ctx, IR::Inst* inst) {
     auto& shift_arg = args[1];
 
     if (shift_arg.IsImmediate()) {
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
-        u8 shift = shift_arg.GetImmediateU8();
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const u8 shift = shift_arg.GetImmediateU8();
 
         if (shift < 64) {
             code.shl(result, shift);
@@ -337,8 +337,8 @@ void EmitX64::EmitLogicalShiftLeft64(EmitContext& ctx, IR::Inst* inst) {
         ctx.reg_alloc.DefineValue(inst, result);
     } else {
         ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
-        Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
 
         // The x64 SHL instruction masks the shift count by 0x1F before performing the shift.
         // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -362,8 +362,8 @@ void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
 
     if (!carry_inst) {
         if (shift_arg.IsImmediate()) {
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const u8 shift = shift_arg.GetImmediateU8();
 
             if (shift <= 31) {
                 code.shr(result, shift);
@@ -374,8 +374,8 @@ void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg32 zero = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 zero = ctx.reg_alloc.ScratchGpr().cvt32();
 
             // The 32-bit x64 SHR instruction masks the shift count by 0x1F before performing the shift.
             // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -389,9 +389,9 @@ void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
         }
     } else {
         if (shift_arg.IsImmediate()) {
-            u8 shift = shift_arg.GetImmediateU8();
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
+            const u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -412,8 +412,8 @@ void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
 
             // TODO: Optimize this.
 
@@ -457,8 +457,8 @@ void EmitX64::EmitLogicalShiftRight64(EmitContext& ctx, IR::Inst* inst) {
     auto& shift_arg = args[1];
 
     if (shift_arg.IsImmediate()) {
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
-        u8 shift = shift_arg.GetImmediateU8();
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const u8 shift = shift_arg.GetImmediateU8();
 
         if (shift < 64) {
             code.shr(result, shift);
@@ -469,8 +469,8 @@ void EmitX64::EmitLogicalShiftRight64(EmitContext& ctx, IR::Inst* inst) {
         ctx.reg_alloc.DefineValue(inst, result);
     } else {
         ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
-        Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
 
         // The x64 SHR instruction masks the shift count by 0x1F before performing the shift.
         // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
@@ -494,16 +494,16 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
 
     if (!carry_inst) {
         if (shift_arg.IsImmediate()) {
-            u8 shift = shift_arg.GetImmediateU8();
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
 
             code.sar(result, u8(shift < 31 ? shift : 31));
 
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg32 const31 = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 const31 = ctx.reg_alloc.ScratchGpr().cvt32();
 
             // The 32-bit x64 SAR instruction masks the shift count by 0x1F before performing the shift.
             // ARM differs from the behaviour: It does not mask the count.
@@ -519,9 +519,9 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
         }
     } else {
         if (shift_arg.IsImmediate()) {
-            u8 shift = shift_arg.GetImmediateU8();
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
+            const u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -539,8 +539,8 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
 
             // TODO: Optimize this.
 
@@ -578,16 +578,16 @@ void EmitX64::EmitArithmeticShiftRight64(EmitContext& ctx, IR::Inst* inst) {
     auto& shift_arg = args[1];
 
     if (shift_arg.IsImmediate()) {
-        u8 shift = shift_arg.GetImmediateU8();
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const u8 shift = shift_arg.GetImmediateU8();
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
 
         code.sar(result, u8(shift < 63 ? shift : 63));
 
         ctx.reg_alloc.DefineValue(inst, result);
     } else {
         ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
-        Xbyak::Reg64 const63 = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const Xbyak::Reg64 const63 = ctx.reg_alloc.ScratchGpr();
 
         // The 64-bit x64 SAR instruction masks the shift count by 0x3F before performing the shift.
         // ARM differs from the behaviour: It does not mask the count.
@@ -613,15 +613,15 @@ void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
 
     if (!carry_inst) {
         if (shift_arg.IsImmediate()) {
-            u8 shift = shift_arg.GetImmediateU8();
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
 
             code.ror(result, u8(shift & 0x1F));
 
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
 
             // x64 ROR instruction does (shift & 0x1F) for us.
             code.ror(result, code.cl);
@@ -630,9 +630,9 @@ void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
         }
     } else {
         if (shift_arg.IsImmediate()) {
-            u8 shift = shift_arg.GetImmediateU8();
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
+            const u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
 
             if (shift == 0) {
                 // There is nothing more to do.
@@ -649,8 +649,8 @@ void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
-            Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
+            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
 
             // TODO: Optimize
 
@@ -688,15 +688,15 @@ void EmitX64::EmitRotateRight64(EmitContext& ctx, IR::Inst* inst) {
     auto& shift_arg = args[1];
 
     if (shift_arg.IsImmediate()) {
-        u8 shift = shift_arg.GetImmediateU8();
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const u8 shift = shift_arg.GetImmediateU8();
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
 
         code.ror(result, u8(shift & 0x3F));
 
         ctx.reg_alloc.DefineValue(inst, result);
     } else {
         ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-        Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
 
         // x64 ROR instruction does (shift & 0x3F) for us.
         code.ror(result, code.cl);
@@ -709,9 +709,8 @@ void EmitX64::EmitRotateRightExtended(EmitContext& ctx, IR::Inst* inst) {
     auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-    Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(args[1]).cvt8();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(args[1]).cvt8();
 
     code.bt(carry.cvt32(), 0);
     code.rcr(result, 1);
@@ -735,8 +734,9 @@ static Xbyak::Reg8 DoCarry(RegAlloc& reg_alloc, Argument& carry_in, IR::Inst* ca
 }
 
 static Xbyak::Reg64 DoNZCV(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* nzcv_out) {
-    if (!nzcv_out)
+    if (!nzcv_out) {
         return Xbyak::Reg64{-1};
+    }
 
     const Xbyak::Reg64 nzcv = reg_alloc.ScratchGpr({HostLoc::RAX});
     code.xor_(nzcv.cvt32(), nzcv.cvt32());
@@ -895,7 +895,7 @@ void EmitX64::EmitSub64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitMul32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
     if (args[1].IsImmediate()) {
         code.imul(result, result, args[1].GetImmediateU32());
     } else {
@@ -910,7 +910,7 @@ void EmitX64::EmitMul32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitMul64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
 
     code.imul(result, *op_arg);
@@ -945,8 +945,8 @@ void EmitX64::EmitUnsignedDiv32(EmitContext& ctx, IR::Inst* inst) {
 
     ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
     ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
-    Xbyak::Reg32 dividend = ctx.reg_alloc.UseGpr(args[0]).cvt32();
-    Xbyak::Reg32 divisor = ctx.reg_alloc.UseGpr(args[1]).cvt32();
+    const Xbyak::Reg32 dividend = ctx.reg_alloc.UseGpr(args[0]).cvt32();
+    const Xbyak::Reg32 divisor = ctx.reg_alloc.UseGpr(args[1]).cvt32();
 
     Xbyak::Label end;
 
@@ -966,8 +966,8 @@ void EmitX64::EmitUnsignedDiv64(EmitContext& ctx, IR::Inst* inst) {
 
     ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
     ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
-    Xbyak::Reg64 dividend = ctx.reg_alloc.UseGpr(args[0]);
-    Xbyak::Reg64 divisor = ctx.reg_alloc.UseGpr(args[1]);
+    const Xbyak::Reg64 dividend = ctx.reg_alloc.UseGpr(args[0]);
+    const Xbyak::Reg64 divisor = ctx.reg_alloc.UseGpr(args[1]);
 
     Xbyak::Label end;
 
@@ -987,8 +987,8 @@ void EmitX64::EmitSignedDiv32(EmitContext& ctx, IR::Inst* inst) {
 
     ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
     ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
-    Xbyak::Reg32 dividend = ctx.reg_alloc.UseGpr(args[0]).cvt32();
-    Xbyak::Reg32 divisor = ctx.reg_alloc.UseGpr(args[1]).cvt32();
+    const Xbyak::Reg32 dividend = ctx.reg_alloc.UseGpr(args[0]).cvt32();
+    const Xbyak::Reg32 divisor = ctx.reg_alloc.UseGpr(args[1]).cvt32();
 
     Xbyak::Label end;
 
@@ -1008,8 +1008,8 @@ void EmitX64::EmitSignedDiv64(EmitContext& ctx, IR::Inst* inst) {
 
     ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
     ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
-    Xbyak::Reg64 dividend = ctx.reg_alloc.UseGpr(args[0]);
-    Xbyak::Reg64 divisor = ctx.reg_alloc.UseGpr(args[1]);
+    const Xbyak::Reg64 dividend = ctx.reg_alloc.UseGpr(args[0]);
+    const Xbyak::Reg64 divisor = ctx.reg_alloc.UseGpr(args[1]);
 
     Xbyak::Label end;
 
@@ -1027,10 +1027,10 @@ void EmitX64::EmitSignedDiv64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitAnd32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
     if (args[1].IsImmediate()) {
-        u32 op_arg = args[1].GetImmediateU32();
+        const u32 op_arg = args[1].GetImmediateU32();
 
         code.and_(result, op_arg);
     } else {
@@ -1046,10 +1046,10 @@ void EmitX64::EmitAnd32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitAnd64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
 
     if (args[1].FitsInImmediateS32()) {
-        u32 op_arg = u32(args[1].GetImmediateS32());
+        const u32 op_arg = u32(args[1].GetImmediateS32());
 
         code.and_(result, op_arg);
     } else {
@@ -1065,10 +1065,10 @@ void EmitX64::EmitAnd64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitEor32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
     if (args[1].IsImmediate()) {
-        u32 op_arg = args[1].GetImmediateU32();
+        const u32 op_arg = args[1].GetImmediateU32();
 
         code.xor_(result, op_arg);
     } else {
@@ -1084,10 +1084,10 @@ void EmitX64::EmitEor32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitEor64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
 
     if (args[1].FitsInImmediateS32()) {
-        u32 op_arg = u32(args[1].GetImmediateS32());
+        const u32 op_arg = u32(args[1].GetImmediateS32());
 
         code.xor_(result, op_arg);
     } else {
@@ -1103,10 +1103,10 @@ void EmitX64::EmitEor64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitOr32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
     if (args[1].IsImmediate()) {
-        u32 op_arg = args[1].GetImmediateU32();
+        const u32 op_arg = args[1].GetImmediateU32();
 
         code.or_(result, op_arg);
     } else {
@@ -1122,10 +1122,10 @@ void EmitX64::EmitOr32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitOr64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
 
     if (args[1].FitsInImmediateS32()) {
-        u32 op_arg = u32(args[1].GetImmediateS32());
+        const u32 op_arg = u32(args[1].GetImmediateS32());
 
         code.or_(result, op_arg);
     } else {
@@ -1168,49 +1168,49 @@ void EmitX64::EmitNot64(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitSignExtendByteToWord(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.movsx(result.cvt32(), result.cvt8());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitSignExtendHalfToWord(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.movsx(result.cvt32(), result.cvt16());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitSignExtendByteToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.movsx(result.cvt64(), result.cvt8());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitSignExtendHalfToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.movsx(result.cvt64(), result.cvt16());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitSignExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.movsxd(result.cvt64(), result.cvt32());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitZeroExtendByteToWord(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.movzx(result.cvt32(), result.cvt8());
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitZeroExtendHalfToWord(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.movzx(result.cvt32(), result.cvt16());
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -1227,7 +1227,7 @@ void EmitX64::EmitZeroExtendHalfToLong(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitZeroExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.mov(result.cvt32(), result.cvt32()); // x64 zeros upper 32 bits on a 32-bit move
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -1235,12 +1235,12 @@ void EmitX64::EmitZeroExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitZeroExtendLongToQuad(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     if (args[0].IsInGpr()) {
-        Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]);
-        Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
         code.movq(result, source);
         ctx.reg_alloc.DefineValue(inst, result);
     } else {
-        Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
         code.movq(result, result);
         ctx.reg_alloc.DefineValue(inst, result);
     }
@@ -1248,21 +1248,21 @@ void EmitX64::EmitZeroExtendLongToQuad(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitByteReverseWord(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
     code.bswap(result);
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitByteReverseHalf(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg16 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt16();
+    const Xbyak::Reg16 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt16();
     code.rol(result, 8);
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitByteReverseDual(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
     code.bswap(result);
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -1270,15 +1270,15 @@ void EmitX64::EmitByteReverseDual(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitCountLeadingZeros32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tLZCNT)) {
-        Xbyak::Reg32 source = ctx.reg_alloc.UseGpr(args[0]).cvt32();
-        Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+        const Xbyak::Reg32 source = ctx.reg_alloc.UseGpr(args[0]).cvt32();
+        const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
 
         code.lzcnt(result, source);
 
         ctx.reg_alloc.DefineValue(inst, result);
     } else {
-        Xbyak::Reg32 source = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-        Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+        const Xbyak::Reg32 source = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+        const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
 
         // The result of a bsr of zero is undefined, but zf is set after it.
         code.bsr(result, source);
@@ -1294,15 +1294,15 @@ void EmitX64::EmitCountLeadingZeros32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitCountLeadingZeros64(EmitContext& ctx, IR::Inst* inst) {
    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
    if (code.DoesCpuSupport(Xbyak::util::Cpu::tLZCNT)) {
-       Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]).cvt64();
-       Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
+       const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]).cvt64();
+       const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
 
        code.lzcnt(result, source);
 
        ctx.reg_alloc.DefineValue(inst, result);
    } else {
-       Xbyak::Reg64 source = ctx.reg_alloc.UseScratchGpr(args[0]).cvt64();
-       Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
+       const Xbyak::Reg64 source = ctx.reg_alloc.UseScratchGpr(args[0]).cvt64();
+       const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
 
        // The result of a bsr of zero is undefined, but zf is set after it.
        code.bsr(result, source);
