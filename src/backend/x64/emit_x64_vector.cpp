@@ -31,8 +31,8 @@ template <typename Function>
 static void EmitVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
     (code.*fn)(xmm_a, xmm_b);
 
@@ -188,8 +188,8 @@ void EmitX64::EmitVectorGetElement16(EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
-    Xbyak::Reg32 dest = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Reg32 dest = ctx.reg_alloc.ScratchGpr().cvt32();
     code.pextrw(dest, source, index);
     ctx.reg_alloc.DefineValue(inst, dest);
 }
@@ -204,13 +204,13 @@ void EmitX64::EmitVectorGetElement32(EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    Xbyak::Reg32 dest = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 dest = ctx.reg_alloc.ScratchGpr().cvt32();
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-        Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
         code.pextrd(dest, source, index);
     } else {
-        Xbyak::Xmm source = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm source = ctx.reg_alloc.UseScratchXmm(args[0]);
         code.pshufd(source, source, index);
         code.movd(dest, source);
     }
@@ -221,20 +221,20 @@ void EmitX64::EmitVectorGetElement32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorGetElement64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(args[1].IsImmediate());
-    u8 index = args[1].GetImmediateU8();
+    const u8 index = args[1].GetImmediateU8();
 
     if (index == 0) {
         ctx.reg_alloc.DefineValue(inst, args[0]);
         return;
     }
 
-    Xbyak::Reg64 dest = ctx.reg_alloc.ScratchGpr().cvt64();
+    const Xbyak::Reg64 dest = ctx.reg_alloc.ScratchGpr().cvt64();
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-        Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
         code.pextrq(dest, source, 1);
     } else {
-        Xbyak::Xmm source = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm source = ctx.reg_alloc.UseScratchXmm(args[0]);
         code.punpckhqdq(source, source);
         code.movq(dest, source);
     }
@@ -277,10 +277,10 @@ void EmitX64::EmitVectorSetElement8(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorSetElement16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(args[1].IsImmediate());
-    u8 index = args[1].GetImmediateU8();
+    const u8 index = args[1].GetImmediateU8();
 
-    Xbyak::Xmm source_vector = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Reg16 source_elem = ctx.reg_alloc.UseGpr(args[2]).cvt16();
+    const Xbyak::Xmm source_vector = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Reg16 source_elem = ctx.reg_alloc.UseGpr(args[2]).cvt16();
 
     code.pinsrw(source_vector, source_elem.cvt32(), index);
 
@@ -640,14 +640,13 @@ void EmitX64::EmitVectorArithmeticVShift64(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorBroadcastLower8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX2)) {
         code.vpbroadcastb(a, a);
         code.vmovq(a, a);
     } else if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
-        Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
         code.pxor(tmp, tmp);
         code.pshufb(a, tmp);
@@ -662,8 +661,7 @@ void EmitX64::EmitVectorBroadcastLower8(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorBroadcastLower16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     code.pshuflw(a, a, 0);
 
@@ -672,8 +670,7 @@ void EmitX64::EmitVectorBroadcastLower16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorBroadcastLower32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     code.pshuflw(a, a, 0b01000100);
 
@@ -682,13 +679,12 @@ void EmitX64::EmitVectorBroadcastLower32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorBroadcast8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX2)) {
         code.vpbroadcastb(a, a);
     } else if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
-        Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
         code.pxor(tmp, tmp);
         code.pshufb(a, tmp);
@@ -703,8 +699,7 @@ void EmitX64::EmitVectorBroadcast8(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorBroadcast16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX2)) {
         code.vpbroadcastw(a, a);
@@ -718,8 +713,7 @@ void EmitX64::EmitVectorBroadcast16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorBroadcast32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX2)) {
         code.vpbroadcastd(a, a);
@@ -732,8 +726,7 @@ void EmitX64::EmitVectorBroadcast32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorBroadcast64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX2)) {
         code.vpbroadcastq(a, a);
@@ -1023,9 +1016,9 @@ void EmitX64::EmitVectorEqual128(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-        Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
-        Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
         code.pcmpeqq(xmm_a, xmm_b);
         code.pshufd(tmp, xmm_a, 0b01001110);
@@ -1033,9 +1026,9 @@ void EmitX64::EmitVectorEqual128(EmitContext& ctx, IR::Inst* inst) {
 
         ctx.reg_alloc.DefineValue(inst, xmm_a);
     } else {
-        Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
-        Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
         code.pcmpeqd(xmm_a, xmm_b);
         code.pshufd(tmp, xmm_a, 0b10110001);
@@ -1384,7 +1377,7 @@ void EmitX64::EmitVectorLogicalShiftLeft8(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorLogicalShiftLeft16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.psllw(result, shift_amount);
@@ -1395,7 +1388,7 @@ void EmitX64::EmitVectorLogicalShiftLeft16(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.pslld(result, shift_amount);
@@ -1406,7 +1399,7 @@ void EmitX64::EmitVectorLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorLogicalShiftLeft64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.psllq(result, shift_amount);
@@ -1434,7 +1427,7 @@ void EmitX64::EmitVectorLogicalShiftRight8(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorLogicalShiftRight16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.psrlw(result, shift_amount);
@@ -1445,7 +1438,7 @@ void EmitX64::EmitVectorLogicalShiftRight16(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.psrld(result, shift_amount);
@@ -1456,7 +1449,7 @@ void EmitX64::EmitVectorLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorLogicalShiftRight64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.psrlq(result, shift_amount);
@@ -1851,10 +1844,10 @@ void EmitX64::EmitVectorMinU64(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorMultiply8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
-    Xbyak::Xmm tmp_a = ctx.reg_alloc.ScratchXmm();
-    Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm tmp_a = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
 
     // TODO: Optimize
     code.movdqa(tmp_a, a);
@@ -1906,10 +1899,10 @@ void EmitX64::EmitVectorMultiply64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-        Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
-        Xbyak::Reg64 tmp1 = ctx.reg_alloc.ScratchGpr();
-        Xbyak::Reg64 tmp2 = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Reg64 tmp1 = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 tmp2 = ctx.reg_alloc.ScratchGpr();
 
         code.movq(tmp1, a);
         code.movq(tmp2, b);
@@ -1993,8 +1986,8 @@ void EmitX64::EmitVectorNarrow32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorNarrow64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm zeros = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm zeros = ctx.reg_alloc.ScratchXmm();
 
     // TODO: AVX512F implementation
 
@@ -2007,8 +2000,8 @@ void EmitX64::EmitVectorNarrow64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorNot(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm xmm_b = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.ScratchXmm();
 
     code.pcmpeqw(xmm_b, xmm_b);
     code.pxor(xmm_a, xmm_b);
@@ -2023,9 +2016,9 @@ void EmitX64::EmitVectorOr(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorPairedAddLower8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
-    Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
     code.punpcklqdq(xmm_a, xmm_b);
     code.movdqa(tmp, xmm_a);
@@ -2041,9 +2034,9 @@ void EmitX64::EmitVectorPairedAddLower8(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorPairedAddLower16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
-    Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
     code.punpcklqdq(xmm_a, xmm_b);
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
@@ -2064,9 +2057,9 @@ void EmitX64::EmitVectorPairedAddLower16(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorPairedAddLower32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
-    Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
     code.punpcklqdq(xmm_a, xmm_b);
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
@@ -2086,10 +2079,10 @@ void EmitX64::EmitVectorPairedAddLower32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorPairedAdd8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
-    Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
-    Xbyak::Xmm d = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm d = ctx.reg_alloc.ScratchXmm();
 
     code.movdqa(c, a);
     code.movdqa(d, b);
@@ -2108,17 +2101,17 @@ void EmitX64::EmitVectorPairedAdd16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
-        Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
         code.phaddw(a, b);
 
         ctx.reg_alloc.DefineValue(inst, a);
     } else {
-        Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
-        Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
-        Xbyak::Xmm d = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+        const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm d = ctx.reg_alloc.ScratchXmm();
 
         code.movdqa(c, a);
         code.movdqa(d, b);
@@ -2138,17 +2131,17 @@ void EmitX64::EmitVectorPairedAdd32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
-        Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
         code.phaddd(a, b);
 
         ctx.reg_alloc.DefineValue(inst, a);
     } else {
-        Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
-        Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
-        Xbyak::Xmm d = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+        const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm d = ctx.reg_alloc.ScratchXmm();
 
         code.movdqa(c, a);
         code.movdqa(d, b);
@@ -2165,9 +2158,9 @@ void EmitX64::EmitVectorPairedAdd32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorPairedAdd64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
-    Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
 
     code.movdqa(c, a);
     code.punpcklqdq(a, b);
@@ -2242,8 +2235,8 @@ void EmitX64::EmitVectorPairedAddSignedWiden32(EmitContext& ctx, IR::Inst* inst)
 void EmitX64::EmitVectorPairedAddUnsignedWiden8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
 
     code.movdqa(c, a);
     code.psllw(a, 8);
@@ -2257,8 +2250,8 @@ void EmitX64::EmitVectorPairedAddUnsignedWiden8(EmitContext& ctx, IR::Inst* inst
 void EmitX64::EmitVectorPairedAddUnsignedWiden16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
 
     code.movdqa(c, a);
     code.pslld(a, 16);
@@ -2272,8 +2265,8 @@ void EmitX64::EmitVectorPairedAddUnsignedWiden16(EmitContext& ctx, IR::Inst* ins
 void EmitX64::EmitVectorPairedAddUnsignedWiden32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
 
     code.movdqa(c, a);
     code.psllq(a, 32);
@@ -2540,10 +2533,10 @@ void EmitX64::EmitVectorPopulationCount(EmitContext& ctx, IR::Inst* inst) {
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
         auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-        Xbyak::Xmm low_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-        Xbyak::Xmm high_a = ctx.reg_alloc.ScratchXmm();
-        Xbyak::Xmm tmp1 = ctx.reg_alloc.ScratchXmm();
-        Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm low_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm high_a = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm tmp1 = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
 
         code.movdqa(high_a, low_a);
         code.psrlw(high_a, 4);
@@ -2632,7 +2625,7 @@ static void EmitVectorRoundingHalvingAddSigned(size_t esize, EmitContext& ctx, I
     case 16: {
         const Xbyak::Xmm vec_32768 = ctx.reg_alloc.ScratchXmm();
         code.movdqa(vec_32768, code.MConst(xword, 0x8000800080008000, 0x8000800080008000));
-        
+
         code.paddw(a, vec_32768);
         code.paddw(b, vec_32768);
         code.pavgw(a, b);
@@ -4491,8 +4484,7 @@ void EmitX64::EmitVectorZeroExtend64(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorZeroUpper(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
 
     code.movq(a, a); // TODO: !IsLastUse
 
@@ -4500,7 +4492,7 @@ void EmitX64::EmitVectorZeroUpper(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitZeroVector(EmitContext& ctx, IR::Inst* inst) {
-    Xbyak::Xmm a = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm a = ctx.reg_alloc.ScratchXmm();
     code.pxor(a, a);
     ctx.reg_alloc.DefineValue(inst, a);
 }
