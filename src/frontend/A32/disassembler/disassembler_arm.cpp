@@ -224,6 +224,22 @@ public:
         return "<internal error>";
     }
 
+    // CRC32 instructions
+    std::string arm_CRC32([[maybe_unused]] Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
+        static constexpr std::array data_type{
+            "b", "h", "w", "invalid",
+        };
+
+        return fmt::format("crc32{} {}, {}, {}", data_type[sz.ZeroExtend()], d, n, m);
+    }
+    std::string arm_CRC32C([[maybe_unused]] Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
+        static constexpr std::array data_type{
+            "b", "h", "w", "invalid",
+        };
+
+        return fmt::format("crc32c{} {}, {}, {}", data_type[sz.ZeroExtend()], d, n, m);
+    }
+
     // Data processing instructions
     std::string arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm<8> imm8) {
         return fmt::format("adc{}{} {}, {}, #{}", CondToString(cond), S ? "s" : "", d, n, ArmExpandImm(rotate, imm8));

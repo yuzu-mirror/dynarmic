@@ -11,6 +11,10 @@ INST(arm_BL,            "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv
 INST(arm_BX,            "BX",                  "cccc000100101111111111110001mmmm") // v4T
 INST(arm_BXJ,           "BXJ",                 "cccc000100101111111111110010mmmm") // v5J
 
+// CRC32 instructions
+INST(arm_CRC32,         "CRC32",               "cccc00010zz0nnnndddd00000100mmmm") // v8
+INST(arm_CRC32C,        "CRC32C",              "cccc00010zz0nnnndddd00100100mmmm") // v8
+
 // Coprocessor instructions
 INST(arm_CDP,           "CDP",                 "cccc1110ooooNNNNDDDDppppooo0MMMM") // v2  (CDP2:  v5)
 INST(arm_LDC,           "LDC",                 "cccc110pudw1nnnnDDDDppppvvvvvvvv") // v2  (LDC2:  v5)

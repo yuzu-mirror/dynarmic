@@ -87,6 +87,10 @@ struct ArmTranslatorVisitor final {
     bool arm_MRRC(Cond cond, Reg t2, Reg t, size_t coproc_no, size_t opc, CoprocReg CRm);
     bool arm_STC(Cond cond, bool p, bool u, bool d, bool w, Reg n, CoprocReg CRd, size_t coproc_no, Imm<8> imm8);
 
+    // CRC32 instructions
+    bool arm_CRC32(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m);
+    bool arm_CRC32C(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m);
+
     // Data processing instructions
     bool arm_ADC_imm(Cond cond, bool S, Reg n, Reg d, int rotate, Imm<8> imm8);
     bool arm_ADC_reg(Cond cond, bool S, Reg n, Reg d, Imm<5> imm5, ShiftType shift, Reg m);
