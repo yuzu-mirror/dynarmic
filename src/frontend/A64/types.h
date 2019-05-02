@@ -57,14 +57,14 @@ inline size_t VecNumber(Vec vec) {
 }
 
 inline Reg operator+(Reg reg, size_t number) {
-    size_t new_reg = static_cast<size_t>(reg) + number;
+    const size_t new_reg = RegNumber(reg) + number;
     ASSERT(new_reg <= 31);
 
     return static_cast<Reg>(new_reg);
 }
 
 inline Vec operator+(Vec vec, size_t number) {
-    size_t new_vec = static_cast<size_t>(vec) + number;
+    const size_t new_vec = VecNumber(vec) + number;
     ASSERT(new_vec <= 31);
 
     return static_cast<Vec>(new_vec);
