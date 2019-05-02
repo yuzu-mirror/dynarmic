@@ -52,8 +52,7 @@ void A32Unicorn<TestEnvironment>::Run() {
     }
 
     const bool T = Dynarmic::Common::Bit<5>(GetCpsr());
-    const u32 mask = T ? 0xFFFFFFFE : 0xFFFFFFFC;
-    const u32 new_pc = GetPC() & mask;
+    const u32 new_pc = GetPC() | (T ? 1 : 0);
     SetPC(new_pc);
 }
 
