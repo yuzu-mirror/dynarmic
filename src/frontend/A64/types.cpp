@@ -15,15 +15,17 @@
 namespace Dynarmic::A64 {
 
 const char* CondToString(Cond cond) {
-    constexpr std::array<const char*, 16> cond_strs = {
-        "eq", "ne", "hs", "lo", "mi", "pl", "vs", "vc", "hi", "ls", "ge", "lt", "gt", "le", "al", "nv"
+    static constexpr std::array cond_strs = {
+        "eq", "ne", "hs", "lo", "mi", "pl", "vs", "vc",
+        "hi", "ls", "ge", "lt", "gt", "le", "al", "nv"
     };
     return cond_strs.at(static_cast<size_t>(cond));
 }
 
 std::string RegToString(Reg reg) {
-    if (reg == Reg::R31)
+    if (reg == Reg::R31) {
         return "sp|zr";
+    }
     return fmt::format("r{}", static_cast<size_t>(reg));
 }
 

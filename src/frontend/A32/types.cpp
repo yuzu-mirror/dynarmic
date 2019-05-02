@@ -13,32 +13,40 @@
 namespace Dynarmic::A32 {
 
 const char* CondToString(Cond cond, bool explicit_al) {
-    constexpr std::array<const char*, 16> cond_strs = {
-        "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc", "hi", "ls", "ge", "lt", "gt", "le", "al", "nv",
+    static constexpr std::array cond_strs = {
+        "eq", "ne", "cs", "cc", "mi", "pl", "vs", "vc",
+        "hi", "ls", "ge", "lt", "gt", "le", "al", "nv",
     };
     return (!explicit_al && cond == Cond::AL) ? "" : cond_strs.at(static_cast<size_t>(cond));
 }
 
 const char* RegToString(Reg reg) {
-    constexpr std::array<const char*, 16> reg_strs = {
-        "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc"
+    static constexpr std::array reg_strs = {
+        "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
+        "r8", "r9", "r10", "r11", "r12", "sp", "lr", "pc"
     };
     return reg_strs.at(static_cast<size_t>(reg));
 }
 
 const char* ExtRegToString(ExtReg reg) {
-    constexpr std::array<const char*, 64> reg_strs = {
-        "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10", "s11", "s12", "s13", "s14", "s15",
-        "s16", "s17", "s18", "s19", "s20", "s21", "s22", "s23", "s24", "s25", "s26", "s27", "s28", "s29", "s30", "s31",
-        "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15",
-        "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31",
+    static constexpr std::array reg_strs = {
+        "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8",
+        "s9", "s10", "s11", "s12", "s13", "s14", "s15", "s16",
+        "s17", "s18", "s19", "s20", "s21", "s22", "s23", "s24",
+        "s25", "s26", "s27", "s28", "s29", "s30", "s31",
+
+        "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8",
+        "d9", "d10", "d11", "d12", "d13", "d14", "d15", "d16",
+        "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24",
+        "d25", "d26", "d27", "d28", "d29", "d30", "d31",
     };
     return reg_strs.at(static_cast<size_t>(reg));
 }
 
 const char* CoprocRegToString(CoprocReg reg) {
-    constexpr std::array<const char*, 16> reg_strs = {
-        "c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14", "c15"
+    static constexpr std::array reg_strs = {
+        "c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8",
+        "c9", "c10", "c11", "c12", "c13", "c14", "c15"
     };
     return reg_strs.at(static_cast<size_t>(reg));
 }
