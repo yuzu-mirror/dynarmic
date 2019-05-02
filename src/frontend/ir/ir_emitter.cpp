@@ -153,22 +153,6 @@ ResultAndCarry<U32> IREmitter::RotateRightExtended(const U32& value_in, const U1
     return {result, carry_out};
 }
 
-U32 IREmitter::LogicalShiftLeft(const U32& value_in, const U8& shift_amount) {
-    return Inst<U32>(Opcode::LogicalShiftLeft32, value_in, shift_amount, Imm1(0));
-}
-
-U64 IREmitter::LogicalShiftLeft(const U64& value_in, const U8& shift_amount) {
-    return Inst<U64>(Opcode::LogicalShiftLeft64, value_in, shift_amount);
-}
-
-U32 IREmitter::LogicalShiftRight(const U32& value_in, const U8& shift_amount) {
-    return Inst<U32>(Opcode::LogicalShiftRight32, value_in, shift_amount, Imm1(0));
-}
-
-U64 IREmitter::LogicalShiftRight(const U64& value_in, const U8& shift_amount) {
-    return Inst<U64>(Opcode::LogicalShiftRight64, value_in, shift_amount);
-}
-
 U32U64 IREmitter::LogicalShiftLeft(const U32U64& value_in, const U8& shift_amount) {
     if (value_in.GetType() == Type::U32) {
         return Inst<U32>(Opcode::LogicalShiftLeft32, value_in, shift_amount, Imm1(0));
