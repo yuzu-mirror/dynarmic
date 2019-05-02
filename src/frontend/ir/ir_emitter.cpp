@@ -47,8 +47,8 @@ U32 IREmitter::LeastSignificantWord(const U64& value) {
 }
 
 ResultAndCarry<U32> IREmitter::MostSignificantWord(const U64& value) {
-    auto result = Inst<U32>(Opcode::MostSignificantWord, value);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto result = Inst<U32>(Opcode::MostSignificantWord, value);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
     return {result, carry_out};
 }
 
@@ -124,32 +124,32 @@ NZCV IREmitter::NZCVFrom(const Value& value) {
 }
 
 ResultAndCarry<U32> IREmitter::LogicalShiftLeft(const U32& value_in, const U8& shift_amount, const U1& carry_in) {
-    auto result = Inst<U32>(Opcode::LogicalShiftLeft32, value_in, shift_amount, carry_in);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto result = Inst<U32>(Opcode::LogicalShiftLeft32, value_in, shift_amount, carry_in);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
     return {result, carry_out};
 }
 
 ResultAndCarry<U32> IREmitter::LogicalShiftRight(const U32& value_in, const U8& shift_amount, const U1& carry_in) {
-    auto result = Inst<U32>(Opcode::LogicalShiftRight32, value_in, shift_amount, carry_in);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto result = Inst<U32>(Opcode::LogicalShiftRight32, value_in, shift_amount, carry_in);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
     return {result, carry_out};
 }
 
 ResultAndCarry<U32> IREmitter::ArithmeticShiftRight(const U32& value_in, const U8& shift_amount, const U1& carry_in) {
-    auto result = Inst<U32>(Opcode::ArithmeticShiftRight32, value_in, shift_amount, carry_in);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto result = Inst<U32>(Opcode::ArithmeticShiftRight32, value_in, shift_amount, carry_in);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
     return {result, carry_out};
 }
 
 ResultAndCarry<U32> IREmitter::RotateRight(const U32& value_in, const U8& shift_amount, const U1& carry_in) {
-    auto result = Inst<U32>(Opcode::RotateRight32, value_in, shift_amount, carry_in);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto result = Inst<U32>(Opcode::RotateRight32, value_in, shift_amount, carry_in);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
     return {result, carry_out};
 }
 
 ResultAndCarry<U32> IREmitter::RotateRightExtended(const U32& value_in, const U1& carry_in) {
-    auto result = Inst<U32>(Opcode::RotateRightExtended, value_in, carry_in);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto result = Inst<U32>(Opcode::RotateRightExtended, value_in, carry_in);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
     return {result, carry_out};
 }
 
@@ -202,9 +202,9 @@ U32U64 IREmitter::RotateRight(const U32U64& value_in, const U8& shift_amount) {
 }
 
 ResultAndCarryAndOverflow<U32> IREmitter::AddWithCarry(const U32& a, const U32& b, const U1& carry_in) {
-    auto result = Inst<U32>(Opcode::Add32, a, b, carry_in);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
-    auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    const auto result = Inst<U32>(Opcode::Add32, a, b, carry_in);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
     return {result, carry_out, overflow};
 }
 
@@ -228,9 +228,9 @@ U32U64 IREmitter::Add(const U32U64& a, const U32U64& b) {
 
 ResultAndCarryAndOverflow<U32> IREmitter::SubWithCarry(const U32& a, const U32& b, const U1& carry_in) {
     // This is equivalent to AddWithCarry(a, Not(b), carry_in).
-    auto result = Inst<U32>(Opcode::Sub32, a, b, carry_in);
-    auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
-    auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    const auto result = Inst<U32>(Opcode::Sub32, a, b, carry_in);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
     return {result, carry_out, overflow};
 }
 
@@ -541,8 +541,8 @@ ResultAndOverflow<UAny> IREmitter::SignedSaturatedSub(const UAny& a, const UAny&
 
 ResultAndOverflow<U32> IREmitter::SignedSaturation(const U32& a, size_t bit_size_to_saturate_to) {
     ASSERT(bit_size_to_saturate_to >= 1 && bit_size_to_saturate_to <= 32);
-    auto result = Inst<U32>(Opcode::SignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
-    auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    const auto result = Inst<U32>(Opcode::SignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
     return {result, overflow};
 }
 
@@ -588,80 +588,80 @@ ResultAndOverflow<UAny> IREmitter::UnsignedSaturatedSub(const UAny& a, const UAn
 
 ResultAndOverflow<U32> IREmitter::UnsignedSaturation(const U32& a, size_t bit_size_to_saturate_to) {
     ASSERT(bit_size_to_saturate_to <= 31);
-    auto result = Inst<U32>(Opcode::UnsignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
-    auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    const auto result = Inst<U32>(Opcode::UnsignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
     return {result, overflow};
 }
 
 ResultAndGE<U32> IREmitter::PackedAddU8(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedAddU8, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedAddU8, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedAddS8(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedAddS8, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedAddS8, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedAddU16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedAddU16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedAddU16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedAddS16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedAddS16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedAddS16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedSubU8(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedSubU8, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedSubU8, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedSubS8(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedSubS8, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedSubS8, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedSubU16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedSubU16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedSubU16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedSubS16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedSubS16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedSubS16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedAddSubU16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedAddSubU16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedAddSubU16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedAddSubS16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedAddSubS16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedAddSubS16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedSubAddU16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedSubAddU16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedSubAddU16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
 ResultAndGE<U32> IREmitter::PackedSubAddS16(const U32& a, const U32& b) {
-    auto result = Inst<U32>(Opcode::PackedSubAddS16, a, b);
-    auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
+    const auto result = Inst<U32>(Opcode::PackedSubAddS16, a, b);
+    const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
     return {result, ge};
 }
 
