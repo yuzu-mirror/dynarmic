@@ -15,7 +15,7 @@
 namespace Dynarmic::FP {
 
 template<typename FPT>
-std::tuple<FPType, bool, FPUnpacked> FPUnpackBase(FPT op, FPCR fpcr, FPSR& fpsr) {
+std::tuple<FPType, bool, FPUnpacked> FPUnpackBase(FPT op, FPCR fpcr, [[maybe_unused]] FPSR& fpsr) {
     constexpr size_t sign_bit = FPInfo<FPT>::exponent_width + FPInfo<FPT>::explicit_mantissa_width;
     constexpr size_t exponent_high_bit = FPInfo<FPT>::exponent_width + FPInfo<FPT>::explicit_mantissa_width - 1;
     constexpr size_t exponent_low_bit = FPInfo<FPT>::explicit_mantissa_width;
@@ -34,16 +34,16 @@ std::tuple<FPType, bool, FPUnpacked> FPUnpackBase(FPT op, FPCR fpcr, FPSR& fpsr)
                 return {FPType::Zero, sign, {sign, 0, 0}};
             }
             return {FPType::Nonzero, sign, ToNormalized(sign, denormal_exponent, frac_raw)};
-        }
-
-        if (frac_raw == 0 || fpcr.FZ()) {
-            if (frac_raw != 0) {
-                FPProcessException(FPExc::InputDenorm, fpcr, fpsr);
+        } else {
+            if (frac_raw == 0 || fpcr.FZ()) {
+                if (frac_raw != 0) {
+                    FPProcessException(FPExc::InputDenorm, fpcr, fpsr);
+                }
+                return {FPType::Zero, sign, {sign, 0, 0}};
             }
-            return {FPType::Zero, sign, {sign, 0, 0}};
-        }
 
-        return {FPType::Nonzero, sign, ToNormalized(sign, denormal_exponent, frac_raw)};
+            return {FPType::Nonzero, sign, ToNormalized(sign, denormal_exponent, frac_raw)};
+        }
     }
 
     const bool exp_all_ones = exp_raw == Common::Ones<FPT>(FPInfo<FPT>::exponent_width);

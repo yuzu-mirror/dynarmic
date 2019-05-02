@@ -261,9 +261,10 @@ struct PairedLowerIndexer {
                 return std::make_tuple(a[0], b[0]);
             }
             return std::make_tuple(0, 0);
+        } else {
+            UNREACHABLE();
+            return {};
         }
-        UNREACHABLE();
-        return {};
     }
 };
 
