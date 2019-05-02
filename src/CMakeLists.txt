@@ -104,6 +104,7 @@ add_library(dynarmic
     frontend/A32/translate/translate_arm/divide.cpp
     frontend/A32/translate/translate_arm/exception_generating.cpp
     frontend/A32/translate/translate_arm/extension.cpp
+    frontend/A32/translate/translate_arm/hint.cpp
     frontend/A32/translate/translate_arm/load_store.cpp
     frontend/A32/translate/translate_arm/misc.cpp
     frontend/A32/translate/translate_arm/multiply.cpp

@@ -14,6 +14,8 @@
 
 namespace Dynarmic::A32 {
 
+enum class Exception;
+
 enum class ConditionalState {
     /// We haven't met any conditional instructions yet.
     None,
@@ -40,6 +42,7 @@ struct ArmTranslatorVisitor final {
     bool InterpretThisInstruction();
     bool UnpredictableInstruction();
     bool UndefinedInstruction();
+    bool RaiseException(Exception exception);
 
     static u32 ArmExpandImm(int rotate, Imm<8> imm8) {
         return Common::RotateRight<u32>(imm8.ZeroExtend(), rotate * 2);
@@ -161,11 +164,11 @@ struct ArmTranslatorVisitor final {
     bool arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m);
 
     // Hint instructions
-    bool arm_PLD() { return true; }
-    bool arm_SEV() { return true; }
-    bool arm_WFE() { return true; }
-    bool arm_WFI() { return true; }
-    bool arm_YIELD() { return true; }
+    bool arm_PLD();
+    bool arm_SEV();
+    bool arm_WFE();
+    bool arm_WFI();
+    bool arm_YIELD();
 
     // Load/Store
     bool arm_LDRBT();

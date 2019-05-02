@@ -157,6 +157,13 @@ bool ArmTranslatorVisitor::UndefinedInstruction() {
     return false;
 }
 
+bool ArmTranslatorVisitor::RaiseException(Exception exception) {
+    ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
+    ir.ExceptionRaised(exception);
+    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
+    return false;
+}
+
 IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in) {
     u8 imm5_value = imm5.ZeroExtend<u8>();
 

@@ -24,8 +24,18 @@ enum class Exception {
     /// An unpredictable instruction is to be executed. Implementation-defined behaviour should now happen.
     /// This behaviour is up to the user of this library to define.
     UnpredictableInstruction,
+    /// A SEV instruction was executed. The event register of all PEs should be set.
+    SendEvent,
+    /// A WFI instruction was executed. You may now enter a low-power state.
+    WaitForInterrupt,
+    /// A WFE instruction was executed. You may now enter a low-power state if the event register is clear.
+    WaitForEvent,
+    /// A YIELD instruction was executed.
+    Yield,
     /// A BKPT instruction was executed.
     Breakpoint,
+    /// A PLD instruction was executed.
+    PreloadData,
 };
 
 /// These function pointers may be inserted into compiled code.
