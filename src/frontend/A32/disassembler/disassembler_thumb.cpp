@@ -258,6 +258,10 @@ public:
         return "wfe";
     }
 
+    std::string thumb16_WFI() {
+        return "wfi";
+    }
+
     std::string thumb16_SXTH(Reg m, Reg d) {
         return fmt::format("sxth {}, {}", d, m);
     }
