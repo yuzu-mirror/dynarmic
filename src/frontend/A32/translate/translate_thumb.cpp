@@ -6,6 +6,8 @@
 
 #include <tuple>
 
+#include <dynarmic/A32/config.h>
+
 #include "common/assert.h"
 #include "common/bit_util.h"
 #include "frontend/imm.h"
@@ -802,6 +804,13 @@ struct ThumbTranslatorVisitor final {
         const auto rev_half = ir.ByteReverseHalf(ir.LeastSignificantHalf(ir.GetRegister(m)));
         ir.SetRegister(d, ir.SignExtendHalfToWord(rev_half));
         return true;
+    }
+
+    // BKPT #<imm8>
+    bool thumb16_BKPT([[maybe_unused]] Imm<8> imm8) {
+        ir.ExceptionRaised(Exception::Breakpoint);
+        ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
+        return false;
     }
 
     // STM <Rn>!, <reg_list>

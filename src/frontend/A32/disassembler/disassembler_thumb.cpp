@@ -292,6 +292,10 @@ public:
         return fmt::format("revsh {}, {}", d, m);
     }
 
+    std::string thumb16_BKPT(Imm<8> imm8) {
+        return fmt::format("bkpt #{}", imm8.ZeroExtend());
+    }
+
     std::string thumb16_STMIA(Reg n, RegList reg_list) {
         return fmt::format("stm {}!, {{{}}}", n, RegListToString(reg_list));
     }
