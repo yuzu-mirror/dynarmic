@@ -8,8 +8,7 @@
 
 #include <cstdint>
 #include <optional>
-
-#include <boost/variant.hpp>
+#include <variant>
 
 #include <dynarmic/A32/coprocessor_util.h>
 
@@ -36,18 +35,18 @@ public:
     };
 
     /**
-     * boost::blank: coprocessor exception will be compiled
+     * std::monostate: coprocessor exception will be compiled
      * Callback: a call to the Callback will be compiled
      * std::uint32_t*: a write/read to that memory address will be compiled
      */
-    using CallbackOrAccessOneWord = boost::variant<boost::blank, Callback, std::uint32_t*>;
+    using CallbackOrAccessOneWord = std::variant<std::monostate, Callback, std::uint32_t*>;
 
     /**
-     * boost::blank: coprocessor exception will be compiled
+     * std::monostate: coprocessor exception will be compiled
      * Callback: a call to the Callback will be compiled
      * std::array<std::uint32_t*, 2>: a write/read to those memory addresses will be compiled
      */
-    using CallbackOrAccessTwoWords = boost::variant<boost::blank, Callback, std::array<std::uint32_t*, 2>>;
+    using CallbackOrAccessTwoWords = std::variant<std::monostate, Callback, std::array<std::uint32_t*, 2>>;
 
     /**
      * Called when compiling CDP or CDP2 for this coprocessor.
@@ -58,7 +57,7 @@ public:
 
     /**
      * Called when compiling MCR or MCR2 for this coprocessor.
-     * A return value of boost::blank will cause a coprocessor exception to be compiled.
+     * A return value of std::monostate will cause a coprocessor exception to be compiled.
      * arg0 of the callback will contain the word sent to the coprocessor.
      * arg1 and return value of the callback are ignored.
      */
@@ -74,7 +73,7 @@ public:
 
     /**
      * Called when compiling MRC or MRC2 for this coprocessor.
-     * A return value of boost::blank will cause a coprocessor exception to be compiled.
+     * A return value of std::monostate will cause a coprocessor exception to be compiled.
      * The return value of the callback should contain word from coprocessor.
      * The low word of the return value will be stored in Rt.
      * arg0 and arg1 of the callback are ignored.
@@ -83,7 +82,7 @@ public:
 
     /**
      * Called when compiling MRRC or MRRC2 for this coprocessor.
-     * A return value of boost::blank will cause a coprocessor exception to be compiled.
+     * A return value of std::monostate will cause a coprocessor exception to be compiled.
      * The return value of the callback should contain words from coprocessor.
      * The low word of the return value will be stored in Rt.
      * The high word of the return value will be stored in Rt2.
