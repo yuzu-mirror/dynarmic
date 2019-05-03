@@ -679,6 +679,11 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    // SEV<c>
+    bool thumb16_SEV() {
+        return RaiseException(Exception::SendEvent);
+    }
+
     // SXTH <Rd>, <Rm>
     // Rd cannot encode R15.
     bool thumb16_SXTH(Reg m, Reg d) {

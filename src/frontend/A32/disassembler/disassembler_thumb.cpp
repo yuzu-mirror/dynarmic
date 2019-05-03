@@ -250,6 +250,10 @@ public:
         return "nop";
     }
 
+    std::string thumb16_SEV() {
+        return "sev";
+    }
+
     std::string thumb16_SXTH(Reg m, Reg d) {
         return fmt::format("sxth {}, {}", d, m);
     }
