@@ -127,6 +127,7 @@ std::optional<std::reference_wrapper<const Thumb32Matcher<V>>> DecodeThumb32(u32
         //INST(&V::thumb32_WFE,            "WFE",                      "111100111010----10-0-00000000010"),
         //INST(&V::thumb32_WFI,            "WFI",                      "111100111010----10-0-00000000011"),
         //INST(&V::thumb32_SEV,            "SEV",                      "111100111010----10-0-00000000100"),
+        //INST(&V::thumb32_SEVL,           "SEVL",                     "111100111010----10-0-00000000101"),
         //INST(&V::thumb32_DBG,            "DBG",                      "111100111010----10-0-0001111----"),
         //INST(&V::thumb32_CPS,            "CPS",                      "111100111010----10-0------------"),
 

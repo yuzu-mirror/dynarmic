@@ -34,7 +34,7 @@ enum class Exception {
     WaitForEvent,
     /// A SEV instruction was executed. The event register of all PEs should be set.
     SendEvent,
-    /// A SEV instruction was executed. The event register of the current PE should be set.
+    /// A SEVL instruction was executed. The event register of the current PE should be set.
     SendEventLocal,
     /// A YIELD instruction was executed.
     Yield,

@@ -41,6 +41,13 @@ struct ThumbTranslatorVisitor final {
         return false;
     }
 
+    bool RaiseException(Exception exception) {
+        ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 2));
+        ir.ExceptionRaised(exception);
+        ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
+        return false;
+    }
+
     // LSLS <Rd>, <Rm>, #<imm5>
     bool thumb16_LSL_imm(Imm<5> imm5, Reg m, Reg d) {
         const u8 shift_n = imm5.ZeroExtend<u8>();
@@ -665,6 +672,36 @@ struct ThumbTranslatorVisitor final {
 
         ir.SetRegister(d, result.result);
         return true;
+    }
+
+    // NOP<c>
+    bool thumb16_NOP() {
+        return true;
+    }
+
+    // SEV<c>
+    bool thumb16_SEV() {
+        return RaiseException(Exception::SendEvent);
+    }
+
+    // SEVL<c>
+    bool thumb16_SEVL() {
+        return RaiseException(Exception::SendEventLocal);
+    }
+
+    // WFE<c>
+    bool thumb16_WFE() {
+        return RaiseException(Exception::WaitForEvent);
+    }
+
+    // WFI<c>
+    bool thumb16_WFI() {
+        return RaiseException(Exception::WaitForInterrupt);
+    }
+
+    // YIELD<c>
+    bool thumb16_YIELD() {
+        return RaiseException(Exception::Yield);
     }
 
     // SXTH <Rd>, <Rm>

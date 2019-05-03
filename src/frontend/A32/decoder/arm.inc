@@ -97,6 +97,7 @@ INST(arm_UXTAH,         "UXTAH",               "cccc01101111nnnnddddrr000111mmmm
 INST(arm_PLD_imm,       "PLD (imm)",           "11110101uz01nnnn1111iiiiiiiiiiii") // v5E for PLD; v7 for PLDW
 INST(arm_PLD_reg,       "PLD (reg)",           "11110111uz01nnnn1111iiiiitt0mmmm") // v5E for PLD; v7 for PLDW
 INST(arm_SEV,           "SEV",                 "----0011001000001111000000000100") // v6K
+INST(arm_SEVL,          "SEVL",                "----0011001000001111000000000101") // v8
 INST(arm_WFE,           "WFE",                 "----0011001000001111000000000010") // v6K
 INST(arm_WFI,           "WFI",                 "----0011001000001111000000000011") // v6K
 INST(arm_YIELD,         "YIELD",               "----0011001000001111000000000001") // v6K

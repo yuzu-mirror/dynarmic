@@ -26,6 +26,8 @@ enum class Exception {
     UnpredictableInstruction,
     /// A SEV instruction was executed. The event register of all PEs should be set.
     SendEvent,
+    /// A SEVL instruction was executed. The event register of the current PE should be set.
+    SendEventLocal,
     /// A WFI instruction was executed. You may now enter a low-power state.
     WaitForInterrupt,
     /// A WFE instruction was executed. You may now enter a low-power state if the event register is clear.
