@@ -135,17 +135,18 @@ void A32JitState::ResetRSB() {
  *
  * SSE MXCSR mode bits
  * -------------------
- * FZ   bit 15  Flush To Zero
- * DAZ  bit 6   Denormals Are Zero
+ * FZ   bit 15      Flush To Zero
+ * DAZ  bit 6       Denormals Are Zero
  * RN   bits 13-14  Round to {0 = Nearest, 1 = Negative, 2 = Positive, 3 = Zero}
  *
  * VFP FPSCR mode bits
  * -------------------
- * DN   bit 25  Default NaN
- * FZ   bit 24  Flush to Zero
+ * AHP      bit 26      Alternate half-precision
+ * DN       bit 25      Default NaN
+ * FZ       bit 24      Flush to Zero
  * RMode    bits 22-23  Round to {0 = Nearest, 1 = Positive, 2 = Negative, 3 = Zero}
  * Stride   bits 20-21  Vector stride
- * Len  bits 16-18  Vector length
+ * Len      bits 16-18  Vector length
  */
 
 // NZCV; QC (ASMID only), AHP; DN, FZ, RMode, Stride; SBZP; Len; trap enables; cumulative bits
