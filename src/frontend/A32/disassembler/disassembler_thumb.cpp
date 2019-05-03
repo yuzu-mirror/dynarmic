@@ -246,6 +246,10 @@ public:
         return fmt::format("sub sp, sp, #{}", imm32);
     }
 
+    std::string thumb16_NOP() {
+        return "nop";
+    }
+
     std::string thumb16_SXTH(Reg m, Reg d) {
         return fmt::format("sxth {}, {}", d, m);
     }

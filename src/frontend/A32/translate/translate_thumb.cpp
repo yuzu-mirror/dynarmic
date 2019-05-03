@@ -667,6 +667,11 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    // NOP<c>
+    bool thumb16_NOP() {
+        return true;
+    }
+
     // SXTH <Rd>, <Rm>
     // Rd cannot encode R15.
     bool thumb16_SXTH(Reg m, Reg d) {
