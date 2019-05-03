@@ -98,7 +98,8 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             "arm_LDM_eret", "arm_LDM_usr",
             "arm_STM_usr",
             // Hint instructions
-            "arm_NOP", "arm_PLD", "arm_SEV", "arm_WFE", "arm_WFI", "arm_YIELD",
+            "arm_NOP", "arm_PLD_imm", "arm_PLD_reg", "arm_SEV",
+            "arm_WFE", "arm_WFI", "arm_YIELD",
             // E, T, J
             "arm_BLX_reg", "arm_BLX_imm", "arm_BXJ", "arm_SETEND",
             // Coprocessor

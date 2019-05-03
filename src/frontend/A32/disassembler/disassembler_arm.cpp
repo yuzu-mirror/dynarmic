@@ -436,7 +436,18 @@ public:
     }
 
     // Hint instructions
-    std::string arm_PLD() { return "pld <unimplemented>"; }
+    std::string arm_PLD_imm(bool add, bool R, Reg n, Imm<12> imm12) {
+        const char sign = add ? '+' : '-';
+        const char* const w = R ? "" : "w";
+
+        return fmt::format("pld{} [{}, #{}{:x}]", w, n, sign, imm12.ZeroExtend());
+    }
+    std::string arm_PLD_reg(bool add, bool R, Reg n, Imm<5> imm5, ShiftType shift, Reg m) {
+        const char sign = add ? '+' : '-';
+        const char* const w = R ? "" : "w";
+
+        return fmt::format("pld{} [{}, {}{}{}]", w, n, sign, m, ShiftStr(shift, imm5));
+    }
     std::string arm_SEV() { return "sev <unimplemented>"; }
     std::string arm_WFE() { return "wfe <unimplemented>"; }
     std::string arm_WFI() { return "wfi <unimplemented>"; }

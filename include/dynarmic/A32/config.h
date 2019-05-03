@@ -36,6 +36,8 @@ enum class Exception {
     Breakpoint,
     /// A PLD instruction was executed.
     PreloadData,
+    /// A PLDW instruction was executed.
+    PreloadDataWithIntentToWrite,
 };
 
 /// These function pointers may be inserted into compiled code.
