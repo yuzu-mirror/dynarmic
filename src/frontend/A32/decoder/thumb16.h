@@ -90,6 +90,7 @@ std::optional<std::reference_wrapper<const Thumb16Matcher<V>>> DecodeThumb16(u16
         // Hint instructions
         INST(&V::thumb16_NOP,            "NOP",                      "1011111100000000"), // v6T2
         INST(&V::thumb16_SEV,            "SEV",                      "1011111101000000"), // v7
+        INST(&V::thumb16_SEVL,           "SEVL",                     "1011111101010000"), // v8
         INST(&V::thumb16_WFE,            "WFE",                      "1011111100100000"), // v7
         INST(&V::thumb16_WFI,            "WFI",                      "1011111100110000"), // v7
         INST(&V::thumb16_YIELD,          "YIELD",                    "1011111100010000"), // v7

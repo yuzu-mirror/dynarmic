@@ -254,6 +254,10 @@ public:
         return "sev";
     }
 
+    std::string thumb16_SEVL() {
+        return "sevl";
+    }
+
     std::string thumb16_WFE() {
         return "wfe";
     }

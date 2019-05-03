@@ -684,6 +684,11 @@ struct ThumbTranslatorVisitor final {
         return RaiseException(Exception::SendEvent);
     }
 
+    // SEVL<c>
+    bool thumb16_SEVL() {
+        return RaiseException(Exception::SendEventLocal);
+    }
+
     // WFE<c>
     bool thumb16_WFE() {
         return RaiseException(Exception::WaitForEvent);
