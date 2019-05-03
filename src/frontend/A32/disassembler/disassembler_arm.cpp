@@ -448,10 +448,18 @@ public:
 
         return fmt::format("pld{} [{}, {}{}{}]", w, n, sign, m, ShiftStr(shift, imm5));
     }
-    std::string arm_SEV() { return "sev <unimplemented>"; }
-    std::string arm_WFE() { return "wfe <unimplemented>"; }
-    std::string arm_WFI() { return "wfi <unimplemented>"; }
-    std::string arm_YIELD() { return "yield <unimplemented>"; }
+    std::string arm_SEV() {
+        return "sev";
+    }
+    std::string arm_WFE() {
+        return "wfe";
+    }
+    std::string arm_WFI() {
+        return "wfi";
+    }
+    std::string arm_YIELD() {
+        return "yield";
+    }
 
     // Load/Store instructions
     std::string arm_LDR_lit(Cond cond, bool U, Reg t, Imm<12> imm12) {
