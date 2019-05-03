@@ -167,6 +167,7 @@ struct ArmTranslatorVisitor final {
     bool arm_PLD_imm(bool add, bool R, Reg n, Imm<12> imm12);
     bool arm_PLD_reg(bool add, bool R, Reg n, Imm<5> imm5, ShiftType shift, Reg m);
     bool arm_SEV();
+    bool arm_SEVL();
     bool arm_WFE();
     bool arm_WFI();
     bool arm_YIELD();

@@ -451,6 +451,9 @@ public:
     std::string arm_SEV() {
         return "sev";
     }
+    std::string arm_SEVL() {
+        return "sevl";
+    }
     std::string arm_WFE() {
         return "wfe";
     }

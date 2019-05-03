@@ -33,6 +33,10 @@ bool ArmTranslatorVisitor::arm_SEV() {
     return RaiseException(Exception::SendEvent);
 }
 
+bool ArmTranslatorVisitor::arm_SEVL() {
+    return RaiseException(Exception::SendEventLocal);
+}
+
 bool ArmTranslatorVisitor::arm_WFE() {
     return RaiseException(Exception::WaitForEvent);
 }
