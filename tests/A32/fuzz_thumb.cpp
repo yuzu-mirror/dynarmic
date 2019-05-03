@@ -291,6 +291,7 @@ TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
                          const u32 c = Dynarmic::Common::Bits<9, 12>(inst);
                          return c < 0b1110; // Don't want SWI or undefined instructions.
                      }),
+        ThumbInstGen("1011o0i1iiiiinnn"), // CBZ/CBNZ
         ThumbInstGen("10110110011x0xxx"), // CPS
 
         // TODO: We currently have no control over the generated

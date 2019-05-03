@@ -116,6 +116,7 @@ std::optional<std::reference_wrapper<const Thumb16Matcher<V>>> DecodeThumb16(u16
         // Branch instructions
         INST(&V::thumb16_BX,             "BX",                       "010001110mmmm000"), // v4T
         INST(&V::thumb16_BLX_reg,        "BLX (reg)",                "010001111mmmm000"), // v5T
+        INST(&V::thumb16_CBZ_CBNZ,       "CBZ/CBNZ",                 "1011o0i1iiiiinnn"), // v6T2
         INST(&V::thumb16_UDF,            "UDF",                      "11011110--------"),
         INST(&V::thumb16_SVC,            "SVC",                      "11011111xxxxxxxx"),
         INST(&V::thumb16_B_t1,           "B (T1)",                   "1101ccccvvvvvvvv"),
