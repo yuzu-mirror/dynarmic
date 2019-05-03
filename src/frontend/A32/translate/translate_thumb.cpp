@@ -684,6 +684,11 @@ struct ThumbTranslatorVisitor final {
         return RaiseException(Exception::SendEvent);
     }
 
+    // WFE<c>
+    bool thumb16_WFE() {
+        return RaiseException(Exception::WaitForEvent);
+    }
+
     // SXTH <Rd>, <Rm>
     // Rd cannot encode R15.
     bool thumb16_SXTH(Reg m, Reg d) {
