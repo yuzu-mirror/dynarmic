@@ -39,7 +39,7 @@ EmitX64::EmitX64(BlockOfCode& code)
 EmitX64::~EmitX64() = default;
 
 std::optional<EmitX64::BlockDescriptor> EmitX64::GetBasicBlock(IR::LocationDescriptor descriptor) const {
-    auto iter = block_descriptors.find(descriptor);
+    const auto iter = block_descriptors.find(descriptor);
     if (iter == block_descriptors.end()) {
         return std::nullopt;
     }
@@ -63,7 +63,7 @@ void EmitX64::EmitIdentity(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, IR::LocationDescriptor target) {
     using namespace Xbyak::util;
 
-    auto iter = block_descriptors.find(target);
+    const auto iter = block_descriptors.find(target);
     CodePtr target_code_ptr = iter != block_descriptors.end()
                             ? iter->second.entrypoint
                             : code.GetReturnFromRunCodeAddress();
@@ -86,11 +86,11 @@ void EmitX64::PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, I
 void EmitX64::EmitPushRSB(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(args[0].IsImmediate());
-    u64 unique_hash_of_target = args[0].GetImmediateU64();
+    const u64 unique_hash_of_target = args[0].GetImmediateU64();
 
     ctx.reg_alloc.ScratchGpr({HostLoc::RCX});
-    Xbyak::Reg64 loc_desc_reg = ctx.reg_alloc.ScratchGpr();
-    Xbyak::Reg64 index_reg = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 loc_desc_reg = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 index_reg = ctx.reg_alloc.ScratchGpr();
 
     PushRSBHelper(loc_desc_reg, index_reg, IR::LocationDescriptor{unique_hash_of_target});
 }
@@ -134,8 +134,8 @@ void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
         }
     }();
 
-    Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
-    Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
+    const Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
+    const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
     code.cmp(value, 0);
     code.lahf();
     code.seto(code.al);
@@ -146,7 +146,7 @@ void EmitX64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (args[0].IsImmediate()) {
-        Xbyak::Reg32 nzcv = ctx.reg_alloc.ScratchGpr().cvt32();
+        const Xbyak::Reg32 nzcv = ctx.reg_alloc.ScratchGpr().cvt32();
         u32 value = 0;
         value |= Common::Bit<31>(args[0].GetImmediateU32()) ? (1 << 15) : 0;
         value |= Common::Bit<30>(args[0].GetImmediateU32()) ? (1 << 14) : 0;
@@ -155,7 +155,7 @@ void EmitX64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {
         code.mov(nzcv, value);
         ctx.reg_alloc.DefineValue(inst, nzcv);
     } else {
-        Xbyak::Reg32 nzcv = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+        const Xbyak::Reg32 nzcv = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         // TODO: Optimize
         code.shr(nzcv, 28);
         code.imul(nzcv, nzcv, 0b00010000'10000001);
@@ -353,7 +353,7 @@ void EmitX64::InvalidateBasicBlocks(const std::unordered_set<IR::LocationDescrip
     SCOPE_EXIT { code.DisableWriting(); };
 
     for (const auto &descriptor : locations) {
-        auto it = block_descriptors.find(descriptor);
+        const auto it = block_descriptors.find(descriptor);
         if (it == block_descriptors.end()) {
             continue;
         }
