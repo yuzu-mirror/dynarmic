@@ -99,7 +99,7 @@ std::optional<std::reference_wrapper<const Thumb16Matcher<V>>> DecodeThumb16(u16
         INST(&V::thumb16_REV,            "REV",                      "1011101000mmmddd"), // v6
         INST(&V::thumb16_REV16,          "REV16",                    "1011101001mmmddd"), // v6
         INST(&V::thumb16_REVSH,          "REVSH",                    "1011101011mmmddd"), // v6
-        //INST(&V::thumb16_BKPT,           "BKPT",                     "10111110xxxxxxxx"), // v5
+        INST(&V::thumb16_BKPT,           "BKPT",                     "10111110xxxxxxxx"), // v5
 
         // Store/Load multiple registers
         INST(&V::thumb16_STMIA,          "STMIA",                    "11000nnnxxxxxxxx"),
