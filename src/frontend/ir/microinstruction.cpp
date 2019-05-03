@@ -477,10 +477,15 @@ bool Inst::IsCoprocessorInstruction() const {
     }
 }
 
+bool Inst::IsSetCheckBitOperation() const {
+    return op == Opcode::A32SetCheckBit ||
+           op == Opcode::A64SetCheckBit;
+}
+
 bool Inst::MayHaveSideEffects() const {
     return op == Opcode::PushRSB                        ||
-           op == Opcode::A64SetCheckBit                 ||
            op == Opcode::A64DataCacheOperationRaised    ||
+           IsSetCheckBitOperation()                     ||
            IsBarrier()                                  ||
            CausesCPUException()                         ||
            WritesToCoreRegister()                       ||

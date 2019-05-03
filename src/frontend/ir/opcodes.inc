@@ -5,6 +5,7 @@ OPCODE(Identity,                                            Opaque,         Opaq
 OPCODE(Breakpoint,                                          Void,                                                                           )
 
 // A32 Context getters/setters
+A32OPC(SetCheckBit,                                         Void,           U1                                                              )
 A32OPC(GetRegister,                                         U32,            A32Reg                                                          )
 A32OPC(GetExtendedRegister32,                               U32,            A32ExtReg                                                       )
 A32OPC(GetExtendedRegister64,                               U64,            A32ExtReg                                                       )
