@@ -4,6 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
+#include <cstdio>
 #include <map>
 
 #include "common/assert.h"
@@ -22,7 +23,7 @@ void VerificationPass(const IR::Block& block) {
             const IR::Type t1 = inst.GetArg(i).GetType();
             const IR::Type t2 = IR::GetArgTypeOf(inst.GetOpcode(), i);
             if (!IR::AreTypesCompatible(t1, t2)) {
-                puts(IR::DumpBlock(block).c_str());
+                std::puts(IR::DumpBlock(block).c_str());
                 ASSERT(false);
             }
         }
