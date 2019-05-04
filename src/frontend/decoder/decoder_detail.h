@@ -115,7 +115,7 @@ private:
                          CallRetT (Visitor::* const fn)(Args...),
                          const std::array<opcode_type, sizeof...(iota)> arg_masks,
                          const std::array<size_t, sizeof...(iota)> arg_shifts) {
-            static_assert(std::is_same<visitor_type, Visitor>::value, "Member function is not from Matcher's Visitor");
+            static_assert(std::is_same_v<visitor_type, Visitor>, "Member function is not from Matcher's Visitor");
             return [fn, arg_masks, arg_shifts](Visitor& v, opcode_type instruction) {
                 (void)instruction;
                 (void)arg_masks;
@@ -132,7 +132,7 @@ private:
                          CallRetT (Visitor::* const fn)(Args...) const,
                          const std::array<opcode_type, sizeof...(iota)> arg_masks,
                          const std::array<size_t, sizeof...(iota)> arg_shifts) {
-            static_assert(std::is_same<visitor_type, const Visitor>::value, "Member function is not from Matcher's Visitor");
+            static_assert(std::is_same_v<visitor_type, const Visitor>, "Member function is not from Matcher's Visitor");
             return [fn, arg_masks, arg_shifts](const Visitor& v, opcode_type instruction) {
                 (void)instruction;
                 (void)arg_masks;
