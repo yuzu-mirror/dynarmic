@@ -820,6 +820,10 @@ public:
         const u32 imm = concatenate(imm4, imm12).ZeroExtend();
         return fmt::format("movt{} {}, #{}", CondToString(cond), d, imm);
     }
+    std::string arm_MOVW(Cond cond, Imm<4> imm4, Reg d, Imm<12> imm12) {
+        const u32 imm = concatenate(imm4, imm12).ZeroExtend();
+        return fmt::format("movw{}, {}, #{}", CondToString(cond), d, imm);
+    }
     std::string arm_NOP() {
         return "nop";
     }
