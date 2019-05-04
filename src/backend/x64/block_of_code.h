@@ -68,7 +68,7 @@ public:
     /// Code emitter: Calls the function
     template <typename FunctionPointer>
     void CallFunction(FunctionPointer fn) {
-        static_assert(std::is_pointer<FunctionPointer>() && std::is_function<std::remove_pointer_t<FunctionPointer>>(),
+        static_assert(std::is_pointer_v<FunctionPointer> && std::is_function_v<std::remove_pointer_t<FunctionPointer>>,
                       "Supplied type must be a pointer to a function");
 
         const u64 address  = reinterpret_cast<u64>(fn);
