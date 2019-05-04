@@ -31,8 +31,9 @@ void VerificationPass(const IR::Block& block) {
     std::map<IR::Inst*, size_t> actual_uses;
     for (const auto& inst : block) {
         for (size_t i = 0; i < inst.NumArgs(); i++) {
-            if (!inst.GetArg(i).IsImmediate()) {
-                actual_uses[inst.GetArg(i).GetInst()]++;
+            const auto arg = inst.GetArg(i);
+            if (!arg.IsImmediate()) {
+                actual_uses[arg.GetInst()]++;
             }
         }
     }
