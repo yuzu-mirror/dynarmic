@@ -1018,15 +1018,15 @@ void A32EmitX64::EmitA32CoprocSendOneWord(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     const auto action = coproc->CompileSendOneWord(two, opc1, CRn, CRm, opc2);
-    switch (action.which()) {
+    switch (action.index()) {
     case 0:
         EmitCoprocessorException();
         return;
     case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, boost::get<A32::Coprocessor::Callback>(action), nullptr, args[1]);
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), nullptr, args[1]);
         return;
     case 2: {
-        const u32* const destination_ptr = boost::get<u32*>(action);
+        const u32* const destination_ptr = std::get<u32*>(action);
 
         const Xbyak::Reg32 reg_word = ctx.reg_alloc.UseGpr(args[1]).cvt32();
         const Xbyak::Reg64 reg_destination_addr = ctx.reg_alloc.ScratchGpr();
@@ -1057,15 +1057,15 @@ void A32EmitX64::EmitA32CoprocSendTwoWords(A32EmitContext& ctx, IR::Inst* inst) 
     }
 
     const auto action = coproc->CompileSendTwoWords(two, opc, CRm);
-    switch (action.which()) {
+    switch (action.index()) {
     case 0:
         EmitCoprocessorException();
         return;
     case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, boost::get<A32::Coprocessor::Callback>(action), nullptr, args[1], args[2]);
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), nullptr, args[1], args[2]);
         return;
     case 2: {
-        const auto destination_ptrs = boost::get<std::array<u32*, 2>>(action);
+        const auto destination_ptrs = std::get<std::array<u32*, 2>>(action);
 
         const Xbyak::Reg32 reg_word1 = ctx.reg_alloc.UseGpr(args[1]).cvt32();
         const Xbyak::Reg32 reg_word2 = ctx.reg_alloc.UseGpr(args[2]).cvt32();
@@ -1100,15 +1100,15 @@ void A32EmitX64::EmitA32CoprocGetOneWord(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     const auto action = coproc->CompileGetOneWord(two, opc1, CRn, CRm, opc2);
-    switch (action.which()) {
+    switch (action.index()) {
     case 0:
         EmitCoprocessorException();
         return;
     case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, boost::get<A32::Coprocessor::Callback>(action), inst);
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), inst);
         return;
     case 2: {
-        const u32* const source_ptr = boost::get<u32*>(action);
+        const u32* const source_ptr = std::get<u32*>(action);
 
         const Xbyak::Reg32 reg_word = ctx.reg_alloc.ScratchGpr().cvt32();
         const Xbyak::Reg64 reg_source_addr = ctx.reg_alloc.ScratchGpr();
@@ -1139,15 +1139,15 @@ void A32EmitX64::EmitA32CoprocGetTwoWords(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     auto action = coproc->CompileGetTwoWords(two, opc, CRm);
-    switch (action.which()) {
+    switch (action.index()) {
     case 0:
         EmitCoprocessorException();
         return;
     case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, boost::get<A32::Coprocessor::Callback>(action), inst);
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), inst);
         return;
     case 2: {
-        const auto source_ptrs = boost::get<std::array<u32*, 2>>(action);
+        const auto source_ptrs = std::get<std::array<u32*, 2>>(action);
 
         const Xbyak::Reg64 reg_result = ctx.reg_alloc.ScratchGpr();
         const Xbyak::Reg64 reg_destination_addr = ctx.reg_alloc.ScratchGpr();
