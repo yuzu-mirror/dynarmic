@@ -177,9 +177,6 @@ void A32JitState::SetFpscr(u32 FPSCR) {
 
     // Exception masks / enables
     guest_MXCSR |= 0x00001f80; // mask all
-    //guest_MXCSR |= (~FPSCR >> 1) & 0b0000010000000;  // IM = ~IOE
-    //guest_MXCSR |= (~FPSCR >> 7) & 0b0000100000000;  // DM = ~IDE
-    //guest_MXCSR |= (~FPSCR     ) & 0b1111000000000;  // PM, UM, OM, ZM = ~IXE, ~UFE, ~OFE, ~DZE
 
     // RMode
     const std::array<u32, 4> MXCSR_RMode {0x0, 0x4000, 0x2000, 0x6000};
