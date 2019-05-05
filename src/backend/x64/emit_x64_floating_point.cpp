@@ -52,7 +52,6 @@ constexpr u64 f64_nan = 0x7ff8000000000000u;
 constexpr u64 f64_non_sign_mask = 0x7fffffffffffffffu;
 constexpr u64 f64_smallest_normal = 0x0010000000000000u;
 
-constexpr u64 f64_penultimate_positive_denormal = 0x000ffffffffffffeu;
 constexpr u64 f64_max_s32 = 0x41dfffffffc00000u; // 2147483647 as a double
 constexpr u64 f64_min_u32 = 0x0000000000000000u; // 0 as a double
 constexpr u64 f64_max_u32 = 0x41efffffffe00000u; // 4294967295 as a double
@@ -89,33 +88,21 @@ std::optional<int> ConvertRoundingModeToX64Immediate(FP::RoundingMode rounding_m
 }
 
 template<size_t fsize>
-void DenormalsAreZero(BlockOfCode& code, Xbyak::Xmm xmm_value, Xbyak::Reg64 gpr_scratch) {
-    Xbyak::Label end;
-
-    if constexpr (fsize == 32) {
-        code.movd(gpr_scratch.cvt32(), xmm_value);
-        code.and_(gpr_scratch.cvt32(), u32(0x7FFFFFFF));
-        code.sub(gpr_scratch.cvt32(), u32(1));
-        code.cmp(gpr_scratch.cvt32(), u32(0x007FFFFE));
-    } else {
-        auto mask = code.MConst(xword, f64_non_sign_mask);
-        mask.setBit(64);
-        auto penult_denormal = code.MConst(xword, f64_penultimate_positive_denormal);
-        penult_denormal.setBit(64);
-
-        code.movq(gpr_scratch, xmm_value);
-        code.and_(gpr_scratch, mask);
-        code.sub(gpr_scratch, u32(1));
-        code.cmp(gpr_scratch, penult_denormal);
+void DenormalsAreZero(BlockOfCode& code, EmitContext& ctx, std::initializer_list<Xbyak::Xmm> to_daz, Xbyak::Xmm tmp) {
+    if (ctx.FPCR().FZ()) {
+        for (const Xbyak::Xmm& xmm : to_daz) {
+            // TODO: Optimize
+            code.movaps(tmp, code.MConst(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
+            code.andps(tmp, xmm);
+            if constexpr (fsize == 32) {
+                code.pcmpgtd(tmp, code.MConst(xword, f32_smallest_normal - 1));
+            } else {
+                code.pcmpgtq(tmp, code.MConst(xword, f64_smallest_normal - 1));
+            }
+            code.orps(tmp, code.MConst(xword, fsize == 32 ? f32_negative_zero : f64_negative_zero));
+            code.andps(xmm, tmp);
+        }
     }
-
-    // We need to report back whether we've found a denormal on input.
-    // SSE doesn't do this for us when SSE's DAZ is enabled.
-
-    code.ja(end);
-    code.andps(xmm_value, code.MConst(xword, fsize == 32 ? f32_negative_zero : f64_negative_zero));
-    code.mov(dword[r15 + code.GetJitStateInfo().offsetof_fpsr_idc], u32(1 << 7));
-    code.L(end);
 }
 
 template<size_t fsize>
@@ -421,10 +408,7 @@ static void EmitFPMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
     const Xbyak::Reg64 gpr_scratch = ctx.reg_alloc.ScratchGpr();
 
-    if (ctx.FPCR().FZ()) {
-        DenormalsAreZero<fsize>(code, result, gpr_scratch);
-        DenormalsAreZero<fsize>(code, operand, gpr_scratch);
-    }
+    DenormalsAreZero<fsize>(code, ctx, {result, operand}, tmp);
 
     Xbyak::Label equal, end, nan;
 
@@ -483,13 +467,9 @@ static void EmitFPMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
         }
     };
 
-    if (ctx.FPCR().FZ()) {
-        DenormalsAreZero<fsize>(code, op1, tmp.cvt64());
-        DenormalsAreZero<fsize>(code, op2, tmp.cvt64());
-    }
-
     Xbyak::Label end, z, nan, op2_is_nan, snan, maybe_both_nan, normal;
 
+    DenormalsAreZero<fsize>(code, ctx, {op1, op2}, xmm0);
     FCODE(ucomis)(op1, op2);
     code.jz(z, code.T_NEAR);
     code.L(normal);

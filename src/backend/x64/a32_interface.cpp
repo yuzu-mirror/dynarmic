@@ -270,7 +270,6 @@ void TransferJitState(A32JitState& dest, const A32JitState& src, bool reset_rsb)
     dest.Reg = src.Reg;
     dest.ExtReg = src.ExtReg;
     dest.guest_MXCSR = src.guest_MXCSR;
-    dest.fpsr_idc = src.fpsr_idc;
     dest.fpcr_mode = src.fpcr_mode;
     dest.fpsr_nzcv = src.fpsr_nzcv;
     if (reset_rsb) {
