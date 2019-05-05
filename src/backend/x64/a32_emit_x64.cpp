@@ -220,11 +220,11 @@ void A32EmitX64::GenTerminalHandlers() {
     // PC ends up in ebp, location_descriptor ends up in rbx
     const auto calculate_location_descriptor = [this] {
         // This calculation has to match up with IREmitter::PushRSB
-        // TODO: Optimization is available here based on known state of FPSCR_mode and CPSR_et.
+        // TODO: Optimization is available here based on known state of fpcr_mode and CPSR_et.
         code.mov(ecx, MJitStateReg(A32::Reg::PC));
         code.mov(ebp, ecx);
         code.shl(rcx, 32);
-        code.mov(ebx, dword[r15 + offsetof(A32JitState, FPSCR_mode)]);
+        code.mov(ebx, dword[r15 + offsetof(A32JitState, fpcr_mode)]);
         code.or_(ebx, dword[r15 + offsetof(A32JitState, CPSR_et)]);
         code.or_(rbx, rcx);
     };

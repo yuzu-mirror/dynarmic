@@ -114,7 +114,7 @@ private:
 
         u32 pc = jit_state.Reg[15];
         A32::PSR cpsr{jit_state.Cpsr()};
-        A32::FPSCR fpscr{jit_state.FPSCR_mode};
+        A32::FPSCR fpscr{jit_state.fpcr_mode};
         A32::LocationDescriptor descriptor{pc, cpsr, fpscr};
 
         return this_.GetBasicBlock(descriptor).entrypoint;
@@ -271,7 +271,7 @@ void TransferJitState(A32JitState& dest, const A32JitState& src, bool reset_rsb)
     dest.ExtReg = src.ExtReg;
     dest.guest_MXCSR = src.guest_MXCSR;
     dest.fpsr_idc = src.fpsr_idc;
-    dest.FPSCR_mode = src.FPSCR_mode;
+    dest.fpcr_mode = src.fpcr_mode;
     dest.FPSCR_nzcv = src.FPSCR_nzcv;
     if (reset_rsb) {
         dest.ResetRSB();
