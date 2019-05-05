@@ -11,7 +11,7 @@
 namespace Dynarmic::FP {
 
 template<typename FPT>
-inline FPT FPNeg(FPT op) {
+constexpr FPT FPNeg(FPT op) {
     return op ^ FPInfo<FPT>::sign_mask;
 }
 
