@@ -156,12 +156,12 @@ constexpr u32 FPSCR_NZCV_MASK = 0xF0000000;
 u32 A32JitState::Fpscr() const {
     ASSERT((FPSCR_mode & ~FPSCR_MODE_MASK) == 0);
     ASSERT((FPSCR_nzcv & ~FPSCR_NZCV_MASK) == 0);
-    ASSERT((FPSCR_IDC & ~(1 << 7)) == 0);
+    ASSERT((fpsr_idc & ~(1 << 7)) == 0);
 
     u32 FPSCR = FPSCR_mode | FPSCR_nzcv;
     FPSCR |= (guest_MXCSR & 0b0000000000001);       // IOC = IE
     FPSCR |= (guest_MXCSR & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
-    FPSCR |= FPSCR_IDC;
+    FPSCR |= fpsr_idc;
     FPSCR |= fpsr_exc;
 
     return FPSCR;
@@ -181,7 +181,7 @@ void A32JitState::SetFpscr(u32 FPSCR) {
     guest_MXCSR |= MXCSR_RMode[(FPSCR >> 22) & 0x3];
 
     // Cumulative flags IDC, IOC, IXC, UFC, OFC, DZC
-    FPSCR_IDC = 0;
+    fpsr_idc = 0;
     fpsr_exc = FPSCR & 0x9F;
 
     if (Common::Bit<24>(FPSCR)) {

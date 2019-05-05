@@ -114,7 +114,7 @@ void DenormalsAreZero(BlockOfCode& code, Xbyak::Xmm xmm_value, Xbyak::Reg64 gpr_
 
     code.ja(end);
     code.andps(xmm_value, code.MConst(xword, fsize == 32 ? f32_negative_zero : f64_negative_zero));
-    code.mov(dword[r15 + code.GetJitStateInfo().offsetof_FPSCR_IDC], u32(1 << 7));
+    code.mov(dword[r15 + code.GetJitStateInfo().offsetof_fpsr_idc], u32(1 << 7));
     code.L(end);
 }
 
