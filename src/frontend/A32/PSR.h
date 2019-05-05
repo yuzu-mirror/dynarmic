@@ -68,49 +68,49 @@ public:
         return Common::Bit<31>(value);
     }
     void N(bool set) {
-        value = (value & ~0x80000000) | static_cast<u32>(set) << 31;
+        value = Common::ModifyBit<31>(value, set);
     }
 
     bool Z() const {
         return Common::Bit<30>(value);
     }
     void Z(bool set) {
-        value = (value & ~0x40000000) | static_cast<u32>(set) << 30;
+        value = Common::ModifyBit<30>(value, set);
     }
 
     bool C() const {
         return Common::Bit<29>(value);
     }
     void C(bool set) {
-        value = (value & ~0x20000000) | static_cast<u32>(set) << 29;
+        value = Common::ModifyBit<29>(value, set);
     }
 
     bool V() const {
         return Common::Bit<28>(value);
     }
     void V(bool set) {
-        value = (value & ~0x10000000) | static_cast<u32>(set) << 28;
+        value = Common::ModifyBit<28>(value, set);
     }
 
     bool Q() const {
         return Common::Bit<27>(value);
     }
     void Q(bool set) {
-        value = (value & ~0x8000000) | static_cast<u32>(set) << 27;
+        value = Common::ModifyBit<27>(value, set);
     }
 
     bool J() const {
         return Common::Bit<24>(value);
     }
     void J(bool set) {
-        value = (value & ~0x1000000) | static_cast<u32>(set) << 24;
+        value = Common::ModifyBit<24>(value, set);
     }
 
     u32 GE() const {
         return Common::Bits<16, 19>(value);
     }
     void GE(u32 data) {
-        value = (value & ~0xF0000) | (data & 0xF) << 16;
+        value = Common::ModifyBits<16, 19>(value, data);
     }
 
     ITState IT() const {
@@ -126,42 +126,42 @@ public:
         return Common::Bit<9>(value);
     }
     void E(bool set) {
-        value = (value & ~0x200) | static_cast<u32>(set) << 9;
+        value = Common::ModifyBit<9>(value, set);
     }
 
     bool A() const {
         return Common::Bit<8>(value);
     }
     void A(bool set) {
-        value = (value & ~0x100) | static_cast<u32>(set) << 8;
+        value = Common::ModifyBit<8>(value, set);
     }
 
     bool I() const {
         return Common::Bit<7>(value);
     }
     void I(bool set) {
-        value = (value & ~0x80) | static_cast<u32>(set) << 7;
+        value = Common::ModifyBit<7>(value, set);
     }
 
     bool F() const {
         return Common::Bit<6>(value);
     }
     void F(bool set) {
-        value = (value & ~0x40) | static_cast<u32>(set) << 6;
+        value = Common::ModifyBit<6>(value, set);
     }
 
     bool T() const {
         return Common::Bit<5>(value);
     }
     void T(bool set) {
-        value = (value & ~0x20) | static_cast<u32>(set) << 5;
+        value = Common::ModifyBit<5>(value, set);
     }
 
     Mode M() const {
         return static_cast<Mode>(Common::Bits<0, 4>(value));
     }
     void M(Mode mode) {
-        value = (value & ~0x1F) | (static_cast<u32>(mode) & 0x1F);
+        value = Common::ModifyBits<0, 4>(value, static_cast<u32>(mode));
     }
 
     u32 Value() const {
