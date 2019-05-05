@@ -22,4 +22,4 @@ enum class FPExc {
 
 void FPProcessException(FPExc exception, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP 
+} // namespace Dynarmic::FP

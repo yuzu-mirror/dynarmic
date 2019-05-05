@@ -43,7 +43,7 @@ struct cartesian_product_impl<RL, L1, L2, Ls...> {
 } // namespace detail
 
 /// Produces the cartesian product of a set of lists
-/// For example: 
+/// For example:
 /// cartesian_product<list<A, B>, list<D, E>> == list<list<A, D>, list<A, E>, list<B, D>, list<B, E>
 template<typename L1, typename... Ls>
 using cartesian_product = typename detail::cartesian_product_impl<fmap<list, L1>, Ls...>::type;

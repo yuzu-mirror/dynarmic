@@ -37,7 +37,7 @@ static RunCodeCallbacks GenRunCodeCallbacks(A64::UserCallbacks* cb, CodePtr (*Lo
 struct Jit::Impl final {
 public:
     Impl(Jit* jit, UserConfig conf)
-        : conf(conf) 
+        : conf(conf)
         , block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state})
         , emitter(block_of_code, conf, jit)
     {

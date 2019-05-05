@@ -89,7 +89,7 @@ bool FPMinMax(TranslatorVisitor& v, bool Q, bool sz, Vec Vn, Vec Vd, MinMaxOpera
 
         for (size_t i = start + 1; i < end; i++) {
             const IR::U32U64 element = v.ir.VectorGetElement(esize, operand, i);
- 
+
             result = op(result, element);
         }
 
@@ -128,7 +128,7 @@ bool ScalarMinMax(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vn, Vec Vd,
 
         return v.ir.ZeroExtendToWord(vec_element);
     };
-    
+
     const auto op_func = [&](const auto& a, const auto& b) {
         switch (operation) {
         case ScalarMinMaxOperation::Max:

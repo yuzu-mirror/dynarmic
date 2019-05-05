@@ -97,4 +97,4 @@ template u16 FPRecipEstimate<u16>(u16 op, FPCR fpcr, FPSR& fpsr);
 template u32 FPRecipEstimate<u32>(u32 op, FPCR fpcr, FPSR& fpsr);
 template u64 FPRecipEstimate<u64>(u64 op, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP 
+} // namespace Dynarmic::FP

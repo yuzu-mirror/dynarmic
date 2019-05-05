@@ -90,7 +90,7 @@ enum class LongOperationBehavior {
     Addition,
     Subtraction
 };
-    
+
 bool LongOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
                    LongOperationBehavior behavior, Signedness sign) {
     if (size == 0b11) {

@@ -124,7 +124,7 @@ IR::U32 SM4Rotation(IREmitter& ir, IR::U32 intval, IR::U32 round_result_low_word
 IR::U128 SM4Hash(IREmitter& ir, Vec Vn, Vec Vd, SM4RotationType type) {
     const IR::U128 n = ir.GetQ(Vn);
     IR::U128 roundresult = ir.GetQ(Vd);
-    
+
     for (size_t i = 0; i < 4; i++) {
         const IR::U32 round_key = ir.VectorGetElement(32, n, i);
 

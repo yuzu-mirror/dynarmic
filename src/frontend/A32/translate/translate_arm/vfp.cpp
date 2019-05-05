@@ -765,7 +765,7 @@ bool ArmTranslatorVisitor::vfp_VSTM_a1(Cond cond, bool p, bool u, bool D, bool w
     if (!p && !u && !w) {
         ASSERT_MSG(false, "Decode error");
     }
-    
+
     if (p && !w) {
         ASSERT_MSG(false, "Decode error");
     }

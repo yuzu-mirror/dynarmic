@@ -96,7 +96,7 @@ bool FPMultiplyByElementHalfPrecision(TranslatorVisitor& v, bool Q, Imm<1> L, Im
     const Vec Vm = Vmlo.ZeroExtend<Vec>();
     const size_t esize = 16;
     const size_t datasize = Q ? 128 : 64;
-    
+
     const IR::UAny element2 = v.ir.VectorGetElement(esize, v.V(idxdsize, Vm), index);
     const IR::U128 operand1 = v.V(datasize, Vn);
     const IR::U128 operand2 = Q ? v.ir.VectorBroadcast(esize, element2) : v.ir.VectorBroadcastLower(esize, element2);

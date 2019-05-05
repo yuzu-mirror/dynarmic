@@ -99,7 +99,7 @@ bool IntegerConvertToFloat(TranslatorVisitor& v, bool Q, bool sz, Vec Vn, Vec Vd
 
     const IR::U128 operand = v.V(datasize, Vn);
     const IR::U128 result = signedness == Signedness::Signed
-                          ? v.ir.FPVectorFromSignedFixed(esize, operand, 0, rounding_mode) 
+                          ? v.ir.FPVectorFromSignedFixed(esize, operand, 0, rounding_mode)
                           : v.ir.FPVectorFromUnsignedFixed(esize, operand, 0, rounding_mode);
 
     v.V(datasize, Vd, result);

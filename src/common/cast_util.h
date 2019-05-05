@@ -32,7 +32,7 @@ inline Dest BitCastPointee(const SourcePtr source) {
 
     std::aligned_storage_t<sizeof(Dest), alignof(Dest)> dest;
     std::memcpy(&dest, BitCast<void*>(source), sizeof(dest));
-    return reinterpret_cast<Dest&>(dest);    
+    return reinterpret_cast<Dest&>(dest);
 }
 
 } // namespace Dynarmic::Common

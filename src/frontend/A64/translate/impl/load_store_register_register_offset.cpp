@@ -67,7 +67,7 @@ static bool RegSharedDecodeAndOperation(TranslatorVisitor& v, size_t scale, u8 s
     case MemOp::PREFETCH:
         // TODO: Prefetch
         break;
-    default: 
+    default:
         UNREACHABLE();
     }
 

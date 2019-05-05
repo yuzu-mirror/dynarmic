@@ -33,7 +33,7 @@ u64 FPRoundInt(FPT op, FPCR fpcr, RoundingMode rounding, bool exact, FPSR& fpsr)
     if (type == FPType::Infinity) {
         return FPInfo<FPT>::Infinity(sign);
     }
-    
+
     if (type == FPType::Zero) {
         return FPInfo<FPT>::Zero(sign);
     }
@@ -93,4 +93,4 @@ template u64 FPRoundInt<u16>(u16 op, FPCR fpcr, RoundingMode rounding, bool exac
 template u64 FPRoundInt<u32>(u32 op, FPCR fpcr, RoundingMode rounding, bool exact, FPSR& fpsr);
 template u64 FPRoundInt<u64>(u64 op, FPCR fpcr, RoundingMode rounding, bool exact, FPSR& fpsr);
 
-} // namespace Dynarmic::FP 
+} // namespace Dynarmic::FP

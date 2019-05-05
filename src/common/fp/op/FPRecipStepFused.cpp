@@ -53,4 +53,4 @@ template u16 FPRecipStepFused<u16>(u16 op1, u16 op2, FPCR fpcr, FPSR& fpsr);
 template u32 FPRecipStepFused<u32>(u32 op1, u32 op2, FPCR fpcr, FPSR& fpsr);
 template u64 FPRecipStepFused<u64>(u64 op1, u64 op2, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP 
+} // namespace Dynarmic::FP

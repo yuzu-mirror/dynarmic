@@ -126,7 +126,7 @@ void FoldLeastSignificantByte(IR::Inst& inst) {
     if (!inst.AreAllArgsImmediates()) {
         return;
     }
-    
+
     const auto operand = inst.GetArg(0);
     inst.ReplaceUsesWith(IR::Value{static_cast<u8>(operand.GetImmediateAsU64())});
 }

@@ -54,4 +54,4 @@ template u16 FPRSqrtEstimate<u16>(u16 op, FPCR fpcr, FPSR& fpsr);
 template u32 FPRSqrtEstimate<u32>(u32 op, FPCR fpcr, FPSR& fpsr);
 template u64 FPRSqrtEstimate<u64>(u64 op, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP 
+} // namespace Dynarmic::FP
