@@ -28,6 +28,7 @@ add_library(dynarmic
     common/fp/op/FPConvert.h
     common/fp/op/FPMulAdd.cpp
     common/fp/op/FPMulAdd.h
+    common/fp/op/FPNeg.h
     common/fp/op/FPRecipEstimate.cpp
     common/fp/op/FPRecipEstimate.h
     common/fp/op/FPRecipExponent.cpp
