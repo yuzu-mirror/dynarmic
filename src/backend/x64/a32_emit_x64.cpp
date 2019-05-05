@@ -748,7 +748,7 @@ void A32EmitX64::EmitA32SetFpscr(A32EmitContext& ctx, IR::Inst* inst) {
 
 void A32EmitX64::EmitA32GetFpscrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
-    code.mov(result, dword[r15 + offsetof(A32JitState, FPSCR_nzcv)]);
+    code.mov(result, dword[r15 + offsetof(A32JitState, fpsr_nzcv)]);
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
@@ -761,7 +761,7 @@ void A32EmitX64::EmitA32SetFpscrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
     code.shl(value, 16);
     code.and_(value, 0xF0000000);
 
-    code.mov(dword[r15 + offsetof(A32JitState, FPSCR_nzcv)], value);
+    code.mov(dword[r15 + offsetof(A32JitState, fpsr_nzcv)], value);
 }
 
 void A32EmitX64::EmitA32ClearExclusive(A32EmitContext&, IR::Inst*) {
