@@ -71,13 +71,13 @@ constexpr std::array<int, A64Unicorn::num_gprs> gpr_ids{
 };
 
 A64Unicorn::RegisterArray A64Unicorn::GetRegisters() const {
-    RegisterArray regs;
+    RegisterArray regs{};
     RegisterPtrArray ptrs;
     for (size_t i = 0; i < ptrs.size(); ++i)
         ptrs[i] = &regs[i];
 
     CHECKED(uc_reg_read_batch(uc, const_cast<int*>(gpr_ids.data()),
-                              reinterpret_cast<void**>(ptrs.data()), num_gprs));
+                              reinterpret_cast<void**>(ptrs.data()), static_cast<int>(num_gprs)));
     return regs;
 }
 
@@ -87,7 +87,7 @@ void A64Unicorn::SetRegisters(const RegisterArray& value) {
         ptrs[i] = &value[i];
 
     CHECKED(uc_reg_write_batch(uc, const_cast<int*>(gpr_ids.data()),
-                               reinterpret_cast<void**>(const_cast<u64**>(ptrs.data())), num_gprs));
+                               reinterpret_cast<void**>(const_cast<u64**>(ptrs.data())), static_cast<int>(num_gprs)));
 }
 
 constexpr std::array<int, A64Unicorn::num_vecs> vec_ids{
@@ -98,13 +98,13 @@ constexpr std::array<int, A64Unicorn::num_vecs> vec_ids{
 };
 
 A64Unicorn::VectorArray A64Unicorn::GetVectors() const {
-    VectorArray vecs;
+    VectorArray vecs{};
     VectorPtrArray ptrs;
     for (size_t i = 0; i < ptrs.size(); ++i)
         ptrs[i] = &vecs[i];
 
     CHECKED(uc_reg_read_batch(uc, const_cast<int*>(vec_ids.data()),
-                              reinterpret_cast<void**>(ptrs.data()), num_vecs));
+                              reinterpret_cast<void**>(ptrs.data()), static_cast<int>(num_vecs)));
 
     return vecs;
 }
@@ -115,7 +115,7 @@ void A64Unicorn::SetVectors(const VectorArray& value) {
         ptrs[i] = &value[i];
 
     CHECKED(uc_reg_write_batch(uc, const_cast<int*>(vec_ids.data()),
-                               reinterpret_cast<void* const *>(const_cast<Vector**>(ptrs.data())), num_vecs));
+                               reinterpret_cast<void* const *>(const_cast<Vector**>(ptrs.data())), static_cast<int>(num_vecs)));
 }
 
 u32 A64Unicorn::GetFpcr() const {

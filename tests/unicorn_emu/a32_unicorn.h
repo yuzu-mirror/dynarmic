@@ -9,7 +9,13 @@
 #include <array>
 #include <vector>
 
+#ifdef _MSC_VER
+#pragma warning(push, 0)
 #include <unicorn/unicorn.h>
+#pragma warning(pop)
+#else
+#include <unicorn/unicorn.h>
+#endif
 
 #include "common/common_types.h"
 

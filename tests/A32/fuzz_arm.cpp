@@ -126,7 +126,7 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
     while (true) {
         const size_t index = RandInt<size_t>(0, instructions.generators.size() - 1);
         const u32 inst = instructions.generators[index].Generate();
-        
+
         if (std::any_of(instructions.invalid.begin(), instructions.invalid.end(), [inst](const auto& invalid) { return invalid.Match(inst); })) {
             continue;
         }
@@ -150,7 +150,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit, A32Unicorn<ArmTestEnv>& uni
                             const std::vector<u32>& instructions, const u32 cpsr, const u32 fpscr) {
     const u32 initial_pc = regs[15];
     const u32 num_words = initial_pc / sizeof(u32);
-    const u32 code_mem_size = num_words + instructions.size();
+    const u32 code_mem_size = num_words + static_cast<u32>(instructions.size());
 
     jit_env.code_mem.resize(code_mem_size + 1);
     uni_env.code_mem.resize(code_mem_size + 1);

@@ -87,14 +87,14 @@ constexpr std::array<int, Unicorn::A32::num_gprs> gpr_ids{
 
 template <class TestEnvironment>
 Unicorn::A32::RegisterArray A32Unicorn<TestEnvironment>::GetRegisters() const {
-    Unicorn::A32::RegisterArray regs;
+    Unicorn::A32::RegisterArray regs{};
     Unicorn::A32::RegisterPtrArray ptrs;
     for (size_t i = 0; i < ptrs.size(); ++i) {
         ptrs[i] = &regs[i];
     }
 
     CHECKED(uc_reg_read_batch(uc, const_cast<int*>(gpr_ids.data()),
-                              reinterpret_cast<void**>(ptrs.data()), Unicorn::A32::num_gprs));
+                              reinterpret_cast<void**>(ptrs.data()), static_cast<int>(Unicorn::A32::num_gprs)));
     return regs;
 }
 
@@ -106,7 +106,7 @@ void A32Unicorn<TestEnvironment>::SetRegisters(const RegisterArray& value) {
     }
 
     CHECKED(uc_reg_write_batch(uc, const_cast<int*>(gpr_ids.data()),
-                               reinterpret_cast<void**>(const_cast<u32**>(ptrs.data())), ptrs.size()));
+                               reinterpret_cast<void**>(const_cast<u32**>(ptrs.data())), static_cast<int>(ptrs.size())));
 }
 
 using DoubleExtRegPtrArray = std::array<Unicorn::A32::ExtRegArray::pointer, Unicorn::A32::num_ext_regs/2>;
@@ -121,13 +121,13 @@ constexpr std::array<int, Unicorn::A32::num_ext_regs/2> double_ext_reg_ids{
 
 template <class TestEnvironment>
 Unicorn::A32::ExtRegArray A32Unicorn<TestEnvironment>::GetExtRegs() const {
-    Unicorn::A32::ExtRegArray ext_regs;
+    Unicorn::A32::ExtRegArray ext_regs{};
     DoubleExtRegPtrArray ptrs;
     for (size_t i = 0; i < ptrs.size(); ++i)
         ptrs[i] = &ext_regs[i*2];
 
     CHECKED(uc_reg_read_batch(uc, const_cast<int*>(double_ext_reg_ids.data()),
-                              reinterpret_cast<void**>(ptrs.data()), ptrs.size()));
+                              reinterpret_cast<void**>(ptrs.data()), static_cast<int>(ptrs.size())));
 
     return ext_regs;
 }
@@ -140,7 +140,7 @@ void A32Unicorn<TestEnvironment>::SetExtRegs(const ExtRegArray& value) {
     }
 
     CHECKED(uc_reg_write_batch(uc, const_cast<int*>(double_ext_reg_ids.data()),
-                               reinterpret_cast<void* const *>(const_cast<u32**>(ptrs.data())), ptrs.size()));
+                               reinterpret_cast<void* const *>(const_cast<u32**>(ptrs.data())), static_cast<int>(ptrs.size())));
 }
 
 template <class TestEnvironment>

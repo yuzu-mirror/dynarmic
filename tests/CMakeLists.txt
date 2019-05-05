@@ -26,7 +26,6 @@ if (DYNARMIC_TESTS_USE_UNICORN)
         unicorn_emu/a32_unicorn.h
         unicorn_emu/a64_unicorn.cpp
         unicorn_emu/a64_unicorn.h
-        unicorn_emu/unicorn_load.cpp
     )
     target_link_libraries(dynarmic_tests PRIVATE Unicorn::Unicorn)
 endif()
