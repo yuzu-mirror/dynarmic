@@ -8,6 +8,7 @@
 
 #include "common/bit_util.h"
 #include "common/common_types.h"
+#include "frontend/A32/ITState.h"
 
 namespace Dynarmic::A32 {
 
@@ -35,8 +36,7 @@ namespace Dynarmic::A32 {
 class PSR final {
 public:
     /// Valid processor modes that may be indicated.
-    enum class Mode : u32
-    {
+    enum class Mode : u32 {
         User       = 0b10000,
         FIQ        = 0b10001,
         IRQ        = 0b10010,
@@ -49,8 +49,7 @@ public:
     };
 
     /// Instruction sets that may be signified through a PSR.
-    enum class InstructionSet
-    {
+    enum class InstructionSet {
         ARM,
         Jazelle,
         Thumb,
@@ -114,10 +113,11 @@ public:
         value = (value & ~0xF0000) | (data & 0xF) << 16;
     }
 
-    u32 IT() const {
-        return (value & 0x6000000) >> 25 | (value & 0xFC00) >> 8;
+    ITState IT() const {
+        return ITState{static_cast<u8>((value & 0x6000000) >> 25 | (value & 0xFC00) >> 8)};
     }
-    void IT(u32 data) {
+    void IT(ITState it_state) {
+        const u32 data = it_state.Value();
         value = (value & ~0x000FC00) | (data & 0b11111100) << 8;
         value = (value & ~0x6000000) | (data & 0b00000011) << 25;
     }

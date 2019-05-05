@@ -91,6 +91,7 @@ add_library(dynarmic
     frontend/A32/FPSCR.h
     frontend/A32/ir_emitter.cpp
     frontend/A32/ir_emitter.h
+    frontend/A32/ITState.h
     frontend/A32/location_descriptor.cpp
     frontend/A32/location_descriptor.h
     frontend/A32/PSR.h
