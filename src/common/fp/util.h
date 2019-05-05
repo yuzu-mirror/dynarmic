@@ -53,7 +53,7 @@ constexpr bool IsNaN(FPT value) {
 /// Given a single argument, return the NaN value which would be returned by an ARM processor.
 /// If the argument isn't a NaN, returns std::nullopt.
 template<typename FPT>
-inline std::optional<FPT> ProcessNaNs(FPT a) {
+constexpr std::optional<FPT> ProcessNaNs(FPT a) {
     if (IsSNaN(a)) {
         return a | FPInfo<FPT>::mantissa_msb;
     } else if (IsQNaN(a)) {
@@ -65,7 +65,7 @@ inline std::optional<FPT> ProcessNaNs(FPT a) {
 /// Given a pair of arguments, return the NaN value which would be returned by an ARM processor.
 /// If neither argument is a NaN, returns std::nullopt.
 template<typename FPT>
-inline std::optional<FPT> ProcessNaNs(FPT a, FPT b) {
+constexpr std::optional<FPT> ProcessNaNs(FPT a, FPT b) {
     if (IsSNaN(a)) {
         return a | FPInfo<FPT>::mantissa_msb;
     } else if (IsSNaN(b)) {
@@ -81,7 +81,7 @@ inline std::optional<FPT> ProcessNaNs(FPT a, FPT b) {
 /// Given three arguments, return the NaN value which would be returned by an ARM processor.
 /// If none of the arguments is a NaN, returns std::nullopt.
 template<typename FPT>
-inline std::optional<FPT> ProcessNaNs(FPT a, FPT b, FPT c) {
+constexpr std::optional<FPT> ProcessNaNs(FPT a, FPT b, FPT c) {
     if (IsSNaN(a)) {
         return a | FPInfo<FPT>::mantissa_msb;
     } else if (IsSNaN(b)) {
