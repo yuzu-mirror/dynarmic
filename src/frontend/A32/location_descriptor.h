@@ -12,6 +12,7 @@
 #include "common/common_types.h"
 #include "frontend/A32/FPSCR.h"
 #include "frontend/A32/PSR.h"
+#include "frontend/A32/ITState.h"
 #include "frontend/ir/location_descriptor.h"
 
 namespace Dynarmic::A32 {
@@ -25,7 +26,7 @@ namespace Dynarmic::A32 {
 class LocationDescriptor {
 public:
     // Indicates bits that should be preserved within descriptors.
-    static constexpr u32 CPSR_MODE_MASK  = 0x00000220;
+    static constexpr u32 CPSR_MODE_MASK  = 0x0600FE20;
     static constexpr u32 FPSCR_MODE_MASK = 0x07F70000;
 
     LocationDescriptor(u32 arm_pc, PSR cpsr, FPSCR fpscr)
@@ -35,12 +36,14 @@ public:
         arm_pc = static_cast<u32>(o.Value());
         cpsr.T(o.Value() & (u64(0x01) << 32));
         cpsr.E(o.Value() & (u64(0x10) << 32));
+        cpsr.IT(ITState{static_cast<u8>(o.Value() >> 40)});
         fpscr = static_cast<u32>(o.Value() >> 32) & FPSCR_MODE_MASK;
     }
 
     u32 PC() const { return arm_pc; }
     bool TFlag() const { return cpsr.T(); }
     bool EFlag() const { return cpsr.E(); }
+    ITState IT() const { return cpsr.IT(); }
 
     A32::PSR CPSR() const { return cpsr; }
     A32::FPSCR FPSCR() const { return fpscr; }
@@ -79,14 +82,22 @@ public:
         return LocationDescriptor(arm_pc, cpsr, A32::FPSCR{new_fpscr & FPSCR_MODE_MASK});
     }
 
+    LocationDescriptor AdvanceIT() const {
+        PSR new_cpsr = cpsr;
+        new_cpsr.IT(new_cpsr.IT().Advance());
+
+        return LocationDescriptor(arm_pc, new_cpsr, fpscr);
+    }
+
     u64 UniqueHash() const noexcept {
         // This value MUST BE UNIQUE.
         // This calculation has to match up with EmitX64::EmitTerminalPopRSBHint
         const u64 pc_u64 = u64(arm_pc);
         const u64 fpscr_u64 = u64(fpscr.Value()) << 32;
+        const u64 it_u64 = u64(cpsr.IT().Value()) << 40;
         const u64 t_u64 = cpsr.T() ? u64(0x01) << 32 : 0;
         const u64 e_u64 = cpsr.E() ? u64(0x10) << 32 : 0;
-        return pc_u64 | fpscr_u64 | t_u64 | e_u64;
+        return pc_u64 | fpscr_u64 | it_u64 | t_u64 | e_u64;
     }
 
     operator IR::LocationDescriptor() const {

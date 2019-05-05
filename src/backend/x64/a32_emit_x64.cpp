@@ -222,7 +222,7 @@ void A32EmitX64::GenTerminalHandlers() {
         // This calculation has to match up with IREmitter::PushRSB
         constexpr size_t offsetof_pc = offsetof(A32JitState, Reg) + 15 * sizeof(u32);
         static_assert(offsetof_pc + 4 == offsetof(A32JitState, cpsr_et));
-        static_assert(offsetof_pc + 5 == offsetof(A32JitState, padding));
+        static_assert(offsetof_pc + 5 == offsetof(A32JitState, cpsr_it));
         static_assert(offsetof_pc + 6 == offsetof(A32JitState, fpcr_mode));
         code.mov(rbx, qword[r15 + offsetof_pc]);
     };

@@ -31,9 +31,12 @@ struct A32JitState {
 
     // Location Descriptor related (the order of fields is important)
     u8 cpsr_et = 0; ///< Format: 000E000T
-    u8 padding = 0;
+    u8 cpsr_it = 0; ///< Format: ccccmmmm
     u16 fpcr_mode = 0; ///< Top 16 bits of FPCR
-    u64 GetUniqueHash() const noexcept;
+    u64 GetUniqueHash() const noexcept {
+        const u64 upper_half = u64(cpsr_et) | (u64(cpsr_it) << 8) | (u64(fpcr_mode) << 16);
+        return (upper_half << 32) | Reg[15];
+    }
 
     // CPSR fields
     u32 cpsr_ge = 0;

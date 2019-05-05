@@ -19,19 +19,21 @@ namespace Dynarmic::BackendX64 {
  *
  * ARM CPSR flags
  * --------------
- * N    bit 31       Negative flag
- * Z    bit 30       Zero flag
- * C    bit 29       Carry flag
- * V    bit 28       oVerflow flag
- * Q    bit 27       Saturation flag
- * J    bit 24       Jazelle instruction set flag
- * GE   bits 16-19   Greater than or Equal flags
- * E    bit 9        Data Endianness flag
- * A    bit 8        Disable imprecise Aborts
- * I    bit 7        Disable IRQ interrupts
- * F    bit 6        Disable FIQ interrupts
- * T    bit 5        Thumb instruction set flag
- * M    bits 0-4     Processor Mode bits
+ * N        bit 31       Negative flag
+ * Z        bit 30       Zero flag
+ * C        bit 29       Carry flag
+ * V        bit 28       oVerflow flag
+ * Q        bit 27       Saturation flag
+ * IT[1:0]  bits 25-26   If-Then execution state (lower 2 bits)
+ * J        bit 24       Jazelle instruction set flag
+ * GE       bits 16-19   Greater than or Equal flags
+ * IT[7:2]  bits 10-15   If-Then execution state (upper 6 bits)
+ * E        bit 9        Data Endianness flag
+ * A        bit 8        Disable imprecise Aborts
+ * I        bit 7        Disable IRQ interrupts
+ * F        bit 6        Disable FIQ interrupts
+ * T        bit 5        Thumb instruction set flag
+ * M        bits 0-4     Processor Mode bits
  *
  * x64 LAHF+SETO flags
  * -------------------
@@ -62,6 +64,9 @@ u32 A32JitState::Cpsr() const {
     cpsr |= Common::Bit<7>(cpsr_ge) ? 1 << 16 : 0;
     // E flag, T flag
     cpsr |= static_cast<u32>(cpsr_et) << 5;
+    // IT state
+    cpsr |= static_cast<u32>(cpsr_it & 0b11111100) << 8;
+    cpsr |= static_cast<u32>(cpsr_it & 0b00000011) << 25;
     // Other flags
     cpsr |= cpsr_jaifm;
 
@@ -81,8 +86,12 @@ void A32JitState::SetCpsr(u32 cpsr) {
     cpsr_ge |= Common::Bit<16>(cpsr) ? 0x000000FF : 0;
     // E flag, T flag
     cpsr_et = static_cast<u8>((cpsr >> 5) & 0x11);
+    // IT state
+    cpsr_it = 0;
+    cpsr_it |= static_cast<u8>((cpsr >> 8) & 0b11111100);
+    cpsr_it |= static_cast<u8>((cpsr >> 25) & 0b00000011);
     // Other flags
-    cpsr_jaifm = cpsr & 0x07F0FDDF;
+    cpsr_jaifm = cpsr & 0x010001DF;
 }
 
 void A32JitState::ResetRSB() {
@@ -184,10 +193,6 @@ void A32JitState::SetFpscr(u32 FPSCR) {
         guest_MXCSR |= (1 << 15); // SSE Flush to Zero
         guest_MXCSR |= (1 << 6);  // SSE Denormals are Zero
     }
-}
-
-u64 A32JitState::GetUniqueHash() const noexcept {
-    return (static_cast<u64>(cpsr_et) << 32) | (static_cast<u64>(fpcr_mode) << 48) | Reg[15];
 }
 
 } // namespace Dynarmic::BackendX64
