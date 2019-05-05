@@ -26,7 +26,7 @@ class LocationDescriptor {
 public:
     // Indicates bits that should be preserved within descriptors.
     static constexpr u32 CPSR_MODE_MASK  = 0x00000220;
-    static constexpr u32 FPSCR_MODE_MASK = 0x03F79F00;
+    static constexpr u32 FPSCR_MODE_MASK = 0x07F79F00;
 
     LocationDescriptor(u32 arm_pc, PSR cpsr, FPSCR fpscr)
             : arm_pc(arm_pc), cpsr(cpsr.Value() & CPSR_MODE_MASK), fpscr(fpscr.Value() & FPSCR_MODE_MASK) {}
