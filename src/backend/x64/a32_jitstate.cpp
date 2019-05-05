@@ -168,7 +168,6 @@ u32 A32JitState::Fpscr() const {
 }
 
 void A32JitState::SetFpscr(u32 FPSCR) {
-    old_FPSCR = FPSCR;
     fpcr_mode = FPSCR & FPSCR_MODE_MASK;
     fpsr_nzcv = FPSCR & FPSCR_NZCV_MASK;
     guest_MXCSR = 0;
