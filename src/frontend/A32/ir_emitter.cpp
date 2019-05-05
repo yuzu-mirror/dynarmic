@@ -106,6 +106,10 @@ void IREmitter::SetCpsrNZCVQ(const IR::U32& value) {
     Inst(Opcode::A32SetCpsrNZCVQ, value);
 }
 
+void IREmitter::SetCheckBit(const IR::U1& value) {
+    Inst(Opcode::A32SetCheckBit, value);
+}
+
 IR::U1 IREmitter::GetCFlag() {
     return Inst<IR::U1>(Opcode::A32GetCFlag);
 }

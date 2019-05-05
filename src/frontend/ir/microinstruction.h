@@ -99,6 +99,9 @@ public:
     /// Determines whether or not this instruction causes a CPU exception.
     bool CausesCPUException() const;
 
+    /// Determines whether or not this instruction is a SetCheckBit operation.
+    bool IsSetCheckBitOperation() const;
+
     /// Determines whether or not this instruction may have side-effects.
     bool MayHaveSideEffects() const;
 

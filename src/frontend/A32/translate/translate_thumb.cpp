@@ -884,6 +884,29 @@ struct ThumbTranslatorVisitor final {
         return true;
     }
 
+    // CB{N}Z <Rn>, <label>
+    bool thumb16_CBZ_CBNZ(bool nonzero, Imm<1> i, Imm<5> imm5, Reg n) {
+        const u32 imm = concatenate(i, imm5, Imm<1>{0}).ZeroExtend();
+        const IR::U32 rn = ir.GetRegister(n);
+
+        ir.SetCheckBit(ir.IsZero(rn));
+
+        const auto [cond_pass, cond_fail] = [this, imm, nonzero] {
+            const u32 target = ir.PC() + imm;
+            const auto skip = IR::Term::LinkBlock{ir.current_location.AdvancePC(2)};
+            const auto branch = IR::Term::LinkBlock{ir.current_location.AdvancePC(target)};
+
+            if (nonzero) {
+                return std::make_pair(skip, branch);
+            } else {
+                return std::make_pair(branch, skip);
+            }
+        }();
+
+         ir.SetTerm(IR::Term::CheckBit{cond_pass, cond_fail});
+        return false;
+    }
+
     bool thumb16_UDF() {
         return InterpretThisInstruction();
     }

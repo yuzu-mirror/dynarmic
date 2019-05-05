@@ -501,6 +501,12 @@ void A32EmitX64::EmitA32SetZFlag(A32EmitContext& ctx, IR::Inst* inst) {
     }
 }
 
+void A32EmitX64::EmitA32SetCheckBit(A32EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const Xbyak::Reg8 to_store = ctx.reg_alloc.UseGpr(args[0]).cvt8();
+    code.mov(code.byte[r15 + offsetof(A32JitState, check_bit)], to_store);
+}
+
 void A32EmitX64::EmitA32GetCFlag(A32EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
     code.mov(result, dword[r15 + offsetof(A32JitState, CPSR_nzcv)]);
@@ -1320,8 +1326,13 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::If terminal, IR::LocationDescriptor 
     EmitTerminal(terminal.then_, initial_location);
 }
 
-void A32EmitX64::EmitTerminalImpl(IR::Term::CheckBit, IR::LocationDescriptor) {
-    ASSERT_MSG(false, "Term::CheckBit should never be emitted by the A32 frontend");
+void A32EmitX64::EmitTerminalImpl(IR::Term::CheckBit terminal, IR::LocationDescriptor initial_location) {
+    Xbyak::Label fail;
+    code.cmp(code.byte[r15 + offsetof(A32JitState, check_bit)], u8(0));
+    code.jz(fail);
+    EmitTerminal(terminal.then_, initial_location);
+    code.L(fail);
+    EmitTerminal(terminal.else_, initial_location);
 }
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location) {

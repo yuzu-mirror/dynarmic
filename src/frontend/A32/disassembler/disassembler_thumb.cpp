@@ -337,6 +337,13 @@ public:
         return fmt::format("blx {}", m);
     }
 
+    std::string thumb16_CBZ_CBNZ(bool nonzero, Imm<1> i, Imm<5> imm5, Reg n) {
+        const char* const name = nonzero ? "cbnz" : "cbz";
+        const u32 imm = concatenate(i, imm5, Imm<1>{0}).ZeroExtend();
+
+        return fmt::format("{} {}, #{}", name, n, imm);
+    }
+
     std::string thumb16_UDF() {
         return fmt::format("udf");
     }
