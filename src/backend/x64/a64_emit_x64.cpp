@@ -350,7 +350,7 @@ void A64EmitX64::EmitA64SetCheckBit(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64GetCFlag(A64EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
-    code.mov(result, dword[r15 + offsetof(A64JitState, CPSR_nzcv)]);
+    code.mov(result, dword[r15 + offsetof(A64JitState, cpsr_nzcv)]);
     code.shr(result, 29);
     code.and_(result, 1);
     ctx.reg_alloc.DefineValue(inst, result);
@@ -359,7 +359,7 @@ void A64EmitX64::EmitA64GetCFlag(A64EmitContext& ctx, IR::Inst* inst) {
 void A64EmitX64::EmitA64GetNZCVRaw(A64EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 nzcv_raw = ctx.reg_alloc.ScratchGpr().cvt32();
 
-    code.mov(nzcv_raw, dword[r15 + offsetof(A64JitState, CPSR_nzcv)]);
+    code.mov(nzcv_raw, dword[r15 + offsetof(A64JitState, cpsr_nzcv)]);
     ctx.reg_alloc.DefineValue(inst, nzcv_raw);
 }
 
@@ -368,7 +368,7 @@ void A64EmitX64::EmitA64SetNZCVRaw(A64EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 nzcv_raw = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
     code.and_(nzcv_raw, 0xF0000000);
-    code.mov(dword[r15 + offsetof(A64JitState, CPSR_nzcv)], nzcv_raw);
+    code.mov(dword[r15 + offsetof(A64JitState, cpsr_nzcv)], nzcv_raw);
 }
 
 void A64EmitX64::EmitA64SetNZCV(A64EmitContext& ctx, IR::Inst* inst) {
@@ -378,7 +378,7 @@ void A64EmitX64::EmitA64SetNZCV(A64EmitContext& ctx, IR::Inst* inst) {
     code.imul(to_store, to_store, 0b00010000'00100001);
     code.shl(to_store, 16);
     code.and_(to_store, 0xF0000000);
-    code.mov(dword[r15 + offsetof(A64JitState, CPSR_nzcv)], to_store);
+    code.mov(dword[r15 + offsetof(A64JitState, cpsr_nzcv)], to_store);
 }
 
 void A64EmitX64::EmitA64GetW(A64EmitContext& ctx, IR::Inst* inst) {

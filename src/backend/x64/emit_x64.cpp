@@ -173,7 +173,7 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
     Xbyak::Label label;
 
     const Xbyak::Reg32 cpsr = eax;
-    code.mov(cpsr, dword[r15 + code.GetJitStateInfo().offsetof_CPSR_nzcv]);
+    code.mov(cpsr, dword[r15 + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
 
     constexpr size_t n_shift = 31;
     constexpr size_t z_shift = 30;

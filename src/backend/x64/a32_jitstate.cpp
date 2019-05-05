@@ -44,48 +44,48 @@ namespace Dynarmic::BackendX64 {
  */
 
 u32 A32JitState::Cpsr() const {
-    ASSERT((CPSR_nzcv & ~0xF0000000) == 0);
-    ASSERT((CPSR_q & ~1) == 0);
-    ASSERT((CPSR_et & ~3) == 0);
-    ASSERT((CPSR_jaifm & ~0x010001DF) == 0);
+    ASSERT((cpsr_nzcv & ~0xF0000000) == 0);
+    ASSERT((cpsr_q & ~1) == 0);
+    ASSERT((cpsr_et & ~3) == 0);
+    ASSERT((cpsr_jaifm & ~0x010001DF) == 0);
 
     u32 cpsr = 0;
 
     // NZCV flags
-    cpsr |= CPSR_nzcv;
+    cpsr |= cpsr_nzcv;
     // Q flag
-    cpsr |= CPSR_q ? 1 << 27 : 0;
+    cpsr |= cpsr_q ? 1 << 27 : 0;
     // GE flags
-    cpsr |= Common::Bit<31>(CPSR_ge) ? 1 << 19 : 0;
-    cpsr |= Common::Bit<23>(CPSR_ge) ? 1 << 18 : 0;
-    cpsr |= Common::Bit<15>(CPSR_ge) ? 1 << 17 : 0;
-    cpsr |= Common::Bit<7>(CPSR_ge) ? 1 << 16 : 0;
+    cpsr |= Common::Bit<31>(cpsr_ge) ? 1 << 19 : 0;
+    cpsr |= Common::Bit<23>(cpsr_ge) ? 1 << 18 : 0;
+    cpsr |= Common::Bit<15>(cpsr_ge) ? 1 << 17 : 0;
+    cpsr |= Common::Bit<7>(cpsr_ge) ? 1 << 16 : 0;
     // E flag, T flag
-    cpsr |= Common::Bit<1>(CPSR_et) ? 1 << 9 : 0;
-    cpsr |= Common::Bit<0>(CPSR_et) ? 1 << 5 : 0;
+    cpsr |= Common::Bit<1>(cpsr_et) ? 1 << 9 : 0;
+    cpsr |= Common::Bit<0>(cpsr_et) ? 1 << 5 : 0;
     // Other flags
-    cpsr |= CPSR_jaifm;
+    cpsr |= cpsr_jaifm;
 
     return cpsr;
 }
 
 void A32JitState::SetCpsr(u32 cpsr) {
     // NZCV flags
-    CPSR_nzcv = cpsr & 0xF0000000;
+    cpsr_nzcv = cpsr & 0xF0000000;
     // Q flag
-    CPSR_q = Common::Bit<27>(cpsr) ? 1 : 0;
+    cpsr_q = Common::Bit<27>(cpsr) ? 1 : 0;
     // GE flags
-    CPSR_ge = 0;
-    CPSR_ge |= Common::Bit<19>(cpsr) ? 0xFF000000 : 0;
-    CPSR_ge |= Common::Bit<18>(cpsr) ? 0x00FF0000 : 0;
-    CPSR_ge |= Common::Bit<17>(cpsr) ? 0x0000FF00 : 0;
-    CPSR_ge |= Common::Bit<16>(cpsr) ? 0x000000FF : 0;
+    cpsr_ge = 0;
+    cpsr_ge |= Common::Bit<19>(cpsr) ? 0xFF000000 : 0;
+    cpsr_ge |= Common::Bit<18>(cpsr) ? 0x00FF0000 : 0;
+    cpsr_ge |= Common::Bit<17>(cpsr) ? 0x0000FF00 : 0;
+    cpsr_ge |= Common::Bit<16>(cpsr) ? 0x000000FF : 0;
     // E flag, T flag
-    CPSR_et = 0;
-    CPSR_et |= Common::Bit<9>(cpsr) ? 2 : 0;
-    CPSR_et |= Common::Bit<5>(cpsr) ? 1 : 0;
+    cpsr_et = 0;
+    cpsr_et |= Common::Bit<9>(cpsr) ? 2 : 0;
+    cpsr_et |= Common::Bit<5>(cpsr) ? 1 : 0;
     // Other flags
-    CPSR_jaifm = cpsr & 0x07F0FDDF;
+    cpsr_jaifm = cpsr & 0x07F0FDDF;
 }
 
 void A32JitState::ResetRSB() {
@@ -191,7 +191,7 @@ void A32JitState::SetFpscr(u32 FPSCR) {
 }
 
 u64 A32JitState::GetUniqueHash() const noexcept {
-    return CPSR_et | fpcr_mode | (static_cast<u64>(Reg[15]) << 32);
+    return cpsr_et | fpcr_mode | (static_cast<u64>(Reg[15]) << 32);
 }
 
 } // namespace Dynarmic::BackendX64
