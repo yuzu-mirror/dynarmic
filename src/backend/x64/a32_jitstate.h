@@ -29,12 +29,17 @@ struct A32JitState {
     std::array<u32, 16> Reg{}; // Current register file.
     // TODO: Mode-specific register sets unimplemented.
 
-    u32 cpsr_et = 0;
+    // Location Descriptor related (the order of fields is important)
+    u8 cpsr_et = 0; ///< Format: 000E000T
+    u8 padding = 0;
+    u16 fpcr_mode = 0; ///< Top 16 bits of FPCR
+    u64 GetUniqueHash() const noexcept;
+
+    // CPSR fields
     u32 cpsr_ge = 0;
     u32 cpsr_q = 0;
     u32 cpsr_nzcv = 0;
     u32 cpsr_jaifm = 0;
-
     u32 Cpsr() const;
     void SetCpsr(u32 cpsr);
 
@@ -69,12 +74,9 @@ struct A32JitState {
 
     u32 fpsr_exc = 0;
     u32 fpsr_qc = 0; // Dummy value
-    u32 fpcr_mode = 0;
     u32 fpsr_nzcv = 0;
     u32 Fpscr() const;
     void SetFpscr(u32 FPSCR);
-
-    u64 GetUniqueHash() const noexcept;
 };
 
 #ifdef _MSC_VER

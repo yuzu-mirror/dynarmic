@@ -46,7 +46,7 @@ namespace Dynarmic::BackendX64 {
 u32 A32JitState::Cpsr() const {
     ASSERT((cpsr_nzcv & ~0xF0000000) == 0);
     ASSERT((cpsr_q & ~1) == 0);
-    ASSERT((cpsr_et & ~3) == 0);
+    ASSERT((cpsr_et & ~0x11) == 0);
     ASSERT((cpsr_jaifm & ~0x010001DF) == 0);
 
     u32 cpsr = 0;
@@ -61,8 +61,7 @@ u32 A32JitState::Cpsr() const {
     cpsr |= Common::Bit<15>(cpsr_ge) ? 1 << 17 : 0;
     cpsr |= Common::Bit<7>(cpsr_ge) ? 1 << 16 : 0;
     // E flag, T flag
-    cpsr |= Common::Bit<1>(cpsr_et) ? 1 << 9 : 0;
-    cpsr |= Common::Bit<0>(cpsr_et) ? 1 << 5 : 0;
+    cpsr |= static_cast<u32>(cpsr_et) << 5;
     // Other flags
     cpsr |= cpsr_jaifm;
 
@@ -81,9 +80,7 @@ void A32JitState::SetCpsr(u32 cpsr) {
     cpsr_ge |= Common::Bit<17>(cpsr) ? 0x0000FF00 : 0;
     cpsr_ge |= Common::Bit<16>(cpsr) ? 0x000000FF : 0;
     // E flag, T flag
-    cpsr_et = 0;
-    cpsr_et |= Common::Bit<9>(cpsr) ? 2 : 0;
-    cpsr_et |= Common::Bit<5>(cpsr) ? 1 : 0;
+    cpsr_et = static_cast<u8>((cpsr >> 5) & 0x11);
     // Other flags
     cpsr_jaifm = cpsr & 0x07F0FDDF;
 }
@@ -154,10 +151,12 @@ constexpr u32 FPSCR_MODE_MASK = A32::LocationDescriptor::FPSCR_MODE_MASK;
 constexpr u32 FPSCR_NZCV_MASK = 0xF0000000;
 
 u32 A32JitState::Fpscr() const {
-    ASSERT((fpcr_mode & ~FPSCR_MODE_MASK) == 0);
+    const u32 fpcr_mode_shifted = static_cast<u32>(fpcr_mode) << 16;
+
+    ASSERT((fpcr_mode_shifted & ~FPSCR_MODE_MASK) == 0);
     ASSERT((fpsr_nzcv & ~FPSCR_NZCV_MASK) == 0);
 
-    u32 FPSCR = fpcr_mode | fpsr_nzcv;
+    u32 FPSCR = fpcr_mode_shifted | fpsr_nzcv;
     FPSCR |= (guest_MXCSR & 0b0000000000001);       // IOC = IE
     FPSCR |= (guest_MXCSR & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
     FPSCR |= fpsr_exc;
@@ -166,7 +165,7 @@ u32 A32JitState::Fpscr() const {
 }
 
 void A32JitState::SetFpscr(u32 FPSCR) {
-    fpcr_mode = FPSCR & FPSCR_MODE_MASK;
+    fpcr_mode = static_cast<u16>((FPSCR & FPSCR_MODE_MASK) >> 16);
     fpsr_nzcv = FPSCR & FPSCR_NZCV_MASK;
     guest_MXCSR = 0;
 
@@ -188,7 +187,7 @@ void A32JitState::SetFpscr(u32 FPSCR) {
 }
 
 u64 A32JitState::GetUniqueHash() const noexcept {
-    return cpsr_et | fpcr_mode | (static_cast<u64>(Reg[15]) << 32);
+    return (static_cast<u64>(cpsr_et) << 32) | (static_cast<u64>(fpcr_mode) << 48) | Reg[15];
 }
 
 } // namespace Dynarmic::BackendX64

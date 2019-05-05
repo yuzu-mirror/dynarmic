@@ -32,10 +32,10 @@ public:
             : arm_pc(arm_pc), cpsr(cpsr.Value() & CPSR_MODE_MASK), fpscr(fpscr.Value() & FPSCR_MODE_MASK) {}
 
     explicit LocationDescriptor(const IR::LocationDescriptor& o) {
-        arm_pc = o.Value() >> 32;
-        cpsr.T(o.Value() & 1);
-        cpsr.E(o.Value() & 2);
-        fpscr = o.Value() & FPSCR_MODE_MASK;
+        arm_pc = static_cast<u32>(o.Value());
+        cpsr.T(o.Value() & (u64(0x01) << 32));
+        cpsr.E(o.Value() & (u64(0x10) << 32));
+        fpscr = static_cast<u32>(o.Value() >> 32) & FPSCR_MODE_MASK;
     }
 
     u32 PC() const { return arm_pc; }
@@ -82,10 +82,10 @@ public:
     u64 UniqueHash() const noexcept {
         // This value MUST BE UNIQUE.
         // This calculation has to match up with EmitX64::EmitTerminalPopRSBHint
-        const u64 pc_u64 = u64(arm_pc) << 32;
-        const u64 fpscr_u64 = u64(fpscr.Value());
-        const u64 t_u64 = cpsr.T() ? 1 : 0;
-        const u64 e_u64 = cpsr.E() ? 2 : 0;
+        const u64 pc_u64 = u64(arm_pc);
+        const u64 fpscr_u64 = u64(fpscr.Value()) << 32;
+        const u64 t_u64 = cpsr.T() ? u64(0x01) << 32 : 0;
+        const u64 e_u64 = cpsr.E() ? u64(0x10) << 32 : 0;
         return pc_u64 | fpscr_u64 | t_u64 | e_u64;
     }
 

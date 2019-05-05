@@ -262,16 +262,7 @@ void Context::SetFpscr(std::uint32_t value) {
 }
 
 void TransferJitState(A32JitState& dest, const A32JitState& src, bool reset_rsb) {
-    dest.cpsr_ge = src.cpsr_ge;
-    dest.cpsr_et = src.cpsr_et;
-    dest.cpsr_q = src.cpsr_q;
-    dest.cpsr_nzcv = src.cpsr_nzcv;
-    dest.cpsr_jaifm = src.cpsr_jaifm;
-    dest.Reg = src.Reg;
-    dest.ExtReg = src.ExtReg;
-    dest.guest_MXCSR = src.guest_MXCSR;
-    dest.fpcr_mode = src.fpcr_mode;
-    dest.fpsr_nzcv = src.fpsr_nzcv;
+    dest = src;
     if (reset_rsb) {
         dest.ResetRSB();
     } else {
