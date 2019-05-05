@@ -29,8 +29,8 @@ matrix:
             - g++-7
             - llvm-dev
             - ninja-build
-      install: ./.travis/test-a64-on-x86_64-linux/deps.sh
-      script: ./.travis/test-a64-on-x86_64-linux/build.sh
+      install: ./.travis/test-with-unicorn-on-x86_64-linux/deps.sh
+      script: ./.travis/test-with-unicorn-on-x86_64-linux/build.sh
     - env: NAME="Test - SSE3 only"
       os: linux
       dist: trusty

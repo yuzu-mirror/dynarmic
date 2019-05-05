@@ -8,7 +8,7 @@ cd externals
 git clone https://github.com/MerryMage/ext-boost
 git clone https://github.com/yuzu-emu/unicorn
 cd unicorn
-UNICORN_ARCHS=aarch64 ./make.sh
+UNICORN_ARCHS="arm aarch64" ./make.sh
 cd ../..
 
 mkdir -p $HOME/.local
