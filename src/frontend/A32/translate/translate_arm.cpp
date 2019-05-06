@@ -11,8 +11,8 @@
 #include "frontend/A32/decoder/arm.h"
 #include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/location_descriptor.h"
+#include "frontend/A32/translate/impl/translate_arm.h"
 #include "frontend/A32/translate/translate.h"
-#include "frontend/A32/translate/translate_arm/translate_arm.h"
 #include "frontend/A32/types.h"
 #include "frontend/ir/basic_block.h"
 

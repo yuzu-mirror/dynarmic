@@ -78,7 +78,6 @@ add_library(dynarmic
     common/u128.cpp
     common/u128.h
     common/variant_util.h
-    frontend/imm.h
     frontend/A32/decoder/arm.h
     frontend/A32/decoder/arm.inc
     frontend/A32/decoder/thumb16.h
@@ -95,29 +94,29 @@ add_library(dynarmic
     frontend/A32/location_descriptor.cpp
     frontend/A32/location_descriptor.h
     frontend/A32/PSR.h
+    frontend/A32/translate/impl/barrier.cpp
+    frontend/A32/translate/impl/branch.cpp
+    frontend/A32/translate/impl/coprocessor.cpp
+    frontend/A32/translate/impl/crc32.cpp
+    frontend/A32/translate/impl/data_processing.cpp
+    frontend/A32/translate/impl/divide.cpp
+    frontend/A32/translate/impl/exception_generating.cpp
+    frontend/A32/translate/impl/extension.cpp
+    frontend/A32/translate/impl/hint.cpp
+    frontend/A32/translate/impl/load_store.cpp
+    frontend/A32/translate/impl/misc.cpp
+    frontend/A32/translate/impl/multiply.cpp
+    frontend/A32/translate/impl/packing.cpp
+    frontend/A32/translate/impl/parallel.cpp
+    frontend/A32/translate/impl/reversal.cpp
+    frontend/A32/translate/impl/saturated.cpp
+    frontend/A32/translate/impl/status_register_access.cpp
+    frontend/A32/translate/impl/synchronization.cpp
+    frontend/A32/translate/impl/translate_arm.h
+    frontend/A32/translate/impl/vfp.cpp
     frontend/A32/translate/translate.cpp
     frontend/A32/translate/translate.h
     frontend/A32/translate/translate_arm.cpp
-    frontend/A32/translate/translate_arm/barrier.cpp
-    frontend/A32/translate/translate_arm/branch.cpp
-    frontend/A32/translate/translate_arm/coprocessor.cpp
-    frontend/A32/translate/translate_arm/crc32.cpp
-    frontend/A32/translate/translate_arm/data_processing.cpp
-    frontend/A32/translate/translate_arm/divide.cpp
-    frontend/A32/translate/translate_arm/exception_generating.cpp
-    frontend/A32/translate/translate_arm/extension.cpp
-    frontend/A32/translate/translate_arm/hint.cpp
-    frontend/A32/translate/translate_arm/load_store.cpp
-    frontend/A32/translate/translate_arm/misc.cpp
-    frontend/A32/translate/translate_arm/multiply.cpp
-    frontend/A32/translate/translate_arm/packing.cpp
-    frontend/A32/translate/translate_arm/parallel.cpp
-    frontend/A32/translate/translate_arm/reversal.cpp
-    frontend/A32/translate/translate_arm/saturated.cpp
-    frontend/A32/translate/translate_arm/status_register_access.cpp
-    frontend/A32/translate/translate_arm/synchronization.cpp
-    frontend/A32/translate/translate_arm/translate_arm.h
-    frontend/A32/translate/translate_arm/vfp.cpp
     frontend/A32/translate/translate_thumb.cpp
     frontend/A32/types.cpp
     frontend/A32/types.h
@@ -191,6 +190,7 @@ add_library(dynarmic
     frontend/A64/types.h
     frontend/decoder/decoder_detail.h
     frontend/decoder/matcher.h
+    frontend/imm.h
     frontend/ir/basic_block.cpp
     frontend/ir/basic_block.h
     frontend/ir/cond.h
