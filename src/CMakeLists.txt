@@ -112,7 +112,10 @@ add_library(dynarmic
     frontend/A32/translate/impl/saturated.cpp
     frontend/A32/translate/impl/status_register_access.cpp
     frontend/A32/translate/impl/synchronization.cpp
+    frontend/A32/translate/impl/thumb16.cpp
+    frontend/A32/translate/impl/thumb32.cpp
     frontend/A32/translate/impl/translate_arm.h
+    frontend/A32/translate/impl/translate_thumb.h
     frontend/A32/translate/impl/vfp.cpp
     frontend/A32/translate/translate.cpp
     frontend/A32/translate/translate.h
