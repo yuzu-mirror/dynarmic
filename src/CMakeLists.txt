@@ -301,7 +301,14 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 export(
-    TARGETS   dynarmic boost fmt xbyak
+    TARGETS   dynarmic boost xbyak
     NAMESPACE dynarmic::
     FILE      "dynarmic-config.cmake"
 )
+if (NOT DYNARMIC_NO_BUNDLED_FMT)
+    export(
+        TARGETS     fmt
+        NAMESPACE   dynarmic::
+        APPEND FILE "dynarmic-config.cmake"
+    )
+endif()
