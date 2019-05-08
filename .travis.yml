@@ -4,7 +4,7 @@ cache: ccache
 
 matrix:
   include:
-    - env: NAME="Linux Build"
+    - env: NAME="Linux Build" GCC_VERSION=7
       os: linux
       dist: trusty
       addons:
@@ -14,6 +14,19 @@ matrix:
           packages:
             - gcc-7
             - g++-7
+            - ninja-build
+      install: ./.travis/build-x86_64-linux/deps.sh
+      script: ./.travis/build-x86_64-linux/build.sh
+    - env: NAME="Linux Build" GCC_VERSION=8
+      os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-8
+            - g++-8
             - ninja-build
       install: ./.travis/build-x86_64-linux/deps.sh
       script: ./.travis/build-x86_64-linux/build.sh
