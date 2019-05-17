@@ -199,15 +199,18 @@ static void RunTestInstance(Dynarmic::A64::Jit& jit, A64Unicorn& uni, A64TestEnv
 
     SCOPE_FAIL {
         fmt::print("Instruction Listing:\n");
-        for (u32 instruction : instructions)
+        for (u32 instruction : instructions) {
             fmt::print("{:08x} {}\n", instruction, Common::DisassembleAArch64(instruction));
+        }
         fmt::print("\n");
 
         fmt::print("Initial register listing:\n");
-        for (size_t i = 0; i < regs.size(); ++i)
+        for (size_t i = 0; i < regs.size(); ++i) {
             fmt::print("{:3s}: {:016x}\n", static_cast<A64::Reg>(i), regs[i]);
-        for (size_t i = 0; i < vecs.size(); ++i)
+        }
+        for (size_t i = 0; i < vecs.size(); ++i) {
             fmt::print("{:3s}: {}\n", static_cast<A64::Vec>(i), vecs[i]);
+        }
         fmt::print("sp : {:016x}\n", initial_sp);
         fmt::print("pc : {:016x}\n", instructions_start);
         fmt::print("p  : {:08x}\n", pstate);
@@ -221,10 +224,14 @@ static void RunTestInstance(Dynarmic::A64::Jit& jit, A64Unicorn& uni, A64TestEnv
 
         fmt::print("Final register listing:\n");
         fmt::print("     unicorn          dynarmic\n");
-        for (size_t i = 0; i < regs.size(); ++i)
-            fmt::print("{:3s}: {:016x} {:016x} {}\n", static_cast<A64::Reg>(i), uni.GetRegisters()[i], jit.GetRegisters()[i], uni.GetRegisters()[i] != jit.GetRegisters()[i] ? "*" : "");
-        for (size_t i = 0; i < vecs.size(); ++i)
-            fmt::print("{:3s}: {} {} {}\n", static_cast<A64::Vec>(i), uni.GetVectors()[i], jit.GetVectors()[i], uni.GetVectors()[i] != jit.GetVectors()[i] ? "*" : "");
+        const auto uni_regs = uni.GetRegisters();
+        for (size_t i = 0; i < regs.size(); ++i) {
+            fmt::print("{:3s}: {:016x} {:016x} {}\n", static_cast<A64::Reg>(i), uni_regs[i], jit.GetRegisters()[i], uni_regs[i] != jit.GetRegisters()[i] ? "*" : "");
+        }
+        const auto uni_vecs = uni.GetVectors();
+        for (size_t i = 0; i < vecs.size(); ++i) {
+            fmt::print("{:3s}: {} {} {}\n", static_cast<A64::Vec>(i), uni_vecs[i], jit.GetVectors()[i], uni_vecs[i] != jit.GetVectors()[i] ? "*" : "");
+        }
         fmt::print("sp : {:016x} {:016x} {}\n", uni.GetSP(), jit.GetSP(), uni.GetSP() != jit.GetSP() ? "*" : "");
         fmt::print("pc : {:016x} {:016x} {}\n", uni.GetPC(), jit.GetPC(), uni.GetPC() != jit.GetPC() ? "*" : "");
         fmt::print("p  : {:08x} {:08x} {}\n", uni.GetPstate(), jit.GetPstate(), (uni.GetPstate() & 0xF0000000) != (jit.GetPstate() & 0xF0000000) ? "*" : "");
