@@ -65,7 +65,7 @@ public:
 
     /**
      * Called when compiling MCRR or MCRR2 for this coprocessor.
-     * A return value of boost::blank will cause a coprocessor exception to be compiled.
+     * A return value of std::monostate will cause a coprocessor exception to be compiled.
      * arg0 and arg1 of the callback will contain the words sent to the coprocessor.
      * The return value of the callback is ignored.
      */
