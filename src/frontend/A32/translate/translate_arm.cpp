@@ -6,8 +6,9 @@
 
 #include <algorithm>
 
+#include <dynarmic/A32/config.h>
+
 #include "common/assert.h"
-#include "dynarmic/A32/config.h"
 #include "frontend/A32/decoder/arm.h"
 #include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/location_descriptor.h"

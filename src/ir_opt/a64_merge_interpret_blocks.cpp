@@ -7,10 +7,10 @@
 #include <array>
 
 #include <boost/variant/get.hpp>
+#include <dynarmic/A64/config.h>
 
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "dynarmic/A64/config.h"
 #include "frontend/A64/location_descriptor.h"
 #include "frontend/A64/translate/translate.h"
 #include "frontend/ir/basic_block.h"

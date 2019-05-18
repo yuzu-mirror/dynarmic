@@ -6,7 +6,7 @@
 
 #include <array>
 
-#include "dynarmic/A64/config.h"
+#include <dynarmic/A64/config.h>
 #include "frontend/A64/ir_emitter.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"

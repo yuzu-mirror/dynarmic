@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <boost/icl/interval_set.hpp>
+#include <dynarmic/A64/a64.h>
 
 #include "backend/x64/a64_emit_x64.h"
 #include "backend/x64/a64_jitstate.h"
@@ -17,7 +18,6 @@
 #include "common/assert.h"
 #include "common/llvm_disassemble.h"
 #include "common/scope_exit.h"
-#include "dynarmic/A64/a64.h"
 #include "frontend/A64/translate/translate.h"
 #include "frontend/ir/basic_block.h"
 #include "ir_opt/passes.h"
