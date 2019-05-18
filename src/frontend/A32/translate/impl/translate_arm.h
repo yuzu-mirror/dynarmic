@@ -11,6 +11,7 @@
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/translate.h"
+#include "frontend/A32/types.h"
 
 namespace Dynarmic::A32 {
 

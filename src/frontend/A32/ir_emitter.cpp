@@ -6,6 +6,7 @@
 
 #include "common/assert.h"
 #include "frontend/A32/ir_emitter.h"
+#include "frontend/A32/types.h"
 #include "frontend/ir/opcodes.h"
 
 namespace Dynarmic::A32 {
