@@ -4,9 +4,9 @@
  * General Public License version 2 or any later version.
  */
 
-#include "translate_thumb.h"
-
 #include <dynarmic/A32/config.h>
+
+#include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
 

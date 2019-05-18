@@ -4,7 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
-#include "translate_arm.h"
+#include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
 namespace {
