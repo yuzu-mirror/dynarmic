@@ -13,7 +13,7 @@ namespace Dynarmic::Common {
 
 /// Reinterpret objects of one type as another by bit-casting between object representations.
 template <class Dest, class Source>
-inline Dest BitCast(const Source& source) {
+inline Dest BitCast(const Source& source) noexcept {
     static_assert(sizeof(Dest) == sizeof(Source), "size of destination and source objects must be equal");
     static_assert(std::is_trivially_copyable_v<Dest>, "destination type must be trivially copyable.");
     static_assert(std::is_trivially_copyable_v<Source>, "source type must be trivially copyable");
@@ -26,7 +26,7 @@ inline Dest BitCast(const Source& source) {
 /// Reinterpret objects of any arbitrary type as another type by bit-casting between object representations.
 /// Note that here we do not verify if source has enough bytes to read from.
 template <class Dest, class SourcePtr>
-inline Dest BitCastPointee(const SourcePtr source) {
+inline Dest BitCastPointee(const SourcePtr source) noexcept {
     static_assert(sizeof(SourcePtr) == sizeof(void*), "source pointer must have size of a pointer");
     static_assert(std::is_trivially_copyable_v<Dest>, "destination type must be trivially copyable.");
 
