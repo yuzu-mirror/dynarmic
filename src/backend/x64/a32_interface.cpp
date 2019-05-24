@@ -42,7 +42,7 @@ struct Jit::Impl {
     Impl(Jit* jit, A32::UserConfig config)
             : block_of_code(GenRunCodeCallbacks(config.callbacks, &GetCurrentBlock, this), JitStateInfo{jit_state})
             , emitter(block_of_code, config, jit)
-            , config(config)
+            , config(std::move(config))
             , jit_interface(jit)
     {}
 
@@ -142,7 +142,7 @@ private:
     }
 };
 
-Jit::Jit(UserConfig config) : impl(std::make_unique<Impl>(this, config)) {}
+Jit::Jit(UserConfig config) : impl(std::make_unique<Impl>(this, std::move(config))) {}
 
 Jit::~Jit() = default;
 
