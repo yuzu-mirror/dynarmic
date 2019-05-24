@@ -43,8 +43,8 @@ struct TranslatorVisitor final {
         u64 wmask, tmask;
     };
 
-    std::optional<BitMasks> DecodeBitMasks(bool immN, Imm<6> imms, Imm<6> immr, bool immediate);
-    u64 AdvSIMDExpandImm(bool op, Imm<4> cmode, Imm<8> imm8);
+    static std::optional<BitMasks> DecodeBitMasks(bool immN, Imm<6> imms, Imm<6> immr, bool immediate);
+    static u64 AdvSIMDExpandImm(bool op, Imm<4> cmode, Imm<8> imm8);
 
     IR::UAny I(size_t bitsize, u64 value);
     IR::UAny X(size_t bitsize, Reg reg);
