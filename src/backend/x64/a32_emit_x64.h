@@ -34,10 +34,10 @@ public:
     ~A32EmitX64() override;
 
     /**
-     * Emit host machine code for a basic block with intermediate representation `ir`.
-     * @note ir is modified.
+     * Emit host machine code for a basic block with intermediate representation `block`.
+     * @note block is modified.
      */
-    BlockDescriptor Emit(IR::Block& ir);
+    BlockDescriptor Emit(IR::Block& block);
 
     void ClearCache() override;
 

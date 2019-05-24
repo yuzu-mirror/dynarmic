@@ -315,30 +315,30 @@ void EmitX64::EmitTerminal(IR::Terminal terminal, IR::LocationDescriptor initial
     });
 }
 
-void EmitX64::Patch(const IR::LocationDescriptor& desc, CodePtr bb) {
+void EmitX64::Patch(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr) {
     const CodePtr save_code_ptr = code.getCurr();
-    const PatchInformation& patch_info = patch_information[desc];
+    const PatchInformation& patch_info = patch_information[target_desc];
 
     for (CodePtr location : patch_info.jg) {
         code.SetCodePtr(location);
-        EmitPatchJg(desc, bb);
+        EmitPatchJg(target_desc, target_code_ptr);
     }
 
     for (CodePtr location : patch_info.jmp) {
         code.SetCodePtr(location);
-        EmitPatchJmp(desc, bb);
+        EmitPatchJmp(target_desc, target_code_ptr);
     }
 
     for (CodePtr location : patch_info.mov_rcx) {
         code.SetCodePtr(location);
-        EmitPatchMovRcx(bb);
+        EmitPatchMovRcx(target_code_ptr);
     }
 
     code.SetCodePtr(save_code_ptr);
 }
 
-void EmitX64::Unpatch(const IR::LocationDescriptor& desc) {
-    Patch(desc, nullptr);
+void EmitX64::Unpatch(const IR::LocationDescriptor& target_desc) {
+    Patch(target_desc, nullptr);
 }
 
 void EmitX64::ClearCache() {

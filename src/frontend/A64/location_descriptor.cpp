@@ -11,8 +11,8 @@
 
 namespace Dynarmic::A64 {
 
-std::ostream& operator<<(std::ostream& o, const LocationDescriptor& loc) {
-    o << fmt::format("{{{}, {}}}", loc.PC(), loc.FPCR().Value());
+std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor) {
+    o << fmt::format("{{{}, {}}}", descriptor.PC(), descriptor.FPCR().Value());
     return o;
 }
 

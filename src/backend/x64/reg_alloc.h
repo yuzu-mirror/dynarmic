@@ -143,7 +143,7 @@ private:
     void DefineValueImpl(IR::Inst* def_inst, HostLoc host_loc);
     void DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst);
 
-    HostLoc LoadImmediate(IR::Value imm, HostLoc reg);
+    HostLoc LoadImmediate(IR::Value imm, HostLoc host_loc);
     void Move(HostLoc to, HostLoc from);
     void CopyToScratch(size_t bit_width, HostLoc to, HostLoc from);
     void Exchange(HostLoc a, HostLoc b);

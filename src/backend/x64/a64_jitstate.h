@@ -76,8 +76,8 @@ struct A64JitState {
     u32 fpcr = 0;
     u32 GetFpcr() const;
     u32 GetFpsr() const;
-    void SetFpcr(u32 new_fpcr);
-    void SetFpsr(u32 new_fpcr);
+    void SetFpcr(u32 value);
+    void SetFpsr(u32 value);
 
     u64 GetUniqueHash() const noexcept;
 };
