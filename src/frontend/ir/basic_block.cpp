@@ -102,12 +102,12 @@ Terminal Block::GetTerminal() const {
 
 void Block::SetTerminal(Terminal term) {
     ASSERT_MSG(!HasTerminal(), "Terminal has already been set.");
-    terminal = term;
+    terminal = std::move(term);
 }
 
 void Block::ReplaceTerminal(Terminal term) {
     ASSERT_MSG(HasTerminal(), "Terminal has not been set.");
-    terminal = term;
+    terminal = std::move(term);
 }
 
 bool Block::HasTerminal() const {
