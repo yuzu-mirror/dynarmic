@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <bitset>
 #include <cstdlib>
-#include <functional>
 #include <type_traits>
 
 #include "backend/x64/abi.h"

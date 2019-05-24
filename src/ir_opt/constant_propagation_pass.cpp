@@ -4,9 +4,8 @@
  * General Public License version 2 or any later version.
  */
 
-#include <dynarmic/A32/config.h>
-
 #include "common/bit_util.h"
+#include "common/common_types.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/opcodes.h"
 #include "ir_opt/passes.h"

@@ -4,15 +4,12 @@
  * General Public License version 2 or any later version.
  */
 
-#include <tuple>
-
 #include "common/common_types.h"
 #include "common/fp/fpcr.h"
 #include "common/fp/fpsr.h"
 #include "common/fp/info.h"
-#include "common/fp/op/FPRecipEstimate.h"
+#include "common/fp/op/FPConvert.h"
 #include "common/fp/process_exception.h"
-#include "common/fp/process_nan.h"
 #include "common/fp/unpacked.h"
 
 namespace Dynarmic::FP {

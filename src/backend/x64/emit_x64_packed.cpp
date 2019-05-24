@@ -6,9 +6,6 @@
 
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
-#include "common/assert.h"
-#include "common/common_types.h"
-#include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "common/assert.h"
 #include "common/bit_util.h"
 #include "frontend/imm.h"
 #include "frontend/A32/ir_emitter.h"

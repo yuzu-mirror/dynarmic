@@ -4,8 +4,6 @@
  * General Public License version 2 or any later version.
  */
 
-#include <array>
-
 #include "common/common_types.h"
 #include "common/u128.h"
 

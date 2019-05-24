@@ -10,7 +10,6 @@
 #include "common/common_types.h"
 #include "common/crypto/aes.h"
 #include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
 
 namespace Dynarmic::BackendX64 {
 

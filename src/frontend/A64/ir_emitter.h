@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <initializer_list>
 #include <optional>
 
 #include <dynarmic/A64/config.h>

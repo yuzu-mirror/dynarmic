@@ -4,8 +4,6 @@
  * General Public License version 2 or any later version.
  */
 
-#include <tuple>
-
 #include "common/common_types.h"
 #include "common/bit_util.h"
 #include "common/fp/fpcr.h"

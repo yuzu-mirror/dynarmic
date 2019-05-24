@@ -7,7 +7,6 @@
 #pragma once
 
 #include <array>
-#include <optional>
 
 #include <dynarmic/A32/a32.h>
 #include <dynarmic/A32/config.h>

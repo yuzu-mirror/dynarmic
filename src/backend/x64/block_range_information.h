@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <set>
 #include <unordered_set>
 
 #include <boost/icl/interval_map.hpp>

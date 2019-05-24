@@ -8,9 +8,6 @@
 #include <ostream>
 #include <string>
 
-#include <fmt/format.h>
-#include <fmt/ostream.h>
-
 #include "frontend/ir/type.h"
 
 namespace Dynarmic::IR {

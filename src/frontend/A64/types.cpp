@@ -9,7 +9,6 @@
 
 #include <fmt/format.h>
 
-#include "common/bit_util.h"
 #include "frontend/A64/types.h"
 
 namespace Dynarmic::A64 {

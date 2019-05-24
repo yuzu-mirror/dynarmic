@@ -6,11 +6,9 @@
 
 #include <array>
 
-#include "common/assert.h"
 #include "common/common_types.h"
 #include "frontend/A64/types.h"
 #include "frontend/ir/basic_block.h"
-#include "frontend/ir/ir_emitter.h"
 #include "frontend/ir/opcodes.h"
 #include "frontend/ir/value.h"
 #include "ir_opt/passes.h"

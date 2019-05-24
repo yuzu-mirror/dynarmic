@@ -9,6 +9,9 @@
 #include <boost/icl/interval_set.hpp>
 #include <fmt/format.h>
 
+#include <dynarmic/A32/a32.h>
+#include <dynarmic/A32/context.h>
+
 #include "backend/x64/a32_emit_x64.h"
 #include "backend/x64/a32_jitstate.h"
 #include "backend/x64/block_of_code.h"
@@ -19,8 +22,6 @@
 #include "common/common_types.h"
 #include "common/llvm_disassemble.h"
 #include "common/scope_exit.h"
-#include "dynarmic/A32/a32.h"
-#include "dynarmic/A32/context.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/location_descriptor.h"

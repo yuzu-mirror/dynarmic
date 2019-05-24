@@ -10,6 +10,7 @@
 #include <functional>
 #include <optional>
 #include <set>
+#include <string>
 #include <vector>
 
 #include "common/bit_util.h"

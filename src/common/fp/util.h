@@ -8,7 +8,6 @@
 
 #include <optional>
 
-#include "common/common_types.h"
 #include "common/fp/fpcr.h"
 #include "common/fp/info.h"
 
