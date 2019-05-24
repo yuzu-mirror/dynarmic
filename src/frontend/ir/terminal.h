@@ -94,7 +94,7 @@ using Terminal = boost::variant<
  * on the run-time state of the ARM flags.
  */
 struct If {
-    If(Cond if_, Terminal then_, Terminal else_) : if_(if_), then_(then_), else_(else_) {}
+    If(Cond if_, Terminal then_, Terminal else_) : if_(if_), then_(std::move(then_)), else_(std::move(else_)) {}
     Cond if_;
     Terminal then_;
     Terminal else_;
@@ -106,7 +106,7 @@ struct If {
  * then_ is executed if the check bit is non-zero, otherwise else_ is executed.
  */
 struct CheckBit {
-    CheckBit(Terminal then_, Terminal else_) : then_(then_), else_(else_) {}
+    CheckBit(Terminal then_, Terminal else_) : then_(std::move(then_)), else_(std::move(else_)) {}
     Terminal then_;
     Terminal else_;
 };
@@ -116,7 +116,7 @@ struct CheckBit {
  * executed.
  */
 struct CheckHalt {
-    explicit CheckHalt(Terminal else_) : else_(else_) {}
+    explicit CheckHalt(Terminal else_) : else_(std::move(else_)) {}
     Terminal else_;
 };
 
