@@ -101,7 +101,7 @@ INST(DC_CVAU,                "DC CVAU",                                   "11010
 INST(DC_CVAP,                "DC CVAP",                                   "110101010000101101111100001ttttt")
 INST(DC_CIVAC,               "DC CIVAC",                                  "110101010000101101111110001ttttt")
 
-// Unconditonal branch (Register)
+// Unconditional branch (Register)
 INST(BLR,                    "BLR",                                       "1101011000111111000000nnnnn00000")
 INST(BR,                     "BR",                                        "1101011000011111000000nnnnn00000")
 //INST(DRPS,                   "DRPS",                                      "11010110101111110000001111100000")
@@ -112,7 +112,7 @@ INST(RET,                    "RET",                                       "11010
 //INST(ERETA,                  "ERETAA, ERETAB",                            "110101101001111100001M1111111111") // ARMv8.3
 //INST(RETA,                   "RETAA, RETAB",                              "110101100101111100001M1111111111") // ARMv8.3
 
-// Unconditonal branch (immediate)
+// Unconditional branch (immediate)
 INST(B_uncond,               "B",                                         "000101iiiiiiiiiiiiiiiiiiiiiiiiii")
 INST(BL,                     "BL",                                        "100101iiiiiiiiiiiiiiiiiiiiiiiiii")
 

@@ -143,7 +143,7 @@ bool operator>=(Imm<bit_size> a, u32 b) {
 }
 
 /**
- * Concatentate immediates together.
+ * Concatenate immediates together.
  * Left to right corresponds to most significant imm to least significant imm.
  * This is equivalent to a:b:...:z in ASL.
  */

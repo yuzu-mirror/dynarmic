@@ -90,7 +90,7 @@ struct UserCallbacks {
     // A conservative implementation that always returns false is safe.
     virtual bool IsReadOnlyMemory(VAddr /* vaddr */) { return false; }
 
-    /// The intrepreter must execute exactly num_instructions starting from PC.
+    /// The interpreter must execute exactly num_instructions starting from PC.
     virtual void InterpreterFallback(VAddr pc, size_t num_instructions) = 0;
 
     // This callback is called whenever a SVC instruction is executed.
@@ -128,7 +128,7 @@ struct UserConfig {
 
     /// CTR_EL0<27:24> is log2 of the cache writeback granule in words.
     /// CTR_EL0<23:20> is log2 of the exclusives reservation granule in words.
-    /// CTR_EL0<19:16> is log2 of the smallest data/unifed cacheline in words.
+    /// CTR_EL0<19:16> is log2 of the smallest data/unified cacheline in words.
     /// CTR_EL0<15:14> is the level 1 instruction cache policy.
     /// CTR_EL0<3:0> is log2 of the smallest instruction cacheline in words.
     std::uint32_t ctr_el0 = 0x8444c004;

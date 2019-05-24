@@ -44,7 +44,7 @@ bool ArmTranslatorVisitor::EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, E
 
     // The VFP register file is divided into banks each containing:
     // * eight single-precision registers, or
-    // * four double-precision reigsters.
+    // * four double-precision registers.
     // VFP vector instructions access these registers in a circular manner.
     const auto bank_increment = [register_bank_size](ExtReg reg, size_t stride) -> ExtReg {
         const auto reg_number = static_cast<size_t>(reg);

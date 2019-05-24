@@ -109,7 +109,7 @@ public:
     /// Pseudo-instructions depend on their parent instructions for their semantics.
     bool IsAPseudoOperation() const;
 
-    /// Determins whether or not this instruction supports the GetNZCVFromOp pseudo-operation.
+    /// Determines whether or not this instruction supports the GetNZCVFromOp pseudo-operation.
     bool MayGetNZCVFromOp() const;
 
     /// Determines if all arguments of this instruction are immediates.

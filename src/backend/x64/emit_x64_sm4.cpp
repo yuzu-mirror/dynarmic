@@ -1,7 +1,7 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2018 MerryMage
  * This software may be used and distributed according to the terms of the GNU
- * General Public icense version 2 or any later version.
+ * General Public License version 2 or any later version.
  */
 
 #include "backend/x64/block_of_code.h"

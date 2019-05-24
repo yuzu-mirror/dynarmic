@@ -134,4 +134,4 @@ bool ThumbTranslatorVisitor::RaiseException(Exception exception) {
     return false;
 }
 
-} // namepsace Dynarmic::A32
+} // namespace Dynarmic::A32

@@ -69,7 +69,7 @@ struct UserCallbacks {
     // A conservative implementation that always returns false is safe.
     virtual bool IsReadOnlyMemory(VAddr /* vaddr */) { return false; }
 
-    /// The intrepreter must execute exactly num_instructions starting from PC.
+    /// The interpreter must execute exactly num_instructions starting from PC.
     virtual void InterpreterFallback(VAddr pc, size_t num_instructions) = 0;
 
     // This callback is called whenever a SVC instruction is executed.

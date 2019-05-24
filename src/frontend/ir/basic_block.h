@@ -112,7 +112,7 @@ public:
     LocationDescriptor ConditionFailedLocation() const;
     /// Sets the location of the block to execute if the predicated condition fails.
     void SetConditionFailedLocation(LocationDescriptor fail_location);
-    /// Determines whether or not a prediated condition failure block is present.
+    /// Determines whether or not a predicated condition failure block is present.
     bool HasConditionFailedLocation() const;
 
     /// Gets a mutable reference to the condition failed cycle count.

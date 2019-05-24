@@ -176,7 +176,7 @@ struct TranslatorVisitor final {
     bool DC_CVAP(Reg Rt);
     bool DC_CIVAC(Reg Rt);
 
-    // Unconditonal branch (Register)
+    // Unconditional branch (Register)
     bool BR(Reg Rn);
     bool BRA(bool Z, bool M, Reg Rn, Reg Rm);
     bool BLR(Reg Rn);
@@ -187,7 +187,7 @@ struct TranslatorVisitor final {
     bool ERETA(bool M);
     bool DRPS();
 
-    // Unconditonal branch (immediate)
+    // Unconditional branch (immediate)
     bool B_uncond(Imm<26> imm26);
     bool BL(Imm<26> imm26);
 

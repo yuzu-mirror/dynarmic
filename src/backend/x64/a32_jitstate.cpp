@@ -155,7 +155,7 @@ void A32JitState::ResetRSB() {
  * Len      bits 16-18  Vector length
  */
 
-// NZCV; QC (ASMID only), AHP; DN, FZ, RMode, Stride; SBZP; Len; trap enables; cumulative bits
+// NZCV; QC (ASIMD only), AHP; DN, FZ, RMode, Stride; SBZP; Len; trap enables; cumulative bits
 constexpr u32 FPSCR_MODE_MASK = A32::LocationDescriptor::FPSCR_MODE_MASK;
 constexpr u32 FPSCR_NZCV_MASK = 0xF0000000;
 

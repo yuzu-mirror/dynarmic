@@ -923,7 +923,7 @@ static void ExclusiveWrite(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* ins
         reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
     }
     const Xbyak::Reg32 passed = reg_alloc.ScratchGpr().cvt32();
-    const Xbyak::Reg32 tmp = code.ABI_RETURN.cvt32(); // Use one of the unusued HostCall registers.
+    const Xbyak::Reg32 tmp = code.ABI_RETURN.cvt32(); // Use one of the unused HostCall registers.
 
     Xbyak::Label end;
 
