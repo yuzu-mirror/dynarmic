@@ -144,7 +144,7 @@ private:
 
 Jit::Jit(UserConfig config) : impl(std::make_unique<Impl>(this, config)) {}
 
-Jit::~Jit() {}
+Jit::~Jit() = default;
 
 void Jit::Run() {
     ASSERT(!is_executing);
