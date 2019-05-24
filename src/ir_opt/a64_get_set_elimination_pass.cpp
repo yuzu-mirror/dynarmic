@@ -66,7 +66,6 @@ void A64GetSetElimination(IR::Block& block) {
         }
 
         do_nothing();
-        return;
     };
 
     for (auto inst = block.begin(); inst != block.end(); ++inst) {
