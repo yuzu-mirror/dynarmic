@@ -245,7 +245,6 @@ const std::array<std::uint32_t, 64>& Context::ExtRegs() const {
     return impl->jit_state.ExtReg;
 }
 
-/// View and modify CPSR.
 std::uint32_t Context::Cpsr() const {
     return impl->jit_state.Cpsr();
 }
@@ -253,7 +252,6 @@ void Context::SetCpsr(std::uint32_t value) {
     impl->jit_state.SetCpsr(value);
 }
 
-/// View and modify FPSCR.
 std::uint32_t Context::Fpscr() const {
     return impl->jit_state.Fpscr();
 }
