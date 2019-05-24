@@ -52,12 +52,13 @@ const char* CoprocRegToString(CoprocReg reg) {
 }
 
 std::string RegListToString(RegList reg_list) {
-    std::string ret = "";
+    std::string ret;
     bool first_reg = true;
     for (size_t i = 0; i < 16; i++) {
         if (Common::Bit(i, reg_list)) {
-            if (!first_reg)
+            if (!first_reg) {
                 ret += ", ";
+            }
             ret += RegToString(static_cast<Reg>(i));
             first_reg = false;
         }
