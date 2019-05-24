@@ -554,6 +554,7 @@ OPCODE(FPVectorAdd32,                                       U128,           U128
 OPCODE(FPVectorAdd64,                                       U128,           U128,           U128                                            )
 OPCODE(FPVectorDiv32,                                       U128,           U128,           U128                                            )
 OPCODE(FPVectorDiv64,                                       U128,           U128,           U128                                            )
+OPCODE(FPVectorEqual16,                                     U128,           U128,           U128                                            )
 OPCODE(FPVectorEqual32,                                     U128,           U128,           U128                                            )
 OPCODE(FPVectorEqual64,                                     U128,           U128,           U128                                            )
 OPCODE(FPVectorFromSignedFixed32,                           U128,           U128,           U8,             U8                              )
