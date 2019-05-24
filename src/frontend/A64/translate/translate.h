@@ -32,7 +32,7 @@ struct TranslationOptions {
  * This function translates instructions in memory into our intermediate representation.
  * @param descriptor The starting location of the basic block. Includes information like PC, FPCR state, &c.
  * @param memory_read_code The function we should use to read emulated memory.
- * @param options Configure how instructions are translated.
+ * @param options Configures how certain instructions are translated.
  * @return A translated basic block in the intermediate representation.
  */
 IR::Block Translate(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, TranslationOptions options);
