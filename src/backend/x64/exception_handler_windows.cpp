@@ -68,8 +68,7 @@ struct UNWIND_INFO {
     // With Flags == 0 there are no additional fields.
 };
 
-namespace Dynarmic {
-namespace BackendX64 {
+namespace Dynarmic::BackendX64 {
 
 struct PrologueInformation {
     std::vector<UNWIND_CODE> unwind_code;
@@ -198,5 +197,4 @@ void BlockOfCode::ExceptionHandler::Register(BlockOfCode& code) {
     impl = std::make_unique<Impl>(rfuncs, code.getCode());
 }
 
-} // namespace BackendX64
-} // namespace Dynarmic
+} // namespace Dynarmic::BackendX64
