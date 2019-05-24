@@ -24,6 +24,8 @@ add_library(dynarmic
     common/fp/info.h
     common/fp/mantissa_util.h
     common/fp/op.h
+    common/fp/op/FPCompare.cpp
+    common/fp/op/FPCompare.h
     common/fp/op/FPConvert.cpp
     common/fp/op/FPConvert.h
     common/fp/op/FPMulAdd.cpp
