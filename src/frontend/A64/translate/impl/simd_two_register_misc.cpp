@@ -332,6 +332,17 @@ bool TranslatorVisitor::FABS_2(bool Q, bool sz, Vec Vn, Vec Vd) {
     return true;
 }
 
+bool TranslatorVisitor::FCMEQ_zero_3(bool Q, Vec Vn, Vec Vd) {
+    const size_t datasize = Q ? 128 : 64;
+
+    const IR::U128 operand = V(datasize, Vn);
+    const IR::U128 zero = ir.ZeroVector();
+    const IR::U128 result = ir.FPVectorEqual(16, operand, zero);
+
+    V(datasize, Vd, result);
+    return true;
+}
+
 bool TranslatorVisitor::FCMEQ_zero_4(bool Q, bool sz, Vec Vn, Vec Vd) {
     return FPCompareAgainstZero(*this, Q, sz, Vn, Vd, ComparisonType::EQ);
 }

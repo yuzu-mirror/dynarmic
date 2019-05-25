@@ -382,7 +382,7 @@ INST(DUP_elt_1,              "DUP (element)",                             "01011
 // Data Processing - FP and SIMD - Scalar three
 //INST(FMULX_vec_1,            "FMULX",                                     "01011110010mmmmm000111nnnnnddddd")
 INST(FMULX_vec_2,            "FMULX",                                     "010111100z1mmmmm110111nnnnnddddd")
-//INST(FCMEQ_reg_1,            "FCMEQ (register)",                          "01011110010mmmmm001001nnnnnddddd")
+INST(FCMEQ_reg_1,            "FCMEQ (register)",                          "01011110010mmmmm001001nnnnnddddd")
 INST(FCMEQ_reg_2,            "FCMEQ (register)",                          "010111100z1mmmmm111001nnnnnddddd")
 INST(FRECPS_1,               "FRECPS",                                    "01011110010mmmmm001111nnnnnddddd")
 INST(FRECPS_2,               "FRECPS",                                    "010111100z1mmmmm111111nnnnnddddd")
@@ -410,7 +410,7 @@ INST(FCVTAS_2,               "FCVTAS (vector)",                           "01011
 INST(SCVTF_int_2,            "SCVTF (vector, integer)",                   "010111100z100001110110nnnnnddddd")
 //INST(FCMGT_zero_1,           "FCMGT (zero)",                              "0101111011111000110010nnnnnddddd")
 INST(FCMGT_zero_2,           "FCMGT (zero)",                              "010111101z100000110010nnnnnddddd")
-//INST(FCMEQ_zero_1,           "FCMEQ (zero)",                              "0101111011111000110110nnnnnddddd")
+INST(FCMEQ_zero_1,           "FCMEQ (zero)",                              "0101111011111000110110nnnnnddddd")
 INST(FCMEQ_zero_2,           "FCMEQ (zero)",                              "010111101z100000110110nnnnnddddd")
 //INST(FCMLT_1,                "FCMLT (zero)",                              "0101111011111000111010nnnnnddddd")
 INST(FCMLT_2,                "FCMLT (zero)",                              "010111101z100000111010nnnnnddddd")
@@ -574,7 +574,7 @@ INST(INS_elt,                "INS (element)",                             "01101
 
 // Data Processing - FP and SIMD - SIMD Three same
 //INST(FMULX_vec_3,            "FMULX",                                     "0Q001110010mmmmm000111nnnnnddddd")
-//INST(FCMEQ_reg_3,            "FCMEQ (register)",                          "0Q001110010mmmmm001001nnnnnddddd")
+INST(FCMEQ_reg_3,            "FCMEQ (register)",                          "0Q001110010mmmmm001001nnnnnddddd")
 INST(FRECPS_3,               "FRECPS",                                    "0Q001110010mmmmm001111nnnnnddddd")
 INST(FRSQRTS_3,              "FRSQRTS",                                   "0Q001110110mmmmm001111nnnnnddddd")
 //INST(FCMGE_reg_3,            "FCMGE (register)",                          "0Q101110010mmmmm001001nnnnnddddd")
@@ -635,7 +635,7 @@ INST(FCVTAS_4,               "FCVTAS (vector)",                           "0Q001
 INST(SCVTF_int_4,            "SCVTF (vector, integer)",                   "0Q0011100z100001110110nnnnnddddd")
 //INST(FCMGT_zero_3,           "FCMGT (zero)",                              "0Q00111011111000110010nnnnnddddd")
 INST(FCMGT_zero_4,           "FCMGT (zero)",                              "0Q0011101z100000110010nnnnnddddd")
-//INST(FCMEQ_zero_3,           "FCMEQ (zero)",                              "0Q00111011111000110110nnnnnddddd")
+INST(FCMEQ_zero_3,           "FCMEQ (zero)",                              "0Q00111011111000110110nnnnnddddd")
 INST(FCMEQ_zero_4,           "FCMEQ (zero)",                              "0Q0011101z100000110110nnnnnddddd")
 //INST(FCMLT_3,                "FCMLT (zero)",                              "0Q00111011111000111010nnnnnddddd")
 INST(FCMLT_4,                "FCMLT (zero)",                              "0Q0011101z100000111010nnnnnddddd")
