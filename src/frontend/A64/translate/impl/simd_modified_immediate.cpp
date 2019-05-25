@@ -15,7 +15,7 @@ bool TranslatorVisitor::MOVI(bool Q, bool op, Imm<1> a, Imm<1> b, Imm<1> c, Imm<
     // MOVI
     // also FMOV (vector, immediate) when cmode == 0b1111
     const auto movi = [&]{
-        u64 imm64 = AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
+        const u64 imm64 = AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
         const IR::U128 imm = datasize == 64 ? ir.ZeroExtendToQuad(ir.Imm64(imm64)) : ir.VectorBroadcast(64, ir.Imm64(imm64));
         V(128, Vd, imm);
         return true;
@@ -23,7 +23,7 @@ bool TranslatorVisitor::MOVI(bool Q, bool op, Imm<1> a, Imm<1> b, Imm<1> c, Imm<
 
     // MVNI
     const auto mvni = [&]{
-        u64 imm64 = ~AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
+        const u64 imm64 = ~AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
         const IR::U128 imm = datasize == 64 ? ir.ZeroExtendToQuad(ir.Imm64(imm64)) : ir.VectorBroadcast(64, ir.Imm64(imm64));
         V(128, Vd, imm);
         return true;
@@ -31,7 +31,7 @@ bool TranslatorVisitor::MOVI(bool Q, bool op, Imm<1> a, Imm<1> b, Imm<1> c, Imm<
 
     // ORR (vector, immediate)
     const auto orr = [&]{
-        u64 imm64 = AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
+        const u64 imm64 = AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
         const IR::U128 imm = datasize == 64 ? ir.ZeroExtendToQuad(ir.Imm64(imm64)) : ir.VectorBroadcast(64, ir.Imm64(imm64));
         const IR::U128 operand = V(datasize, Vd);
         const IR::U128 result = ir.VectorOr(operand, imm);
@@ -41,7 +41,7 @@ bool TranslatorVisitor::MOVI(bool Q, bool op, Imm<1> a, Imm<1> b, Imm<1> c, Imm<
 
     // BIC (vector, immediate)
     const auto bic = [&]{
-        u64 imm64 = ~AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
+        const u64 imm64 = ~AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
         const IR::U128 imm = datasize == 64 ? ir.ZeroExtendToQuad(ir.Imm64(imm64)) : ir.VectorBroadcast(64, ir.Imm64(imm64));
         const IR::U128 operand = V(datasize, Vd);
         const IR::U128 result = ir.VectorAnd(operand, imm);

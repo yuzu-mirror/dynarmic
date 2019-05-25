@@ -9,8 +9,8 @@
 namespace Dynarmic::A64 {
 
 static IR::U32U64 ReplicateBit(IREmitter& ir, const IR::U32U64& value, u8 bit_position_to_replicate) {
-    u8 datasize = value.GetType() == IR::Type::U64 ? 64 : 32;
-    auto bit = ir.LogicalShiftLeft(value, ir.Imm8(datasize - 1 - bit_position_to_replicate));
+    const u8 datasize = value.GetType() == IR::Type::U64 ? 64 : 32;
+    const auto bit = ir.LogicalShiftLeft(value, ir.Imm8(datasize - 1 - bit_position_to_replicate));
     return ir.ArithmeticShiftRight(bit, ir.Imm8(datasize - 1));
 }
 
