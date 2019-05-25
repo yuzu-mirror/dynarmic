@@ -18,7 +18,7 @@ using namespace Xbyak::util;
 
 void EmitX64::EmitPackedAddU8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -45,7 +45,7 @@ void EmitX64::EmitPackedAddU8(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPackedAddS8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -72,7 +72,7 @@ void EmitX64::EmitPackedAddS8(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -114,7 +114,7 @@ void EmitX64::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPackedAddS16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -141,7 +141,7 @@ void EmitX64::EmitPackedAddS16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPackedSubU8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -164,7 +164,7 @@ void EmitX64::EmitPackedSubU8(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPackedSubS8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -191,7 +191,7 @@ void EmitX64::EmitPackedSubS8(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     if (!ge_inst) {
         const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
@@ -242,7 +242,7 @@ void EmitX64::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitPackedSubS16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -512,7 +512,7 @@ void EmitX64::EmitPackedHalvingSubS16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitPackedSubAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, bool hi_is_sum, bool is_signed, bool is_halving) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
     const Xbyak::Reg32 reg_a_hi = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
     const Xbyak::Reg32 reg_b_hi = ctx.reg_alloc.UseScratchGpr(args[1]).cvt32();

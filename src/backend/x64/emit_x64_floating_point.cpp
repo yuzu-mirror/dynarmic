@@ -1013,7 +1013,7 @@ void EmitX64::EmitFPSub64(EmitContext& ctx, IR::Inst* inst) {
 
 static Xbyak::Reg64 SetFpscrNzcvFromFlags(BlockOfCode& code, EmitContext& ctx) {
     ctx.reg_alloc.ScratchGpr({HostLoc::RCX}); // shifting requires use of cl
-    Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr();
 
     //               x64 flags    ARM flags
     //               ZF  PF  CF     NZCV
@@ -1040,9 +1040,9 @@ static Xbyak::Reg64 SetFpscrNzcvFromFlags(BlockOfCode& code, EmitContext& ctx) {
 
 void EmitX64::EmitFPCompare32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Xmm reg_a = ctx.reg_alloc.UseXmm(args[0]);
-    Xbyak::Xmm reg_b = ctx.reg_alloc.UseXmm(args[1]);
-    bool exc_on_qnan = args[2].GetImmediateU1();
+    const Xbyak::Xmm reg_a = ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm reg_b = ctx.reg_alloc.UseXmm(args[1]);
+    const bool exc_on_qnan = args[2].GetImmediateU1();
 
     if (exc_on_qnan) {
         code.comiss(reg_a, reg_b);
@@ -1050,15 +1050,15 @@ void EmitX64::EmitFPCompare32(EmitContext& ctx, IR::Inst* inst) {
         code.ucomiss(reg_a, reg_b);
     }
 
-    Xbyak::Reg64 nzcv = SetFpscrNzcvFromFlags(code, ctx);
+    const Xbyak::Reg64 nzcv = SetFpscrNzcvFromFlags(code, ctx);
     ctx.reg_alloc.DefineValue(inst, nzcv);
 }
 
 void EmitX64::EmitFPCompare64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    Xbyak::Xmm reg_a = ctx.reg_alloc.UseXmm(args[0]);
-    Xbyak::Xmm reg_b = ctx.reg_alloc.UseXmm(args[1]);
-    bool exc_on_qnan = args[2].GetImmediateU1();
+    const Xbyak::Xmm reg_a = ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm reg_b = ctx.reg_alloc.UseXmm(args[1]);
+    const bool exc_on_qnan = args[2].GetImmediateU1();
 
     if (exc_on_qnan) {
         code.comisd(reg_a, reg_b);
@@ -1066,7 +1066,7 @@ void EmitX64::EmitFPCompare64(EmitContext& ctx, IR::Inst* inst) {
         code.ucomisd(reg_a, reg_b);
     }
 
-    Xbyak::Reg64 nzcv = SetFpscrNzcvFromFlags(code, ctx);
+    const Xbyak::Reg64 nzcv = SetFpscrNzcvFromFlags(code, ctx);
     ctx.reg_alloc.DefineValue(inst, nzcv);
 }
 

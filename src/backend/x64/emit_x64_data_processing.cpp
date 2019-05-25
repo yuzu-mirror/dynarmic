@@ -38,7 +38,7 @@ void EmitX64::EmitPack2x64To1x128(EmitContext& ctx, IR::Inst* inst) {
         code.movq(result, lo);
         code.pinsrq(result, hi, 1);
     } else {
-        Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
         code.movq(result, lo);
         code.movq(tmp, hi);
         code.punpcklqdq(result, tmp);
@@ -53,7 +53,7 @@ void EmitX64::EmitLeastSignificantWord(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitMostSignificantWord(EmitContext& ctx, IR::Inst* inst) {
-    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
@@ -220,7 +220,7 @@ void EmitX64::EmitExtractRegister64(Dynarmic::BackendX64::EmitContext& ctx, IR::
 }
 
 void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
-    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& operand_arg = args[0];
@@ -353,7 +353,7 @@ void EmitX64::EmitLogicalShiftLeft64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
-    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& operand_arg = args[0];
@@ -485,7 +485,7 @@ void EmitX64::EmitLogicalShiftRight64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
-    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& operand_arg = args[0];
@@ -604,7 +604,7 @@ void EmitX64::EmitArithmeticShiftRight64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
-    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& operand_arg = args[0];
@@ -706,7 +706,7 @@ void EmitX64::EmitRotateRight64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitRotateRightExtended(EmitContext& ctx, IR::Inst* inst) {
-    auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();

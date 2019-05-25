@@ -467,7 +467,7 @@ void EmitX64::EmitVectorArithmeticShiftRight8(EmitContext& ctx, IR::Inst* inst) 
 void EmitX64::EmitVectorArithmeticShiftRight16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.psraw(result, shift_amount);
@@ -478,7 +478,7 @@ void EmitX64::EmitVectorArithmeticShiftRight16(EmitContext& ctx, IR::Inst* inst)
 void EmitX64::EmitVectorArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const u8 shift_amount = args[1].GetImmediateU8();
 
     code.psrad(result, shift_amount);
@@ -1001,9 +1001,9 @@ void EmitX64::EmitVectorEqual64(EmitContext& ctx, IR::Inst* inst) {
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
-    Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
     code.pcmpeqd(xmm_a, xmm_b);
     code.pshufd(tmp, xmm_a, 0b10110001);
