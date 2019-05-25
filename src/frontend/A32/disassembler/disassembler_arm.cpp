@@ -466,7 +466,8 @@ public:
 
     // Load/Store instructions
     std::string arm_LDR_lit(Cond cond, bool U, Reg t, Imm<12> imm12) {
-        bool P = true, W = false;
+        const bool P = true;
+        const bool W = false;
         return arm_LDR_imm(cond, P, U, W, Reg::PC, t, imm12);
     }
     std::string arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
