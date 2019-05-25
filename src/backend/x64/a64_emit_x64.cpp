@@ -141,7 +141,7 @@ void A64EmitX64::GenMemory128Accessors() {
     memory_read_128 = code.getCurr<void(*)()>();
 #ifdef _WIN32
     Devirtualize<&A64::UserCallbacks::MemoryRead128>(conf.callbacks).EmitCallWithReturnPointer(code,
-        [&](Xbyak::Reg64 return_value_ptr, RegList args) {
+        [&](Xbyak::Reg64 return_value_ptr, [[maybe_unused]] RegList args) {
             code.mov(code.ABI_PARAM3, code.ABI_PARAM2);
             code.sub(rsp, 8 + 16 + ABI_SHADOW_SPACE);
             code.lea(return_value_ptr, ptr[rsp + ABI_SHADOW_SPACE]);
