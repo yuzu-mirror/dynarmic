@@ -7,10 +7,9 @@
 #pragma once
 
 #include <cstring>
-#include <memory>
+#include <utility>
 
 #include "backend/x64/callback.h"
-#include "common/assert.h"
 #include "common/cast_util.h"
 #include "common/common_types.h"
 #include "common/mp/function_info.h"

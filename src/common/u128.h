@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <cstring>
 #include <tuple>
 #include <type_traits>
 

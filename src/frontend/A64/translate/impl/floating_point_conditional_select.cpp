@@ -4,8 +4,6 @@
  * General Public License version 2 or any later version.
  */
 
-#include <optional>
-
 #include "frontend/A64/translate/impl/impl.h"
 
 namespace Dynarmic::A64 {

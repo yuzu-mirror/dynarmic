@@ -8,8 +8,6 @@
 
 #include <cstddef>
 
-#include "common/common_types.h"
-
 namespace Dynarmic::BackendX64 {
 
 struct JitStateInfo {

@@ -18,7 +18,6 @@
 #include "common/fp/info.h"
 #include "common/fp/op.h"
 #include "common/fp/rounding_mode.h"
-#include "common/fp/util.h"
 #include "common/mp/cartesian_product.h"
 #include "common/mp/integer.h"
 #include "common/mp/list.h"
@@ -28,7 +27,6 @@
 #include "common/mp/vllift.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
 
 namespace Dynarmic::BackendX64 {
 

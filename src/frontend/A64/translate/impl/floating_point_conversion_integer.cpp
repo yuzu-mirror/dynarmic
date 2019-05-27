@@ -4,8 +4,6 @@
  * General Public License version 2 or any later version.
  */
 
-#include <optional>
-
 #include "common/fp/rounding_mode.h"
 #include "frontend/A64/translate/impl/impl.h"
 

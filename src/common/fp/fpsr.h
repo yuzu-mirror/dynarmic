@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <optional>
-
 #include "common/bit_util.h"
 #include "common/common_types.h"
 

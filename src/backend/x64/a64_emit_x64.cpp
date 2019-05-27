@@ -21,7 +21,6 @@
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "common/scope_exit.h"
-#include "common/variant_util.h"
 #include "frontend/A64/location_descriptor.h"
 #include "frontend/A64/types.h"
 #include "frontend/ir/basic_block.h"

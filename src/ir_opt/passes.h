@@ -6,8 +6,14 @@
 
 #pragma once
 
-#include <dynarmic/A32/config.h>
-#include <dynarmic/A64/config.h>
+namespace Dynarmic::A32 {
+struct UserCallbacks;
+}
+
+namespace Dynarmic::A64 {
+struct UserCallbacks;
+struct UserConfig;
+}
 
 namespace Dynarmic::IR {
 class Block;

@@ -8,7 +8,6 @@
 
 #include <iosfwd>
 #include <string>
-#include <utility>
 
 #include "common/assert.h"
 #include "common/common_types.h"
