@@ -346,6 +346,15 @@ bool TranslatorVisitor::FACGT_2(bool sz, Vec Vm, Vec Vn, Vec Vd) {
     return ScalarFPCompareRegister(*this, sz, Vm, Vn, Vd, FPComparisonType::AbsoluteGT);
 }
 
+bool TranslatorVisitor::FCMEQ_reg_1(Vec Vm, Vec Vn, Vec Vd) {
+    const IR::U128 lhs = V(128, Vn);
+    const IR::U128 rhs = V(128, Vm);
+    const IR::U128 result = ir.FPVectorEqual(16, lhs, rhs);
+
+    V_scalar(16, Vd, ir.VectorGetElement(16, result, 0));
+    return true;
+}
+
 bool TranslatorVisitor::FCMEQ_reg_2(bool sz, Vec Vm, Vec Vn, Vec Vd) {
     return ScalarFPCompareRegister(*this, sz, Vm, Vn, Vd, FPComparisonType::EQ);
 }

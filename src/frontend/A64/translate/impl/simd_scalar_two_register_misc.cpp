@@ -100,6 +100,15 @@ bool TranslatorVisitor::ABS_1(Imm<2> size, Vec Vn, Vec Vd) {
     return true;
 }
 
+bool TranslatorVisitor::FCMEQ_zero_1(Vec Vn, Vec Vd) {
+    const IR::U128 operand = ir.ZeroExtendToQuad(V_scalar(16, Vn));
+    const IR::U128 zero = ir.ZeroVector();
+    const IR::U128 result = ir.FPVectorEqual(16, operand, zero);
+
+    V_scalar(16, Vd, ir.VectorGetElement(16, result, 0));
+    return true;
+}
+
 bool TranslatorVisitor::FCMEQ_zero_2(bool sz, Vec Vn, Vec Vd) {
     return ScalarFPCompareAgainstZero(*this, sz, Vn, Vd, ComparisonType::EQ);
 }

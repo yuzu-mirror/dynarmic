@@ -753,6 +753,17 @@ bool TranslatorVisitor::FMLS_vec_2(bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd) {
     return true;
 }
 
+bool TranslatorVisitor::FCMEQ_reg_3(bool Q, Vec Vm, Vec Vn, Vec Vd) {
+    const size_t datasize = Q ? 128 : 64;
+
+    const IR::U128 lhs = V(datasize, Vn);
+    const IR::U128 rhs = V(datasize, Vm);
+    const IR::U128 result = ir.FPVectorEqual(16, lhs, rhs);
+
+    V(datasize, Vd, result);
+    return true;
+}
+
 bool TranslatorVisitor::FCMEQ_reg_4(bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd) {
     return FPCompareRegister(*this, Q, sz, Vm, Vn, Vd, ComparisonType::EQ);
 }
