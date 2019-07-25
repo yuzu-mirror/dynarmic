@@ -219,11 +219,11 @@ void A32EmitX64::GenTerminalHandlers() {
     // location_descriptor ends up in rbx
     const auto calculate_location_descriptor = [this] {
         // This calculation has to match up with IREmitter::PushRSB
-        constexpr size_t offsetof_pc = offsetof(A32JitState, Reg) + 15 * sizeof(u32);
-        static_assert(offsetof_pc + 4 == offsetof(A32JitState, cpsr_et));
-        static_assert(offsetof_pc + 5 == offsetof(A32JitState, cpsr_it));
-        static_assert(offsetof_pc + 6 == offsetof(A32JitState, fpcr_mode));
-        code.mov(rbx, qword[r15 + offsetof_pc]);
+        code.mov(ebx, dword[r15 + offsetof(A32JitState, upper_location_descriptor)]);
+        code.shl(rbx, 32);
+        code.mov(ecx, MJitStateReg(A32::Reg::PC));
+        code.mov(ebp, ecx);
+        code.or_(rbx, rcx);
     };
 
     Xbyak::Label fast_dispatch_cache_miss, rsb_cache_miss;
@@ -347,15 +347,17 @@ void A32EmitX64::EmitA32GetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
         const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
         const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
 
-        code.mov(result, dword[r15 + offsetof(A32JitState, cpsr_ge)]);
-        code.mov(tmp, 0x80808080);
-        code.pext(result, result, tmp);
-        code.shr(result, 16);
+        // Here we observe that cpsr_et and cpsr_ge are right next to each other in memory,
+        // so we load them both at the same time with one 64-bit read. This allows us to
+        // extract all of their bits together at once with one pext.
+        static_assert(offsetof(A32JitState, upper_location_descriptor) + 4 == offsetof(A32JitState, cpsr_ge));
+        code.mov(result.cvt64(), qword[r15 + offsetof(A32JitState, upper_location_descriptor)]);
+        code.mov(tmp.cvt64(), 0x80808080'00000003ull);
+        code.pext(result.cvt64(), result.cvt64(), tmp.cvt64());
+        code.mov(tmp, 0x000f0220);
+        code.pdep(result, result, tmp);
         code.mov(tmp, dword[r15 + offsetof(A32JitState, cpsr_q)]);
         code.shl(tmp, 27);
-        code.or_(result, tmp);
-        code.movzx(tmp, code.byte[r15 + offsetof(A32JitState, cpsr_et)]);
-        code.shl(tmp, 5);
         code.or_(result, tmp);
         code.or_(result, dword[r15 + offsetof(A32JitState, cpsr_nzcv)]);
         code.or_(result, dword[r15 + offsetof(A32JitState, cpsr_jaifm)]);
@@ -378,6 +380,7 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
         const Xbyak::Reg32 cpsr = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+        const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
 
         // cpsr_q
         code.bt(cpsr, 27);
@@ -393,21 +396,19 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
         code.and_(tmp, 0x07F0FDDF);
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_jaifm)], tmp);
 
-        // cpsr_et
-        code.mov(tmp, cpsr);
-        code.shr(tmp, 5);
-        code.and_(tmp, 0x11);
-        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_et)], tmp.cvt8());
-
-        // cpsr_ge
-        code.shr(cpsr, 16);
-        code.mov(tmp, 0x01010101);
-        code.pdep(cpsr, cpsr, tmp);
+        // cpsr_et and cpsr_ge
+        static_assert(offsetof(A32JitState, upper_location_descriptor) + 4 == offsetof(A32JitState, cpsr_ge));
+        code.and_(qword[r15 + offsetof(A32JitState, upper_location_descriptor)], u32(0xFFFF0000));
+        code.mov(tmp, 0x000f0220);
+        code.pext(cpsr, cpsr, tmp);
+        code.mov(tmp.cvt64(), 0x01010101'00000003ull);
+        code.pdep(cpsr.cvt64(), cpsr.cvt64(), tmp.cvt64());
         // We perform SWAR partitioned subtraction here, to negate the GE bytes.
-        code.mov(tmp, 0x80808080);
-        code.sub(tmp, cpsr);
-        code.xor_(tmp, 0x80808080);
-        code.mov(dword[r15 + offsetof(A32JitState, cpsr_ge)], tmp);
+        code.mov(tmp.cvt64(), 0x80808080'00000003ull);
+        code.mov(tmp2.cvt64(), tmp.cvt64());
+        code.sub(tmp.cvt64(), cpsr.cvt64());
+        code.xor_(tmp.cvt64(), tmp2.cvt64());
+        code.or_(qword[r15 + offsetof(A32JitState, upper_location_descriptor)], tmp.cvt64());
     } else {
         ctx.reg_alloc.HostCall(nullptr, args[0]);
         code.mov(code.ABI_PARAM2, code.r15);
@@ -644,6 +645,8 @@ void A32EmitX64::EmitA32BXWritePC(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& arg = args[0];
 
+    const u32 upper_without_t = (ctx.Location().UniqueHash() >> 32) & 0xFFFFFFFE;
+
     // Pseudocode:
     // if (new_pc & 1) {
     //    new_pc &= 0xFFFFFFFE;
@@ -657,36 +660,22 @@ void A32EmitX64::EmitA32BXWritePC(A32EmitContext& ctx, IR::Inst* inst) {
     if (arg.IsImmediate()) {
         const u32 new_pc = arg.GetImmediateU32();
         const u32 mask = Common::Bit<0>(new_pc) ? 0xFFFFFFFE : 0xFFFFFFFC;
-        u32 et = 0;
-        et |= ctx.Location().EFlag() ? 0x10 : 0;
-        et |= Common::Bit<0>(new_pc) ? 0x01 : 0;
+        const u32 new_upper = upper_without_t | (Common::Bit<0>(new_pc) ? 1 : 0);
 
         code.mov(MJitStateReg(A32::Reg::PC), new_pc & mask);
-        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_et)], u8(et));
+        code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], new_upper);
     } else {
-        if (ctx.Location().EFlag()) {
-            const Xbyak::Reg32 new_pc = ctx.reg_alloc.UseScratchGpr(arg).cvt32();
-            const Xbyak::Reg32 mask = ctx.reg_alloc.ScratchGpr().cvt32();
-            const Xbyak::Reg32 et = ctx.reg_alloc.ScratchGpr().cvt32();
+        const Xbyak::Reg32 new_pc = ctx.reg_alloc.UseScratchGpr(arg).cvt32();
+        const Xbyak::Reg32 mask = ctx.reg_alloc.ScratchGpr().cvt32();
+        const Xbyak::Reg32 new_upper = ctx.reg_alloc.ScratchGpr().cvt32();
 
-            code.mov(mask, new_pc);
-            code.and_(mask, 1);
-            code.lea(et, ptr[mask.cvt64() + 0x10]);
-            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_et)], et.cvt8());
-            code.lea(mask, ptr[mask.cvt64() + mask.cvt64() * 1 - 4]); // mask = pc & 1 ? 0xFFFFFFFE : 0xFFFFFFFC
-            code.and_(new_pc, mask);
-            code.mov(MJitStateReg(A32::Reg::PC), new_pc);
-        } else {
-            const Xbyak::Reg32 new_pc = ctx.reg_alloc.UseScratchGpr(arg).cvt32();
-            const Xbyak::Reg32 mask = ctx.reg_alloc.ScratchGpr().cvt32();
-
-            code.mov(mask, new_pc);
-            code.and_(mask, 1);
-            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_et)], mask.cvt8());
-            code.lea(mask, ptr[mask.cvt64() + mask.cvt64() * 1 - 4]); // mask = pc & 1 ? 0xFFFFFFFE : 0xFFFFFFFC
-            code.and_(new_pc, mask);
-            code.mov(MJitStateReg(A32::Reg::PC), new_pc);
-        }
+        code.mov(mask, new_pc);
+        code.and_(mask, 1);
+        code.lea(new_upper, ptr[mask.cvt64() + upper_without_t]);
+        code.lea(mask, ptr[mask.cvt64() + mask.cvt64() * 1 - 4]); // mask = pc & 1 ? 0xFFFFFFFE : 0xFFFFFFFC
+        code.and_(new_pc, mask);
+        code.mov(MJitStateReg(A32::Reg::PC), new_pc);
+        code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], new_upper);
     }
 }
 
@@ -1259,17 +1248,13 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::ReturnToDispatch, IR::LocationDescri
     code.ReturnFromRunCode();
 }
 
-static u8 CalculateCpsr_et(const IR::LocationDescriptor& arg) {
-    const A32::LocationDescriptor desc{arg};
-    u8 et = 0;
-    et |= desc.EFlag() ? 0x10 : 0;
-    et |= desc.TFlag() ? 0x01 : 0;
-    return et;
+static u32 CalculateUpper(const IR::LocationDescriptor& arg) {
+    return static_cast<u32>(arg.Value() >> 32);
 }
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location) {
-    if (CalculateCpsr_et(terminal.next) != CalculateCpsr_et(initial_location)) {
-        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_et)], CalculateCpsr_et(terminal.next));
+    if (CalculateUpper(terminal.next) != CalculateUpper(initial_location)) {
+        code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], CalculateUpper(terminal.next));
     }
 
     code.cmp(qword[r15 + offsetof(A32JitState, cycles_remaining)], 0);
@@ -1293,8 +1278,8 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
 }
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location) {
-    if (CalculateCpsr_et(terminal.next) != CalculateCpsr_et(initial_location)) {
-        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_et)], CalculateCpsr_et(terminal.next));
+    if (CalculateUpper(terminal.next) != CalculateUpper(initial_location)) {
+        code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], CalculateUpper(terminal.next));
     }
 
     patch_information[terminal.next].jmp.emplace_back(code.getCurr());
