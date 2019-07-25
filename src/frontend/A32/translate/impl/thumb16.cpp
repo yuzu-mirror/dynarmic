@@ -643,26 +643,41 @@ bool ThumbTranslatorVisitor::thumb16_NOP() {
 
 // SEV<c>
 bool ThumbTranslatorVisitor::thumb16_SEV() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::SendEvent);
 }
 
 // SEVL<c>
 bool ThumbTranslatorVisitor::thumb16_SEVL() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::SendEventLocal);
 }
 
 // WFE<c>
 bool ThumbTranslatorVisitor::thumb16_WFE() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::WaitForEvent);
 }
 
 // WFI<c>
 bool ThumbTranslatorVisitor::thumb16_WFI() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::WaitForInterrupt);
 }
 
 // YIELD<c>
 bool ThumbTranslatorVisitor::thumb16_YIELD() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::Yield);
 }
 

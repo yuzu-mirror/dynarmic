@@ -24,21 +24,21 @@ enum class Exception {
     /// An unpredictable instruction is to be executed. Implementation-defined behaviour should now happen.
     /// This behaviour is up to the user of this library to define.
     UnpredictableInstruction,
-    /// A SEV instruction was executed. The event register of all PEs should be set.
+    /// A SEV instruction was executed. The event register of all PEs should be set. (Hint instruction.)
     SendEvent,
-    /// A SEVL instruction was executed. The event register of the current PE should be set.
+    /// A SEVL instruction was executed. The event register of the current PE should be set. (Hint instruction.)
     SendEventLocal,
-    /// A WFI instruction was executed. You may now enter a low-power state.
+    /// A WFI instruction was executed. You may now enter a low-power state. (Hint instruction.)
     WaitForInterrupt,
-    /// A WFE instruction was executed. You may now enter a low-power state if the event register is clear.
+    /// A WFE instruction was executed. You may now enter a low-power state if the event register is clear. (Hint instruction.)
     WaitForEvent,
-    /// A YIELD instruction was executed.
+    /// A YIELD instruction was executed. (Hint instruction.)
     Yield,
     /// A BKPT instruction was executed.
     Breakpoint,
-    /// A PLD instruction was executed.
+    /// A PLD instruction was executed. (Hint instruction.)
     PreloadData,
-    /// A PLDW instruction was executed.
+    /// A PLDW instruction was executed. (Hint instruction.)
     PreloadDataWithIntentToWrite,
 };
 
@@ -96,6 +96,10 @@ struct UserConfig {
 
     // Coprocessors
     std::array<std::shared_ptr<Coprocessor>, 16> coprocessors;
+
+    /// Hint instructions would cause ExceptionRaised to be called with the appropriate
+    /// argument.
+    bool hook_hint_instructions = false;
 
     /// This option relates to translation. Generally when we run into an unpredictable
     /// instruction the ExceptionRaised callback is called. If this is true, we define
