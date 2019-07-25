@@ -26,6 +26,11 @@ struct TranslationOptions {
     /// If this is false, the ExceptionRaised IR instruction is emitted.
     /// If this is true, we define some behaviour for some instructions.
     bool define_unpredictable_behaviour = false;
+
+    /// This changes what IR we emit when we translate a hint instruction.
+    /// If this is false, we treat the instruction as a NOP.
+    /// If this is true, we emit an ExceptionRaised instruction.
+    bool hook_hint_instructions = true;
 };
 
 /**

@@ -28,17 +28,17 @@ enum class Exception {
     /// This behaviour is up to the user of this library to define.
     /// Note: Constraints on unpredictable behaviour are specified in the ARMv8 ARM.
     UnpredictableInstruction,
-    /// A WFI instruction was executed. You may now enter a low-power state.
+    /// A WFI instruction was executed. You may now enter a low-power state. (Hint instruction.)
     WaitForInterrupt,
-    /// A WFE instruction was executed. You may now enter a low-power state if the event register is clear.
+    /// A WFE instruction was executed. You may now enter a low-power state if the event register is clear. (Hint instruction.)
     WaitForEvent,
-    /// A SEV instruction was executed. The event register of all PEs should be set.
+    /// A SEV instruction was executed. The event register of all PEs should be set. (Hint instruction.)
     SendEvent,
-    /// A SEVL instruction was executed. The event register of the current PE should be set.
+    /// A SEVL instruction was executed. The event register of the current PE should be set. (Hint instruction.)
     SendEventLocal,
-    /// A YIELD instruction was executed.
+    /// A YIELD instruction was executed. (Hint instruction.)
     Yield,
-    /// A BRK instruction was executed.
+    /// A BRK instruction was executed. (Hint instruction.)
     Breakpoint,
 };
 
@@ -121,6 +121,10 @@ struct UserConfig {
     /// When set to false, UserCallbacks::DataCacheOperationRaised will never be called.
     /// Executing DC ZVA in this mode will result in zeros being written to memory.
     bool hook_data_cache_operations = false;
+
+    /// When set to true, UserCallbacks::ExceptionRaised will be called when any hint
+    /// instruction is executed.
+    bool hook_hint_instructions = false;
 
     /// Counter-timer frequency register. The value of the register is not interpreted by
     /// dynarmic.

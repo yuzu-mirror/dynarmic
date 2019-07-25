@@ -37,22 +37,37 @@ bool TranslatorVisitor::NOP() {
 }
 
 bool TranslatorVisitor::YIELD() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::Yield);
 }
 
 bool TranslatorVisitor::WFE() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::WaitForEvent);
 }
 
 bool TranslatorVisitor::WFI() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::WaitForInterrupt);
 }
 
 bool TranslatorVisitor::SEV() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::SendEvent);
 }
 
 bool TranslatorVisitor::SEVL() {
+    if (!options.hook_hint_instructions) {
+        return true;
+    }
     return RaiseException(Exception::SendEventLocal);
 }
 
