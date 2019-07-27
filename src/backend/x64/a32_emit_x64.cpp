@@ -216,7 +216,7 @@ void A32EmitX64::GenMemoryAccessors() {
 }
 
 void A32EmitX64::GenTerminalHandlers() {
-    // location_descriptor ends up in rbx
+    // PC ends up in ebp, location_descriptor ends up in rbx
     const auto calculate_location_descriptor = [this] {
         // This calculation has to match up with IREmitter::PushRSB
         code.mov(ebx, dword[r15 + offsetof(A32JitState, upper_location_descriptor)]);
@@ -251,11 +251,10 @@ void A32EmitX64::GenTerminalHandlers() {
         calculate_location_descriptor();
         code.L(rsb_cache_miss);
         code.mov(r12, reinterpret_cast<u64>(fast_dispatch_table.data()));
-        code.mov(rbp, rbx);
         if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE42)) {
-            code.crc32(rbp, r12);
+            code.crc32(ebp, r12d);
         }
-        code.and_(rbp, fast_dispatch_table_mask);
+        code.and_(ebp, fast_dispatch_table_mask);
         code.lea(rbp, ptr[r12 + rbp]);
         code.cmp(rbx, qword[rbp + offsetof(FastDispatchEntry, location_descriptor)]);
         code.jne(fast_dispatch_cache_miss);
