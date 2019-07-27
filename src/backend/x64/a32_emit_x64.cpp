@@ -397,7 +397,9 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
 
         // cpsr_et and cpsr_ge
         static_assert(offsetof(A32JitState, upper_location_descriptor) + 4 == offsetof(A32JitState, cpsr_ge));
-        code.and_(qword[r15 + offsetof(A32JitState, upper_location_descriptor)], u32(0xFFFF0000));
+        // This mask is 0x7FFF0000, because we do not want the MSB to be sign extended to the upper dword.
+        static_assert((A32::LocationDescriptor::FPSCR_MODE_MASK & ~0x7FFF0000) == 0);
+        code.and_(qword[r15 + offsetof(A32JitState, upper_location_descriptor)], u32(0x7FFF0000));
         code.mov(tmp, 0x000f0220);
         code.pext(cpsr, cpsr, tmp);
         code.mov(tmp.cvt64(), 0x01010101'00000003ull);
