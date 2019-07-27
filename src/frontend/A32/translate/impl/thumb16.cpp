@@ -885,7 +885,7 @@ bool ThumbTranslatorVisitor::thumb16_CBZ_CBNZ(bool nonzero, Imm<1> i, Imm<5> imm
 }
 
 bool ThumbTranslatorVisitor::thumb16_UDF() {
-    return InterpretThisInstruction();
+    return UndefinedInstruction();
 }
 
 // BX <Rm>

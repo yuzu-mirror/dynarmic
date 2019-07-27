@@ -29,6 +29,7 @@ struct ThumbTranslatorVisitor final {
 
     bool InterpretThisInstruction();
     bool UnpredictableInstruction();
+    bool UndefinedInstruction();
     bool RaiseException(Exception exception);
 
     // thumb16
