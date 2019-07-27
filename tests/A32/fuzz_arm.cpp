@@ -108,9 +108,6 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             "arm_CPS", "arm_RFE", "arm_SRS",
             // Undefined
             "arm_UDF",
-
-            // Behavior differs from Qemu
-            "arm_MSR_reg", "arm_MSR_imm", "arm_MRS",
         };
 
         for (const auto& [fn, bitstring] : list) {
@@ -140,6 +137,7 @@ Dynarmic::A32::UserConfig GetUserConfig(ArmTestEnv& testenv) {
     Dynarmic::A32::UserConfig user_config;
     user_config.enable_fast_dispatch = false;
     user_config.callbacks = &testenv;
+    user_config.always_little_endian = true;
     return user_config;
 }
 
@@ -287,7 +285,7 @@ TEST_CASE("A32: Single random instruction", "[arm]") {
         instructions[0] = GenRandomInst(0, true);
 
         const u32 start_address = 100;
-        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x13;
+        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x10;
         const u32 fpcr = RandomFpcr();
 
         INFO("Instruction: 0x" << std::hex << instructions[0]);
@@ -319,7 +317,7 @@ TEST_CASE("A32: Small random block", "[arm]") {
         instructions[4] = GenRandomInst(16, true);
 
         const u32 start_address = 100;
-        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x13;
+        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x10;
         const u32 fpcr = RandomFpcr();
 
         INFO("Instruction 1: 0x" << std::hex << instructions[0]);

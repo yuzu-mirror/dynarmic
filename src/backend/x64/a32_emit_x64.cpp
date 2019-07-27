@@ -381,6 +381,10 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
         const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
         const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
 
+        if (config.always_little_endian) {
+            code.and_(cpsr, 0xFFFFFDFF);
+        }
+
         // cpsr_q
         code.bt(cpsr, 27);
         code.setc(code.byte[r15 + offsetof(A32JitState, cpsr_q)]);
@@ -412,6 +416,11 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
         code.or_(qword[r15 + offsetof(A32JitState, upper_location_descriptor)], tmp.cvt64());
     } else {
         ctx.reg_alloc.HostCall(nullptr, args[0]);
+
+        if (config.always_little_endian) {
+            code.and_(code.ABI_PARAM1, 0xFFFFFDFF);
+        }
+
         code.mov(code.ABI_PARAM2, code.r15);
         code.CallFunction(&SetCpsrImpl);
     }
@@ -1249,14 +1258,24 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::ReturnToDispatch, IR::LocationDescri
     code.ReturnFromRunCode();
 }
 
-static u32 CalculateUpper(const IR::LocationDescriptor& arg) {
-    return static_cast<u32>(arg.Value() >> 32);
+void A32EmitX64::EmitSetUpperLocationDescriptor(IR::LocationDescriptor new_location, IR::LocationDescriptor old_location) {
+    auto get_upper = [](const IR::LocationDescriptor& desc) -> u32 {
+        return static_cast<u32>(desc.Value() >> 32);
+    };
+
+    const u32 old_upper = get_upper(old_location);
+    const u32 new_upper = [&]{
+        const u32 mask = ~u32(config.always_little_endian ? 0x2 : 0);
+        return get_upper(new_location) & mask;
+    }();
+
+    if (old_upper != new_upper) {
+        code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], new_upper);
+    }
 }
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location) {
-    if (CalculateUpper(terminal.next) != CalculateUpper(initial_location)) {
-        code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], CalculateUpper(terminal.next));
-    }
+    EmitSetUpperLocationDescriptor(terminal.next, initial_location);
 
     code.cmp(qword[r15 + offsetof(A32JitState, cycles_remaining)], 0);
 
@@ -1279,9 +1298,7 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
 }
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location) {
-    if (CalculateUpper(terminal.next) != CalculateUpper(initial_location)) {
-        code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], CalculateUpper(terminal.next));
-    }
+    EmitSetUpperLocationDescriptor(terminal.next, initial_location);
 
     patch_information[terminal.next].jmp.emplace_back(code.getCurr());
     if (const auto next_bb = GetBasicBlock(terminal.next)) {

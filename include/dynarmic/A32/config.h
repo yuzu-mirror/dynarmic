@@ -108,6 +108,12 @@ struct UserConfig {
 
     /// This enables the fast dispatcher.
     bool enable_fast_dispatch = true;
+
+    /// This option relates to the CPSR.E flag. Enabling this option disables modification
+    /// of CPSR.E by the emulated program, forcing it to 0.
+    /// NOTE: Calling Jit::SetCpsr with CPSR.E=1 while this option is enabled may result
+    ///       in unusual behavior.
+    bool always_little_endian = false;
 };
 
 } // namespace A32
