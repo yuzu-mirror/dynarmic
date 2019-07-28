@@ -260,17 +260,6 @@ void Context::SetFpscr(std::uint32_t value) {
     return impl->jit_state.SetFpscr(value);
 }
 
-void TransferJitState(A32JitState& dest, const A32JitState& src, bool reset_rsb) {
-    dest = src;
-    if (reset_rsb) {
-        dest.ResetRSB();
-    } else {
-        dest.rsb_ptr = src.rsb_ptr;
-        dest.rsb_location_descriptors = src.rsb_location_descriptors;
-        dest.rsb_codeptrs = src.rsb_codeptrs;
-    }
-}
-
 void Jit::SaveContext(Context& ctx) const {
     ctx.impl->jit_state.TransferJitState(impl->jit_state, false);
     ctx.impl->invalid_cache_generation = impl->invalid_cache_generation;
