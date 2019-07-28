@@ -42,3 +42,200 @@ TEST_CASE("arm: Opt Failure: Const folding in MostSignificantWord", "[arm][A32]"
 
     // If we don't trigger the GetCarryFromOp ASSERT, we're fine.
 }
+
+TEST_CASE("arm: Unintended modification in SetCFlag", "[arm][A32]") {
+    // This was a randomized test-case that was failing.
+    //
+    // IR produced for location {12, !T, !E} was:
+    // %0     = GetRegister r1
+    // %1     = SubWithCarry %0, #0x3e80000, #1
+    // %2     = GetCarryFromOp %1
+    // %3     = GetOverflowFromOp %1
+    // %4     = MostSignificantBit %1
+    //          SetNFlag %4
+    // %6     = IsZero %1
+    //          SetZFlag %6
+    //          SetCFlag %2
+    //          SetVFlag %3
+    // %10    = GetRegister r5
+    // %11    = AddWithCarry %10, #0x8a00, %2
+    //          SetRegister r4, %11
+    //
+    // The reference to %2 in instruction %11 was the issue, because instruction %8
+    // told the register allocator it was a Use but then modified the value.
+    // Changing the EmitSet*Flag instruction to declare their arguments as UseScratch
+    // solved this bug.
+
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe35f0cd9, // cmp pc, #55552
+        0xe11c0474, // tst r12, r4, ror r4
+        0xe1a006a7, // mov r0, r7, lsr #13
+        0xe35107fa, // cmp r1, #0x3E80000
+        0xe2a54c8a, // adc r4, r5, #35328
+        0xeafffffe, // b +#0
+    };
+
+    jit.Regs() = {
+            0x6973b6bb, 0x267ea626, 0x69debf49, 0x8f976895, 0x4ecd2d0d, 0xcf89b8c7, 0xb6713f85, 0x15e2aa5,
+            0xcd14336a, 0xafca0f3e, 0xace2efd9, 0x68fb82cd, 0x775447c0, 0xc9e1f8cd, 0xebe0e626, 0x0
+    };
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 6;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[0] == 0x00000af1);
+    REQUIRE(jit.Regs()[1] == 0x267ea626);
+    REQUIRE(jit.Regs()[2] == 0x69debf49);
+    REQUIRE(jit.Regs()[3] == 0x8f976895);
+    REQUIRE(jit.Regs()[4] == 0xcf8a42c8);
+    REQUIRE(jit.Regs()[5] == 0xcf89b8c7);
+    REQUIRE(jit.Regs()[6] == 0xb6713f85);
+    REQUIRE(jit.Regs()[7] == 0x015e2aa5);
+    REQUIRE(jit.Regs()[8] == 0xcd14336a);
+    REQUIRE(jit.Regs()[9] == 0xafca0f3e);
+    REQUIRE(jit.Regs()[10] == 0xace2efd9);
+    REQUIRE(jit.Regs()[11] == 0x68fb82cd);
+    REQUIRE(jit.Regs()[12] == 0x775447c0);
+    REQUIRE(jit.Regs()[13] == 0xc9e1f8cd);
+    REQUIRE(jit.Regs()[14] == 0xebe0e626);
+    REQUIRE(jit.Regs()[15] == 0x00000014);
+    REQUIRE(jit.Cpsr() == 0x200001d0);
+}
+
+TEST_CASE( "arm: shsax (Edge-case)", "[arm][A32]" ) {
+    // This was a randomized test-case that was failing.
+    //
+    // The issue here was one of the words to be subtracted was 0x8000.
+    // When the 2s complement was calculated by (~a + 1), it was 0x8000.
+
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe63dbf59, // shsax r11, sp, r9
+        0xeafffffe, // b +#0
+    };
+
+    jit.Regs() = {
+            0x3a3b8b18, 0x96156555, 0xffef039f, 0xafb946f2, 0x2030a69a, 0xafe09b2a, 0x896823c8, 0xabde0ded,
+            0x9825d6a6, 0x17498000, 0x999d2c95, 0x8b812a59, 0x209bdb58, 0x2f7fb1d4, 0x0f378107, 0x00000000
+    };
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[0] == 0x3a3b8b18);
+    REQUIRE(jit.Regs()[1] == 0x96156555);
+    REQUIRE(jit.Regs()[2] == 0xffef039f);
+    REQUIRE(jit.Regs()[3] == 0xafb946f2);
+    REQUIRE(jit.Regs()[4] == 0x2030a69a);
+    REQUIRE(jit.Regs()[5] == 0xafe09b2a);
+    REQUIRE(jit.Regs()[6] == 0x896823c8);
+    REQUIRE(jit.Regs()[7] == 0xabde0ded);
+    REQUIRE(jit.Regs()[8] == 0x9825d6a6);
+    REQUIRE(jit.Regs()[9] == 0x17498000);
+    REQUIRE(jit.Regs()[10] == 0x999d2c95);
+    REQUIRE(jit.Regs()[11] == 0x57bfe48e);
+    REQUIRE(jit.Regs()[12] == 0x209bdb58);
+    REQUIRE(jit.Regs()[13] == 0x2f7fb1d4);
+    REQUIRE(jit.Regs()[14] == 0x0f378107);
+    REQUIRE(jit.Regs()[15] == 0x00000004);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}
+
+TEST_CASE( "arm: uasx (Edge-case)", "[arm][A32]" ) {
+    // UASX's Rm<31:16> == 0x0000.
+    // An implementation that depends on addition overflow to detect
+    // if diff >= 0 will fail this testcase.
+
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe6549f35, // uasx r9, r4, r5
+        0xeafffffe, // b +#0
+    };
+
+    jit.Regs()[4] = 0x8ed38f4c;
+    jit.Regs()[5] = 0x0000261d;
+    jit.Regs()[15] = 0x00000000;
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[4] == 0x8ed38f4c);
+    REQUIRE(jit.Regs()[5] == 0x0000261d);
+    REQUIRE(jit.Regs()[9] == 0xb4f08f4c);
+    REQUIRE(jit.Regs()[15] == 0x00000004);
+    REQUIRE(jit.Cpsr() == 0x000301d0);
+}
+
+TEST_CASE("arm: smuad (Edge-case)", "[arm][A32]") {
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xE700F211, // smuad r0, r1, r2
+        0xeafffffe, // b +#0
+    };
+
+    jit.Regs() = {
+            0, // Rd
+            0x80008000, // Rn
+            0x80008000, // Rm
+            0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+    };
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[0] == 0x80000000);
+    REQUIRE(jit.Regs()[1] == 0x80008000);
+    REQUIRE(jit.Regs()[2] == 0x80008000);
+    REQUIRE(jit.Cpsr() == 0x080001d0);
+}
+
+TEST_CASE("arm: Test InvalidateCacheRange", "[arm][A32]") {
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe3a00005, // mov r0, #5
+        0xe3a0100D, // mov r1, #13
+        0xe0812000, // add r2, r1, r0
+        0xeafffffe, // b +#0 (infinite loop)
+    };
+
+    jit.Regs() = {};
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 4;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[0] == 5);
+    REQUIRE(jit.Regs()[1] == 13);
+    REQUIRE(jit.Regs()[2] == 18);
+    REQUIRE(jit.Regs()[15] == 0x0000000c);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+
+    // Change the code
+    test_env.code_mem[1] = 0xe3a01007; // mov r1, #7
+    jit.InvalidateCacheRange(/*start_memory_location = */ 4, /* length_in_bytes = */ 4);
+
+    // Reset position of PC
+    jit.Regs()[15] = 0;
+
+    test_env.ticks_left = 4;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[0] == 5);
+    REQUIRE(jit.Regs()[1] == 7);
+    REQUIRE(jit.Regs()[2] == 12);
+    REQUIRE(jit.Regs()[15] == 0x0000000c);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}
