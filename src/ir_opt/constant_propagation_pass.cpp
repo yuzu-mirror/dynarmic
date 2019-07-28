@@ -158,11 +158,16 @@ void FoldMostSignificantBit(IR::Inst& inst) {
 }
 
 void FoldMostSignificantWord(IR::Inst& inst) {
+    IR::Inst* carry_inst = inst.GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+
     if (!inst.AreAllArgsImmediates()) {
         return;
     }
 
     const auto operand = inst.GetArg(0);
+    if (carry_inst) {
+        carry_inst->ReplaceUsesWith(IR::Value{Common::Bit<31>(operand.GetImmediateAsU64())});
+    }
     inst.ReplaceUsesWith(IR::Value{static_cast<u32>(operand.GetImmediateAsU64() >> 32)});
 }
 
