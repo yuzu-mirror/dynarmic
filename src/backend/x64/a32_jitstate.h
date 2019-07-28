@@ -76,6 +76,31 @@ struct A32JitState {
     u64 GetUniqueHash() const noexcept {
         return (static_cast<u64>(upper_location_descriptor) << 32) | (static_cast<u64>(Reg[15]));
     }
+
+    void TransferJitState(const A32JitState& src, bool reset_rsb) {
+        Reg = src.Reg;
+        upper_location_descriptor = src.upper_location_descriptor;
+        cpsr_ge = src.cpsr_ge;
+        cpsr_q = src.cpsr_q;
+        cpsr_nzcv = src.cpsr_nzcv;
+        cpsr_jaifm = src.cpsr_jaifm;
+        ExtReg = src.ExtReg;
+        guest_MXCSR = src.guest_MXCSR;
+        fpsr_exc = src.fpsr_exc;
+        fpsr_qc = src.fpsr_qc;
+        fpsr_nzcv = src.fpsr_nzcv;
+
+        exclusive_state = 0;
+        exclusive_address = 0;
+
+        if (reset_rsb) {
+            ResetRSB();
+        } else {
+            rsb_ptr = src.rsb_ptr;
+            rsb_location_descriptors = src.rsb_location_descriptors;
+            rsb_codeptrs = src.rsb_codeptrs;
+        }
+    }
 };
 
 #ifdef _MSC_VER

@@ -272,13 +272,13 @@ void TransferJitState(A32JitState& dest, const A32JitState& src, bool reset_rsb)
 }
 
 void Jit::SaveContext(Context& ctx) const {
-    TransferJitState(ctx.impl->jit_state, impl->jit_state, false);
+    ctx.impl->jit_state.TransferJitState(impl->jit_state, false);
     ctx.impl->invalid_cache_generation = impl->invalid_cache_generation;
 }
 
 void Jit::LoadContext(const Context& ctx) {
     bool reset_rsb = ctx.impl->invalid_cache_generation != impl->invalid_cache_generation;
-    TransferJitState(impl->jit_state, ctx.impl->jit_state, reset_rsb);
+    impl->jit_state.TransferJitState(ctx.impl->jit_state, reset_rsb);
 }
 
 std::string Jit::Disassemble(const IR::LocationDescriptor& descriptor) {
