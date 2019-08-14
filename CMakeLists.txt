@@ -11,6 +11,7 @@ endif()
 # Dynarmic project options
 option(DYNARMIC_ENABLE_CPU_FEATURE_DETECTION "Turning this off causes dynarmic to assume the host CPU doesn't support anything later than SSE3" ON)
 option(DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT "Enables support for systems that require W^X" OFF)
+option(DYNARMIC_FATAL_ERRORS "Errors are fatal" OFF)
 option(DYNARMIC_TESTS "Build tests" ${MASTER_PROJECT})
 option(DYNARMIC_TESTS_USE_UNICORN "Enable fuzzing tests against unicorn" OFF)
 option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
@@ -78,12 +79,16 @@ else()
         -Wcast-qual
         -pedantic
         -pedantic-errors
-        -Wfatal-errors
         -Wno-missing-braces)
 
     if (DYNARMIC_WARNINGS_AS_ERRORS)
         list(APPEND DYNARMIC_CXX_FLAGS
              -Werror)
+    endif()
+
+    if (DYNARMIC_FATAL_ERRORS)
+        list(APPEND DYNARMIC_CXX_FLAGS
+             -Wfatal-errors)
     endif()
 endif()
 
