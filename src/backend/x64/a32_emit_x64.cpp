@@ -1021,27 +1021,28 @@ void A32EmitX64::EmitA32CoprocSendOneWord(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     const auto action = coproc->CompileSendOneWord(two, opc1, CRn, CRm, opc2);
-    switch (action.index()) {
-    case 0:
+
+    if (std::holds_alternative<std::monostate>(action)) {
         EmitCoprocessorException();
         return;
-    case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), nullptr, args[1]);
-        return;
-    case 2: {
-        const u32* const destination_ptr = std::get<u32*>(action);
+    }
 
+    if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, nullptr, args[1]);
+        return;
+    }
+
+    if (const auto destination_ptr = std::get_if<u32*>(&action)) {
         const Xbyak::Reg32 reg_word = ctx.reg_alloc.UseGpr(args[1]).cvt32();
         const Xbyak::Reg64 reg_destination_addr = ctx.reg_alloc.ScratchGpr();
 
-        code.mov(reg_destination_addr, reinterpret_cast<u64>(destination_ptr));
+        code.mov(reg_destination_addr, reinterpret_cast<u64>(*destination_ptr));
         code.mov(code.dword[reg_destination_addr], reg_word);
 
         return;
     }
-    default:
-        UNREACHABLE();
-    }
+
+    UNREACHABLE();
 }
 
 void A32EmitX64::EmitA32CoprocSendTwoWords(A32EmitContext& ctx, IR::Inst* inst) {
@@ -1060,30 +1061,31 @@ void A32EmitX64::EmitA32CoprocSendTwoWords(A32EmitContext& ctx, IR::Inst* inst) 
     }
 
     const auto action = coproc->CompileSendTwoWords(two, opc, CRm);
-    switch (action.index()) {
-    case 0:
+
+    if (std::holds_alternative<std::monostate>(action)) {
         EmitCoprocessorException();
         return;
-    case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), nullptr, args[1], args[2]);
-        return;
-    case 2: {
-        const auto destination_ptrs = std::get<std::array<u32*, 2>>(action);
+    }
 
+    if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, nullptr, args[1], args[2]);
+        return;
+    }
+
+    if (const auto destination_ptrs = std::get_if<std::array<u32*, 2>>(&action)) {
         const Xbyak::Reg32 reg_word1 = ctx.reg_alloc.UseGpr(args[1]).cvt32();
         const Xbyak::Reg32 reg_word2 = ctx.reg_alloc.UseGpr(args[2]).cvt32();
         const Xbyak::Reg64 reg_destination_addr = ctx.reg_alloc.ScratchGpr();
 
-        code.mov(reg_destination_addr, reinterpret_cast<u64>(destination_ptrs[0]));
+        code.mov(reg_destination_addr, reinterpret_cast<u64>((*destination_ptrs)[0]));
         code.mov(code.dword[reg_destination_addr], reg_word1);
-        code.mov(reg_destination_addr, reinterpret_cast<u64>(destination_ptrs[1]));
+        code.mov(reg_destination_addr, reinterpret_cast<u64>((*destination_ptrs)[1]));
         code.mov(code.dword[reg_destination_addr], reg_word2);
 
         return;
     }
-    default:
-        UNREACHABLE();
-    }
+
+    UNREACHABLE();
 }
 
 void A32EmitX64::EmitA32CoprocGetOneWord(A32EmitContext& ctx, IR::Inst* inst) {
@@ -1103,29 +1105,30 @@ void A32EmitX64::EmitA32CoprocGetOneWord(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     const auto action = coproc->CompileGetOneWord(two, opc1, CRn, CRm, opc2);
-    switch (action.index()) {
-    case 0:
+
+    if (std::holds_alternative<std::monostate>(action)) {
         EmitCoprocessorException();
         return;
-    case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), inst);
-        return;
-    case 2: {
-        const u32* const source_ptr = std::get<u32*>(action);
+    }
 
+    if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, inst);
+        return;
+    }
+
+    if (const auto source_ptr = std::get_if<u32*>(&action)) {
         const Xbyak::Reg32 reg_word = ctx.reg_alloc.ScratchGpr().cvt32();
         const Xbyak::Reg64 reg_source_addr = ctx.reg_alloc.ScratchGpr();
 
-        code.mov(reg_source_addr, reinterpret_cast<u64>(source_ptr));
+        code.mov(reg_source_addr, reinterpret_cast<u64>(*source_ptr));
         code.mov(reg_word, code.dword[reg_source_addr]);
 
         ctx.reg_alloc.DefineValue(inst, reg_word);
 
         return;
     }
-    default:
-        UNREACHABLE();
-    }
+
+    UNREACHABLE();
 }
 
 void A32EmitX64::EmitA32CoprocGetTwoWords(A32EmitContext& ctx, IR::Inst* inst) {
@@ -1142,24 +1145,26 @@ void A32EmitX64::EmitA32CoprocGetTwoWords(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     auto action = coproc->CompileGetTwoWords(two, opc, CRm);
-    switch (action.index()) {
-    case 0:
+
+    if (std::holds_alternative<std::monostate>(action)) {
         EmitCoprocessorException();
         return;
-    case 1:
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, std::get<A32::Coprocessor::Callback>(action), inst);
-        return;
-    case 2: {
-        const auto source_ptrs = std::get<std::array<u32*, 2>>(action);
+    }
 
+    if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
+        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, inst);
+        return;
+    }
+
+    if (const auto source_ptrs = std::get_if<std::array<u32*, 2>>(&action)) {
         const Xbyak::Reg64 reg_result = ctx.reg_alloc.ScratchGpr();
         const Xbyak::Reg64 reg_destination_addr = ctx.reg_alloc.ScratchGpr();
         const Xbyak::Reg64 reg_tmp = ctx.reg_alloc.ScratchGpr();
 
-        code.mov(reg_destination_addr, reinterpret_cast<u64>(source_ptrs[1]));
+        code.mov(reg_destination_addr, reinterpret_cast<u64>((*source_ptrs)[1]));
         code.mov(reg_result.cvt32(), code.dword[reg_destination_addr]);
         code.shl(reg_result, 32);
-        code.mov(reg_destination_addr, reinterpret_cast<u64>(source_ptrs[0]));
+        code.mov(reg_destination_addr, reinterpret_cast<u64>((*source_ptrs)[0]));
         code.mov(reg_tmp.cvt32(), code.dword[reg_destination_addr]);
         code.or_(reg_result, reg_tmp);
 
@@ -1167,9 +1172,8 @@ void A32EmitX64::EmitA32CoprocGetTwoWords(A32EmitContext& ctx, IR::Inst* inst) {
 
         return;
     }
-    default:
-        UNREACHABLE();
-    }
+
+    UNREACHABLE();
 }
 
 void A32EmitX64::EmitA32CoprocLoadWords(A32EmitContext& ctx, IR::Inst* inst) {
