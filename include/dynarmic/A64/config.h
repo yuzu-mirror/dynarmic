@@ -163,6 +163,13 @@ struct UserConfig {
     /// relevant memory callback.
     /// This is only used if page_table is not nullptr.
     bool silently_mirror_page_table = true;
+    /// Determines if the pointer in the page_table shall be offseted locally or globally.
+    /// 'false' will access page_table[addr >> bits][addr & mask]
+    /// 'true'  will access page_table[addr >> bits][addr]
+    /// Note: page_table[addr >> bits] will still be checked to verify active pages.
+    ///       So there might be wrongly faulted pages which maps to nullptr.
+    ///       This can be avoided by carefully allocating the memory region.
+    bool absolute_offset_page_table = false;
 
     /// This option relates to translation. Generally when we run into an unpredictable
     /// instruction the ExceptionRaised callback is called. If this is true, we define
