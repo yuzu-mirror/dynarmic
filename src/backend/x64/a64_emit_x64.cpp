@@ -737,6 +737,9 @@ static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, Xby
     code.mov(page_table, qword[page_table + tmp * sizeof(void*)]);
     code.test(page_table, page_table);
     code.jz(abort, code.T_NEAR);
+    if (ctx.conf.absolute_offset_page_table) {
+        return page_table + vaddr;
+    }
     code.mov(tmp, vaddr);
     code.and_(tmp, static_cast<u32>(page_size - 1));
     return page_table + tmp;
