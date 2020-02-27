@@ -185,6 +185,11 @@ public:
         jit_state.SetPstate(value);
     }
 
+    void ChangeProcessorID(size_t value) {
+        conf.processor_id = value;
+        emitter.ChangeProcessorID(value);
+    }
+
     void ClearExclusiveState() {
         jit_state.exclusive_state = 0;
     }
@@ -377,6 +382,10 @@ u32 Jit::GetPstate() const {
 
 void Jit::SetPstate(u32 value) {
     impl->SetPstate(value);
+}
+
+void Jit::ChangeProcessorID(size_t new_processor) {
+    impl->ChangeProcessorID(new_processor);
 }
 
 void Jit::ClearExclusiveState() {
