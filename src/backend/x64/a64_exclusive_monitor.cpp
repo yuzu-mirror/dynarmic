@@ -60,5 +60,12 @@ void ExclusiveMonitor::Clear() {
     Unlock();
 }
 
+void ExclusiveMonitor::Clear(size_t processor_id) {
+    Lock();
+    exclusive_addresses[processor_id] = INVALID_EXCLUSIVE_ADDRESS;
+    Unlock();
+}
+
+
 } // namespace A64
 } // namespace Dynarmic
