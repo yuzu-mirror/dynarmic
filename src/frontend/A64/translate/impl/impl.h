@@ -16,14 +16,6 @@
 
 namespace Dynarmic::A64 {
 
-enum class AccType {
-    NORMAL, VEC, STREAM, VECSTREAM, ATOMIC, ORDERED, ORDEREDRW, LIMITEDORDERED, UNPRIV, IFETCH, PTW, DC, IC, DCZVA, AT,
-};
-
-enum class MemOp {
-    LOAD, STORE, PREFETCH,
-};
-
 struct TranslatorVisitor final {
     using instruction_return_type = bool;
 
@@ -64,9 +56,9 @@ struct TranslatorVisitor final {
     IR::UAny Vpart_scalar(size_t bitsize, Vec vec, size_t part);
     void Vpart_scalar(size_t bitsize, Vec vec, size_t part, IR::UAny value);
 
-    IR::UAnyU128 Mem(IR::U64 address, size_t size, AccType acctype);
-    void Mem(IR::U64 address, size_t size, AccType acctype, IR::UAnyU128 value);
-    IR::U32 ExclusiveMem(IR::U64 address, size_t size, AccType acctype, IR::UAnyU128 value);
+    IR::UAnyU128 Mem(IR::U64 address, size_t size, IR::AccType acctype);
+    void Mem(IR::U64 address, size_t size, IR::AccType acctype, IR::UAnyU128 value);
+    IR::U32 ExclusiveMem(IR::U64 address, size_t size, IR::AccType acctype, IR::UAnyU128 value);
 
     IR::U32U64 SignExtend(IR::UAny value, size_t to_size);
     IR::U32U64 ZeroExtend(IR::UAny value, size_t to_size);

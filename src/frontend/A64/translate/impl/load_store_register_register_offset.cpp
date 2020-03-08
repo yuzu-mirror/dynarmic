@@ -11,22 +11,22 @@ namespace Dynarmic::A64 {
 static bool RegSharedDecodeAndOperation(TranslatorVisitor& v, size_t scale, u8 shift, Imm<2> size, Imm<1> opc_1, Imm<1> opc_0, Reg Rm, Imm<3> option, Reg Rn, Reg Rt) {
     // Shared Decode
 
-    const AccType acctype = AccType::NORMAL;
-    MemOp memop;
+    const auto acctype = IR::AccType::NORMAL;
+    IR::MemOp memop;
     size_t regsize = 64;
     bool signed_ = false;
 
     if (opc_1 == 0) {
-        memop = opc_0 == 1 ? MemOp::LOAD : MemOp::STORE;
+        memop = opc_0 == 1 ? IR::MemOp::LOAD : IR::MemOp::STORE;
         regsize = size == 0b11 ? 64 : 32;
         signed_ = false;
     } else if (size == 0b11) {
-        memop = MemOp::PREFETCH;
+        memop = IR::MemOp::PREFETCH;
         if (opc_0 == 1) {
             return v.UnallocatedEncoding();
         }
     } else {
-        memop = MemOp::LOAD;
+        memop = IR::MemOp::LOAD;
         if (size == 0b10 && opc_0 == 1) {
             return v.UnallocatedEncoding();
         }
@@ -50,12 +50,12 @@ static bool RegSharedDecodeAndOperation(TranslatorVisitor& v, size_t scale, u8 s
     address = v.ir.Add(address, offset);
 
     switch (memop) {
-    case MemOp::STORE: {
+    case IR::MemOp::STORE: {
         const IR::UAny data = v.X(datasize, Rt);
         v.Mem(address, datasize / 8, acctype, data);
         break;
     }
-    case MemOp::LOAD: {
+    case IR::MemOp::LOAD: {
         const IR::UAny data = v.Mem(address, datasize / 8, acctype);
         if (signed_) {
             v.X(regsize, Rt, v.SignExtend(data, regsize));
@@ -64,7 +64,7 @@ static bool RegSharedDecodeAndOperation(TranslatorVisitor& v, size_t scale, u8 s
         }
         break;
     }
-    case MemOp::PREFETCH:
+    case IR::MemOp::PREFETCH:
         // TODO: Prefetch
         break;
     default:
@@ -97,8 +97,8 @@ bool TranslatorVisitor::LDRx_reg(Imm<2> size, Imm<1> opc_1, Reg Rm, Imm<3> optio
 static bool VecSharedDecodeAndOperation(TranslatorVisitor& v, size_t scale, u8 shift, Imm<1> opc_0, Reg Rm, Imm<3> option, Reg Rn, Vec Vt) {
     // Shared Decode
 
-    const AccType acctype = AccType::VEC;
-    const MemOp memop = opc_0 == 1 ? MemOp::LOAD : MemOp::STORE;
+    const auto acctype = IR::AccType::VEC;
+    const auto memop = opc_0 == 1 ? IR::MemOp::LOAD : IR::MemOp::STORE;
     const size_t datasize = 8 << scale;
 
     // Operation
@@ -115,12 +115,12 @@ static bool VecSharedDecodeAndOperation(TranslatorVisitor& v, size_t scale, u8 s
     address = v.ir.Add(address, offset);
 
     switch (memop) {
-    case MemOp::STORE: {
+    case IR::MemOp::STORE: {
         const IR::UAnyU128 data = v.V_scalar(datasize, Vt);
         v.Mem(address, datasize / 8, acctype, data);
         break;
     }
-    case MemOp::LOAD: {
+    case IR::MemOp::LOAD: {
         const IR::UAnyU128 data = v.Mem(address, datasize / 8, acctype);
         v.V_scalar(datasize, Vt, data);
         break;

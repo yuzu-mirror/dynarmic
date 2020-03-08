@@ -9,28 +9,28 @@
 namespace Dynarmic::A64 {
 
 static bool LoadStoreRegisterImmediate(TranslatorVisitor& v, bool wback, bool postindex, size_t scale, u64 offset, Imm<2> size, Imm<2> opc, Reg Rn, Reg Rt) {
-    MemOp memop;
+    IR::MemOp memop;
     bool signed_ = false;
     size_t regsize = 0;
 
     if (opc.Bit<1>() == 0) {
-        memop = opc.Bit<0>() ? MemOp::LOAD : MemOp::STORE;
+        memop = opc.Bit<0>() ? IR::MemOp::LOAD : IR::MemOp::STORE;
         regsize = size == 0b11 ? 64 : 32;
         signed_ = false;
     } else if (size == 0b11) {
-        memop = MemOp::PREFETCH;
+        memop = IR::MemOp::PREFETCH;
         ASSERT(!opc.Bit<0>());
     } else {
-        memop = MemOp::LOAD;
+        memop = IR::MemOp::LOAD;
         ASSERT(!(size == 0b10 && opc.Bit<0>() == 1));
         regsize = opc.Bit<0>() ? 32 : 64;
         signed_ = true;
     }
 
-    if (memop == MemOp::LOAD && wback && Rn == Rt && Rn != Reg::R31) {
+    if (memop == IR::MemOp::LOAD && wback && Rn == Rt && Rn != Reg::R31) {
         return v.UnpredictableInstruction();
     }
-    if (memop == MemOp::STORE && wback && Rn == Rt && Rn != Reg::R31) {
+    if (memop == IR::MemOp::STORE && wback && Rn == Rt && Rn != Reg::R31) {
         return v.UnpredictableInstruction();
     }
 
@@ -42,13 +42,13 @@ static bool LoadStoreRegisterImmediate(TranslatorVisitor& v, bool wback, bool po
 
     const size_t datasize = 8 << scale;
     switch (memop) {
-    case MemOp::STORE: {
+    case IR::MemOp::STORE: {
         const auto data = v.X(datasize, Rt);
-        v.Mem(address, datasize / 8, AccType::NORMAL, data);
+        v.Mem(address, datasize / 8, IR::AccType::NORMAL, data);
         break;
     }
-    case MemOp::LOAD: {
-        const auto data = v.Mem(address, datasize / 8, AccType::NORMAL);
+    case IR::MemOp::LOAD: {
+        const auto data = v.Mem(address, datasize / 8, IR::AccType::NORMAL);
         if (signed_) {
             v.X(regsize, Rt, v.SignExtend(data, regsize));
         } else {
@@ -56,7 +56,7 @@ static bool LoadStoreRegisterImmediate(TranslatorVisitor& v, bool wback, bool po
         }
         break;
     }
-    case MemOp::PREFETCH:
+    case IR::MemOp::PREFETCH:
         // Prefetch(address, Rt)
         break;
     }
@@ -115,8 +115,8 @@ bool TranslatorVisitor::PRFM_unscaled_imm([[maybe_unused]] Imm<9> imm9, [[maybe_
     return true;
 }
 
-static bool LoadStoreSIMD(TranslatorVisitor& v, bool wback, bool postindex, size_t scale, u64 offset, MemOp memop, Reg Rn, Vec Vt) {
-    const AccType acctype = AccType::VEC;
+static bool LoadStoreSIMD(TranslatorVisitor& v, bool wback, bool postindex, size_t scale, u64 offset, IR::MemOp memop, Reg Rn, Vec Vt) {
+    const auto acctype = IR::AccType::VEC;
     const size_t datasize = 8 << scale;
 
     IR::U64 address;
@@ -132,7 +132,7 @@ static bool LoadStoreSIMD(TranslatorVisitor& v, bool wback, bool postindex, size
     }
 
     switch (memop) {
-    case MemOp::STORE:
+    case IR::MemOp::STORE:
         if (datasize == 128) {
             const IR::U128 data = v.V(128, Vt);
             v.Mem(address, 16, acctype, data);
@@ -141,7 +141,7 @@ static bool LoadStoreSIMD(TranslatorVisitor& v, bool wback, bool postindex, size
             v.Mem(address, datasize / 8, acctype, data);
         }
         break;
-    case MemOp::LOAD:
+    case IR::MemOp::LOAD:
         if (datasize == 128) {
             const IR::U128 data = v.Mem(address, 16, acctype);
             v.V(128, Vt, data);
@@ -179,7 +179,7 @@ bool TranslatorVisitor::STR_imm_fpsimd_1(Imm<2> size, Imm<1> opc_1, Imm<9> imm9,
     const bool postindex = !not_postindex;
     const u64 offset = imm9.SignExtend<u64>();
 
-    return LoadStoreSIMD(*this, wback, postindex, scale, offset, MemOp::STORE, Rn, Vt);
+    return LoadStoreSIMD(*this, wback, postindex, scale, offset, IR::MemOp::STORE, Rn, Vt);
 }
 
 bool TranslatorVisitor::STR_imm_fpsimd_2(Imm<2> size, Imm<1> opc_1, Imm<12> imm12, Reg Rn, Vec Vt) {
@@ -192,7 +192,7 @@ bool TranslatorVisitor::STR_imm_fpsimd_2(Imm<2> size, Imm<1> opc_1, Imm<12> imm1
     const bool postindex = false;
     const u64 offset = imm12.ZeroExtend<u64>() << scale;
 
-    return LoadStoreSIMD(*this, wback, postindex, scale, offset, MemOp::STORE, Rn, Vt);
+    return LoadStoreSIMD(*this, wback, postindex, scale, offset, IR::MemOp::STORE, Rn, Vt);
 }
 
 bool TranslatorVisitor::LDR_imm_fpsimd_1(Imm<2> size, Imm<1> opc_1, Imm<9> imm9, bool not_postindex, Reg Rn, Vec Vt) {
@@ -205,7 +205,7 @@ bool TranslatorVisitor::LDR_imm_fpsimd_1(Imm<2> size, Imm<1> opc_1, Imm<9> imm9,
     const bool postindex = !not_postindex;
     const u64 offset = imm9.SignExtend<u64>();
 
-    return LoadStoreSIMD(*this, wback, postindex, scale, offset, MemOp::LOAD, Rn, Vt);
+    return LoadStoreSIMD(*this, wback, postindex, scale, offset, IR::MemOp::LOAD, Rn, Vt);
 }
 
 bool TranslatorVisitor::LDR_imm_fpsimd_2(Imm<2> size, Imm<1> opc_1, Imm<12> imm12, Reg Rn, Vec Vt) {
@@ -218,7 +218,7 @@ bool TranslatorVisitor::LDR_imm_fpsimd_2(Imm<2> size, Imm<1> opc_1, Imm<12> imm1
     const bool postindex = false;
     const u64 offset = imm12.ZeroExtend<u64>() << scale;
 
-    return LoadStoreSIMD(*this, wback, postindex, scale, offset, MemOp::LOAD, Rn, Vt);
+    return LoadStoreSIMD(*this, wback, postindex, scale, offset, IR::MemOp::LOAD, Rn, Vt);
 }
 
 bool TranslatorVisitor::STUR_fpsimd(Imm<2> size, Imm<1> opc_1, Imm<9> imm9, Reg Rn, Vec Vt) {
@@ -231,7 +231,7 @@ bool TranslatorVisitor::STUR_fpsimd(Imm<2> size, Imm<1> opc_1, Imm<9> imm9, Reg 
     const bool postindex = false;
     const u64 offset = imm9.SignExtend<u64>();
 
-    return LoadStoreSIMD(*this, wback, postindex, scale, offset, MemOp::STORE, Rn, Vt);
+    return LoadStoreSIMD(*this, wback, postindex, scale, offset, IR::MemOp::STORE, Rn, Vt);
 }
 
 bool TranslatorVisitor::LDUR_fpsimd(Imm<2> size, Imm<1> opc_1, Imm<9> imm9, Reg Rn, Vec Vt) {
@@ -244,7 +244,7 @@ bool TranslatorVisitor::LDUR_fpsimd(Imm<2> size, Imm<1> opc_1, Imm<9> imm9, Reg 
     const bool postindex = false;
     const u64 offset = imm9.SignExtend<u64>();
 
-    return LoadStoreSIMD(*this, wback, postindex, scale, offset, MemOp::LOAD, Rn, Vt);
+    return LoadStoreSIMD(*this, wback, postindex, scale, offset, IR::MemOp::LOAD, Rn, Vt);
 }
 
 } // namespace Dynarmic::A64

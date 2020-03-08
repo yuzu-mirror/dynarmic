@@ -57,6 +57,16 @@ struct UpperAndLower {
     U128 lower;
 };
 
+enum class AccType {
+    NORMAL, VEC, STREAM, VECSTREAM,
+    ATOMIC, ORDERED, ORDEREDRW, LIMITEDORDERED,
+    UNPRIV, IFETCH, PTW, DC, IC, DCZVA, AT,
+};
+
+enum class MemOp {
+    LOAD, STORE, PREFETCH,
+};
+
 /**
  * Convenience class to construct a basic block of the intermediate representation.
  * `block` is the resulting block.

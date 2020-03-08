@@ -275,7 +275,7 @@ void TranslatorVisitor::Vpart_scalar(size_t bitsize, Vec vec, size_t part, IR::U
     }
 }
 
-IR::UAnyU128 TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, AccType /*acctype*/) {
+IR::UAnyU128 TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType /*acc_type*/) {
     switch (bytesize) {
     case 1:
         return ir.ReadMemory8(address);
@@ -293,7 +293,7 @@ IR::UAnyU128 TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, AccType /*
     }
 }
 
-void TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, AccType /*acctype*/, IR::UAnyU128 value) {
+void TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType /*acc_type*/, IR::UAnyU128 value) {
     switch (bytesize) {
     case 1:
         ir.WriteMemory8(address, value);
@@ -316,7 +316,7 @@ void TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, AccType /*acctype*
     }
 }
 
-IR::U32 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, AccType /*acctype*/, IR::UAnyU128 value) {
+IR::U32 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType /*acc_type*/, IR::UAnyU128 value) {
     switch (bytesize) {
     case 1:
         return ir.ExclusiveWriteMemory8(address, value);

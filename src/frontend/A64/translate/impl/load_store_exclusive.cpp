@@ -13,8 +13,8 @@ namespace Dynarmic::A64 {
 static bool ExclusiveSharedDecodeAndOperation(TranslatorVisitor& v, bool pair, size_t size, bool L, bool o0, std::optional<Reg> Rs, std::optional<Reg> Rt2, Reg Rn, Reg Rt) {
     // Shared Decode
 
-    const AccType acctype = o0 ? AccType::ORDERED : AccType::ATOMIC;
-    const MemOp memop = L ? MemOp::LOAD : MemOp::STORE;
+    const auto acctype = o0 ? IR::AccType::ORDERED : IR::AccType::ATOMIC;
+    const auto memop = L ? IR::MemOp::LOAD : IR::MemOp::STORE;
     const size_t elsize = 8 << size;
     const size_t regsize = elsize == 64 ? 64 : 32;
     const size_t datasize = pair ? elsize * 2 : elsize;
@@ -23,14 +23,14 @@ static bool ExclusiveSharedDecodeAndOperation(TranslatorVisitor& v, bool pair, s
 
     const size_t dbytes = datasize / 8;
 
-    if (memop == MemOp::LOAD && pair && Rt == *Rt2) {
+    if (memop == IR::MemOp::LOAD && pair && Rt == *Rt2) {
         return v.UnpredictableInstruction();
-    } else if (memop == MemOp::STORE && (*Rs == Rt || (pair && *Rs == *Rt2))) {
+    } else if (memop == IR::MemOp::STORE && (*Rs == Rt || (pair && *Rs == *Rt2))) {
         if (!v.options.define_unpredictable_behaviour) {
             return v.UnpredictableInstruction();
         }
         // UNPREDICTABLE: The Constraint_NONE case is executed.
-    } else if (memop == MemOp::STORE && *Rs == Rn && Rn != Reg::R31) {
+    } else if (memop == IR::MemOp::STORE && *Rs == Rn && Rn != Reg::R31) {
         return v.UnpredictableInstruction();
     }
 
@@ -43,7 +43,7 @@ static bool ExclusiveSharedDecodeAndOperation(TranslatorVisitor& v, bool pair, s
     }
 
     switch (memop) {
-    case MemOp::STORE: {
+    case IR::MemOp::STORE: {
         IR::UAnyU128 data;
         if (pair && elsize == 64) {
             data = v.ir.Pack2x64To1x128(v.X(64, Rt), v.X(64, *Rt2));
@@ -56,7 +56,7 @@ static bool ExclusiveSharedDecodeAndOperation(TranslatorVisitor& v, bool pair, s
         v.X(32, *Rs, status);
         break;
     }
-    case MemOp::LOAD: {
+    case IR::MemOp::LOAD: {
         v.ir.SetExclusive(address, dbytes);
         const IR::UAnyU128 data = v.Mem(address, dbytes, acctype);
         if (pair && elsize == 64) {
@@ -144,8 +144,8 @@ bool TranslatorVisitor::LDAXP(Imm<1> sz, Reg Rt2, Reg Rn, Reg Rt) {
 static bool OrderedSharedDecodeAndOperation(TranslatorVisitor& v, size_t size, bool L, bool o0, Reg Rn, Reg Rt) {
     // Shared Decode
 
-    const AccType acctype = !o0 ? AccType::LIMITEDORDERED : AccType::ORDERED;
-    const MemOp memop = L ? MemOp::LOAD : MemOp::STORE;
+    const auto acctype = !o0 ? IR::AccType::LIMITEDORDERED : IR::AccType::ORDERED;
+    const auto memop = L ? IR::MemOp::LOAD : IR::MemOp::STORE;
     const size_t elsize = 8 << size;
     const size_t regsize = elsize == 64 ? 64 : 32;
     const size_t datasize = elsize;
@@ -163,12 +163,12 @@ static bool OrderedSharedDecodeAndOperation(TranslatorVisitor& v, size_t size, b
     }
 
     switch (memop) {
-    case MemOp::STORE: {
+    case IR::MemOp::STORE: {
         const IR::UAny data = v.X(datasize, Rt);
         v.Mem(address, dbytes, acctype, data);
         break;
     }
-    case MemOp::LOAD: {
+    case IR::MemOp::LOAD: {
         const IR::UAny data = v.Mem(address, dbytes, acctype);
         v.X(regsize, Rt, v.ZeroExtend(data, regsize));
         break;

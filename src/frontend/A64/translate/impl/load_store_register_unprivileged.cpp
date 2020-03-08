@@ -11,7 +11,7 @@ namespace Dynarmic::A64 {
 static bool StoreRegister(TranslatorVisitor& v, const size_t datasize,
                           const Imm<9> imm9, const Reg Rn, const Reg Rt) {
     const u64 offset = imm9.SignExtend<u64>();
-    const AccType acctype = AccType::UNPRIV;
+    const auto acctype = IR::AccType::UNPRIV;
 
     IR::U64 address;
     if (Rn == Reg::SP) {
@@ -30,7 +30,7 @@ static bool StoreRegister(TranslatorVisitor& v, const size_t datasize,
 static bool LoadRegister(TranslatorVisitor& v, const size_t datasize,
                          const Imm<9> imm9, const Reg Rn, const Reg Rt) {
     const u64 offset = imm9.SignExtend<u64>();
-    const AccType acctype = AccType::UNPRIV;
+    const auto acctype = IR::AccType::UNPRIV;
 
     IR::U64 address;
     if (Rn == Reg::SP) {
@@ -51,19 +51,19 @@ static bool LoadRegister(TranslatorVisitor& v, const size_t datasize,
 static bool LoadRegisterSigned(TranslatorVisitor& v, const size_t datasize,
                                const Imm<2> opc, const Imm<9> imm9, const Reg Rn, const Reg Rt) {
     const u64 offset = imm9.SignExtend<u64>();
-    const AccType acctype = AccType::UNPRIV;
+    const auto acctype = IR::AccType::UNPRIV;
 
-    MemOp memop;
+    IR::MemOp memop;
     bool is_signed;
     size_t regsize;
     if (opc.Bit<1>() == 0) {
         // store or zero-extending load
-        memop = opc.Bit<0>() ? MemOp::LOAD : MemOp::STORE;
+        memop = opc.Bit<0>() ? IR::MemOp::LOAD : IR::MemOp::STORE;
         regsize = 32;
         is_signed = false;
     } else {
         // sign-extending load
-        memop = MemOp::LOAD;
+        memop = IR::MemOp::LOAD;
         regsize = opc.Bit<0>() ? 32 : 64;
         is_signed = true;
     }
@@ -78,10 +78,10 @@ static bool LoadRegisterSigned(TranslatorVisitor& v, const size_t datasize,
     address = v.ir.Add(address, v.ir.Imm64(offset));
 
     switch (memop) {
-    case MemOp::STORE:
+    case IR::MemOp::STORE:
         v.Mem(address, datasize / 8, acctype, v.X(datasize, Rt));
         break;
-    case MemOp::LOAD: {
+    case IR::MemOp::LOAD: {
         const IR::UAny data = v.Mem(address, datasize / 8, acctype);
         if (is_signed) {
             v.X(regsize, Rt, v.SignExtend(data, regsize));
@@ -90,7 +90,7 @@ static bool LoadRegisterSigned(TranslatorVisitor& v, const size_t datasize,
         }
         break;
     }
-    case MemOp::PREFETCH:
+    case IR::MemOp::PREFETCH:
         // Prefetch(address, Rt);
         break;
     }
@@ -135,7 +135,7 @@ bool TranslatorVisitor::LDTRSH(Imm<2> opc, Imm<9> imm9, Reg Rn, Reg Rt) {
 
 bool TranslatorVisitor::LDTRSW(Imm<9> imm9, Reg Rn, Reg Rt) {
     const u64 offset = imm9.SignExtend<u64>();
-    const AccType acctype = AccType::UNPRIV;
+    const auto acctype = IR::AccType::UNPRIV;
 
     IR::U64 address;
     if (Rn == Reg::SP) {
