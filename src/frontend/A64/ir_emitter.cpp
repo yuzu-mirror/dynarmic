@@ -100,11 +100,6 @@ void IREmitter::ClearExclusive() {
     Inst(Opcode::A64ClearExclusive);
 }
 
-void IREmitter::SetExclusive(const IR::U64& vaddr, size_t byte_size) {
-    ASSERT(byte_size == 1 || byte_size == 2 || byte_size == 4 || byte_size == 8 || byte_size == 16);
-    Inst(Opcode::A64SetExclusive, vaddr, Imm8(u8(byte_size)));
-}
-
 IR::U8 IREmitter::ReadMemory8(const IR::U64& vaddr) {
     return Inst<IR::U8>(Opcode::A64ReadMemory8, vaddr);
 }
@@ -123,6 +118,26 @@ IR::U64 IREmitter::ReadMemory64(const IR::U64& vaddr) {
 
 IR::U128 IREmitter::ReadMemory128(const IR::U64& vaddr) {
     return Inst<IR::U128>(Opcode::A64ReadMemory128, vaddr);
+}
+
+IR::U8 IREmitter::ExclusiveReadMemory8(const IR::U64& vaddr) {
+    return Inst<IR::U8>(Opcode::A64ExclusiveReadMemory8, vaddr);
+}
+
+IR::U16 IREmitter::ExclusiveReadMemory16(const IR::U64& vaddr) {
+    return Inst<IR::U16>(Opcode::A64ExclusiveReadMemory16, vaddr);
+}
+
+IR::U32 IREmitter::ExclusiveReadMemory32(const IR::U64& vaddr) {
+    return Inst<IR::U32>(Opcode::A64ExclusiveReadMemory32, vaddr);
+}
+
+IR::U64 IREmitter::ExclusiveReadMemory64(const IR::U64& vaddr) {
+    return Inst<IR::U64>(Opcode::A64ExclusiveReadMemory64, vaddr);
+}
+
+IR::U128 IREmitter::ExclusiveReadMemory128(const IR::U64& vaddr) {
+    return Inst<IR::U128>(Opcode::A64ExclusiveReadMemory128, vaddr);
 }
 
 void IREmitter::WriteMemory8(const IR::U64& vaddr, const IR::U8& value) {

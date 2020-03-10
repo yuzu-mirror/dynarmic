@@ -287,9 +287,6 @@ TEST_CASE("A64: 128-bit exclusive read/write", "[a64]") {
     conf.callbacks = &env;
     conf.processor_id = 0;
 
-    SECTION("Local Monitor Only") {
-        conf.global_monitor = nullptr;
-    }
     SECTION("Global Monitor") {
         conf.global_monitor = &monitor;
     }

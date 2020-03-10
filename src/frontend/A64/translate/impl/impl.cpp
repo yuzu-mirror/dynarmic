@@ -308,7 +308,24 @@ void TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType /*acc_
     }
 }
 
-IR::U32 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType /*acc_type*/, IR::UAnyU128 value) {
+IR::UAnyU128 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType /*acctype*/) {
+    switch (bytesize) {
+    case 1:
+        return ir.ExclusiveReadMemory8(address);
+    case 2:
+        return ir.ExclusiveReadMemory16(address);
+    case 4:
+        return ir.ExclusiveReadMemory32(address);
+    case 8:
+        return ir.ExclusiveReadMemory64(address);
+    case 16:
+        return ir.ExclusiveReadMemory128(address);
+    default:
+        ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
+    }
+}
+
+IR::U32 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType /*acctype*/, IR::UAnyU128 value) {
     switch (bytesize) {
     case 1:
         return ir.ExclusiveWriteMemory8(address, value);
