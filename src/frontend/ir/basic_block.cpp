@@ -123,40 +123,40 @@ const size_t& Block::CycleCount() const {
 }
 
 static std::string TerminalToString(const Terminal& terminal_variant) {
-    switch (terminal_variant.which()) {
-    case 1: {
-        auto terminal = boost::get<IR::Term::Interpret>(terminal_variant);
-        return fmt::format("Interpret{{{}}}", terminal.next);
-    }
-    case 2: {
-        return "ReturnToDispatch{}";
-    }
-    case 3: {
-        auto terminal = boost::get<IR::Term::LinkBlock>(terminal_variant);
-        return fmt::format("LinkBlock{{{}}}", terminal.next);
-    }
-    case 4: {
-        auto terminal = boost::get<IR::Term::LinkBlockFast>(terminal_variant);
-        return fmt::format("LinkBlockFast{{{}}}", terminal.next);
-    }
-    case 5: {
-        return "PopRSBHint{}";
-    }
-    case 6: {
-        auto terminal = boost::get<IR::Term::If>(terminal_variant);
-        return fmt::format("If{{{}, {}, {}}}", A64::CondToString(terminal.if_), TerminalToString(terminal.then_), TerminalToString(terminal.else_));
-    }
-    case 7: {
-        auto terminal = boost::get<IR::Term::CheckBit>(terminal_variant);
-        return fmt::format("CheckBit{{{}, {}}}", TerminalToString(terminal.then_), TerminalToString(terminal.else_));
-    }
-    case 8: {
-        auto terminal = boost::get<IR::Term::CheckHalt>(terminal_variant);
-        return fmt::format("CheckHalt{{{}}}", TerminalToString(terminal.else_));
-    }
-    default:
-        return "<invalid terminal>";
-    }
+    struct : boost::static_visitor<std::string> {
+        std::string operator()(const Term::Invalid&) const {
+            return "<invalid terminal>";
+        }
+        std::string operator()(const Term::Interpret& terminal) const {
+            return fmt::format("Interpret{{{}}}", terminal.next);
+        }
+        std::string operator()(const Term::ReturnToDispatch&) const {
+            return "ReturnToDispatch{}";
+        }
+        std::string operator()(const Term::LinkBlock& terminal) const {
+            return fmt::format("LinkBlock{{{}}}", terminal.next);
+        }
+        std::string operator()(const Term::LinkBlockFast& terminal) const {
+            return fmt::format("LinkBlockFast{{{}}}", terminal.next);
+        }
+        std::string operator()(const Term::PopRSBHint&) const {
+            return "PopRSBHint{}";
+        }
+        std::string operator()(const Term::FastDispatchHint&) const {
+            return "FastDispatchHint{}";
+        }
+        std::string operator()(const Term::If& terminal) const {
+            return fmt::format("If{{{}, {}, {}}}", A64::CondToString(terminal.if_), TerminalToString(terminal.then_), TerminalToString(terminal.else_));
+        }
+        std::string operator()(const Term::CheckBit& terminal) const {
+            return fmt::format("CheckBit{{{}, {}}}", TerminalToString(terminal.then_), TerminalToString(terminal.else_));
+        }
+        std::string operator()(const Term::CheckHalt& terminal) const {
+            return fmt::format("CheckHalt{{{}}}", TerminalToString(terminal.else_));
+        }
+    } visitor;
+
+    return boost::apply_visitor(visitor, terminal_variant);
 }
 
 std::string DumpBlock(const IR::Block& block) {
