@@ -233,7 +233,8 @@ private:
 
         // JIT Compile
         const auto get_code = [this](u64 vaddr) { return conf.callbacks->MemoryReadCode(vaddr); };
-        IR::Block ir_block = A64::Translate(A64::LocationDescriptor{current_location}, get_code, {conf.define_unpredictable_behaviour});
+        IR::Block ir_block = A64::Translate(A64::LocationDescriptor{current_location}, get_code,
+                                                {conf.define_unpredictable_behaviour, conf.wall_clock_cntpct});
         Optimization::A64CallbackConfigPass(ir_block, conf);
         if (conf.enable_optimizations) {
             Optimization::A64GetSetElimination(ir_block);

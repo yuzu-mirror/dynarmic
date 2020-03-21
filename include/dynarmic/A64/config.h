@@ -200,6 +200,10 @@ struct UserConfig {
     /// definite behaviour for some unpredictable instructions.
     bool define_unpredictable_behaviour = false;
 
+    /// This tells the translator a wall clock will be used, thus allowing it
+    /// to avoid writting certain unnecessary code only needed for cycle timers.
+    bool wall_clock_cntpct = false;
+
     /// This enables the fast dispatcher.
     bool enable_fast_dispatch = true;
 
