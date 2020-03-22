@@ -4,6 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
+#include <optional>
 #include <unordered_map>
 #include <utility>
 
@@ -774,6 +775,28 @@ void A32EmitX64::EmitA32SetExclusive(A32EmitContext& ctx, IR::Inst* inst) {
     code.mov(dword[r15 + offsetof(A32JitState, exclusive_address)], address);
 }
 
+static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc,
+                                     const A32::UserConfig& config, Xbyak::Label& abort,
+                                     Xbyak::Reg64 vaddr,
+                                     std::optional<Xbyak::Reg64> arg_scratch = {}) {
+    constexpr size_t page_bits = A32::UserConfig::PAGE_BITS;
+    const Xbyak::Reg64 page_table = arg_scratch ? *arg_scratch : reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 tmp = reg_alloc.ScratchGpr();
+    code.mov(page_table, reinterpret_cast<u64>(config.page_table));
+    code.mov(tmp, vaddr);
+    code.shr(tmp, static_cast<int>(page_bits));
+    code.mov(page_table, qword[page_table + tmp * sizeof(void*)]);
+    code.test(page_table, page_table);
+    code.jz(abort);
+    if (config.absolute_offset_page_table) {
+        return page_table + vaddr;
+    }
+    constexpr size_t page_mask = (1 << page_bits) - 1;
+    code.mov(tmp, vaddr);
+    code.and_(tmp, static_cast<u32>(page_mask));
+    return page_table + tmp;
+}
+
 template <typename T, T (A32::UserCallbacks::*raw_fn)(A32::VAddr)>
 static void ReadMemory(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* inst, const A32::UserConfig& config, const CodePtr wrapped_fn) {
     constexpr size_t bit_size = Common::BitSize<T>();
@@ -785,35 +808,26 @@ static void ReadMemory(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* inst, c
         return;
     }
 
-    reg_alloc.UseScratch(args[0], ABI_PARAM2);
-
-    const Xbyak::Reg64 result = reg_alloc.ScratchGpr({ABI_RETURN});
-    const Xbyak::Reg32 vaddr = code.ABI_PARAM2.cvt32();
-    const Xbyak::Reg64 page_index = reg_alloc.ScratchGpr();
-    const Xbyak::Reg64 page_offset = reg_alloc.ScratchGpr();
-
     Xbyak::Label abort, end;
 
-    code.mov(result, reinterpret_cast<u64>(config.page_table));
-    code.mov(page_index.cvt32(), vaddr);
-    code.shr(page_index.cvt32(), 12);
-    code.mov(result, qword[result + page_index * 8]);
-    code.test(result, result);
-    code.jz(abort);
-    code.mov(page_offset.cvt32(), vaddr);
-    code.and_(page_offset.cvt32(), 4095);
+    reg_alloc.UseScratch(args[0], ABI_PARAM2);
+
+    const Xbyak::Reg64 vaddr = code.ABI_PARAM2;
+    const Xbyak::Reg64 value = reg_alloc.ScratchGpr({ABI_RETURN});
+    
+    const auto src_ptr = EmitVAddrLookup(code, reg_alloc, config, abort, vaddr, value);
     switch (bit_size) {
     case 8:
-        code.movzx(result, code.byte[result + page_offset]);
+        code.movzx(value.cvt32(), code.byte[src_ptr]);
         break;
     case 16:
-        code.movzx(result, word[result + page_offset]);
+        code.movzx(value.cvt32(), word[src_ptr]);
         break;
     case 32:
-        code.mov(result.cvt32(), dword[result + page_offset]);
+        code.mov(value.cvt32(), dword[src_ptr]);
         break;
     case 64:
-        code.mov(result.cvt64(), qword[result + page_offset]);
+        code.mov(value, qword[src_ptr]);
         break;
     default:
         ASSERT_MSG(false, "Invalid bit_size");
@@ -824,7 +838,7 @@ static void ReadMemory(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* inst, c
     code.call(wrapped_fn);
     code.L(end);
 
-    reg_alloc.DefineValue(inst, result);
+    reg_alloc.DefineValue(inst, value);
 }
 
 template <typename T, void (A32::UserCallbacks::*raw_fn)(A32::VAddr, T)>
@@ -838,37 +852,28 @@ static void WriteMemory(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* inst, 
         return;
     }
 
+    Xbyak::Label abort, end;
+
     reg_alloc.ScratchGpr({ABI_RETURN});
     reg_alloc.UseScratch(args[0], ABI_PARAM2);
     reg_alloc.UseScratch(args[1], ABI_PARAM3);
 
-    const Xbyak::Reg32 vaddr = code.ABI_PARAM2.cvt32();
+    const Xbyak::Reg64 vaddr = code.ABI_PARAM2;
     const Xbyak::Reg64 value = code.ABI_PARAM3;
-    const Xbyak::Reg64 page_index = reg_alloc.ScratchGpr();
-    const Xbyak::Reg64 page_offset = reg_alloc.ScratchGpr();
 
-    Xbyak::Label abort, end;
-
-    code.mov(rax, reinterpret_cast<u64>(config.page_table));
-    code.mov(page_index.cvt32(), vaddr);
-    code.shr(page_index.cvt32(), 12);
-    code.mov(rax, qword[rax + page_index * 8]);
-    code.test(rax, rax);
-    code.jz(abort);
-    code.mov(page_offset.cvt32(), vaddr);
-    code.and_(page_offset.cvt32(), 4095);
+    const auto dest_ptr = EmitVAddrLookup(code, reg_alloc, config, abort, vaddr);
     switch (bit_size) {
     case 8:
-        code.mov(code.byte[rax + page_offset], value.cvt8());
+        code.mov(code.byte[dest_ptr], value.cvt8());
         break;
     case 16:
-        code.mov(word[rax + page_offset], value.cvt16());
+        code.mov(word[dest_ptr], value.cvt16());
         break;
     case 32:
-        code.mov(dword[rax + page_offset], value.cvt32());
+        code.mov(dword[dest_ptr], value.cvt32());
         break;
     case 64:
-        code.mov(qword[rax + page_offset], value.cvt64());
+        code.mov(qword[dest_ptr], value);
         break;
     default:
         ASSERT_MSG(false, "Invalid bit_size");

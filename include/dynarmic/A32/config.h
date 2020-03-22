@@ -93,6 +93,13 @@ struct UserConfig {
     static constexpr std::size_t PAGE_BITS = 12;
     static constexpr std::size_t NUM_PAGE_TABLE_ENTRIES = 1 << (32 - PAGE_BITS);
     std::array<std::uint8_t*, NUM_PAGE_TABLE_ENTRIES>* page_table = nullptr;
+    /// Determines if the pointer in the page_table shall be offseted locally or globally.
+    /// 'false' will access page_table[addr >> bits][addr & mask]
+    /// 'true'  will access page_table[addr >> bits][addr]
+    /// Note: page_table[addr >> bits] will still be checked to verify active pages.
+    ///       So there might be wrongly faulted pages which maps to nullptr.
+    ///       This can be avoided by carefully allocating the memory region.
+    bool absolute_offset_page_table = false;
 
     // Coprocessors
     std::array<std::shared_ptr<Coprocessor>, 16> coprocessors;
