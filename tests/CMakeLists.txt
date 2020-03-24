@@ -20,6 +20,7 @@ if (DYNARMIC_TESTS_USE_UNICORN)
         A32/fuzz_arm.cpp
         A32/fuzz_thumb.cpp
         A64/fuzz_with_unicorn.cpp
+        A64/misaligned_page_table.cpp
         A64/verify_unicorn.cpp
         fuzz_util.cpp
         fuzz_util.h

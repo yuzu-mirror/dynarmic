@@ -708,14 +708,63 @@ void A64EmitX64::EmitA64SetExclusive(A64EmitContext& ctx, IR::Inst* inst) {
     code.mov(qword[r15 + offsetof(A64JitState, exclusive_address)], address);
 }
 
-static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr, std::optional<Xbyak::Reg64> arg_scratch = {}) {
-    constexpr size_t page_bits = 12;
-    constexpr size_t page_size = 1 << page_bits;
+namespace {
+
+constexpr size_t page_bits = 12;
+constexpr size_t page_size = 1 << page_bits;
+
+void EmitDetectMisaignedVAddr(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, Xbyak::Reg64 tmp) {
+    if (bitsize == 8 || (ctx.conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
+        return;
+    }
+
+    const u32 align_mask = [bitsize]() -> u32 {
+        switch (bitsize) {
+        case 16:
+            return 0b1;
+        case 32:
+            return 0b11;
+        case 64:
+            return 0b111;
+        case 128:
+            return 0b1111;
+        }
+        UNREACHABLE();
+    }();
+
+    code.test(vaddr, align_mask);
+
+    if (!ctx.conf.only_detect_misalignment_via_page_table_on_page_boundary) {
+        code.jnz(abort, code.T_NEAR);
+        return;
+    }
+
+    const u32 page_align_mask = static_cast<u32>(page_size - 1) & ~align_mask;
+
+    Xbyak::Label detect_boundary, resume;
+
+    code.jnz(detect_boundary, code.T_NEAR);
+    code.L(resume);
+
+    code.SwitchToFarCode();
+    code.L(detect_boundary);
+    code.mov(tmp, vaddr);
+    code.and_(tmp, page_align_mask);
+    code.cmp(tmp, page_align_mask);
+    code.jne(resume, code.T_NEAR);
+    // NOTE: We expect to fallthrough into abort code here.
+    code.SwitchToNearCode();
+}
+
+Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, std::optional<Xbyak::Reg64> arg_scratch = {}) {
     const size_t valid_page_index_bits = ctx.conf.page_table_address_space_bits - page_bits;
     const size_t unused_top_bits = 64 - ctx.conf.page_table_address_space_bits;
 
     const Xbyak::Reg64 page_table = arg_scratch ? *arg_scratch : ctx.reg_alloc.ScratchGpr();
     const Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
+
+    EmitDetectMisaignedVAddr(code, ctx, bitsize, abort, vaddr, tmp);
+
     code.mov(page_table, reinterpret_cast<u64>(ctx.conf.page_table));
     code.mov(tmp, vaddr);
     if (unused_top_bits == 0) {
@@ -745,6 +794,8 @@ static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, Xby
     return page_table + tmp;
 }
 
+} // anonymous namepsace
+
 void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize) {
     Xbyak::Label abort, end;
 
@@ -752,7 +803,7 @@ void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* in
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr();
 
-    auto src_ptr = EmitVAddrLookup(code, ctx, abort, vaddr, value);
+    const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr, value);
     switch (bitsize) {
     case 8:
         code.movzx(value.cvt32(), code.byte[src_ptr]);
@@ -785,7 +836,7 @@ void A64EmitX64::EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* i
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
 
-    auto dest_ptr = EmitVAddrLookup(code, ctx, abort, vaddr);
+    const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
     switch (bitsize) {
     case 8:
         code.mov(code.byte[dest_ptr], value.cvt8());
@@ -861,7 +912,7 @@ void A64EmitX64::EmitA64ReadMemory128(A64EmitContext& ctx, IR::Inst* inst) {
         const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
         const Xbyak::Xmm value = ctx.reg_alloc.ScratchXmm();
 
-        const auto src_ptr = EmitVAddrLookup(code, ctx, abort, vaddr);
+        const auto src_ptr = EmitVAddrLookup(code, ctx, 128, abort, vaddr);
         code.movups(value, xword[src_ptr]);
         code.L(end);
 
@@ -933,7 +984,7 @@ void A64EmitX64::EmitA64WriteMemory128(A64EmitContext& ctx, IR::Inst* inst) {
         const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
         const Xbyak::Xmm value = ctx.reg_alloc.UseXmm(args[1]);
 
-        const auto dest_ptr = EmitVAddrLookup(code, ctx, abort, vaddr);
+        const auto dest_ptr = EmitVAddrLookup(code, ctx, 128, abort, vaddr);
         code.movups(xword[dest_ptr], value);
         code.L(end);
 
