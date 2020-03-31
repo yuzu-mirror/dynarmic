@@ -1222,7 +1222,7 @@ void A64EmitX64::EmitPatchJg(const IR::LocationDescriptor& target_desc, CodePtr 
         code.mov(qword[r15 + offsetof(A64JitState, pc)], rax);
         code.jg(code.GetReturnFromRunCodeAddress());
     }
-    code.EnsurePatchLocationSize(patch_location, 30); // TODO: Reduce size
+    code.EnsurePatchLocationSize(patch_location, 23);
 }
 
 void A64EmitX64::EmitPatchJmp(const IR::LocationDescriptor& target_desc, CodePtr target_code_ptr) {
@@ -1234,7 +1234,7 @@ void A64EmitX64::EmitPatchJmp(const IR::LocationDescriptor& target_desc, CodePtr
         code.mov(qword[r15 + offsetof(A64JitState, pc)], rax);
         code.jmp(code.GetReturnFromRunCodeAddress());
     }
-    code.EnsurePatchLocationSize(patch_location, 30); // TODO: Reduce size
+    code.EnsurePatchLocationSize(patch_location, 22);
 }
 
 void A64EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
