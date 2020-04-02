@@ -102,7 +102,7 @@ struct UserConfig {
     bool absolute_offset_page_table = false;
 
     // Coprocessors
-    std::array<std::shared_ptr<Coprocessor>, 16> coprocessors;
+    std::array<std::shared_ptr<Coprocessor>, 16> coprocessors{};
 
     /// Hint instructions would cause ExceptionRaised to be called with the appropriate
     /// argument.
