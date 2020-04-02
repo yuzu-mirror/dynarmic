@@ -59,6 +59,14 @@ struct FunctionInfo<R(C::*)(Args...) const> : public FunctionInfo<R(Args...)>
 };
 
 /**
+ * Helper template for retrieving the number of function parameters.
+ *
+ * @tparam Function       An arbitrary function type.
+ */
+template <typename Function>
+constexpr size_t parameter_count_v = FunctionInfo<Function>::args_count;
+
+/**
  * Helper template for retrieving the type of a function parameter.
  *
  * @tparam Function       An arbitrary function type.
