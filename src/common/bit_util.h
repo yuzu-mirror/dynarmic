@@ -151,6 +151,17 @@ inline size_t BitCount(Integral value) {
 }
 
 template <typename T>
+constexpr size_t CountLeadingZeros(T value) {
+    auto x = static_cast<std::make_unsigned_t<T>>(value);
+    size_t result = BitSize<T>();
+    while (x != 0) {
+        x >>= 1;
+        result--;
+    }
+    return result;
+}
+
+template <typename T>
 constexpr int HighestSetBit(T value) {
     auto x = static_cast<std::make_unsigned_t<T>>(value);
     int result = -1;
