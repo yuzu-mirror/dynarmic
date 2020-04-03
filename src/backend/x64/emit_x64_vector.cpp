@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <type_traits>
 
+#include <mp/traits/function_info.h>
+
 #include "backend/x64/abi.h"
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
@@ -16,7 +18,6 @@
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "common/math_util.h"
-#include "common/mp/function_info.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"
@@ -24,7 +25,6 @@
 namespace Dynarmic::BackendX64 {
 
 using namespace Xbyak::util;
-namespace mp = Common::mp;
 
 template <typename Function>
 static void EmitVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
@@ -52,7 +52,7 @@ static void EmitAVXVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst
 
 template <typename Lambda>
 static void EmitOneArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
-    const auto fn = static_cast<mp::equivalent_function_type_t<Lambda>*>(lambda);
+    const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
     constexpr u32 stack_space = 2 * 16;
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -75,7 +75,7 @@ static void EmitOneArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Ins
 
 template <typename Lambda>
 static void EmitOneArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
-    const auto fn = static_cast<mp::equivalent_function_type_t<Lambda>*>(lambda);
+    const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
     constexpr u32 stack_space = 2 * 16;
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -100,7 +100,7 @@ static void EmitOneArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext
 
 template <typename Lambda>
 static void EmitTwoArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
-    const auto fn = static_cast<mp::equivalent_function_type_t<Lambda>*>(lambda);
+    const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
     constexpr u32 stack_space = 3 * 16;
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -128,7 +128,7 @@ static void EmitTwoArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext
 
 template <typename Lambda>
 static void EmitTwoArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
-    const auto fn = static_cast<mp::equivalent_function_type_t<Lambda>*>(lambda);
+    const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
     constexpr u32 stack_space = 3 * 16;
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);

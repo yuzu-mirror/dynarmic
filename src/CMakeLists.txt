@@ -57,23 +57,12 @@ add_library(dynarmic
     common/iterator_util.h
     common/llvm_disassemble.cpp
     common/llvm_disassemble.h
+    common/lut_from_list.h
     common/macro_util.h
     common/math_util.cpp
     common/math_util.h
     common/memory_pool.cpp
     common/memory_pool.h
-    common/mp/append.h
-    common/mp/bind.h
-    common/mp/cartesian_product.h
-    common/mp/concat.h
-    common/mp/fapply.h
-    common/mp/fmap.h
-    common/mp/function_info.h
-    common/mp/list.h
-    common/mp/lut.h
-    common/mp/to_tuple.h
-    common/mp/vlift.h
-    common/mp/vllift.h
     common/safe_ops.h
     common/scope_exit.h
     common/string_util.h
@@ -289,6 +278,7 @@ target_link_libraries(dynarmic
     PRIVATE
         boost
         fmt::fmt
+        mp
         xbyak
         $<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>
 )

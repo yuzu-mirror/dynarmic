@@ -10,9 +10,10 @@
 #include <array>
 #include <tuple>
 
+#include <mp/traits/function_info.h>
+
 #include "common/assert.h"
 #include "common/bit_util.h"
-#include "common/mp/function_info.h"
 
 namespace Dynarmic::Decoder {
 namespace detail {
@@ -152,7 +153,7 @@ public:
      */
     template<typename FnT>
     static auto GetMatcher(FnT fn, const char* const name, const char* const bitstring) {
-        constexpr size_t args_count = Common::mp::FunctionInfo<FnT>::args_count;
+        constexpr size_t args_count = mp::parameter_count_v<FnT>;
         using Iota = std::make_index_sequence<args_count>;
 
         const auto [mask, expect] = GetMaskAndExpect(bitstring);

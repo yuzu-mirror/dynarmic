@@ -10,6 +10,14 @@
 #include <type_traits>
 #include <utility>
 
+#include <mp/metavalue/lift_value.h>
+#include <mp/traits/function_info.h>
+#include <mp/traits/integer_of_size.h>
+#include <mp/typelist/cartesian_product.h>
+#include <mp/typelist/lift_sequence.h>
+#include <mp/typelist/list.h>
+#include <mp/typelist/lower_to_tuple.h>
+
 #include "backend/x64/abi.h"
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
@@ -18,21 +26,13 @@
 #include "common/fp/info.h"
 #include "common/fp/op.h"
 #include "common/fp/util.h"
-#include "common/mp/cartesian_product.h"
-#include "common/mp/function_info.h"
-#include "common/mp/integer.h"
-#include "common/mp/list.h"
-#include "common/mp/lut.h"
-#include "common/mp/to_tuple.h"
-#include "common/mp/vlift.h"
-#include "common/mp/vllift.h"
+#include "common/lut_from_list.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 
 namespace Dynarmic::BackendX64 {
 
 using namespace Xbyak::util;
-namespace mp = Common::mp;
 
 namespace {
 
@@ -361,7 +361,7 @@ void EmitThreeOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 
 template<typename Lambda>
 void EmitTwoOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
-    const auto fn = static_cast<mp::equivalent_function_type_t<Lambda>*>(lambda);
+    const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -387,7 +387,7 @@ void EmitTwoOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lamb
 
 template<typename Lambda>
 void EmitThreeOpFallbackWithoutRegAlloc(BlockOfCode& code, EmitContext& ctx, Xbyak::Xmm result, Xbyak::Xmm arg1, Xbyak::Xmm arg2, Lambda lambda) {
-    const auto fn = static_cast<mp::equivalent_function_type_t<Lambda>*>(lambda);
+    const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
 
 #ifdef _WIN32
     constexpr u32 stack_space = 4 * 16;
@@ -437,7 +437,7 @@ void EmitThreeOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, La
 
 template<typename Lambda>
 void EmitFourOpFallbackWithoutRegAlloc(BlockOfCode& code, EmitContext& ctx, Xbyak::Xmm result, Xbyak::Xmm arg1, Xbyak::Xmm arg2, Xbyak::Xmm arg3, Lambda lambda) {
-    const auto fn = static_cast<mp::equivalent_function_type_t<Lambda>*>(lambda);
+    const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
 
 #ifdef _WIN32
     constexpr u32 stack_space = 5 * 16;
@@ -1205,25 +1205,26 @@ void EmitFPVectorRoundInt(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     }
 
     using rounding_list = mp::list<
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::ToNearest_TieEven>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::TowardsPlusInfinity>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::TowardsMinusInfinity>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::TowardsZero>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::ToNearest_TieAwayFromZero>
+        mp::lift_value<FP::RoundingMode::ToNearest_TieEven>,
+        mp::lift_value<FP::RoundingMode::TowardsPlusInfinity>,
+        mp::lift_value<FP::RoundingMode::TowardsMinusInfinity>,
+        mp::lift_value<FP::RoundingMode::TowardsZero>,
+        mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>
     >;
-    using exact_list = mp::list<mp::vlift<true>, mp::vlift<false>>;
+    using exact_list = mp::list<std::true_type, std::false_type>;
 
     using key_type = std::tuple<FP::RoundingMode, bool>;
     using value_type = void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&);
 
-    static const auto lut = mp::GenerateLookupTableFromList<key_type, value_type>(
+    static const auto lut = Common::GenerateLookupTableFromList<key_type, value_type>(
         [](auto arg) {
             return std::pair<key_type, value_type>{
-                mp::to_tuple<decltype(arg)>,
+                mp::lower_to_tuple_v<decltype(arg)>,
                 static_cast<value_type>(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
-                        constexpr FP::RoundingMode rounding_mode = std::get<0>(mp::to_tuple<decltype(arg)>);
-                        constexpr bool exact = std::get<1>(mp::to_tuple<decltype(arg)>);
+                        constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
+                        constexpr FP::RoundingMode rounding_mode = std::get<0>(t);
+                        constexpr bool exact = std::get<1>(t);
 
                         for (size_t i = 0; i < output.size(); ++i) {
                             output[i] = static_cast<FPT>(FP::FPRoundInt<FPT>(input[i], fpcr, rounding_mode, exact, fpsr));
@@ -1465,26 +1466,27 @@ void EmitFPVectorToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         }
     }
 
-    using fbits_list = mp::vllift<std::make_index_sequence<fsize + 1>>;
+    using fbits_list = mp::lift_sequence<std::make_index_sequence<fsize + 1>>;
     using rounding_list = mp::list<
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::ToNearest_TieEven>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::TowardsPlusInfinity>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::TowardsMinusInfinity>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::TowardsZero>,
-        std::integral_constant<FP::RoundingMode, FP::RoundingMode::ToNearest_TieAwayFromZero>
+        mp::lift_value<FP::RoundingMode::ToNearest_TieEven>,
+        mp::lift_value<FP::RoundingMode::TowardsPlusInfinity>,
+        mp::lift_value<FP::RoundingMode::TowardsMinusInfinity>,
+        mp::lift_value<FP::RoundingMode::TowardsZero>,
+        mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>
     >;
 
     using key_type = std::tuple<size_t, FP::RoundingMode>;
     using value_type = void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&);
 
-    static const auto lut = mp::GenerateLookupTableFromList<key_type, value_type>(
+    static const auto lut = Common::GenerateLookupTableFromList<key_type, value_type>(
         [](auto arg) {
             return std::pair<key_type, value_type>{
-                mp::to_tuple<decltype(arg)>,
+                mp::lower_to_tuple_v<decltype(arg)>,
                 static_cast<value_type>(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
-                        constexpr size_t fbits = std::get<0>(mp::to_tuple<decltype(arg)>);
-                        constexpr FP::RoundingMode rounding_mode = std::get<1>(mp::to_tuple<decltype(arg)>);
+                        constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
+                        constexpr size_t fbits = std::get<0>(t);
+                        constexpr FP::RoundingMode rounding_mode = std::get<1>(t);
 
                         for (size_t i = 0; i < output.size(); ++i) {
                             output[i] = static_cast<FPT>(FP::FPToFixed<FPT>(fsize, input[i], fbits, unsigned_, fpcr, rounding_mode, fpsr));

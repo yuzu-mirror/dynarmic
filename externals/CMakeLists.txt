@@ -18,3 +18,7 @@ endif()
 add_library(catch INTERFACE)
 target_include_directories(catch INTERFACE
                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/catch>)
+
+add_library(mp INTERFACE)
+target_include_directories(mp INTERFACE
+                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mp/include>)

@@ -8,16 +8,15 @@
 
 #include <array>
 #include <map>
-#include <type_traits>
 
-#include "common/mp/list.h"
+#include <mp/typelist/list.h>
 
-namespace Dynarmic::Common::mp {
+namespace Dynarmic::Common {
 
 template <typename KeyT, typename ValueT, typename Function, typename ...Values>
-inline auto GenerateLookupTableFromList(Function f, list<Values...>) {
+inline auto GenerateLookupTableFromList(Function f, mp::list<Values...>) {
     static const std::array<std::pair<KeyT, ValueT>, sizeof...(Values)> pair_array{f(Values{})...};
     return std::map<KeyT, ValueT>(pair_array.begin(), pair_array.end());
 }
 
-} // namespace Dynarmic::Common::mp
+} // namespace Dynarmic::Common

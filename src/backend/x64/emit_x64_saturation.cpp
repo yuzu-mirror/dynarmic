@@ -6,12 +6,13 @@
 
 #include <limits>
 
+#include <mp/traits/integer_of_size.h>
+
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
-#include "common/mp/integer.h"
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"
@@ -19,7 +20,6 @@
 namespace Dynarmic::BackendX64 {
 
 using namespace Xbyak::util;
-namespace mp = Dynarmic::Common::mp;
 
 namespace {
 
