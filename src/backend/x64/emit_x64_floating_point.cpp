@@ -857,14 +857,11 @@ static void EmitFPRound(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, siz
     >;
     using exact_list = mp::list<std::true_type, std::false_type>;
 
-    using key_type = std::tuple<size_t, FP::RoundingMode, bool>;
-    using value_type = u64(*)(u64, FP::FPSR&, FP::FPCR);
-
-    static const auto lut = Common::GenerateLookupTableFromList<key_type, value_type>(
+    static const auto lut = Common::GenerateLookupTableFromList(
         [](auto args) {
-            return std::pair<key_type, value_type>{
+            return std::pair{
                 mp::lower_to_tuple_v<decltype(args)>,
-                static_cast<value_type>(
+                static_cast<u64(*)(u64, FP::FPSR&, FP::FPCR)>(
                     [](u64 input, FP::FPSR& fpsr, FP::FPCR fpcr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(args)>;
                         constexpr size_t fsize = std::get<0>(t);
@@ -1288,14 +1285,11 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>
     >;
 
-    using key_type = std::tuple<size_t, FP::RoundingMode>;
-    using value_type = u64(*)(u64, FP::FPSR&, FP::FPCR);
-
-    static const auto lut = Common::GenerateLookupTableFromList<key_type, value_type>(
+    static const auto lut = Common::GenerateLookupTableFromList(
         [](auto args) {
-            return std::pair<key_type, value_type>{
+            return std::pair{
                 mp::lower_to_tuple_v<decltype(args)>,
-                static_cast<value_type>(
+                static_cast<u64(*)(u64, FP::FPSR&, FP::FPCR)>(
                     [](u64 input, FP::FPSR& fpsr, FP::FPCR fpcr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(args)>;
                         constexpr size_t fbits = std::get<0>(t);

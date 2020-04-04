@@ -1213,14 +1213,11 @@ void EmitFPVectorRoundInt(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     >;
     using exact_list = mp::list<std::true_type, std::false_type>;
 
-    using key_type = std::tuple<FP::RoundingMode, bool>;
-    using value_type = void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&);
-
-    static const auto lut = Common::GenerateLookupTableFromList<key_type, value_type>(
+    static const auto lut = Common::GenerateLookupTableFromList(
         [](auto arg) {
-            return std::pair<key_type, value_type>{
+            return std::pair{
                 mp::lower_to_tuple_v<decltype(arg)>,
-                static_cast<value_type>(
+                static_cast<void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&)>(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
                         constexpr FP::RoundingMode rounding_mode = std::get<0>(t);
@@ -1475,14 +1472,11 @@ void EmitFPVectorToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>
     >;
 
-    using key_type = std::tuple<size_t, FP::RoundingMode>;
-    using value_type = void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&);
-
-    static const auto lut = Common::GenerateLookupTableFromList<key_type, value_type>(
+    static const auto lut = Common::GenerateLookupTableFromList(
         [](auto arg) {
-            return std::pair<key_type, value_type>{
+            return std::pair{
                 mp::lower_to_tuple_v<decltype(arg)>,
-                static_cast<value_type>(
+                static_cast<void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&)>(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
                         constexpr size_t fbits = std::get<0>(t);
