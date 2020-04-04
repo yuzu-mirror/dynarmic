@@ -20,6 +20,7 @@
 #include "backend/x64/emit_x64.h"
 #include "common/assert.h"
 #include "common/common_types.h"
+#include "common/cast_util.h"
 #include "common/fp/fpcr.h"
 #include "common/fp/fpsr.h"
 #include "common/fp/info.h"
@@ -861,7 +862,7 @@ static void EmitFPRound(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, siz
         [](auto args) {
             return std::pair{
                 mp::lower_to_tuple_v<decltype(args)>,
-                static_cast<u64(*)(u64, FP::FPSR&, FP::FPCR)>(
+                Common::FptrCast(
                     [](u64 input, FP::FPSR& fpsr, FP::FPCR fpcr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(args)>;
                         constexpr size_t fsize = std::get<0>(t);
@@ -1289,7 +1290,7 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         [](auto args) {
             return std::pair{
                 mp::lower_to_tuple_v<decltype(args)>,
-                static_cast<u64(*)(u64, FP::FPSR&, FP::FPCR)>(
+                Common::FptrCast(
                     [](u64 input, FP::FPSR& fpsr, FP::FPCR fpcr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(args)>;
                         constexpr size_t fbits = std::get<0>(t);

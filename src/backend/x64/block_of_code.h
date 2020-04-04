@@ -16,6 +16,7 @@
 #include "backend/x64/callback.h"
 #include "backend/x64/constant_pool.h"
 #include "backend/x64/jitstate_info.h"
+#include "common/cast_util.h"
 #include "common/common_types.h"
 
 namespace Dynarmic::BackendX64 {
@@ -81,6 +82,12 @@ public:
         } else {
             call(fn);
         }
+    }
+
+    /// Code emitter: Calls the lambda. Lambda must not have any captures.
+    template <typename Lambda>
+    void CallLambda(Lambda l) {
+        CallFunction(Common::FptrCast(l));
     }
 
     Xbyak::Address MConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper = 0);

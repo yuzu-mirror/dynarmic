@@ -1005,7 +1005,7 @@ static void EmitFPVectorMulX(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst
     FCODE(mulp)(result, xmm_b);
     FCODE(cmpunordp)(nan_mask, result);
 
-    const auto nan_handler = static_cast<void(*)(std::array<VectorArray<FPT>, 3>&, FP::FPCR)>(
+    const auto nan_handler = Common::FptrCast(
         [](std::array<VectorArray<FPT>, 3>& values, FP::FPCR fpcr) {
             VectorArray<FPT>& result = values[0];
             for (size_t elementi = 0; elementi < result.size(); ++elementi) {
@@ -1217,7 +1217,7 @@ void EmitFPVectorRoundInt(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         [](auto arg) {
             return std::pair{
                 mp::lower_to_tuple_v<decltype(arg)>,
-                static_cast<void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&)>(
+                Common::FptrCast(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
                         constexpr FP::RoundingMode rounding_mode = std::get<0>(t);
@@ -1476,7 +1476,7 @@ void EmitFPVectorToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         [](auto arg) {
             return std::pair{
                 mp::lower_to_tuple_v<decltype(arg)>,
-                static_cast<void(*)(VectorArray<FPT>&, const VectorArray<FPT>&, FP::FPCR, FP::FPSR&)>(
+                Common::FptrCast(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
                         constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
                         constexpr size_t fbits = std::get<0>(t);

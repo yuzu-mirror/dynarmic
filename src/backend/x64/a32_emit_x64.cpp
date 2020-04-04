@@ -647,9 +647,7 @@ void A32EmitX64::EmitA32InstructionSynchronizationBarrier(A32EmitContext& ctx, I
     ctx.reg_alloc.HostCall(nullptr);
 
     code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(jit_interface));
-    code.CallFunction(static_cast<void(*)(A32::Jit*)>([](A32::Jit* jit) {
-        jit->ClearCache();
-    }));
+    code.CallLambda([](A32::Jit* jit) { jit->ClearCache(); });
 }
 
 void A32EmitX64::EmitA32BXWritePC(A32EmitContext& ctx, IR::Inst* inst) {
@@ -814,7 +812,7 @@ static void ReadMemory(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* inst, c
 
     const Xbyak::Reg64 vaddr = code.ABI_PARAM2;
     const Xbyak::Reg64 value = reg_alloc.ScratchGpr({ABI_RETURN});
-    
+
     const auto src_ptr = EmitVAddrLookup(code, reg_alloc, config, abort, vaddr, value);
     switch (bit_size) {
     case 8:

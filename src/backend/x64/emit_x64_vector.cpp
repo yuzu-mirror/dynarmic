@@ -4050,7 +4050,7 @@ void EmitX64::EmitVectorTableLookup(EmitContext& ctx, IR::Inst* inst) {
     code.movaps(xword[code.ABI_PARAM2], defaults);
     code.movaps(xword[code.ABI_PARAM3], indicies);
 
-    code.CallFunction(static_cast<void(*)(const VectorArray<u8>*, VectorArray<u8>&, const VectorArray<u8>&, size_t)>(
+    code.CallLambda(
         [](const VectorArray<u8>* table, VectorArray<u8>& result, const VectorArray<u8>& indicies, size_t table_size) {
             for (size_t i = 0; i < result.size(); ++i) {
                 const size_t index = indicies[i] / table[0].size();
@@ -4060,7 +4060,7 @@ void EmitX64::EmitVectorTableLookup(EmitContext& ctx, IR::Inst* inst) {
                 }
             }
         }
-    ));
+    );
 
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + (table_size + 0) * 16]);
     code.add(rsp, stack_space + ABI_SHADOW_SPACE);
