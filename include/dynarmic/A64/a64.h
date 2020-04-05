@@ -60,6 +60,12 @@ public:
      */
     void HaltExecution();
 
+    /**
+     * Exits execution from a callback, the callback must rewind the stack or
+     * never return to dynarmic from it's current stack.
+     */
+    void ExceptionalExit();
+
     /// Read Stack Pointer
     std::uint64_t GetSP() const;
     /// Modify Stack Pointer
