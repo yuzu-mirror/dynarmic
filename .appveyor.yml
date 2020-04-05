@@ -21,7 +21,7 @@ install:
 before_build:
   - mkdir build
   - cd build
-  - cmake .. -G "%cmake_generator%" -DDYNARMIC_USE_SYSTEM_BOOST=0 -DBoost_INCLUDE_DIRS=%cd%/../externals/boost
+  - cmake .. -G "%cmake_generator%" -DBoost_INCLUDE_DIRS=%cd%/../externals/boost
   - cd ..
 
 build:
