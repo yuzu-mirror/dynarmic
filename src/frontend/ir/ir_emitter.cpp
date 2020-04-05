@@ -185,6 +185,42 @@ U32U64 IREmitter::RotateRight(const U32U64& value_in, const U8& shift_amount) {
     }
 }
 
+U32U64 IREmitter::LogicalShiftLeftMasked(const U32U64& value_in, const U32U64& shift_amount) {
+    ASSERT(value_in.GetType() == shift_amount.GetType());
+    if (value_in.GetType() == Type::U32) {
+        return Inst<U32>(Opcode::LogicalShiftLeftMasked32, value_in, shift_amount);
+    } else {
+        return Inst<U64>(Opcode::LogicalShiftLeftMasked64, value_in, shift_amount);
+    }
+}
+
+U32U64 IREmitter::LogicalShiftRightMasked(const U32U64& value_in, const U32U64& shift_amount) {
+    ASSERT(value_in.GetType() == shift_amount.GetType());
+    if (value_in.GetType() == Type::U32) {
+        return Inst<U32>(Opcode::LogicalShiftRightMasked32, value_in, shift_amount);
+    } else {
+        return Inst<U64>(Opcode::LogicalShiftRightMasked64, value_in, shift_amount);
+    }
+}
+
+U32U64 IREmitter::ArithmeticShiftRightMasked(const U32U64& value_in, const U32U64& shift_amount) {
+    ASSERT(value_in.GetType() == shift_amount.GetType());
+    if (value_in.GetType() == Type::U32) {
+        return Inst<U32>(Opcode::ArithmeticShiftRightMasked32, value_in, shift_amount);
+    } else {
+        return Inst<U64>(Opcode::ArithmeticShiftRightMasked64, value_in, shift_amount);
+    }
+}
+
+U32U64 IREmitter::RotateRightMasked(const U32U64& value_in, const U32U64& shift_amount) {
+    ASSERT(value_in.GetType() == shift_amount.GetType());
+    if (value_in.GetType() == Type::U32) {
+        return Inst<U32>(Opcode::RotateRightMasked32, value_in, shift_amount);
+    } else {
+        return Inst<U64>(Opcode::RotateRightMasked64, value_in, shift_amount);
+    }
+}
+
 ResultAndCarryAndOverflow<U32> IREmitter::AddWithCarry(const U32& a, const U32& b, const U1& carry_in) {
     const auto result = Inst<U32>(Opcode::Add32, a, b, carry_in);
     const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);

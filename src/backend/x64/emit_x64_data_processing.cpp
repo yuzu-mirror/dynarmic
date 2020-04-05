@@ -4,6 +4,9 @@
  * General Public License version 2 or any later version.
  */
 
+#include <cstddef>
+#include <type_traits>
+
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
 #include "common/assert.h"
@@ -723,6 +726,112 @@ void EmitX64::EmitRotateRightExtended(EmitContext& ctx, IR::Inst* inst) {
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
+}
+
+template <typename ShfitFT, typename BMI2FT>
+static void EmitMaskedShift32(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, ShfitFT shift_fn, [[maybe_unused]] BMI2FT bmi2_shift) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+
+    if (shift_arg.IsImmediate()) {
+        const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+        const u8 shift = shift_arg.GetImmediateU8();
+
+        shift_fn(result, shift & 0x1F);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
+    if constexpr (!std::is_same_v<BMI2FT, std::nullptr_t>) {
+        if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+            const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 operand = ctx.reg_alloc.UseGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 shift = ctx.reg_alloc.UseGpr(shift_arg).cvt32();
+
+            (code.*bmi2_shift)(result, operand, shift);
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+    }
+
+    ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
+    const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+
+    shift_fn(result, code.cl);
+
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+template <typename ShfitFT, typename BMI2FT>
+static void EmitMaskedShift64(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, ShfitFT shift_fn, [[maybe_unused]] BMI2FT bmi2_shift) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+
+    if (shift_arg.IsImmediate()) {
+        const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+        const u8 shift = shift_arg.GetImmediateU8();
+
+        shift_fn(result, shift & 0x3F);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
+    if constexpr (!std::is_same_v<BMI2FT, std::nullptr_t>) {
+        if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+            const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+            const Xbyak::Reg64 operand = ctx.reg_alloc.UseGpr(operand_arg);
+            const Xbyak::Reg64 shift = ctx.reg_alloc.UseGpr(shift_arg);
+
+            (code.*bmi2_shift)(result, operand, shift);
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+    }
+
+    ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
+    const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
+
+    shift_fn(result, code.cl);
+
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+void EmitX64::EmitLogicalShiftLeftMasked32(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.shl(result, shift); }, &Xbyak::CodeGenerator::shlx);
+}
+
+void EmitX64::EmitLogicalShiftLeftMasked64(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.shl(result, shift); }, &Xbyak::CodeGenerator::shlx);
+}
+
+void EmitX64::EmitLogicalShiftRightMasked32(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.shr(result, shift); }, &Xbyak::CodeGenerator::shrx);
+}
+
+void EmitX64::EmitLogicalShiftRightMasked64(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.shr(result, shift); }, &Xbyak::CodeGenerator::shrx);
+}
+
+void EmitX64::EmitArithmeticShiftRightMasked32(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.sar(result, shift); }, &Xbyak::CodeGenerator::sarx);
+}
+
+void EmitX64::EmitArithmeticShiftRightMasked64(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.sar(result, shift); }, &Xbyak::CodeGenerator::sarx);
+}
+
+void EmitX64::EmitRotateRightMasked32(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.ror(result, shift); }, nullptr);
+}
+
+void EmitX64::EmitRotateRightMasked64(EmitContext& ctx, IR::Inst* inst) {
+    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.ror(result, shift); }, nullptr);
 }
 
 static Xbyak::Reg8 DoCarry(RegAlloc& reg_alloc, Argument& carry_in, IR::Inst* carry_out) {
