@@ -47,10 +47,8 @@ public:
     /// Calculates how much space is remaining to use. This is the minimum of near code and far code.
     size_t SpaceRemaining() const;
 
-    /// Runs emulated code.
-    void RunCode(void* jit_state) const;
     /// Runs emulated code from code_ptr.
-    void RunCodeFrom(void* jit_state, CodePtr code_ptr) const;
+    void RunCode(void* jit_state, CodePtr code_ptr) const;
     /// Runs emulated code from code_ptr for a single cycle.
     void StepCode(void* jit_state, CodePtr code_ptr) const;
     /// Code emitter: Returns to dispatcher
@@ -157,11 +155,9 @@ private:
     CodePtr near_code_ptr;
     CodePtr far_code_ptr;
 
-    using RunCodeFuncType = void(*)(void*);
-    using RunCodeFromFuncType = void(*)(void*, CodePtr);
+    using RunCodeFuncType = void(*)(void*, CodePtr);
     RunCodeFuncType run_code = nullptr;
-    RunCodeFromFuncType step_code = nullptr;
-    RunCodeFromFuncType run_code_from = nullptr;
+    RunCodeFuncType step_code = nullptr;
     static constexpr size_t MXCSR_ALREADY_EXITED = 1 << 0;
     static constexpr size_t FORCE_RETURN = 1 << 1;
     std::array<const void*, 4> return_from_run_code;

@@ -64,7 +64,7 @@ public:
 
             return GetCurrentBlock();
         }();
-        block_of_code.RunCodeFrom(&jit_state, current_code_ptr);
+        block_of_code.RunCode(&jit_state, current_code_ptr);
 
         PerformRequestedCacheInvalidation();
     }

@@ -70,7 +70,7 @@ struct Jit::Impl {
             return GetCurrentBlock();
         }();
 
-        block_of_code.RunCodeFrom(&jit_state, current_codeptr);
+        block_of_code.RunCode(&jit_state, current_codeptr);
     }
 
     void Step() {

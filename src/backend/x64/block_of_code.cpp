@@ -134,12 +134,8 @@ size_t BlockOfCode::SpaceRemaining() const {
     return std::min(TOTAL_CODE_SIZE - far_code_offset, FAR_CODE_OFFSET - near_code_offset);
 }
 
-void BlockOfCode::RunCode(void* jit_state) const {
-    run_code(jit_state);
-}
-
-void BlockOfCode::RunCodeFrom(void* jit_state, CodePtr code_ptr) const {
-    run_code_from(jit_state, code_ptr);
+void BlockOfCode::RunCode(void* jit_state, CodePtr code_ptr) const {
+    run_code(jit_state, code_ptr);
 }
 
 void BlockOfCode::StepCode(void* jit_state, CodePtr code_ptr) const {
@@ -164,8 +160,12 @@ void BlockOfCode::GenRunCode() {
     Xbyak::Label loop, enter_mxcsr_then_loop;
 
     align();
-    run_code_from = getCurr<RunCodeFromFuncType>();
+    run_code = getCurr<RunCodeFuncType>();
 
+    // This serves two purposes:
+    // 1. It saves all the registers we as a callee need to save.
+    // 2. It aligns the stack so that the code the JIT emits can assume
+    //    that the stack is appropriately aligned for CALLs.
     ABI_PushCalleeSaveRegistersAndAdjustStack(*this);
 
     mov(r15, ABI_PARAM1);
@@ -179,7 +179,7 @@ void BlockOfCode::GenRunCode() {
     jmp(r14);
 
     align();
-    step_code = getCurr<RunCodeFromFuncType>();
+    step_code = getCurr<RunCodeFuncType>();
 
     ABI_PushCalleeSaveRegistersAndAdjustStack(*this);
 
@@ -192,25 +192,13 @@ void BlockOfCode::GenRunCode() {
     jmp(ABI_PARAM2);
 
     align();
-    run_code = getCurr<RunCodeFuncType>();
 
-    // This serves two purposes:
-    // 1. It saves all the registers we as a callee need to save.
-    // 2. It aligns the stack so that the code the JIT emits can assume
-    //    that the stack is appropriately aligned for CALLs.
-    ABI_PushCalleeSaveRegistersAndAdjustStack(*this);
-
-    mov(r15, ABI_PARAM1);
-
-    cb.GetTicksRemaining->EmitCall(*this);
-    mov(qword[r15 + jsi.offsetof_cycles_to_run], ABI_RETURN);
-    mov(qword[r15 + jsi.offsetof_cycles_remaining], ABI_RETURN);
+    // Dispatcher loop
 
     L(enter_mxcsr_then_loop);
     SwitchMxcsrOnEntry();
     L(loop);
     cb.LookupBlock->EmitCall(*this);
-
     jmp(ABI_RETURN);
 
     // Return from run code variants
@@ -249,7 +237,7 @@ void BlockOfCode::GenRunCode() {
     return_from_run_code[MXCSR_ALREADY_EXITED | FORCE_RETURN] = getCurr<const void*>();
     emit_return_from_run_code(true, true);
 
-    PerfMapRegister(run_code_from, getCurr(), "dynarmic_dispatcher");
+    PerfMapRegister(run_code, getCurr(), "dynarmic_dispatcher");
 }
 
 void BlockOfCode::SwitchMxcsrOnEntry() {
