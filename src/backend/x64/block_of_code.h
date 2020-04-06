@@ -51,6 +51,8 @@ public:
     void RunCode(void* jit_state) const;
     /// Runs emulated code from code_ptr.
     void RunCodeFrom(void* jit_state, CodePtr code_ptr) const;
+    /// Runs emulated code from code_ptr for a single cycle.
+    void StepCode(void* jit_state, CodePtr code_ptr) const;
     /// Code emitter: Returns to dispatcher
     void ReturnFromRunCode(bool mxcsr_already_exited = false);
     /// Code emitter: Returns to dispatcher, forces return to host
@@ -158,6 +160,7 @@ private:
     using RunCodeFuncType = void(*)(void*);
     using RunCodeFromFuncType = void(*)(void*, CodePtr);
     RunCodeFuncType run_code = nullptr;
+    RunCodeFromFuncType step_code = nullptr;
     RunCodeFromFuncType run_code_from = nullptr;
     static constexpr size_t MXCSR_ALREADY_EXITED = 1 << 0;
     static constexpr size_t FORCE_RETURN = 1 << 1;

@@ -9,6 +9,7 @@
 #include "frontend/A64/translate/impl/impl.h"
 #include "frontend/A64/translate/translate.h"
 #include "frontend/ir/basic_block.h"
+#include "frontend/ir/terminal.h"
 
 namespace Dynarmic::A64 {
 
@@ -16,8 +17,9 @@ IR::Block Translate(LocationDescriptor descriptor, MemoryReadCodeFuncType memory
     IR::Block block{descriptor};
     TranslatorVisitor visitor{block, descriptor, std::move(options)};
 
+    const bool single_step = descriptor.SingleStepping();
     bool should_continue = true;
-    while (should_continue) {
+    do {
         const u64 pc = visitor.ir.current_location->PC();
         const u32 instruction = memory_read_code(pc);
 
@@ -29,6 +31,10 @@ IR::Block Translate(LocationDescriptor descriptor, MemoryReadCodeFuncType memory
 
         visitor.ir.current_location = visitor.ir.current_location->AdvancePC(4);
         block.CycleCount()++;
+    } while (should_continue && !single_step);
+
+    if (single_step && should_continue) {
+        visitor.ir.SetTerm(IR::Term::LinkBlock{*visitor.ir.current_location});
     }
 
     ASSERT_MSG(block.HasTerminal(), "Terminal has not been set");

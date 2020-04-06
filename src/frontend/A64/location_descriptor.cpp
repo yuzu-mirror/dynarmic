@@ -12,7 +12,7 @@
 namespace Dynarmic::A64 {
 
 std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor) {
-    o << fmt::format("{{{}, {}}}", descriptor.PC(), descriptor.FPCR().Value());
+    o << fmt::format("{{{}, {}{}}}", descriptor.PC(), descriptor.FPCR().Value(), descriptor.SingleStepping() ? ", step" : "");
     return o;
 }
 

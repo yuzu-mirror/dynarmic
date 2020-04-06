@@ -11,6 +11,7 @@
 #include <xbyak.h>
 
 #include "common/common_types.h"
+#include "frontend/A64/location_descriptor.h"
 
 namespace Dynarmic::BackendX64 {
 
@@ -79,7 +80,11 @@ struct A64JitState {
     void SetFpcr(u32 value);
     void SetFpsr(u32 value);
 
-    u64 GetUniqueHash() const noexcept;
+    u64 GetUniqueHash() const noexcept {
+        const u64 fpcr_u64 = static_cast<u64>(fpcr & A64::LocationDescriptor::fpcr_mask) << A64::LocationDescriptor::fpcr_shift;
+        const u64 pc_u64 = pc & A64::LocationDescriptor::pc_mask;
+        return pc_u64 | fpcr_u64;
+    }
 };
 
 #ifdef _MSC_VER

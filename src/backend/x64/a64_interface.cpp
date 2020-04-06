@@ -54,13 +54,28 @@ public:
 
         // TODO: Check code alignment
 
-        const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A64JitState::RSBPtrMask;
-        if (jit_state.GetUniqueHash() == jit_state.rsb_location_descriptors[new_rsb_ptr]) {
-            jit_state.rsb_ptr = new_rsb_ptr;
-            block_of_code.RunCodeFrom(&jit_state, reinterpret_cast<CodePtr>(jit_state.rsb_codeptrs[new_rsb_ptr]));
-        } else {
-            block_of_code.RunCode(&jit_state);
-        }
+        const CodePtr current_code_ptr = [this]{
+            // RSB optimization
+            const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A64JitState::RSBPtrMask;
+            if (jit_state.GetUniqueHash() == jit_state.rsb_location_descriptors[new_rsb_ptr]) {
+                jit_state.rsb_ptr = new_rsb_ptr;
+                return reinterpret_cast<CodePtr>(jit_state.rsb_codeptrs[new_rsb_ptr]);
+            }
+
+            return GetCurrentBlock();
+        }();
+        block_of_code.RunCodeFrom(&jit_state, current_code_ptr);
+
+        PerformRequestedCacheInvalidation();
+    }
+
+    void Step() {
+        ASSERT(!is_executing);
+        is_executing = true;
+        SCOPE_EXIT { this->is_executing = false; };
+        jit_state.halt_requested = true;
+
+        block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
 
         PerformRequestedCacheInvalidation();
     }
@@ -185,9 +200,19 @@ private:
         return this_->GetCurrentBlock();
     }
 
-    CodePtr GetCurrentBlock() {
-        IR::LocationDescriptor current_location{jit_state.GetUniqueHash()};
+    IR::LocationDescriptor GetCurrentLocation() const {
+        return IR::LocationDescriptor{jit_state.GetUniqueHash()};
+    }
 
+    CodePtr GetCurrentBlock() {
+        return GetBlock(GetCurrentLocation());
+    }
+
+    CodePtr GetCurrentSingleStep() {
+        return GetBlock(A64::LocationDescriptor{GetCurrentLocation()}.SetSingleStepping(true));
+    }
+
+    CodePtr GetBlock(IR::LocationDescriptor current_location) {
         if (auto block = emitter.GetBasicBlock(current_location))
             return block->entrypoint;
 
@@ -254,6 +279,10 @@ Jit::~Jit() = default;
 
 void Jit::Run() {
     impl->Run();
+}
+
+void Jit::Step() {
+    impl->Step();
 }
 
 void Jit::ClearCache() {

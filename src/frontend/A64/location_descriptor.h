@@ -24,19 +24,29 @@ namespace Dynarmic::A64 {
  */
 class LocationDescriptor {
 public:
-    static constexpr u64 PC_MASK = 0x00FF'FFFF'FFFF'FFFFull;
-    static constexpr u32 FPCR_MASK = 0x07C8'0000;
+    static constexpr size_t pc_bit_count = 56;
+    static constexpr u64 pc_mask = Common::Ones<u64>(pc_bit_count);
+    static constexpr u32 fpcr_mask = 0x07C8'0000;
+    static constexpr size_t fpcr_shift = 37;
+    static constexpr size_t single_stepping_bit = 57;
+    static_assert((pc_mask & (u64(fpcr_mask) << fpcr_shift) & (u64(1) << single_stepping_bit)) == 0);
 
-    LocationDescriptor(u64 pc, FP::FPCR fpcr) : pc(pc & PC_MASK), fpcr(fpcr.Value() & FPCR_MASK) {}
+    LocationDescriptor(u64 pc, FP::FPCR fpcr, bool single_stepping = false)
+        : pc(pc & pc_mask), fpcr(fpcr.Value() & fpcr_mask), single_stepping(single_stepping)
+    {}
 
     explicit LocationDescriptor(const IR::LocationDescriptor& o)
-        : pc(o.Value() & PC_MASK), fpcr((o.Value() >> 37) & FPCR_MASK) {}
+        : pc(o.Value() & pc_mask)
+        , fpcr((o.Value() >> fpcr_shift) & fpcr_mask)
+        , single_stepping(Common::Bit<single_stepping_bit>(o.Value()))
+    {}
 
-    u64 PC() const { return Common::SignExtend<56>(pc); }
+    u64 PC() const { return Common::SignExtend<pc_bit_count>(pc); }
     FP::FPCR FPCR() const { return fpcr; }
+    bool SingleStepping() const { return single_stepping; }
 
     bool operator == (const LocationDescriptor& o) const {
-        return std::tie(pc, fpcr) == std::tie(o.pc, o.fpcr);
+        return std::tie(pc, fpcr, single_stepping) == std::tie(o.pc, o.fpcr, single_stepping);
     }
 
     bool operator != (const LocationDescriptor& o) const {
@@ -44,18 +54,23 @@ public:
     }
 
     LocationDescriptor SetPC(u64 new_pc) const {
-        return LocationDescriptor(new_pc, fpcr);
+        return LocationDescriptor(new_pc, fpcr, single_stepping);
     }
 
     LocationDescriptor AdvancePC(int amount) const {
-        return LocationDescriptor(static_cast<u64>(pc + amount), fpcr);
+        return LocationDescriptor(static_cast<u64>(pc + amount), fpcr, single_stepping);
+    }
+
+    LocationDescriptor SetSingleStepping(bool new_single_stepping) const {
+        return LocationDescriptor(pc, fpcr, new_single_stepping);
     }
 
     u64 UniqueHash() const noexcept {
         // This value MUST BE UNIQUE.
         // This calculation has to match up with EmitTerminalPopRSBHint
-        const u64 fpcr_u64 = static_cast<u64>(fpcr.Value()) << 37;
-        return pc | fpcr_u64;
+        const u64 fpcr_u64 = static_cast<u64>(fpcr.Value()) << fpcr_shift;
+        const u64 single_stepping_u64 = static_cast<u64>(single_stepping) << single_stepping_bit;
+        return pc | fpcr_u64 | single_stepping_u64;
     }
 
     operator IR::LocationDescriptor() const {
@@ -65,6 +80,7 @@ public:
 private:
     u64 pc;        ///< Current program counter value.
     FP::FPCR fpcr; ///< Floating point control register.
+    bool single_stepping;
 };
 
 /**

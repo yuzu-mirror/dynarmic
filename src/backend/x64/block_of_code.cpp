@@ -142,6 +142,10 @@ void BlockOfCode::RunCodeFrom(void* jit_state, CodePtr code_ptr) const {
     run_code_from(jit_state, code_ptr);
 }
 
+void BlockOfCode::StepCode(void* jit_state, CodePtr code_ptr) const {
+    step_code(jit_state, code_ptr);
+}
+
 void BlockOfCode::ReturnFromRunCode(bool mxcsr_already_exited) {
     size_t index = 0;
     if (mxcsr_already_exited)
@@ -173,6 +177,19 @@ void BlockOfCode::GenRunCode() {
 
     SwitchMxcsrOnEntry();
     jmp(r14);
+
+    align();
+    step_code = getCurr<RunCodeFromFuncType>();
+
+    ABI_PushCalleeSaveRegistersAndAdjustStack(*this);
+
+    mov(r15, ABI_PARAM1);
+
+    mov(qword[r15 + jsi.offsetof_cycles_to_run], 1);
+    mov(qword[r15 + jsi.offsetof_cycles_remaining], 1);
+
+    SwitchMxcsrOnEntry();
+    jmp(ABI_PARAM2);
 
     align();
     run_code = getCurr<RunCodeFuncType>();

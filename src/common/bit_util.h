@@ -23,7 +23,7 @@ constexpr size_t BitSize() {
 }
 
 template <typename T>
-inline T Ones(size_t count) {
+constexpr T Ones(size_t count) {
     ASSERT_MSG(count <= BitSize<T>(), "count larger than bitsize of T");
     if (count == BitSize<T>())
         return static_cast<T>(~static_cast<T>(0));
