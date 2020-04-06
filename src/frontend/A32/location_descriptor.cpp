@@ -11,11 +11,12 @@
 namespace Dynarmic::A32 {
 
 std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor) {
-    o << fmt::format("{{{:08x},{},{},{:08x}}}",
+    o << fmt::format("{{{:08x},{},{},{:08x}{}}}",
                      descriptor.PC(),
                      descriptor.TFlag() ? "T" : "!T",
                      descriptor.EFlag() ? "E" : "!E",
-                     descriptor.FPSCR().Value());
+                     descriptor.FPSCR().Value(),
+                     descriptor.SingleStepping() ? ",step" : "");
     return o;
 }
 

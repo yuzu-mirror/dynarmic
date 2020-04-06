@@ -33,8 +33,9 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType mem
     IR::Block block{descriptor};
     ArmTranslatorVisitor visitor{block, descriptor, options};
 
+    const bool single_step = descriptor.SingleStepping();
     bool should_continue = true;
-    while (should_continue && CondCanContinue(visitor.cond_state, visitor.ir)) {
+    do {
         const u32 arm_pc = visitor.ir.current_location.PC();
         const u32 arm_instruction = memory_read_code(arm_pc);
 
@@ -52,11 +53,15 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType mem
 
         visitor.ir.current_location = visitor.ir.current_location.AdvancePC(4);
         block.CycleCount()++;
-    }
+    } while (should_continue && CondCanContinue(visitor.cond_state, visitor.ir) && !single_step);
 
-    if (visitor.cond_state == ConditionalState::Translating || visitor.cond_state == ConditionalState::Trailing) {
+    if (visitor.cond_state == ConditionalState::Translating || visitor.cond_state == ConditionalState::Trailing || single_step) {
         if (should_continue) {
-            visitor.ir.SetTerm(IR::Term::LinkBlockFast{visitor.ir.current_location});
+            if (single_step) {
+                visitor.ir.SetTerm(IR::Term::LinkBlock{visitor.ir.current_location});
+            } else {
+                visitor.ir.SetTerm(IR::Term::LinkBlockFast{visitor.ir.current_location});
+            }
         }
     }
 

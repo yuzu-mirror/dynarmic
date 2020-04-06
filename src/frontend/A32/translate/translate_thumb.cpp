@@ -59,8 +59,9 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
     IR::Block block{descriptor};
     ThumbTranslatorVisitor visitor{block, descriptor, options};
 
+    const bool single_step = descriptor.SingleStepping();
     bool should_continue = true;
-    while (should_continue) {
+    do {
         const u32 arm_pc = visitor.ir.current_location.PC();
         const auto [thumb_instruction, inst_size] = ReadThumbInstruction(arm_pc, memory_read_code);
 
@@ -81,6 +82,10 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
         const s32 advance_pc = (inst_size == ThumbInstSize::Thumb16) ? 2 : 4;
         visitor.ir.current_location = visitor.ir.current_location.AdvancePC(advance_pc);
         block.CycleCount()++;
+    } while (should_continue && !single_step);
+
+    if (single_step && should_continue) {
+        visitor.ir.SetTerm(IR::Term::LinkBlock{visitor.ir.current_location});
     }
 
     block.SetEndLocation(visitor.ir.current_location);
