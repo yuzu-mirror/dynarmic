@@ -195,47 +195,42 @@ void BlockOfCode::GenRunCode() {
 
     // Dispatcher loop
 
-    L(enter_mxcsr_then_loop);
-    SwitchMxcsrOnEntry();
-    L(loop);
-    cb.LookupBlock->EmitCall(*this);
-    jmp(ABI_RETURN);
-
-    // Return from run code variants
-    const auto emit_return_from_run_code = [this, &loop, &enter_mxcsr_then_loop](bool mxcsr_already_exited, bool force_return){
-        if (!force_return) {
-            cmp(qword[r15 + jsi.offsetof_cycles_remaining], 0);
-            jg(mxcsr_already_exited ? enter_mxcsr_then_loop : loop);
-        }
-
-        if (!mxcsr_already_exited) {
-            SwitchMxcsrOnExit();
-        }
-
-        cb.AddTicks->EmitCall(*this, [this](RegList param) {
-            mov(param[0], qword[r15 + jsi.offsetof_cycles_to_run]);
-            sub(param[0], qword[r15 + jsi.offsetof_cycles_remaining]);
-        });
-
-        ABI_PopCalleeSaveRegistersAndAdjustStack(*this);
-        ret();
-    };
+    Xbyak::Label return_to_caller, return_to_caller_mxcsr_already_exited;
 
     align();
     return_from_run_code[0] = getCurr<const void*>();
-    emit_return_from_run_code(false, false);
+
+    cmp(qword[r15 + jsi.offsetof_cycles_remaining], 0);
+    jng(return_to_caller);
+    cb.LookupBlock->EmitCall(*this);
+    jmp(ABI_RETURN);
 
     align();
     return_from_run_code[MXCSR_ALREADY_EXITED] = getCurr<const void*>();
-    emit_return_from_run_code(true, false);
+
+    cmp(qword[r15 + jsi.offsetof_cycles_remaining], 0);
+    jng(return_to_caller_mxcsr_already_exited);
+    SwitchMxcsrOnEntry();
+    cb.LookupBlock->EmitCall(*this);
+    jmp(ABI_RETURN);
 
     align();
     return_from_run_code[FORCE_RETURN] = getCurr<const void*>();
-    emit_return_from_run_code(false, true);
+    L(return_to_caller);
 
-    align();
+    SwitchMxcsrOnExit();
+    // fallthrough
+
     return_from_run_code[MXCSR_ALREADY_EXITED | FORCE_RETURN] = getCurr<const void*>();
-    emit_return_from_run_code(true, true);
+    L(return_to_caller_mxcsr_already_exited);
+
+    cb.AddTicks->EmitCall(*this, [this](RegList param) {
+        mov(param[0], qword[r15 + jsi.offsetof_cycles_to_run]);
+        sub(param[0], qword[r15 + jsi.offsetof_cycles_remaining]);
+    });
+
+    ABI_PopCalleeSaveRegistersAndAdjustStack(*this);
+    ret();
 
     PerfMapRegister(run_code, getCurr(), "dynarmic_dispatcher");
 }
