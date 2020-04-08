@@ -70,7 +70,7 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     // Start emitting.
     EmitCondPrelude(block);
 
-    RegAlloc reg_alloc{code, A64JitState::SpillCount, SpillToOpArg<A64JitState>};
+    RegAlloc reg_alloc{code, A64JitState::SpillCount, SpillToOpArg<A64JitState>, any_gpr, any_xmm};
     A64EmitContext ctx{conf, reg_alloc, block};
 
     for (auto iter = block.begin(); iter != block.end(); ++iter) {

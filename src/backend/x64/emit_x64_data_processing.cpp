@@ -122,7 +122,7 @@ void EmitX64::EmitTestBit(EmitContext& ctx, IR::Inst* inst) {
 
 static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bitsize) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Reg32 nzcv = ctx.reg_alloc.ScratchGpr({HostLoc::RAX}).cvt32();
+    const Xbyak::Reg32 nzcv = ctx.reg_alloc.ScratchGpr(HostLoc::RAX).cvt32();
     const Xbyak::Reg then_ = ctx.reg_alloc.UseGpr(args[1]).changeBit(bitsize);
     const Xbyak::Reg else_ = ctx.reg_alloc.UseScratchGpr(args[2]).changeBit(bitsize);
 
@@ -847,7 +847,7 @@ static Xbyak::Reg64 DoNZCV(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* nzc
         return Xbyak::Reg64{-1};
     }
 
-    const Xbyak::Reg64 nzcv = reg_alloc.ScratchGpr({HostLoc::RAX});
+    const Xbyak::Reg64 nzcv = reg_alloc.ScratchGpr(HostLoc::RAX);
     code.xor_(nzcv.cvt32(), nzcv.cvt32());
     return nzcv;
 }
@@ -1030,7 +1030,7 @@ void EmitX64::EmitMul64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitUnsignedMultiplyHigh64(EmitContext& ctx, IR::Inst* inst) {
    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-   ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
+   ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
    ctx.reg_alloc.UseScratch(args[0], HostLoc::RAX);
    OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
    code.mul(*op_arg);
@@ -1041,7 +1041,7 @@ void EmitX64::EmitUnsignedMultiplyHigh64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitSignedMultiplyHigh64(EmitContext& ctx, IR::Inst* inst) {
    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-   ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
+   ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
    ctx.reg_alloc.UseScratch(args[0], HostLoc::RAX);
    OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
    code.imul(*op_arg);
@@ -1052,8 +1052,8 @@ void EmitX64::EmitSignedMultiplyHigh64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitUnsignedDiv32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
-    ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
+    ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
+    ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
     const Xbyak::Reg32 dividend = ctx.reg_alloc.UseGpr(args[0]).cvt32();
     const Xbyak::Reg32 divisor = ctx.reg_alloc.UseGpr(args[1]).cvt32();
 
@@ -1073,8 +1073,8 @@ void EmitX64::EmitUnsignedDiv32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitUnsignedDiv64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
-    ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
+    ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
+    ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
     const Xbyak::Reg64 dividend = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 divisor = ctx.reg_alloc.UseGpr(args[1]);
 
@@ -1094,8 +1094,8 @@ void EmitX64::EmitUnsignedDiv64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitSignedDiv32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
-    ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
+    ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
+    ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
     const Xbyak::Reg32 dividend = ctx.reg_alloc.UseGpr(args[0]).cvt32();
     const Xbyak::Reg32 divisor = ctx.reg_alloc.UseGpr(args[1]).cvt32();
 
@@ -1115,8 +1115,8 @@ void EmitX64::EmitSignedDiv32(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitSignedDiv64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
-    ctx.reg_alloc.ScratchGpr({HostLoc::RDX});
+    ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
+    ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
     const Xbyak::Reg64 dividend = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 divisor = ctx.reg_alloc.UseGpr(args[1]);
 

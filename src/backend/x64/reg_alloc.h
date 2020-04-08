@@ -97,8 +97,7 @@ class RegAlloc final {
 public:
     using ArgumentInfo = std::array<Argument, IR::max_arg_count>;
 
-    explicit RegAlloc(BlockOfCode& code, size_t num_spills, std::function<Xbyak::Address(HostLoc)> spill_to_addr)
-        : hostloc_info(NonSpillHostLocCount + num_spills), code(code), spill_to_addr(std::move(spill_to_addr)) {}
+    explicit RegAlloc(BlockOfCode& code, size_t num_spills, std::function<Xbyak::Address(HostLoc)> spill_to_addr, std::vector<HostLoc> gpr_order, std::vector<HostLoc> xmm_order);
 
     ArgumentInfo GetArgumentInfo(IR::Inst* inst);
 
@@ -116,8 +115,10 @@ public:
 
     void Release(const Xbyak::Reg& reg);
 
-    Xbyak::Reg64 ScratchGpr(HostLocList desired_locations = any_gpr);
-    Xbyak::Xmm ScratchXmm(HostLocList desired_locations = any_xmm);
+    Xbyak::Reg64 ScratchGpr();
+    Xbyak::Reg64 ScratchGpr(HostLoc desired_location);
+    Xbyak::Xmm ScratchXmm();
+    Xbyak::Xmm ScratchXmm(HostLoc desired_location);
 
     void HostCall(IR::Inst* result_def = nullptr,
                   std::optional<Argument::copyable_reference> arg0 = {},
@@ -134,12 +135,15 @@ public:
 private:
     friend struct Argument;
 
-    HostLoc SelectARegister(HostLocList desired_locations) const;
+    std::vector<HostLoc> gpr_order;
+    std::vector<HostLoc> xmm_order;
+
+    HostLoc SelectARegister(const std::vector<HostLoc>& desired_locations) const;
     std::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
 
-    HostLoc UseImpl(IR::Value use_value, HostLocList desired_locations);
-    HostLoc UseScratchImpl(IR::Value use_value, HostLocList desired_locations);
-    HostLoc ScratchImpl(HostLocList desired_locations);
+    HostLoc UseImpl(IR::Value use_value, const std::vector<HostLoc>& desired_locations);
+    HostLoc UseScratchImpl(IR::Value use_value, const std::vector<HostLoc>& desired_locations);
+    HostLoc ScratchImpl(const std::vector<HostLoc>& desired_locations);
     void DefineValueImpl(IR::Inst* def_inst, HostLoc host_loc);
     void DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst);
 

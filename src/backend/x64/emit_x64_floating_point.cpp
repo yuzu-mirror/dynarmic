@@ -1008,7 +1008,7 @@ void EmitX64::EmitFPSub64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 static Xbyak::Reg64 SetFpscrNzcvFromFlags(BlockOfCode& code, EmitContext& ctx) {
-    ctx.reg_alloc.ScratchGpr({HostLoc::RCX}); // shifting requires use of cl
+    ctx.reg_alloc.ScratchGpr(HostLoc::RCX); // shifting requires use of cl
     const Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr();
 
     //               x64 flags    ARM flags

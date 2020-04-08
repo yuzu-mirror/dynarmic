@@ -227,6 +227,14 @@ bool Argument::IsInMemory() const {
     return HostLocIsSpill(*reg_alloc.ValueLocation(value.GetInst()));
 }
 
+RegAlloc::RegAlloc(BlockOfCode& code, size_t num_spills, std::function<Xbyak::Address(HostLoc)> spill_to_addr, std::vector<HostLoc> gpr_order, std::vector<HostLoc> xmm_order)
+    : gpr_order(gpr_order)
+    , xmm_order(xmm_order)
+    , hostloc_info(NonSpillHostLocCount + num_spills)
+    , code(code)
+    , spill_to_addr(std::move(spill_to_addr))
+{}
+
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     ArgumentInfo ret = {Argument{*this}, Argument{*this}, Argument{*this}, Argument{*this}};
     for (size_t i = 0; i < inst->NumArgs(); i++) {
@@ -243,13 +251,13 @@ RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
 Xbyak::Reg64 RegAlloc::UseGpr(Argument& arg) {
     ASSERT(!arg.allocated);
     arg.allocated = true;
-    return HostLocToReg64(UseImpl(arg.value, any_gpr));
+    return HostLocToReg64(UseImpl(arg.value, gpr_order));
 }
 
 Xbyak::Xmm RegAlloc::UseXmm(Argument& arg) {
     ASSERT(!arg.allocated);
     arg.allocated = true;
-    return HostLocToXmm(UseImpl(arg.value, any_xmm));
+    return HostLocToXmm(UseImpl(arg.value, xmm_order));
 }
 
 OpArg RegAlloc::UseOpArg(Argument& arg) {
@@ -265,13 +273,13 @@ void RegAlloc::Use(Argument& arg, HostLoc host_loc) {
 Xbyak::Reg64 RegAlloc::UseScratchGpr(Argument& arg) {
     ASSERT(!arg.allocated);
     arg.allocated = true;
-    return HostLocToReg64(UseScratchImpl(arg.value, any_gpr));
+    return HostLocToReg64(UseScratchImpl(arg.value, gpr_order));
 }
 
 Xbyak::Xmm RegAlloc::UseScratchXmm(Argument& arg) {
     ASSERT(!arg.allocated);
     arg.allocated = true;
-    return HostLocToXmm(UseScratchImpl(arg.value, any_xmm));
+    return HostLocToXmm(UseScratchImpl(arg.value, xmm_order));
 }
 
 void RegAlloc::UseScratch(Argument& arg, HostLoc host_loc) {
@@ -298,15 +306,23 @@ void RegAlloc::Release(const Xbyak::Reg& reg) {
     LocInfo(hostloc).ReleaseOne();
 }
 
-Xbyak::Reg64 RegAlloc::ScratchGpr(HostLocList desired_locations) {
-    return HostLocToReg64(ScratchImpl(desired_locations));
+Xbyak::Reg64 RegAlloc::ScratchGpr() {
+    return HostLocToReg64(ScratchImpl(gpr_order));
 }
 
-Xbyak::Xmm RegAlloc::ScratchXmm(HostLocList desired_locations) {
-    return HostLocToXmm(ScratchImpl(desired_locations));
+Xbyak::Reg64 RegAlloc::ScratchGpr(HostLoc desired_location) {
+    return HostLocToReg64(ScratchImpl({desired_location}));
 }
 
-HostLoc RegAlloc::UseImpl(IR::Value use_value, HostLocList desired_locations) {
+Xbyak::Xmm RegAlloc::ScratchXmm() {
+    return HostLocToXmm(ScratchImpl(xmm_order));
+}
+
+Xbyak::Xmm RegAlloc::ScratchXmm(HostLoc desired_location) {
+    return HostLocToXmm(ScratchImpl({desired_location}));
+}
+
+HostLoc RegAlloc::UseImpl(IR::Value use_value, const std::vector<HostLoc>& desired_locations) {
     if (use_value.IsImmediate()) {
         return LoadImmediate(use_value, ScratchImpl(desired_locations));
     }
@@ -338,7 +354,7 @@ HostLoc RegAlloc::UseImpl(IR::Value use_value, HostLocList desired_locations) {
     return destination_location;
 }
 
-HostLoc RegAlloc::UseScratchImpl(IR::Value use_value, HostLocList desired_locations) {
+HostLoc RegAlloc::UseScratchImpl(IR::Value use_value, const std::vector<HostLoc>& desired_locations) {
     if (use_value.IsImmediate()) {
         return LoadImmediate(use_value, ScratchImpl(desired_locations));
     }
@@ -363,7 +379,7 @@ HostLoc RegAlloc::UseScratchImpl(IR::Value use_value, HostLocList desired_locati
     return destination_location;
 }
 
-HostLoc RegAlloc::ScratchImpl(HostLocList desired_locations) {
+HostLoc RegAlloc::ScratchImpl(const std::vector<HostLoc>& desired_locations) {
     const HostLoc location = SelectARegister(desired_locations);
     MoveOutOfTheWay(location);
     LocInfo(location).WriteLock();
@@ -389,7 +405,7 @@ void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_r
         return ret;
     }();
 
-    ScratchGpr({ABI_RETURN});
+    ScratchGpr(ABI_RETURN);
     if (result_def) {
         DefineValueImpl(result_def, ABI_RETURN);
     }
@@ -417,7 +433,7 @@ void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_r
     for (size_t i = 0; i < args_count; i++) {
         if (!args[i]) {
             // TODO: Force spill
-            ScratchGpr({args_hostloc[i]});
+            ScratchGpr(args_hostloc[i]);
         }
     }
 
@@ -436,7 +452,7 @@ void RegAlloc::AssertNoMoreUses() {
     ASSERT(std::all_of(hostloc_info.begin(), hostloc_info.end(), [](const auto& i) { return i.IsEmpty(); }));
 }
 
-HostLoc RegAlloc::SelectARegister(HostLocList desired_locations) const {
+HostLoc RegAlloc::SelectARegister(const std::vector<HostLoc>& desired_locations) const {
     std::vector<HostLoc> candidates = desired_locations;
 
     // Find all locations that have not been allocated..
@@ -475,7 +491,7 @@ void RegAlloc::DefineValueImpl(IR::Inst* def_inst, const IR::Value& use_inst) {
     ASSERT_MSG(!ValueLocation(def_inst), "def_inst has already been defined");
 
     if (use_inst.IsImmediate()) {
-        const HostLoc location = ScratchImpl(any_gpr);
+        const HostLoc location = ScratchImpl(gpr_order);
         DefineValueImpl(def_inst, location);
         LoadImmediate(use_inst, location);
         return;

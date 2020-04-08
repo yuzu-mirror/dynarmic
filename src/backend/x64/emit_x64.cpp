@@ -89,7 +89,7 @@ void EmitX64::EmitPushRSB(EmitContext& ctx, IR::Inst* inst) {
     ASSERT(args[0].IsImmediate());
     const u64 unique_hash_of_target = args[0].GetImmediateU64();
 
-    ctx.reg_alloc.ScratchGpr({HostLoc::RCX});
+    ctx.reg_alloc.ScratchGpr(HostLoc::RCX);
     const Xbyak::Reg64 loc_desc_reg = ctx.reg_alloc.ScratchGpr();
     const Xbyak::Reg64 index_reg = ctx.reg_alloc.ScratchGpr();
 
@@ -135,7 +135,7 @@ void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
         }
     }();
 
-    const Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr({HostLoc::RAX});
+    const Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
     const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
     code.cmp(value, 0);
     code.lahf();

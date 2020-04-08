@@ -85,7 +85,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
     // Start emitting.
     EmitCondPrelude(block);
 
-    RegAlloc reg_alloc{code, A32JitState::SpillCount, SpillToOpArg<A32JitState>};
+    RegAlloc reg_alloc{code, A32JitState::SpillCount, SpillToOpArg<A32JitState>, any_gpr, any_xmm};
     A32EmitContext ctx{reg_alloc, block};
 
     for (auto iter = block.begin(); iter != block.end(); ++iter) {
@@ -841,7 +841,7 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.UseScratch(args[0], ABI_PARAM2);
 
     const Xbyak::Reg64 vaddr = code.ABI_PARAM2;
-    const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr({ABI_RETURN});
+    const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr(ABI_RETURN);
 
     const auto src_ptr = EmitVAddrLookup(code, ctx.reg_alloc, config, abort, vaddr, value);
     switch (bitsize) {
@@ -912,7 +912,7 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Label abort, end;
 
-    ctx.reg_alloc.ScratchGpr({ABI_RETURN});
+    ctx.reg_alloc.ScratchGpr(ABI_RETURN);
     ctx.reg_alloc.UseScratch(args[0], ABI_PARAM2);
     ctx.reg_alloc.UseScratch(args[1], ABI_PARAM3);
 
