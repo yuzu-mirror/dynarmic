@@ -43,6 +43,7 @@ using VectorArray = std::array<T, A64FullVectorWidth::value / Common::BitSize<T>
 struct EmitContext {
     EmitContext(RegAlloc& reg_alloc, IR::Block& block);
 
+    size_t GetInstOffset(IR::Inst* inst) const;
     void EraseInstruction(IR::Inst* inst);
 
     virtual FP::FPCR FPCR() const = 0;

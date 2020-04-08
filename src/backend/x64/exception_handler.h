@@ -6,11 +6,19 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
+
+#include "common/common_types.h"
 
 namespace Dynarmic::Backend::X64 {
 
 class BlockOfCode;
+
+struct FakeCall {
+    u64 call_rip;
+    u64 ret_rip;
+};
 
 class ExceptionHandler final {
 public:
@@ -18,6 +26,10 @@ public:
     ~ExceptionHandler();
 
     void Register(BlockOfCode& code);
+
+    bool SupportsFastmem() const noexcept;
+    void SetFastmemCallback(std::function<FakeCall(u64)> cb);
+
 private:
     struct Impl;
     std::unique_ptr<Impl> impl;

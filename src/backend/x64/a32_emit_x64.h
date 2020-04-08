@@ -7,6 +7,10 @@
 #pragma once
 
 #include <array>
+#include <optional>
+#include <set>
+#include <tuple>
+#include <unordered_map>
 
 #include <dynarmic/A32/a32.h>
 #include <dynarmic/A32/config.h>
@@ -46,7 +50,6 @@ protected:
     const A32::UserConfig config;
     A32::Jit* jit_interface;
     BlockRangeInformation<u32> block_ranges;
-    ExceptionHandler exception_handler;
 
     struct FastDispatchEntry {
         u64 location_descriptor;
@@ -77,6 +80,18 @@ protected:
 
     // Helpers
     std::string LocationDescriptorToFriendlyName(const IR::LocationDescriptor&) const override;
+
+    // Fastmem information
+    using DoNotFastmemMarker = std::tuple<IR::LocationDescriptor, std::ptrdiff_t>;
+    struct FastmemPatchInfo {
+        u64 resume_rip;
+        u64 callback;
+        DoNotFastmemMarker marker;
+    };
+    std::unordered_map<u64, FastmemPatchInfo> fastmem_patch_info;
+    std::set<DoNotFastmemMarker> do_not_fastmem;
+    std::optional<DoNotFastmemMarker> ShouldFastmem(A32EmitContext& ctx, IR::Inst* inst) const;
+    FakeCall FastmemCallback(u64 rip);
 
     // Memory access helpers
     template<std::size_t bitsize>

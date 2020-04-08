@@ -101,6 +101,15 @@ struct UserConfig {
     ///       This can be avoided by carefully allocating the memory region.
     bool absolute_offset_page_table = false;
 
+    // Fastmem Pointer
+    // This should point to the beginning of a 4GB address space which is in arranged just like
+    // what you wish for emulated memory to be. If the host page faults on an address, the JIT
+    // will fallback to calling the MemoryRead*/MemoryWrite* callbacks.
+    void* fastmem_pointer = nullptr;
+    /// Determines if instructions that pagefault should cause recompilation of that block
+    /// with fastmem disabled.
+    bool recompile_on_fastmem_failure = true;
+
     // Coprocessors
     std::array<std::shared_ptr<Coprocessor>, 16> coprocessors{};
 

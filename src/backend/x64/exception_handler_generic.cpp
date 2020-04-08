@@ -18,4 +18,12 @@ void ExceptionHandler::Register(BlockOfCode&) {
     // Do nothing
 }
 
+bool ExceptionHandler::SupportsFastmem() const noexcept {
+    return false;
+}
+
+void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)>) {
+    // Do nothing
+}
+
 } // namespace Dynarmic::Backend::X64

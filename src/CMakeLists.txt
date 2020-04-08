@@ -248,6 +248,7 @@ if (ARCHITECTURE_x86_64)
          backend/x64/emit_x64_sm4.cpp
          backend/x64/emit_x64_vector.cpp
          backend/x64/emit_x64_vector_floating_point.cpp
+         backend/x64/exception_handler.h
          backend/x64/hostloc.cpp
          backend/x64/hostloc.h
          backend/x64/jitstate_info.h

@@ -72,6 +72,10 @@ A32EmitX64::A32EmitX64(BlockOfCode& code, A32::UserConfig config, A32::Jit* jit_
     GenTerminalHandlers();
     code.PreludeComplete();
     ClearFastDispatchTable();
+
+    exception_handler.SetFastmemCallback([this](u64 rip_){
+        return FastmemCallback(rip_);
+    });
 }
 
 A32EmitX64::~A32EmitX64() = default;
@@ -90,6 +94,9 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
         std::vector<HostLoc> gprs{any_gpr};
         if (config.page_table) {
             gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R14));
+        }
+        if (config.fastmem_pointer) {
+            gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R13));
         }
         return gprs;
     }();
@@ -146,6 +153,7 @@ void A32EmitX64::ClearCache() {
     EmitX64::ClearCache();
     block_ranges.ClearCache();
     ClearFastDispatchTable();
+    fastmem_patch_info.clear();
 }
 
 void A32EmitX64::InvalidateCacheRanges(const boost::icl::interval_set<u32>& ranges) {
@@ -777,6 +785,32 @@ void A32EmitX64::EmitA32SetExclusive(A32EmitContext& ctx, IR::Inst* inst) {
     code.mov(dword[r15 + offsetof(A32JitState, exclusive_address)], address);
 }
 
+std::optional<A32EmitX64::DoNotFastmemMarker> A32EmitX64::ShouldFastmem(A32EmitContext& ctx, IR::Inst* inst) const {
+    if (!config.fastmem_pointer || !exception_handler.SupportsFastmem()) {
+        return std::nullopt;
+    }
+
+    const auto marker = std::make_tuple(ctx.Location(), ctx.GetInstOffset(inst));
+    if (do_not_fastmem.count(marker) > 0) {
+        return std::nullopt;
+    }
+    return marker;
+}
+
+FakeCall A32EmitX64::FastmemCallback(u64 rip_) {
+    const auto iter = fastmem_patch_info.find(rip_);
+    ASSERT(iter != fastmem_patch_info.end());
+    if (config.recompile_on_fastmem_failure) {
+        const auto marker = iter->second.marker;
+        do_not_fastmem.emplace(marker);
+        InvalidateBasicBlocks({std::get<0>(marker)});
+    }
+    FakeCall ret;
+    ret.call_rip = iter->second.callback;
+    ret.ret_rip = iter->second.resume_rip;
+    return ret;
+}
+
 static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc,
                                      const A32::UserConfig& config, Xbyak::Label& abort,
                                      Xbyak::Reg64 vaddr,
@@ -823,12 +857,47 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    Xbyak::Label abort, end;
-
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr();
 
     const auto wrapped_fn = read_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
+
+    if (const auto marker = ShouldFastmem(ctx, inst)) {
+        const auto location = code.getCurr();
+
+        switch (bitsize) {
+        case 8:
+            code.movzx(value.cvt32(), code.byte[r13 + vaddr]);
+            break;
+        case 16:
+            code.movzx(value.cvt32(), word[r13 + vaddr]);
+            break;
+        case 32:
+            code.mov(value.cvt32(), dword[r13 + vaddr]);
+            break;
+        case 64:
+            code.mov(value, qword[r13 + vaddr]);
+            break;
+        default:
+            ASSERT_MSG(false, "Invalid bitsize");
+            break;
+        }
+
+        ctx.reg_alloc.DefineValue(inst, value);
+
+        fastmem_patch_info.emplace(
+            Common::BitCast<u64>(location),
+            FastmemPatchInfo{
+                Common::BitCast<u64>(code.getCurr()),
+                Common::BitCast<u64>(wrapped_fn),
+                *marker,
+            }
+        );
+
+        return;
+    }
+
+    Xbyak::Label abort, end;
 
     const auto src_ptr = EmitVAddrLookup(code, ctx.reg_alloc, config, abort, vaddr, value);
     switch (bitsize) {
@@ -845,7 +914,7 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
         code.mov(value, qword[src_ptr]);
         break;
     default:
-        ASSERT_MSG(false, "Invalid bit_size");
+        ASSERT_MSG(false, "Invalid bitsize");
         break;
     }
     code.jmp(end);
@@ -881,12 +950,45 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    Xbyak::Label abort, end;
-
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
 
     const auto wrapped_fn = write_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
+
+    if (const auto marker = ShouldFastmem(ctx, inst)) {
+        const auto location = code.getCurr();
+
+        switch (bitsize) {
+        case 8:
+            code.mov(code.byte[r13 + vaddr], value.cvt8());
+            break;
+        case 16:
+            code.mov(word[r13 + vaddr], value.cvt16());
+            break;
+        case 32:
+            code.mov(dword[r13 + vaddr], value.cvt32());
+            break;
+        case 64:
+            code.mov(qword[r13 + vaddr], value);
+            break;
+        default:
+            ASSERT_MSG(false, "Invalid bitsize");
+            break;
+        }
+
+        fastmem_patch_info.emplace(
+            Common::BitCast<u64>(location),
+            FastmemPatchInfo{
+                Common::BitCast<u64>(code.getCurr()),
+                Common::BitCast<u64>(wrapped_fn),
+                *marker,
+            }
+        );
+
+        return;
+    }
+
+    Xbyak::Label abort, end;
 
     const auto dest_ptr = EmitVAddrLookup(code, ctx.reg_alloc, config, abort, vaddr);
     switch (bitsize) {
@@ -903,7 +1005,7 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
         code.mov(qword[dest_ptr], value);
         break;
     default:
-        ASSERT_MSG(false, "Invalid bit_size");
+        ASSERT_MSG(false, "Invalid bitsize");
         break;
     }
     code.jmp(end);

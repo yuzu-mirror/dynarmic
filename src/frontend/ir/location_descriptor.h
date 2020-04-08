@@ -33,13 +33,17 @@ private:
 
 std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor);
 
+inline bool operator<(const LocationDescriptor& x, const LocationDescriptor& y) noexcept {
+    return x.Value() < y.Value();
+}
+
 } // namespace Dynarmic::IR
 
 namespace std {
 template <>
 struct less<Dynarmic::IR::LocationDescriptor> {
     bool operator()(const Dynarmic::IR::LocationDescriptor& x, const Dynarmic::IR::LocationDescriptor& y) const noexcept {
-        return x.Value() < y.Value();
+        return x < y;
     }
 };
 template <>
