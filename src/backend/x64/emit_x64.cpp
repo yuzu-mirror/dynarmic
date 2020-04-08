@@ -33,8 +33,9 @@ void EmitContext::EraseInstruction(IR::Inst* inst) {
     inst->ClearArgs();
 }
 
-EmitX64::EmitX64(BlockOfCode& code)
-    : code(code) {}
+EmitX64::EmitX64(BlockOfCode& code) : code(code) {
+    exception_handler.Register(code);
+}
 
 EmitX64::~EmitX64() = default;
 

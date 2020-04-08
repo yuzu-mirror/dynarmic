@@ -11,6 +11,7 @@
 #include <windows.h>
 
 #include "backend/x64/block_of_code.h"
+#include "backend/x64/exception_handler.h"
 #include "common/assert.h"
 #include "common/common_types.h"
 
@@ -156,7 +157,7 @@ static PrologueInformation GetPrologueInformation() {
     return ret;
 }
 
-struct BlockOfCode::ExceptionHandler::Impl final {
+struct ExceptionHandler::Impl final {
     Impl(RUNTIME_FUNCTION* rfuncs_, const u8* base_ptr) : rfuncs(rfuncs_) {
         RtlAddFunctionTable(rfuncs, 1, reinterpret_cast<DWORD64>(base_ptr));
     }
@@ -169,10 +170,10 @@ private:
     RUNTIME_FUNCTION* rfuncs = nullptr;
 };
 
-BlockOfCode::ExceptionHandler::ExceptionHandler() = default;
-BlockOfCode::ExceptionHandler::~ExceptionHandler() = default;
+ExceptionHandler::ExceptionHandler() = default;
+ExceptionHandler::~ExceptionHandler() = default;
 
-void BlockOfCode::ExceptionHandler::Register(BlockOfCode& code) {
+void ExceptionHandler::Register(BlockOfCode& code) {
     const auto prolog_info = GetPrologueInformation();
 
     code.align(16);
@@ -190,8 +191,8 @@ void BlockOfCode::ExceptionHandler::Register(BlockOfCode& code) {
 
     code.align(16);
     RUNTIME_FUNCTION* rfuncs = static_cast<RUNTIME_FUNCTION*>(code.AllocateFromCodeSpace(sizeof(RUNTIME_FUNCTION)));
-    rfuncs->BeginAddress = static_cast<DWORD>(reinterpret_cast<u8*>(code.run_code) - code.getCode());
-    rfuncs->EndAddress = static_cast<DWORD>(code.maxSize_);
+    rfuncs->BeginAddress = static_cast<DWORD>(0);
+    rfuncs->EndAddress = static_cast<DWORD>(code.GetTotalCodeSize());
     rfuncs->UnwindData = static_cast<DWORD>(reinterpret_cast<u8*>(unwind_info) - code.getCode());
 
     impl = std::make_unique<Impl>(rfuncs, code.getCode());

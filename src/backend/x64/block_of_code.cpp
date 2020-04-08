@@ -83,7 +83,6 @@ BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi)
 {
     EnableWriting();
     GenRunCode();
-    exception_handler.Register(*this);
 }
 
 void BlockOfCode::PreludeComplete() {
@@ -284,6 +283,10 @@ void BlockOfCode::SwitchToNearCode() {
 
 CodePtr BlockOfCode::GetCodeBegin() const {
     return near_code_begin;
+}
+
+size_t BlockOfCode::GetTotalCodeSize() const {
+    return maxSize_;
 }
 
 void* BlockOfCode::AllocateFromCodeSpace(size_t alloc_size) {

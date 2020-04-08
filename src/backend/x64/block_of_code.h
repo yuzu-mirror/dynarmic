@@ -98,6 +98,7 @@ public:
     void SwitchToNearCode();
 
     CodePtr GetCodeBegin() const;
+    size_t GetTotalCodeSize() const;
 
     const void* GetReturnFromRunCodeAddress() const {
         return return_from_run_code[0];
@@ -162,18 +163,6 @@ private:
     static constexpr size_t FORCE_RETURN = 1 << 1;
     std::array<const void*, 4> return_from_run_code;
     void GenRunCode();
-
-    class ExceptionHandler final {
-    public:
-        ExceptionHandler();
-        ~ExceptionHandler();
-
-        void Register(BlockOfCode& code);
-    private:
-        struct Impl;
-        std::unique_ptr<Impl> impl;
-    };
-    ExceptionHandler exception_handler;
 
     Xbyak::util::Cpu cpu_info;
 };

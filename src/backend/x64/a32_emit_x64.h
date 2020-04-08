@@ -46,6 +46,7 @@ protected:
     const A32::UserConfig config;
     A32::Jit* jit_interface;
     BlockRangeInformation<u32> block_ranges;
+    ExceptionHandler exception_handler;
 
     struct FastDispatchEntry {
         u64 location_descriptor;

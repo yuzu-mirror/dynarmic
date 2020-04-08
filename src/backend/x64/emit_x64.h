@@ -16,6 +16,7 @@
 
 #include <xbyak_util.h>
 
+#include "backend/x64/exception_handler.h"
 #include "backend/x64/reg_alloc.h"
 #include "common/bit_util.h"
 #include "common/fp/fpcr.h"
@@ -58,7 +59,7 @@ public:
         size_t size;         // Length in bytes of emitted code
     };
 
-    EmitX64(BlockOfCode& code);
+    explicit EmitX64(BlockOfCode& code);
     virtual ~EmitX64();
 
     /// Looks up an emitted host block in the cache.
@@ -114,6 +115,7 @@ protected:
 
     // State
     BlockOfCode& code;
+    ExceptionHandler exception_handler;
     std::unordered_map<IR::LocationDescriptor, BlockDescriptor> block_descriptors;
     std::unordered_map<IR::LocationDescriptor, PatchInformation> patch_information;
 };

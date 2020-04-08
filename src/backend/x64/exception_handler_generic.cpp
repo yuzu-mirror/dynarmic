@@ -4,17 +4,17 @@
  * General Public License version 2 or any later version.
  */
 
-#include "backend/x64/block_of_code.h"
+#include "backend/x64/exception_handler.h"
 
 namespace Dynarmic::Backend::X64 {
 
-struct BlockOfCode::ExceptionHandler::Impl final {
+struct ExceptionHandler::Impl final {
 };
 
-BlockOfCode::ExceptionHandler::ExceptionHandler() = default;
-BlockOfCode::ExceptionHandler::~ExceptionHandler() = default;
+ExceptionHandler::ExceptionHandler() = default;
+ExceptionHandler::~ExceptionHandler() = default;
 
-void BlockOfCode::ExceptionHandler::Register(BlockOfCode&) {
+void ExceptionHandler::Register(BlockOfCode&) {
     // Do nothing
 }
 
