@@ -75,14 +75,14 @@ void ProtectMemory(const void* base, size_t size, bool is_executable) {
 
 } // anonymous namespace
 
-BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi)
+BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi, std::function<void(BlockOfCode&)> rcp)
         : Xbyak::CodeGenerator(TOTAL_CODE_SIZE, nullptr, &s_allocator)
         , cb(std::move(cb))
         , jsi(jsi)
         , constant_pool(*this, CONSTANT_POOL_SIZE)
 {
     EnableWriting();
-    GenRunCode();
+    GenRunCode(rcp);
 }
 
 void BlockOfCode::PreludeComplete() {
@@ -155,7 +155,7 @@ void BlockOfCode::ForceReturnFromRunCode(bool mxcsr_already_exited) {
     jmp(return_from_run_code[index]);
 }
 
-void BlockOfCode::GenRunCode() {
+void BlockOfCode::GenRunCode(std::function<void(BlockOfCode&)> rcp) {
     Xbyak::Label loop, enter_mxcsr_then_loop;
 
     align();
@@ -168,14 +168,16 @@ void BlockOfCode::GenRunCode() {
     ABI_PushCalleeSaveRegistersAndAdjustStack(*this);
 
     mov(r15, ABI_PARAM1);
-    mov(r14, ABI_PARAM2); // save temporarily in non-volatile register
+    mov(rbx, ABI_PARAM2); // save temporarily in non-volatile register
 
     cb.GetTicksRemaining->EmitCall(*this);
     mov(qword[r15 + jsi.offsetof_cycles_to_run], ABI_RETURN);
     mov(qword[r15 + jsi.offsetof_cycles_remaining], ABI_RETURN);
 
+    rcp(*this);
+
     SwitchMxcsrOnEntry();
-    jmp(r14);
+    jmp(rbx);
 
     align();
     step_code = getCurr<RunCodeFuncType>();
@@ -186,6 +188,8 @@ void BlockOfCode::GenRunCode() {
 
     mov(qword[r15 + jsi.offsetof_cycles_to_run], 1);
     mov(qword[r15 + jsi.offsetof_cycles_remaining], 1);
+
+    rcp(*this);
 
     SwitchMxcsrOnEntry();
     jmp(ABI_PARAM2);

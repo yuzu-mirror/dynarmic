@@ -4,6 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
+#include <algorithm>
 #include <optional>
 #include <unordered_map>
 #include <utility>
@@ -85,7 +86,15 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
     // Start emitting.
     EmitCondPrelude(block);
 
-    RegAlloc reg_alloc{code, A32JitState::SpillCount, SpillToOpArg<A32JitState>, any_gpr, any_xmm};
+    static const std::vector<HostLoc> gpr_order = [this]{
+        std::vector<HostLoc> gprs{any_gpr};
+        if (config.page_table) {
+            gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R14));
+        }
+        return gprs;
+    }();
+
+    RegAlloc reg_alloc{code, A32JitState::SpillCount, SpillToOpArg<A32JitState>, gpr_order, any_xmm};
     A32EmitContext ctx{reg_alloc, block};
 
     for (auto iter = block.begin(); iter != block.end(); ++iter) {
@@ -778,21 +787,20 @@ static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc,
                                      Xbyak::Reg64 vaddr,
                                      std::optional<Xbyak::Reg64> arg_scratch = {}) {
     constexpr size_t page_bits = A32::UserConfig::PAGE_BITS;
-    const Xbyak::Reg64 page_table = arg_scratch ? *arg_scratch : reg_alloc.ScratchGpr();
-    const Xbyak::Reg64 tmp = reg_alloc.ScratchGpr();
-    code.mov(page_table, reinterpret_cast<u64>(config.page_table));
+    const Xbyak::Reg64 page = arg_scratch ? *arg_scratch : reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 tmp = config.absolute_offset_page_table ? page : reg_alloc.ScratchGpr();
     code.mov(tmp, vaddr);
     code.shr(tmp, static_cast<int>(page_bits));
-    code.mov(page_table, qword[page_table + tmp * sizeof(void*)]);
-    code.test(page_table, page_table);
+    code.mov(page, qword[r14 + tmp * sizeof(void*)]);
+    code.test(page, page);
     code.jz(abort);
     if (config.absolute_offset_page_table) {
-        return page_table + vaddr;
+        return page + vaddr;
     }
     constexpr size_t page_mask = (1 << page_bits) - 1;
     code.mov(tmp, vaddr);
     code.and_(tmp, static_cast<u32>(page_mask));
-    return page_table + tmp;
+    return page + tmp;
 }
 
 template<std::size_t bitsize>

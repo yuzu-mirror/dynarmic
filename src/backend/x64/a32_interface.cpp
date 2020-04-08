@@ -4,6 +4,7 @@
  * General Public License version 2 or any later version.
  */
 
+#include <functional>
 #include <memory>
 
 #include <boost/icl/interval_set.hpp>
@@ -19,6 +20,7 @@
 #include "backend/x64/devirtualize.h"
 #include "backend/x64/jitstate_info.h"
 #include "common/assert.h"
+#include "common/cast_util.h"
 #include "common/common_types.h"
 #include "common/llvm_disassemble.h"
 #include "common/scope_exit.h"
@@ -39,9 +41,20 @@ static RunCodeCallbacks GenRunCodeCallbacks(A32::UserCallbacks* cb, CodePtr (*Lo
     };
 }
 
+static std::function<void(BlockOfCode&)> GenRCP(const A32::UserConfig& config) {
+    if (!config.page_table) {
+        return [](BlockOfCode&){};
+    }
+
+    const u64 r14_value = Common::BitCast<u64>(config.page_table);
+    return [r14_value](BlockOfCode& code) {
+        code.mov(code.r14, r14_value);
+    };
+}
+
 struct Jit::Impl {
     Impl(Jit* jit, A32::UserConfig config)
-            : block_of_code(GenRunCodeCallbacks(config.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state})
+            : block_of_code(GenRunCodeCallbacks(config.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, GenRCP(config))
             , emitter(block_of_code, config, jit)
             , config(std::move(config))
             , jit_interface(jit)
