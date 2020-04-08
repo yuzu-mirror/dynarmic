@@ -58,15 +58,9 @@ protected:
     std::array<FastDispatchEntry, fast_dispatch_table_size> fast_dispatch_table;
     void ClearFastDispatchTable();
 
-    const void* read_memory_8;
-    const void* read_memory_16;
-    const void* read_memory_32;
-    const void* read_memory_64;
-    const void* write_memory_8;
-    const void* write_memory_16;
-    const void* write_memory_32;
-    const void* write_memory_64;
-    void GenMemoryAccessors();
+    std::map<std::tuple<size_t, int, int>, void(*)()> read_fallbacks;
+    std::map<std::tuple<size_t, int, int>, void(*)()> write_fallbacks;
+    void GenFastmemFallbacks();
 
     const void* terminal_handler_pop_rsb_hint;
     const void* terminal_handler_fast_dispatch_hint = nullptr;

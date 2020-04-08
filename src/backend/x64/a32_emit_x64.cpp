@@ -68,7 +68,7 @@ FP::FPCR A32EmitContext::FPCR() const {
 
 A32EmitX64::A32EmitX64(BlockOfCode& code, A32::UserConfig config, A32::Jit* jit_interface)
         : EmitX64(code), config(std::move(config)), jit_interface(jit_interface) {
-    GenMemoryAccessors();
+    GenFastmemFallbacks();
     GenTerminalHandlers();
     code.PreludeComplete();
     ClearFastDispatchTable();
@@ -159,70 +159,65 @@ void A32EmitX64::ClearFastDispatchTable() {
     }
 }
 
-void A32EmitX64::GenMemoryAccessors() {
-    code.align();
-    read_memory_8 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryRead8>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(read_memory_8, code.getCurr(), "a32_read_memory_8");
+void A32EmitX64::GenFastmemFallbacks() {
+    const std::initializer_list<int> idxes{0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
+    const std::array<std::pair<size_t, ArgCallback>, 4> read_callbacks{{
+        {8, Devirtualize<&A32::UserCallbacks::MemoryRead8>(config.callbacks)},
+        {16, Devirtualize<&A32::UserCallbacks::MemoryRead16>(config.callbacks)},
+        {32, Devirtualize<&A32::UserCallbacks::MemoryRead32>(config.callbacks)},
+        {64, Devirtualize<&A32::UserCallbacks::MemoryRead64>(config.callbacks)},
+    }};
+    const std::array<std::pair<size_t, ArgCallback>, 4> write_callbacks{{
+        {8, Devirtualize<&A32::UserCallbacks::MemoryWrite8>(config.callbacks)},
+        {16, Devirtualize<&A32::UserCallbacks::MemoryWrite16>(config.callbacks)},
+        {32, Devirtualize<&A32::UserCallbacks::MemoryWrite32>(config.callbacks)},
+        {64, Devirtualize<&A32::UserCallbacks::MemoryWrite64>(config.callbacks)},
+    }};
 
-    code.align();
-    read_memory_16 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryRead16>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(read_memory_16, code.getCurr(), "a32_read_memory_16");
+    for (int vaddr_idx : idxes) {
+        for (int value_idx : idxes) {
+            for (const auto& [bitsize, callback] : read_callbacks) {
+                code.align();
+                read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+                ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
+                if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
+                    code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                }
+                callback.EmitCall(code);
+                if (value_idx != code.ABI_RETURN.getIdx()) {
+                    code.mov(Xbyak::Reg64{value_idx}, code.ABI_RETURN);
+                }
+                ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
+                code.ret();
+                PerfMapRegister(read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a32_read_fallback_{}", bitsize));
+            }
 
-    code.align();
-    read_memory_32 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryRead32>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(read_memory_32, code.getCurr(), "a32_read_memory_32");
-
-    code.align();
-    read_memory_64 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryRead64>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(read_memory_64, code.getCurr(), "a32_read_memory_64");
-
-    code.align();
-    write_memory_8 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryWrite8>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(write_memory_8, code.getCurr(), "a32_write_memory_8");
-
-    code.align();
-    write_memory_16 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryWrite16>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(write_memory_16, code.getCurr(), "a32_write_memory_16");
-
-    code.align();
-    write_memory_32 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryWrite32>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(write_memory_32, code.getCurr(), "a32_write_memory_32");
-
-    code.align();
-    write_memory_64 = code.getCurr<const void*>();
-    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    Devirtualize<&A32::UserCallbacks::MemoryWrite64>(config.callbacks).EmitCall(code);
-    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, ABI_RETURN);
-    code.ret();
-    PerfMapRegister(write_memory_64, code.getCurr(), "a32_write_memory_64");
+            for (const auto& [bitsize, callback] : write_callbacks) {
+                code.align();
+                write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+                ABI_PushCallerSaveRegistersAndAdjustStack(code);
+                if (vaddr_idx == code.ABI_PARAM3.getIdx() && value_idx == code.ABI_PARAM2.getIdx()) {
+                    code.xchg(code.ABI_PARAM2, code.ABI_PARAM3);
+                } else if (vaddr_idx == code.ABI_PARAM3.getIdx()) {
+                    code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                    if (value_idx != code.ABI_PARAM3.getIdx()) {
+                        code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
+                    }
+                } else {
+                    if (value_idx != code.ABI_PARAM3.getIdx()) {
+                        code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
+                    }
+                    if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
+                        code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                    }
+                }
+                callback.EmitCall(code);
+                ABI_PopCallerSaveRegistersAndAdjustStack(code);
+                code.ret();
+                PerfMapRegister(write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a32_write_fallback_{}", bitsize));
+            }
+        }
+    }
 }
 
 void A32EmitX64::GenTerminalHandlers() {
@@ -828,28 +823,12 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    const auto wrapped_fn = [this]{
-        switch (bitsize) {
-        case 8:
-            return read_memory_8;
-        case 16:
-            return read_memory_16;
-        case 32:
-            return read_memory_32;
-        case 64:
-            return read_memory_64;
-        default:
-            UNREACHABLE();
-            return static_cast<const void*>(nullptr);
-        }
-    }();
-
     Xbyak::Label abort, end;
 
-    ctx.reg_alloc.UseScratch(args[0], ABI_PARAM2);
+    const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
+    const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr();
 
-    const Xbyak::Reg64 vaddr = code.ABI_PARAM2;
-    const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr(ABI_RETURN);
+    const auto wrapped_fn = read_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
 
     const auto src_ptr = EmitVAddrLookup(code, ctx.reg_alloc, config, abort, vaddr, value);
     switch (bitsize) {
@@ -902,30 +881,12 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    const auto wrapped_fn = [this]{
-        switch (bitsize) {
-        case 8:
-            return write_memory_8;
-        case 16:
-            return write_memory_16;
-        case 32:
-            return write_memory_32;
-        case 64:
-            return write_memory_64;
-        default:
-            UNREACHABLE();
-            return static_cast<const void*>(nullptr);
-        }
-    }();
-
     Xbyak::Label abort, end;
 
-    ctx.reg_alloc.ScratchGpr(ABI_RETURN);
-    ctx.reg_alloc.UseScratch(args[0], ABI_PARAM2);
-    ctx.reg_alloc.UseScratch(args[1], ABI_PARAM3);
+    const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
+    const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
 
-    const Xbyak::Reg64 vaddr = code.ABI_PARAM2;
-    const Xbyak::Reg64 value = code.ABI_PARAM3;
+    const auto wrapped_fn = write_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
 
     const auto dest_ptr = EmitVAddrLookup(code, ctx.reg_alloc, config, abort, vaddr);
     switch (bitsize) {
