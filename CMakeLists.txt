@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(dynarmic CXX)
+project(dynarmic C CXX)
 
 # Determine if we're built as a subproject (using add_subdirectory)
 # or if this is the master project.
