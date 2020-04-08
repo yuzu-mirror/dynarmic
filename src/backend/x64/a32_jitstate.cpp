@@ -11,7 +11,7 @@
 #include "common/common_types.h"
 #include "frontend/A32/location_descriptor.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 /**
  * CPSR Bits
@@ -202,4 +202,4 @@ void A32JitState::SetFpscr(u32 FPSCR) {
     }
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

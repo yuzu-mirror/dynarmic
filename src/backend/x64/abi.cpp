@@ -24,7 +24,7 @@
 #include "common/common_types.h"
 #include "common/iterator_util.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 constexpr size_t GPR_SIZE = 8;
 constexpr size_t XMM_SIZE = 16;
@@ -150,4 +150,4 @@ void ABI_PopCallerSaveRegistersAndAdjustStackExcept(BlockOfCode& code, HostLoc e
     ABI_PopRegistersAndAdjustStack(code, 0, regs);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

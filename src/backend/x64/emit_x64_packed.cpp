@@ -9,7 +9,7 @@
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 
@@ -698,4 +698,4 @@ void EmitX64::EmitPackedSelect(EmitContext& ctx, IR::Inst* inst) {
     }
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

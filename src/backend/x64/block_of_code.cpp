@@ -21,7 +21,7 @@
     #include <sys/mman.h>
 #endif
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 #ifdef _WIN32
 const Xbyak::Reg64 BlockOfCode::ABI_RETURN = Xbyak::util::rax;
@@ -317,4 +317,4 @@ bool BlockOfCode::DoesCpuSupport([[maybe_unused]] Xbyak::util::Cpu::Type type) c
 #endif
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

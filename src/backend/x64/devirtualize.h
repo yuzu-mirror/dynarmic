@@ -16,7 +16,7 @@
 #include "common/common_types.h"
 
 namespace Dynarmic {
-namespace BackendX64 {
+namespace Backend::X64 {
 
 namespace impl {
 
@@ -78,5 +78,5 @@ ArgCallback Devirtualize(mp::class_type<decltype(mfp)>* this_) {
 #endif
 }
 
-} // namespace BackendX64
+} // namespace Backend::X64
 } // namespace Dynarmic

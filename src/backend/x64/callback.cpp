@@ -7,7 +7,7 @@
 #include "backend/x64/callback.h"
 #include "backend/x64/block_of_code.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 Callback::~Callback() = default;
 
@@ -38,4 +38,4 @@ void ArgCallback::EmitCallWithReturnPointer(BlockOfCode& code, std::function<voi
     code.CallFunction(fn);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

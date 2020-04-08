@@ -30,7 +30,7 @@
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 
@@ -1519,4 +1519,4 @@ void EmitX64::EmitFPVectorToUnsignedFixed64(EmitContext& ctx, IR::Inst* inst) {
     EmitFPVectorToFixed<64, true>(code, ctx, inst);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

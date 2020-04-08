@@ -14,7 +14,7 @@
 
 #include "frontend/ir/location_descriptor.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 template <typename ProgramCounterType>
 class BlockRangeInformation {
@@ -27,4 +27,4 @@ private:
     boost::icl::interval_map<ProgramCounterType, std::set<IR::LocationDescriptor>> block_ranges;
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

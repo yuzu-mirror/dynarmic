@@ -27,7 +27,7 @@ class Block;
 class Inst;
 } // namespace Dynarmic::IR
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 class BlockOfCode;
 
@@ -118,4 +118,4 @@ protected:
     std::unordered_map<IR::LocationDescriptor, PatchInformation> patch_information;
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

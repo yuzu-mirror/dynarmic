@@ -17,7 +17,7 @@
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 
@@ -321,4 +321,4 @@ void EmitX64::EmitUnsignedSaturation(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

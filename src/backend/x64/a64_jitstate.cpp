@@ -8,7 +8,7 @@
 #include "common/bit_util.h"
 #include "frontend/A64/location_descriptor.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 /**
  * Comparing MXCSR and FPCR
@@ -108,4 +108,4 @@ void A64JitState::SetFpsr(u32 value) {
     fpsr_exc = value & 0x9F;
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

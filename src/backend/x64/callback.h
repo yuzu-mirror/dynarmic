@@ -13,7 +13,7 @@
 
 #include "common/common_types.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using RegList = std::vector<Xbyak::Reg64>;
 
@@ -52,4 +52,4 @@ private:
     u64 arg;
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

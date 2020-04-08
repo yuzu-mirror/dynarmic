@@ -30,7 +30,7 @@
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/microinstruction.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 
@@ -1562,4 +1562,4 @@ void EmitX64::EmitFPFixedU64ToSingle(EmitContext& ctx, IR::Inst* inst) {
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

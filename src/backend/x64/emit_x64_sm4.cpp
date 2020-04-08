@@ -9,7 +9,7 @@
 #include "common/crypto/sm4.h"
 #include "frontend/ir/microinstruction.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 void EmitX64::EmitSM4AccessSubstitutionBox(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -18,4 +18,4 @@ void EmitX64::EmitSM4AccessSubstitutionBox(EmitContext& ctx, IR::Inst* inst) {
     code.CallFunction(&Common::Crypto::SM4::AccessSubstitutionBox);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

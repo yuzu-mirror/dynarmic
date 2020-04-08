@@ -13,7 +13,7 @@
 #include "common/common_types.h"
 #include "frontend/A64/location_descriptor.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 class BlockOfCode;
 
@@ -93,4 +93,4 @@ struct A64JitState {
 
 using CodePtr = const void*;
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

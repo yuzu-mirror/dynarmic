@@ -18,7 +18,7 @@
 #include "frontend/A64/location_descriptor.h"
 #include "frontend/ir/terminal.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 class RegAlloc;
 
@@ -106,4 +106,4 @@ protected:
     void EmitPatchMovRcx(CodePtr target_code_ptr = nullptr) override;
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

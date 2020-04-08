@@ -12,7 +12,7 @@
 #include "common/crypto/crc32.h"
 #include "frontend/ir/microinstruction.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 namespace CRC32 = Common::Crypto::CRC32;
@@ -72,4 +72,4 @@ void EmitX64::EmitCRC32ISO64(EmitContext& ctx, IR::Inst* inst) {
     EmitCRC32ISO(code, ctx, inst, 64);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

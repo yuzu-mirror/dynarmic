@@ -29,7 +29,7 @@
 
 namespace Dynarmic::A32 {
 
-using namespace BackendX64;
+using namespace Backend::X64;
 
 static RunCodeCallbacks GenRunCodeCallbacks(A32::UserCallbacks* cb, CodePtr (*LookupBlock)(void* lookup_block_arg), void* arg) {
     return RunCodeCallbacks{

@@ -10,7 +10,7 @@
 
 #include "common/cast_util.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 namespace detail {
 void PerfMapRegister(const void* start, const void* end, std::string_view friendly_name);
@@ -23,4 +23,4 @@ void PerfMapRegister(T start, const void* end, std::string_view friendly_name) {
 
 void PerfMapClear();
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

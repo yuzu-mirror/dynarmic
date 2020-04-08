@@ -22,7 +22,7 @@
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/value.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 class RegAlloc;
 
@@ -162,4 +162,4 @@ private:
     void EmitExchange(HostLoc a, HostLoc b);
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

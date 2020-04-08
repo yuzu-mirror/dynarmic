@@ -15,7 +15,7 @@
 #include "frontend/ir/microinstruction.h"
 #include "frontend/ir/opcodes.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 
@@ -214,11 +214,11 @@ static void EmitExtractRegister(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-void EmitX64::EmitExtractRegister32(Dynarmic::BackendX64::EmitContext& ctx, IR::Inst* inst) {
+void EmitX64::EmitExtractRegister32(Dynarmic::Backend::X64::EmitContext& ctx, IR::Inst* inst) {
     EmitExtractRegister(code, ctx, inst, 32);
 }
 
-void EmitX64::EmitExtractRegister64(Dynarmic::BackendX64::EmitContext& ctx, IR::Inst* inst) {
+void EmitX64::EmitExtractRegister64(Dynarmic::Backend::X64::EmitContext& ctx, IR::Inst* inst) {
     EmitExtractRegister(code, ctx, inst, 64);
 }
 
@@ -1520,4 +1520,4 @@ void EmitX64::EmitMinUnsigned64(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, y);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

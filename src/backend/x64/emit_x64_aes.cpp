@@ -11,7 +11,7 @@
 #include "common/crypto/aes.h"
 #include "frontend/ir/microinstruction.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 namespace AES = Common::Crypto::AES;
@@ -73,4 +73,4 @@ void EmitX64::EmitAESMixColumns(EmitContext& ctx, IR::Inst* inst) {
     EmitAESFunction(args, ctx, code, inst, AES::MixColumns);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

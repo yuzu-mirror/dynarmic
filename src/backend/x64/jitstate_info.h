@@ -8,7 +8,7 @@
 
 #include <cstddef>
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 struct JitStateInfo {
     template <typename JitStateType>
@@ -39,4 +39,4 @@ struct JitStateInfo {
     const size_t offsetof_fpsr_qc;
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

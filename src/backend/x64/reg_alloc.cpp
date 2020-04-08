@@ -15,7 +15,7 @@
 #include "backend/x64/reg_alloc.h"
 #include "common/assert.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 #define MAYBE_AVX(OPCODE, ...)                                          \
     [&] {                                                               \
@@ -681,4 +681,4 @@ void RegAlloc::EmitExchange(HostLoc a, HostLoc b) {
     }
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

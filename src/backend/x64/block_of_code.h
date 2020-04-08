@@ -19,7 +19,7 @@
 #include "common/cast_util.h"
 #include "common/common_types.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using CodePtr = const void*;
 
@@ -178,4 +178,4 @@ private:
     Xbyak::util::Cpu cpu_info;
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

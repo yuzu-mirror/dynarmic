@@ -13,7 +13,7 @@
 
 #include "common/common_types.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 class BlockOfCode;
 
@@ -38,4 +38,4 @@ private:
     u8* current_pool_ptr;
 };
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

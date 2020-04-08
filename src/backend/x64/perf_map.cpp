@@ -19,7 +19,7 @@
 
 #include "common/common_types.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 namespace {
 std::mutex mutex;
@@ -72,11 +72,11 @@ void PerfMapClear() {
     OpenFile();
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64
 
 #else
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 namespace detail {
 void PerfMapRegister(const void*, const void*, std::string_view) {}
@@ -84,6 +84,6 @@ void PerfMapRegister(const void*, const void*, std::string_view) {}
 
 void PerfMapClear() {}
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64
 
 #endif

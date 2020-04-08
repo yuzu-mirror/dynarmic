@@ -9,7 +9,7 @@
 
 #include "backend/x64/hostloc.h"
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 class BlockOfCode;
 
@@ -121,4 +121,4 @@ void ABI_PopCallerSaveRegistersAndAdjustStack(BlockOfCode& code, size_t frame_si
 void ABI_PushCallerSaveRegistersAndAdjustStackExcept(BlockOfCode& code, HostLoc exception);
 void ABI_PopCallerSaveRegistersAndAdjustStackExcept(BlockOfCode& code, HostLoc exception);
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64

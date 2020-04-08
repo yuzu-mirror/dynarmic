@@ -34,7 +34,7 @@
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.
 
-namespace Dynarmic::BackendX64 {
+namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 
@@ -1380,4 +1380,4 @@ void A32EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
     code.EnsurePatchLocationSize(patch_location, 10);
 }
 
-} // namespace Dynarmic::BackendX64
+} // namespace Dynarmic::Backend::X64
