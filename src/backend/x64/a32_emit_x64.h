@@ -84,6 +84,12 @@ protected:
     // Helpers
     std::string LocationDescriptorToFriendlyName(const IR::LocationDescriptor&) const override;
 
+    // Memory access helpers
+    template<std::size_t bitsize>
+    void ReadMemory(A32EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize>
+    void WriteMemory(A32EmitContext& ctx, IR::Inst* inst);
+
     // Terminal instruction emitters
     void EmitSetUpperLocationDescriptor(IR::LocationDescriptor new_location, IR::LocationDescriptor old_location);
     void EmitTerminalImpl(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location) override;
