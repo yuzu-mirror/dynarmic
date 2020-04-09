@@ -13,6 +13,7 @@
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/exception_handler.h"
 #include "common/assert.h"
+#include "common/cast_util.h"
 #include "common/common_types.h"
 
 using UBYTE = u8;
@@ -67,6 +68,12 @@ struct UNWIND_INFO {
     UBYTE FrameOffset : 4;
     // UNWIND_CODE UnwindCode[];
     // With Flags == 0 there are no additional fields.
+    // OPTIONAL UNW_EXCEPTION_INFO ExceptionInfo;
+};
+
+struct UNW_EXCEPTION_INFO {
+    ULONG ExceptionHandler;
+    // OPTIONAL ARBITRARY HandlerData;
 };
 
 namespace Dynarmic::Backend::X64 {
@@ -158,8 +165,55 @@ static PrologueInformation GetPrologueInformation() {
 }
 
 struct ExceptionHandler::Impl final {
-    Impl(RUNTIME_FUNCTION* rfuncs_, const u8* base_ptr) : rfuncs(rfuncs_) {
-        RtlAddFunctionTable(rfuncs, 1, reinterpret_cast<DWORD64>(base_ptr));
+    Impl(BlockOfCode& code) {
+        const auto prolog_info = GetPrologueInformation();
+
+        code.align(16);
+        const u8* exception_handler = code.getCurr<u8*>();
+        // Our 3rd argument is a PCONTEXT.
+        code.sub(code.rsp, 8);
+        code.mov(code.ABI_PARAM1, Common::BitCast<u64>(&cb));
+        code.mov(code.ABI_PARAM2, code.ABI_PARAM3);
+        code.CallLambda(
+            [](const std::function<FakeCall(u64)>& cb_, PCONTEXT ctx){
+                FakeCall fc = cb_(ctx->Rip);
+
+                ctx->Rsp -= sizeof(u64);
+                *Common::BitCast<u64*>(ctx->Rsp) = fc.ret_rip;
+                ctx->Rip = fc.call_rip;
+            }
+        );
+        code.add(code.rsp, 8);
+        code.mov(code.eax, static_cast<u32>(ExceptionContinueExecution));
+        code.ret();
+
+        code.align(16);
+        UNWIND_INFO* unwind_info = static_cast<UNWIND_INFO*>(code.AllocateFromCodeSpace(sizeof(UNWIND_INFO)));
+        unwind_info->Version = 1;
+        unwind_info->Flags = UNW_FLAG_EHANDLER;
+        unwind_info->SizeOfProlog = prolog_info.prolog_size;
+        unwind_info->CountOfCodes = static_cast<UBYTE>(prolog_info.number_of_unwind_code_entries);
+        unwind_info->FrameRegister = 0; // No frame register present
+        unwind_info->FrameOffset = 0; // Unused because FrameRegister == 0
+        // UNWIND_INFO::UnwindCode field:
+        const size_t size_of_unwind_code = sizeof(UNWIND_CODE) * prolog_info.unwind_code.size();
+        UNWIND_CODE* unwind_code = static_cast<UNWIND_CODE*>(code.AllocateFromCodeSpace(size_of_unwind_code));
+        memcpy(unwind_code, prolog_info.unwind_code.data(), size_of_unwind_code);
+        // UNWIND_INFO::ExceptionInfo field:
+        UNW_EXCEPTION_INFO* except_info = static_cast<UNW_EXCEPTION_INFO*>(code.AllocateFromCodeSpace(sizeof(UNW_EXCEPTION_INFO)));
+        except_info->ExceptionHandler = static_cast<ULONG>(exception_handler - code.getCode<u8*>());
+
+        code.align(16);
+        rfuncs = static_cast<RUNTIME_FUNCTION*>(code.AllocateFromCodeSpace(sizeof(RUNTIME_FUNCTION)));
+        rfuncs->BeginAddress = static_cast<DWORD>(0);
+        rfuncs->EndAddress = static_cast<DWORD>(code.GetTotalCodeSize());
+        rfuncs->UnwindData = static_cast<DWORD>(reinterpret_cast<u8*>(unwind_info) - code.getCode());
+
+        RtlAddFunctionTable(rfuncs, 1, reinterpret_cast<DWORD64>(code.getCode()));
+    }
+
+    void SetCallback(std::function<FakeCall(u64)> new_cb) {
+        cb = new_cb;
     }
 
     ~Impl() {
@@ -167,43 +221,23 @@ struct ExceptionHandler::Impl final {
     }
 
 private:
-    RUNTIME_FUNCTION* rfuncs = nullptr;
+    RUNTIME_FUNCTION* rfuncs;
+    std::function<FakeCall(u64)> cb;
 };
 
 ExceptionHandler::ExceptionHandler() = default;
 ExceptionHandler::~ExceptionHandler() = default;
 
 void ExceptionHandler::Register(BlockOfCode& code) {
-    const auto prolog_info = GetPrologueInformation();
-
-    code.align(16);
-    UNWIND_INFO* unwind_info = static_cast<UNWIND_INFO*>(code.AllocateFromCodeSpace(sizeof(UNWIND_INFO)));
-    unwind_info->Version = 1;
-    unwind_info->Flags = 0; // No special exception handling required.
-    unwind_info->SizeOfProlog = prolog_info.prolog_size;
-    unwind_info->CountOfCodes = static_cast<UBYTE>(prolog_info.number_of_unwind_code_entries);
-    unwind_info->FrameRegister = 0; // No frame register present
-    unwind_info->FrameOffset = 0; // Unused because FrameRegister == 0
-    // UNWIND_INFO::UnwindCode field:
-    const size_t size_of_unwind_code = sizeof(UNWIND_CODE) * prolog_info.unwind_code.size();
-    UNWIND_CODE* unwind_code = static_cast<UNWIND_CODE*>(code.AllocateFromCodeSpace(size_of_unwind_code));
-    memcpy(unwind_code, prolog_info.unwind_code.data(), size_of_unwind_code);
-
-    code.align(16);
-    RUNTIME_FUNCTION* rfuncs = static_cast<RUNTIME_FUNCTION*>(code.AllocateFromCodeSpace(sizeof(RUNTIME_FUNCTION)));
-    rfuncs->BeginAddress = static_cast<DWORD>(0);
-    rfuncs->EndAddress = static_cast<DWORD>(code.GetTotalCodeSize());
-    rfuncs->UnwindData = static_cast<DWORD>(reinterpret_cast<u8*>(unwind_info) - code.getCode());
-
-    impl = std::make_unique<Impl>(rfuncs, code.getCode());
+    impl = std::make_unique<Impl>(code);
 }
 
 bool ExceptionHandler::SupportsFastmem() const noexcept {
-    return false;
+    return static_cast<bool>(impl);
 }
 
-void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)>) {
-    // Do nothing
+void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
+    impl->SetCallback(cb);
 }
 
 } // namespace Dynarmic::Backend::X64
