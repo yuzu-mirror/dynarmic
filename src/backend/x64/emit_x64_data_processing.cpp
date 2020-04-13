@@ -736,9 +736,9 @@ static void EmitMaskedShift32(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
 
     if (shift_arg.IsImmediate()) {
         const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-        const u8 shift = shift_arg.GetImmediateU8();
+        const u32 shift = shift_arg.GetImmediateU32();
 
-        shift_fn(result, shift & 0x1F);
+        shift_fn(result, static_cast<int>(shift & 0x1F));
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -773,9 +773,9 @@ static void EmitMaskedShift64(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
 
     if (shift_arg.IsImmediate()) {
         const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
-        const u8 shift = shift_arg.GetImmediateU8();
+        const u64 shift = shift_arg.GetImmediateU64();
 
-        shift_fn(result, shift & 0x3F);
+        shift_fn(result, static_cast<int>(shift & 0x3F));
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
