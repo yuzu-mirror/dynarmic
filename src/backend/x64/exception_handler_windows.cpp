@@ -169,7 +169,12 @@ struct ExceptionHandler::Impl final {
         const auto prolog_info = GetPrologueInformation();
 
         code.align(16);
-        const u8* exception_handler = code.getCurr<u8*>();
+        const u8* exception_handler_without_cb = code.getCurr<u8*>();
+        code.mov(code.eax, static_cast<u32>(ExceptionContinueSearch));
+        code.ret();
+
+        code.align(16);
+        const u8* exception_handler_with_cb = code.getCurr<u8*>();
         // Our 3rd argument is a PCONTEXT.
         code.sub(code.rsp, 8);
         code.mov(code.ABI_PARAM1, Common::BitCast<u64>(&cb));
@@ -187,6 +192,9 @@ struct ExceptionHandler::Impl final {
         code.mov(code.eax, static_cast<u32>(ExceptionContinueExecution));
         code.ret();
 
+        exception_handler_without_cb_offset = static_cast<ULONG>(exception_handler_without_cb - code.getCode<u8*>());
+        exception_handler_with_cb_offset = static_cast<ULONG>(exception_handler_with_cb - code.getCode<u8*>());
+
         code.align(16);
         UNWIND_INFO* unwind_info = static_cast<UNWIND_INFO*>(code.AllocateFromCodeSpace(sizeof(UNWIND_INFO)));
         unwind_info->Version = 1;
@@ -200,8 +208,8 @@ struct ExceptionHandler::Impl final {
         UNWIND_CODE* unwind_code = static_cast<UNWIND_CODE*>(code.AllocateFromCodeSpace(size_of_unwind_code));
         memcpy(unwind_code, prolog_info.unwind_code.data(), size_of_unwind_code);
         // UNWIND_INFO::ExceptionInfo field:
-        UNW_EXCEPTION_INFO* except_info = static_cast<UNW_EXCEPTION_INFO*>(code.AllocateFromCodeSpace(sizeof(UNW_EXCEPTION_INFO)));
-        except_info->ExceptionHandler = static_cast<ULONG>(exception_handler - code.getCode<u8*>());
+        except_info = static_cast<UNW_EXCEPTION_INFO*>(code.AllocateFromCodeSpace(sizeof(UNW_EXCEPTION_INFO)));
+        except_info->ExceptionHandler = exception_handler_without_cb_offset;
 
         code.align(16);
         rfuncs = static_cast<RUNTIME_FUNCTION*>(code.AllocateFromCodeSpace(sizeof(RUNTIME_FUNCTION)));
@@ -214,6 +222,7 @@ struct ExceptionHandler::Impl final {
 
     void SetCallback(std::function<FakeCall(u64)> new_cb) {
         cb = new_cb;
+        except_info->ExceptionHandler = cb ? exception_handler_with_cb_offset : exception_handler_without_cb_offset;
     }
 
     ~Impl() {
@@ -223,6 +232,9 @@ struct ExceptionHandler::Impl final {
 private:
     RUNTIME_FUNCTION* rfuncs;
     std::function<FakeCall(u64)> cb;
+    UNW_EXCEPTION_INFO* except_info;
+    ULONG exception_handler_without_cb_offset;
+    ULONG exception_handler_with_cb_offset;
 };
 
 ExceptionHandler::ExceptionHandler() = default;
