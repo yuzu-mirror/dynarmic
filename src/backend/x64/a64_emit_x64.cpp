@@ -295,7 +295,7 @@ void A64EmitX64::GenTerminalHandlers() {
         code.and_(rcx, rbp);
         code.mov(ebx, dword[r15 + offsetof(A64JitState, fpcr)]);
         code.and_(ebx, A64::LocationDescriptor::fpcr_mask);
-        code.shl(ebx, A64::LocationDescriptor::fpcr_shift);
+        code.shl(rbx, A64::LocationDescriptor::fpcr_shift);
         code.or_(rbx, rcx);
     };
 
