@@ -77,8 +77,6 @@ static u32 GenRandomInst(u64 pc, bool is_last_inst) {
             "LDLAR",
             // Dynarmic and QEMU currently differ on how the exclusive monitor's address range works.
             "STXR", "STLXR", "STXP", "STLXP", "LDXR", "LDAXR", "LDXP", "LDAXP",
-            // QEMU's implementation of FDIV is incorrect
-            "FDIV_1", "FDIV_2",
             // Behaviour differs from QEMU
             "MSR_reg", "MSR_imm", "MRS",
         };
@@ -119,8 +117,6 @@ static u32 GenFloatInst(u64 pc, bool is_last_inst) {
 
         // List of instructions not to test
         const std::vector<std::string> do_not_test {
-            // QEMU's implementation of FDIV is incorrect
-            "FDIV_1", "FDIV_2",
         };
 
         std::vector<InstructionGenerator> result;
@@ -460,6 +456,36 @@ TEST_CASE("A64: Small random block", "[a64]") {
         INFO("Instruction 3: 0x" << std::hex << instructions[2]);
         INFO("Instruction 4: 0x" << std::hex << instructions[3]);
         INFO("Instruction 5: 0x" << std::hex << instructions[4]);
+
+        RunTestInstance(jit, uni, jit_env, uni_env, regs, vecs, start_address, instructions, pstate, fpcr);
+    }
+}
+
+
+TEST_CASE("A64: Large random block", "[a64]") {
+    A64TestEnv jit_env{};
+    A64TestEnv uni_env{};
+
+    Dynarmic::A64::Jit jit{GetUserConfig(jit_env)};
+    A64Unicorn uni{uni_env};
+
+    A64Unicorn::RegisterArray regs;
+    A64Unicorn::VectorArray vecs;
+
+    constexpr size_t instruction_count = 100;
+    std::vector<u32> instructions(instruction_count);
+
+    for (size_t iteration = 0; iteration < 500; ++iteration) {
+        std::generate(regs.begin(), regs.end(), [] { return RandInt<u64>(0, ~u64(0)); });
+        std::generate(vecs.begin(), vecs.end(), RandomVector);
+
+        for (size_t j = 0; j < instruction_count; ++j) {
+            instructions[j] = GenRandomInst(j * 4, j == instruction_count - 1);
+        }
+
+        const u64 start_address = RandInt<u64>(0, 0x10'0000'0000) * 4;
+        const u32 pstate = RandInt<u32>(0, 0xF) << 28;
+        const u32 fpcr = RandomFpcr();
 
         RunTestInstance(jit, uni, jit_env, uni_env, regs, vecs, start_address, instructions, pstate, fpcr);
     }
