@@ -158,12 +158,11 @@ void A32EmitX64::ClearCache() {
 
 void A32EmitX64::InvalidateCacheRanges(const boost::icl::interval_set<u32>& ranges) {
     InvalidateBasicBlocks(block_ranges.InvalidateRanges(ranges));
-    ClearFastDispatchTable();
 }
 
 void A32EmitX64::ClearFastDispatchTable() {
     if (config.enable_fast_dispatch) {
-        fast_dispatch_table.fill({0xFFFFFFFFFFFFFFFFull, nullptr});
+        fast_dispatch_table.fill({});
     }
 }
 
@@ -278,6 +277,16 @@ void A32EmitX64::GenTerminalHandlers() {
         code.mov(ptr[rbp + offsetof(FastDispatchEntry, code_ptr)], rax);
         code.jmp(rax);
         PerfMapRegister(terminal_handler_fast_dispatch_hint, code.getCurr(), "a32_terminal_handler_fast_dispatch_hint");
+
+        code.align();
+        fast_dispatch_table_lookup = code.getCurr<FastDispatchEntry&(*)(u64)>();
+        code.mov(code.ABI_PARAM2, reinterpret_cast<u64>(fast_dispatch_table.data()));
+        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE42)) {
+            code.crc32(code.ABI_PARAM1.cvt32(), code.ABI_PARAM2.cvt32());
+        }
+        code.and_(code.ABI_PARAM1.cvt32(), fast_dispatch_table_mask);
+        code.lea(code.ABI_RETURN, code.ptr[code.ABI_PARAM1 + code.ABI_PARAM2]);
+        code.ret();
     }
 }
 
@@ -1509,6 +1518,13 @@ void A32EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
     const CodePtr patch_location = code.getCurr();
     code.mov(code.rcx, reinterpret_cast<u64>(target_code_ptr));
     code.EnsurePatchLocationSize(patch_location, 10);
+}
+
+void A32EmitX64::Unpatch(const IR::LocationDescriptor& location) {
+    EmitX64::Unpatch(location);
+    if (config.enable_fast_dispatch) {
+        (*fast_dispatch_table_lookup)(location.Value()) = {};
+    }
 }
 
 } // namespace Dynarmic::Backend::X64
