@@ -38,8 +38,7 @@ matrix:
       script: ./.travis/build-x86_64-macos/build.sh
     - env: NAME="Test - Fuzz against Unicorn"
       os: linux
-      dist: trusty
-      python: "3.8"
+      dist: bionic
       addons:
         apt:
           sources:
@@ -53,8 +52,7 @@ matrix:
       script: ./.travis/test-with-unicorn-on-x86_64-linux/build.sh
     - env: NAME="Test - SSE3 only"
       os: linux
-      dist: trusty
-      python: "3.8"
+      dist: bionic
       addons:
         apt:
           sources:

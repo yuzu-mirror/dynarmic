@@ -3,10 +3,12 @@
 set -e
 set -x
 
+python3 --version
+
 # TODO: This isn't ideal.
 cd externals
 git clone https://github.com/MerryMage/ext-boost
-git clone https://github.com/yuzu-emu/unicorn
+git clone https://github.com/MerryMage/unicorn
 cd unicorn
 UNICORN_ARCHS=aarch64,arm ./make.sh
 cd ../..
