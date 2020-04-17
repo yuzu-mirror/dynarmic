@@ -768,6 +768,9 @@ bool ArmTranslatorVisitor::arm_LDM(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
+    if (W && Common::Bit(static_cast<size_t>(n), list)) {
+        return UnpredictableInstruction();
+    }
 
     if (!ConditionPassed(cond)) {
         return true;
@@ -781,6 +784,9 @@ bool ArmTranslatorVisitor::arm_LDM(Cond cond, bool W, Reg n, RegList list) {
 // LDMDA <Rn>{!}, <reg_list>
 bool ArmTranslatorVisitor::arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
+        return UnpredictableInstruction();
+    }
+    if (W && Common::Bit(static_cast<size_t>(n), list)) {
         return UnpredictableInstruction();
     }
 
@@ -798,6 +804,9 @@ bool ArmTranslatorVisitor::arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
+    if (W && Common::Bit(static_cast<size_t>(n), list)) {
+        return UnpredictableInstruction();
+    }
 
     if (!ConditionPassed(cond)) {
         return true;
@@ -811,6 +820,9 @@ bool ArmTranslatorVisitor::arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
 // LDMIB <Rn>{!}, <reg_list>
 bool ArmTranslatorVisitor::arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
+        return UnpredictableInstruction();
+    }
+    if (W && Common::Bit(static_cast<size_t>(n), list)) {
         return UnpredictableInstruction();
     }
 

@@ -829,6 +829,13 @@ bool ThumbTranslatorVisitor::thumb16_BKPT([[maybe_unused]] Imm<8> imm8) {
 
 // STM <Rn>!, <reg_list>
 bool ThumbTranslatorVisitor::thumb16_STMIA(Reg n, RegList reg_list) {
+    if (Common::BitCount(reg_list) == 0) {
+        return UnpredictableInstruction();
+    }
+    if (Common::Bit(static_cast<size_t>(n), reg_list) && n != static_cast<Reg>(Common::LowestSetBit(reg_list))) {
+        return UnpredictableInstruction();
+    }
+
     auto address = ir.GetRegister(n);
     for (size_t i = 0; i < 8; i++) {
         if (Common::Bit(i, reg_list)) {
@@ -842,8 +849,12 @@ bool ThumbTranslatorVisitor::thumb16_STMIA(Reg n, RegList reg_list) {
     return true;
 }
 
-// STM <Rn>!, <reg_list>
+// LDM <Rn>!, <reg_list>
 bool ThumbTranslatorVisitor::thumb16_LDMIA(Reg n, RegList reg_list) {
+    if (Common::BitCount(reg_list) == 0) {
+        return UnpredictableInstruction();
+    }
+
     const bool write_back = !Common::Bit(static_cast<size_t>(n), reg_list);
     auto address = ir.GetRegister(n);
 

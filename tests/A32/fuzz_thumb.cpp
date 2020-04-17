@@ -234,7 +234,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
                          // Ensure that the architecturally undefined case of
                          // the base register being within the list isn't hit.
                          const u32 rn = Dynarmic::Common::Bits<8, 10>(inst);
-                         return (inst & (1U << rn)) == 0;
+                         return (inst & (1U << rn)) == 0 && Dynarmic::Common::Bits<0, 7>(inst) != 0;
                      }),
         // TODO: We should properly test against swapped
         //       endianness cases, however Unicorn doesn't
