@@ -8,20 +8,17 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(MASTER_PROJECT ON)
 endif()
 
-# CMake policites
-if(POLICY CMP0077)
-    cmake_policy(SET CMP0077 NEW) # CMake 3.13 - option() honors normal variables
-endif()
-
 # Dynarmic project options
 option(DYNARMIC_ENABLE_CPU_FEATURE_DETECTION "Turning this off causes dynarmic to assume the host CPU doesn't support anything later than SSE3" ON)
 option(DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT "Enables support for systems that require W^X" OFF)
 option(DYNARMIC_FATAL_ERRORS "Errors are fatal" OFF)
-option(DYNARMIC_FRONTENDS "Selects which frontends to enable" "A32;A64")
 option(DYNARMIC_TESTS "Build tests" ${MASTER_PROJECT})
 option(DYNARMIC_TESTS_USE_UNICORN "Enable fuzzing tests against unicorn" OFF)
 option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
 option(DYNARMIC_WARNINGS_AS_ERRORS "Warnings as errors" ${MASTER_PROJECT})
+if (NOT DEFINED DYNARMIC_FRONTENDS)
+    set(DYNARMIC_FRONTENDS "A32;A64" CACHE STRING "Selects which frontends to enable")
+endif()
 
 # Default to a Release build
 if (NOT CMAKE_BUILD_TYPE)
