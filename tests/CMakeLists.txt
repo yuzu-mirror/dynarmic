@@ -1,3 +1,7 @@
+if ((NOT "A32" IN_LIST DYNARMIC_FRONTENDS) OR (NOT "A64" IN_LIST DYNARMIC_FRONTENDS))
+    return()
+endif()
+
 add_executable(dynarmic_tests
     A32/test_arm_disassembler.cpp
     A32/test_arm_instructions.cpp

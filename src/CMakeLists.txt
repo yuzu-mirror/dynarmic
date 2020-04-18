@@ -69,117 +69,8 @@ add_library(dynarmic
     common/u128.cpp
     common/u128.h
     common/variant_util.h
-    frontend/A32/decoder/arm.h
-    frontend/A32/decoder/arm.inc
-    frontend/A32/decoder/thumb16.h
-    frontend/A32/decoder/thumb32.h
-    frontend/A32/decoder/vfp.h
-    frontend/A32/decoder/vfp.inc
-    frontend/A32/disassembler/disassembler.h
-    frontend/A32/disassembler/disassembler_arm.cpp
-    frontend/A32/disassembler/disassembler_thumb.cpp
-    frontend/A32/FPSCR.h
-    frontend/A32/ir_emitter.cpp
-    frontend/A32/ir_emitter.h
-    frontend/A32/ITState.h
-    frontend/A32/location_descriptor.cpp
-    frontend/A32/location_descriptor.h
-    frontend/A32/PSR.h
-    frontend/A32/translate/impl/barrier.cpp
-    frontend/A32/translate/impl/branch.cpp
-    frontend/A32/translate/impl/coprocessor.cpp
-    frontend/A32/translate/impl/crc32.cpp
-    frontend/A32/translate/impl/data_processing.cpp
-    frontend/A32/translate/impl/divide.cpp
-    frontend/A32/translate/impl/exception_generating.cpp
-    frontend/A32/translate/impl/extension.cpp
-    frontend/A32/translate/impl/hint.cpp
-    frontend/A32/translate/impl/load_store.cpp
-    frontend/A32/translate/impl/misc.cpp
-    frontend/A32/translate/impl/multiply.cpp
-    frontend/A32/translate/impl/packing.cpp
-    frontend/A32/translate/impl/parallel.cpp
-    frontend/A32/translate/impl/reversal.cpp
-    frontend/A32/translate/impl/saturated.cpp
-    frontend/A32/translate/impl/status_register_access.cpp
-    frontend/A32/translate/impl/synchronization.cpp
-    frontend/A32/translate/impl/thumb16.cpp
-    frontend/A32/translate/impl/thumb32.cpp
-    frontend/A32/translate/impl/translate_arm.h
-    frontend/A32/translate/impl/translate_thumb.h
-    frontend/A32/translate/impl/vfp.cpp
-    frontend/A32/translate/translate.cpp
-    frontend/A32/translate/translate.h
-    frontend/A32/translate/translate_arm.cpp
-    frontend/A32/translate/translate_thumb.cpp
     frontend/A32/types.cpp
     frontend/A32/types.h
-    frontend/A64/decoder/a64.h
-    frontend/A64/decoder/a64.inc
-    frontend/A64/ir_emitter.cpp
-    frontend/A64/ir_emitter.h
-    frontend/A64/location_descriptor.cpp
-    frontend/A64/location_descriptor.h
-    frontend/A64/translate/impl/branch.cpp
-    frontend/A64/translate/impl/data_processing_addsub.cpp
-    frontend/A64/translate/impl/data_processing_bitfield.cpp
-    frontend/A64/translate/impl/data_processing_conditional_compare.cpp
-    frontend/A64/translate/impl/data_processing_conditional_select.cpp
-    frontend/A64/translate/impl/data_processing_crc32.cpp
-    frontend/A64/translate/impl/data_processing_logical.cpp
-    frontend/A64/translate/impl/data_processing_multiply.cpp
-    frontend/A64/translate/impl/data_processing_pcrel.cpp
-    frontend/A64/translate/impl/data_processing_register.cpp
-    frontend/A64/translate/impl/data_processing_shift.cpp
-    frontend/A64/translate/impl/exception_generating.cpp
-    frontend/A64/translate/impl/floating_point_compare.cpp
-    frontend/A64/translate/impl/floating_point_conditional_compare.cpp
-    frontend/A64/translate/impl/floating_point_conditional_select.cpp
-    frontend/A64/translate/impl/floating_point_conversion_fixed_point.cpp
-    frontend/A64/translate/impl/floating_point_conversion_integer.cpp
-    frontend/A64/translate/impl/floating_point_data_processing_one_register.cpp
-    frontend/A64/translate/impl/floating_point_data_processing_three_register.cpp
-    frontend/A64/translate/impl/floating_point_data_processing_two_register.cpp
-    frontend/A64/translate/impl/impl.cpp
-    frontend/A64/translate/impl/impl.h
-    frontend/A64/translate/impl/load_store_exclusive.cpp
-    frontend/A64/translate/impl/load_store_load_literal.cpp
-    frontend/A64/translate/impl/load_store_multiple_structures.cpp
-    frontend/A64/translate/impl/load_store_no_allocate_pair.cpp
-    frontend/A64/translate/impl/load_store_register_immediate.cpp
-    frontend/A64/translate/impl/load_store_register_pair.cpp
-    frontend/A64/translate/impl/load_store_register_register_offset.cpp
-    frontend/A64/translate/impl/load_store_register_unprivileged.cpp
-    frontend/A64/translate/impl/load_store_single_structure.cpp
-    frontend/A64/translate/impl/move_wide.cpp
-    frontend/A64/translate/impl/simd_across_lanes.cpp
-    frontend/A64/translate/impl/simd_aes.cpp
-    frontend/A64/translate/impl/simd_copy.cpp
-    frontend/A64/translate/impl/simd_crypto_four_register.cpp
-    frontend/A64/translate/impl/simd_crypto_three_register.cpp
-    frontend/A64/translate/impl/simd_extract.cpp
-    frontend/A64/translate/impl/simd_modified_immediate.cpp
-    frontend/A64/translate/impl/simd_permute.cpp
-    frontend/A64/translate/impl/simd_scalar_pairwise.cpp
-    frontend/A64/translate/impl/simd_scalar_shift_by_immediate.cpp
-    frontend/A64/translate/impl/simd_scalar_three_same.cpp
-    frontend/A64/translate/impl/simd_scalar_two_register_misc.cpp
-    frontend/A64/translate/impl/simd_scalar_x_indexed_element.cpp
-    frontend/A64/translate/impl/simd_sha.cpp
-    frontend/A64/translate/impl/simd_sha512.cpp
-    frontend/A64/translate/impl/simd_shift_by_immediate.cpp
-    frontend/A64/translate/impl/simd_table_lookup.cpp
-    frontend/A64/translate/impl/simd_three_different.cpp
-    frontend/A64/translate/impl/simd_three_same.cpp
-    frontend/A64/translate/impl/simd_three_same_extra.cpp
-    frontend/A64/translate/impl/simd_two_register_misc.cpp
-    frontend/A64/translate/impl/simd_vector_x_indexed_element.cpp
-    frontend/A64/translate/impl/sys_dc.cpp
-    frontend/A64/translate/impl/system.cpp
-    frontend/A64/translate/impl/system_flag_format.cpp
-    frontend/A64/translate/impl/system_flag_manipulation.cpp
-    frontend/A64/translate/translate.cpp
-    frontend/A64/translate/translate.h
     frontend/A64/types.cpp
     frontend/A64/types.h
     frontend/decoder/decoder_detail.h
@@ -202,62 +93,191 @@ add_library(dynarmic
     frontend/ir/type.h
     frontend/ir/value.cpp
     frontend/ir/value.h
-    ir_opt/a32_constant_memory_reads_pass.cpp
-    ir_opt/a32_get_set_elimination_pass.cpp
-    ir_opt/a64_callback_config_pass.cpp
-    ir_opt/a64_get_set_elimination_pass.cpp
-    ir_opt/a64_merge_interpret_blocks.cpp
     ir_opt/constant_propagation_pass.cpp
     ir_opt/dead_code_elimination_pass.cpp
     ir_opt/passes.h
     ir_opt/verification_pass.cpp
 )
 
+if ("A32" IN_LIST DYNARMIC_FRONTENDS)
+    target_sources(dynarmic PRIVATE
+        frontend/A32/decoder/arm.h
+        frontend/A32/decoder/arm.inc
+        frontend/A32/decoder/thumb16.h
+        frontend/A32/decoder/thumb32.h
+        frontend/A32/decoder/vfp.h
+        frontend/A32/decoder/vfp.inc
+        frontend/A32/disassembler/disassembler.h
+        frontend/A32/disassembler/disassembler_arm.cpp
+        frontend/A32/disassembler/disassembler_thumb.cpp
+        frontend/A32/FPSCR.h
+        frontend/A32/ir_emitter.cpp
+        frontend/A32/ir_emitter.h
+        frontend/A32/ITState.h
+        frontend/A32/location_descriptor.cpp
+        frontend/A32/location_descriptor.h
+        frontend/A32/PSR.h
+        frontend/A32/translate/impl/barrier.cpp
+        frontend/A32/translate/impl/branch.cpp
+        frontend/A32/translate/impl/coprocessor.cpp
+        frontend/A32/translate/impl/crc32.cpp
+        frontend/A32/translate/impl/data_processing.cpp
+        frontend/A32/translate/impl/divide.cpp
+        frontend/A32/translate/impl/exception_generating.cpp
+        frontend/A32/translate/impl/extension.cpp
+        frontend/A32/translate/impl/hint.cpp
+        frontend/A32/translate/impl/load_store.cpp
+        frontend/A32/translate/impl/misc.cpp
+        frontend/A32/translate/impl/multiply.cpp
+        frontend/A32/translate/impl/packing.cpp
+        frontend/A32/translate/impl/parallel.cpp
+        frontend/A32/translate/impl/reversal.cpp
+        frontend/A32/translate/impl/saturated.cpp
+        frontend/A32/translate/impl/status_register_access.cpp
+        frontend/A32/translate/impl/synchronization.cpp
+        frontend/A32/translate/impl/thumb16.cpp
+        frontend/A32/translate/impl/thumb32.cpp
+        frontend/A32/translate/impl/translate_arm.h
+        frontend/A32/translate/impl/translate_thumb.h
+        frontend/A32/translate/impl/vfp.cpp
+        frontend/A32/translate/translate.cpp
+        frontend/A32/translate/translate.h
+        frontend/A32/translate/translate_arm.cpp
+        frontend/A32/translate/translate_thumb.cpp
+        ir_opt/a32_constant_memory_reads_pass.cpp
+        ir_opt/a32_get_set_elimination_pass.cpp
+    )
+endif()
+
+if ("A64" IN_LIST DYNARMIC_FRONTENDS)
+    target_sources(dynarmic PRIVATE
+        frontend/A64/decoder/a64.h
+        frontend/A64/decoder/a64.inc
+        frontend/A64/ir_emitter.cpp
+        frontend/A64/ir_emitter.h
+        frontend/A64/location_descriptor.cpp
+        frontend/A64/location_descriptor.h
+        frontend/A64/translate/impl/branch.cpp
+        frontend/A64/translate/impl/data_processing_addsub.cpp
+        frontend/A64/translate/impl/data_processing_bitfield.cpp
+        frontend/A64/translate/impl/data_processing_conditional_compare.cpp
+        frontend/A64/translate/impl/data_processing_conditional_select.cpp
+        frontend/A64/translate/impl/data_processing_crc32.cpp
+        frontend/A64/translate/impl/data_processing_logical.cpp
+        frontend/A64/translate/impl/data_processing_multiply.cpp
+        frontend/A64/translate/impl/data_processing_pcrel.cpp
+        frontend/A64/translate/impl/data_processing_register.cpp
+        frontend/A64/translate/impl/data_processing_shift.cpp
+        frontend/A64/translate/impl/exception_generating.cpp
+        frontend/A64/translate/impl/floating_point_compare.cpp
+        frontend/A64/translate/impl/floating_point_conditional_compare.cpp
+        frontend/A64/translate/impl/floating_point_conditional_select.cpp
+        frontend/A64/translate/impl/floating_point_conversion_fixed_point.cpp
+        frontend/A64/translate/impl/floating_point_conversion_integer.cpp
+        frontend/A64/translate/impl/floating_point_data_processing_one_register.cpp
+        frontend/A64/translate/impl/floating_point_data_processing_three_register.cpp
+        frontend/A64/translate/impl/floating_point_data_processing_two_register.cpp
+        frontend/A64/translate/impl/impl.cpp
+        frontend/A64/translate/impl/impl.h
+        frontend/A64/translate/impl/load_store_exclusive.cpp
+        frontend/A64/translate/impl/load_store_load_literal.cpp
+        frontend/A64/translate/impl/load_store_multiple_structures.cpp
+        frontend/A64/translate/impl/load_store_no_allocate_pair.cpp
+        frontend/A64/translate/impl/load_store_register_immediate.cpp
+        frontend/A64/translate/impl/load_store_register_pair.cpp
+        frontend/A64/translate/impl/load_store_register_register_offset.cpp
+        frontend/A64/translate/impl/load_store_register_unprivileged.cpp
+        frontend/A64/translate/impl/load_store_single_structure.cpp
+        frontend/A64/translate/impl/move_wide.cpp
+        frontend/A64/translate/impl/simd_across_lanes.cpp
+        frontend/A64/translate/impl/simd_aes.cpp
+        frontend/A64/translate/impl/simd_copy.cpp
+        frontend/A64/translate/impl/simd_crypto_four_register.cpp
+        frontend/A64/translate/impl/simd_crypto_three_register.cpp
+        frontend/A64/translate/impl/simd_extract.cpp
+        frontend/A64/translate/impl/simd_modified_immediate.cpp
+        frontend/A64/translate/impl/simd_permute.cpp
+        frontend/A64/translate/impl/simd_scalar_pairwise.cpp
+        frontend/A64/translate/impl/simd_scalar_shift_by_immediate.cpp
+        frontend/A64/translate/impl/simd_scalar_three_same.cpp
+        frontend/A64/translate/impl/simd_scalar_two_register_misc.cpp
+        frontend/A64/translate/impl/simd_scalar_x_indexed_element.cpp
+        frontend/A64/translate/impl/simd_sha.cpp
+        frontend/A64/translate/impl/simd_sha512.cpp
+        frontend/A64/translate/impl/simd_shift_by_immediate.cpp
+        frontend/A64/translate/impl/simd_table_lookup.cpp
+        frontend/A64/translate/impl/simd_three_different.cpp
+        frontend/A64/translate/impl/simd_three_same.cpp
+        frontend/A64/translate/impl/simd_three_same_extra.cpp
+        frontend/A64/translate/impl/simd_two_register_misc.cpp
+        frontend/A64/translate/impl/simd_vector_x_indexed_element.cpp
+        frontend/A64/translate/impl/sys_dc.cpp
+        frontend/A64/translate/impl/system.cpp
+        frontend/A64/translate/impl/system_flag_format.cpp
+        frontend/A64/translate/impl/system_flag_manipulation.cpp
+        frontend/A64/translate/translate.cpp
+        frontend/A64/translate/translate.h
+        ir_opt/a64_callback_config_pass.cpp
+        ir_opt/a64_get_set_elimination_pass.cpp
+        ir_opt/a64_merge_interpret_blocks.cpp
+    )
+endif()
+
 if (ARCHITECTURE_x86_64)
     target_sources(dynarmic PRIVATE
-         backend/x64/a32_emit_x64.cpp
-         backend/x64/a32_emit_x64.h
-         backend/x64/a32_interface.cpp
-         backend/x64/a32_jitstate.cpp
-         backend/x64/a32_jitstate.h
-         backend/x64/a64_emit_x64.cpp
-         backend/x64/a64_emit_x64.h
-         backend/x64/a64_exclusive_monitor.cpp
-         backend/x64/a64_interface.cpp
-         backend/x64/a64_jitstate.cpp
-         backend/x64/a64_jitstate.h
-         backend/x64/abi.cpp
-         backend/x64/abi.h
-         backend/x64/block_of_code.cpp
-         backend/x64/block_of_code.h
-         backend/x64/block_range_information.cpp
-         backend/x64/block_range_information.h
-         backend/x64/callback.cpp
-         backend/x64/callback.h
-         backend/x64/constant_pool.cpp
-         backend/x64/constant_pool.h
-         backend/x64/devirtualize.h
-         backend/x64/emit_x64.cpp
-         backend/x64/emit_x64.h
-         backend/x64/emit_x64_aes.cpp
-         backend/x64/emit_x64_crc32.cpp
-         backend/x64/emit_x64_data_processing.cpp
-         backend/x64/emit_x64_floating_point.cpp
-         backend/x64/emit_x64_packed.cpp
-         backend/x64/emit_x64_saturation.cpp
-         backend/x64/emit_x64_sm4.cpp
-         backend/x64/emit_x64_vector.cpp
-         backend/x64/emit_x64_vector_floating_point.cpp
-         backend/x64/exception_handler.h
-         backend/x64/hostloc.cpp
-         backend/x64/hostloc.h
-         backend/x64/jitstate_info.h
-         backend/x64/oparg.h
-         backend/x64/perf_map.cpp
-         backend/x64/perf_map.h
-         backend/x64/reg_alloc.cpp
-         backend/x64/reg_alloc.h
+        backend/x64/abi.cpp
+        backend/x64/abi.h
+        backend/x64/block_of_code.cpp
+        backend/x64/block_of_code.h
+        backend/x64/block_range_information.cpp
+        backend/x64/block_range_information.h
+        backend/x64/callback.cpp
+        backend/x64/callback.h
+        backend/x64/constant_pool.cpp
+        backend/x64/constant_pool.h
+        backend/x64/devirtualize.h
+        backend/x64/emit_x64.cpp
+        backend/x64/emit_x64.h
+        backend/x64/emit_x64_aes.cpp
+        backend/x64/emit_x64_crc32.cpp
+        backend/x64/emit_x64_data_processing.cpp
+        backend/x64/emit_x64_floating_point.cpp
+        backend/x64/emit_x64_packed.cpp
+        backend/x64/emit_x64_saturation.cpp
+        backend/x64/emit_x64_sm4.cpp
+        backend/x64/emit_x64_vector.cpp
+        backend/x64/emit_x64_vector_floating_point.cpp
+        backend/x64/exception_handler.h
+        backend/x64/hostloc.cpp
+        backend/x64/hostloc.h
+        backend/x64/jitstate_info.h
+        backend/x64/oparg.h
+        backend/x64/perf_map.cpp
+        backend/x64/perf_map.h
+        backend/x64/reg_alloc.cpp
+        backend/x64/reg_alloc.h
     )
+
+    if ("A32" IN_LIST DYNARMIC_FRONTENDS)
+        target_sources(dynarmic PRIVATE
+            backend/x64/a32_emit_x64.cpp
+            backend/x64/a32_emit_x64.h
+            backend/x64/a32_interface.cpp
+            backend/x64/a32_jitstate.cpp
+            backend/x64/a32_jitstate.h
+        )
+    endif()
+
+    if ("A64" IN_LIST DYNARMIC_FRONTENDS)
+        target_sources(dynarmic PRIVATE
+            backend/x64/a64_emit_x64.cpp
+            backend/x64/a64_emit_x64.h
+            backend/x64/a64_exclusive_monitor.cpp
+            backend/x64/a64_interface.cpp
+            backend/x64/a64_jitstate.cpp
+            backend/x64/a64_jitstate.h
+        )
+    endif()
 
     if (WIN32)
         target_sources(dynarmic PRIVATE backend/x64/exception_handler_windows.cpp)
