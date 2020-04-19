@@ -87,19 +87,21 @@ std::optional<int> ConvertRoundingModeToX64Immediate(FP::RoundingMode rounding_m
 }
 
 template<size_t fsize>
-void DenormalsAreZero(BlockOfCode& code, EmitContext& ctx, std::initializer_list<Xbyak::Xmm> to_daz, Xbyak::Xmm tmp) {
+void DenormalsAreZero(BlockOfCode& code, EmitContext& ctx, std::initializer_list<Xbyak::Xmm> to_daz) {
     if (ctx.FPCR().FZ()) {
         for (const Xbyak::Xmm& xmm : to_daz) {
-            // TODO: Optimize
-            code.movaps(tmp, code.MConst(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
-            code.andps(tmp, xmm);
+            code.movaps(xmm0, code.MConst(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
+            code.andps(xmm0, xmm);
             if constexpr (fsize == 32) {
-                code.pcmpgtd(tmp, code.MConst(xword, f32_smallest_normal - 1));
+                code.pcmpgtd(xmm0, code.MConst(xword, f32_smallest_normal - 1));
+            } else if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE42)) {
+                code.pcmpgtq(xmm0, code.MConst(xword, f64_smallest_normal - 1));
             } else {
-                code.pcmpgtq(tmp, code.MConst(xword, f64_smallest_normal - 1));
+                code.pcmpgtd(xmm0, code.MConst(xword, f64_smallest_normal - 1));
+                code.pshufd(xmm0, xmm0, 0b11100101);
             }
-            code.orps(tmp, code.MConst(xword, fsize == 32 ? f32_negative_zero : f64_negative_zero));
-            code.andps(xmm, tmp);
+            code.orps(xmm0, code.MConst(xword, fsize == 32 ? f32_negative_zero : f64_negative_zero));
+            code.andps(xmm, xmm0);
         }
     }
 }
@@ -407,7 +409,7 @@ static void EmitFPMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
     const Xbyak::Reg64 gpr_scratch = ctx.reg_alloc.ScratchGpr();
 
-    DenormalsAreZero<fsize>(code, ctx, {result, operand}, tmp);
+    DenormalsAreZero<fsize>(code, ctx, {result, operand});
 
     Xbyak::Label equal, end, nan;
 
@@ -468,7 +470,7 @@ static void EmitFPMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 
     Xbyak::Label end, z, nan, op2_is_nan, snan, maybe_both_nan, normal;
 
-    DenormalsAreZero<fsize>(code, ctx, {op1, op2}, xmm0);
+    DenormalsAreZero<fsize>(code, ctx, {op1, op2});
     FCODE(ucomis)(op1, op2);
     code.jz(z, code.T_NEAR);
     code.L(normal);
