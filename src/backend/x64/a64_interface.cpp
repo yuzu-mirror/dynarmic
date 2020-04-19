@@ -231,10 +231,12 @@ private:
         const auto get_code = [this](u64 vaddr) { return conf.callbacks->MemoryReadCode(vaddr); };
         IR::Block ir_block = A64::Translate(A64::LocationDescriptor{current_location}, get_code, {conf.define_unpredictable_behaviour});
         Optimization::A64CallbackConfigPass(ir_block, conf);
-        Optimization::A64GetSetElimination(ir_block);
-        Optimization::ConstantPropagation(ir_block);
-        Optimization::DeadCodeElimination(ir_block);
-        Optimization::A64MergeInterpretBlocksPass(ir_block, conf.callbacks);
+        if (conf.enable_optimizations) {
+            Optimization::A64GetSetElimination(ir_block);
+            Optimization::ConstantPropagation(ir_block);
+            Optimization::DeadCodeElimination(ir_block);
+            Optimization::A64MergeInterpretBlocksPass(ir_block, conf.callbacks);
+        }
         // printf("%s\n", IR::DumpBlock(ir_block).c_str());
         Optimization::VerificationPass(ir_block);
         return emitter.Emit(ir_block).entrypoint;

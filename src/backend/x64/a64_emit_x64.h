@@ -79,6 +79,7 @@ protected:
     void EmitExclusiveWrite(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize);
 
     // Microinstruction emitters
+    void EmitPushRSB(EmitContext& ctx, IR::Inst* inst);
 #define OPCODE(...)
 #define A32OPC(...)
 #define A64OPC(name, type, ...) void EmitA64##name(A64EmitContext& ctx, IR::Inst* inst);

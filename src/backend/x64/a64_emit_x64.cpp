@@ -350,6 +350,14 @@ void A64EmitX64::GenTerminalHandlers() {
     }
 }
 
+void A64EmitX64::EmitPushRSB(EmitContext& ctx, IR::Inst* inst) {
+    if (!conf.enable_optimizations) {
+        return;
+    }
+
+    EmitX64::EmitPushRSB(ctx, inst);
+}
+
 void A64EmitX64::EmitA64SetCheckBit(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Reg8 to_store = ctx.reg_alloc.UseGpr(args[0]).cvt8();
@@ -1156,6 +1164,13 @@ void A64EmitX64::EmitTerminalImpl(IR::Term::ReturnToDispatch, IR::LocationDescri
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDescriptor) {
+    if (!conf.enable_optimizations) {
+        code.mov(rax, A64::LocationDescriptor{terminal.next}.PC());
+        code.mov(qword[r15 + offsetof(A64JitState, pc)], rax);
+        code.ReturnFromRunCode();
+        return;
+    }
+
     code.cmp(qword[r15 + offsetof(A64JitState, cycles_remaining)], 0);
 
     patch_information[terminal.next].jg.emplace_back(code.getCurr());
@@ -1170,6 +1185,13 @@ void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor) {
+    if (!conf.enable_optimizations) {
+        code.mov(rax, A64::LocationDescriptor{terminal.next}.PC());
+        code.mov(qword[r15 + offsetof(A64JitState, pc)], rax);
+        code.ReturnFromRunCode();
+        return;
+    }
+
     patch_information[terminal.next].jmp.emplace_back(code.getCurr());
     if (auto next_bb = GetBasicBlock(terminal.next)) {
         EmitPatchJmp(terminal.next, next_bb->entrypoint);
@@ -1179,6 +1201,11 @@ void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::Location
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::PopRSBHint, IR::LocationDescriptor) {
+    if (!conf.enable_optimizations) {
+        code.ReturnFromRunCode();
+        return;
+    }
+
     code.jmp(terminal_handler_pop_rsb_hint);
 }
 

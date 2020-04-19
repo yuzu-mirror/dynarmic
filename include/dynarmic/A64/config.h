@@ -116,6 +116,14 @@ struct UserConfig {
     size_t processor_id = 0;
     ExclusiveMonitor* global_monitor = nullptr;
 
+    /// When set to false, this disables all optimizations than can't otherwise be disabled
+    /// by setting other configuration options. This includes:
+    /// - IR optimizations
+    /// - Block linking optimizations
+    /// - RSB optimizations
+    /// This is intended to be used for debugging.
+    bool enable_optimizations = true;
+
     /// When set to true, UserCallbacks::DataCacheOperationRaised will be called when any
     /// data cache instruction is executed. Notably DC ZVA will not implicitly do anything.
     /// When set to false, UserCallbacks::DataCacheOperationRaised will never be called.
