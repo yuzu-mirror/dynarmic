@@ -55,6 +55,7 @@ public:
     Type GetType() const;
 
     Inst* GetInst() const;
+    Inst* GetInstRecursive() const;
     A32::Reg GetA32RegRef() const;
     A32::ExtReg GetA32ExtRegRef() const;
     A64::Reg GetA64RegRef() const;

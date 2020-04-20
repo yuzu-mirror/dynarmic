@@ -110,6 +110,13 @@ Inst* Value::GetInst() const {
     return inner.inst;
 }
 
+Inst* Value::GetInstRecursive() const {
+    ASSERT(type == Type::Opaque);
+    if (IsIdentity())
+        return inner.inst->GetArg(0).GetInstRecursive();
+    return inner.inst;
+}
+
 bool Value::GetU1() const {
     if (IsIdentity())
         return inner.inst->GetArg(0).GetU1();
