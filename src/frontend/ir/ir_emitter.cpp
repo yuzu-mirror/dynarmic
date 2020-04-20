@@ -2607,12 +2607,4 @@ void IREmitter::SetTerm(const Terminal& terminal) {
     block.SetTerminal(terminal);
 }
 
-void IREmitter::SetInsertionPoint(IR::Inst* new_insertion_point) {
-    insertion_point = IR::Block::iterator{*new_insertion_point};
-}
-
-void IREmitter::SetInsertionPoint(IR::Block::iterator new_insertion_point) {
-    insertion_point = new_insertion_point;
-}
-
 } // namespace Dynarmic::IR

@@ -96,6 +96,7 @@ add_library(dynarmic
     ir_opt/constant_propagation_pass.cpp
     ir_opt/dead_code_elimination_pass.cpp
     ir_opt/identity_removal_pass.cpp
+    ir_opt/ir_matcher.h
     ir_opt/passes.h
     ir_opt/verification_pass.cpp
 )

@@ -30,7 +30,7 @@ void IdentityRemovalPass(IR::Block& block) {
             }
         }
 
-        if (inst.GetOpcode() == IR::Opcode::Identity) {
+        if (inst.GetOpcode() == IR::Opcode::Identity || inst.GetOpcode() == IR::Opcode::Void) {
             iter = block.Instructions().erase(inst);
             to_invalidate.push_back(&inst);
         } else {

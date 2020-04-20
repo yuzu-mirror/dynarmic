@@ -369,8 +369,13 @@ public:
 
     void SetTerm(const Terminal& terminal);
 
-    void SetInsertionPoint(IR::Inst* new_insertion_point);
-    void SetInsertionPoint(IR::Block::iterator new_insertion_point);
+    void SetInsertionPoint(IR::Inst* new_insertion_point) {
+        insertion_point = IR::Block::iterator{*new_insertion_point};
+    }
+
+    void SetInsertionPoint(IR::Block::iterator new_insertion_point) {
+        insertion_point = new_insertion_point;
+    }
 
 protected:
     IR::Block::iterator insertion_point;

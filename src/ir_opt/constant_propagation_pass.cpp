@@ -4,13 +4,22 @@
  * General Public License version 2 or any later version.
  */
 
+#include <optional>
+
+#include "common/assert.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "frontend/ir/basic_block.h"
+#include "frontend/ir/ir_emitter.h"
 #include "frontend/ir/opcodes.h"
+#include "ir_opt/ir_matcher.h"
 #include "ir_opt/passes.h"
 
 namespace Dynarmic::Optimization {
+
+using namespace IRMatcher;
+using Op = Dynarmic::IR::Opcode;
+
 namespace {
 
 // Tiny helper to avoid the need to store based off the opcode
@@ -89,17 +98,17 @@ void FoldAND(IR::Inst& inst, bool is_32_bit) {
 //
 // 1. imm -> swap(imm)
 //
-void FoldByteReverse(IR::Inst& inst, IR::Opcode op) {
+void FoldByteReverse(IR::Inst& inst, Op op) {
     const auto operand = inst.GetArg(0);
 
     if (!operand.IsImmediate()) {
         return;
     }
 
-    if (op == IR::Opcode::ByteReverseWord) {
+    if (op == Op::ByteReverseWord) {
         const u32 result = Common::Swap32(static_cast<u32>(operand.GetImmediateAsU64()));
         inst.ReplaceUsesWith(IR::Value{result});
-    } else if (op == IR::Opcode::ByteReverseHalf) {
+    } else if (op == Op::ByteReverseHalf) {
         const u16 result = Common::Swap16(static_cast<u16>(operand.GetImmediateAsU64()));
         inst.ReplaceUsesWith(IR::Value{result});
     } else {
@@ -188,7 +197,7 @@ void FoldMostSignificantBit(IR::Inst& inst) {
 }
 
 void FoldMostSignificantWord(IR::Inst& inst) {
-    IR::Inst* carry_inst = inst.GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    IR::Inst* carry_inst = inst.GetAssociatedPseudoOperation(Op::GetCarryFromOp);
 
     if (!inst.AreAllArgsImmediates()) {
         return;
@@ -239,21 +248,16 @@ void FoldNOT(IR::Inst& inst, bool is_32_bit) {
 // 3. 0 | y -> y
 //
 void FoldOR(IR::Inst& inst, bool is_32_bit) {
-    const auto lhs = inst.GetArg(0);
-    const auto rhs = inst.GetArg(1);
-
-    if (lhs.IsImmediate() && rhs.IsImmediate()) {
-        const u64 result = lhs.GetImmediateAsU64() | rhs.GetImmediateAsU64();
-        ReplaceUsesWith(inst, is_32_bit, result);
-    } else if (lhs.IsZero()) {
-        inst.ReplaceUsesWith(rhs);
-    } else if (rhs.IsZero()) {
-        inst.ReplaceUsesWith(lhs);
+    if (FoldCommutative(inst, is_32_bit, [](u64 a, u64 b) { return a | b; })) {
+        const auto rhs = inst.GetArg(1);
+        if (rhs.IsZero()) {
+            inst.ReplaceUsesWith(inst.GetArg(0));
+        }
     }
 }
 
 void FoldShifts(IR::Inst& inst) {
-    IR::Inst* carry_inst = inst.GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+    IR::Inst* carry_inst = inst.GetAssociatedPseudoOperation(Op::GetCarryFromOp);
 
     // The 32-bit variants can contain 3 arguments, while the
     // 64-bit variants only contain 2.
@@ -314,80 +318,80 @@ void ConstantPropagation(IR::Block& block) {
         const auto opcode = inst.GetOpcode();
 
         switch (opcode) {
-        case IR::Opcode::LeastSignificantWord:
+        case Op::LeastSignificantWord:
             FoldLeastSignificantWord(inst);
             break;
-        case IR::Opcode::MostSignificantWord:
+        case Op::MostSignificantWord:
             FoldMostSignificantWord(inst);
             break;
-        case IR::Opcode::LeastSignificantHalf:
+        case Op::LeastSignificantHalf:
             FoldLeastSignificantHalf(inst);
             break;
-        case IR::Opcode::LeastSignificantByte:
+        case Op::LeastSignificantByte:
             FoldLeastSignificantByte(inst);
             break;
-        case IR::Opcode::MostSignificantBit:
+        case Op::MostSignificantBit:
             FoldMostSignificantBit(inst);
             break;
-        case IR::Opcode::LogicalShiftLeft32:
-        case IR::Opcode::LogicalShiftLeft64:
-        case IR::Opcode::LogicalShiftRight32:
-        case IR::Opcode::LogicalShiftRight64:
-        case IR::Opcode::ArithmeticShiftRight32:
-        case IR::Opcode::ArithmeticShiftRight64:
-        case IR::Opcode::RotateRight32:
-        case IR::Opcode::RotateRight64:
+        case Op::LogicalShiftLeft32:
+        case Op::LogicalShiftLeft64:
+        case Op::LogicalShiftRight32:
+        case Op::LogicalShiftRight64:
+        case Op::ArithmeticShiftRight32:
+        case Op::ArithmeticShiftRight64:
+        case Op::RotateRight32:
+        case Op::RotateRight64:
             FoldShifts(inst);
             break;
-        case IR::Opcode::Mul32:
-        case IR::Opcode::Mul64:
-            FoldMultiply(inst, opcode == IR::Opcode::Mul32);
+        case Op::Mul32:
+        case Op::Mul64:
+            FoldMultiply(inst, opcode == Op::Mul32);
             break;
-        case IR::Opcode::SignedDiv32:
-        case IR::Opcode::SignedDiv64:
-            FoldDivide(inst, opcode == IR::Opcode::SignedDiv32, true);
+        case Op::SignedDiv32:
+        case Op::SignedDiv64:
+            FoldDivide(inst, opcode == Op::SignedDiv32, true);
             break;
-        case IR::Opcode::UnsignedDiv32:
-        case IR::Opcode::UnsignedDiv64:
-            FoldDivide(inst, opcode == IR::Opcode::UnsignedDiv32, false);
+        case Op::UnsignedDiv32:
+        case Op::UnsignedDiv64:
+            FoldDivide(inst, opcode == Op::UnsignedDiv32, false);
             break;
-        case IR::Opcode::And32:
-        case IR::Opcode::And64:
-            FoldAND(inst, opcode == IR::Opcode::And32);
+        case Op::And32:
+        case Op::And64:
+            FoldAND(inst, opcode == Op::And32);
             break;
-        case IR::Opcode::Eor32:
-        case IR::Opcode::Eor64:
-            FoldEOR(inst, opcode == IR::Opcode::Eor32);
+        case Op::Eor32:
+        case Op::Eor64:
+            FoldEOR(inst, opcode == Op::Eor32);
             break;
-        case IR::Opcode::Or32:
-        case IR::Opcode::Or64:
-            FoldOR(inst, opcode == IR::Opcode::Or32);
+        case Op::Or32:
+        case Op::Or64:
+            FoldOR(inst, opcode == Op::Or32);
             break;
-        case IR::Opcode::Not32:
-        case IR::Opcode::Not64:
-            FoldNOT(inst, opcode == IR::Opcode::Not32);
+        case Op::Not32:
+        case Op::Not64:
+            FoldNOT(inst, opcode == Op::Not32);
             break;
-        case IR::Opcode::SignExtendByteToWord:
-        case IR::Opcode::SignExtendHalfToWord:
+        case Op::SignExtendByteToWord:
+        case Op::SignExtendHalfToWord:
             FoldSignExtendXToWord(inst);
             break;
-        case IR::Opcode::SignExtendByteToLong:
-        case IR::Opcode::SignExtendHalfToLong:
-        case IR::Opcode::SignExtendWordToLong:
+        case Op::SignExtendByteToLong:
+        case Op::SignExtendHalfToLong:
+        case Op::SignExtendWordToLong:
             FoldSignExtendXToLong(inst);
             break;
-        case IR::Opcode::ZeroExtendByteToWord:
-        case IR::Opcode::ZeroExtendHalfToWord:
+        case Op::ZeroExtendByteToWord:
+        case Op::ZeroExtendHalfToWord:
             FoldZeroExtendXToWord(inst);
             break;
-        case IR::Opcode::ZeroExtendByteToLong:
-        case IR::Opcode::ZeroExtendHalfToLong:
-        case IR::Opcode::ZeroExtendWordToLong:
+        case Op::ZeroExtendByteToLong:
+        case Op::ZeroExtendHalfToLong:
+        case Op::ZeroExtendWordToLong:
             FoldZeroExtendXToLong(inst);
             break;
-        case IR::Opcode::ByteReverseWord:
-        case IR::Opcode::ByteReverseHalf:
-        case IR::Opcode::ByteReverseDual:
+        case Op::ByteReverseWord:
+        case Op::ByteReverseHalf:
+        case Op::ByteReverseDual:
             FoldByteReverse(inst, opcode);
             break;
         default:

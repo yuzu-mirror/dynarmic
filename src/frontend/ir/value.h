@@ -156,6 +156,8 @@ public:
     explicit TypedValue(const Value& value) : Value(value) {
         ASSERT((value.GetType() & type_) != Type::Void);
     }
+
+    explicit TypedValue(Inst* inst) : TypedValue(Value(inst)) {}
 };
 
 using U1 = TypedValue<Type::U1>;
