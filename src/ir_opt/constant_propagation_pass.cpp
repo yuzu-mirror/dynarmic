@@ -12,12 +12,10 @@
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/ir_emitter.h"
 #include "frontend/ir/opcodes.h"
-#include "ir_opt/ir_matcher.h"
 #include "ir_opt/passes.h"
 
 namespace Dynarmic::Optimization {
 
-using namespace IRMatcher;
 using Op = Dynarmic::IR::Opcode;
 
 namespace {

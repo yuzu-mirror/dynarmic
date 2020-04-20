@@ -85,6 +85,20 @@ bool TranslatorVisitor::UBFM(bool sf, bool N, Imm<6> immr, Imm<6> imms, Reg Rn, 
     return true;
 }
 
+bool TranslatorVisitor::ASR_1(Imm<5> immr, Reg Rn, Reg Rd) {
+    const auto src = X(32, Rn);
+    const auto result = ir.ArithmeticShiftRightMasked(src, ir.Imm32(immr.ZeroExtend<u32>()));
+    X(32, Rd, result);
+    return true;
+}
+
+bool TranslatorVisitor::ASR_2(Imm<6> immr, Reg Rn, Reg Rd) {
+    const auto src = X(64, Rn);
+    const auto result = ir.ArithmeticShiftRightMasked(src, ir.Imm64(immr.ZeroExtend<u64>()));
+    X(64, Rd, result);
+    return true;
+}
+
 bool TranslatorVisitor::SXTB_1(Reg Rn, Reg Rd) {
     const auto src = X(32, Rn);
     const auto result = ir.SignExtendToWord(ir.LeastSignificantByte(src));

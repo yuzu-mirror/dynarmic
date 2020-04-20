@@ -27,6 +27,8 @@ INST(MOVK,                   "MOVK",                                      "z1110
 INST(SBFM,                   "SBFM",                                      "z00100110Nrrrrrrssssssnnnnnddddd")
 INST(BFM,                    "BFM",                                       "z01100110Nrrrrrrssssssnnnnnddddd")
 INST(UBFM,                   "UBFM",                                      "z10100110Nrrrrrrssssssnnnnnddddd")
+INST(ASR_1,                  "ASR (immediate, 32-bit)",                   "00010011000rrrrr011111nnnnnddddd")
+INST(ASR_2,                  "ASR (immediate, 64-bit)",                   "1001001101rrrrrr111111nnnnnddddd")
 INST(SXTB_1,                 "SXTB (32-bit)",                             "0001001100000000000111nnnnnddddd")
 INST(SXTB_2,                 "SXTB (64-bit)",                             "1001001101000000000111nnnnnddddd")
 INST(SXTH_1,                 "SXTH (32-bit)",                             "0001001100000000001111nnnnnddddd")
