@@ -85,6 +85,41 @@ bool TranslatorVisitor::UBFM(bool sf, bool N, Imm<6> immr, Imm<6> imms, Reg Rn, 
     return true;
 }
 
+bool TranslatorVisitor::SXTB_1(Reg Rn, Reg Rd) {
+    const auto src = X(32, Rn);
+    const auto result = ir.SignExtendToWord(ir.LeastSignificantByte(src));
+    X(32, Rd, result);
+    return true;
+}
+
+bool TranslatorVisitor::SXTB_2(Reg Rn, Reg Rd) {
+    const auto src = X(64, Rn);
+    const auto result = ir.SignExtendToLong(ir.LeastSignificantByte(src));
+    X(64, Rd, result);
+    return true;
+}
+
+bool TranslatorVisitor::SXTH_1(Reg Rn, Reg Rd) {
+    const auto src = X(32, Rn);
+    const auto result = ir.SignExtendToWord(ir.LeastSignificantHalf(src));
+    X(32, Rd, result);
+    return true;
+}
+
+bool TranslatorVisitor::SXTH_2(Reg Rn, Reg Rd) {
+    const auto src = X(64, Rn);
+    const auto result = ir.SignExtendToLong(ir.LeastSignificantHalf(src));
+    X(64, Rd, result);
+    return true;
+}
+
+bool TranslatorVisitor::SXTW(Reg Rn, Reg Rd) {
+    const auto src = X(64, Rn);
+    const auto result = ir.SignExtendToLong(ir.LeastSignificantWord(src));
+    X(64, Rd, result);
+    return true;
+}
+
 bool TranslatorVisitor::EXTR(bool sf, bool N, Reg Rm, Imm<6> imms, Reg Rn, Reg Rd) {
     if (N != sf) {
         return UnallocatedEncoding();

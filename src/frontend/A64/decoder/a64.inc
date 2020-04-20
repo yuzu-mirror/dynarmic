@@ -27,6 +27,11 @@ INST(MOVK,                   "MOVK",                                      "z1110
 INST(SBFM,                   "SBFM",                                      "z00100110Nrrrrrrssssssnnnnnddddd")
 INST(BFM,                    "BFM",                                       "z01100110Nrrrrrrssssssnnnnnddddd")
 INST(UBFM,                   "UBFM",                                      "z10100110Nrrrrrrssssssnnnnnddddd")
+INST(SXTB_1,                 "SXTB (32-bit)",                             "0001001100000000000111nnnnnddddd")
+INST(SXTB_2,                 "SXTB (64-bit)",                             "1001001101000000000111nnnnnddddd")
+INST(SXTH_1,                 "SXTH (32-bit)",                             "0001001100000000001111nnnnnddddd")
+INST(SXTH_2,                 "SXTH (64-bit)",                             "1001001101000000001111nnnnnddddd")
+INST(SXTW,                   "SXTW",                                      "1001001101000000011111nnnnnddddd")
 
 // Data processing - Immediate - Extract
 INST(EXTR,                   "EXTR",                                      "z00100111N0mmmmmssssssnnnnnddddd")

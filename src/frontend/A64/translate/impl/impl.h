@@ -94,6 +94,11 @@ struct TranslatorVisitor final {
     bool SBFM(bool sf, bool N, Imm<6> immr, Imm<6> imms, Reg Rn, Reg Rd);
     bool BFM(bool sf, bool N, Imm<6> immr, Imm<6> imms, Reg Rn, Reg Rd);
     bool UBFM(bool sf, bool N, Imm<6> immr, Imm<6> imms, Reg Rn, Reg Rd);
+    bool SXTB_1(Reg Rn, Reg Rd);
+    bool SXTB_2(Reg Rn, Reg Rd);
+    bool SXTH_1(Reg Rn, Reg Rd);
+    bool SXTH_2(Reg Rn, Reg Rd);
+    bool SXTW(Reg Rn, Reg Rd);
 
     // Data processing - Immediate - Extract
     bool EXTR(bool sf, bool N, Reg Rm, Imm<6> imms, Reg Rn, Reg Rd);
