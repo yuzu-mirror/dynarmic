@@ -21,13 +21,14 @@ class Block;
 
 namespace Dynarmic::Optimization {
 
-void A32GetSetElimination(IR::Block& block);
 void A32ConstantMemoryReads(IR::Block& block, A32::UserCallbacks* cb);
+void A32GetSetElimination(IR::Block& block);
 void A64CallbackConfigPass(IR::Block& block, const A64::UserConfig& conf);
 void A64GetSetElimination(IR::Block& block);
 void A64MergeInterpretBlocksPass(IR::Block& block, A64::UserCallbacks* cb);
 void ConstantPropagation(IR::Block& block);
 void DeadCodeElimination(IR::Block& block);
+void IdentityRemovalPass(IR::Block& block);
 void VerificationPass(const IR::Block& block);
 
 } // namespace Dynarmic::Optimization

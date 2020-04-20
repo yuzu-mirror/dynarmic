@@ -1,0 +1,46 @@
+/* This file is part of the dynarmic project.
+ * Copyright (c) 2020 MerryMage
+ * This software may be used and distributed according to the terms of the GNU
+ * General Public License version 2 or any later version.
+ */
+
+#include <vector>
+
+#include "common/iterator_util.h"
+#include "frontend/ir/basic_block.h"
+#include "frontend/ir/opcodes.h"
+#include "ir_opt/passes.h"
+
+namespace Dynarmic::Optimization {
+
+void IdentityRemovalPass(IR::Block& block) {
+    std::vector<IR::Inst*> to_invalidate;
+
+    auto iter = block.begin();
+    while (iter != block.end()) {
+        IR::Inst& inst = *iter;
+
+        const size_t num_args = inst.NumArgs();
+        for (size_t i = 0; i < num_args; i++) {
+            while (true) {
+                IR::Value arg = inst.GetArg(i);
+                if (!arg.IsIdentity())
+                    break;
+                inst.SetArg(i, arg.GetInst()->GetArg(0));
+            }
+        }
+
+        if (inst.GetOpcode() == IR::Opcode::Identity) {
+            iter = block.Instructions().erase(inst);
+            to_invalidate.push_back(&inst);
+        } else {
+            ++iter;
+        }
+    }
+
+    for (IR::Inst* inst : to_invalidate) {
+        inst->Invalidate();
+    }
+}
+
+} // namespace Dynarmic
