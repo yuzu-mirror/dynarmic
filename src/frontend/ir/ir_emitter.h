@@ -152,6 +152,7 @@ public:
     U64 ByteReverseDual(const U64& a);
     U32U64 CountLeadingZeros(const U32U64& a);
     U32U64 ExtractRegister(const U32U64& a, const U32U64& b, const U8& lsb);
+    U32U64 ReplicateBit(const U32U64& a, u8 bit);
     U32U64 MaxSigned(const U32U64& a, const U32U64& b);
     U32U64 MaxUnsigned(const U32U64& a, const U32U64& b);
     U32U64 MinSigned(const U32U64& a, const U32U64& b);

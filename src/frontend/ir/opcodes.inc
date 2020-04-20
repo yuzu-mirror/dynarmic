@@ -159,6 +159,8 @@ OPCODE(CountLeadingZeros32,                                 U32,            U32 
 OPCODE(CountLeadingZeros64,                                 U64,            U64                                                             )
 OPCODE(ExtractRegister32,                                   U32,            U32,            U32,            U8                              )
 OPCODE(ExtractRegister64,                                   U64,            U64,            U64,            U8                              )
+OPCODE(ReplicateBit32,                                      U32,            U32,            U8                                              )
+OPCODE(ReplicateBit64,                                      U64,            U64,            U8                                              )
 OPCODE(MaxSigned32,                                         U32,            U32,            U32                                             )
 OPCODE(MaxSigned64,                                         U64,            U64,            U64                                             )
 OPCODE(MaxUnsigned32,                                       U32,            U32,            U32                                             )

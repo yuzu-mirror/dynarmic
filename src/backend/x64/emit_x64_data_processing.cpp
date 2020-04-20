@@ -222,6 +222,38 @@ void EmitX64::EmitExtractRegister64(Dynarmic::Backend::X64::EmitContext& ctx, IR
     EmitExtractRegister(code, ctx, inst, 64);
 }
 
+static void EmitReplicateBit(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit_size) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const u8 bit = args[1].GetImmediateU8();
+
+    if (bit == bit_size - 1) {
+        const Xbyak::Reg result = ctx.reg_alloc.UseScratchGpr(args[0]).changeBit(bit_size);
+
+        code.sar(result, bit_size - 1);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
+    const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bit_size);
+    const Xbyak::Reg result = ctx.reg_alloc.ScratchGpr().changeBit(bit_size);
+
+    code.xor_(result, result);
+    code.bt(value, bit);
+    code.sbb(result, result);
+
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+void EmitX64::EmitReplicateBit32(Dynarmic::Backend::X64::EmitContext& ctx, IR::Inst* inst) {
+    EmitReplicateBit(code, ctx, inst, 32);
+}
+
+void EmitX64::EmitReplicateBit64(Dynarmic::Backend::X64::EmitContext& ctx, IR::Inst* inst) {
+    EmitReplicateBit(code, ctx, inst, 64);
+}
+
 void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
     const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 

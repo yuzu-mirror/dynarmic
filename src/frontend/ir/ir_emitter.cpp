@@ -469,6 +469,16 @@ U32U64 IREmitter::ExtractRegister(const U32U64& a, const U32U64& b, const U8& ls
     return Inst<U64>(Opcode::ExtractRegister64, a, b, lsb);
 }
 
+U32U64 IREmitter::ReplicateBit(const U32U64& a, u8 bit) {
+    if (a.GetType() == IR::Type::U32) {
+        ASSERT(bit < 32);
+        return Inst<U32>(Opcode::ReplicateBit32, a, Imm8(bit));
+    }
+
+    ASSERT(bit < 64);
+    return Inst<U64>(Opcode::ReplicateBit64, a, Imm8(bit));
+}
+
 U32U64 IREmitter::MaxSigned(const U32U64& a, const U32U64& b) {
     if (a.GetType() == IR::Type::U32) {
         return Inst<U32>(Opcode::MaxSigned32, a, b);

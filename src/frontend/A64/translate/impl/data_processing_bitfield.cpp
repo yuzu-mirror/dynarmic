@@ -8,12 +8,6 @@
 
 namespace Dynarmic::A64 {
 
-static IR::U32U64 ReplicateBit(IREmitter& ir, const IR::U32U64& value, u8 bit_position_to_replicate) {
-    const u8 datasize = value.GetType() == IR::Type::U64 ? 64 : 32;
-    const auto bit = ir.LogicalShiftLeft(value, ir.Imm8(datasize - 1 - bit_position_to_replicate));
-    return ir.ArithmeticShiftRight(bit, ir.Imm8(datasize - 1));
-}
-
 bool TranslatorVisitor::SBFM(bool sf, bool N, Imm<6> immr, Imm<6> imms, Reg Rn, Reg Rd) {
     if (sf && !N) {
         return ReservedValue();
@@ -34,7 +28,7 @@ bool TranslatorVisitor::SBFM(bool sf, bool N, Imm<6> immr, Imm<6> imms, Reg Rn, 
     const auto src = X(datasize, Rn);
 
     auto bot = ir.And(ir.RotateRight(src, ir.Imm8(R)), I(datasize, masks->wmask));
-    auto top = ReplicateBit(ir, src, S);
+    auto top = ir.ReplicateBit(src, S);
 
     top = ir.And(top, I(datasize, ~masks->tmask));
     bot = ir.And(bot, I(datasize, masks->tmask));
