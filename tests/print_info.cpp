@@ -27,6 +27,7 @@
 #include "frontend/A64/translate/impl/impl.h"
 #include "frontend/A64/translate/translate.h"
 #include "frontend/ir/basic_block.h"
+#include "ir_opt/passes.h"
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
@@ -54,7 +55,7 @@ void PrintA32Instruction(u32 instruction) {
     const A32::LocationDescriptor location{0, {}, {}};
     IR::Block block{location};
     const bool should_continue = A32::TranslateSingleInstruction(block, location, instruction);
-    fmt::print("should_continue: {}\n", should_continue);
+    fmt::print("should_continue: {}\n\n", should_continue);
     fmt::print("IR:\n");
     fmt::print("{}\n", IR::DumpBlock(block));
 }
@@ -66,8 +67,16 @@ void PrintA64Instruction(u32 instruction) {
     const A64::LocationDescriptor location{0, {}};
     IR::Block block{location};
     const bool should_continue = A64::TranslateSingleInstruction(block, location, instruction);
-    fmt::print("should_continue: {}\n", should_continue);
+    fmt::print("should_continue: {}\n\n", should_continue);
     fmt::print("IR:\n");
+    fmt::print("{}\n", IR::DumpBlock(block));
+
+    Optimization::A64GetSetElimination(block);
+    Optimization::ConstantPropagation(block);
+    Optimization::DeadCodeElimination(block);
+    Optimization::IdentityRemovalPass(block);
+
+    fmt::print("Optimized IR:\n");
     fmt::print("{}\n", IR::DumpBlock(block));
 }
 
