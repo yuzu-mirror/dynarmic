@@ -23,6 +23,49 @@ void ReplaceUsesWith(IR::Inst& inst, bool is_32_bit, u64 value) {
     }
 }
 
+IR::Value Value(bool is_32_bit, u64 value) {
+    return is_32_bit ? IR::Value{static_cast<u32>(value)} : IR::Value{value};
+}
+
+template <typename ImmFn>
+bool FoldCommutative(IR::Inst& inst, bool is_32_bit, ImmFn imm_fn) {
+    const auto lhs = inst.GetArg(0);
+    const auto rhs = inst.GetArg(1);
+
+    const bool is_lhs_immediate = lhs.IsImmediate();
+    const bool is_rhs_immediate = rhs.IsImmediate();
+
+    if (is_lhs_immediate && is_rhs_immediate) {
+        const u64 result = imm_fn(lhs.GetImmediateAsU64(), rhs.GetImmediateAsU64());
+        ReplaceUsesWith(inst, is_32_bit, result);
+        return false;
+    }
+
+    if (is_lhs_immediate && !is_rhs_immediate) {
+        const IR::Inst* rhs_inst = rhs.GetInstRecursive();
+        if (rhs_inst->GetOpcode() == inst.GetOpcode() && rhs_inst->GetArg(1).IsImmediate()) {
+            const u64 combined = imm_fn(lhs.GetImmediateAsU64(), rhs_inst->GetArg(1).GetImmediateAsU64());
+            inst.SetArg(0, rhs_inst->GetArg(0));
+            inst.SetArg(1, Value(is_32_bit, combined));
+        } else {
+            // Normalize
+            inst.SetArg(0, rhs);
+            inst.SetArg(1, lhs);
+        }
+    }
+
+    if (!is_lhs_immediate && is_rhs_immediate) {
+        const IR::Inst* lhs_inst = lhs.GetInstRecursive();
+        if (lhs_inst->GetOpcode() == inst.GetOpcode() && lhs_inst->GetArg(1).IsImmediate()) {
+            const u64 combined = imm_fn(rhs.GetImmediateAsU64(), lhs_inst->GetArg(1).GetImmediateAsU64());
+            inst.SetArg(0, lhs_inst->GetArg(0));
+            inst.SetArg(1, Value(is_32_bit, combined));
+        }
+    }
+
+    return true;
+}
+
 // Folds AND operations based on the following:
 //
 // 1. imm_x & imm_y -> result
@@ -32,21 +75,13 @@ void ReplaceUsesWith(IR::Inst& inst, bool is_32_bit, u64 value) {
 // 5. x & y -> x (where y has all bits set to 1)
 //
 void FoldAND(IR::Inst& inst, bool is_32_bit) {
-    const auto lhs = inst.GetArg(0);
-    const auto rhs = inst.GetArg(1);
-
-    const bool is_lhs_immediate = lhs.IsImmediate();
-    const bool is_rhs_immediate = rhs.IsImmediate();
-
-    if (is_lhs_immediate && is_rhs_immediate) {
-        const u64 result = lhs.GetImmediateAsU64() & rhs.GetImmediateAsU64();
-        ReplaceUsesWith(inst, is_32_bit, result);
-    } else if (lhs.IsZero() || rhs.IsZero()) {
-        ReplaceUsesWith(inst, is_32_bit, 0);
-    } else if (is_lhs_immediate && lhs.HasAllBitsSet()) {
-        inst.ReplaceUsesWith(rhs);
-    } else if (is_rhs_immediate && rhs.HasAllBitsSet()) {
-        inst.ReplaceUsesWith(lhs);
+    if (FoldCommutative(inst, is_32_bit, [](u64 a, u64 b) { return a & b; })) {
+        const auto rhs = inst.GetArg(1);
+        if (rhs.IsZero()) {
+            ReplaceUsesWith(inst, is_32_bit, 0);
+        } else if (rhs.HasAllBitsSet()) {
+            inst.ReplaceUsesWith(inst.GetArg(0));
+        }
     }
 }
 
@@ -108,16 +143,11 @@ void FoldDivide(IR::Inst& inst, bool is_32_bit, bool is_signed) {
 // 3. 0 ^ y -> y
 //
 void FoldEOR(IR::Inst& inst, bool is_32_bit) {
-    const auto lhs = inst.GetArg(0);
-    const auto rhs = inst.GetArg(1);
-
-    if (lhs.IsImmediate() && rhs.IsImmediate()) {
-        const u64 result = lhs.GetImmediateAsU64() ^ rhs.GetImmediateAsU64();
-        ReplaceUsesWith(inst, is_32_bit, result);
-    } else if (lhs.IsZero()) {
-        inst.ReplaceUsesWith(rhs);
-    } else if (rhs.IsZero()) {
-        inst.ReplaceUsesWith(lhs);
+    if (FoldCommutative(inst, is_32_bit, [](u64 a, u64 b) { return a ^ b; })) {
+        const auto rhs = inst.GetArg(1);
+        if (rhs.IsZero()) {
+            inst.ReplaceUsesWith(inst.GetArg(0));
+        }
     }
 }
 
@@ -180,18 +210,13 @@ void FoldMostSignificantWord(IR::Inst& inst) {
 // 5. 1 * y -> y
 //
 void FoldMultiply(IR::Inst& inst, bool is_32_bit) {
-    const auto lhs = inst.GetArg(0);
-    const auto rhs = inst.GetArg(1);
-
-    if (lhs.IsImmediate() && rhs.IsImmediate()) {
-        const u64 result = lhs.GetImmediateAsU64() * rhs.GetImmediateAsU64();
-        ReplaceUsesWith(inst, is_32_bit, result);
-    } else if (lhs.IsZero() || rhs.IsZero()) {
-        ReplaceUsesWith(inst, is_32_bit, 0);
-    } else if (lhs.IsUnsignedImmediate(1)) {
-        inst.ReplaceUsesWith(rhs);
-    } else if (rhs.IsUnsignedImmediate(1)) {
-        inst.ReplaceUsesWith(lhs);
+    if (FoldCommutative(inst, is_32_bit, [](u64 a, u64 b) { return a * b; })) {
+        const auto rhs = inst.GetArg(1);
+        if (rhs.IsZero()) {
+            ReplaceUsesWith(inst, is_32_bit, 0);
+        } else if (rhs.IsUnsignedImmediate(1)) {
+            inst.ReplaceUsesWith(inst.GetArg(0));
+        }
     }
 }
 
