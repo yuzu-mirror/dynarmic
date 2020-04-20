@@ -61,10 +61,16 @@ Value::Value(Cond value) : type(Type::Cond) {
     inner.imm_cond = value;
 }
 
-bool Value::IsImmediate() const {
+bool Value::IsIdentity() const {
     if (type == Type::Opaque)
-        return inner.inst->GetOpcode() == Opcode::Identity ? inner.inst->GetArg(0).IsImmediate() : false;
-    return true;
+        return inner.inst->GetOpcode() == Opcode::Identity;
+    return false;
+}
+
+bool Value::IsImmediate() const {
+    if (IsIdentity())
+        return inner.inst->GetArg(0).IsImmediate();
+    return type != Type::Opaque;
 }
 
 bool Value::IsEmpty() const {
@@ -72,13 +78,10 @@ bool Value::IsEmpty() const {
 }
 
 Type Value::GetType() const {
-    if (type == Type::Opaque) {
-        if (inner.inst->GetOpcode() == Opcode::Identity) {
-            return inner.inst->GetArg(0).GetType();
-        } else {
-            return inner.inst->GetType();
-        }
-    }
+    if (IsIdentity())
+        return inner.inst->GetArg(0).GetType();
+    if (type == Type::Opaque)
+        return inner.inst->GetType();
     return type;
 }
 
@@ -108,49 +111,49 @@ Inst* Value::GetInst() const {
 }
 
 bool Value::GetU1() const {
-    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+    if (IsIdentity())
         return inner.inst->GetArg(0).GetU1();
     ASSERT(type == Type::U1);
     return inner.imm_u1;
 }
 
 u8 Value::GetU8() const {
-    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+    if (IsIdentity())
         return inner.inst->GetArg(0).GetU8();
     ASSERT(type == Type::U8);
     return inner.imm_u8;
 }
 
 u16 Value::GetU16() const {
-    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+    if (IsIdentity())
         return inner.inst->GetArg(0).GetU16();
     ASSERT(type == Type::U16);
     return inner.imm_u16;
 }
 
 u32 Value::GetU32() const {
-    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+    if (IsIdentity())
         return inner.inst->GetArg(0).GetU32();
     ASSERT(type == Type::U32);
     return inner.imm_u32;
 }
 
 u64 Value::GetU64() const {
-    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+    if (IsIdentity())
         return inner.inst->GetArg(0).GetU64();
     ASSERT(type == Type::U64);
     return inner.imm_u64;
 }
 
 Value::CoprocessorInfo Value::GetCoprocInfo() const {
-    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+    if (IsIdentity())
         return inner.inst->GetArg(0).GetCoprocInfo();
     ASSERT(type == Type::CoprocInfo);
     return inner.imm_coproc;
 }
 
 Cond Value::GetCond() const {
-    if (type == Type::Opaque && inner.inst->GetOpcode() == Opcode::Identity)
+    if (IsIdentity())
         return inner.inst->GetArg(0).GetCond();
     ASSERT(type == Type::Cond);
     return inner.imm_cond;

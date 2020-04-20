@@ -49,6 +49,7 @@ public:
     explicit Value(CoprocessorInfo value);
     explicit Value(Cond value);
 
+    bool IsIdentity() const;
     bool IsEmpty() const;
     bool IsImmediate() const;
     Type GetType() const;
