@@ -337,6 +337,16 @@ void ConstantPropagation(IR::Block& block) {
         case Op::MostSignificantBit:
             FoldMostSignificantBit(inst);
             break;
+        case Op::IsZero32:
+            if (inst.AreAllArgsImmediates()) {
+                inst.ReplaceUsesWith(IR::Value{inst.GetArg(0).GetU32() == 0});
+            }
+            break;
+        case Op::IsZero64:
+            if (inst.AreAllArgsImmediates()) {
+                inst.ReplaceUsesWith(IR::Value{inst.GetArg(0).GetU64() == 0});
+            }
+            break;
         case Op::LogicalShiftLeft32:
             if (FoldShifts(inst)) {
                 ReplaceUsesWith(inst, true, Safe::LogicalShiftLeft<u32>(inst.GetArg(0).GetU32(), inst.GetArg(1).GetU8()));
