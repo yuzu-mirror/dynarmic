@@ -1,11 +1,11 @@
-/* Ehis file is part of the mp project.
+/* This file is part of the mp project.
  * Copyright (c) 2017 MerryMage
  * SPDX-License-Identifier: 0BSD
  */
 
 #pragma once
 
-#include <type_traits>
+#include <mp/metavalue/value.h>
 
 namespace mp {
 
@@ -15,7 +15,7 @@ struct contains;
 
 template<template<class...> class LT, class... Ts, class T>
 struct contains<LT<Ts...>, T>
-    : public std::bool_constant<(false || ... || std::is_same_v<Ts, T>)>
+    : bool_value<(false || ... || std::is_same_v<Ts, T>)>
 {};
 
 /// Does list L contain an element which is same as type T?

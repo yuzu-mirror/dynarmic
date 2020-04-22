@@ -53,14 +53,15 @@ A metavalue is a type of template `std::integral_constant`.
 
 ### Constants
 
-* [`std::true_type`](https://en.cppreference.com/w/cpp/types/integral_constant)
-* [`std::false_type`](https://en.cppreference.com/w/cpp/types/integral_constant)
+* mp::true_type: Aliases to [`std::true_type`](https://en.cppreference.com/w/cpp/types/integral_constant)
+* mp::false_type: Aliases to [`mp::false_type`](https://en.cppreference.com/w/cpp/types/integral_constant)
 
 ### Constructor
 
-* [`std::integral_constant`](https://en.cppreference.com/w/cpp/types/integral_constant)
-* [`std::bool_constant`](https://en.cppreference.com/w/cpp/types/integral_constant)
-* `mp::lift_value`: Lifts a value to become a metavalue
+* mp::value: Aliases to [`std::integral_constant`](https://en.cppreference.com/w/cpp/types/integral_constant)
+* mp::bool_value: Aliases to [`std::bool_constant`](https://en.cppreference.com/w/cpp/types/integral_constant)
+* mp::size_value: Constructs a metavalue with value of type std::size_t
+* `mp::lift_value`: Lifts a value of any arbitrary type to become a metavalue
 
 ### Conversions
 
@@ -69,9 +70,18 @@ A metavalue is a type of template `std::integral_constant`.
 ### Operations
 
 * `mp::value_equal`: Compares value equality, ignores type. Use `std::is_same` for strict comparison.
-* [`std::negation`](https://en.cppreference.com/w/cpp/types/negation)
-* [`std::conjunction`](https://en.cppreference.com/w/cpp/types/conjunction)
-* [`std::disjunction`](https://en.cppreference.com/w/cpp/types/disjunction)
+* `mp::logic_if`: Like std::conditional but has a bool metavalue as first argument.
+* `mp::bit_not`: Bitwise not
+* `mp::bit_and`: Bitwise and
+* `mp::bit_or`: Bitwise or
+* `mp::bit_xor`: Bitwise xor
+* `mp::logic_not`: Logical not
+* `mp::logic_and`: Logical conjunction (no short circuiting, always results in a mp:bool_value)
+* `mp::logic_or`: Logical disjunction (no short circuiting, always results in a mp:bool_value)
+* `mp::conjunction`: Logical conjunction (with short circuiting, preserves type)
+* `mp::disjunction`: Logical disjunction (with short circuiting, preserves type)
+* `mp::sum`: Sum of values
+* `mp::product`: Product of values
 
 `metafunction`
 --------------

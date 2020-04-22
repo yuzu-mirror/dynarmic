@@ -10,10 +10,13 @@
 #include <type_traits>
 #include <utility>
 
+#include <mp/metavalue/value.h>
+
 #include <mp/typelist/append.h>
 #include <mp/typelist/cartesian_product.h>
 #include <mp/typelist/concat.h>
 #include <mp/typelist/contains.h>
+#include <mp/typelist/drop.h>
 #include <mp/typelist/get.h>
 #include <mp/typelist/head.h>
 #include <mp/typelist/length.h>
@@ -60,6 +63,14 @@ static_assert(!contains_v<list<>, int>);
 static_assert(!contains_v<list<double>, int>);
 static_assert(contains_v<list<double, int>, int>);
 
+// drop
+
+static_assert(std::is_same_v<list<>, drop<3, list<int, int>>>);
+static_assert(std::is_same_v<list<>, drop<3, list<int, int, int>>>);
+static_assert(std::is_same_v<list<int>, drop<3, list<int, int, int, int>>>);
+static_assert(std::is_same_v<list<double>, drop<3, list<int, int, int, double>>>);
+static_assert(std::is_same_v<list<int, double, bool>, drop<0, list<int, double, bool>>>);
+
 // get
 
 static_assert(std::is_same_v<get<0, list<int, double>>, int>);
@@ -81,13 +92,13 @@ static_assert(length_v<list<int, int, int>> == 3);
 static_assert(
     std::is_same_v<
         lift_sequence<std::make_index_sequence<3>>,
-        list<std::integral_constant<std::size_t, 0>, std::integral_constant<std::size_t, 1>, std::integral_constant<std::size_t, 2>>
+        list<size_value<0>, size_value<1>, size_value<2>>
     >
 );
 
 // lower_to_tuple
 
-static_assert(lower_to_tuple_v<list<std::integral_constant<std::size_t, 0>, std::integral_constant<std::size_t, 1>, std::integral_constant<std::size_t, 2>>> == std::tuple<std::size_t, std::size_t, std::size_t>(0, 1, 2));
+static_assert(lower_to_tuple_v<list<size_value<0>, size_value<1>, size_value<2>>> == std::tuple<std::size_t, std::size_t, std::size_t>(0, 1, 2));
 static_assert(lower_to_tuple_v<list<std::true_type, std::false_type>> == std::make_tuple(true, false));
 
 // prepend
