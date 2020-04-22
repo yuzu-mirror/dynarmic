@@ -1,5 +1,5 @@
 
-    C++用x86(IA-32), x64(AMD64, x86-64) JITアセンブラ Xbyak 5.67
+    C++用x86(IA-32), x64(AMD64, x86-64) JITアセンブラ Xbyak 5.77
 
 -----------------------------------------------------------------------------
 ◎概要
@@ -245,8 +245,8 @@ void func2()
 
 更にラベルの割り当てを行うassignL(dstLabel, srcLabel)という命令も追加されました。
 
-      Label label1, label2;
-    L(label1);
+      Label label2;
+    Label label1 = L(); // Label label1; L(label1);と同じ意味
       ...
       jmp(label2);
       ...
@@ -309,6 +309,41 @@ bool CodeArray::protect(const void *addr, size_t size, bool canExec);
 */
 uint8 *CodeArray::getAlignedAddress(uint8 *addr, size_t alignedSize = ALIGN_SIZE);
 
+・read/execモード
+デフォルトのCodeGeneratorはコンストラクト時にJIT用の領域をread/write/execモードに設定して利用します。
+コード生成時はread/writeでコード実行時にはread/execにしたい場合、次のようにしてください。
+
+struct Code : Xbyak::CodeGenerator {
+    Code()
+        : Xbyak::CodeGenerator(4096, Xbyak::DontUseProtect) // JIT領域をread/writeのままコード生成
+    {
+        mov(eax, 123);
+        ret();
+    }
+};
+
+Code c;
+c.setProtectModeRE(); // read/execモードに変更
+// JIT領域を実行
+
+AutoGrowの場合はreadyの代わりにreadyRE()を読んでください。
+
+struct Code : Xbyak::CodeGenerator {
+    Code()
+        : Xbyak::CodeGenerator(4096, Xbyak::AutoGrow) // JIT領域をread/writeのままコード生成
+    {
+        mov(eax, 123);
+        ret();
+    }
+};
+
+Code c;
+c.readyRE(); // read/exeモードに変更
+// JIT領域を実行
+
+setProtectModeRW()を呼ぶと領域が元のread/execモードに戻ります。
+
+
 その他詳細は各種サンプルを参照してください。
 -----------------------------------------------------------------------------
 ◎マクロ
@@ -338,6 +373,17 @@ sample/{echo,hello}.bfは http://www.kmonos.net/alang/etc/brainfuck.php から
 -----------------------------------------------------------------------------
 ◎履歴
 
+2019/03/06 ver 5.77 LLCキャッシュを共有数CPU数の修整(by densamoilov)
+2019/01/17 ver 5.76 Cpu::getNumCores()追加(by shelleygoel)
+2018/10/31 ver 5.751 互換性のためにXbyak::CastToの復元
+2018/10/29 ver 5.75 LabelManagerのデストラクタでLabelから参照を切り離す
+2018/10/21 ver 5.74 RegRip +/intの形をサポート Xbyak::CastToを削除
+2018/10/15 util::StackFrameでmovの代わりにpush/popを使う
+2018/09/19 ver 5.73 vpslld, vpslldq, vpsllwなどの(reg, mem, imm8)に対するevexエンコーディング修整
+2018/09/19 ver 5.72 fix the encoding of vinsertps for disp8N(Thanks to petercaday)
+2018/08/27 ver 5.71 新しいlabelインスタンスを返すL()を追加
+2018/08/27 ver 5.70 read/exec設定のためのsetProtectMode()とDontUseProtectの追加
+2018/08/24 ver 5.68 indexが16以上のVSIBエンコーディングのバグ修正(thanks to petercaday)
 2018/08/14 ver 5.67 Addressクラス内のmutableを削除 ; fix setCacheHierarchy for cloud vm
 2018/07/26 ver 5.661 mingw64対応
 2018/07/24 ver 5.66 protect()のmodeにCodeArray::PROTECT_REを追加
