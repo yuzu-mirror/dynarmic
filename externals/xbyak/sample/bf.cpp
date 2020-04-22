@@ -10,12 +10,6 @@
 #endif
 
 class Brainfuck : public Xbyak::CodeGenerator {
-private:
-	enum Direction { B, F };
-	std::string toStr(int labelNo, Direction dir)
-	{
-		return Xbyak::Label::toStr(labelNo) + (dir == B ? 'B' : 'F');
-	}
 public:
 	int getContinuousChar(std::istream& is, char c)
 	{
@@ -67,8 +61,7 @@ public:
 		mov(pGetchar, rsi); // getchar
 		mov(stack, rdx); // stack
 #endif
-		int labelNo = 0;
-		std::stack<int> keepLabelNo;
+		std::stack<Label> labelF, labelB;
 		char c;
 		while (is >> c) {
 			switch (c) {
@@ -116,17 +109,22 @@ public:
 				mov(cur, eax);
 				break;
 			case '[':
-				L(toStr(labelNo, B));
-				mov(eax, cur);
-				test(eax, eax);
-				jz(toStr(labelNo, F), T_NEAR);
-				keepLabelNo.push(labelNo++);
+				{
+					Label B = L();
+					labelB.push(B);
+					mov(eax, cur);
+					test(eax, eax);
+					Label F;
+					jz(F, T_NEAR);
+					labelF.push(F);
+				}
 				break;
 			case ']':
 				{
-					int no = keepLabelNo.top(); keepLabelNo.pop();
-					jmp(toStr(no, B));
-					L(toStr(no, F));
+					Label B = labelB.top(); labelB.pop();
+					jmp(B);
+					Label F = labelF.top(); labelF.pop();
+					L(F);
 				}
 				break;
 			default:
@@ -200,7 +198,7 @@ int main(int argc, char *argv[])
 		Brainfuck bf(ifs);
 		if (mode == 0) {
 			static int stack[128 * 1024];
-			bf.getCode<void (*)(void*, void*, int *)>()(Xbyak::CastTo<void*>(putchar), Xbyak::CastTo<void*>(getchar), stack);
+			bf.getCode<void (*)(const void*, const void*, int *)>()(reinterpret_cast<const void*>(putchar), reinterpret_cast<const void*>(getchar), stack);
 		} else {
 			dump(bf.getCode(), bf.getSize());
 		}
