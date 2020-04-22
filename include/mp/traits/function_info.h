@@ -13,7 +13,7 @@
 namespace mp {
 
 template<class F>
-struct function_info : public function_info<decltype(&F::operator())> {};
+struct function_info : function_info<decltype(&F::operator())> {};
 
 template<class R, class... As>
 struct function_info<R(As...)> {
@@ -31,15 +31,15 @@ struct function_info<R(As...)> {
 };
 
 template<class R, class... As>
-struct function_info<R(*)(As...)> : public function_info<R(As...)> {};
+struct function_info<R(*)(As...)> : function_info<R(As...)> {};
 
 template<class C, class R, class... As>
-struct function_info<R(C::*)(As...)> : public function_info<R(As...)> {
+struct function_info<R(C::*)(As...)> : function_info<R(As...)> {
     using class_type = C;
 };
 
 template<class C, class R, class... As>
-struct function_info<R(C::*)(As...) const> : public function_info<R(As...)> {
+struct function_info<R(C::*)(As...) const> : function_info<R(As...)> {
     using class_type = C;
 };
 

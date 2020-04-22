@@ -5,9 +5,6 @@ matrix:
   - compiler: clang
     env: CXX=clang
     dist: bionic
-  - compiler: g++-7
-    env: CXX=g++-7
-    dist: bionic
   - compiler: g++-8
     env: CXX=g++-8
     addons:
