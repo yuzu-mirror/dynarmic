@@ -63,6 +63,7 @@ if (MSVC)
         /Zc:inline          # Omits inline functions from object-file output.
         /Zc:throwingNew     # Assumes new (without std::nothrow) never returns null.
         /volatile:iso       # Use strict standard-abiding volatile semantics
+        /bigobj             # Increase number of sections in .obj files
         /DNOMINMAX)
 
     if (DYNARMIC_WARNINGS_AS_ERRORS)

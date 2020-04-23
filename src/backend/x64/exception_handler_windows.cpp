@@ -14,6 +14,7 @@
 #include "common/assert.h"
 #include "common/cast_util.h"
 #include "common/common_types.h"
+#include "common/safe_ops.h"
 
 using UBYTE = u8;
 
@@ -175,6 +176,13 @@ struct ExceptionHandler::Impl final {
         code.align(16);
         const u8* exception_handler_with_cb = code.getCurr<u8*>();
         // Our 3rd argument is a PCONTEXT.
+
+        // If not within our codeblock, ignore this exception.
+        code.mov(code.rax, Safe::Negate(Common::BitCast<u64>(code.getCode())));
+        code.add(code.rax, code.qword[code.ABI_PARAM3 + Xbyak::RegExp(offsetof(CONTEXT, Rip))]);
+        code.cmp(code.rax, static_cast<u32>(code.GetTotalCodeSize()));
+        code.ja(exception_handler_without_cb);
+
         code.sub(code.rsp, 8);
         code.mov(code.ABI_PARAM1, Common::BitCast<u64>(&cb));
         code.mov(code.ABI_PARAM2, code.ABI_PARAM3);
