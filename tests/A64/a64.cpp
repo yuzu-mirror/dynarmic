@@ -535,3 +535,20 @@ TEST_CASE("A64: SQDMULH.4S (saturate)", "[a64]") {
     REQUIRE(jit.GetVector(0) == Vector{0x7ffffffe7fffffff, 0x8000000180000001});
     REQUIRE(FP::FPSR{jit.GetFpsr()}.QC() == true);
 }
+
+TEST_CASE("A64: This is an infinite loop if fast dispatch is enabled", "[a64]") {
+    A64TestEnv env;
+    Dynarmic::A64::UserConfig conf{&env};
+    conf.enable_fast_dispatch = false;
+    Dynarmic::A64::Jit jit{conf};
+
+    env.code_mem.emplace_back(0x2ef998fa);
+    env.code_mem.emplace_back(0x2ef41c11);
+    env.code_mem.emplace_back(0x0f07fdd8);
+    env.code_mem.emplace_back(0x9ac90d09);
+    env.code_mem.emplace_back(0xd63f0120); // BLR X9
+    env.code_mem.emplace_back(0x14000000); // B .
+
+    env.ticks_left = 6;
+    jit.Run();
+}
