@@ -82,7 +82,6 @@ bool FPMultiplyByElement(TranslatorVisitor& v, bool Q, bool sz, Imm<1> L, Imm<1>
             return v.ir.FPVectorMulAdd(esize, operand3, v.ir.FPVectorNeg(esize, operand1), operand2);
         }
         UNREACHABLE();
-        return IR::U128{};
     }();
     v.V(datasize, Vd, result);
     return true;
@@ -115,7 +114,6 @@ bool FPMultiplyByElementHalfPrecision(TranslatorVisitor& v, bool Q, Imm<1> L, Im
             return v.ir.FPVectorMulAdd(esize, operand3, v.ir.FPVectorNeg(esize, operand1), operand2);
         }
         UNREACHABLE();
-        return IR::U128{};
     }();
     v.V(datasize, Vd, result);
     return true;

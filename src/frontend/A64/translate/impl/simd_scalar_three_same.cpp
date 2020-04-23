@@ -118,7 +118,6 @@ bool ScalarFPCompareRegister(TranslatorVisitor& v, bool sz, Vec Vm, Vec Vn, Vec 
         }
 
         UNREACHABLE();
-        return IR::U128{};
     }();
 
     v.V_scalar(datasize, Vd, v.ir.VectorGetElement(esize, result, 0));

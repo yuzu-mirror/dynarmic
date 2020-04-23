@@ -567,8 +567,7 @@ Inst* Inst::GetAssociatedPseudoOperation(Opcode opcode) {
         break;
     }
 
-    ASSERT_MSG(false, "Not a valid pseudo-operation");
-    return nullptr;
+    ASSERT_FALSE("Not a valid pseudo-operation");
 }
 
 Type Inst::GetType() const {

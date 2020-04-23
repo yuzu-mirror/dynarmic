@@ -171,7 +171,6 @@ bool ArmTranslatorVisitor::RaiseException(Exception exception) {
 
 IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in) {
     u8 imm5_value = imm5.ZeroExtend<u8>();
-
     switch (type) {
     case ShiftType::LSL:
         return ir.LogicalShiftLeft(value, ir.Imm8(imm5_value), carry_in);
@@ -188,9 +187,7 @@ IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitImmShift(IR::U32 value, Sh
             return ir.RotateRightExtended(value, carry_in);
         }
     }
-
     UNREACHABLE();
-    return {};
 }
 
 IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitRegShift(IR::U32 value, ShiftType type, IR::U8 amount, IR::U1 carry_in) {
@@ -205,7 +202,6 @@ IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitRegShift(IR::U32 value, Sh
         return ir.RotateRight(value, amount, carry_in);
     }
     UNREACHABLE();
-    return {};
 }
 
 } // namespace Dynarmic::A32

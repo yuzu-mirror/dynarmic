@@ -20,7 +20,6 @@ bool TranslatorVisitor::UnpredictableInstruction() {
 
 bool TranslatorVisitor::DecodeError() {
     UNREACHABLE();
-    return false;
 }
 
 bool TranslatorVisitor::ReservedValue() {
@@ -113,7 +112,6 @@ u64 TranslatorVisitor::AdvSIMDExpandImm(bool op, Imm<4> cmode, Imm<8> imm8) {
         }
     }
     UNREACHABLE();
-    return 0;
 }
 
 IR::UAny TranslatorVisitor::I(size_t bitsize, u64 value) {
@@ -167,7 +165,6 @@ IR::U32U64 TranslatorVisitor::SP(size_t bitsize) {
         return ir.GetSP();
     default:
         ASSERT_FALSE("SP - get : Invalid bitsize");
-        return {};
     }
 }
 
@@ -286,7 +283,6 @@ IR::UAnyU128 TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccTyp
         return ir.ReadMemory128(address);
     default:
         ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
-        return {};
     }
 }
 
@@ -309,7 +305,6 @@ void TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType /*acc_
         return;
     default:
         ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
-        return;
     }
 }
 
@@ -327,7 +322,6 @@ IR::U32 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::Ac
         return ir.ExclusiveWriteMemory128(address, value);
     default:
         ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
-        return {};
     }
 }
 
@@ -339,7 +333,6 @@ IR::U32U64 TranslatorVisitor::SignExtend(IR::UAny value, size_t to_size) {
         return ir.SignExtendToLong(value);
     default:
         ASSERT_FALSE("Invalid size parameter {}", to_size);
-        return {};
     }
 }
 
@@ -351,7 +344,6 @@ IR::U32U64 TranslatorVisitor::ZeroExtend(IR::UAny value, size_t to_size) {
         return ir.ZeroExtendToLong(value);
     default:
         ASSERT_FALSE("Invalid size parameter {}", to_size);
-        return {};
     }
 }
 
@@ -368,7 +360,6 @@ IR::U32U64 TranslatorVisitor::ShiftReg(size_t bitsize, Reg reg, Imm<2> shift, IR
         return ir.RotateRight(result, amount);
     }
     UNREACHABLE();
-    return {};
 }
 
 IR::U32U64 TranslatorVisitor::ExtendReg(size_t bitsize, Reg reg, Imm<3> option, u8 shift) {

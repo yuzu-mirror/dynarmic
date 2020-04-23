@@ -350,7 +350,6 @@ U64 IREmitter::SignExtendToLong(const UAny& a) {
         return U64(a);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -366,7 +365,6 @@ U32 IREmitter::SignExtendToWord(const UAny& a) {
         return Inst<U32>(Opcode::LeastSignificantWord, a);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -394,7 +392,6 @@ U64 IREmitter::ZeroExtendToLong(const UAny& a) {
         return U64(a);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -410,7 +407,6 @@ U32 IREmitter::ZeroExtendToWord(const UAny& a) {
         return Inst<U32>(Opcode::LeastSignificantWord, a);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -540,7 +536,6 @@ ResultAndOverflow<UAny> IREmitter::SignedSaturatedDoublingMultiplyReturnHigh(con
             return Inst<U32>(Opcode::SignedSaturatedDoublingMultiplyReturnHigh32, a, b);
         default:
             UNREACHABLE();
-            return IR::UAny{};
         }
     }();
 
@@ -847,7 +842,6 @@ UAny IREmitter::VectorGetElement(size_t esize, const U128& a, size_t index) {
         return Inst<U64>(Opcode::VectorGetElement64, a, Imm8(static_cast<u8>(index)));
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -864,7 +858,6 @@ U128 IREmitter::VectorSetElement(size_t esize, const U128& a, size_t index, cons
         return Inst<U128>(Opcode::VectorSetElement64, a, Imm8(static_cast<u8>(index)), elem);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -880,7 +873,6 @@ U128 IREmitter::VectorAbs(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::VectorAbs64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorAdd(size_t esize, const U128& a, const U128& b) {
@@ -895,7 +887,6 @@ U128 IREmitter::VectorAdd(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorAdd64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorAnd(const U128& a, const U128& b) {
@@ -914,7 +905,6 @@ U128 IREmitter::VectorArithmeticShiftRight(size_t esize, const U128& a, u8 shift
         return Inst<U128>(Opcode::VectorArithmeticShiftRight64, a, Imm8(shift_amount));
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorArithmeticVShift(size_t esize, const U128& a, const U128& b) {
@@ -929,7 +919,6 @@ U128 IREmitter::VectorArithmeticVShift(size_t esize, const U128& a, const U128& 
         return Inst<U128>(Opcode::VectorArithmeticVShift64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorBroadcastLower(size_t esize, const UAny& a) {
@@ -942,7 +931,6 @@ U128 IREmitter::VectorBroadcastLower(size_t esize, const UAny& a) {
         return Inst<U128>(Opcode::VectorBroadcastLower32, U32(a));
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorBroadcast(size_t esize, const UAny& a) {
@@ -957,7 +945,6 @@ U128 IREmitter::VectorBroadcast(size_t esize, const UAny& a) {
         return Inst<U128>(Opcode::VectorBroadcast64, U64(a));
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorCountLeadingZeros(size_t esize, const U128& a) {
@@ -970,7 +957,6 @@ U128 IREmitter::VectorCountLeadingZeros(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::VectorCountLeadingZeros32, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorDeinterleaveEven(size_t esize, const U128& a, const U128& b) {
@@ -985,7 +971,6 @@ U128 IREmitter::VectorDeinterleaveEven(size_t esize, const U128& a, const U128& 
         return Inst<U128>(Opcode::VectorDeinterleaveEven64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorDeinterleaveOdd(size_t esize, const U128& a, const U128& b) {
@@ -1000,7 +985,6 @@ U128 IREmitter::VectorDeinterleaveOdd(size_t esize, const U128& a, const U128& b
         return Inst<U128>(Opcode::VectorDeinterleaveOdd64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorEor(const U128& a, const U128& b) {
@@ -1021,7 +1005,6 @@ U128 IREmitter::VectorEqual(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorEqual128, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorExtract(const U128& a, const U128& b, size_t position) {
@@ -1046,7 +1029,6 @@ U128 IREmitter::VectorGreaterSigned(size_t esize, const U128& a, const U128& b) 
         return Inst<U128>(Opcode::VectorGreaterS64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorGreaterEqualSigned(size_t esize, const U128& a, const U128& b) {
@@ -1071,7 +1053,6 @@ U128 IREmitter::VectorHalvingAddSigned(size_t esize, const U128& a, const U128& 
         return Inst<U128>(Opcode::VectorHalvingAddS32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorHalvingAddUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1084,7 +1065,6 @@ U128 IREmitter::VectorHalvingAddUnsigned(size_t esize, const U128& a, const U128
         return Inst<U128>(Opcode::VectorHalvingAddU32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorHalvingSubSigned(size_t esize, const U128& a, const U128& b) {
@@ -1097,7 +1077,6 @@ U128 IREmitter::VectorHalvingSubSigned(size_t esize, const U128& a, const U128& 
         return Inst<U128>(Opcode::VectorHalvingSubS32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorHalvingSubUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1110,7 +1089,6 @@ U128 IREmitter::VectorHalvingSubUnsigned(size_t esize, const U128& a, const U128
         return Inst<U128>(Opcode::VectorHalvingSubU32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorInterleaveLower(size_t esize, const U128& a, const U128& b) {
@@ -1125,7 +1103,6 @@ U128 IREmitter::VectorInterleaveLower(size_t esize, const U128& a, const U128& b
         return Inst<U128>(Opcode::VectorInterleaveLower64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorInterleaveUpper(size_t esize, const U128& a, const U128& b) {
@@ -1140,7 +1117,6 @@ U128 IREmitter::VectorInterleaveUpper(size_t esize, const U128& a, const U128& b
         return Inst<U128>(Opcode::VectorInterleaveUpper64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorLessEqualSigned(size_t esize, const U128& a, const U128& b) {
@@ -1171,7 +1147,6 @@ U128 IREmitter::VectorLogicalShiftLeft(size_t esize, const U128& a, u8 shift_amo
         return Inst<U128>(Opcode::VectorLogicalShiftLeft64, a, Imm8(shift_amount));
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorLogicalShiftRight(size_t esize, const U128& a, u8 shift_amount) {
@@ -1186,7 +1161,6 @@ U128 IREmitter::VectorLogicalShiftRight(size_t esize, const U128& a, u8 shift_am
         return Inst<U128>(Opcode::VectorLogicalShiftRight64, a, Imm8(shift_amount));
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorLogicalVShift(size_t esize, const U128& a, const U128& b) {
@@ -1201,7 +1175,6 @@ U128 IREmitter::VectorLogicalVShift(size_t esize, const U128& a, const U128& b) 
         return Inst<U128>(Opcode::VectorLogicalVShift64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorMaxSigned(size_t esize, const U128& a, const U128& b) {
@@ -1216,7 +1189,6 @@ U128 IREmitter::VectorMaxSigned(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorMaxS64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorMaxUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1231,7 +1203,6 @@ U128 IREmitter::VectorMaxUnsigned(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorMaxU64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorMinSigned(size_t esize, const U128& a, const U128& b) {
@@ -1246,7 +1217,6 @@ U128 IREmitter::VectorMinSigned(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorMinS64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorMinUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1261,7 +1231,6 @@ U128 IREmitter::VectorMinUnsigned(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorMinU64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorMultiply(size_t esize, const U128& a, const U128& b) {
@@ -1276,7 +1245,6 @@ U128 IREmitter::VectorMultiply(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorMultiply64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorNarrow(size_t original_esize, const U128& a) {
@@ -1289,7 +1257,6 @@ U128 IREmitter::VectorNarrow(size_t original_esize, const U128& a) {
         return Inst<U128>(Opcode::VectorNarrow64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorNot(const U128& a) {
@@ -1312,7 +1279,6 @@ U128 IREmitter::VectorPairedAdd(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorPairedAdd64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorPairedAddLower(size_t esize, const U128& a, const U128& b) {
@@ -1325,7 +1291,6 @@ U128 IREmitter::VectorPairedAddLower(size_t esize, const U128& a, const U128& b)
         return Inst<U128>(Opcode::VectorPairedAddLower32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorPairedAddSignedWiden(size_t original_esize, const U128& a) {
@@ -1338,7 +1303,6 @@ U128 IREmitter::VectorPairedAddSignedWiden(size_t original_esize, const U128& a)
         return Inst<U128>(Opcode::VectorPairedAddSignedWiden32, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorPairedAddUnsignedWiden(size_t original_esize, const U128& a) {
@@ -1351,7 +1315,6 @@ U128 IREmitter::VectorPairedAddUnsignedWiden(size_t original_esize, const U128& 
         return Inst<U128>(Opcode::VectorPairedAddUnsignedWiden32, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorPairedMaxSigned(size_t esize, const U128& a, const U128& b) {
@@ -1364,7 +1327,6 @@ U128 IREmitter::VectorPairedMaxSigned(size_t esize, const U128& a, const U128& b
         return Inst<U128>(Opcode::VectorPairedMaxS32, a, b);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -1378,7 +1340,6 @@ U128 IREmitter::VectorPairedMaxUnsigned(size_t esize, const U128& a, const U128&
         return Inst<U128>(Opcode::VectorPairedMaxU32, a, b);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -1392,7 +1353,6 @@ U128 IREmitter::VectorPairedMinSigned(size_t esize, const U128& a, const U128& b
         return Inst<U128>(Opcode::VectorPairedMinS32, a, b);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -1406,7 +1366,6 @@ U128 IREmitter::VectorPairedMinUnsigned(size_t esize, const U128& a, const U128&
         return Inst<U128>(Opcode::VectorPairedMinU32, a, b);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -1422,7 +1381,6 @@ U128 IREmitter::VectorPolynomialMultiplyLong(size_t esize, const U128& a, const 
         return Inst<U128>(Opcode::VectorPolynomialMultiplyLong64, a, b);
     default:
         UNREACHABLE();
-        return {};
     }
 }
 
@@ -1467,7 +1425,6 @@ U128 IREmitter::VectorRoundingHalvingAddSigned(size_t esize, const U128& a, cons
     }
 
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorRoundingHalvingAddUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1481,7 +1438,6 @@ U128 IREmitter::VectorRoundingHalvingAddUnsigned(size_t esize, const U128& a, co
     }
 
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorRoundingShiftLeftSigned(size_t esize, const U128& a, const U128& b) {
@@ -1497,7 +1453,6 @@ U128 IREmitter::VectorRoundingShiftLeftSigned(size_t esize, const U128& a, const
     }
 
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorRoundingShiftLeftUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1513,7 +1468,6 @@ U128 IREmitter::VectorRoundingShiftLeftUnsigned(size_t esize, const U128& a, con
     }
 
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorShuffleHighHalfwords(const U128& a, u8 mask) {
@@ -1540,7 +1494,6 @@ U128 IREmitter::VectorSignExtend(size_t original_esize, const U128& a) {
         return Inst<U128>(Opcode::VectorSignExtend64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSignedAbsoluteDifference(size_t esize, const U128& a, const U128& b) {
@@ -1553,7 +1506,6 @@ U128 IREmitter::VectorSignedAbsoluteDifference(size_t esize, const U128& a, cons
         return Inst<U128>(Opcode::VectorSignedAbsoluteDifference32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 UpperAndLower IREmitter::VectorSignedMultiply(size_t esize, const U128& a, const U128& b) {
@@ -1565,7 +1517,6 @@ UpperAndLower IREmitter::VectorSignedMultiply(size_t esize, const U128& a, const
             return Inst(Opcode::VectorSignedMultiply32, a, b);
         }
         UNREACHABLE();
-        return Value{};
     }();
 
     return {
@@ -1586,7 +1537,6 @@ U128 IREmitter::VectorSignedSaturatedAbs(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::VectorSignedSaturatedAbs64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSignedSaturatedAccumulateUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1601,7 +1551,6 @@ U128 IREmitter::VectorSignedSaturatedAccumulateUnsigned(size_t esize, const U128
         return Inst<U128>(Opcode::VectorSignedSaturatedAccumulateUnsigned64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 UpperAndLower IREmitter::VectorSignedSaturatedDoublingMultiply(size_t esize, const U128& a, const U128& b) {
@@ -1613,7 +1562,6 @@ UpperAndLower IREmitter::VectorSignedSaturatedDoublingMultiply(size_t esize, con
             return Inst(Opcode::VectorSignedSaturatedDoublingMultiply32, a, b);
         default:
             UNREACHABLE();
-            return Value{};
         }
     }();
 
@@ -1631,7 +1579,6 @@ U128 IREmitter::VectorSignedSaturatedDoublingMultiplyLong(size_t esize, const U1
         return Inst<U128>(Opcode::VectorSignedSaturatedDoublingMultiplyLong32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSignedSaturatedNarrowToSigned(size_t original_esize, const U128& a) {
@@ -1644,7 +1591,6 @@ U128 IREmitter::VectorSignedSaturatedNarrowToSigned(size_t original_esize, const
         return Inst<U128>(Opcode::VectorSignedSaturatedNarrowToSigned64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSignedSaturatedNarrowToUnsigned(size_t original_esize, const U128& a) {
@@ -1657,7 +1603,6 @@ U128 IREmitter::VectorSignedSaturatedNarrowToUnsigned(size_t original_esize, con
         return Inst<U128>(Opcode::VectorSignedSaturatedNarrowToUnsigned64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSignedSaturatedNeg(size_t esize, const U128& a) {
@@ -1672,7 +1617,6 @@ U128 IREmitter::VectorSignedSaturatedNeg(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::VectorSignedSaturatedNeg64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSignedSaturatedShiftLeft(size_t esize, const U128& a, const U128& b) {
@@ -1687,7 +1631,6 @@ U128 IREmitter::VectorSignedSaturatedShiftLeft(size_t esize, const U128& a, cons
         return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeft64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSignedSaturatedShiftLeftUnsigned(size_t esize, const U128& a, const U128& b) {
@@ -1702,7 +1645,6 @@ U128 IREmitter::VectorSignedSaturatedShiftLeftUnsigned(size_t esize, const U128&
         return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorSub(size_t esize, const U128& a, const U128& b) {
@@ -1717,7 +1659,6 @@ U128 IREmitter::VectorSub(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::VectorSub64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 Table IREmitter::VectorTable(std::vector<U128> values) {
@@ -1740,7 +1681,6 @@ U128 IREmitter::VectorUnsignedAbsoluteDifference(size_t esize, const U128& a, co
         return Inst<U128>(Opcode::VectorUnsignedAbsoluteDifference32, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorUnsignedRecipEstimate(const U128& a) {
@@ -1763,7 +1703,6 @@ U128 IREmitter::VectorUnsignedSaturatedAccumulateSigned(size_t esize, const U128
         return Inst<U128>(Opcode::VectorUnsignedSaturatedAccumulateSigned64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorUnsignedSaturatedNarrow(size_t esize, const U128& a) {
@@ -1776,7 +1715,6 @@ U128 IREmitter::VectorUnsignedSaturatedNarrow(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::VectorUnsignedSaturatedNarrow64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorUnsignedSaturatedShiftLeft(size_t esize, const U128& a, const U128& b) {
@@ -1791,7 +1729,6 @@ U128 IREmitter::VectorUnsignedSaturatedShiftLeft(size_t esize, const U128& a, co
         return Inst<U128>(Opcode::VectorUnsignedSaturatedShiftLeft64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorZeroExtend(size_t original_esize, const U128& a) {
@@ -1806,7 +1743,6 @@ U128 IREmitter::VectorZeroExtend(size_t original_esize, const U128& a) {
         return Inst<U128>(Opcode::VectorZeroExtend64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::VectorZeroUpper(const U128& a) {
@@ -1827,7 +1763,6 @@ U16U32U64 IREmitter::FPAbs(const U16U32U64& a) {
         return Inst<U64>(Opcode::FPAbs64, a);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -1842,7 +1777,6 @@ U32U64 IREmitter::FPAdd(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
         return Inst<U64>(Opcode::FPAdd64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1859,7 +1793,6 @@ NZCV IREmitter::FPCompare(const U32U64& a, const U32U64& b, bool exc_on_qnan, bo
         return Inst<NZCV>(Opcode::FPCompare64, a, b, exc_on_qnan_imm);
     default:
         UNREACHABLE();
-        return NZCV{};
     }
 }
 
@@ -1874,7 +1807,6 @@ U32U64 IREmitter::FPDiv(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
         return Inst<U64>(Opcode::FPDiv64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1889,7 +1821,6 @@ U32U64 IREmitter::FPMax(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
         return Inst<U64>(Opcode::FPMax64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1904,7 +1835,6 @@ U32U64 IREmitter::FPMaxNumeric(const U32U64& a, const U32U64& b, bool fpcr_contr
         return Inst<U64>(Opcode::FPMaxNumeric64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1919,7 +1849,6 @@ U32U64 IREmitter::FPMin(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
         return Inst<U64>(Opcode::FPMin64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1934,7 +1863,6 @@ U32U64 IREmitter::FPMinNumeric(const U32U64& a, const U32U64& b, bool fpcr_contr
         return Inst<U64>(Opcode::FPMinNumeric64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1949,7 +1877,6 @@ U32U64 IREmitter::FPMul(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
         return Inst<U64>(Opcode::FPMul64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1966,7 +1893,6 @@ U16U32U64 IREmitter::FPMulAdd(const U16U32U64& a, const U16U32U64& b, const U16U
         return Inst<U64>(Opcode::FPMulAdd64, a, b, c);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -1980,7 +1906,6 @@ U32U64 IREmitter::FPMulX(const U32U64& a, const U32U64& b) {
         return Inst<U64>(Opcode::FPMulX64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -1994,7 +1919,6 @@ U16U32U64 IREmitter::FPNeg(const U16U32U64& a) {
         return Inst<U64>(Opcode::FPNeg64, a);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -2008,7 +1932,6 @@ U16U32U64 IREmitter::FPRecipEstimate(const U16U32U64& a) {
         return Inst<U64>(Opcode::FPRecipEstimate64, a);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -2022,7 +1945,6 @@ U16U32U64 IREmitter::FPRecipExponent(const U16U32U64& a) {
         return Inst<U64>(Opcode::FPRecipExponent64, a);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -2038,7 +1960,6 @@ U16U32U64 IREmitter::FPRecipStepFused(const U16U32U64& a, const U16U32U64& b) {
         return Inst<U64>(Opcode::FPRecipStepFused64, a, b);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -2055,7 +1976,6 @@ U16U32U64 IREmitter::FPRoundInt(const U16U32U64& a, FP::RoundingMode rounding, b
         return Inst<U64>(Opcode::FPRoundInt64, a, rounding_value, exact_imm);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -2069,7 +1989,6 @@ U16U32U64 IREmitter::FPRSqrtEstimate(const U16U32U64& a) {
         return Inst<U64>(Opcode::FPRSqrtEstimate64, a);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -2085,7 +2004,6 @@ U16U32U64 IREmitter::FPRSqrtStepFused(const U16U32U64& a, const U16U32U64& b) {
         return Inst<U64>(Opcode::FPRSqrtStepFused64, a, b);
     default:
         UNREACHABLE();
-        return U16U32U64{};
     }
 }
 
@@ -2097,7 +2015,6 @@ U32U64 IREmitter::FPSqrt(const U32U64& a) {
         return Inst<U64>(Opcode::FPSqrt64, a);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -2112,7 +2029,6 @@ U32U64 IREmitter::FPSub(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
         return Inst<U64>(Opcode::FPSub64, a, b);
     default:
         UNREACHABLE();
-        return U32U64{};
     }
 }
 
@@ -2155,7 +2071,6 @@ U32 IREmitter::FPToFixedS32(const U16U32U64& a, size_t fbits, FP::RoundingMode r
         return Inst<U32>(Opcode::FPDoubleToFixedS32, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U32{};
     }
 }
 
@@ -2174,7 +2089,6 @@ U64 IREmitter::FPToFixedS64(const U16U32U64& a, size_t fbits, FP::RoundingMode r
         return Inst<U64>(Opcode::FPDoubleToFixedS64, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U64{};
     }
 }
 
@@ -2193,7 +2107,6 @@ U32 IREmitter::FPToFixedU32(const U16U32U64& a, size_t fbits, FP::RoundingMode r
         return Inst<U32>(Opcode::FPDoubleToFixedU32, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U32{};
     }
 }
 
@@ -2212,7 +2125,6 @@ U64 IREmitter::FPToFixedU64(const U16U32U64& a, size_t fbits, FP::RoundingMode r
         return Inst<U64>(Opcode::FPDoubleToFixedU64, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U64{};
     }
 }
 
@@ -2229,7 +2141,6 @@ U32 IREmitter::FPSignedFixedToSingle(const U32U64& a, size_t fbits, FP::Rounding
         return Inst<U32>(Opcode::FPFixedS64ToSingle, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U32{};
     }
 }
 
@@ -2246,7 +2157,6 @@ U32 IREmitter::FPUnsignedFixedToSingle(const U32U64& a, size_t fbits, FP::Roundi
         return Inst<U32>(Opcode::FPFixedU64ToSingle, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U32{};
     }
 }
 
@@ -2263,7 +2173,6 @@ U64 IREmitter::FPSignedFixedToDouble(const U32U64& a, size_t fbits, FP::Rounding
         return Inst<U64>(Opcode::FPFixedS64ToDouble, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U64{};
     }
 }
 
@@ -2280,7 +2189,6 @@ U64 IREmitter::FPUnsignedFixedToDouble(const U32U64& a, size_t fbits, FP::Roundi
         return Inst<U64>(Opcode::FPFixedU64ToDouble, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
-        return U64{};
     }
 }
 
@@ -2294,7 +2202,6 @@ U128 IREmitter::FPVectorAbs(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::FPVectorAbs64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorAdd(size_t esize, const U128& a, const U128& b) {
@@ -2305,7 +2212,6 @@ U128 IREmitter::FPVectorAdd(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorAdd64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorDiv(size_t esize, const U128& a, const U128& b) {
@@ -2316,7 +2222,6 @@ U128 IREmitter::FPVectorDiv(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorDiv64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorEqual(size_t esize, const U128& a, const U128& b) {
@@ -2329,7 +2234,6 @@ U128 IREmitter::FPVectorEqual(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorEqual64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorFromSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding) {
@@ -2341,7 +2245,6 @@ U128 IREmitter::FPVectorFromSignedFixed(size_t esize, const U128& a, size_t fbit
         return Inst<U128>(Opcode::FPVectorFromSignedFixed64, a, Imm8(static_cast<u8>(fbits)), Imm8(static_cast<u8>(rounding)));
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorFromUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding) {
@@ -2353,7 +2256,6 @@ U128 IREmitter::FPVectorFromUnsignedFixed(size_t esize, const U128& a, size_t fb
         return Inst<U128>(Opcode::FPVectorFromUnsignedFixed64, a, Imm8(static_cast<u8>(fbits)), Imm8(static_cast<u8>(rounding)));
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorGreater(size_t esize, const U128& a, const U128& b) {
@@ -2364,7 +2266,6 @@ U128 IREmitter::FPVectorGreater(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorGreater64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorGreaterEqual(size_t esize, const U128& a, const U128& b) {
@@ -2375,7 +2276,6 @@ U128 IREmitter::FPVectorGreaterEqual(size_t esize, const U128& a, const U128& b)
         return Inst<U128>(Opcode::FPVectorGreaterEqual64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorMax(size_t esize, const U128& a, const U128& b) {
@@ -2386,7 +2286,6 @@ U128 IREmitter::FPVectorMax(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorMax64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorMin(size_t esize, const U128& a, const U128& b) {
@@ -2397,7 +2296,6 @@ U128 IREmitter::FPVectorMin(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorMin64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorMul(size_t esize, const U128& a, const U128& b) {
@@ -2408,7 +2306,6 @@ U128 IREmitter::FPVectorMul(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorMul64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorMulAdd(size_t esize, const U128& a, const U128& b, const U128& c) {
@@ -2421,7 +2318,6 @@ U128 IREmitter::FPVectorMulAdd(size_t esize, const U128& a, const U128& b, const
         return Inst<U128>(Opcode::FPVectorMulAdd64, a, b, c);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorMulX(size_t esize, const U128& a, const U128& b) {
@@ -2432,7 +2328,6 @@ U128 IREmitter::FPVectorMulX(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorMulX64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorNeg(size_t esize, const U128& a) {
@@ -2445,7 +2340,6 @@ U128 IREmitter::FPVectorNeg(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::FPVectorNeg64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorPairedAdd(size_t esize, const U128& a, const U128& b) {
@@ -2456,7 +2350,6 @@ U128 IREmitter::FPVectorPairedAdd(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorPairedAdd64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorPairedAddLower(size_t esize, const U128& a, const U128& b) {
@@ -2467,7 +2360,6 @@ U128 IREmitter::FPVectorPairedAddLower(size_t esize, const U128& a, const U128& 
         return Inst<U128>(Opcode::FPVectorPairedAddLower64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorRecipEstimate(size_t esize, const U128& a) {
@@ -2480,7 +2372,6 @@ U128 IREmitter::FPVectorRecipEstimate(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::FPVectorRecipEstimate64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorRecipStepFused(size_t esize, const U128& a, const U128& b) {
@@ -2493,7 +2384,6 @@ U128 IREmitter::FPVectorRecipStepFused(size_t esize, const U128& a, const U128& 
         return Inst<U128>(Opcode::FPVectorRecipStepFused64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorRoundInt(size_t esize, const U128& operand, FP::RoundingMode rounding, bool exact) {
@@ -2509,7 +2399,6 @@ U128 IREmitter::FPVectorRoundInt(size_t esize, const U128& operand, FP::Rounding
         return Inst<U128>(Opcode::FPVectorRoundInt64, operand, rounding_imm, exact_imm);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorRSqrtEstimate(size_t esize, const U128& a) {
@@ -2522,7 +2411,6 @@ U128 IREmitter::FPVectorRSqrtEstimate(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::FPVectorRSqrtEstimate64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorRSqrtStepFused(size_t esize, const U128& a, const U128& b) {
@@ -2535,7 +2423,6 @@ U128 IREmitter::FPVectorRSqrtStepFused(size_t esize, const U128& a, const U128& 
         return Inst<U128>(Opcode::FPVectorRSqrtStepFused64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorSqrt(size_t esize, const U128& a) {
@@ -2546,7 +2433,6 @@ U128 IREmitter::FPVectorSqrt(size_t esize, const U128& a) {
         return Inst<U128>(Opcode::FPVectorSqrt64, a);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorSub(size_t esize, const U128& a, const U128& b) {
@@ -2557,7 +2443,6 @@ U128 IREmitter::FPVectorSub(size_t esize, const U128& a, const U128& b) {
         return Inst<U128>(Opcode::FPVectorSub64, a, b);
     }
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorToSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding) {
@@ -2576,7 +2461,6 @@ U128 IREmitter::FPVectorToSignedFixed(size_t esize, const U128& a, size_t fbits,
     }
 
     UNREACHABLE();
-    return {};
 }
 
 U128 IREmitter::FPVectorToUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding) {
@@ -2595,7 +2479,6 @@ U128 IREmitter::FPVectorToUnsignedFixed(size_t esize, const U128& a, size_t fbit
     }
 
     UNREACHABLE();
-    return {};
 }
 
 void IREmitter::Breakpoint() {

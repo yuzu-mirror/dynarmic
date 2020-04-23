@@ -79,7 +79,6 @@ bool FPMinMax(TranslatorVisitor& v, bool Q, bool sz, Vec Vn, Vec Vd, MinMaxOpera
             return v.ir.FPMinNumeric(lhs, rhs, true);
         default:
             UNREACHABLE();
-            return IR::U32U64{};
         }
     };
 
@@ -144,7 +143,6 @@ bool ScalarMinMax(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vn, Vec Vd,
 
         default:
             UNREACHABLE();
-            return IR::U32U64{};
         }
     };
 

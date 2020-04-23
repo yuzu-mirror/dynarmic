@@ -135,7 +135,6 @@ void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
             return 64;
         default:
             UNREACHABLE();
-            return 0;
         }
     }();
 

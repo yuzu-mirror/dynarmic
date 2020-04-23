@@ -181,7 +181,6 @@ public:
                                CondOrTwo(cond), coproc_no, CRd, n, imm8.ZeroExtend());
         }
         UNREACHABLE();
-        return "<internal error>";
     }
 
     std::string arm_MCR(Cond cond, size_t opc1, CoprocReg CRn, Reg t, size_t coproc_no, size_t opc2, CoprocReg CRm) {
@@ -220,7 +219,6 @@ public:
                                CondOrTwo(cond), coproc_no, CRd, n, imm8.ZeroExtend());
         }
         UNREACHABLE();
-        return "<internal error>";
     }
 
     // CRC32 instructions

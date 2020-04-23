@@ -201,7 +201,6 @@ bool ShiftRightNarrowing(TranslatorVisitor& v, Imm<4> immh, Imm<3> immb, Vec Vn,
             return v.ir.VectorSignedSaturatedNarrowToSigned(source_esize, wide_result);
         }
         UNREACHABLE();
-        return IR::U128{};
     }();
 
     const IR::UAny segment = v.ir.VectorGetElement(esize, result, 0);
@@ -252,7 +251,6 @@ bool ScalarFPConvertWithRound(TranslatorVisitor& v, Imm<4> immh, Imm<3> immb, Ve
         }
 
         UNREACHABLE();
-        return {};
     }();
 
     v.V_scalar(esize, Vd, result);

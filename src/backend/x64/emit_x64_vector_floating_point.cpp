@@ -237,7 +237,6 @@ struct PairedIndexer {
             return std::make_tuple(b[2 * i], b[2 * i + 1]);
         }
         UNREACHABLE();
-        return {};
     }
 };
 
@@ -261,7 +260,6 @@ struct PairedLowerIndexer {
             return std::make_tuple(0, 0);
         } else {
             UNREACHABLE();
-            return {};
         }
     }
 };
@@ -1192,7 +1190,6 @@ void EmitFPVectorRoundInt(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                 default:
                     UNREACHABLE();
                 }
-                return 0;
             }();
 
             EmitTwoOpVectorOperation<fsize, DefaultIndexer>(code, ctx, inst, [&](const Xbyak::Xmm& result, const Xbyak::Xmm& xmm_a){

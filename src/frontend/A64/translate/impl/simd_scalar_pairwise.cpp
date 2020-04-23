@@ -32,7 +32,6 @@ bool FPPairwiseMinMax(TranslatorVisitor& v, bool sz, Vec Vn, Vec Vd, MinMaxOpera
             return v.ir.FPMinNumeric(element1, element2, true);
         default:
             UNREACHABLE();
-            return IR::U32U64{};
         }
     }();
 

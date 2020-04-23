@@ -3069,7 +3069,6 @@ static void EmitVectorSignedSaturatedAbs(size_t esize, BlockOfCode& code, EmitCo
             return code.MConst(xword, 0x8000000000000000, 0x8000000000000000);
         default:
             UNREACHABLE();
-            return Xbyak::Address{0};
         }
     }();
 
@@ -3594,7 +3593,6 @@ static void EmitVectorSignedSaturatedNarrowToSigned(size_t original_esize, Block
         break;
     default:
         UNREACHABLE();
-        break;
     }
 
     const Xbyak::Reg32 bit = ctx.reg_alloc.ScratchGpr().cvt32();
@@ -3650,7 +3648,6 @@ static void EmitVectorSignedSaturatedNarrowToUnsigned(size_t original_esize, Blo
         break;
     default:
         UNREACHABLE();
-        break;
     }
 
     const Xbyak::Reg32 bit = ctx.reg_alloc.ScratchGpr().cvt32();
@@ -3713,7 +3710,6 @@ static void EmitVectorSignedSaturatedNeg(size_t esize, BlockOfCode& code, EmitCo
             return code.MConst(xword, 0x8000000000000000, 0x8000000000000000);
         default:
             UNREACHABLE();
-            return Xbyak::Address{0};
         }
     }();
 

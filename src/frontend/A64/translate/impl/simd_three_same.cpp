@@ -160,7 +160,6 @@ bool FPCompareRegister(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Ve
         }
 
         UNREACHABLE();
-        return IR::U128{};
     }();
 
     v.V(datasize, Vd, result);
@@ -199,7 +198,6 @@ bool VectorMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Ve
 
         default:
             UNREACHABLE();
-            return IR::U128{};
         }
     }();
 
@@ -282,7 +280,6 @@ bool PairedMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Ve
 
         default:
             UNREACHABLE();
-            return IR::U128{};
         }
     }();
 

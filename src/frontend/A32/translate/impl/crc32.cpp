@@ -75,7 +75,6 @@ bool CRC32Variant(ArmTranslatorVisitor& v, Cond cond, Imm<2> sz, Reg n, Reg d, R
         }
 
         UNREACHABLE();
-        return IR::U32{};
     }();
 
     v.ir.SetRegister(d, result);

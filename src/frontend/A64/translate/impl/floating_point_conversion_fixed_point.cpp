@@ -28,7 +28,6 @@ bool TranslatorVisitor::SCVTF_float_fix(bool sf, Imm<2> type, Imm<6> scale, Reg 
             return ir.FPSignedFixedToDouble(intval, fracbits, rounding_mode);
         }
         UNREACHABLE();
-        return {};
     }();
 
     V_scalar(*fltsize, Vd, fltval);
@@ -56,7 +55,6 @@ bool TranslatorVisitor::UCVTF_float_fix(bool sf, Imm<2> type, Imm<6> scale, Reg 
             return ir.FPUnsignedFixedToDouble(intval, fracbits, rounding_mode);
         }
         UNREACHABLE();
-        return {};
     }();
 
     V_scalar(*fltsize, Vd, fltval);

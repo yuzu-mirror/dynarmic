@@ -24,14 +24,19 @@ template <typename... Ts>
 
 } // namespace Dynarmic::Common
 
-#if defined(__clang) || defined(__GNUC__)
-    #define UNREACHABLE() __builtin_unreachable()
-    #define ASSUME(expr) [&]{ if (!(expr)) __builtin_unreachable(); }()
-#elif defined(_MSC_VER)
-    #define UNREACHABLE() __assume(0)
-    #define ASSUME(expr) __assume(expr)
+#if defined(NDEBUG)
+    #if defined(__clang) || defined(__GNUC__)
+        #define UNREACHABLE() __builtin_unreachable()
+        #define ASSUME(expr) [&]{ if (!(expr)) __builtin_unreachable(); }()
+    #elif defined(_MSC_VER)
+        #define UNREACHABLE() __assume(0)
+        #define ASSUME(expr) __assume(expr)
+    #else
+        #define UNREACHABLE() ASSERT_FALSE("Unreachable code!")
+        #define ASSUME(expr)
+    #endif
 #else
-    #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
+    #define UNREACHABLE() ASSERT_FALSE("Unreachable code!")
     #define ASSUME(expr)
 #endif
 

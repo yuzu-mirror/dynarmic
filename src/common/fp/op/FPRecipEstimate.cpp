@@ -52,7 +52,6 @@ FPT FPRecipEstimate(FPT op, FPCR fpcr, FPSR& fpsr) {
             default:
                 UNREACHABLE();
             }
-            return false;
         }();
 
         FPProcessException(FPExc::Overflow, fpcr, fpsr);

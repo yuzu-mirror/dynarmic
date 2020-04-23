@@ -41,7 +41,6 @@ bool ScalarFPCompareAgainstZero(TranslatorVisitor& v, bool sz, Vec Vn, Vec Vd, C
         }
 
         UNREACHABLE();
-        return IR::U128{};
     }();
 
     v.V_scalar(datasize, Vd, v.ir.VectorGetElement(esize, result, 0));

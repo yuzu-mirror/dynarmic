@@ -129,7 +129,6 @@ bool ShiftRightNarrowing(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb,
             return v.ir.VectorSignedSaturatedNarrowToSigned(source_esize, wide_result);
         }
         UNREACHABLE();
-        return IR::U128{};
     }();
 
     v.Vpart(64, Vd, part, result);
@@ -223,7 +222,6 @@ bool ConvertFloat(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn
                  : v.ir.FPVectorToUnsignedFixed(esize, operand, fbits, rounding_mode);
         }
         UNREACHABLE();
-        return IR::U128{};
     }();
 
     v.V(datasize, Vd, result);

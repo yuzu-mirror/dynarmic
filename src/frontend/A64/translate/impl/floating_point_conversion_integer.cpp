@@ -76,7 +76,6 @@ bool TranslatorVisitor::FMOV_float_gen(bool sf, Imm<2> type, Imm<1> rmode_0, Imm
             return 16;
         default:
             UNREACHABLE();
-            return 0;
         }
     }();
 

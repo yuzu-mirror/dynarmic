@@ -75,7 +75,6 @@ bool FPCompareAgainstZero(TranslatorVisitor& v, bool Q, bool sz, Vec Vn, Vec Vd,
         }
 
         UNREACHABLE();
-        return IR::U128{};
     }();
 
     v.V(datasize, Vd, result);

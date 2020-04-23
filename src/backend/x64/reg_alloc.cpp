@@ -41,10 +41,8 @@ static size_t GetBitWidth(IR::Type type) {
     case IR::Type::Void:
     case IR::Type::Table:
         ASSERT_FALSE("Type {} cannot be represented at runtime", type);
-        return 0;
     case IR::Type::Opaque:
         ASSERT_FALSE("Not a concrete type");
-        return 0;
     case IR::Type::U1:
         return 8;
     case IR::Type::U8:
@@ -61,7 +59,6 @@ static size_t GetBitWidth(IR::Type type) {
         return 32; // TODO: Update to 16 when flags optimization is done
     }
     UNREACHABLE();
-    return 0;
 }
 
 static bool IsValuelessType(IR::Type type) {
