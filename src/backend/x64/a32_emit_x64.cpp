@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2016 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include <algorithm>
@@ -52,7 +51,7 @@ static Xbyak::Address MJitStateExtReg(A32::ExtReg reg) {
         const size_t index = static_cast<size_t>(reg) - static_cast<size_t>(A32::ExtReg::D0);
         return qword[r15 + offsetof(A32JitState, ExtReg) + sizeof(u64) * index];
     }
-    ASSERT_MSG(false, "Should never happen.");
+    ASSERT_FALSE("Should never happen.");
 }
 
 A32EmitContext::A32EmitContext(RegAlloc& reg_alloc, IR::Block& block)
@@ -125,7 +124,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
 #undef A64OPC
 
         default:
-            ASSERT_MSG(false, "Invalid opcode: {}", inst->GetOpcode());
+            ASSERT_FALSE("Invalid opcode: {}", inst->GetOpcode());
             break;
         }
 
@@ -888,7 +887,7 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
             code.mov(value, qword[r13 + vaddr]);
             break;
         default:
-            ASSERT_MSG(false, "Invalid bitsize");
+            ASSERT_FALSE("Invalid bitsize");
             break;
         }
 
@@ -923,7 +922,7 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
         code.mov(value, qword[src_ptr]);
         break;
     default:
-        ASSERT_MSG(false, "Invalid bitsize");
+        ASSERT_FALSE("Invalid bitsize");
         break;
     }
     code.jmp(end);
@@ -981,7 +980,7 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
             code.mov(qword[r13 + vaddr], value);
             break;
         default:
-            ASSERT_MSG(false, "Invalid bitsize");
+            ASSERT_FALSE("Invalid bitsize");
             break;
         }
 
@@ -1014,7 +1013,7 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
         code.mov(qword[dest_ptr], value);
         break;
     default:
-        ASSERT_MSG(false, "Invalid bitsize");
+        ASSERT_FALSE("Invalid bitsize");
         break;
     }
     code.jmp(end);
@@ -1105,7 +1104,7 @@ void A32EmitX64::EmitA32ExclusiveWriteMemory64(A32EmitContext& ctx, IR::Inst* in
 }
 
 static void EmitCoprocessorException() {
-    ASSERT_MSG(false, "Should raise coproc exception here");
+    ASSERT_FALSE("Should raise coproc exception here");
 }
 
 static void CallCoprocCallback(BlockOfCode& code, RegAlloc& reg_alloc, A32::Jit* jit_interface,

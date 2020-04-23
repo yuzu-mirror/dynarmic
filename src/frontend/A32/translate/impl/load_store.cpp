@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2016 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include "frontend/A32/translate/impl/translate_arm.h"
@@ -9,35 +8,35 @@
 namespace Dynarmic::A32 {
 
 bool ArmTranslatorVisitor::arm_LDRBT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 bool ArmTranslatorVisitor::arm_LDRHT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 bool ArmTranslatorVisitor::arm_LDRSBT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 bool ArmTranslatorVisitor::arm_LDRSHT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 bool ArmTranslatorVisitor::arm_LDRT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 bool ArmTranslatorVisitor::arm_STRBT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 bool ArmTranslatorVisitor::arm_STRHT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 bool ArmTranslatorVisitor::arm_STRT() {
-    ASSERT_MSG(false, "System instructions unimplemented");
+    ASSERT_FALSE("System instructions unimplemented");
 }
 
 static IR::U32 GetAddress(A32::IREmitter& ir, bool P, bool U, bool W, Reg n, IR::U32 offset) {

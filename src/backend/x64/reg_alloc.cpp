@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2016 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include <algorithm>
@@ -41,10 +40,10 @@ static size_t GetBitWidth(IR::Type type) {
     case IR::Type::Cond:
     case IR::Type::Void:
     case IR::Type::Table:
-        ASSERT_MSG(false, "Type {} cannot be represented at runtime", type);
+        ASSERT_FALSE("Type {} cannot be represented at runtime", type);
         return 0;
     case IR::Type::Opaque:
-        ASSERT_MSG(false, "Not a concrete type");
+        ASSERT_FALSE("Not a concrete type");
         return 0;
     case IR::Type::U1:
         return 8;
@@ -595,7 +594,7 @@ HostLoc RegAlloc::FindFreeSpill() const {
         }
     }
 
-    ASSERT_MSG(false, "All spill locations are full");
+    ASSERT_FALSE("All spill locations are full");
 }
 
 HostLocInfo& RegAlloc::LocInfo(HostLoc loc) {
@@ -683,7 +682,7 @@ void RegAlloc::EmitMove(size_t bit_width, HostLoc to, HostLoc from) {
             code.mov(spill_to_addr(to), HostLocToReg64(from).cvt32());
         }
     } else {
-        ASSERT_MSG(false, "Invalid RegAlloc::EmitMove");
+        ASSERT_FALSE("Invalid RegAlloc::EmitMove");
     }
 }
 
@@ -691,9 +690,9 @@ void RegAlloc::EmitExchange(HostLoc a, HostLoc b) {
     if (HostLocIsGPR(a) && HostLocIsGPR(b)) {
         code.xchg(HostLocToReg64(a), HostLocToReg64(b));
     } else if (HostLocIsXMM(a) && HostLocIsXMM(b)) {
-        ASSERT_MSG(false, "Check your code: Exchanging XMM registers is unnecessary");
+        ASSERT_FALSE("Check your code: Exchanging XMM registers is unnecessary");
     } else {
-        ASSERT_MSG(false, "Invalid RegAlloc::EmitExchange");
+        ASSERT_FALSE("Invalid RegAlloc::EmitExchange");
     }
 }
 

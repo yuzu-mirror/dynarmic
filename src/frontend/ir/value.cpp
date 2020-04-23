@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2016 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include "common/assert.h"
@@ -181,7 +180,7 @@ s64 Value::GetImmediateAsS64() const {
     case IR::Type::U64:
         return s64(GetU64());
     default:
-        ASSERT_MSG(false, "GetImmediateAsS64 called on an incompatible Value type.");
+        ASSERT_FALSE("GetImmediateAsS64 called on an incompatible Value type.");
     }
 }
 
@@ -200,7 +199,7 @@ u64 Value::GetImmediateAsU64() const {
     case IR::Type::U64:
         return u64(GetU64());
     default:
-        ASSERT_MSG(false, "GetImmediateAsU64 called on an incompatible Value type.");
+        ASSERT_FALSE("GetImmediateAsU64 called on an incompatible Value type.");
     }
 }
 

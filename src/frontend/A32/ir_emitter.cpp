@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2016 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include "common/assert.h"
@@ -39,7 +38,7 @@ IR::U32U64 IREmitter::GetExtendedRegister(ExtReg reg) {
         return Inst<IR::U32U64>(Opcode::A32GetExtendedRegister64, IR::Value(reg));
     }
 
-    ASSERT_MSG(false, "Invalid reg.");
+    ASSERT_FALSE("Invalid reg.");
 }
 
 void IREmitter::SetRegister(const Reg reg, const IR::U32& value) {
@@ -53,7 +52,7 @@ void IREmitter::SetExtendedRegister(const ExtReg reg, const IR::U32U64& value) {
     } else if (A32::IsDoubleExtReg(reg)) {
         Inst(Opcode::A32SetExtendedRegister64, IR::Value(reg), value);
     } else {
-        ASSERT_MSG(false, "Invalid reg.");
+        ASSERT_FALSE("Invalid reg.");
     }
 }
 

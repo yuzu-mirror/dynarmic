@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2018 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #include <utility>
@@ -74,11 +73,11 @@ bool MultiplyByElementHalfPrecision(TranslatorVisitor& v, Imm<1> L, Imm<1> M, Im
         //       for regular multiplication and extended multiplication.
 
         if (extra_behavior == ExtraBehavior::None) {
-            UNIMPLEMENTED();
+            ASSERT_FALSE("half-precision option unimplemented");
         }
 
         if (extra_behavior == ExtraBehavior::MultiplyExtended) {
-            UNIMPLEMENTED();
+            ASSERT_FALSE("half-precision option unimplemented");
         }
 
         if (extra_behavior == ExtraBehavior::Subtract) {

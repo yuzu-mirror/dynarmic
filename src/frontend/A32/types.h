@@ -1,7 +1,6 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2016 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
 
 #pragma once
@@ -88,7 +87,7 @@ inline size_t RegNumber(ExtReg reg) {
         return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::D0);
     }
 
-    ASSERT_MSG(false, "Invalid extended register");
+    ASSERT_FALSE("Invalid extended register");
 }
 
 inline Reg operator+(Reg reg, size_t number) {

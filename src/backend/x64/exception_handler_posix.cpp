@@ -1,12 +1,7 @@
 /* This file is part of the dynarmic project.
  * Copyright (c) 2019 MerryMage
- * This software may be used and distributed according to the terms of the GNU
- * General Public License version 2 or any later version.
+ * SPDX-License-Identifier: 0BSD
  */
-
-// Copyright 2008 Dolphin Emulator Project
-// Licensed under GPLv2+
-// Refer to the license.txt file included.
 
 #include "backend/x64/exception_handler.h"
 
@@ -40,7 +35,6 @@ struct CodeBlockInfo {
 class SigHandler {
 public:
     SigHandler();
-    ~SigHandler();
 
     void AddCodeBlock(CodeBlockInfo info);
     void RemoveCodeBlock(u64 rip);
@@ -62,15 +56,14 @@ private:
 SigHandler sig_handler;
 
 SigHandler::SigHandler() {
-    // Method below from dolphin.
-
     constexpr size_t signal_stack_size = std::max(SIGSTKSZ, 2 * 1024 * 1024);
 
     stack_t signal_stack;
-    signal_stack.ss_sp = malloc(signal_stack_size);
+    signal_stack.ss_sp = std::malloc(signal_stack_size);
     signal_stack.ss_size = signal_stack_size;
     signal_stack.ss_flags = 0;
-    ASSERT_MSG(sigaltstack(&signal_stack, nullptr) == 0, "dynarmic: POSIX SigHandler: init failure at sigaltstack");
+    const int ret = sigaltstack(&signal_stack, nullptr);
+    ASSERT_MSG(ret == 0, "dynarmic: POSIX SigHandler: init failure at sigaltstack");
 
     struct sigaction sa;
     sa.sa_handler = nullptr;
@@ -81,10 +74,6 @@ SigHandler::SigHandler() {
 #ifdef __APPLE__
     sigaction(SIGBUS, &sa, &old_sa_bus);
 #endif
-}
-
-SigHandler::~SigHandler() {
-    // No cleanup required.
 }
 
 void SigHandler::AddCodeBlock(CodeBlockInfo cbi) {

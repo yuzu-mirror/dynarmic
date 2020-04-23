@@ -1,18 +1,7 @@
-// Copyright (C) 2003 Dolphin Project.
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, version 2.0 or later versions.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License 2.0 for more details.
-
-// A copy of the GPL 2.0 should have been included with the program.
-// If not, see http://www.gnu.org/licenses/
-
-// 24th August 2016: This code was modified for Dynarmic.
+/* This file is part of the dynarmic project.
+ * Copyright (c) 2020 MerryMage
+ * SPDX-License-Identifier: 0BSD
+ */
 
 #include <algorithm>
 #include <vector>
@@ -26,36 +15,28 @@
 
 namespace Dynarmic::Backend::X64 {
 
-constexpr size_t GPR_SIZE = 8;
 constexpr size_t XMM_SIZE = 16;
 
 struct FrameInfo {
-    size_t stack_subtraction = 0;
-    size_t xmm_offset = 0;
+    size_t stack_subtraction;
+    size_t xmm_offset;
+    size_t frame_offset;
 };
 
 static FrameInfo CalculateFrameInfo(size_t num_gprs, size_t num_xmms, size_t frame_size) {
-    FrameInfo frame_info = {};
+    // We are initially 8 byte aligned because the return value is pushed onto an aligned stack after a call.
+    const size_t rsp_alignment = (num_gprs % 2 == 0) ? 8 : 0;
+    const size_t total_xmm_size = num_xmms * XMM_SIZE;
 
-    size_t rsp_alignment = 8; // We are always 8-byte aligned initially
-    rsp_alignment -= num_gprs * GPR_SIZE;
-
-    if (num_xmms > 0) {
-        frame_info.stack_subtraction = rsp_alignment & 0xF;
-        frame_info.stack_subtraction += num_xmms * XMM_SIZE;
+    if (frame_size & 0xF) {
+        frame_size += 0x10 - (frame_size & 0xF);
     }
 
-    size_t xmm_base = frame_info.stack_subtraction;
-
-    frame_info.stack_subtraction += frame_size;
-    frame_info.stack_subtraction += ABI_SHADOW_SPACE;
-
-    rsp_alignment -= frame_info.stack_subtraction;
-    frame_info.stack_subtraction += rsp_alignment & 0xF;
-
-    frame_info.xmm_offset = frame_info.stack_subtraction - xmm_base;
-
-    return frame_info;
+    return {
+        rsp_alignment + total_xmm_size + frame_size + ABI_SHADOW_SPACE,
+        frame_size + ABI_SHADOW_SPACE,
+        ABI_SHADOW_SPACE,
+    };
 }
 
 template<typename RegisterArrayT>

@@ -1,6 +1,7 @@
-// Copyright 2016 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+/* This file is part of the dynarmic project.
+ * Copyright (c) 2020 MerryMage
+ * SPDX-License-Identifier: 0BSD
+ */
 
 #pragma once
 

@@ -1,53 +1,64 @@
-// Copyright 2013 Dolphin Emulator Project / 2014 Citra Emulator Project
-// Licensed under GPLv2 or any later version
-// Refer to the license.txt file included.
+/* This file is part of the dynarmic project.
+ * Copyright (c) 2020 MerryMage
+ * SPDX-License-Identifier: 0BSD
+ */
 
 #pragma once
 
-#include <cstdio>
-
 #include <fmt/format.h>
 
-// For asserts we'd like to keep all the junk executed when an assert happens away from the
-// important code in the function. One way of doing this is to put all the relevant code inside a
-// lambda and force the compiler to not inline it. Unfortunately, MSVC seems to have no syntax to
-// specify __declspec on lambda functions, so what we do instead is define a noinline wrapper
-// template that calls the lambda. This seems to generate an extra instruction at the call-site
-// compared to the ideal implementation (which wouldn't support ASSERT_MSG parameters), but is good
-// enough for our purposes.
-template <typename Fn>
-#if defined(_MSC_VER)
-__declspec(noinline, noreturn)
-#elif defined(__GNUC__)
-[[noreturn, gnu::noinline, gnu::cold]]
-#endif
-static void assert_noinline_call(const Fn& fn) {
-    fn();
-    throw "";
+#include "common/unlikely.h"
+
+namespace Dynarmic::Common {
+
+[[noreturn]] void Terminate(fmt::string_view msg, fmt::format_args args);
+
+namespace detail {
+
+template <typename... Ts>
+[[noreturn]] void TerminateHelper(fmt::string_view msg, Ts... args) {
+    Terminate(msg, fmt::make_format_args(args...));
 }
 
-#define ASSERT(_a_) \
-    do if (!(_a_)) { assert_noinline_call([] { \
-        fmt::print(stderr, "Assertion Failed!: {}\n", #_a_); \
-    }); } while (false)
+} // namespace detail
 
-#define ASSERT_MSG(_a_, ...) \
-    do if (!(_a_)) { assert_noinline_call([&] { \
-        fmt::print(stderr, "Assertion Failed!: {}\n", #_a_); \
-        fmt::print(stderr, "Message: " __VA_ARGS__); \
-        fmt::print(stderr, "\n"); \
-    }); } while (false)
+} // namespace Dynarmic::Common
 
-#define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
-#define UNREACHABLE_MSG(...) ASSERT_MSG(false, __VA_ARGS__)
-
-#ifdef NDEBUG
-#define DEBUG_ASSERT(_a_)
-#define DEBUG_ASSERT_MSG(_a_, ...)
-#else // debug
-#define DEBUG_ASSERT(_a_) ASSERT(_a_)
-#define DEBUG_ASSERT_MSG(_a_, ...) ASSERT_MSG(_a_, __VA_ARGS__)
+#if defined(__clang) || defined(__GNUC__)
+    #define UNREACHABLE() __builtin_unreachable()
+    #define ASSUME(expr) [&]{ if (!(expr)) __builtin_unreachable(); }()
+#elif defined(_MSC_VER)
+    #define UNREACHABLE() __assume(0)
+    #define ASSUME(expr) __assume(expr)
+#else
+    #define UNREACHABLE() ASSERT_MSG(false, "Unreachable code!")
+    #define ASSUME(expr)
 #endif
 
-#define UNIMPLEMENTED() DEBUG_ASSERT_MSG(false, "Unimplemented code!")
-#define UNIMPLEMENTED_MSG(_a_, ...) ASSERT_MSG(false, _a_, __VA_ARGS__)
+#ifdef DYNARMIC_IGNORE_ASSERTS
+    #define ASSERT(expr) ASSUME(expr)
+    #define ASSERT_MSG(expr, ...) ASSUME(expr)
+    #define ASSERT_FALSE(...) UNREACHABLE()
+#else
+    #define ASSERT(expr)                                                                        \
+        [&]{                                                                                    \
+            if (UNLIKELY(!(expr))) {                                                            \
+                ::Dynarmic::Common::detail::TerminateHelper(#expr);                             \
+            }                                                                                   \
+        }()
+    #define ASSERT_MSG(expr, ...)                                                               \
+        [&]{                                                                                    \
+            if (UNLIKELY(!(expr))) {                                                            \
+                ::Dynarmic::Common::detail::TerminateHelper(#expr "\nMessage: " __VA_ARGS__);   \
+            }                                                                                   \
+        }()
+    #define ASSERT_FALSE(...) ::Dynarmic::Common::detail::TerminateHelper("false\nMessage: " __VA_ARGS__);
+#endif
+
+#if defined(NDEBUG) || defined(DYNARMIC_IGNORE_ASSERTS)
+    #define DEBUG_ASSERT(expr) ASSUME(expr)
+    #define DEBUG_ASSERT_MSG(expr, ...) ASSUME(expr)
+#else
+    #define DEBUG_ASSERT(expr) ASSERT(expr)
+    #define DEBUG_ASSERT_MSG(expr, ...) ASSERT_MSG(expr, __VA_ARGS__)
+#endif
