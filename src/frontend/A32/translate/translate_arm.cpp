@@ -29,10 +29,11 @@ static bool CondCanContinue(ConditionalState cond_state, const A32::IREmitter& i
 }
 
 IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, const TranslationOptions& options) {
+    const bool single_step = descriptor.SingleStepping();
+
     IR::Block block{descriptor};
     ArmTranslatorVisitor visitor{block, descriptor, options};
 
-    const bool single_step = descriptor.SingleStepping();
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();

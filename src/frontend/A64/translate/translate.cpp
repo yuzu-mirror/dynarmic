@@ -13,10 +13,11 @@
 namespace Dynarmic::A64 {
 
 IR::Block Translate(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, TranslationOptions options) {
+    const bool single_step = descriptor.SingleStepping();
+
     IR::Block block{descriptor};
     TranslatorVisitor visitor{block, descriptor, std::move(options)};
 
-    const bool single_step = descriptor.SingleStepping();
     bool should_continue = true;
     do {
         const u64 pc = visitor.ir.current_location->PC();

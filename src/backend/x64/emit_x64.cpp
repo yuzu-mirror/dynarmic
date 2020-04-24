@@ -285,20 +285,6 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
     return label;
 }
 
-void EmitX64::EmitCondPrelude(const IR::Block& block) {
-    if (block.GetCondition() == IR::Cond::AL) {
-        ASSERT(!block.HasConditionFailedLocation());
-        return;
-    }
-
-    ASSERT(block.HasConditionFailedLocation());
-
-    Xbyak::Label pass = EmitCond(block.GetCondition());
-    EmitAddCycles(block.ConditionFailedCycleCount());
-    EmitTerminal(IR::Term::LinkBlock{block.ConditionFailedLocation()}, block.Location());
-    code.L(pass);
-}
-
 EmitX64::BlockDescriptor EmitX64::RegisterBlock(const IR::LocationDescriptor& descriptor, CodePtr entrypoint, size_t size) {
     PerfMapRegister(entrypoint, code.getCurr(), LocationDescriptorToFriendlyName(descriptor));
     Patch(descriptor, entrypoint);
@@ -308,11 +294,11 @@ EmitX64::BlockDescriptor EmitX64::RegisterBlock(const IR::LocationDescriptor& de
     return block_desc;
 }
 
-void EmitX64::EmitTerminal(IR::Terminal terminal, IR::LocationDescriptor initial_location) {
-    Common::VisitVariant<void>(terminal, [this, &initial_location](auto x) {
+void EmitX64::EmitTerminal(IR::Terminal terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    Common::VisitVariant<void>(terminal, [this, initial_location, is_single_step](auto x) {
         using T = std::decay_t<decltype(x)>;
         if constexpr (!std::is_same_v<T, IR::Term::Invalid>) {
-            this->EmitTerminalImpl(x, initial_location);
+            this->EmitTerminalImpl(x, initial_location, is_single_step);
         } else {
             ASSERT_MSG(false, "Invalid terminal");
         }

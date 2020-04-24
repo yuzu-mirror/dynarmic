@@ -55,10 +55,11 @@ std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryReadCodeFu
 } // local namespace
 
 IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, const TranslationOptions& options) {
+    const bool single_step = descriptor.SingleStepping();
+
     IR::Block block{descriptor};
     ThumbTranslatorVisitor visitor{block, descriptor, options};
 
-    const bool single_step = descriptor.SingleStepping();
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();

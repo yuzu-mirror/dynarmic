@@ -27,6 +27,7 @@ class RegAlloc;
 struct A32EmitContext final : public EmitContext {
     A32EmitContext(RegAlloc& reg_alloc, IR::Block& block);
     A32::LocationDescriptor Location() const;
+    bool IsSingleStep() const;
     FP::FPCR FPCR() const override;
 };
 
@@ -49,6 +50,8 @@ protected:
     const A32::UserConfig config;
     A32::Jit* jit_interface;
     BlockRangeInformation<u32> block_ranges;
+
+    void EmitCondPrelude(const A32EmitContext& ctx);
 
     struct FastDispatchEntry {
         u64 location_descriptor = 0xFFFF'FFFF'FFFF'FFFFull;
@@ -101,15 +104,15 @@ protected:
 
     // Terminal instruction emitters
     void EmitSetUpperLocationDescriptor(IR::LocationDescriptor new_location, IR::LocationDescriptor old_location);
-    void EmitTerminalImpl(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::ReturnToDispatch terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::PopRSBHint terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::FastDispatchHint terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::If terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::CheckBit terminal, IR::LocationDescriptor initial_location) override;
-    void EmitTerminalImpl(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location) override;
+    void EmitTerminalImpl(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::ReturnToDispatch terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::PopRSBHint terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::FastDispatchHint terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::If terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::CheckBit terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
+    void EmitTerminalImpl(IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;
 
     // Patching
     void Unpatch(const IR::LocationDescriptor& target_desc) override;

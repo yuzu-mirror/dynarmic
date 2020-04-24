@@ -7,6 +7,7 @@
 #include <dynarmic/A32/a32.h>
 
 #include "A32/testenv.h"
+#include "frontend/A32/location_descriptor.h"
 
 using namespace Dynarmic;
 
@@ -236,5 +237,191 @@ TEST_CASE("arm: Test InvalidateCacheRange", "[arm][A32]") {
     REQUIRE(jit.Regs()[1] == 7);
     REQUIRE(jit.Regs()[2] == 12);
     REQUIRE(jit.Regs()[15] == 0x0000000c);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}
+
+TEST_CASE("arm: Step blx", "[arm]") {
+    ArmTestEnv test_env;
+    A32::UserConfig config = GetUserConfig(&test_env);
+    config.enable_fast_dispatch = true;
+    Dynarmic::A32::Jit jit{config};
+    test_env.code_mem = {
+        0xe12fff30, // blx r0
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xeafffffe, // b +#0 (infinite loop)
+    };
+
+    jit.Regs()[0] = 8;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 10;
+    jit.Step();
+
+    REQUIRE(jit.Regs()[0] == 8);
+    REQUIRE(jit.Regs()[14] == 4);
+    REQUIRE(jit.Regs()[15] == 8);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}
+
+TEST_CASE("arm: Step bx", "[arm]") {
+    ArmTestEnv test_env;
+    A32::UserConfig config = GetUserConfig(&test_env);
+    config.enable_fast_dispatch = true;
+    Dynarmic::A32::Jit jit{config};
+    test_env.code_mem = {
+        0xe12fff10, // bx r0
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xeafffffe, // b +#0 (infinite loop)
+    };
+
+    jit.Regs()[0] = 8;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 10;
+    jit.Step();
+
+    REQUIRE(jit.Regs()[0] == 8);
+    REQUIRE(jit.Regs()[15] == 8);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}
+
+
+TEST_CASE("arm: Test stepping", "[arm]") {
+    ArmTestEnv test_env;
+    Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xeafffffe, // b +#0 (infinite loop)
+    };
+
+    jit.Regs()[0] = 8;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    for (size_t i = 0; i < 5; ++i) {
+        test_env.ticks_left = 10;
+        jit.Step();
+
+        REQUIRE(jit.Regs()[15] == (i + 1) * 4);
+        REQUIRE(jit.Cpsr() == 0x000001d0);
+    }
+
+    test_env.ticks_left = 20;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[15] == 80);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}
+
+TEST_CASE("arm: Test stepping 2", "[arm]") {
+    ArmTestEnv test_env;
+    Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe12fff10, // bx r0
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xeafffffe, // b +#0 (infinite loop)
+    };
+
+    jit.Regs()[0] = 4;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    for (size_t i = 0; i < 5; ++i) {
+        test_env.ticks_left = 10;
+        jit.Step();
+
+        REQUIRE(jit.Regs()[15] == (i + 1) * 4);
+        REQUIRE(jit.Cpsr() == 0x000001d0);
+    }
+
+    test_env.ticks_left = 20;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[15] == 80);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+}
+
+TEST_CASE("arm: Test stepping 3", "[arm]") {
+    ArmTestEnv test_env;
+    Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe12fff10, // bx r0
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+        0xe320f000, // nop
+
+        0xeafffffe, // b +#0 (infinite loop)
+    };
+
+    jit.Regs()[0] = 4;
+    jit.Regs()[15] = 0; // PC = 0
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 10;
+    jit.Step();
+
+    REQUIRE(jit.Regs()[15] == 4);
+    REQUIRE(jit.Cpsr() == 0x000001d0);
+
+    test_env.ticks_left = 20;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[15] == 20);
     REQUIRE(jit.Cpsr() == 0x000001d0);
 }

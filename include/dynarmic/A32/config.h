@@ -86,6 +86,14 @@ struct UserCallbacks {
 struct UserConfig {
     UserCallbacks* callbacks;
 
+    /// When set to false, this disables all optimizations than can't otherwise be disabled
+    /// by setting other configuration options. This includes:
+    /// - IR optimizations
+    /// - Block linking optimizations
+    /// - RSB optimizations
+    /// This is intended to be used for debugging.
+    bool enable_optimizations = true;
+
     // Page Table
     // The page table is used for faster memory access. If an entry in the table is nullptr,
     // the JIT will fallback to calling the MemoryRead*/MemoryWrite* callbacks.
