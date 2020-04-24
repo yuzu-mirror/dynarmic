@@ -142,7 +142,7 @@ bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
     cond_state = ConditionalState::Translating;
     ir.block.SetCondition(cond);
     ir.block.SetConditionFailedLocation(ir.current_location.AdvancePC(4));
-    ir.block.ConditionFailedCycleCount() = 1;
+    ir.block.ConditionFailedCycleCount() = ir.block.CycleCount() + 1;
     return true;
 }
 
