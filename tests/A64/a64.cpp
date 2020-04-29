@@ -552,3 +552,88 @@ TEST_CASE("A64: This is an infinite loop if fast dispatch is enabled", "[a64]") 
     env.ticks_left = 6;
     jit.Run();
 }
+
+TEST_CASE("A64: Optimization failure when folding ADD", "[a64]") {
+    A64TestEnv env;
+    Dynarmic::A64::Jit jit{Dynarmic::A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0xbc4f84be); // LDR S30, [X5], #248
+    env.code_mem.emplace_back(0x9a0c00ea); // ADC X10, X7, X12
+    env.code_mem.emplace_back(0x5a1a0079); // SBC W25, W3, W26
+    env.code_mem.emplace_back(0x9b0e2be9); // MADD X9, XZR, X14, X10
+    env.code_mem.emplace_back(0xfa5fe8a9); // CCMP X5, #31, #9, AL
+    env.code_mem.emplace_back(0x14000000); // B .
+
+    jit.SetPC(0);
+    jit.SetRegister(0, 0x46e15845dba57924);
+    jit.SetRegister(1, 0x6f60d04350581fea);
+    jit.SetRegister(2, 0x85cface50edcfc03);
+    jit.SetRegister(3, 0x47e1e8906e10ec5a);
+    jit.SetRegister(4, 0x70717c9450b6b707);
+    jit.SetRegister(5, 0x300d83205baeaff4);
+    jit.SetRegister(6, 0xb7890de7c6fee082);
+    jit.SetRegister(7, 0xa89fb6d6f1b42f4a);
+    jit.SetRegister(8, 0x04e36b8aada91d4f);
+    jit.SetRegister(9, 0xa03bf6bde71c6ac5);
+    jit.SetRegister(10, 0x319374d14baa83b0);
+    jit.SetRegister(11, 0x5a78fc0fffca7c5f);
+    jit.SetRegister(12, 0xc012b5063f43b8ad);
+    jit.SetRegister(13, 0x821ade159d39fea1);
+    jit.SetRegister(14, 0x41f97b2f5525c25e);
+    jit.SetRegister(15, 0xab0cd3653cb93738);
+    jit.SetRegister(16, 0x50dfcb55a4ebd554);
+    jit.SetRegister(17, 0x30dd7d18ae52df03);
+    jit.SetRegister(18, 0x4e53b20d252bf085);
+    jit.SetRegister(19, 0x013582d71f5fd42a);
+    jit.SetRegister(20, 0x97a151539dad44e7);
+    jit.SetRegister(21, 0xa6fcc6bb220a2ad3);
+    jit.SetRegister(22, 0x4c84d3c84a6c5c5c);
+    jit.SetRegister(23, 0x1a7596a5ef930dff);
+    jit.SetRegister(24, 0x06248d96a02ff210);
+    jit.SetRegister(25, 0xfcb8772aec4b1dfd);
+    jit.SetRegister(26, 0x63619787b6a17665);
+    jit.SetRegister(27, 0xbd50c3352d001e40);
+    jit.SetRegister(28, 0x4e186aae63c81553);
+    jit.SetRegister(29, 0x57462b7163bd6508);
+    jit.SetRegister(30, 0xa977c850d16d562c);
+    jit.SetSP(0x000000da9b761d8c);
+    jit.SetFpsr(0x03480000);
+    jit.SetPstate(0x30000000);
+
+    env.ticks_left = 6;
+    jit.Run();
+
+    REQUIRE(jit.GetRegister(0) == 0x46e15845dba57924);
+    REQUIRE(jit.GetRegister(1) == 0x6f60d04350581fea);
+    REQUIRE(jit.GetRegister(2) == 0x85cface50edcfc03);
+    REQUIRE(jit.GetRegister(3) == 0x47e1e8906e10ec5a);
+    REQUIRE(jit.GetRegister(4) == 0x70717c9450b6b707);
+    REQUIRE(jit.GetRegister(5) == 0x300d83205baeb0ec);
+    REQUIRE(jit.GetRegister(6) == 0xb7890de7c6fee082);
+    REQUIRE(jit.GetRegister(7) == 0xa89fb6d6f1b42f4a);
+    REQUIRE(jit.GetRegister(8) == 0x04e36b8aada91d4f);
+    REQUIRE(jit.GetRegister(9) == 0x68b26bdd30f7e7f8);
+    REQUIRE(jit.GetRegister(10) == 0x68b26bdd30f7e7f8);
+    REQUIRE(jit.GetRegister(11) == 0x5a78fc0fffca7c5f);
+    REQUIRE(jit.GetRegister(12) == 0xc012b5063f43b8ad);
+    REQUIRE(jit.GetRegister(13) == 0x821ade159d39fea1);
+    REQUIRE(jit.GetRegister(14) == 0x41f97b2f5525c25e);
+    REQUIRE(jit.GetRegister(15) == 0xab0cd3653cb93738);
+    REQUIRE(jit.GetRegister(16) == 0x50dfcb55a4ebd554);
+    REQUIRE(jit.GetRegister(17) == 0x30dd7d18ae52df03);
+    REQUIRE(jit.GetRegister(18) == 0x4e53b20d252bf085);
+    REQUIRE(jit.GetRegister(19) == 0x013582d71f5fd42a);
+    REQUIRE(jit.GetRegister(20) == 0x97a151539dad44e7);
+    REQUIRE(jit.GetRegister(21) == 0xa6fcc6bb220a2ad3);
+    REQUIRE(jit.GetRegister(22) == 0x4c84d3c84a6c5c5c);
+    REQUIRE(jit.GetRegister(23) == 0x1a7596a5ef930dff);
+    REQUIRE(jit.GetRegister(24) == 0x06248d96a02ff210);
+    REQUIRE(jit.GetRegister(25) == 0x00000000b76f75f5);
+    REQUIRE(jit.GetRegister(26) == 0x63619787b6a17665);
+    REQUIRE(jit.GetRegister(27) == 0xbd50c3352d001e40);
+    REQUIRE(jit.GetRegister(28) == 0x4e186aae63c81553);
+    REQUIRE(jit.GetRegister(29) == 0x57462b7163bd6508);
+    REQUIRE(jit.GetRegister(30) == 0xa977c850d16d562c);
+    REQUIRE(jit.GetPstate() == 0x20000000);
+    REQUIRE(jit.GetVector(30) == Vector{0xf7f6f5f4, 0});
+}

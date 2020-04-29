@@ -232,6 +232,7 @@ private:
         Optimization::A64CallbackConfigPass(ir_block, conf);
         if (conf.enable_optimizations) {
             Optimization::A64GetSetElimination(ir_block);
+            Optimization::DeadCodeElimination(ir_block);
             Optimization::ConstantPropagation(ir_block);
             Optimization::DeadCodeElimination(ir_block);
             Optimization::A64MergeInterpretBlocksPass(ir_block, conf.callbacks);
