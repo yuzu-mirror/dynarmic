@@ -57,6 +57,15 @@ void PrintA32Instruction(u32 instruction) {
     fmt::print("should_continue: {}\n\n", should_continue);
     fmt::print("IR:\n");
     fmt::print("{}\n", IR::DumpBlock(block));
+
+    Optimization::A32GetSetElimination(block);
+    Optimization::DeadCodeElimination(block);
+    Optimization::ConstantPropagation(block);
+    Optimization::DeadCodeElimination(block);
+    Optimization::IdentityRemovalPass(block);
+
+    fmt::print("Optimized IR:\n");
+    fmt::print("{}\n", IR::DumpBlock(block));
 }
 
 void PrintA64Instruction(u32 instruction) {
@@ -71,6 +80,7 @@ void PrintA64Instruction(u32 instruction) {
     fmt::print("{}\n", IR::DumpBlock(block));
 
     Optimization::A64GetSetElimination(block);
+    Optimization::DeadCodeElimination(block);
     Optimization::ConstantPropagation(block);
     Optimization::DeadCodeElimination(block);
     Optimization::IdentityRemovalPass(block);
