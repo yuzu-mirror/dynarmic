@@ -22,6 +22,7 @@
 #include "frontend/ir/basic_block.h"
 #include "frontend/ir/opcodes.h"
 #include "fuzz_util.h"
+#include "ir_opt/passes.h"
 #include "rand_int.h"
 #include "testenv.h"
 #include "unicorn_emu/a64_unicorn.h"
@@ -251,6 +252,19 @@ static void RunTestInstance(Dynarmic::A64::Jit& jit, A64Unicorn& uni, A64TestEnv
             }
         }
         fmt::print("\n");
+
+        const auto get_code = [&jit_env](u64 vaddr) { return jit_env.MemoryReadCode(vaddr); };
+        IR::Block ir_block = A64::Translate({instructions_start, FP::FPCR{fpcr}}, get_code, {});
+        Optimization::A64CallbackConfigPass(ir_block, GetUserConfig(jit_env));
+        fmt::print("IR:\n");
+        fmt::print("{}\n", IR::DumpBlock(ir_block));
+
+        Optimization::A64GetSetElimination(ir_block);
+        Optimization::DeadCodeElimination(ir_block);
+        Optimization::ConstantPropagation(ir_block);
+        Optimization::DeadCodeElimination(ir_block);
+        fmt::print("Optimized IR:\n");
+        fmt::print("{}\n", IR::DumpBlock(ir_block));
 
         fmt::print("x86_64:\n");
         fmt::print("{}\n", jit.Disassemble());
