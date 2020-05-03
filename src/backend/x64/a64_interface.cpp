@@ -83,6 +83,15 @@ public:
         PerformRequestedCacheInvalidation();
     }
 
+    void ExceptionalExit() {
+        if (!conf.wall_clock_cntpct) {
+            const s64 ticks = jit_state.cycles_to_run - jit_state.cycles_remaining;
+            conf.callbacks->AddTicks(ticks);
+        }
+        PerformRequestedCacheInvalidation();
+        is_executing = false;
+    }
+
     void ClearCache() {
         invalidate_entire_cache = true;
         RequestCacheInvalidation();
@@ -185,6 +194,11 @@ public:
         jit_state.SetPstate(value);
     }
 
+    void ChangeProcessorID(size_t value) {
+        conf.processor_id = value;
+        emitter.ChangeProcessorID(value);
+    }
+
     void ClearExclusiveState() {
         jit_state.exclusive_state = 0;
     }
@@ -228,7 +242,8 @@ private:
 
         // JIT Compile
         const auto get_code = [this](u64 vaddr) { return conf.callbacks->MemoryReadCode(vaddr); };
-        IR::Block ir_block = A64::Translate(A64::LocationDescriptor{current_location}, get_code, {conf.define_unpredictable_behaviour});
+        IR::Block ir_block = A64::Translate(A64::LocationDescriptor{current_location}, get_code,
+                                                {conf.define_unpredictable_behaviour, conf.wall_clock_cntpct});
         Optimization::A64CallbackConfigPass(ir_block, conf);
         if (conf.enable_optimizations) {
             Optimization::A64GetSetElimination(ir_block);
@@ -307,6 +322,10 @@ void Jit::HaltExecution() {
     impl->HaltExecution();
 }
 
+void Jit::ExceptionalExit() {
+    impl->ExceptionalExit();
+}
+
 u64 Jit::GetSP() const {
     return impl->GetSP();
 }
@@ -377,6 +396,10 @@ u32 Jit::GetPstate() const {
 
 void Jit::SetPstate(u32 value) {
     impl->SetPstate(value);
+}
+
+void Jit::ChangeProcessorID(size_t new_processor) {
+    impl->ChangeProcessorID(new_processor);
 }
 
 void Jit::ClearExclusiveState() {

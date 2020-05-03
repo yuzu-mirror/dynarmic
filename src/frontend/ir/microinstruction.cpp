@@ -99,6 +99,20 @@ bool Inst::IsSharedMemoryReadOrWrite() const {
     return IsSharedMemoryRead() || IsSharedMemoryWrite();
 }
 
+bool Inst::IsExclusiveMemoryRead() const {
+    switch (op) {
+    case Opcode::A64ExclusiveReadMemory8:
+    case Opcode::A64ExclusiveReadMemory16:
+    case Opcode::A64ExclusiveReadMemory32:
+    case Opcode::A64ExclusiveReadMemory64:
+    case Opcode::A64ExclusiveReadMemory128:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 bool Inst::IsExclusiveMemoryWrite() const {
     switch (op) {
     case Opcode::A32ExclusiveWriteMemory8:
@@ -118,7 +132,7 @@ bool Inst::IsExclusiveMemoryWrite() const {
 }
 
 bool Inst::IsMemoryRead() const {
-    return IsSharedMemoryRead();
+    return IsSharedMemoryRead() || IsExclusiveMemoryRead();
 }
 
 bool Inst::IsMemoryWrite() const {
@@ -457,7 +471,7 @@ bool Inst::AltersExclusiveState() const {
     return op == Opcode::A32ClearExclusive ||
            op == Opcode::A32SetExclusive   ||
            op == Opcode::A64ClearExclusive ||
-           op == Opcode::A64SetExclusive   ||
+           IsExclusiveMemoryRead()         ||
            IsExclusiveMemoryWrite();
 }
 

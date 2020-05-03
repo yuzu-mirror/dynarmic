@@ -26,6 +26,10 @@ struct TranslationOptions {
     /// If this is true, we define some behaviour for some instructions.
     bool define_unpredictable_behaviour = false;
 
+    /// This tells the translator a wall clock will be used, thus allowing it
+    /// to avoid writting certain unnecessary code only needed for cycle timers.
+    bool wall_clock_cntpct = false;
+
     /// This changes what IR we emit when we translate a hint instruction.
     /// If this is false, we treat the instruction as a NOP.
     /// If this is true, we emit an ExceptionRaised instruction.

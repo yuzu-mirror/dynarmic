@@ -637,12 +637,16 @@ A32OPC(ExclusiveWriteMemory64,                              U32,            U32,
 
 // A64 Memory access
 A64OPC(ClearExclusive,                                      Void,                                                                           )
-A64OPC(SetExclusive,                                        Void,           U64,            U8                                              )
 A64OPC(ReadMemory8,                                         U8,             U64                                                             )
 A64OPC(ReadMemory16,                                        U16,            U64                                                             )
 A64OPC(ReadMemory32,                                        U32,            U64                                                             )
 A64OPC(ReadMemory64,                                        U64,            U64                                                             )
 A64OPC(ReadMemory128,                                       U128,           U64                                                             )
+A64OPC(ExclusiveReadMemory8,                                U8,             U64                                                             )
+A64OPC(ExclusiveReadMemory16,                               U16,            U64                                                             )
+A64OPC(ExclusiveReadMemory32,                               U32,            U64                                                             )
+A64OPC(ExclusiveReadMemory64,                               U64,            U64                                                             )
+A64OPC(ExclusiveReadMemory128,                              U128,           U64                                                             )
 A64OPC(WriteMemory8,                                        Void,           U64,            U8                                              )
 A64OPC(WriteMemory16,                                       Void,           U64,            U16                                             )
 A64OPC(WriteMemory32,                                       Void,           U64,            U32                                             )

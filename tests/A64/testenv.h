@@ -84,6 +84,27 @@ public:
         MemoryWrite64(vaddr + 8, value[1]);
     }
 
+    bool MemoryWriteExclusive8(u64 vaddr, std::uint8_t value, [[maybe_unused]] std::uint8_t expected) override {
+        MemoryWrite8(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive16(u64 vaddr, std::uint16_t value, [[maybe_unused]] std::uint16_t expected) override {
+        MemoryWrite16(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive32(u64 vaddr, std::uint32_t value, [[maybe_unused]] std::uint32_t expected) override {
+        MemoryWrite32(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive64(u64 vaddr, std::uint64_t value, [[maybe_unused]] std::uint64_t expected) override {
+        MemoryWrite64(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive128(u64 vaddr, Vector value, [[maybe_unused]] Vector expected) override {
+        MemoryWrite128(vaddr, value);
+        return true;
+    }
+
     void InterpreterFallback(u64 pc, size_t num_instructions) override { ASSERT_MSG(false, "InterpreterFallback({:016x}, {})", pc, num_instructions); }
 
     void CallSVC(std::uint32_t swi) override { ASSERT_MSG(false, "CallSVC({})", swi); }

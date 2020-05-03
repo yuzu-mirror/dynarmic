@@ -54,12 +54,16 @@ public:
     void SetTPIDR(const IR::U64& value);
 
     void ClearExclusive();
-    void SetExclusive(const IR::U64& vaddr, size_t byte_size);
     IR::U8 ReadMemory8(const IR::U64& vaddr);
     IR::U16 ReadMemory16(const IR::U64& vaddr);
     IR::U32 ReadMemory32(const IR::U64& vaddr);
     IR::U64 ReadMemory64(const IR::U64& vaddr);
     IR::U128 ReadMemory128(const IR::U64& vaddr);
+    IR::U8 ExclusiveReadMemory8(const IR::U64& vaddr);
+    IR::U16 ExclusiveReadMemory16(const IR::U64& vaddr);
+    IR::U32 ExclusiveReadMemory32(const IR::U64& vaddr);
+    IR::U64 ExclusiveReadMemory64(const IR::U64& vaddr);
+    IR::U128 ExclusiveReadMemory128(const IR::U64& vaddr);
     void WriteMemory8(const IR::U64& vaddr, const IR::U8& value);
     void WriteMemory16(const IR::U64& vaddr, const IR::U16& value);
     void WriteMemory32(const IR::U64& vaddr, const IR::U32& value);
