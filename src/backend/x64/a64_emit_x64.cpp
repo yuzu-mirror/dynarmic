@@ -15,6 +15,7 @@
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/devirtualize.h"
 #include "backend/x64/emit_x64.h"
+#include "backend/x64/nzcv_util.h"
 #include "backend/x64/perf_map.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
@@ -371,7 +372,7 @@ void A64EmitX64::EmitA64SetCheckBit(A64EmitContext& ctx, IR::Inst* inst) {
 void A64EmitX64::EmitA64GetCFlag(A64EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
     code.mov(result, dword[r15 + offsetof(A64JitState, cpsr_nzcv)]);
-    code.shr(result, 29);
+    code.shr(result, NZCV::x64_c_flag_bit);
     code.and_(result, 1);
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -380,6 +381,9 @@ void A64EmitX64::EmitA64GetNZCVRaw(A64EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 nzcv_raw = ctx.reg_alloc.ScratchGpr().cvt32();
 
     code.mov(nzcv_raw, dword[r15 + offsetof(A64JitState, cpsr_nzcv)]);
+    code.and_(nzcv_raw, NZCV::x64_mask);
+    code.imul(nzcv_raw, nzcv_raw, NZCV::from_x64_multiplier);
+    code.and_(nzcv_raw, NZCV::arm_mask);
     ctx.reg_alloc.DefineValue(inst, nzcv_raw);
 }
 
@@ -387,17 +391,15 @@ void A64EmitX64::EmitA64SetNZCVRaw(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Reg32 nzcv_raw = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
-    code.and_(nzcv_raw, 0xF0000000);
+    code.shr(nzcv_raw, 28);
+    code.imul(nzcv_raw, nzcv_raw, NZCV::to_x64_multiplier);
+    code.and_(nzcv_raw, NZCV::x64_mask);
     code.mov(dword[r15 + offsetof(A64JitState, cpsr_nzcv)], nzcv_raw);
 }
 
 void A64EmitX64::EmitA64SetNZCV(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Reg32 to_store = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-    code.and_(to_store, 0b11000001'00000001);
-    code.imul(to_store, to_store, 0b00010000'00100001);
-    code.shl(to_store, 16);
-    code.and_(to_store, 0xF0000000);
     code.mov(dword[r15 + offsetof(A64JitState, cpsr_nzcv)], to_store);
 }
 

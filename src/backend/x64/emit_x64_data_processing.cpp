@@ -126,56 +126,71 @@ static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst*
     const Xbyak::Reg else_ = ctx.reg_alloc.UseScratchGpr(args[2]).changeBit(bitsize);
 
     code.mov(nzcv, dword[r15 + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
-    // TODO: Flag optimization
-    code.shr(nzcv, 28);
-    code.imul(nzcv, nzcv, 0b00010000'10000001);
-    code.and_(nzcv.cvt8(), 1);
-    code.add(nzcv.cvt8(), 0x7F); // restore OF
-    code.sahf(); // restore SF, ZF, CF
+
+    // sahf restores SF, ZF, CF
+    // add al, 0x7F restores OF
 
     switch (args[0].GetImmediateCond()) {
     case IR::Cond::EQ: //z
+        code.sahf();
         code.cmovz(else_, then_);
         break;
     case IR::Cond::NE: //!z
+        code.sahf();
         code.cmovnz(else_, then_);
         break;
     case IR::Cond::CS: //c
+        code.sahf();
         code.cmovc(else_, then_);
         break;
     case IR::Cond::CC: //!c
+        code.sahf();
         code.cmovnc(else_, then_);
         break;
     case IR::Cond::MI: //n
+        code.sahf();
         code.cmovs(else_, then_);
         break;
     case IR::Cond::PL: //!n
+        code.sahf();
         code.cmovns(else_, then_);
         break;
     case IR::Cond::VS: //v
+        code.add(nzcv.cvt8(), 0x7F);
         code.cmovo(else_, then_);
         break;
     case IR::Cond::VC: //!v
+        code.add(nzcv.cvt8(), 0x7F);
         code.cmovno(else_, then_);
         break;
     case IR::Cond::HI: //c & !z
+        code.sahf();
         code.cmc();
         code.cmova(else_, then_);
         break;
     case IR::Cond::LS: //!c | z
+        code.sahf();
         code.cmc();
         code.cmovna(else_, then_);
         break;
     case IR::Cond::GE: // n == v
+        code.add(nzcv.cvt8(), 0x7F);
+        code.sahf();
         code.cmovge(else_, then_);
         break;
     case IR::Cond::LT: // n != v
+        code.add(nzcv.cvt8(), 0x7F);
+        code.sahf();
         code.cmovl(else_, then_);
         break;
     case IR::Cond::GT: // !z & (n == v)
+        code.add(nzcv.cvt8(), 0x7F);
+        code.sahf();
         code.cmovg(else_, then_);
         break;
     case IR::Cond::LE: // z | (n != v)
+        code.add(nzcv.cvt8(), 0x7F);
+        code.sahf();
         code.cmovle(else_, then_);
         break;
     case IR::Cond::AL:

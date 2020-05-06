@@ -174,115 +174,82 @@ void EmitX64::EmitAddCycles(size_t cycles) {
 }
 
 Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
-    Xbyak::Label label;
+    Xbyak::Label pass;
 
-    const Xbyak::Reg32 cpsr = eax;
-    code.mov(cpsr, dword[r15 + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
+    code.mov(eax, dword[r15 + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
 
-    constexpr size_t n_shift = 31;
-    constexpr size_t z_shift = 30;
-    constexpr size_t c_shift = 29;
-    constexpr size_t v_shift = 28;
-    constexpr u32 n_mask = 1u << n_shift;
-    constexpr u32 z_mask = 1u << z_shift;
-    constexpr u32 c_mask = 1u << c_shift;
-    constexpr u32 v_mask = 1u << v_shift;
+    // sahf restores SF, ZF, CF
+    // add al, 0x7F restores OF
 
     switch (cond) {
     case IR::Cond::EQ: //z
-        code.test(cpsr, z_mask);
-        code.jnz(label);
+        code.sahf();
+        code.jz(pass);
         break;
     case IR::Cond::NE: //!z
-        code.test(cpsr, z_mask);
-        code.jz(label);
+        code.sahf();
+        code.jnz(pass);
         break;
     case IR::Cond::CS: //c
-        code.test(cpsr, c_mask);
-        code.jnz(label);
+        code.sahf();
+        code.jc(pass);
         break;
     case IR::Cond::CC: //!c
-        code.test(cpsr, c_mask);
-        code.jz(label);
+        code.sahf();
+        code.jnc(pass);
         break;
     case IR::Cond::MI: //n
-        code.test(cpsr, n_mask);
-        code.jnz(label);
+        code.sahf();
+        code.js(pass);
         break;
     case IR::Cond::PL: //!n
-        code.test(cpsr, n_mask);
-        code.jz(label);
+        code.sahf();
+        code.jns(pass);
         break;
     case IR::Cond::VS: //v
-        code.test(cpsr, v_mask);
-        code.jnz(label);
+        code.add(al, 0x7F);
+        code.jo(pass);
         break;
     case IR::Cond::VC: //!v
-        code.test(cpsr, v_mask);
-        code.jz(label);
+        code.add(al, 0x7F);
+        code.jno(pass);
         break;
-    case IR::Cond::HI: { //c & !z
-        code.and_(cpsr, z_mask | c_mask);
-        code.cmp(cpsr, c_mask);
-        code.je(label);
+    case IR::Cond::HI: //c & !z
+        code.sahf();
+        code.cmc();
+        code.ja(pass);
         break;
-    }
-    case IR::Cond::LS: { //!c | z
-        code.and_(cpsr, z_mask | c_mask);
-        code.cmp(cpsr, c_mask);
-        code.jne(label);
+    case IR::Cond::LS: //!c | z
+        code.sahf();
+        code.cmc();
+        code.jna(pass);
         break;
-    }
-    case IR::Cond::GE: { // n == v
-        code.and_(cpsr, n_mask | v_mask);
-        code.jz(label);
-        code.cmp(cpsr, n_mask | v_mask);
-        code.je(label);
+    case IR::Cond::GE: // n == v
+        code.add(al, 0x7F);
+        code.sahf();
+        code.jge(pass);
         break;
-    }
-    case IR::Cond::LT: { // n != v
-        Xbyak::Label fail;
-        code.and_(cpsr, n_mask | v_mask);
-        code.jz(fail);
-        code.cmp(cpsr, n_mask | v_mask);
-        code.jne(label);
-        code.L(fail);
+    case IR::Cond::LT: // n != v
+        code.add(al, 0x7F);
+        code.sahf();
+        code.jl(pass);
         break;
-    }
-    case IR::Cond::GT: { // !z & (n == v)
-        const Xbyak::Reg32 tmp1 = ebx;
-        const Xbyak::Reg32 tmp2 = esi;
-        code.mov(tmp1, cpsr);
-        code.mov(tmp2, cpsr);
-        code.shr(tmp1, n_shift);
-        code.shr(tmp2, v_shift);
-        code.shr(cpsr, z_shift);
-        code.xor_(tmp1, tmp2);
-        code.or_(tmp1, cpsr);
-        code.test(tmp1, 1);
-        code.jz(label);
+    case IR::Cond::GT: // !z & (n == v)
+        code.add(al, 0x7F);
+        code.sahf();
+        code.jg(pass);
         break;
-    }
-    case IR::Cond::LE: { // z | (n != v)
-        const Xbyak::Reg32 tmp1 = ebx;
-        const Xbyak::Reg32 tmp2 = esi;
-        code.mov(tmp1, cpsr);
-        code.mov(tmp2, cpsr);
-        code.shr(tmp1, n_shift);
-        code.shr(tmp2, v_shift);
-        code.shr(cpsr, z_shift);
-        code.xor_(tmp1, tmp2);
-        code.or_(tmp1, cpsr);
-        code.test(tmp1, 1);
-        code.jnz(label);
+    case IR::Cond::LE: // z | (n != v)
+        code.add(al, 0x7F);
+        code.sahf();
+        code.jle(pass);
         break;
-    }
     default:
         ASSERT_MSG(false, "Unknown cond {}", static_cast<size_t>(cond));
         break;
     }
 
-    return label;
+    return pass;
 }
 
 EmitX64::BlockDescriptor EmitX64::RegisterBlock(const IR::LocationDescriptor& descriptor, CodePtr entrypoint, size_t size) {
