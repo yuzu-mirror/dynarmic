@@ -1216,6 +1216,14 @@ public:
         return fmt::format("vdiv{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
+    std::string vfp_VFNMS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+        return fmt::format("vfnms{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
+    }
+
+    std::string vfp_VFNMA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+        return fmt::format("vfmna{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
+    }
+
     std::string vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D){
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), FPRegStr(true, Vd, D), t);
     }
