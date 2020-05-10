@@ -482,6 +482,36 @@ bool ArmTranslatorVisitor::vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, s
     return true;
 }
 
+// VMOV<c>.F64 <Dd>, #<imm>
+// VMOV<c>.F32 <Sd>, #<imm>
+bool ArmTranslatorVisitor::vfp_VMOV_imm(Cond cond, bool D, Imm<4> imm4H, size_t Vd, bool sz, Imm<4> imm4L) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (ir.current_location.FPSCR().Stride() != 1 || ir.current_location.FPSCR().Len() != 1) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToExtReg(sz, Vd, D);
+    const auto imm8 = concatenate(imm4H, imm4L);
+
+    if (sz) {
+        const u64 sign = static_cast<u64>(imm8.Bit<7>());
+        const u64 exp = (imm8.Bit<6>() ? 0x3FC : 0x400) | imm8.Bits<4, 5, u64>();
+        const u64 fract = imm8.Bits<0, 3, u64>() << 48;
+        const u64 immediate = (sign << 63) | (exp << 52) | fract;
+        ir.SetExtendedRegister(d, ir.Imm64(immediate));
+    } else {
+        const u32 sign = static_cast<u32>(imm8.Bit<7>());
+        const u32 exp = (imm8.Bit<6>() ? 0x7C : 0x80) | imm8.Bits<4, 5>();
+        const u32 fract = imm8.Bits<0, 3>() << 19;
+        const u32 immediate = (sign << 31) | (exp << 23) | fract;
+        ir.SetExtendedRegister(d, ir.Imm32(immediate));
+    }
+    return true;
+}
+
 // VMOV<c>.F64 <Dd>, <Dm>
 // VMOV<c>.F32 <Sd>, <Sm>
 bool ArmTranslatorVisitor::vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {

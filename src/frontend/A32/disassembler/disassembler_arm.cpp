@@ -1232,6 +1232,24 @@ public:
         return fmt::format("vfma{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
+    std::string vfp_VMOV_imm(Cond cond, bool D, Imm<4> imm4H, size_t Vd, bool sz, Imm<4> imm4L) {
+        const auto imm8 = concatenate(imm4H, imm4L);
+
+        if (sz) {
+            const u64 sign = static_cast<u64>(imm8.Bit<7>());
+            const u64 exp = (imm8.Bit<6>() ? 0x3FC : 0x400) | imm8.Bits<4, 5, u64>();
+            const u64 fract = imm8.Bits<0, 3, u64>() << 48;
+            const u64 immediate = (sign << 63) | (exp << 52) | fract;
+            return fmt::format("vmov{}.f64 {}, #0x{:016x}", CondToString(cond), FPRegStr(sz, Vd, D), immediate);
+        } else {
+            const u32 sign = static_cast<u32>(imm8.Bit<7>());
+            const u32 exp = (imm8.Bit<6>() ? 0x7C : 0x80) | imm8.Bits<4, 5>();
+            const u32 fract = imm8.Bits<0, 3>() << 19;
+            const u32 immediate = (sign << 31) | (exp << 23) | fract;
+            return fmt::format("vmov{}.f32 {}, #0x{:08x}", CondToString(cond), FPRegStr(sz, Vd, D), immediate);
+        }
+    }
+
     std::string vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D){
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), FPRegStr(true, Vd, D), t);
     }
