@@ -1280,6 +1280,20 @@ public:
         return fmt::format("vsqrt{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
+    std::string vfp_VCVTB(Cond cond, bool D, bool op, size_t Vd, bool sz, bool M, size_t Vm) {
+        const bool convert_from_half = !op;
+        const char* const to = convert_from_half ? (sz ? "f64" : "f32") : "f16";
+        const char* const from = convert_from_half ? "f16" : (sz ? "f64" : "f32");
+        return fmt::format("vcvtb{}.{}.{} {}, {}", CondToString(cond), to, from, FPRegStr(convert_from_half ? sz : false, Vd, D), FPRegStr(convert_from_half ? false : sz, Vm, M));
+    }
+
+    std::string vfp_VCVTT(Cond cond, bool D, bool op, size_t Vd, bool sz, bool M, size_t Vm) {
+        const bool convert_from_half = !op;
+        const char* const to = convert_from_half ? (sz ? "f64" : "f32") : "f16";
+        const char* const from = convert_from_half ? "f16" : (sz ? "f64" : "f32");
+        return fmt::format("vcvtt{}.{}.{} {}, {}", CondToString(cond), to, from, FPRegStr(convert_from_half ? sz : false, Vd, D), FPRegStr(convert_from_half ? false : sz, Vm, M));
+    }
+
     std::string vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vcvt{}.{}.{} {}, {}", CondToString(cond), !sz ? "f64" : "f32", sz ? "f64" : "f32", FPRegStr(!sz, Vd, D), FPRegStr(sz, Vm, M));
     }

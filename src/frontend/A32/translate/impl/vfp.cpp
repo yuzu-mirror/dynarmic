@@ -548,6 +548,70 @@ bool ArmTranslatorVisitor::vfp_VSQRT(Cond cond, bool D, size_t Vd, bool sz, bool
     });
 }
 
+// VCVTB<c>.f32.f16 <Dd>, <Dm>
+// VCVTB<c>.f64.f16 <Dd>, <Dm>
+// VCVTB<c>.f16.f32 <Dd>, <Dm>
+// VCVTB<c>.f16.f64 <Dd>, <Dm>
+bool ArmTranslatorVisitor::vfp_VCVTB(Cond cond, bool D, bool op, size_t Vd, bool sz, bool M, size_t Vm) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    const bool convert_from_half = !op;
+    const auto rounding_mode = ir.current_location.FPSCR().RMode();
+    if (convert_from_half) {
+        const auto d = ToExtReg(sz, Vd, D);
+        const auto m = ToExtReg(false, Vm, M);
+
+        return EmitVfpVectorOperation(sz, d, m, [this, sz, rounding_mode](ExtReg d, ExtReg m) {
+            const auto reg_m = ir.LeastSignificantHalf(ir.GetExtendedRegister(m));
+            const auto result = sz ? IR::U32U64{ir.FPHalfToDouble(reg_m, rounding_mode)} : IR::U32U64{ir.FPHalfToSingle(reg_m, rounding_mode)};
+            ir.SetExtendedRegister(d, result);
+        });
+    } else {
+        const auto d = ToExtReg(false, Vd, D);
+        const auto m = ToExtReg(sz, Vm, M);
+
+        return EmitVfpVectorOperation(sz, d, m, [this, sz, rounding_mode](ExtReg d, ExtReg m) {
+            const auto reg_m = ir.GetExtendedRegister(m);
+            const auto result = sz ? ir.FPDoubleToHalf(reg_m, rounding_mode) : ir.FPSingleToHalf(reg_m, rounding_mode);
+            ir.SetExtendedRegister(d, ir.Or(ir.And(ir.GetExtendedRegister(d), ir.Imm32(0xFFFF0000)), ir.ZeroExtendToWord(result)));
+        });
+    }
+}
+
+// VCVTT<c>.f32.f16 <Dd>, <Dm>
+// VCVTT<c>.f64.f16 <Dd>, <Dm>
+// VCVTT<c>.f16.f32 <Dd>, <Dm>
+// VCVTT<c>.f16.f64 <Dd>, <Dm>
+bool ArmTranslatorVisitor::vfp_VCVTT(Cond cond, bool D, bool op, size_t Vd, bool sz, bool M, size_t Vm) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    const bool convert_from_half = !op;
+    const auto rounding_mode = ir.current_location.FPSCR().RMode();
+    if (convert_from_half) {
+        const auto d = ToExtReg(sz, Vd, D);
+        const auto m = ToExtReg(false, Vm, M);
+
+        return EmitVfpVectorOperation(sz, d, m, [this, sz, rounding_mode](ExtReg d, ExtReg m) {
+            const auto reg_m = ir.LeastSignificantHalf(ir.LogicalShiftRight(ir.GetExtendedRegister(m), ir.Imm8(16)));
+            const auto result = sz ? IR::U32U64{ir.FPHalfToDouble(reg_m, rounding_mode)} : IR::U32U64{ir.FPHalfToSingle(reg_m, rounding_mode)};
+            ir.SetExtendedRegister(d, result);
+        });
+    } else {
+        const auto d = ToExtReg(false, Vd, D);
+        const auto m = ToExtReg(sz, Vm, M);
+
+        return EmitVfpVectorOperation(sz, d, m, [this, sz, rounding_mode](ExtReg d, ExtReg m) {
+            const auto reg_m = ir.GetExtendedRegister(m);
+            const auto result = sz ? ir.FPDoubleToHalf(reg_m, rounding_mode) : ir.FPSingleToHalf(reg_m, rounding_mode);
+            ir.SetExtendedRegister(d, ir.Or(ir.And(ir.GetExtendedRegister(d), ir.Imm32(0x0000FFFF)), ir.LogicalShiftLeft(ir.ZeroExtendToWord(result), ir.Imm8(16))));
+        });
+    }
+}
+
 // VCVT<c>.F64.F32 <Dd>, <Sm>
 // VCVT<c>.F32.F64 <Sd>, <Dm>
 bool ArmTranslatorVisitor::vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
