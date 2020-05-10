@@ -121,6 +121,7 @@ INST(arm_SWPB,          "SWPB",                "cccc00010100nnnntttt00001001uuuu
 INST(arm_LDRBT,         "LDRBT (A1)",          "----0100-111--------------------")
 INST(arm_LDRBT,         "LDRBT (A2)",          "----0110-111---------------0----")
 INST(arm_LDRHT,         "LDRHT (A1)",          "----0000-111------------1011----")
+INST(arm_LDRHT,         "LDRHT (A1)",          "----0000-1111111--------1011----")
 INST(arm_LDRHT,         "LDRHT (A2)",          "----0000-011--------00001011----")
 INST(arm_LDRSBT,        "LDRSBT (A1)",         "----0000-111------------1101----")
 INST(arm_LDRSBT,        "LDRSBT (A2)",         "----0000-011--------00001101----")

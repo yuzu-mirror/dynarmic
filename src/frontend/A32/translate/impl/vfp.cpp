@@ -643,7 +643,9 @@ bool ArmTranslatorVisitor::vfp_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm<8
         return true;
     }
 
+    const u32 imm32 = imm8.ZeroExtend() << 2;
     auto address = ir.GetRegister(Reg::SP);
+    ir.SetRegister(Reg::SP, ir.Add(address, ir.Imm32(imm32)));
 
     for (size_t i = 0; i < regs; ++i) {
         if (sz) {
@@ -662,7 +664,6 @@ bool ArmTranslatorVisitor::vfp_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm<8
         }
     }
 
-    ir.SetRegister(Reg::SP, address);
     return true;
 }
 
