@@ -107,6 +107,8 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             "arm_CPS", "arm_RFE", "arm_SRS",
             // Undefined
             "arm_UDF",
+            // FPSCR is inaccurate
+            "vfp_VMRS",
         };
 
         for (const auto& [fn, bitstring] : list) {
