@@ -1221,7 +1221,15 @@ public:
     }
 
     std::string vfp_VFNMA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
-        return fmt::format("vfmna{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
+        return fmt::format("vfnma{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
+    }
+
+    std::string vfp_VFMS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+        return fmt::format("vfms{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
+    }
+
+    std::string vfp_VFMA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm) {
+        return fmt::format("vfma{}.{} {}, {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vn, N), FPRegStr(sz, Vm, M));
     }
 
     std::string vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D){
