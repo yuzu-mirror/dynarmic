@@ -1,5 +1,3 @@
-// cccc1110________----101-__-0----
-
 // Floating-point three-register data processing instructions
 INST(vfp_VMLA,             "VMLA",                    "cccc11100D00nnnndddd101zN0M0mmmm") // VFPv2
 INST(vfp_VMLS,             "VMLS",                    "cccc11100D00nnnndddd101zN1M0mmmm") // VFPv2
@@ -10,6 +8,27 @@ INST(vfp_VNMUL,            "VNMUL",                   "cccc11100D10nnnndddd101zN
 INST(vfp_VADD,             "VADD",                    "cccc11100D11nnnndddd101zN0M0mmmm") // VFPv2
 INST(vfp_VSUB,             "VSUB",                    "cccc11100D11nnnndddd101zN1M0mmmm") // VFPv2
 INST(vfp_VDIV,             "VDIV",                    "cccc11101D00nnnndddd101zN0M0mmmm") // VFPv2
+//INST(vfp_VFNMA,            "VFNMA",                   "cccc11101D01nnnndddd101zN0M0mmmm") // VFPv4
+//INST(vfp_VFNMS,            "VFNMS",                   "cccc11101D01nnnndddd101zN1M0mmmm") // VFPv4
+//INST(vfp_VFMA,             "VFMA",                    "cccc11101D10nnnndddd101zN0M0mmmm") // VFPv4
+//INST(vfp_VFMS,             "VFMS",                    "cccc11101D10nnnndddd101zN1M0mmmm") // VFPv4
+
+// Other floating-point data-processing instructions
+//INST(vfp_VMOV_imm,         "VMOV (immediate)",        "cccc11101D11vvvvdddd101z0000vvvv") // VFPv3
+INST(vfp_VMOV_reg,         "VMOV (reg)",              "cccc11101D110000dddd101z01M0mmmm") // VFPv2
+INST(vfp_VABS,             "VABS",                    "cccc11101D110000dddd101z11M0mmmm") // VFPv2
+INST(vfp_VNEG,             "VNEG",                    "cccc11101D110001dddd101z01M0mmmm") // VFPv2
+INST(vfp_VSQRT,            "VSQRT",                   "cccc11101D110001dddd101z11M0mmmm") // VFPv2
+//INST(vfp_VCVTB,            "VCVTB",                   "cccc11101D11001odddd1010T1M0mmmm") // VFPv3HP
+//INST(vfp_VCVTT,            "VCVTT",                   "cccc11101D11001odddd1010T1M0mmmm") // VFPv3HP
+INST(vfp_VCMP,             "VCMP",                    "cccc11101D110100dddd101zE1M0mmmm") // VFPv2
+INST(vfp_VCMP_zero,        "VCMP (with zero)",        "cccc11101D110101dddd101zE1000000") // VFPv2
+INST(vfp_VCVT_f_to_f,      "VCVT (f32<->f64)",        "cccc11101D110111dddd101z11M0mmmm") // VFPv2
+INST(vfp_VCVT_from_int,    "VCVT (from int)",         "cccc11101D111000dddd101zs1M0mmmm") // VFPv2
+//INST(vfp_VCVT_from_fixed,  "VCVT (from fixed)",       "cccc11101D11101Udddd101zx1i0vvvv") // VFPv3
+INST(vfp_VCVT_to_u32,      "VCVT (to u32)",           "cccc11101D111100dddd101zr1M0mmmm") // VFPv2
+INST(vfp_VCVT_to_s32,      "VCVT (to s32)",           "cccc11101D111101dddd101zr1M0mmmm") // VFPv2
+//INST(vfp_VCVT_to_fixed,    "VCVT (to fixed)",         "cccc11101D11111Udddd101zx1i0vvvv") // VFPv3
 
 // Floating-point move instructions
 INST(vfp_VMOV_u32_f64,     "VMOV (core to f64)",      "cccc11100000ddddtttt1011D0010000") // VFPv2
@@ -20,18 +39,6 @@ INST(vfp_VMOV_2u32_2f32,   "VMOV (2xcore to 2xf32)",  "cccc11000100uuuutttt10100
 INST(vfp_VMOV_2f32_2u32,   "VMOV (2xf32 to 2xcore)",  "cccc11000101uuuutttt101000M1mmmm") // VFPv2
 INST(vfp_VMOV_2u32_f64,    "VMOV (2xcore to f64)",    "cccc11000100uuuutttt101100M1mmmm") // VFPv2
 INST(vfp_VMOV_f64_2u32,    "VMOV (f64 to 2xcore)",    "cccc11000101uuuutttt101100M1mmmm") // VFPv2
-INST(vfp_VMOV_reg,         "VMOV (reg)",              "cccc11101D110000dddd101z01M0mmmm") // VFPv2
-
-// Floating-point other instructions
-INST(vfp_VABS,             "VABS",                    "cccc11101D110000dddd101z11M0mmmm") // VFPv2
-INST(vfp_VNEG,             "VNEG",                    "cccc11101D110001dddd101z01M0mmmm") // VFPv2
-INST(vfp_VSQRT,            "VSQRT",                   "cccc11101D110001dddd101z11M0mmmm") // VFPv2
-INST(vfp_VCVT_f_to_f,      "VCVT (f32<->f64)",        "cccc11101D110111dddd101z11M0mmmm") // VFPv2
-INST(vfp_VCVT_to_float,    "VCVT (to float)",         "cccc11101D111000dddd101zs1M0mmmm") // VFPv2
-INST(vfp_VCVT_to_u32,      "VCVT (to u32)",           "cccc11101D111100dddd101zr1M0mmmm") // VFPv2
-INST(vfp_VCVT_to_s32,      "VCVT (to s32)",           "cccc11101D111101dddd101zr1M0mmmm") // VFPv2
-INST(vfp_VCMP,             "VCMP",                    "cccc11101D110100dddd101zE1M0mmmm") // VFPv2
-INST(vfp_VCMP_zero,        "VCMP (with zero)",        "cccc11101D110101dddd101zE1000000") // VFPv2
 
 // Floating-point system register access
 INST(vfp_VMSR,             "VMSR",                    "cccc111011100001tttt101000010000") // VFPv2

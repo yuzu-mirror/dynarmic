@@ -106,6 +106,8 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
     target_sources(dynarmic PRIVATE
         frontend/A32/decoder/arm.h
         frontend/A32/decoder/arm.inc
+        frontend/A32/decoder/asimd.h
+        frontend/A32/decoder/asimd.inc
         frontend/A32/decoder/thumb16.h
         frontend/A32/decoder/thumb32.h
         frontend/A32/decoder/vfp.h
