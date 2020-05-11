@@ -35,7 +35,7 @@ private:
      * A '0' in a bitstring indicates that a zero must be present at that bit position.
      * A '1' in a bitstring indicates that a one must be present at that bit position.
      */
-    static auto GetMaskAndExpect(const char* const bitstring) {
+    static constexpr auto GetMaskAndExpect(const char* const bitstring) {
         const auto one = static_cast<opcode_type>(1);
         opcode_type mask = 0, expect = 0;
         for (size_t i = 0; i < opcode_bitsize; i++) {
