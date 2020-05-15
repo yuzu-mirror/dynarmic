@@ -106,16 +106,30 @@ INST(arm_NOP,           "Reserved Hint",       "----001100100000111100000000----
 
 // Synchronization Primitive instructions
 INST(arm_CLREX,         "CLREX",               "11110101011111111111000000011111") // v6K
-INST(arm_LDREX,         "LDREX",               "cccc00011001nnnndddd111110011111") // v6
-INST(arm_LDREXB,        "LDREXB",              "cccc00011101nnnndddd111110011111") // v6K
-INST(arm_LDREXD,        "LDREXD",              "cccc00011011nnnndddd111110011111") // v6K
-INST(arm_LDREXH,        "LDREXH",              "cccc00011111nnnndddd111110011111") // v6K
-INST(arm_STREX,         "STREX",               "cccc00011000nnnndddd11111001mmmm") // v6
-INST(arm_STREXB,        "STREXB",              "cccc00011100nnnndddd11111001mmmm") // v6K
-INST(arm_STREXD,        "STREXD",              "cccc00011010nnnndddd11111001mmmm") // v6K
-INST(arm_STREXH,        "STREXH",              "cccc00011110nnnndddd11111001mmmm") // v6K
 INST(arm_SWP,           "SWP",                 "cccc00010000nnnntttt00001001uuuu") // v2S (v6: Deprecated)
 INST(arm_SWPB,          "SWPB",                "cccc00010100nnnntttt00001001uuuu") // v2S (v6: Deprecated)
+INST(arm_STL,           "STL",                 "cccc00011000nnnn111111001001tttt") // v8
+INST(arm_STLEX,         "STLEX",               "cccc00011000nnnndddd11101001tttt") // v8
+INST(arm_STREX,         "STREX",               "cccc00011000nnnndddd11111001mmmm") // v6
+INST(arm_LDA,           "LDA",                 "cccc00011001nnnndddd110010011111") // v8
+INST(arm_LDAEX,         "LDAEX",               "cccc00011001nnnndddd111010011111") // v8
+INST(arm_LDREX,         "LDREX",               "cccc00011001nnnndddd111110011111") // v6
+INST(arm_STLEXD,        "STLEXD",              "cccc00011010nnnndddd11101001mmmm") // v8
+INST(arm_STREXD,        "STREXD",              "cccc00011010nnnndddd11111001mmmm") // v6K
+INST(arm_LDAEXD,        "LDAEXD",              "cccc00011011nnnndddd111010011111") // v8
+INST(arm_LDREXD,        "LDREXD",              "cccc00011011nnnndddd111110011111") // v6K
+INST(arm_STLB,          "STLB",                "cccc00011100nnnn111111001001tttt") // v8
+INST(arm_STLEXB,        "STLEXB",              "cccc00011100nnnndddd11101001mmmm") // v8
+INST(arm_STREXB,        "STREXB",              "cccc00011100nnnndddd11111001mmmm") // v6K
+INST(arm_LDAB,          "LDAB",                "cccc00011101nnnndddd110010011111") // v8
+INST(arm_LDAEXB,        "LDAEXB",              "cccc00011101nnnndddd111010011111") // v8
+INST(arm_LDREXB,        "LDREXB",              "cccc00011101nnnndddd111110011111") // v6K
+INST(arm_STLH,          "STLH",                "cccc00011110nnnn111111001001mmmm") // v8
+INST(arm_STLEXH,        "STLEXH",              "cccc00011110nnnndddd11101001mmmm") // v8
+INST(arm_STREXH,        "STREXH",              "cccc00011110nnnndddd11111001mmmm") // v6K
+INST(arm_LDAH,          "LDAH",                "cccc00011111nnnndddd110010011111") // v8
+INST(arm_LDAEXH,        "LDAEXH",              "cccc00011111nnnndddd111010011111") // v8
+INST(arm_LDREXH,        "LDREXH",              "cccc00011111nnnndddd111110011111") // v6K
 
 // Load/Store instructions
 INST(arm_LDRBT,         "LDRBT (A1)",          "----0100-111--------------------")

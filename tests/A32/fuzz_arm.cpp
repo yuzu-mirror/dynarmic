@@ -90,8 +90,8 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             "arm_LDRBT", "arm_LDRBT", "arm_LDRHT", "arm_LDRHT", "arm_LDRSBT", "arm_LDRSBT", "arm_LDRSHT", "arm_LDRSHT", "arm_LDRT", "arm_LDRT",
             "arm_STRBT", "arm_STRBT", "arm_STRHT", "arm_STRHT", "arm_STRT", "arm_STRT",
             // Exclusive load/stores
-            "arm_LDREXB", "arm_LDREXD", "arm_LDREXH", "arm_LDREX",
-            "arm_STREXB", "arm_STREXD", "arm_STREXH", "arm_STREX",
+            "arm_LDREXB", "arm_LDREXD", "arm_LDREXH", "arm_LDREX", "arm_LDAEXB", "arm_LDAEXD", "arm_LDAEXH", "arm_LDAEX",
+            "arm_STREXB", "arm_STREXD", "arm_STREXH", "arm_STREX", "arm_STLEXB", "arm_STLEXD", "arm_STLEXH", "arm_STLEX",
             "arm_SWP", "arm_SWPB",
             // Elevated load/store multiple instructions.
             "arm_LDM_eret", "arm_LDM_usr",

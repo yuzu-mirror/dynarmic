@@ -341,16 +341,30 @@ struct ArmTranslatorVisitor final {
 
     // Synchronization Primitive instructions
     bool arm_CLREX();
-    bool arm_LDREX(Cond cond, Reg n, Reg t);
-    bool arm_LDREXB(Cond cond, Reg n, Reg t);
-    bool arm_LDREXD(Cond cond, Reg n, Reg t);
-    bool arm_LDREXH(Cond cond, Reg n, Reg t);
-    bool arm_STREX(Cond cond, Reg n, Reg d, Reg t);
-    bool arm_STREXB(Cond cond, Reg n, Reg d, Reg t);
-    bool arm_STREXD(Cond cond, Reg n, Reg d, Reg t);
-    bool arm_STREXH(Cond cond, Reg n, Reg d, Reg t);
     bool arm_SWP(Cond cond, Reg n, Reg t, Reg t2);
     bool arm_SWPB(Cond cond, Reg n, Reg t, Reg t2);
+    bool arm_STL(Cond cond, Reg n, Reg t);
+    bool arm_STLEX(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_STREX(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_LDA(Cond cond, Reg n, Reg t);
+    bool arm_LDAEX(Cond cond, Reg n, Reg t);
+    bool arm_LDREX(Cond cond, Reg n, Reg t);
+    bool arm_STLEXD(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_STREXD(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_LDAEXD(Cond cond, Reg n, Reg t);
+    bool arm_LDREXD(Cond cond, Reg n, Reg t);
+    bool arm_STLB(Cond cond, Reg n, Reg t);
+    bool arm_STLEXB(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_STREXB(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_LDAB(Cond cond, Reg n, Reg t);
+    bool arm_LDAEXB(Cond cond, Reg n, Reg t);
+    bool arm_LDREXB(Cond cond, Reg n, Reg t);
+    bool arm_STLH(Cond cond, Reg n, Reg t);
+    bool arm_STLEXH(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_STREXH(Cond cond, Reg n, Reg d, Reg t);
+    bool arm_LDAH(Cond cond, Reg n, Reg t);
+    bool arm_LDAEXH(Cond cond, Reg n, Reg t);
+    bool arm_LDREXH(Cond cond, Reg n, Reg t);
 
     // Status register access instructions
     bool arm_CPS();

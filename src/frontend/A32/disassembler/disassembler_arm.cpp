@@ -1111,6 +1111,54 @@ public:
     std::string arm_CLREX() {
         return "clrex";
     }
+    std::string arm_SWP(Cond cond, Reg n, Reg t, Reg t2) {
+        return fmt::format("swp{} {}, {}, [{}]", CondToString(cond), t, t2, n);
+    }
+    std::string arm_SWPB(Cond cond, Reg n, Reg t, Reg t2) {
+        return fmt::format("swpb{} {}, {}, [{}]", CondToString(cond), t, t2, n);
+    }
+    std::string arm_LDA(Cond cond, Reg n, Reg t) {
+        return fmt::format("lda{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_LDAB(Cond cond, Reg n, Reg t) {
+        return fmt::format("ldab{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_LDAH(Cond cond, Reg n, Reg t) {
+        return fmt::format("ldah{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_LDAEX(Cond cond, Reg n, Reg t) {
+        return fmt::format("ldaex{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_LDAEXB(Cond cond, Reg n, Reg t) {
+        return fmt::format("ldaexb{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_LDAEXD(Cond cond, Reg n, Reg t) {
+        return fmt::format("ldaexd{} {}, {}, [{}]", CondToString(cond), t, t+1, n);
+    }
+    std::string arm_LDAEXH(Cond cond, Reg n, Reg t) {
+        return fmt::format("ldaexh{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_STL(Cond cond, Reg n, Reg t) {
+        return fmt::format("stl{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_STLB(Cond cond, Reg n, Reg t) {
+        return fmt::format("stlb{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_STLH(Cond cond, Reg n, Reg t) {
+        return fmt::format("stlh{} {}, [{}]", CondToString(cond), t, n);
+    }
+    std::string arm_STLEX(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("stlex{} {}, {}, [{}]", CondToString(cond), d, m, n);
+    }
+    std::string arm_STLEXB(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("stlexb{} {}, {}, [{}]", CondToString(cond), d, m, n);
+    }
+    std::string arm_STLEXD(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("stlexd{} {}, {}, {}, [{}]", CondToString(cond), d, m, m+1, n);
+    }
+    std::string arm_STLEXH(Cond cond, Reg n, Reg d, Reg m) {
+        return fmt::format("stlexh{} {}, {}, [{}]", CondToString(cond), d, m, n);
+    }
     std::string arm_LDREX(Cond cond, Reg n, Reg d) {
         return fmt::format("ldrex{} {}, [{}]", CondToString(cond), d, n);
     }
@@ -1134,12 +1182,6 @@ public:
     }
     std::string arm_STREXH(Cond cond, Reg n, Reg d, Reg m) {
         return fmt::format("strexh{} {}, {}, [{}]", CondToString(cond), d, m, n);
-    }
-    std::string arm_SWP(Cond cond, Reg n, Reg t, Reg t2) {
-        return fmt::format("swp{} {}, {}, [{}]", CondToString(cond), t, t2, n);
-    }
-    std::string arm_SWPB(Cond cond, Reg n, Reg t, Reg t2) {
-        return fmt::format("swpb{} {}, {}, [{}]", CondToString(cond), t, t2, n);
     }
 
     // Status register access instructions
