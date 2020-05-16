@@ -8,13 +8,15 @@
 #include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
-static ExtReg ToExtReg(size_t base, bool bit) {
+namespace {
+ExtReg ToExtReg(size_t base, bool bit) {
     return ExtReg::D0 + (base + (bit ? 16 : 0));
 }
 
-bool ArmTranslatorVisitor::asimd_VAND_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+template <typename Callable>
+bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
+        return v.UndefinedInstruction();
     }
 
     const auto d = ToExtReg(Vd, D);
@@ -23,93 +25,44 @@ bool ArmTranslatorVisitor::asimd_VAND_reg(bool D, size_t Vn, size_t Vd, bool N, 
     const size_t regs = Q ? 2 : 1;
 
     for (size_t i = 0; i < regs; i++) {
-        const IR::U32U64 reg_m = ir.GetExtendedRegister(m + i);
-        const IR::U32U64 reg_n = ir.GetExtendedRegister(n + i);
-        const IR::U32U64 result = ir.And(reg_n, reg_m);
-        ir.SetExtendedRegister(d + i, result);
+        const IR::U32U64 reg_m = v.ir.GetExtendedRegister(m + i);
+        const IR::U32U64 reg_n = v.ir.GetExtendedRegister(n + i);
+        const IR::U32U64 result = fn(reg_n, reg_m);
+        v.ir.SetExtendedRegister(d + i, result);
     }
 
     return true;
+}
+} // Anonymous namespace
+
+bool ArmTranslatorVisitor::asimd_VAND_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return BitwiseInstruction(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
+        return ir.And(reg_n, reg_m);
+    });
 }
 
 bool ArmTranslatorVisitor::asimd_VBIC_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    const auto d = ToExtReg(Vd, D);
-    const auto m = ToExtReg(Vm, M);
-    const auto n = ToExtReg(Vn, N);
-    const size_t regs = Q ? 2 : 1;
-
-    for (size_t i = 0; i < regs; i++) {
-        const IR::U32U64 reg_m = ir.GetExtendedRegister(m + i);
-        const IR::U32U64 reg_n = ir.GetExtendedRegister(n + i);
-        const IR::U32U64 result = ir.And(reg_n, ir.Not(reg_m));
-        ir.SetExtendedRegister(d + i, result);
-    }
-
-    return true;
+    return BitwiseInstruction(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
+        return ir.And(reg_n, ir.Not(reg_m));
+    });
 }
 
 bool ArmTranslatorVisitor::asimd_VORR_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    const auto d = ToExtReg(Vd, D);
-    const auto m = ToExtReg(Vm, M);
-    const auto n = ToExtReg(Vn, N);
-    const size_t regs = Q ? 2 : 1;
-
-    for (size_t i = 0; i < regs; i++) {
-        const IR::U32U64 reg_m = ir.GetExtendedRegister(m + i);
-        const IR::U32U64 reg_n = ir.GetExtendedRegister(n + i);
-        const IR::U32U64 result = ir.Or(reg_n, reg_m);
-        ir.SetExtendedRegister(d + i, result);
-    }
-
-    return true;
+    return BitwiseInstruction(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
+        return ir.Or(reg_n, reg_m);
+    });
 }
 
 bool ArmTranslatorVisitor::asimd_VORN_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    const auto d = ToExtReg(Vd, D);
-    const auto m = ToExtReg(Vm, M);
-    const auto n = ToExtReg(Vn, N);
-    const size_t regs = Q ? 2 : 1;
-
-    for (size_t i = 0; i < regs; i++) {
-        const IR::U32U64 reg_m = ir.GetExtendedRegister(m + i);
-        const IR::U32U64 reg_n = ir.GetExtendedRegister(n + i);
-        const IR::U32U64 result = ir.Or(reg_n, ir.Not(reg_m));
-        ir.SetExtendedRegister(d + i, result);
-    }
-
-    return true;
+    return BitwiseInstruction(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
+        return ir.Or(reg_n, ir.Not(reg_m));
+    });
 }
 
 bool ArmTranslatorVisitor::asimd_VEOR_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    const auto d = ToExtReg(Vd, D);
-    const auto m = ToExtReg(Vm, M);
-    const auto n = ToExtReg(Vn, N);
-    const size_t regs = Q ? 2 : 1;
-
-    for (size_t i = 0; i < regs; i++) {
-        const IR::U32U64 reg_m = ir.GetExtendedRegister(m + i);
-        const IR::U32U64 reg_n = ir.GetExtendedRegister(n + i);
-        const IR::U32U64 result = ir.Eor(reg_n, reg_m);
-        ir.SetExtendedRegister(d + i, result);
-    }
-
-    return true;
+    return BitwiseInstruction(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
+        return ir.Eor(reg_n, reg_m);
+    });
 }
 
 } // namespace Dynarmic::A32
