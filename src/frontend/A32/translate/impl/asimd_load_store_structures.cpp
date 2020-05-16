@@ -10,7 +10,7 @@
 namespace Dynarmic::A32 {
 
 static ExtReg ToExtRegD(size_t base, bool bit) {
-    return static_cast<ExtReg>(static_cast<size_t>(ExtReg::D0) + base + (bit ? 16 : 0));
+    return ExtReg::D0 + (base + (bit ? 16 : 0));
 }
 
 bool ArmTranslatorVisitor::v8_VLD_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
