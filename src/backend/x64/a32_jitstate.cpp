@@ -46,7 +46,6 @@ namespace Dynarmic::Backend::X64 {
  */
 
 u32 A32JitState::Cpsr() const {
-    DEBUG_ASSERT((cpsr_nzcv & ~NZCV::x64_mask) == 0);
     DEBUG_ASSERT((cpsr_q & ~1) == 0);
     DEBUG_ASSERT((cpsr_jaifm & ~0x010001DF) == 0);
 
