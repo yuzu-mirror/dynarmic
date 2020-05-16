@@ -119,3 +119,14 @@
 //INST(asimd_VBIC_imm,        "VBIC (immediate)",         "1111001a1-000bcd----10x10-11efgh") // ASIMD
 //INST(asimd_VMVN_imm,        "VMVN (immediate)",         "1111001a1-000bcd----110x0-11efgh") // ASIMD
 //INST(asimd_VMOV_imm,        "VMOV (immediate)",         "1111001a1-000bcd----11100-11efgh") // ASIMD
+
+// Advanced SIMD load/store structures
+//INST(v8_VST_multiple,       "VST{1-4} (multiple)",      "111101000D00nnnnddddxxxxzzaammmm") // v8
+INST(v8_VLD_multiple,       "VLD{1-4} (multiple)",      "111101000D10nnnnddddxxxxzzaammmm") // v8
+INST(arm_UDF,               "UNALLOCATED",              "111101000--0--------1011--------") // v8
+INST(arm_UDF,               "UNALLOCATED",              "111101000--0--------11----------") // v8
+//INST(arm_UDF,               "UNALLOCATED",              "111101001-00--------11----------") // v8
+//INST(v8_VLD_all_lanes,      "VLD{1-4} (all lanes)",     "111101001D10nnnndddd11nnzzTammmm") // v8
+//INST(arm_UDF,               "UNALLOCATED",              "111101001-10--------1110---1----") // v8
+//INST(v8_VST_single,         "VST{1-4} (single)",        "111101001D00nnnnddddzzNNaaaammmm") // v8
+//INST(v8_VLD_single,         "VLD{1-4} (single)",        "111101001D10nnnnddddzzNNaaaammmm") // v8

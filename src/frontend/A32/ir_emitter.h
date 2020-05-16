@@ -70,10 +70,12 @@ public:
 
     void ClearExclusive();
     void SetExclusive(const IR::U32& vaddr, size_t byte_size);
+    IR::UAny ReadMemory(size_t bitsize, const IR::U32& vaddr);
     IR::U8 ReadMemory8(const IR::U32& vaddr);
     IR::U16 ReadMemory16(const IR::U32& vaddr);
     IR::U32 ReadMemory32(const IR::U32& vaddr);
     IR::U64 ReadMemory64(const IR::U32& vaddr);
+    void WriteMemory(size_t bitsize, const IR::U32& vaddr, const IR::UAny& value);
     void WriteMemory8(const IR::U32& vaddr, const IR::U8& value);
     void WriteMemory16(const IR::U32& vaddr, const IR::U16& value);
     void WriteMemory32(const IR::U32& vaddr, const IR::U32& value);

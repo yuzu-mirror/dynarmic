@@ -183,6 +183,20 @@ void IREmitter::SetExclusive(const IR::U32& vaddr, size_t byte_size) {
     Inst(Opcode::A32SetExclusive, vaddr, Imm8(u8(byte_size)));
 }
 
+IR::UAny IREmitter::ReadMemory(size_t bitsize, const IR::U32& vaddr) {
+    switch (bitsize) {
+    case 8:
+        return ReadMemory8(vaddr);
+    case 16:
+        return ReadMemory16(vaddr);
+    case 32:
+        return ReadMemory32(vaddr);
+    case 64:
+        return ReadMemory64(vaddr);
+    }
+    ASSERT_FALSE("Invalid bitsize");
+}
+
 IR::U8 IREmitter::ReadMemory8(const IR::U32& vaddr) {
     return Inst<IR::U8>(Opcode::A32ReadMemory8, vaddr);
 }
@@ -200,6 +214,20 @@ IR::U32 IREmitter::ReadMemory32(const IR::U32& vaddr) {
 IR::U64 IREmitter::ReadMemory64(const IR::U32& vaddr) {
     const auto value = Inst<IR::U64>(Opcode::A32ReadMemory64, vaddr);
     return current_location.EFlag() ? ByteReverseDual(value) : value;
+}
+
+void IREmitter::WriteMemory(size_t bitsize, const IR::U32& vaddr, const IR::UAny& value) {
+    switch (bitsize) {
+    case 8:
+        return WriteMemory8(vaddr, value);
+    case 16:
+        return WriteMemory16(vaddr, value);
+    case 32:
+        return WriteMemory32(vaddr, value);
+    case 64:
+        return WriteMemory64(vaddr, value);
+    }
+    ASSERT_FALSE("Invalid bitsize");
 }
 
 void IREmitter::WriteMemory8(const IR::U32& vaddr, const IR::U8& value) {

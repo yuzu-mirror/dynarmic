@@ -9,6 +9,7 @@
 
 #include "common/assert.h"
 #include "frontend/A32/decoder/arm.h"
+#include "frontend/A32/decoder/asimd.h"
 #include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/impl/translate_arm.h"
@@ -41,6 +42,8 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType mem
 
         if (const auto vfp_decoder = DecodeVFP<ArmTranslatorVisitor>(arm_instruction)) {
             should_continue = vfp_decoder->get().call(visitor, arm_instruction);
+        } else if (const auto asimd_decoder = DecodeASIMD<ArmTranslatorVisitor>(arm_instruction)) {
+            should_continue = asimd_decoder->get().call(visitor, arm_instruction);
         } else if (const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction)) {
             should_continue = decoder->get().call(visitor, arm_instruction);
         } else {
@@ -80,6 +83,8 @@ bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descript
     bool should_continue = true;
     if (const auto vfp_decoder = DecodeVFP<ArmTranslatorVisitor>(arm_instruction)) {
         should_continue = vfp_decoder->get().call(visitor, arm_instruction);
+    } else if (const auto asimd_decoder = DecodeASIMD<ArmTranslatorVisitor>(arm_instruction)) {
+        should_continue = asimd_decoder->get().call(visitor, arm_instruction);
     } else if (const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction)) {
         should_continue = decoder->get().call(visitor, arm_instruction);
     } else {
