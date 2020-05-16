@@ -92,4 +92,24 @@ bool ArmTranslatorVisitor::asimd_VORN_reg(bool D, size_t Vn, size_t Vd, bool N, 
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VEOR_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToExtReg(Vd, D);
+    const auto m = ToExtReg(Vm, M);
+    const auto n = ToExtReg(Vn, N);
+    const size_t regs = Q ? 2 : 1;
+
+    for (size_t i = 0; i < regs; i++) {
+        const IR::U32U64 reg_m = ir.GetExtendedRegister(m + i);
+        const IR::U32U64 reg_n = ir.GetExtendedRegister(n + i);
+        const IR::U32U64 result = ir.Eor(reg_n, reg_m);
+        ir.SetExtendedRegister(d + i, result);
+    }
+
+    return true;
+}
+
 } // namespace Dynarmic::A32
