@@ -4,7 +4,7 @@
 //INST(asimd_VRHADD,          "VRHADD",                   "1111001U0-CC--------0001---0----") // ASIMD
 INST(asimd_VAND_reg,        "VAND (register)",          "111100100D00nnnndddd0001NQM1mmmm") // ASIMD
 INST(asimd_VBIC_reg,        "VBIC (register)",          "111100100D01nnnndddd0001NQM1mmmm") // ASIMD
-//INST(asimd_VORR_reg,        "VORR (register)",          "111100100-10--------0001---1----") // ASIMD
+INST(asimd_VORR_reg,        "VORR (register)",          "111100100D10nnnndddd0001NQM1mmmm") // ASIMD
 //INST(asimd_VORN_reg,        "VORN (register)",          "111100100-11--------0001---1----") // ASIMD
 //INST(asimd_VEOR_reg,        "VEOR (register)",          "111100110-00--------0001---1----") // ASIMD
 //INST(asimd_VBSL,            "VBSL",                     "111100110-01--------0001---1----") // ASIMD
