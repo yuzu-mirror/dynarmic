@@ -92,4 +92,10 @@ bool ArmTranslatorVisitor::asimd_VBSL(bool D, size_t Vn, size_t Vd, bool N, bool
         return ir.Or(ir.And(reg_n, reg_d), ir.And(reg_m, ir.Not(reg_d)));
     });
 }
+
+bool ArmTranslatorVisitor::asimd_VBIT(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return BitwiseInstructionWithDst(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_d, const auto& reg_n, const auto& reg_m) {
+        return ir.Or(ir.And(reg_n, reg_m), ir.And(reg_d, ir.Not(reg_m)));
+    });
+}
 } // namespace Dynarmic::A32
