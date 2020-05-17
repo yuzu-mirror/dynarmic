@@ -41,14 +41,26 @@ U128 IREmitter::Pack2x64To1x128(const U64& lo, const U64& hi) {
     return Inst<U128>(Opcode::Pack2x64To1x128, lo, hi);
 }
 
-U32 IREmitter::LeastSignificantWord(const U64& value) {
-    return Inst<U32>(Opcode::LeastSignificantWord, value);
+UAny IREmitter::LeastSignificant(size_t bitsize, const U32U64& value) {
+    switch (bitsize) {
+    case 8:
+        return LeastSignificantByte(value);
+    case 16:
+        return LeastSignificantHalf(value);
+    case 32:
+        if (value.GetType() == Type::U32) {
+            return value;
+        }
+        return LeastSignificantWord(value);
+    case 64:
+        ASSERT(value.GetType() == Type::U64);
+        return value;
+    }
+    ASSERT_FALSE("Invalid bitsize");
 }
 
-ResultAndCarry<U32> IREmitter::MostSignificantWord(const U64& value) {
-    const auto result = Inst<U32>(Opcode::MostSignificantWord, value);
-    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
-    return {result, carry_out};
+U32 IREmitter::LeastSignificantWord(const U64& value) {
+    return Inst<U32>(Opcode::LeastSignificantWord, value);
 }
 
 U16 IREmitter::LeastSignificantHalf(U32U64 value) {
@@ -63,6 +75,12 @@ U8 IREmitter::LeastSignificantByte(U32U64 value) {
         value = LeastSignificantWord(value);
     }
     return Inst<U8>(Opcode::LeastSignificantByte, value);
+}
+
+ResultAndCarry<U32> IREmitter::MostSignificantWord(const U64& value) {
+    const auto result = Inst<U32>(Opcode::MostSignificantWord, value);
+    const auto carry_out = Inst<U1>(Opcode::GetCarryFromOp, result);
+    return {result, carry_out};
 }
 
 U1 IREmitter::MostSignificantBit(const U32& value) {
