@@ -54,6 +54,29 @@ std::string DisassembleX64(const void* begin, const void* end) {
     return result;
 }
 
+std::string DisassembleAArch32([[maybe_unused]] u32 instruction, [[maybe_unused]] u64 pc) {
+    std::string result;
+
+#ifdef DYNARMIC_USE_LLVM
+    LLVMInitializeARMTargetInfo();
+    LLVMInitializeARMTargetMC();
+    LLVMInitializeARMDisassembler();
+    LLVMDisasmContextRef llvm_ctx = LLVMCreateDisasm("armv8-arm", nullptr, 0, nullptr, nullptr);
+    LLVMSetDisasmOptions(llvm_ctx, LLVMDisassembler_Option_AsmPrinterVariant);
+
+    char buffer[80];
+    size_t inst_size = LLVMDisasmInstruction(llvm_ctx, (u8*)&instruction, sizeof(instruction), pc, buffer, sizeof(buffer));
+    result = inst_size > 0 ? buffer : "<invalid instruction>";
+    result += '\n';
+
+    LLVMDisasmDispose(llvm_ctx);
+#else
+    result += fmt::format("(disassembly disabled)\n");
+#endif
+
+    return result;
+}
+
 std::string DisassembleAArch64([[maybe_unused]] u32 instruction, [[maybe_unused]] u64 pc) {
     std::string result;
 
