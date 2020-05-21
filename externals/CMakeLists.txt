@@ -21,7 +21,9 @@ target_include_directories(mp INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE
 
 # robin-map
 
-add_subdirectory(robin-map)
+add_library(robin_map INTERFACE)
+add_library(tsl::robin_map ALIAS robin_map)
+target_include_directories(robin_map SYSTEM INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/robin-map/include>")
 
 # xbyak
 

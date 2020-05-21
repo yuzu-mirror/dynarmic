@@ -45,14 +45,17 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 if (MSVC)
     set(DYNARMIC_CXX_FLAGS
         /std:c++latest # CMAKE_CXX_STANDARD has no effect on MSVC until CMake 3.10.
+        /experimental:external
+        /external:W0
+        /external:anglebrackets
         /W4
-        /w34263 # Non-virtual member function hides base class virtual function
+        /w44263 # Non-virtual member function hides base class virtual function
         /w44265 # Class has virtual functions, but destructor is not virtual
-        /w34456 # Declaration of 'var' hides previous local declaration
-        /w34457 # Declaration of 'var' hides function parameter
-        /w34458 # Declaration of 'var' hides class member
-        /w34459 # Declaration of 'var' hides global definition
-        /w34946 # Reinterpret-cast between related types
+        /w44456 # Declaration of 'var' hides previous local declaration
+        /w44457 # Declaration of 'var' hides function parameter
+        /w44458 # Declaration of 'var' hides class member
+        /w44459 # Declaration of 'var' hides global definition
+        /w44946 # Reinterpret-cast between related types
         /wd4592 # Symbol will be dynamically initialized (implementation limitation)
         /permissive- # Stricter C++ standards conformance
         /MP
