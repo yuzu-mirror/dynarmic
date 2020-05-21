@@ -94,7 +94,7 @@ INST(asimd_VBIF,            "VBIF",                     "111100110D11nnnndddd000
 //INST(asimd_VCLT_zero,       "VCLT (zero)",              "111100111-11--01----0x100x-0----") // ASIMD
 //INST(asimd_VABS,            "VABS",                     "111100111-11--01----0x110x-0----") // ASIMD
 //INST(asimd_VNEG,            "VNEG",                     "111100111-11--01----0x111x-0----") // ASIMD
-//INST(asimd_VSWP,            "VSWP",                     "111100111-11--10----00000x-0----") // ASIMD
+INST(asimd_VSWP,            "VSWP",                     "111100111D110010dddd00000QM0mmmm") // ASIMD
 //INST(asimd_VTRN,            "VTRN",                     "111100111-11--10----00001x-0----") // ASIMD
 //INST(asimd_VUZP,            "VUZP",                     "111100111-11--10----00010x-0----") // ASIMD
 //INST(asimd_VZIP,            "VZIP",                     "111100111-11--10----00011x-0----") // ASIMD

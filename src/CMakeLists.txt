@@ -124,6 +124,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/PSR.h
         frontend/A32/translate/impl/asimd_load_store_structures.cpp
         frontend/A32/translate/impl/asimd_three_same.cpp
+        frontend/A32/translate/impl/asimd_two_regs_misc.cpp
         frontend/A32/translate/impl/barrier.cpp
         frontend/A32/translate/impl/branch.cpp
         frontend/A32/translate/impl/coprocessor.cpp
