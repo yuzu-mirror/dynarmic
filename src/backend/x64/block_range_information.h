@@ -6,10 +6,10 @@
 #pragma once
 
 #include <set>
-#include <unordered_set>
 
 #include <boost/icl/interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
+#include <tsl/robin_set.h>
 
 #include "frontend/ir/location_descriptor.h"
 
@@ -20,7 +20,7 @@ class BlockRangeInformation {
 public:
     void AddRange(boost::icl::discrete_interval<ProgramCounterType> range, IR::LocationDescriptor location);
     void ClearCache();
-    std::unordered_set<IR::LocationDescriptor> InvalidateRanges(const boost::icl::interval_set<ProgramCounterType>& ranges);
+    tsl::robin_set<IR::LocationDescriptor> InvalidateRanges(const boost::icl::interval_set<ProgramCounterType>& ranges);
 
 private:
     boost::icl::interval_map<ProgramCounterType, std::set<IR::LocationDescriptor>> block_ranges;

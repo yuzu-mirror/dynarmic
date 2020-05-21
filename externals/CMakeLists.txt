@@ -2,10 +2,28 @@
 # simply add the directory to that file as a subdirectory
 # to have CMake automatically recognize them.
 
+# catch
+
+add_library(catch INTERFACE)
+target_include_directories(catch INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/catch>)
+
+# fmt
+
 if (NOT DYNARMIC_NO_BUNDLED_FMT)
     # fmtlib formatting library
     add_subdirectory(fmt)
 endif()
+
+# mp
+
+add_library(mp INTERFACE)
+target_include_directories(mp INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mp/include>)
+
+# robin-map
+
+add_subdirectory(robin-map)
+
+# xbyak
 
 if (NOT TARGET xbyak)
     if (ARCHITECTURE_x86 OR ARCHITECTURE_x86_64)
@@ -14,11 +32,3 @@ if (NOT TARGET xbyak)
         target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
     endif()
 endif()
-
-add_library(catch INTERFACE)
-target_include_directories(catch INTERFACE
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/catch>)
-
-add_library(mp INTERFACE)
-target_include_directories(mp INTERFACE
-                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/mp/include>)

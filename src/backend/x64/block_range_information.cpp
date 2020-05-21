@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <unordered_set>
-
 #include <boost/icl/interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
+#include <tsl/robin_set.h>
 
 #include "backend/x64/block_range_information.h"
 #include "common/common_types.h"
@@ -24,8 +23,8 @@ void BlockRangeInformation<ProgramCounterType>::ClearCache() {
 }
 
 template <typename ProgramCounterType>
-std::unordered_set<IR::LocationDescriptor> BlockRangeInformation<ProgramCounterType>::InvalidateRanges(const boost::icl::interval_set<ProgramCounterType>& ranges) {
-    std::unordered_set<IR::LocationDescriptor> erase_locations;
+tsl::robin_set<IR::LocationDescriptor> BlockRangeInformation<ProgramCounterType>::InvalidateRanges(const boost::icl::interval_set<ProgramCounterType>& ranges) {
+    tsl::robin_set<IR::LocationDescriptor> erase_locations;
     for (auto invalidate_interval : ranges) {
         auto pair = block_ranges.equal_range(invalidate_interval);
         for (auto it = pair.first; it != pair.second; ++it) {

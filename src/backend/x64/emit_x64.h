@@ -9,9 +9,10 @@
 #include <optional>
 #include <string>
 #include <type_traits>
-#include <unordered_map>
-#include <unordered_set>
 #include <vector>
+
+#include <tsl/robin_map.h>
+#include <tsl/robin_set.h>
 
 #include <xbyak_util.h>
 
@@ -69,7 +70,7 @@ public:
     virtual void ClearCache();
 
     /// Invalidates a selection of basic blocks.
-    void InvalidateBasicBlocks(const std::unordered_set<IR::LocationDescriptor>& locations);
+    void InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>& locations);
 
 protected:
     // Microinstruction emitters
@@ -115,8 +116,8 @@ protected:
     // State
     BlockOfCode& code;
     ExceptionHandler exception_handler;
-    std::unordered_map<IR::LocationDescriptor, BlockDescriptor> block_descriptors;
-    std::unordered_map<IR::LocationDescriptor, PatchInformation> patch_information;
+    tsl::robin_map<IR::LocationDescriptor, BlockDescriptor> block_descriptors;
+    tsl::robin_map<IR::LocationDescriptor, PatchInformation> patch_information;
 };
 
 } // namespace Dynarmic::Backend::X64

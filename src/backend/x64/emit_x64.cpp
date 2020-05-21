@@ -4,7 +4,8 @@
  */
 
 #include <iterator>
-#include <unordered_map>
+
+#include <tsl/robin_set.h>
 
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
@@ -305,7 +306,7 @@ void EmitX64::ClearCache() {
     PerfMapClear();
 }
 
-void EmitX64::InvalidateBasicBlocks(const std::unordered_set<IR::LocationDescriptor>& locations) {
+void EmitX64::InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>& locations) {
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 

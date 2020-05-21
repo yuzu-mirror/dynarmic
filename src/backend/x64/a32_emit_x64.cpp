@@ -5,7 +5,6 @@
 
 #include <algorithm>
 #include <optional>
-#include <unordered_map>
 #include <utility>
 
 #include <fmt/format.h>

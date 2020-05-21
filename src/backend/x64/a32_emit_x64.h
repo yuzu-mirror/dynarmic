@@ -9,7 +9,8 @@
 #include <optional>
 #include <set>
 #include <tuple>
-#include <unordered_map>
+
+#include <tsl/robin_map.h>
 
 #include <dynarmic/A32/a32.h>
 #include <dynarmic/A32/config.h>
@@ -91,7 +92,7 @@ protected:
         u64 callback;
         DoNotFastmemMarker marker;
     };
-    std::unordered_map<u64, FastmemPatchInfo> fastmem_patch_info;
+    tsl::robin_map<u64, FastmemPatchInfo> fastmem_patch_info;
     std::set<DoNotFastmemMarker> do_not_fastmem;
     std::optional<DoNotFastmemMarker> ShouldFastmem(A32EmitContext& ctx, IR::Inst* inst) const;
     FakeCall FastmemCallback(u64 rip);
