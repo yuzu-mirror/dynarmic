@@ -157,4 +157,7 @@ auto concatenate(Imm<first_bit_size> first, Imm<rest_bit_sizes> ...rest) {
     }
 }
 
+/// Expands an Advanced SIMD modified immediate.
+u64 AdvSIMDExpandImm(bool op, Imm<4> cmode, Imm<8> imm8);
+
 } // namespace Dynarmic

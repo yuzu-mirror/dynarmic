@@ -76,6 +76,7 @@ add_library(dynarmic
     frontend/A64/types.h
     frontend/decoder/decoder_detail.h
     frontend/decoder/matcher.h
+    frontend/imm.cpp
     frontend/imm.h
     frontend/ir/basic_block.cpp
     frontend/ir/basic_block.h
