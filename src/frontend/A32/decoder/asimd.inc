@@ -108,17 +108,7 @@ INST(asimd_VSWP,            "VSWP",                     "111100111D110010dddd000
 //INST(asimd_VCVT_integer,    "VCVT (integer)",           "111100111-11--11----011xxx-0----") // ASIMD
 
 // One register and modified immediate
-//INST(asimd_VMOV_imm,        "VMOV (immediate)",         "1111001a1-000bcd----0xx00-01efgh") // ASIMD
-//INST(asimd_VORR_imm,        "VORR (immediate)",         "1111001a1-000bcd----0xx10-01efgh") // ASIMD
-//INST(asimd_VMOV_imm,        "VMOV (immediate)",         "1111001a1-000bcd----10x00-01efgh") // ASIMD
-//INST(asimd_VORR_imm,        "VORR (immediate)",         "1111001a1-000bcd----10x10-01efgh") // ASIMD
-//INST(asimd_VMOV_imm,        "VMOV (immediate)",         "1111001a1-000bcd----11xx0-01efgh") // ASIMD
-//INST(asimd_VMVN_imm,        "VMVN (immediate)",         "1111001a1-000bcd----0xx00-11efgh") // ASIMD
-//INST(asimd_VBIC_imm,        "VBIC (immediate)",         "1111001a1-000bcd----0xx10-11efgh") // ASIMD
-//INST(asimd_VMVN_imm,        "VMVN (immediate)",         "1111001a1-000bcd----10x00-11efgh") // ASIMD
-//INST(asimd_VBIC_imm,        "VBIC (immediate)",         "1111001a1-000bcd----10x10-11efgh") // ASIMD
-//INST(asimd_VMVN_imm,        "VMVN (immediate)",         "1111001a1-000bcd----110x0-11efgh") // ASIMD
-//INST(asimd_VMOV_imm,        "VMOV (immediate)",         "1111001a1-000bcd----11100-11efgh") // ASIMD
+INST(asimd_VMOV_imm,        "VBIC, VMOV, VMVN, VORR (immediate)",  "1111001a1D000bcdVVVVmmmm0Qo1efgh") // ASIMD
 
 // Advanced SIMD load/store structures
 INST(v8_VST_multiple,       "VST{1-4} (multiple)",      "111101000D00nnnnddddxxxxzzaammmm") // v8
