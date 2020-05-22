@@ -9,19 +9,15 @@
 
 namespace Dynarmic::A32 {
 namespace {
-ExtReg ToExtReg(size_t base, bool bit) {
-    return ExtReg::D0 + (base + (bit ? 16 : 0));
-}
-
 template <bool WithDst, typename Callable>
 bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return v.UndefinedInstruction();
     }
 
-    const auto d = ToExtReg(Vd, D);
-    const auto m = ToExtReg(Vm, M);
-    const auto n = ToExtReg(Vn, N);
+    const auto d = ToExtRegD(Vd, D);
+    const auto m = ToExtRegD(Vm, M);
+    const auto n = ToExtRegD(Vn, N);
     const size_t regs = Q ? 2 : 1;
 
     for (size_t i = 0; i < regs; i++) {

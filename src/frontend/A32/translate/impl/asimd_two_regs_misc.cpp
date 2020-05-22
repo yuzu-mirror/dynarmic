@@ -8,11 +8,6 @@
 #include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
-namespace {
-ExtReg ToExtRegD(size_t base, bool bit) {
-    return ExtReg::D0 + (base + (bit ? 16 : 0));
-}
-} // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {

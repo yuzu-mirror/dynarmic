@@ -7,14 +7,6 @@
 
 namespace Dynarmic::A32 {
 
-static ExtReg ToExtReg(bool sz, size_t base, bool bit) {
-    if (sz) {
-        return static_cast<ExtReg>(static_cast<size_t>(ExtReg::D0) + base + (bit ? 16 : 0));
-    } else {
-        return static_cast<ExtReg>(static_cast<size_t>(ExtReg::S0) + (base << 1) + (bit ? 1 : 0));
-    }
-}
-
 template <typename FnT>
 bool ArmTranslatorVisitor::EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtReg m, const FnT& fn) {
     if (!ir.current_location.FPSCR().Stride()) {

@@ -106,4 +106,20 @@ inline ExtReg operator+(ExtReg reg, size_t number) {
     return new_reg;
 }
 
+inline ExtReg ToExtRegD(size_t base, bool bit) {
+    return ExtReg::D0 + (base + (bit ? 16 : 0));
+}
+
+inline ExtReg ToExtRegS(size_t base, bool bit) {
+    return ExtReg::S0 + ((base << 1) + (bit ? 1 : 0));
+}
+
+inline ExtReg ToExtReg(bool sz, size_t base, bool bit) {
+    if (sz) {
+        return ToExtRegD(base, bit);
+    } else {
+        return ToExtRegS(base, bit);
+    }
+}
+
 } // namespace Dynarmic::A32

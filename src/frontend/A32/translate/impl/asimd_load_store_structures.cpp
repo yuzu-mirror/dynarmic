@@ -12,9 +12,6 @@
 namespace Dynarmic::A32 {
 
 namespace {
-ExtReg ToExtReg(size_t base, bool bit) {
-    return ExtReg::D0 + (base + (bit ? 16 : 0));
-}
 
 std::optional<std::tuple<size_t, size_t, size_t>> DecodeType(Imm<4> type, size_t size, size_t align) {
     switch (type.ZeroExtend()) {
@@ -82,7 +79,7 @@ bool ArmTranslatorVisitor::v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type
     }
     const auto [nelem, regs, inc] = *decoded_type;
 
-    const ExtReg d = ToExtReg(Vd, D);
+    const ExtReg d = ToExtRegD(Vd, D);
     const size_t d_last = RegNumber(d) + inc * (nelem - 1);
     if (n == Reg::R15 || d_last + regs > 32) {
         return UnpredictableInstruction();
@@ -127,7 +124,7 @@ bool ArmTranslatorVisitor::v8_VLD_multiple(bool D, Reg n, size_t Vd, Imm<4> type
     }
     const auto [nelem, regs, inc] = *decoded_type;
 
-    const ExtReg d = ToExtReg(Vd, D);
+    const ExtReg d = ToExtRegD(Vd, D);
     const size_t d_last = RegNumber(d) + inc * (nelem - 1);
     if (n == Reg::R15 || d_last + regs > 32) {
         return UnpredictableInstruction();
