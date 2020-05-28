@@ -15,22 +15,24 @@ bool ArmTranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t 
     }
 
     // Swapping the same register results in the same contents.
-    const auto d = ToExtRegD(Vd, D);
-    const auto m = ToExtRegD(Vm, M);
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
     if (d == m) {
         return true;
     }
 
-    const size_t regs = Q ? 2 : 1;
-    for (size_t i = 0; i < regs; i++) {
-        const auto d_index = d + i;
-        const auto m_index = m + i;
+    if (Q) {
+        const auto reg_d = ir.GetVector(d);
+        const auto reg_m = ir.GetVector(m);
 
-        const auto reg_d = ir.GetExtendedRegister(d_index);
-        const auto reg_m = ir.GetExtendedRegister(m_index);
+        ir.SetVector(m, reg_d);
+        ir.SetVector(d, reg_m);
+    } else {
+        const auto reg_d = ir.GetExtendedRegister(d);
+        const auto reg_m = ir.GetExtendedRegister(m);
 
-        ir.SetExtendedRegister(m_index, reg_d);
-        ir.SetExtendedRegister(d_index, reg_m);
+        ir.SetExtendedRegister(m, reg_d);
+        ir.SetExtendedRegister(d, reg_m);
     }
 
     return true;
