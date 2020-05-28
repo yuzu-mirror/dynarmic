@@ -23,7 +23,7 @@ void VerificationPass(const IR::Block& block) {
             const IR::Type t2 = IR::GetArgTypeOf(inst.GetOpcode(), i);
             if (!IR::AreTypesCompatible(t1, t2)) {
                 std::puts(IR::DumpBlock(block).c_str());
-                ASSERT(false);
+                ASSERT_FALSE("above block failed validation");
             }
         }
     }
