@@ -15,24 +15,21 @@ bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, b
         return v.UndefinedInstruction();
     }
 
-    const auto d = ToExtRegD(Vd, D);
-    const auto m = ToExtRegD(Vm, M);
-    const auto n = ToExtRegD(Vn, N);
-    const size_t regs = Q ? 2 : 1;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
 
-    for (size_t i = 0; i < regs; i++) {
-        if constexpr (WithDst) {
-            const IR::U32U64 reg_d = v.ir.GetExtendedRegister(d + i);
-            const IR::U32U64 reg_m = v.ir.GetExtendedRegister(m + i);
-            const IR::U32U64 reg_n = v.ir.GetExtendedRegister(n + i);
-            const IR::U32U64 result = fn(reg_d, reg_n, reg_m);
-            v.ir.SetExtendedRegister(d + i, result);
-        } else {
-            const IR::U32U64 reg_m = v.ir.GetExtendedRegister(m + i);
-            const IR::U32U64 reg_n = v.ir.GetExtendedRegister(n + i);
-            const IR::U32U64 result = fn(reg_n, reg_m);
-            v.ir.SetExtendedRegister(d + i, result);
-        }
+    if constexpr (WithDst) {
+        const IR::U128 reg_d = v.ir.GetVector(d);
+        const IR::U128 reg_m = v.ir.GetVector(m);
+        const IR::U128 reg_n = v.ir.GetVector(n);
+        const IR::U128 result = fn(reg_d, reg_n, reg_m);
+        v.ir.SetVector(d, result);
+    } else {
+        const IR::U128 reg_m = v.ir.GetVector(m);
+        const IR::U128 reg_n = v.ir.GetVector(n);
+        const IR::U128 result = fn(reg_n, reg_m);
+        v.ir.SetVector(d, result);
     }
 
     return true;
@@ -41,49 +38,49 @@ bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, b
 
 bool ArmTranslatorVisitor::asimd_VAND_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<false>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
-        return ir.And(reg_n, reg_m);
+        return ir.VectorAnd(reg_n, reg_m);
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VBIC_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<false>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
-        return ir.And(reg_n, ir.Not(reg_m));
+        return ir.VectorAnd(reg_n, ir.VectorNot(reg_m));
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VORR_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<false>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
-        return ir.Or(reg_n, reg_m);
+        return ir.VectorOr(reg_n, reg_m);
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VORN_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<false>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
-        return ir.Or(reg_n, ir.Not(reg_m));
+        return ir.VectorOr(reg_n, ir.VectorNot(reg_m));
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VEOR_reg(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<false>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_n, const auto& reg_m) {
-        return ir.Eor(reg_n, reg_m);
+        return ir.VectorEor(reg_n, reg_m);
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VBSL(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<true>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_d, const auto& reg_n, const auto& reg_m) {
-        return ir.Or(ir.And(reg_n, reg_d), ir.And(reg_m, ir.Not(reg_d)));
+        return ir.VectorOr(ir.VectorAnd(reg_n, reg_d), ir.VectorAnd(reg_m, ir.VectorNot(reg_d)));
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VBIT(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<true>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_d, const auto& reg_n, const auto& reg_m) {
-        return ir.Or(ir.And(reg_n, reg_m), ir.And(reg_d, ir.Not(reg_m)));
+        return ir.VectorOr(ir.VectorAnd(reg_n, reg_m), ir.VectorAnd(reg_d, ir.VectorNot(reg_m)));
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VBIF(bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return BitwiseInstruction<true>(*this, D, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_d, const auto& reg_n, const auto& reg_m) {
-        return ir.Or(ir.And(reg_d, reg_m), ir.And(reg_n, ir.Not(reg_m)));
+        return ir.VectorOr(ir.VectorAnd(reg_d, reg_m), ir.VectorAnd(reg_n, ir.VectorNot(reg_m)));
     });
 }
 } // namespace Dynarmic::A32
