@@ -33,8 +33,10 @@ public:
 
     IR::U32 GetRegister(Reg source_reg);
     IR::U32U64 GetExtendedRegister(ExtReg source_reg);
+    IR::U128 GetVector(ExtReg source_reg);
     void SetRegister(Reg dest_reg, const IR::U32& value);
     void SetExtendedRegister(ExtReg dest_reg, const IR::U32U64& value);
+    void SetVector(ExtReg dest_reg, const IR::U128& value);
 
     void ALUWritePC(const IR::U32& value);
     void BranchWritePC(const IR::U32& value);

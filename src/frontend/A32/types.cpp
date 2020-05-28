@@ -38,6 +38,9 @@ const char* ExtRegToString(ExtReg reg) {
         "d9", "d10", "d11", "d12", "d13", "d14", "d15", "d16",
         "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24",
         "d25", "d26", "d27", "d28", "d29", "d30", "d31",
+
+        "q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8",
+        "q9", "q10", "q11", "q12", "q13", "q14", "q15", "q16",
     };
     return reg_strs.at(static_cast<size_t>(reg));
 }

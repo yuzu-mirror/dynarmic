@@ -51,6 +51,10 @@ static Xbyak::Address MJitStateExtReg(A32::ExtReg reg) {
         const size_t index = static_cast<size_t>(reg) - static_cast<size_t>(A32::ExtReg::D0);
         return qword[r15 + offsetof(A32JitState, ExtReg) + sizeof(u64) * index];
     }
+    if (A32::IsQuadExtReg(reg)) {
+        const size_t index = static_cast<size_t>(reg) - static_cast<size_t>(A32::ExtReg::Q0);
+        return xword[r15 + offsetof(A32JitState, ExtReg) + 2 * sizeof(u64) * index];
+    }
     ASSERT_FALSE("Should never happen.");
 }
 
@@ -339,6 +343,19 @@ void A32EmitX64::EmitA32GetExtendedRegister64(A32EmitContext& ctx, IR::Inst* ins
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
+void A32EmitX64::EmitA32GetVector(A32EmitContext& ctx, IR::Inst* inst) {
+    const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+    ASSERT(A32::IsDoubleExtReg(reg) || A32::IsQuadExtReg(reg));
+
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+    if (A32::IsDoubleExtReg(reg)) {
+        code.movsd(result, MJitStateExtReg(reg));
+    } else {
+        code.movaps(result, MJitStateExtReg(reg));
+    }
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
 void A32EmitX64::EmitA32SetRegister(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
@@ -379,6 +396,19 @@ void A32EmitX64::EmitA32SetExtendedRegister64(A32EmitContext& ctx, IR::Inst* ins
     } else {
         const Xbyak::Reg64 to_store = ctx.reg_alloc.UseGpr(args[1]);
         code.mov(MJitStateExtReg(reg), to_store);
+    }
+}
+
+void A32EmitX64::EmitA32SetVector(A32EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+    ASSERT(A32::IsDoubleExtReg(reg) || A32::IsQuadExtReg(reg));
+
+    const Xbyak::Xmm to_store = ctx.reg_alloc.UseXmm(args[1]);
+    if (A32::IsDoubleExtReg(reg)) {
+        code.movsd(MJitStateExtReg(reg), to_store);
+    } else {
+        code.movaps(MJitStateExtReg(reg), to_store);
     }
 }
 

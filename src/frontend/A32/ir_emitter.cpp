@@ -41,6 +41,11 @@ IR::U32U64 IREmitter::GetExtendedRegister(ExtReg reg) {
     ASSERT_FALSE("Invalid reg.");
 }
 
+IR::U128 IREmitter::GetVector(ExtReg reg) {
+    ASSERT(A32::IsDoubleExtReg(reg) || A32::IsQuadExtReg(reg));
+    return Inst<IR::U128>(Opcode::A32GetVector, IR::Value(reg));
+}
+
 void IREmitter::SetRegister(const Reg reg, const IR::U32& value) {
     ASSERT(reg != A32::Reg::PC);
     Inst(Opcode::A32SetRegister, IR::Value(reg), value);
@@ -54,6 +59,11 @@ void IREmitter::SetExtendedRegister(const ExtReg reg, const IR::U32U64& value) {
     } else {
         ASSERT_FALSE("Invalid reg.");
     }
+}
+
+void IREmitter::SetVector(ExtReg reg, const IR::U128& value) {
+    ASSERT(A32::IsDoubleExtReg(reg) || A32::IsQuadExtReg(reg));
+    Inst(Opcode::A32SetVector, IR::Value(reg), value);
 }
 
 void IREmitter::ALUWritePC(const IR::U32& value) {

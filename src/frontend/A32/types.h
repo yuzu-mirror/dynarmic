@@ -36,6 +36,8 @@ enum class ExtReg {
     D8, D9, D10, D11, D12, D13, D14, D15,
     D16, D17, D18, D19, D20, D21, D22, D23,
     D24, D25, D26, D27, D28, D29, D30, D31,
+    Q0, Q1, Q2, Q3, Q4, Q5, Q6, Q7,
+    Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15,
 };
 
 using RegList = u16;
@@ -73,6 +75,10 @@ constexpr bool IsDoubleExtReg(ExtReg reg) {
     return reg >= ExtReg::D0 && reg <= ExtReg::D31;
 }
 
+constexpr bool IsQuadExtReg(ExtReg reg) {
+    return reg >= ExtReg::Q0 && reg <= ExtReg::Q15;
+}
+
 inline size_t RegNumber(Reg reg) {
     ASSERT(reg != Reg::INVALID_REG);
     return static_cast<size_t>(reg);
@@ -85,6 +91,10 @@ inline size_t RegNumber(ExtReg reg) {
 
     if (IsDoubleExtReg(reg)) {
         return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::D0);
+    }
+
+    if (IsQuadExtReg(reg)) {
+        return static_cast<size_t>(reg) - static_cast<size_t>(ExtReg::Q0);
     }
 
     ASSERT_FALSE("Invalid extended register");
@@ -101,9 +111,14 @@ inline ExtReg operator+(ExtReg reg, size_t number) {
     const auto new_reg = static_cast<ExtReg>(static_cast<size_t>(reg) + number);
 
     ASSERT((IsSingleExtReg(reg) && IsSingleExtReg(new_reg)) ||
-           (IsDoubleExtReg(reg) && IsDoubleExtReg(new_reg)));
+           (IsDoubleExtReg(reg) && IsDoubleExtReg(new_reg)) ||
+           (IsQuadExtReg(reg) && IsQuadExtReg(new_reg)));
 
     return new_reg;
+}
+
+inline ExtReg ToExtRegQ(size_t base, bool bit) {
+    return ExtReg::Q0 + ((base >> 1) + (bit ? 8 : 0));
 }
 
 inline ExtReg ToExtRegD(size_t base, bool bit) {
@@ -115,11 +130,11 @@ inline ExtReg ToExtRegS(size_t base, bool bit) {
 }
 
 inline ExtReg ToExtReg(bool sz, size_t base, bool bit) {
-    if (sz) {
-        return ToExtRegD(base, bit);
-    } else {
-        return ToExtRegS(base, bit);
-    }
+    return sz ? ToExtRegD(base, bit) : ToExtRegS(base, bit);
+}
+
+inline ExtReg ToVector(bool Q, size_t base, bool bit) {
+    return Q ? ToExtRegQ(base, bit) : ToExtRegD(base, bit);
 }
 
 } // namespace Dynarmic::A32
