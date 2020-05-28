@@ -16,15 +16,16 @@ bool ArmTranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, 
         return UndefinedInstruction();
     }
 
-    const auto d_reg = ToExtRegD(Vd, D);
-    const size_t regs = Q ? 2 : 1;
+    const auto d_reg = ToVector(Q, Vd, D);
     const auto imm = AdvSIMDExpandImm(op, cmode, concatenate(a, b, c, d, e, f, g, h));
 
     // VMOV
     const auto mov = [&] {
         const auto imm64 = ir.Imm64(imm);
-        for (size_t i = 0; i < regs; i++) {
-            ir.SetExtendedRegister(d_reg + i, imm64);
+        if (Q) {
+            ir.SetVector(d_reg, ir.VectorBroadcast(64, imm64));
+        } else {
+            ir.SetExtendedRegister(d_reg, imm64);
         }
         return true;
     };
@@ -32,8 +33,10 @@ bool ArmTranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, 
     // VMVN
     const auto mvn = [&] {
         const auto imm64 = ir.Imm64(~imm);
-        for (size_t i = 0; i < regs; i++) {
-            ir.SetExtendedRegister(d_reg + i, imm64);
+        if (Q) {
+            ir.SetVector(d_reg, ir.VectorBroadcast(64, imm64));
+        } else {
+            ir.SetExtendedRegister(d_reg, imm64);
         }
         return true;
     };
@@ -41,10 +44,12 @@ bool ArmTranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, 
     // VORR
     const auto orr = [&] {
         const auto imm64 = ir.Imm64(imm);
-        for (size_t i = 0; i < regs; i++) {
-            const auto d_index = d_reg + i;
-            const auto reg_value = ir.GetExtendedRegister(d_index);
-            ir.SetExtendedRegister(d_index, ir.Or(reg_value, imm64));
+        if (Q) {
+            const auto reg_value = ir.GetVector(d_reg);
+            ir.SetVector(d_reg, ir.VectorOr(reg_value, ir.VectorBroadcast(64, imm64)));
+        } else {
+            const auto reg_value = ir.GetExtendedRegister(d_reg);
+            ir.SetExtendedRegister(d_reg, ir.Or(reg_value, imm64));
         }
         return true;
     };
@@ -52,10 +57,12 @@ bool ArmTranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, 
     // VBIC
     const auto bic = [&] {
         const auto imm64 = ir.Imm64(~imm);
-        for (size_t i = 0; i < regs; i++) {
-            const auto d_index = d_reg + i;
-            const auto reg_value = ir.GetExtendedRegister(d_index);
-            ir.SetExtendedRegister(d_index, ir.And(reg_value, imm64));
+        if (Q) {
+            const auto reg_value = ir.GetVector(d_reg);
+            ir.SetVector(d_reg, ir.VectorAnd(reg_value, ir.VectorBroadcast(64, imm64)));
+        } else {
+            const auto reg_value = ir.GetExtendedRegister(d_reg);
+            ir.SetExtendedRegister(d_reg, ir.And(reg_value, imm64));
         }
         return true;
     };
