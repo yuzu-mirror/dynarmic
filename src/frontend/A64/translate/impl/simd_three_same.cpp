@@ -331,37 +331,29 @@ bool SaturatingArithmeticOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Ve
 
     const size_t esize = 8 << size.ZeroExtend();
     const size_t datasize = Q ? 128 : 64;
-    const size_t elements = datasize / esize;
 
     const IR::U128 operand1 = v.V(datasize, Vn);
     const IR::U128 operand2 = v.V(datasize, Vm);
-    IR::U128 result = v.ir.ZeroVector();
 
-    for (size_t i = 0; i < elements; i++) {
-        const IR::UAny op1_elem = v.ir.VectorGetElement(esize, operand1, i);
-        const IR::UAny op2_elem = v.ir.VectorGetElement(esize, operand2, i);
-        const auto result_elem = [&] {
-            if (sign == Signedness::Signed) {
-                if (op == Operation::Add) {
-                    return v.ir.SignedSaturatedAdd(op1_elem, op2_elem);
-                }
-
-                return v.ir.SignedSaturatedSub(op1_elem, op2_elem);
-            }
-
+    const auto result = [&] {
+        if (sign == Signedness::Signed) {
             if (op == Operation::Add) {
-                return v.ir.UnsignedSaturatedAdd(op1_elem, op2_elem);
+                return v.ir.VectorSignedSaturatedAdd(esize, operand1, operand2);
             }
 
-            return v.ir.UnsignedSaturatedSub(op1_elem, op2_elem);
-        }();
+            return v.ir.VectorSignedSaturatedSub(esize, operand1, operand2);
+        }
 
-        v.ir.OrQC(result_elem.overflow);
+        if (op == Operation::Add) {
+            return v.ir.VectorUnsignedSaturatedAdd(esize, operand1, operand2);
+        }
 
-        result = v.ir.VectorSetElement(esize, result, i, result_elem.result);
-    }
+        return v.ir.VectorUnsignedSaturatedSub(esize, operand1, operand2);
+    }();
 
-    v.V(datasize, Vd, result);
+    v.ir.OrQC(result.overflow);
+
+    v.V(datasize, Vd, result.result);
     return true;
 }
 
