@@ -194,6 +194,24 @@ OPCODE(UnsignedSaturatedSub32,                              U32,            U32,
 OPCODE(UnsignedSaturatedSub64,                              U64,            U64,            U64                                             )
 OPCODE(UnsignedSaturation,                                  U32,            U32,            U8                                              )
 
+// Vector saturated instructions
+OPCODE(VectorSignedSaturatedAdd8,                           U128,           U128,           U128                                            )
+OPCODE(VectorSignedSaturatedAdd16,                          U128,           U128,           U128                                            )
+OPCODE(VectorSignedSaturatedAdd32,                          U128,           U128,           U128                                            )
+OPCODE(VectorSignedSaturatedAdd64,                          U128,           U128,           U128                                            )
+OPCODE(VectorSignedSaturatedSub8,                           U128,           U128,           U128                                            )
+OPCODE(VectorSignedSaturatedSub16,                          U128,           U128,           U128                                            )
+OPCODE(VectorSignedSaturatedSub32,                          U128,           U128,           U128                                            )
+OPCODE(VectorSignedSaturatedSub64,                          U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedAdd8,                         U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedAdd16,                        U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedAdd32,                        U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedAdd64,                        U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedSub8,                         U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedSub16,                        U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedSub32,                        U128,           U128,           U128                                            )
+OPCODE(VectorUnsignedSaturatedSub64,                        U128,           U128,           U128                                            )
+
 // Packed instructions
 OPCODE(PackedAddU8,                                         U32,            U32,            U32                                             )
 OPCODE(PackedAddS8,                                         U32,            U32,            U32                                             )

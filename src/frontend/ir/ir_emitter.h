@@ -166,6 +166,11 @@ public:
     ResultAndOverflow<UAny> UnsignedSaturatedSub(const UAny& a, const UAny& b);
     ResultAndOverflow<U32> UnsignedSaturation(const U32& a, size_t bit_size_to_saturate_to);
 
+    ResultAndOverflow<U128> VectorSignedSaturatedAdd(size_t esize, const U128& a, const U128& b);
+    ResultAndOverflow<U128> VectorSignedSaturatedSub(size_t esize, const U128& a, const U128& b);
+    ResultAndOverflow<U128> VectorUnsignedSaturatedAdd(size_t esize, const U128& a, const U128& b);
+    ResultAndOverflow<U128> VectorUnsignedSaturatedSub(size_t esize, const U128& a, const U128& b);
+
     ResultAndGE<U32> PackedAddU8(const U32& a, const U32& b);
     ResultAndGE<U32> PackedAddS8(const U32& a, const U32& b);
     ResultAndGE<U32> PackedAddU16(const U32& a, const U32& b);

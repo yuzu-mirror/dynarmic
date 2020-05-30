@@ -635,6 +635,83 @@ ResultAndOverflow<U32> IREmitter::UnsignedSaturation(const U32& a, size_t bit_si
     return {result, overflow};
 }
 
+ResultAndOverflow<U128> IREmitter::VectorSignedSaturatedAdd(size_t esize, const U128& a, const U128& b) {
+    const auto result = [&]{
+        switch (esize) {
+        case 8:
+            return Inst<U128>(Opcode::VectorSignedSaturatedAdd8, a, b);
+        case 16:
+            return Inst<U128>(Opcode::VectorSignedSaturatedAdd16, a, b);
+        case 32:
+            return Inst<U128>(Opcode::VectorSignedSaturatedAdd32, a, b);
+        case 64:
+            return Inst<U128>(Opcode::VectorSignedSaturatedAdd64, a, b);
+        default:
+            UNREACHABLE();
+        }
+    }();
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+ResultAndOverflow<U128> IREmitter::VectorSignedSaturatedSub(size_t esize, const U128& a, const U128& b) {
+    const auto result = [&]{
+        switch (esize) {
+        case 8:
+            return Inst<U128>(Opcode::VectorSignedSaturatedSub8, a, b);
+        case 16:
+            return Inst<U128>(Opcode::VectorSignedSaturatedSub16, a, b);
+        case 32:
+            return Inst<U128>(Opcode::VectorSignedSaturatedSub32, a, b);
+        case 64:
+            return Inst<U128>(Opcode::VectorSignedSaturatedSub64, a, b);
+        default:
+            UNREACHABLE();
+        }
+    }();
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+ResultAndOverflow<U128> IREmitter::VectorUnsignedSaturatedAdd(size_t esize, const U128& a, const U128& b) {
+    const auto result = [&]{
+        switch (esize) {
+        case 8:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedAdd8, a, b);
+        case 16:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedAdd16, a, b);
+        case 32:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedAdd32, a, b);
+        case 64:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedAdd64, a, b);
+        default:
+            UNREACHABLE();
+        }
+    }();
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+ResultAndOverflow<U128> IREmitter::VectorUnsignedSaturatedSub(size_t esize, const U128& a, const U128& b) {
+    const auto result = [&]{
+        switch (esize) {
+        case 8:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedSub8, a, b);
+        case 16:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedSub16, a, b);
+        case 32:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedSub32, a, b);
+        case 64:
+            return Inst<U128>(Opcode::VectorUnsignedSaturatedSub64, a, b);
+        default:
+            UNREACHABLE();
+        }
+    }();
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+
 ResultAndGE<U32> IREmitter::PackedAddU8(const U32& a, const U32& b) {
     const auto result = Inst<U32>(Opcode::PackedAddU8, a, b);
     const auto ge = Inst<U32>(Opcode::GetGEFromOp, result);
