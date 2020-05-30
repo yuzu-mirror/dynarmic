@@ -335,7 +335,7 @@ bool SaturatingArithmeticOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Ve
     const IR::U128 operand1 = v.V(datasize, Vn);
     const IR::U128 operand2 = v.V(datasize, Vm);
 
-    const auto result = [&] {
+    const IR::U128 result = [&] {
         if (sign == Signedness::Signed) {
             if (op == Operation::Add) {
                 return v.ir.VectorSignedSaturatedAdd(esize, operand1, operand2);
@@ -351,9 +351,7 @@ bool SaturatingArithmeticOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Ve
         return v.ir.VectorUnsignedSaturatedSub(esize, operand1, operand2);
     }();
 
-    v.ir.OrQC(result.overflow);
-
-    v.V(datasize, Vd, result.result);
+    v.V(datasize, Vd, result);
     return true;
 }
 

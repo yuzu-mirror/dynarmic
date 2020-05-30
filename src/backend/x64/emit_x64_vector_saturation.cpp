@@ -16,39 +16,30 @@ using namespace Xbyak::util;
 namespace {
 
 void EmitVectorSaturatedNative(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, void (Xbyak::CodeGenerator::*saturated_fn)(const Xbyak::Mmx& mmx, const Xbyak::Operand&), void (Xbyak::CodeGenerator::*unsaturated_fn)(const Xbyak::Mmx& mmx, const Xbyak::Operand&), void (Xbyak::CodeGenerator::*sub_fn)(const Xbyak::Mmx& mmx, const Xbyak::Operand&)) {
-    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm addend = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
-    if (overflow_inst) {
-        code.movaps(xmm0, result);
-    }
+    code.movaps(xmm0, result);
 
     (code.*saturated_fn)(result, addend);
 
-    if (overflow_inst) {
-        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-        (code.*unsaturated_fn)(xmm0, addend);
-        (code.*sub_fn)(xmm0, result);
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-            code.ptest(xmm0, xmm0);
-        } else {
-            const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
-            code.pxor(tmp, tmp);
-            code.pcmpeqw(xmm0, tmp);
-            code.pmovmskb(overflow.cvt32(), xmm0);
-            code.xor_(overflow.cvt32(), 0xFFFF);
-            code.test(overflow.cvt32(), overflow.cvt32());
-        }
-        code.setnz(overflow);
-
-        ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
+    (code.*unsaturated_fn)(xmm0, addend);
+    (code.*sub_fn)(xmm0, result);
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+        code.ptest(xmm0, xmm0);
+    } else {
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        code.pxor(tmp, tmp);
+        code.pcmpeqw(xmm0, tmp);
+        code.pmovmskb(overflow.cvt32(), xmm0);
+        code.xor_(overflow.cvt32(), 0xFFFF);
+        code.test(overflow.cvt32(), overflow.cvt32());
     }
+    code.setnz(overflow);
+    code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -63,13 +54,12 @@ void EmitVectorSignedSaturated(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     static_assert(esize == 32 || esize == 64);
     constexpr u64 msb_mask = esize == 32 ? 0x8000000080000000 : 0x8000000000000000;
 
-    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm arg = ctx.reg_alloc.UseXmm(args[1]);
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
     // TODO AVX-512: vpternlog, vpsraq
     // TODO AVX2 implementation
@@ -106,24 +96,18 @@ void EmitVectorSignedSaturated(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     }
     code.pxor(tmp, code.MConst(xword, msb_mask, msb_mask));
 
-    if (overflow_inst) {
-        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-            code.ptest(xmm0, code.MConst(xword, msb_mask, msb_mask));
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+        code.ptest(xmm0, code.MConst(xword, msb_mask, msb_mask));
+    } else {
+        if constexpr (esize == 32) {
+            code.movmskps(overflow.cvt32(), xmm0);
         } else {
-            if constexpr (esize == 32) {
-                code.movmskps(overflow.cvt32(), xmm0);
-            } else {
-                code.movmskpd(overflow.cvt32(), xmm0);
-            }
-            code.test(overflow.cvt32(), overflow.cvt32());
+            code.movmskpd(overflow.cvt32(), xmm0);
         }
-        code.setnz(overflow);
-
-        ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
+        code.test(overflow.cvt32(), overflow.cvt32());
     }
+    code.setnz(overflow);
+    code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
         if constexpr (esize == 32) {
@@ -190,13 +174,12 @@ void EmitX64::EmitVectorUnsignedSaturatedAdd16(EmitContext& ctx, IR::Inst* inst)
 }
 
 void EmitX64::EmitVectorUnsignedSaturatedAdd32(EmitContext& ctx, IR::Inst* inst) {
-    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm addend = ctx.reg_alloc.UseXmm(args[1]);
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
     // TODO AVX2, AVX-512: vpternlog
 
@@ -213,32 +196,25 @@ void EmitX64::EmitVectorUnsignedSaturatedAdd32(EmitContext& ctx, IR::Inst* inst)
 
     code.por(result, tmp);
 
-    if (overflow_inst) {
-        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-            code.ptest(tmp, tmp);
-        } else {
-            code.movmskps(overflow.cvt32(), tmp);
-            code.test(overflow.cvt32(), overflow.cvt32());
-        }
-        code.setnz(overflow);
-
-        ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+        code.ptest(tmp, tmp);
+    } else {
+        code.movmskps(overflow.cvt32(), tmp);
+        code.test(overflow.cvt32(), overflow.cvt32());
     }
+    code.setnz(overflow);
+    code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitVectorUnsignedSaturatedAdd64(EmitContext& ctx, IR::Inst* inst) {
-    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm addend = ctx.reg_alloc.UseXmm(args[1]);
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
     // TODO AVX2, AVX-512: vpternlog
 
@@ -256,20 +232,14 @@ void EmitX64::EmitVectorUnsignedSaturatedAdd64(EmitContext& ctx, IR::Inst* inst)
 
     code.por(result, tmp);
 
-    if (overflow_inst) {
-        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-            code.ptest(tmp, tmp);
-        } else {
-            code.movmskpd(overflow.cvt32(), tmp);
-            code.test(overflow.cvt32(), overflow.cvt32());
-        }
-        code.setnz(overflow);
-
-        ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+        code.ptest(tmp, tmp);
+    } else {
+        code.movmskpd(overflow.cvt32(), tmp);
+        code.test(overflow.cvt32(), overflow.cvt32());
     }
+    code.setnz(overflow);
+    code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -283,13 +253,12 @@ void EmitX64::EmitVectorUnsignedSaturatedSub16(EmitContext& ctx, IR::Inst* inst)
 }
 
 void EmitX64::EmitVectorUnsignedSaturatedSub32(EmitContext& ctx, IR::Inst* inst) {
-    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm subtrahend = ctx.reg_alloc.UseXmm(args[1]);
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
     // TODO AVX2, AVX-512: vpternlog
 
@@ -304,34 +273,26 @@ void EmitX64::EmitVectorUnsignedSaturatedSub32(EmitContext& ctx, IR::Inst* inst)
     code.psubd(tmp, xmm0);
     code.psrad(tmp, 31);
 
-    if (overflow_inst) {
-        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-            code.ptest(tmp, tmp);
-        } else {
-            code.movmskps(overflow.cvt32(), tmp);
-            code.test(overflow.cvt32(), overflow.cvt32());
-        }
-        code.setnz(overflow);
-
-        ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+        code.ptest(tmp, tmp);
+    } else {
+        code.movmskps(overflow.cvt32(), tmp);
+        code.test(overflow.cvt32(), overflow.cvt32());
     }
+    code.setnz(overflow);
+    code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
 
     code.pandn(tmp, result);
-
     ctx.reg_alloc.DefineValue(inst, tmp);
 }
 
 void EmitX64::EmitVectorUnsignedSaturatedSub64(EmitContext& ctx, IR::Inst* inst) {
-    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm subtrahend = ctx.reg_alloc.UseXmm(args[1]);
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
     // TODO AVX2, AVX-512: vpternlog
 
@@ -347,23 +308,16 @@ void EmitX64::EmitVectorUnsignedSaturatedSub64(EmitContext& ctx, IR::Inst* inst)
     code.psrad(tmp, 31);
     code.pshufd(tmp, tmp, 0b11110101);
 
-    if (overflow_inst) {
-        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
-            code.ptest(tmp, tmp);
-        } else {
-            code.movmskpd(overflow.cvt32(), tmp);
-            code.test(overflow.cvt32(), overflow.cvt32());
-        }
-        code.setnz(overflow);
-
-        ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+        code.ptest(tmp, tmp);
+    } else {
+        code.movmskpd(overflow.cvt32(), tmp);
+        code.test(overflow.cvt32(), overflow.cvt32());
     }
+    code.setnz(overflow);
+    code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
 
     code.pandn(tmp, result);
-
     ctx.reg_alloc.DefineValue(inst, tmp);
 }
 
