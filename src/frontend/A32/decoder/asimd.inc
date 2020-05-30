@@ -1,6 +1,6 @@
 // Three registers of the same length
 INST(asimd_VHADD,           "VHADD",                    "1111001U0Dzznnnndddd0000NQM0mmmm") // ASIMD
-//INST(asimd_VQADD,           "VQADD",                    "1111001U0-CC--------0000---1----") // ASIMD
+INST(asimd_VQADD,           "VQADD",                    "1111001U0Dzznnnndddd0000NQM1mmmm") // ASIMD
 INST(asimd_VRHADD,          "VRHADD",                   "1111001U0Dzznnnndddd0001NQM0mmmm") // ASIMD
 INST(asimd_VAND_reg,        "VAND (register)",          "111100100D00nnnndddd0001NQM1mmmm") // ASIMD
 INST(asimd_VBIC_reg,        "VBIC (register)",          "111100100D01nnnndddd0001NQM1mmmm") // ASIMD
