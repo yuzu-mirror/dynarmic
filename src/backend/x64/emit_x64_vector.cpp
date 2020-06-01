@@ -1041,18 +1041,29 @@ void EmitX64::EmitVectorEqual128(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorExtract(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
-
     const u8 position = args[2].GetImmediateU8();
     ASSERT(position % 8 == 0);
 
-    if (position != 0) {
+    if (position == 0) {
+        ctx.reg_alloc.DefineValue(inst, args[0]);
+        return;
+    }
+
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSSE3)) {
+        const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseXmm(args[0]);
         const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseScratchXmm(args[1]);
 
-        code.psrldq(xmm_a, position / 8);
-        code.pslldq(xmm_b, (128 - position) / 8);
-        code.por(xmm_a, xmm_b);
+        code.palignr(xmm_b, xmm_a, position / 8);
+        ctx.reg_alloc.DefineValue(inst, xmm_b);
+        return;
     }
+
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseScratchXmm(args[1]);
+
+    code.psrldq(xmm_a, position / 8);
+    code.pslldq(xmm_b, (128 - position) / 8);
+    code.por(xmm_a, xmm_b);
 
     ctx.reg_alloc.DefineValue(inst, xmm_a);
 }
