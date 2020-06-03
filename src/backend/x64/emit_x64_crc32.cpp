@@ -24,15 +24,78 @@ static void EmitCRC32Castagnoli(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
         const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[1]).changeBit(data_size);
         code.crc32(crc, value);
         ctx.reg_alloc.DefineValue(inst, crc);
-    } else {
-        ctx.reg_alloc.HostCall(inst, args[0], args[1], {});
-        code.mov(code.ABI_PARAM3, data_size / CHAR_BIT);
-        code.CallFunction(&CRC32::ComputeCRC32Castagnoli);
+        return;
     }
+
+    ctx.reg_alloc.HostCall(inst, args[0], args[1], {});
+    code.mov(code.ABI_PARAM3, data_size / CHAR_BIT);
+    code.CallFunction(&CRC32::ComputeCRC32Castagnoli);
 }
 
 static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, const int data_size) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ) && data_size <= 32) {
+        const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+        const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
+        const Xbyak::Xmm xmm_crc = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
+
+        code.movd(xmm_value, value.cvt32());
+        code.movd(xmm_crc, crc);
+        code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
+
+        code.pxor(xmm_value, xmm_crc);
+        if (data_size < 32) {
+            code.pslld(xmm_value, 32 - data_size);
+            code.psllq(xmm_crc, 32 - data_size);
+        }
+
+        code.pclmulqdq(xmm_value, xmm_const, 0x00);
+        code.pshufd(xmm_value, xmm_value, 0b11111100);
+        code.pclmulqdq(xmm_value, xmm_const, 0x10);
+
+        if (data_size < 32) {
+            code.pxor(xmm_value, xmm_crc);
+        }
+
+        code.pextrd(crc, xmm_value, 1);
+
+        ctx.reg_alloc.DefineValue(inst, crc);
+        return;
+    }
+
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ) && data_size == 64) {
+        const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+        const Xbyak::Reg64 value = ctx.reg_alloc.UseScratchGpr(args[1]);
+        const Xbyak::Xmm xmm_crc = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
+
+        code.movd(xmm_value, value.cvt32());
+        code.movd(xmm_crc, crc);
+        code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
+
+        code.pxor(xmm_value, xmm_crc);
+
+        code.pclmulqdq(xmm_value, xmm_const, 0x00);
+        code.pshufd(xmm_value, xmm_value, 0b11111100);
+        code.pclmulqdq(xmm_value, xmm_const, 0x10);
+
+        code.movq(xmm_crc, value);
+        code.pxor(xmm_value, xmm_crc);
+        code.pshufd(xmm_value, xmm_value, 0b11111101);
+
+        code.pclmulqdq(xmm_value, xmm_const, 0x00);
+        code.pshufd(xmm_value, xmm_value, 0b11111100);
+        code.pclmulqdq(xmm_value, xmm_const, 0x10);
+
+        code.pextrd(crc, xmm_value, 1);
+
+        ctx.reg_alloc.DefineValue(inst, crc);
+        return;
+    }
 
     ctx.reg_alloc.HostCall(inst, args[0], args[1], {});
     code.mov(code.ABI_PARAM3, data_size / CHAR_BIT);
