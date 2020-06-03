@@ -47,20 +47,19 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
         code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
 
         code.pxor(xmm_value, xmm_crc);
+        code.psllq(xmm_value, 64 - data_size);
         if (data_size < 32) {
-            code.pslld(xmm_value, 32 - data_size);
-            code.psllq(xmm_crc, 32 - data_size);
+            code.pslldq(xmm_crc, (64 - data_size) / 8);
         }
 
         code.pclmulqdq(xmm_value, xmm_const, 0x00);
-        code.pshufd(xmm_value, xmm_value, 0b11111100);
         code.pclmulqdq(xmm_value, xmm_const, 0x10);
 
         if (data_size < 32) {
             code.pxor(xmm_value, xmm_crc);
         }
 
-        code.pextrd(crc, xmm_value, 1);
+        code.pextrd(crc, xmm_value, 2);
 
         ctx.reg_alloc.DefineValue(inst, crc);
         return;
@@ -73,25 +72,24 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
 
-        code.movd(xmm_value, value.cvt32());
+        code.movq(xmm_value, value);
         code.movd(xmm_crc, crc);
         code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
 
         code.pxor(xmm_value, xmm_crc);
+        code.pslldq(xmm_value, 4);
+        code.movdqa(xmm_crc, xmm_value);
 
         code.pclmulqdq(xmm_value, xmm_const, 0x00);
-        code.pshufd(xmm_value, xmm_value, 0b11111100);
         code.pclmulqdq(xmm_value, xmm_const, 0x10);
 
-        code.movq(xmm_crc, value);
         code.pxor(xmm_value, xmm_crc);
-        code.pshufd(xmm_value, xmm_value, 0b11111101);
+        code.psllq(xmm_value, 32);
 
-        code.pclmulqdq(xmm_value, xmm_const, 0x00);
-        code.pshufd(xmm_value, xmm_value, 0b11111100);
+        code.pclmulqdq(xmm_value, xmm_const, 0x01);
         code.pclmulqdq(xmm_value, xmm_const, 0x10);
 
-        code.pextrd(crc, xmm_value, 1);
+        code.pextrd(crc, xmm_value, 2);
 
         ctx.reg_alloc.DefineValue(inst, crc);
         return;
