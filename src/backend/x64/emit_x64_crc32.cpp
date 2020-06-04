@@ -68,26 +68,37 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ) && data_size == 64) {
         const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg64 value = ctx.reg_alloc.UseScratchGpr(args[1]);
-        const Xbyak::Xmm xmm_crc = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_tmp = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
 
+        code.movdqa(xmm_const, code.MConst(xword, 0xFFFFFFFF00000000, 0x00000001'63CD6124));
+
+        code.mov(crc, crc);
+        code.xor_(value, crc.cvt64());
         code.movq(xmm_value, value);
-        code.movd(xmm_crc, crc);
+
+        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+            code.vpand(xmm_tmp, xmm_value, xmm_const);
+        } else {
+            code.movdqa(xmm_tmp, xmm_value);
+            code.pand(xmm_tmp, xmm_const);
+        }
+        code.psllq(xmm_value, 32);
+        code.pclmulqdq(xmm_value, xmm_const, 0x10);
+
         code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
 
-        code.pxor(xmm_value, xmm_crc);
-        code.pslldq(xmm_value, 4);
-        code.movdqa(xmm_crc, xmm_value);
-
-        code.pclmulqdq(xmm_value, xmm_const, 0x00);
+        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+            code.pxor(xmm_tmp, xmm_value);
+            code.vpclmulqdq(xmm_value, xmm_tmp, xmm_const, 0x00);
+        } else {
+            code.pxor(xmm_value, xmm_tmp);
+            code.movdqa(xmm_tmp, xmm_value);
+            code.pclmulqdq(xmm_value, xmm_const, 0x00);
+        }
         code.pclmulqdq(xmm_value, xmm_const, 0x10);
-
-        code.pxor(xmm_value, xmm_crc);
-        code.psllq(xmm_value, 32);
-
-        code.pclmulqdq(xmm_value, xmm_const, 0x01);
-        code.pclmulqdq(xmm_value, xmm_const, 0x10);
+        code.pxor(xmm_value, xmm_tmp);
 
         code.pextrd(crc, xmm_value, 2);
 
