@@ -57,18 +57,18 @@ bool CRC32Variant(ArmTranslatorVisitor& v, Cond cond, Imm<2> sz, Reg n, Reg d, R
         if (type == CRCType::ISO) {
             switch (sz.ZeroExtend()) {
             case 0b00:
-                return v.ir.CRC32ISO8(accumulator, v.ir.And(data, v.ir.Imm32(0xFF)));
+                return v.ir.CRC32ISO8(accumulator, data);
             case 0b01:
-                return v.ir.CRC32ISO16(accumulator, v.ir.And(data, v.ir.Imm32(0xFFFF)));
+                return v.ir.CRC32ISO16(accumulator, data);
             case 0b10:
                 return v.ir.CRC32ISO32(accumulator, data);
             }
         } else {
             switch (sz.ZeroExtend()) {
             case 0b00:
-                return v.ir.CRC32Castagnoli8(accumulator, v.ir.And(data, v.ir.Imm32(0xFF)));
+                return v.ir.CRC32Castagnoli8(accumulator, data);
             case 0b01:
-                return v.ir.CRC32Castagnoli16(accumulator, v.ir.And(data, v.ir.Imm32(0xFFFF)));
+                return v.ir.CRC32Castagnoli16(accumulator, data);
             case 0b10:
                 return v.ir.CRC32Castagnoli32(accumulator, data);
             }
