@@ -35,29 +35,51 @@ static void EmitCRC32Castagnoli(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, const int data_size) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ) && data_size <= 32) {
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ) && data_size < 32) {
         const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-        const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
-        const Xbyak::Xmm xmm_crc = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg64 value = ctx.reg_alloc.UseScratchGpr(args[1]);
+        const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm xmm_tmp = ctx.reg_alloc.ScratchXmm();
+
+        code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
+
+        code.movzx(value.cvt32(), value.changeBit(data_size));
+        code.xor_(value.cvt32(), crc);
+        code.movd(xmm_tmp, value.cvt32());
+        code.pslldq(xmm_tmp, (64 - data_size) / 8);
+
+        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+            code.vpclmulqdq(xmm_value, xmm_tmp, xmm_const, 0x00);
+            code.pclmulqdq(xmm_value, xmm_const, 0x10);
+            code.pxor(xmm_value, xmm_tmp);
+        } else {
+            code.movdqa(xmm_value, xmm_tmp);
+            code.pclmulqdq(xmm_value, xmm_const, 0x00);
+            code.pclmulqdq(xmm_value, xmm_const, 0x10);
+            code.pxor(xmm_value, xmm_tmp);
+        }
+
+        code.pextrd(crc, xmm_value, 2);
+
+        ctx.reg_alloc.DefineValue(inst, crc);
+        return;
+    }
+
+    if (code.DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ) && data_size == 32) {
+        const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+        const Xbyak::Reg32 value = ctx.reg_alloc.UseGpr(args[1]).cvt32();
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
 
-        code.movd(xmm_value, value.cvt32());
-        code.movd(xmm_crc, crc);
         code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
 
-        code.pxor(xmm_value, xmm_crc);
-        code.psllq(xmm_value, 64 - data_size);
-        if (data_size < 32) {
-            code.pslldq(xmm_crc, (64 - data_size) / 8);
-        }
+        code.xor_(crc, value);
+        code.shl(crc.cvt64(), 32);
+        code.movq(xmm_value, crc.cvt64());
 
         code.pclmulqdq(xmm_value, xmm_const, 0x00);
         code.pclmulqdq(xmm_value, xmm_const, 0x10);
-
-        if (data_size < 32) {
-            code.pxor(xmm_value, xmm_crc);
-        }
 
         code.pextrd(crc, xmm_value, 2);
 
@@ -67,38 +89,18 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
 
     if (code.DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ) && data_size == 64) {
         const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-        const Xbyak::Reg64 value = ctx.reg_alloc.UseScratchGpr(args[1]);
-        const Xbyak::Xmm xmm_tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
 
-        code.movdqa(xmm_const, code.MConst(xword, 0xFFFFFFFF00000000, 0x00000001'63CD6124));
+        code.movdqa(xmm_const, code.MConst(xword, 0xb4e5b025'f7011641, 0x00000001'DB710641));
 
         code.mov(crc, crc);
-        code.xor_(value, crc.cvt64());
-        code.movq(xmm_value, value);
+        code.xor_(crc.cvt64(), value);
+        code.movq(xmm_value, crc.cvt64());
 
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
-            code.vpand(xmm_tmp, xmm_value, xmm_const);
-        } else {
-            code.movdqa(xmm_tmp, xmm_value);
-            code.pand(xmm_tmp, xmm_const);
-        }
-        code.psllq(xmm_value, 32);
+        code.pclmulqdq(xmm_value, xmm_const, 0x00);
         code.pclmulqdq(xmm_value, xmm_const, 0x10);
-
-        code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
-
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
-            code.pxor(xmm_tmp, xmm_value);
-            code.vpclmulqdq(xmm_value, xmm_tmp, xmm_const, 0x00);
-        } else {
-            code.pxor(xmm_value, xmm_tmp);
-            code.movdqa(xmm_tmp, xmm_value);
-            code.pclmulqdq(xmm_value, xmm_const, 0x00);
-        }
-        code.pclmulqdq(xmm_value, xmm_const, 0x10);
-        code.pxor(xmm_value, xmm_tmp);
 
         code.pextrd(crc, xmm_value, 2);
 
