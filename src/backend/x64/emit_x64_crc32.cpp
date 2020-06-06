@@ -42,7 +42,7 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
         const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm xmm_tmp = ctx.reg_alloc.ScratchXmm();
 
-        code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
+        code.movdqa(xmm_const, code.MConst(xword, 0xb4e5b025'f7011641, 0x00000001'DB710641));
 
         code.movzx(value.cvt32(), value.changeBit(data_size));
         code.xor_(value.cvt32(), crc);
@@ -72,7 +72,7 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm xmm_const = ctx.reg_alloc.ScratchXmm();
 
-        code.movdqa(xmm_const, code.MConst(xword, 0x00000001'F7011641, 0x00000001'DB710641));
+        code.movdqa(xmm_const, code.MConst(xword, 0xb4e5b025'f7011641, 0x00000001'DB710641));
 
         code.xor_(crc, value);
         code.shl(crc.cvt64(), 32);
