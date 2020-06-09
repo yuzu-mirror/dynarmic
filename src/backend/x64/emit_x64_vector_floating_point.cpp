@@ -82,7 +82,7 @@ template<size_t fsize, size_t nargs, typename NaNHandler>
 void HandleNaNs(BlockOfCode& code, EmitContext& ctx, std::array<Xbyak::Xmm, nargs + 1> xmms, const Xbyak::Xmm& nan_mask, NaNHandler nan_handler) {
     static_assert(fsize == 32 || fsize == 64, "fsize must be either 32 or 64");
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+    if (code.HasSSE41()) {
         code.ptest(nan_mask, nan_mask);
     } else {
         const Xbyak::Reg32 bitmask = ctx.reg_alloc.ScratchGpr().cvt32();
@@ -169,7 +169,7 @@ template<size_t fsize>
 void ForceToDefaultNaN(BlockOfCode& code, EmitContext& ctx, Xbyak::Xmm result) {
     if (ctx.FPCR().DN()) {
         const Xbyak::Xmm nan_mask = xmm0;
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasAVX()) {
             FCODE(vcmpunordp)(nan_mask, result, result);
             FCODE(blendvp)(result, GetNaNVector<fsize>(code));
         } else {
@@ -185,7 +185,7 @@ void ForceToDefaultNaN(BlockOfCode& code, EmitContext& ctx, Xbyak::Xmm result) {
 template<size_t fsize>
 void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm result) {
     const Xbyak::Xmm nan_mask = xmm0;
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+    if (code.HasAVX()) {
         FCODE(vcmpordp)(nan_mask, result, result);
         FCODE(vandp)(result, result, nan_mask);
     } else {
@@ -301,7 +301,7 @@ void EmitTwoOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
         fn(result, xmm_a);
     }
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+    if (code.HasAVX()) {
         FCODE(vcmpunordp)(nan_mask, result, result);
     } else {
         code.movaps(nan_mask, result);
@@ -588,9 +588,9 @@ void EmitX64::EmitFPVectorFromSignedFixed64(EmitContext& ctx, IR::Inst* inst) {
     const FP::RoundingMode rounding_mode = static_cast<FP::RoundingMode>(args[2].GetImmediateU8());
     ASSERT(rounding_mode == ctx.FPCR().RMode());
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX512VL) && code.DoesCpuSupport(Xbyak::util::Cpu::tAVX512DQ)) {
+    if (code.HasAVX512_Skylake()) {
         code.vcvtqq2pd(xmm, xmm);
-    } else if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+    } else if (code.HasSSE41()) {
         const Xbyak::Xmm xmm_tmp = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
 
@@ -636,7 +636,7 @@ void EmitX64::EmitFPVectorFromUnsignedFixed32(EmitContext& ctx, IR::Inst* inst) 
     const FP::RoundingMode rounding_mode = static_cast<FP::RoundingMode>(args[2].GetImmediateU8());
     ASSERT(rounding_mode == ctx.FPCR().RMode());
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX512DQ) && code.DoesCpuSupport(Xbyak::util::Cpu::tAVX512VL)) {
+    if (code.HasAVX512_Skylake()) {
         code.vcvtudq2ps(xmm, xmm);
     } else {
         const Xbyak::Address mem_4B000000 = code.MConst(xword, 0x4B0000004B000000, 0x4B0000004B000000);
@@ -645,7 +645,7 @@ void EmitX64::EmitFPVectorFromUnsignedFixed32(EmitContext& ctx, IR::Inst* inst) 
 
         const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasAVX()) {
             code.vpblendw(tmp, xmm, mem_4B000000, 0b10101010);
             code.vpsrld(xmm, xmm, 16);
             code.vpblendw(xmm, xmm, mem_53000000, 0b10101010);
@@ -683,7 +683,7 @@ void EmitX64::EmitFPVectorFromUnsignedFixed64(EmitContext& ctx, IR::Inst* inst) 
     const FP::RoundingMode rounding_mode = static_cast<FP::RoundingMode>(args[2].GetImmediateU8());
     ASSERT(rounding_mode == ctx.FPCR().RMode());
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX512DQ) && code.DoesCpuSupport(Xbyak::util::Cpu::tAVX512VL)) {
+    if (code.HasAVX512_Skylake()) {
         code.vcvtuqq2pd(xmm, xmm);
     } else {
         const Xbyak::Address unpack = code.MConst(xword, 0x4530000043300000, 0);
@@ -693,7 +693,7 @@ void EmitX64::EmitFPVectorFromUnsignedFixed64(EmitContext& ctx, IR::Inst* inst) 
         const Xbyak::Xmm subtrahend_reg = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm tmp1 = ctx.reg_alloc.ScratchXmm();
 
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasAVX()) {
             code.vmovapd(unpack_reg, unpack);
             code.vmovapd(subtrahend_reg, subtrahend);
 
@@ -793,7 +793,7 @@ static void EmitFPVectorMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
 
         DenormalsAreZero<fsize>(code, ctx, {result, xmm_b}, mask);
 
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasAVX()) {
             FCODE(vcmpeqp)(mask, result, xmm_b);
             FCODE(vcmpunordp)(nan_mask, result, xmm_b);
             if constexpr (is_max) {
@@ -849,7 +849,7 @@ static void EmitFPVectorMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
         // x86-64 treats differently signed zeros as equal while ARM does not.
         // Thus if we AND together things that x86-64 thinks are equal we'll get the positive zero.
 
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasAVX()) {
             FCODE(vcmpeqp)(mask, result, xmm_b);
             if constexpr (is_max) {
                 FCODE(vandp)(eq, result, xmm_b);
@@ -914,7 +914,7 @@ void EmitFPVectorMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     };
 
     if constexpr (fsize != 16) {
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tFMA) && code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasFMA() && code.HasAVX()) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -971,7 +971,7 @@ static void EmitFPVectorMulX(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (ctx.FPCR().DN() && code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+    if (ctx.FPCR().DN() && code.HasAVX()) {
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[1]);
         const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
@@ -1120,7 +1120,7 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     };
 
     if constexpr (fsize != 16) {
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tFMA) && code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasFMA() && code.HasAVX()) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -1176,7 +1176,7 @@ void EmitFPVectorRoundInt(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     const bool exact = inst->GetArg(2).GetU1();
 
     if constexpr (fsize != 16) {
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41) && rounding != FP::RoundingMode::ToNearest_TieAwayFromZero && !exact) {
+        if (code.HasSSE41() && rounding != FP::RoundingMode::ToNearest_TieAwayFromZero && !exact) {
             const u8 round_imm = [&]() -> u8 {
                 switch (rounding) {
                 case FP::RoundingMode::ToNearest_TieEven:
@@ -1276,7 +1276,7 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     };
 
     if constexpr (fsize != 16) {
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tFMA) && code.DoesCpuSupport(Xbyak::util::Cpu::tAVX)) {
+        if (code.HasFMA() && code.HasAVX()) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -1364,7 +1364,7 @@ void EmitFPVectorToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     // TODO: AVX512 implementation
 
     if constexpr (fsize != 16) {
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41) && rounding != FP::RoundingMode::ToNearest_TieAwayFromZero) {
+        if (code.HasSSE41() && rounding != FP::RoundingMode::ToNearest_TieAwayFromZero) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
             const Xbyak::Xmm src = ctx.reg_alloc.UseScratchXmm(args[0]);

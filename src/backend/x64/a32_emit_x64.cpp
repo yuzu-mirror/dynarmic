@@ -284,7 +284,7 @@ void A32EmitX64::GenTerminalHandlers() {
         calculate_location_descriptor();
         code.L(rsb_cache_miss);
         code.mov(r12, reinterpret_cast<u64>(fast_dispatch_table.data()));
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE42)) {
+        if (code.HasSSE42()) {
             code.crc32(ebp, r12d);
         }
         code.and_(ebp, fast_dispatch_table_mask);
@@ -302,7 +302,7 @@ void A32EmitX64::GenTerminalHandlers() {
         code.align();
         fast_dispatch_table_lookup = code.getCurr<FastDispatchEntry&(*)(u64)>();
         code.mov(code.ABI_PARAM2, reinterpret_cast<u64>(fast_dispatch_table.data()));
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE42)) {
+        if (code.HasSSE42()) {
             code.crc32(code.ABI_PARAM1.cvt32(), code.ABI_PARAM2.cvt32());
         }
         code.and_(code.ABI_PARAM1.cvt32(), fast_dispatch_table_mask);
@@ -417,7 +417,7 @@ static u32 GetCpsrImpl(A32JitState* jit_state) {
 }
 
 void A32EmitX64::EmitA32GetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+    if (code.HasBMI2()) {
         const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
         const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
         const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
@@ -456,7 +456,7 @@ static void SetCpsrImpl(u32 value, A32JitState* jit_state) {
 void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+    if (code.HasBMI2()) {
         const Xbyak::Reg32 cpsr = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
         const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
@@ -514,7 +514,7 @@ void A32EmitX64::EmitA32SetCpsrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
         const u32 imm = args[0].GetImmediateU32();
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], NZCV::ToX64(imm));
-    } else if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+    } else if (code.HasBMI2()) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -539,7 +539,7 @@ void A32EmitX64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], NZCV::ToX64(imm));
         code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_q)], u8((imm & 0x08000000) != 0 ? 1 : 0));
-    } else if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+    } else if (code.HasBMI2()) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -666,7 +666,7 @@ void A32EmitX64::EmitA32SetGEFlagsCompressed(A32EmitContext& ctx, IR::Inst* inst
         ge |= Common::Bit<16>(imm) ? 0x000000FF : 0;
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_ge)], ge);
-    } else if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+    } else if (code.HasBMI2()) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 

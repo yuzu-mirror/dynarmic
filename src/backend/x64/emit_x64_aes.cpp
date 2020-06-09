@@ -56,7 +56,7 @@ void EmitX64::EmitAESEncryptSingleRound(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitAESInverseMixColumns(EmitContext& ctx, IR::Inst* inst) {
      auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tAESNI)) {
+    if (code.HasAESNI()) {
         const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
 
         code.aesimc(data, data);

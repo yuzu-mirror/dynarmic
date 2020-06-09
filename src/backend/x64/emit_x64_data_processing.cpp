@@ -36,7 +36,7 @@ void EmitX64::EmitPack2x64To1x128(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg64 hi = ctx.reg_alloc.UseGpr(args[1]);
     const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tSSE41)) {
+    if (code.HasSSE41()) {
         code.movq(result, lo);
         code.pinsrq(result, hi, 1);
     } else {
@@ -791,7 +791,7 @@ static void EmitMaskedShift32(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
     }
 
     if constexpr (!std::is_same_v<BMI2FT, std::nullptr_t>) {
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+        if (code.HasBMI2()) {
             const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
             const Xbyak::Reg32 operand = ctx.reg_alloc.UseGpr(operand_arg).cvt32();
             const Xbyak::Reg32 shift = ctx.reg_alloc.UseGpr(shift_arg).cvt32();
@@ -828,7 +828,7 @@ static void EmitMaskedShift64(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
     }
 
     if constexpr (!std::is_same_v<BMI2FT, std::nullptr_t>) {
-        if (code.DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
+        if (code.HasBMI2()) {
             const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
             const Xbyak::Reg64 operand = ctx.reg_alloc.UseGpr(operand_arg);
             const Xbyak::Reg64 shift = ctx.reg_alloc.UseGpr(shift_arg);
@@ -1424,7 +1424,7 @@ void EmitX64::EmitByteReverseDual(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitCountLeadingZeros32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    if (code.DoesCpuSupport(Xbyak::util::Cpu::tLZCNT)) {
+    if (code.HasLZCNT()) {
         const Xbyak::Reg32 source = ctx.reg_alloc.UseGpr(args[0]).cvt32();
         const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -1448,7 +1448,7 @@ void EmitX64::EmitCountLeadingZeros32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitCountLeadingZeros64(EmitContext& ctx, IR::Inst* inst) {
    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-   if (code.DoesCpuSupport(Xbyak::util::Cpu::tLZCNT)) {
+   if (code.HasLZCNT()) {
        const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]).cvt64();
        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
 
