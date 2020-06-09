@@ -412,16 +412,12 @@ void A32EmitX64::EmitA32SetVector(A32EmitContext& ctx, IR::Inst* inst) {
     }
 }
 
-static u32 GetCpsrImpl(A32JitState* jit_state) {
-    return jit_state->Cpsr();
-}
-
 void A32EmitX64::EmitA32GetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
-    if (code.HasBMI2()) {
-        const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
-        const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
-        const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
 
+    if (code.HasFastBMI2()) {
         // Here we observe that cpsr_et and cpsr_ge are right next to each other in memory,
         // so we load them both at the same time with one 64-bit read. This allows us to
         // extract all of their bits together at once with one pext.
@@ -431,60 +427,78 @@ void A32EmitX64::EmitA32GetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
         code.pext(result.cvt64(), result.cvt64(), tmp.cvt64());
         code.mov(tmp, 0x000f0220);
         code.pdep(result, result, tmp);
-        code.mov(tmp, dword[r15 + offsetof(A32JitState, cpsr_q)]);
-        code.shl(tmp, 27);
+    } else {
+        code.mov(result, dword[r15 + offsetof(A32JitState, upper_location_descriptor)]);
+        code.imul(result, result, 0x12);
+        code.and_(result, 0x00000220);
+
+        code.mov(tmp, dword[r15 + offsetof(A32JitState, cpsr_ge)]);
+        code.and_(tmp, 0x80808080);
+        code.imul(tmp, tmp, 0x00204081);
+        code.shr(tmp, 12);
+        code.and_(tmp, 0x000f0000);
         code.or_(result, tmp);
-        code.mov(tmp2, dword[r15 + offsetof(A32JitState, cpsr_nzcv)]);
+    }
+
+    code.mov(tmp, dword[r15 + offsetof(A32JitState, cpsr_q)]);
+    code.shl(tmp, 27);
+    code.or_(result, tmp);
+
+    code.mov(tmp2, dword[r15 + offsetof(A32JitState, cpsr_nzcv)]);
+    if (code.HasFastBMI2()) {
         code.mov(tmp, NZCV::x64_mask);
         code.pext(tmp2, tmp2, tmp);
         code.shl(tmp2, 28);
-        code.or_(result, tmp2);
-        code.or_(result, dword[r15 + offsetof(A32JitState, cpsr_jaifm)]);
-
-        ctx.reg_alloc.DefineValue(inst, result);
     } else {
-        ctx.reg_alloc.HostCall(inst);
-        code.mov(code.ABI_PARAM1, code.r15);
-        code.CallFunction(&GetCpsrImpl);
+        code.and_(tmp2, NZCV::x64_mask);
+        code.imul(tmp2, tmp2, NZCV::from_x64_multiplier);
+        code.and_(tmp2, NZCV::arm_mask);
     }
-}
+    code.or_(result, tmp2);
 
-static void SetCpsrImpl(u32 value, A32JitState* jit_state) {
-    jit_state->SetCpsr(value);
+    code.or_(result, dword[r15 + offsetof(A32JitState, cpsr_jaifm)]);
+
+    ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (code.HasBMI2()) {
-        const Xbyak::Reg32 cpsr = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-        const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
-        const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 cpsr = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+    const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
 
-        if (config.always_little_endian) {
-            code.and_(cpsr, 0xFFFFFDFF);
-        }
+    if (config.always_little_endian) {
+        code.and_(cpsr, 0xFFFFFDFF);
+    }
 
-        // cpsr_q
-        code.bt(cpsr, 27);
-        code.setc(code.byte[r15 + offsetof(A32JitState, cpsr_q)]);
+    // cpsr_q
+    code.bt(cpsr, 27);
+    code.setc(code.byte[r15 + offsetof(A32JitState, cpsr_q)]);
 
-        // cpsr_nzcv
-        code.mov(tmp, cpsr);
-        code.shr(tmp, 28);
+    // cpsr_nzcv
+    code.mov(tmp, cpsr);
+    code.shr(tmp, 28);
+    if (code.HasFastBMI2()) {
         code.mov(tmp2, NZCV::x64_mask);
         code.pdep(tmp, tmp, tmp2);
-        code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], tmp);
+    } else {
+        code.imul(tmp, tmp, NZCV::to_x64_multiplier);
+        code.and_(tmp, NZCV::x64_mask);
+    }
+    code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], tmp);
 
-        // cpsr_jaifm
-        code.mov(tmp, cpsr);
-        code.and_(tmp, 0x07F0FDDF);
-        code.mov(dword[r15 + offsetof(A32JitState, cpsr_jaifm)], tmp);
+    // cpsr_jaifm
+    code.mov(tmp, cpsr);
+    code.and_(tmp, 0x07F0FDDF);
+    code.mov(dword[r15 + offsetof(A32JitState, cpsr_jaifm)], tmp);
 
+    if (code.HasFastBMI2()) {
         // cpsr_et and cpsr_ge
         static_assert(offsetof(A32JitState, upper_location_descriptor) + 4 == offsetof(A32JitState, cpsr_ge));
         // This mask is 0x7FFF0000, because we do not want the MSB to be sign extended to the upper dword.
         static_assert((A32::LocationDescriptor::FPSCR_MODE_MASK & ~0x7FFF0000) == 0);
+
         code.and_(qword[r15 + offsetof(A32JitState, upper_location_descriptor)], u32(0x7FFF0000));
         code.mov(tmp, 0x000f0220);
         code.pext(cpsr, cpsr, tmp);
@@ -497,14 +511,21 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
         code.xor_(tmp.cvt64(), tmp2.cvt64());
         code.or_(qword[r15 + offsetof(A32JitState, upper_location_descriptor)], tmp.cvt64());
     } else {
-        ctx.reg_alloc.HostCall(nullptr, args[0]);
+        code.and_(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], u32(0xFFFF0000));
+        code.mov(tmp, cpsr);
+        code.and_(tmp, 0x00000220);
+        code.imul(tmp, tmp, 0x00900000);
+        code.shr(tmp, 28);
+        code.or_(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], tmp);
 
-        if (config.always_little_endian) {
-            code.and_(code.ABI_PARAM1, 0xFFFFFDFF);
-        }
-
-        code.mov(code.ABI_PARAM2, code.r15);
-        code.CallFunction(&SetCpsrImpl);
+        code.and_(cpsr, 0x000f0000);
+        code.shr(cpsr, 16);
+        code.imul(cpsr, cpsr, 0x00204081);
+        code.and_(cpsr, 0x01010101);
+        code.mov(tmp, 0x80808080);
+        code.sub(tmp, cpsr);
+        code.xor_(tmp, 0x80808080);
+        code.mov(dword[r15 + offsetof(A32JitState, cpsr_ge)], tmp);
     }
 }
 
@@ -514,7 +535,7 @@ void A32EmitX64::EmitA32SetCpsrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
         const u32 imm = args[0].GetImmediateU32();
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], NZCV::ToX64(imm));
-    } else if (code.HasBMI2()) {
+    } else if (code.HasFastBMI2()) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -539,7 +560,7 @@ void A32EmitX64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], NZCV::ToX64(imm));
         code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_q)], u8((imm & 0x08000000) != 0 ? 1 : 0));
-    } else if (code.HasBMI2()) {
+    } else if (code.HasFastBMI2()) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -666,7 +687,7 @@ void A32EmitX64::EmitA32SetGEFlagsCompressed(A32EmitContext& ctx, IR::Inst* inst
         ge |= Common::Bit<16>(imm) ? 0x000000FF : 0;
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_ge)], ge);
-    } else if (code.HasBMI2()) {
+    } else if (code.HasFastBMI2()) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -802,13 +823,24 @@ void A32EmitX64::EmitA32GetFpscrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
 
 void A32EmitX64::EmitA32SetFpscrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (code.HasFastBMI2()) {
+        const Xbyak::Reg32 value = ctx.reg_alloc.UseGpr(args[0]).cvt32();
+        const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+
+        code.mov(tmp, NZCV::x64_mask);
+        code.pext(tmp, value, tmp);
+        code.shl(tmp, 28);
+        code.mov(dword[r15 + offsetof(A32JitState, fpsr_nzcv)], tmp);
+
+        return;
+    }
+
     const Xbyak::Reg32 value = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
-    code.and_(value, 0b11000001'00000001);
-    code.imul(value, value, 0b00010000'00100001);
-    code.shl(value, 16);
-    code.and_(value, 0xF0000000);
-
+    code.and_(value, NZCV::x64_mask);
+    code.imul(value, value, NZCV::from_x64_multiplier);
+    code.and_(value, NZCV::arm_mask);
     code.mov(dword[r15 + offsetof(A32JitState, fpsr_nzcv)], value);
 }
 

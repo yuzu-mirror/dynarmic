@@ -381,9 +381,18 @@ void A64EmitX64::EmitA64GetNZCVRaw(A64EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 nzcv_raw = ctx.reg_alloc.ScratchGpr().cvt32();
 
     code.mov(nzcv_raw, dword[r15 + offsetof(A64JitState, cpsr_nzcv)]);
-    code.and_(nzcv_raw, NZCV::x64_mask);
-    code.imul(nzcv_raw, nzcv_raw, NZCV::from_x64_multiplier);
-    code.and_(nzcv_raw, NZCV::arm_mask);
+
+    if (code.HasFastBMI2()) {
+        const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+        code.mov(tmp, NZCV::x64_mask);
+        code.pext(nzcv_raw, nzcv_raw, tmp);
+        code.shl(nzcv_raw, 28);
+    } else {
+        code.and_(nzcv_raw, NZCV::x64_mask);
+        code.imul(nzcv_raw, nzcv_raw, NZCV::from_x64_multiplier);
+        code.and_(nzcv_raw, NZCV::arm_mask);
+    }
+
     ctx.reg_alloc.DefineValue(inst, nzcv_raw);
 }
 
@@ -392,8 +401,14 @@ void A64EmitX64::EmitA64SetNZCVRaw(A64EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 nzcv_raw = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
     code.shr(nzcv_raw, 28);
-    code.imul(nzcv_raw, nzcv_raw, NZCV::to_x64_multiplier);
-    code.and_(nzcv_raw, NZCV::x64_mask);
+    if (code.HasFastBMI2()) {
+        const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+        code.mov(tmp, NZCV::x64_mask);
+        code.pdep(nzcv_raw, nzcv_raw, tmp);
+    } else {
+        code.imul(nzcv_raw, nzcv_raw, NZCV::to_x64_multiplier);
+        code.and_(nzcv_raw, NZCV::x64_mask);
+    }
     code.mov(dword[r15 + offsetof(A64JitState, cpsr_nzcv)], nzcv_raw);
 }
 

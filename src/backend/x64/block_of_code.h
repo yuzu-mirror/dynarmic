@@ -150,6 +150,7 @@ public:
     bool HasLZCNT() const;
     bool HasBMI1() const;
     bool HasBMI2() const;
+    bool HasFastBMI2() const;
     bool HasFMA() const;
     bool HasAVX2() const;
     bool HasAVX512_Skylake() const;

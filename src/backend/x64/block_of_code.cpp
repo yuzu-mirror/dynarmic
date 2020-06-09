@@ -355,6 +355,10 @@ bool BlockOfCode::HasBMI2() const {
     return DoesCpuSupport(Xbyak::util::Cpu::tBMI2);
 }
 
+bool BlockOfCode::HasFastBMI2() const {
+    return DoesCpuSupport(Xbyak::util::Cpu::tBMI2) && !DoesCpuSupport(Xbyak::util::Cpu::tAMD);
+}
+
 bool BlockOfCode::HasFMA() const {
     return DoesCpuSupport(Xbyak::util::Cpu::tFMA);
 }

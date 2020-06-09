@@ -9,6 +9,7 @@
 
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
+#include "backend/x64/nzcv_util.h"
 #include "backend/x64/perf_map.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
@@ -159,12 +160,22 @@ void EmitX64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {
         value |= Common::Bit<28>(args[0].GetImmediateU32()) ? (1 << 0) : 0;
         code.mov(nzcv, value);
         ctx.reg_alloc.DefineValue(inst, nzcv);
+    } else if (code.HasFastBMI2()) {
+        const Xbyak::Reg32 nzcv = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+        const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+
+        code.shr(nzcv, 28);
+        code.mov(tmp, NZCV::x64_mask);
+        code.pdep(nzcv, nzcv, tmp);
+
+        ctx.reg_alloc.DefineValue(inst, nzcv);
     } else {
         const Xbyak::Reg32 nzcv = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-        // TODO: Optimize
+
         code.shr(nzcv, 28);
-        code.imul(nzcv, nzcv, 0b00010000'10000001);
-        code.and_(nzcv.cvt8(), 1);
+        code.imul(nzcv, nzcv, NZCV::to_x64_multiplier);
+        code.and_(nzcv, NZCV::x64_mask);
+
         ctx.reg_alloc.DefineValue(inst, nzcv);
     }
 }
