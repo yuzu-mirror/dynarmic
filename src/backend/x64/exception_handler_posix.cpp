@@ -39,10 +39,14 @@ public:
     void AddCodeBlock(CodeBlockInfo info);
     void RemoveCodeBlock(u64 rip);
 
+    bool SupportsFastmem() const { return supports_fast_mem; }
+
 private:
     auto FindCodeBlockInfo(u64 rip) {
         return std::find_if(code_block_infos.begin(), code_block_infos.end(), [&](const auto& x) { return x.code_begin <= rip && x.code_end > rip; });
     }
+
+    bool supports_fast_mem = true;
 
     std::vector<CodeBlockInfo> code_block_infos;
     std::mutex code_block_infos_mutex;
@@ -62,17 +66,28 @@ SigHandler::SigHandler() {
     signal_stack.ss_sp = std::malloc(signal_stack_size);
     signal_stack.ss_size = signal_stack_size;
     signal_stack.ss_flags = 0;
-    const int ret = sigaltstack(&signal_stack, nullptr);
-    ASSERT_MSG(ret == 0, "dynarmic: POSIX SigHandler: init failure at sigaltstack");
+    if (sigaltstack(&signal_stack, nullptr) != 0) {
+        fmt::print(stderr, "dynarmic: POSIX SigHandler: init failure at sigaltstack\n");
+        supports_fast_mem = false;
+        return;
+    }
 
     struct sigaction sa;
     sa.sa_handler = nullptr;
     sa.sa_sigaction = &SigHandler::SigAction;
     sa.sa_flags = SA_SIGINFO | SA_ONSTACK | SA_RESTART;
     sigemptyset(&sa.sa_mask);
-    sigaction(SIGSEGV, &sa, &old_sa_segv);
+    if (sigaction(SIGSEGV, &sa, &old_sa_segv) != 0) {
+        fmt::print(stderr, "dynarmic: POSIX SigHandler: could not set SIGSEGV handler\n");
+        supports_fast_mem = false;
+        return;
+    }
 #ifdef __APPLE__
-    sigaction(SIGBUS, &sa, &old_sa_bus);
+    if (sigaction(SIGBUS, &sa, &old_sa_bus) != 0) {
+        fmt::print(stderr, "dynarmic: POSIX SigHandler: could not set SIGBUS handler\n");
+        supports_fast_mem = false;
+        return;
+    }
 #endif
 }
 
@@ -173,7 +188,7 @@ void ExceptionHandler::Register(BlockOfCode& code) {
 }
 
 bool ExceptionHandler::SupportsFastmem() const noexcept {
-    return static_cast<bool>(impl);
+    return static_cast<bool>(impl) && sig_handler.SupportsFastmem();
 }
 
 void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
