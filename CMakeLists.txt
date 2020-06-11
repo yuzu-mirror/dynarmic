@@ -107,13 +107,6 @@ endif()
 
 # Arch detection
 include(DetectArchitecture)
-if (MSVC)
-    detect_architecture("_M_AMD64" x86_64)
-    detect_architecture("_M_ARM64" Aarch64)
-else()
-    detect_architecture("__x86_64__" x86_64)
-    detect_architecture("__aarch64__" Aarch64)
-endif()
 if (NOT DEFINED ARCHITECTURE)
     message(FATAL_ERROR "Unsupported architecture encountered. Ending CMake generation.")
 endif()

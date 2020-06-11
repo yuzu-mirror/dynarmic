@@ -250,7 +250,7 @@ if ("A64" IN_LIST DYNARMIC_FRONTENDS)
     )
 endif()
 
-if (ARCHITECTURE_x86_64)
+if (ARCHITECTURE STREQUAL "x86_64")
     target_sources(dynarmic PRIVATE
         backend/x64/abi.cpp
         backend/x64/abi.h

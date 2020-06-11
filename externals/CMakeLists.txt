@@ -27,12 +27,14 @@ target_include_directories(robin_map SYSTEM INTERFACE "$<BUILD_INTERFACE:${CMAKE
 
 # vixl
 
-add_subdirectory(vixl)
+if (ARCHITECTURE STREQUAL "arm64")
+    add_subdirectory(vixl)
+endif()
 
 # xbyak
 
 if (NOT TARGET xbyak)
-    if (ARCHITECTURE_x86 OR ARCHITECTURE_x86_64)
+    if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
         add_library(xbyak INTERFACE)
         target_include_directories(xbyak SYSTEM INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/xbyak/xbyak)
         target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
