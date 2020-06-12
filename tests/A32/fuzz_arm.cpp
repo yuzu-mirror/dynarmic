@@ -240,7 +240,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit, A32Unicorn<ArmTestEnv>& uni
         fmt::print("\n");
 
         fmt::print("x86_64:\n");
-        fmt::print("{}\n", jit.Disassemble(A32::LocationDescriptor{initial_pc, A32::PSR{cpsr}, A32::FPSCR{fpscr}}));
+        fmt::print("{}\n", jit.Disassemble());
 
         fmt::print("Interrupts:\n");
         for (const auto& i : uni_env.interrupts) {

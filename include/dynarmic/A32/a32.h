@@ -13,12 +13,6 @@
 #include <dynarmic/A32/config.h>
 
 namespace Dynarmic {
-namespace IR {
-class LocationDescriptor;
-}
-}
-
-namespace Dynarmic {
 namespace A32 {
 
 struct Context;
@@ -92,10 +86,10 @@ public:
     }
 
     /**
-     * @param descriptor Basic block descriptor.
-     * @return A string containing disassembly of the host machine code produced for the basic block.
+     * Debugging: Disassemble all of compiled code.
+     * @return A string containing disassembly of all host machine code produced.
      */
-    std::string Disassemble(const IR::LocationDescriptor& descriptor);
+    std::string Disassemble() const;
 
 private:
     bool is_executing = false;

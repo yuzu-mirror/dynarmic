@@ -166,7 +166,7 @@ static void RunInstance(size_t run_number, ThumbTestEnv& test_env, A32Unicorn<Th
             Dynarmic::Optimization::DeadCodeElimination(ir_block);
             Dynarmic::Optimization::VerificationPass(ir_block);
             printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
-            printf("\n\nx86_64:\n%s", jit.Disassemble(descriptor).c_str());
+            printf("\n\nx86_64:\n%s", jit.Disassemble().c_str());
             num_insts += ir_block.CycleCount();
         }
 

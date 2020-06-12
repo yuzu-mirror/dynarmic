@@ -310,8 +310,8 @@ void Jit::LoadContext(const Context& ctx) {
     impl->jit_state.TransferJitState(ctx.impl->jit_state, reset_rsb);
 }
 
-std::string Jit::Disassemble(const IR::LocationDescriptor& descriptor) {
-    return impl->Disassemble(descriptor);
+std::string Jit::Disassemble() const {
+    return Common::DisassembleX64(impl->block_of_code.GetCodeBegin(), impl->block_of_code.getCurr());
 }
 
 } // namespace Dynarmic::A32
