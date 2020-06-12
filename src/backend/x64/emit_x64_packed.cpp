@@ -655,7 +655,19 @@ void EmitX64::EmitPackedSaturatedSubS16(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitPackedAbsDiffSumS8(EmitContext& ctx, IR::Inst* inst) {
-    EmitPackedOperation(code, ctx, inst, &Xbyak::CodeGenerator::psadbw);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+
+    // TODO: Optimize with zero-extension detection
+    code.movaps(tmp, code.MConst(xword, 0xFFFFFFFF));
+    code.pand(xmm_a, tmp);
+    code.pand(xmm_b, tmp);
+    code.psadbw(xmm_a, xmm_b);
+
+    ctx.reg_alloc.DefineValue(inst, xmm_a);
 }
 
 void EmitX64::EmitPackedSelect(EmitContext& ctx, IR::Inst* inst) {

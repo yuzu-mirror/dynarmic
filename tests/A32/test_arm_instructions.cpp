@@ -425,3 +425,43 @@ TEST_CASE("arm: Test stepping 3", "[arm]") {
     REQUIRE(jit.Regs()[15] == 20);
     REQUIRE(jit.Cpsr() == 0x000001d0);
 }
+
+TEST_CASE("arm: PackedAbsDiffSumS8", "[arm][A32]") {
+    // This was a randomized test-case that was failing.
+    // In circumstances there were cases when the upper 32 bits of an argument to psadbw were not zero.
+
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0x87414354, // smlsldhi r4, r1, r4, r3
+        0xe7886412, // usad8a r8, r2, r4, r6
+        0xeafffffe, // b +#0
+    };
+
+    jit.Regs() = {
+        0xea85297c, 0x417ad918, 0x64f8b70b, 0xcca0373e, 0xbc722361, 0xc528c69e, 0xca926de8, 0xd665d210,
+        0xb5650555, 0x4a24b25b, 0xaed44144, 0xe87230b2, 0x98e391de, 0x126efc0c, 0xe591fd11, 0x00000000,
+    };
+    jit.SetCpsr(0xb0000010);
+
+    test_env.ticks_left = 3;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[0] == 0xea85297c);
+    REQUIRE(jit.Regs()[1] == 0x417ad918);
+    REQUIRE(jit.Regs()[2] == 0x64f8b70b);
+    REQUIRE(jit.Regs()[3] == 0xcca0373e);
+    REQUIRE(jit.Regs()[4] == 0xb685ec9f);
+    REQUIRE(jit.Regs()[5] == 0xc528c69e);
+    REQUIRE(jit.Regs()[6] == 0xca926de8);
+    REQUIRE(jit.Regs()[7] == 0xd665d210);
+    REQUIRE(jit.Regs()[8] == 0xca926f76);
+    REQUIRE(jit.Regs()[9] == 0x4a24b25b);
+    REQUIRE(jit.Regs()[10] == 0xaed44144);
+    REQUIRE(jit.Regs()[11] == 0xe87230b2);
+    REQUIRE(jit.Regs()[12] == 0x98e391de);
+    REQUIRE(jit.Regs()[13] == 0x126efc0c);
+    REQUIRE(jit.Regs()[14] == 0xe591fd11);
+    REQUIRE(jit.Regs()[15] == 0x00000008);
+    REQUIRE(jit.Cpsr() == 0xb0000010);
+}
