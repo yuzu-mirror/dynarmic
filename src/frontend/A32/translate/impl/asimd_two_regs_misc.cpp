@@ -9,6 +9,32 @@
 
 namespace Dynarmic::A32 {
 
+bool ArmTranslatorVisitor::asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+    if (sz == 0b11 || (F && sz != 0b10)) {
+        return UndefinedInstruction();
+    }
+    
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto result = [this, F, m, sz] {
+        const auto reg_m = ir.GetVector(m);
+
+        if (F) {
+            return ir.FPVectorNeg(32, reg_m);
+        }
+
+        const size_t esize = 8U << sz;
+        return ir.VectorSub(esize, ir.ZeroVector(), reg_m);
+    }();
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
