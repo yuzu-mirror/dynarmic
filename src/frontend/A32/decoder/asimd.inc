@@ -92,7 +92,7 @@ INST(asimd_VCNT,            "VCNT",                     "111100111D11zz00dddd010
 //INST(asimd_VCEQ_zero,       "VCEQ (zero)",              "111100111-11--01----0x010x-0----") // ASIMD
 //INST(asimd_VCLE_zero,       "VCLE (zero)",              "111100111-11--01----0x011x-0----") // ASIMD
 //INST(asimd_VCLT_zero,       "VCLT (zero)",              "111100111-11--01----0x100x-0----") // ASIMD
-//INST(asimd_VABS,            "VABS",                     "111100111-11--01----0x110x-0----") // ASIMD
+INST(asimd_VABS,            "VABS",                     "111100111D11zz01dddd0F110QM0mmmm") // ASIMD
 INST(asimd_VNEG,            "VNEG",                     "111100111D11zz01dddd0F111QM0mmmm") // ASIMD
 INST(asimd_VSWP,            "VSWP",                     "111100111D110010dddd00000QM0mmmm") // ASIMD
 //INST(asimd_VTRN,            "VTRN",                     "111100111-11--10----00001x-0----") // ASIMD
