@@ -297,9 +297,9 @@ IR::U32 IREmitter::ExclusiveWriteMemory64(const IR::U32& vaddr, const IR::U32& v
     if (current_location.EFlag()) {
         const auto vlo = ByteReverseWord(value_lo);
         const auto vhi = ByteReverseWord(value_hi);
-        return Inst<IR::U32>(Opcode::A32ExclusiveWriteMemory64, vaddr, vlo, vhi);
+        return Inst<IR::U32>(Opcode::A32ExclusiveWriteMemory64, vaddr, Pack2x32To1x64(vlo, vhi));
     } else {
-        return Inst<IR::U32>(Opcode::A32ExclusiveWriteMemory64, vaddr, value_lo, value_hi);
+        return Inst<IR::U32>(Opcode::A32ExclusiveWriteMemory64, vaddr, Pack2x32To1x64(value_lo, value_hi));
     }
 }
 

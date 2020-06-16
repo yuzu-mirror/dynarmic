@@ -653,7 +653,7 @@ A32OPC(WriteMemory64,                                       Void,           U32,
 A32OPC(ExclusiveWriteMemory8,                               U32,            U32,            U8                                              )
 A32OPC(ExclusiveWriteMemory16,                              U32,            U32,            U16                                             )
 A32OPC(ExclusiveWriteMemory32,                              U32,            U32,            U32                                             )
-A32OPC(ExclusiveWriteMemory64,                              U32,            U32,            U32,            U32                             )
+A32OPC(ExclusiveWriteMemory64,                              U32,            U32,            U64                                             )
 
 // A64 Memory access
 A64OPC(ClearExclusive,                                      Void,                                                                           )

@@ -1063,14 +1063,8 @@ void A32EmitX64::EmitA32WriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
 
 template <size_t bitsize, auto callback>
 void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
-    const bool prepend_high_word = bitsize == 64;
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    if (prepend_high_word) {
-        ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1], args[2]);
-    } else {
-        ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
-    }
+    ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
     const Xbyak::Reg32 passed = ctx.reg_alloc.ScratchGpr().cvt32();
     const Xbyak::Reg32 tmp = code.ABI_RETURN.cvt32(); // Use one of the unused HostCall registers.
 
@@ -1084,11 +1078,6 @@ void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
     code.test(tmp, A32JitState::RESERVATION_GRANULE_MASK);
     code.jne(end);
     code.mov(code.byte[r15 + offsetof(A32JitState, exclusive_state)], u8(0));
-    if (prepend_high_word) {
-        code.mov(code.ABI_PARAM3.cvt32(), code.ABI_PARAM3.cvt32()); // zero extend to 64-bits
-        code.shl(code.ABI_PARAM4, 32);
-        code.or_(code.ABI_PARAM3, code.ABI_PARAM4);
-    }
     Devirtualize<callback>(config.callbacks).EmitCall(code);
     code.xor_(passed, passed);
     code.L(end);
