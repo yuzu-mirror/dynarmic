@@ -102,6 +102,8 @@ protected:
     void ReadMemory(A32EmitContext& ctx, IR::Inst* inst);
     template<std::size_t bitsize, auto callback>
     void WriteMemory(A32EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize, auto callback>
+    void ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst);
 
     // Terminal instruction emitters
     void EmitSetUpperLocationDescriptor(IR::LocationDescriptor new_location, IR::LocationDescriptor old_location);

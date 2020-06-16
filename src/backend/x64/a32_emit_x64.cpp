@@ -1061,15 +1061,17 @@ void A32EmitX64::EmitA32WriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
     WriteMemory<64, &A32::UserCallbacks::MemoryWrite64>(ctx, inst);
 }
 
-template <typename T, void (A32::UserCallbacks::*fn)(A32::VAddr, T)>
-static void ExclusiveWrite(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* inst, const A32::UserConfig& config, bool prepend_high_word) {
-    auto args = reg_alloc.GetArgumentInfo(inst);
+template <size_t bitsize, auto callback>
+void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
+    const bool prepend_high_word = bitsize == 64;
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     if (prepend_high_word) {
-        reg_alloc.HostCall(nullptr, {}, args[0], args[1], args[2]);
+        ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1], args[2]);
     } else {
-        reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
+        ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
     }
-    const Xbyak::Reg32 passed = reg_alloc.ScratchGpr().cvt32();
+    const Xbyak::Reg32 passed = ctx.reg_alloc.ScratchGpr().cvt32();
     const Xbyak::Reg32 tmp = code.ABI_RETURN.cvt32(); // Use one of the unused HostCall registers.
 
     Xbyak::Label end;
@@ -1087,27 +1089,27 @@ static void ExclusiveWrite(BlockOfCode& code, RegAlloc& reg_alloc, IR::Inst* ins
         code.shl(code.ABI_PARAM4, 32);
         code.or_(code.ABI_PARAM3, code.ABI_PARAM4);
     }
-    Devirtualize<fn>(config.callbacks).EmitCall(code);
+    Devirtualize<callback>(config.callbacks).EmitCall(code);
     code.xor_(passed, passed);
     code.L(end);
 
-    reg_alloc.DefineValue(inst, passed);
+    ctx.reg_alloc.DefineValue(inst, passed);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory8(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWrite<u8, &A32::UserCallbacks::MemoryWrite8>(code, ctx.reg_alloc, inst, config, false);
+    ExclusiveWriteMemory<8, &A32::UserCallbacks::MemoryWrite8>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory16(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWrite<u16, &A32::UserCallbacks::MemoryWrite16>(code, ctx.reg_alloc, inst, config, false);
+    ExclusiveWriteMemory<16, &A32::UserCallbacks::MemoryWrite16>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory32(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWrite<u32, &A32::UserCallbacks::MemoryWrite32>(code, ctx.reg_alloc, inst, config, false);
+    ExclusiveWriteMemory<32, &A32::UserCallbacks::MemoryWrite32>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWrite<u64, &A32::UserCallbacks::MemoryWrite64>(code, ctx.reg_alloc, inst, config, true);
+    ExclusiveWriteMemory<64, &A32::UserCallbacks::MemoryWrite64>(ctx, inst);
 }
 
 static void EmitCoprocessorException() {
