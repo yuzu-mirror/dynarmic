@@ -175,6 +175,21 @@ bool ArmTranslatorVisitor::RaiseException(Exception exception) {
     return false;
 }
 
+IR::UAny ArmTranslatorVisitor::I(size_t bitsize, u64 value) {
+    switch (bitsize) {
+    case 8:
+        return ir.Imm8(static_cast<u8>(value));
+    case 16:
+        return ir.Imm16(static_cast<u16>(value));
+    case 32:
+        return ir.Imm32(static_cast<u32>(value));
+    case 64:
+        return ir.Imm64(value);
+    default:
+        ASSERT_FALSE("Imm - get: Invalid bitsize");
+    }
+}
+
 IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in) {
     u8 imm5_value = imm5.ZeroExtend<u8>();
     switch (type) {

@@ -23,21 +23,10 @@ bool ArmTranslatorVisitor::asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool
     const auto result = [this, m, sz] {
         const auto reg_m = ir.GetVector(m);
         const size_t esize = 8U << sz;
-        const auto one = [this, esize]() -> IR::UAny {
-            switch (esize) {
-            case 8:
-                return ir.Imm8(1);
-            case 16:
-                return ir.Imm16(1);
-            default:
-                return ir.Imm32(1);
-            }
-        }();
-
         const auto shifted = ir.VectorArithmeticShiftRight(esize, reg_m, static_cast<u8>(esize));
         const auto xored = ir.VectorEor(reg_m, shifted);
         const auto clz = ir.VectorCountLeadingZeros(esize, xored);
-        return ir.VectorSub(esize, clz, ir.VectorBroadcast(esize, one));
+        return ir.VectorSub(esize, clz, ir.VectorBroadcast(esize, I(esize, 1)));
     }();
 
     ir.SetVector(d, result);

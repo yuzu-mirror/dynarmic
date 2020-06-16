@@ -64,6 +64,9 @@ struct ArmTranslatorVisitor final {
         return {imm32, carry_out};
     }
 
+    // Creates an immediate of the given value
+    IR::UAny I(size_t bitsize, u64 value);
+
     IR::ResultAndCarry<IR::U32> EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in);
     IR::ResultAndCarry<IR::U32> EmitRegShift(IR::U32 value, ShiftType type, IR::U8 amount, IR::U1 carry_in);
     template <typename FnT> bool EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtReg m, const FnT& fn);
