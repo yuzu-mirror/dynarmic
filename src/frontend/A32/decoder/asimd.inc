@@ -76,9 +76,7 @@ INST(asimd_VQSUB,           "VQSUB",                    "1111001U0Dzznnnndddd001
 //INST(asimd_VCVT_fixed,      "VCVT (fixed-point)",       "1111001U1-vvv-------111x0B-1----") // ASIMD
 
 // Two registers, miscellaneous
-//INST(asimd_VREV64,          "VREV64",                   "111100111-11--00----00000x-0----") // ASIMD
-//INST(asimd_VREV32,          "VREV32",                   "111100111-11--00----00001x-0----") // ASIMD
-//INST(asimd_VREV16,          "VREV16",                   "111100111-11--00----00010x-0----") // ASIMD
+INST(asimd_VREV,            "VREV{16,32,64}",           "111100111D11zz00dddd000ooQM0mmmm") // ASIMD
 //INST(asimd_VPADDL,          "VPADDL",                   "111100111-11--00----0010xx-0----") // ASIMD
 INST(asimd_VCLS,            "VCLS",                     "111100111D11zz00dddd01000QM0mmmm") // ASIMD
 INST(asimd_VCLZ,            "VCLZ",                     "111100111D11zz00dddd01001QM0mmmm") // ASIMD
