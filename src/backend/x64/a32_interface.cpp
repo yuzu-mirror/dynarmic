@@ -40,22 +40,22 @@ static RunCodeCallbacks GenRunCodeCallbacks(A32::UserCallbacks* cb, CodePtr (*Lo
     };
 }
 
-static std::function<void(BlockOfCode&)> GenRCP(const A32::UserConfig& config) {
-    return [config](BlockOfCode& code) {
-        if (config.page_table) {
-            code.mov(code.r14, Common::BitCast<u64>(config.page_table));
+static std::function<void(BlockOfCode&)> GenRCP(const A32::UserConfig& conf) {
+    return [conf](BlockOfCode& code) {
+        if (conf.page_table) {
+            code.mov(code.r14, Common::BitCast<u64>(conf.page_table));
         }
-        if (config.fastmem_pointer) {
-            code.mov(code.r13, Common::BitCast<u64>(config.fastmem_pointer));
+        if (conf.fastmem_pointer) {
+            code.mov(code.r13, Common::BitCast<u64>(conf.fastmem_pointer));
         }
     };
 }
 
 struct Jit::Impl {
-    Impl(Jit* jit, A32::UserConfig config)
-            : block_of_code(GenRunCodeCallbacks(config.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, GenRCP(config))
-            , emitter(block_of_code, config, jit)
-            , config(std::move(config))
+    Impl(Jit* jit, A32::UserConfig conf)
+            : block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, GenRCP(conf))
+            , emitter(block_of_code, conf, jit)
+            , conf(std::move(conf))
             , jit_interface(jit)
     {}
 
@@ -63,7 +63,7 @@ struct Jit::Impl {
     BlockOfCode block_of_code;
     A32EmitX64 emitter;
 
-    const A32::UserConfig config;
+    const A32::UserConfig conf;
 
     // Requests made during execution to invalidate the cache are queued up here.
     size_t invalid_cache_generation = 0;
@@ -158,11 +158,11 @@ private:
             PerformCacheInvalidation();
         }
 
-        IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, [this](u32 vaddr) { return config.callbacks->MemoryReadCode(vaddr); }, {config.define_unpredictable_behaviour, config.hook_hint_instructions});
-        if (config.enable_optimizations) {
+        IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, [this](u32 vaddr) { return conf.callbacks->MemoryReadCode(vaddr); }, {conf.define_unpredictable_behaviour, conf.hook_hint_instructions});
+        if (conf.enable_optimizations) {
             Optimization::A32GetSetElimination(ir_block);
             Optimization::DeadCodeElimination(ir_block);
-            Optimization::A32ConstantMemoryReads(ir_block, config.callbacks);
+            Optimization::A32ConstantMemoryReads(ir_block, conf.callbacks);
             Optimization::ConstantPropagation(ir_block);
             Optimization::DeadCodeElimination(ir_block);
         }
@@ -171,7 +171,7 @@ private:
     }
 };
 
-Jit::Jit(UserConfig config) : impl(std::make_unique<Impl>(this, std::move(config))) {}
+Jit::Jit(UserConfig conf) : impl(std::make_unique<Impl>(this, std::move(conf))) {}
 
 Jit::~Jit() = default;
 

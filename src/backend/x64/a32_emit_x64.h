@@ -34,7 +34,7 @@ struct A32EmitContext final : public EmitContext {
 
 class A32EmitX64 final : public EmitX64 {
 public:
-    A32EmitX64(BlockOfCode& code, A32::UserConfig config, A32::Jit* jit_interface);
+    A32EmitX64(BlockOfCode& code, A32::UserConfig conf, A32::Jit* jit_interface);
     ~A32EmitX64() override;
 
     /**
@@ -48,7 +48,7 @@ public:
     void InvalidateCacheRanges(const boost::icl::interval_set<u32>& ranges);
 
 protected:
-    const A32::UserConfig config;
+    const A32::UserConfig conf;
     A32::Jit* jit_interface;
     BlockRangeInformation<u32> block_ranges;
 
