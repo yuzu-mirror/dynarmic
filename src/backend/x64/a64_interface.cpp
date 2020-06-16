@@ -92,6 +92,11 @@ public:
         is_executing = false;
     }
 
+    void ChangeProcessorID(size_t value) {
+        conf.processor_id = value;
+        emitter.ChangeProcessorID(value);
+    }
+
     void ClearCache() {
         invalidate_entire_cache = true;
         RequestCacheInvalidation();
@@ -192,11 +197,6 @@ public:
 
     void SetPstate(u32 value) {
         jit_state.SetPstate(value);
-    }
-
-    void ChangeProcessorID(size_t value) {
-        conf.processor_id = value;
-        emitter.ChangeProcessorID(value);
     }
 
     void ClearExclusiveState() {
@@ -326,6 +326,10 @@ void Jit::ExceptionalExit() {
     impl->ExceptionalExit();
 }
 
+void Jit::ChangeProcessorID(size_t new_processor) {
+    impl->ChangeProcessorID(new_processor);
+}
+
 u64 Jit::GetSP() const {
     return impl->GetSP();
 }
@@ -396,10 +400,6 @@ u32 Jit::GetPstate() const {
 
 void Jit::SetPstate(u32 value) {
     impl->SetPstate(value);
-}
-
-void Jit::ChangeProcessorID(size_t new_processor) {
-    impl->ChangeProcessorID(new_processor);
 }
 
 void Jit::ClearExclusiveState() {

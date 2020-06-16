@@ -194,12 +194,12 @@ struct UserConfig {
     /// page boundary.
     bool only_detect_misalignment_via_page_table_on_page_boundary = false;
 
-
     /// This option relates to translation. Generally when we run into an unpredictable
     /// instruction the ExceptionRaised callback is called. If this is true, we define
     /// definite behaviour for some unpredictable instructions.
     bool define_unpredictable_behaviour = false;
 
+    /// HACK:
     /// This tells the translator a wall clock will be used, thus allowing it
     /// to avoid writting certain unnecessary code only needed for cycle timers.
     bool wall_clock_cntpct = false;

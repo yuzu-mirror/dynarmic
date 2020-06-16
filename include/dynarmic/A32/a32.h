@@ -59,6 +59,16 @@ public:
      */
     void HaltExecution();
 
+    /**
+     * HACK:
+     * Exits execution from a callback, the callback must rewind the stack or
+     * never return to dynarmic from it's current stack.
+     */
+    void ExceptionalExit();
+
+    /// HACK: Change processor ID.
+    void ChangeProcessorID(std::size_t new_processor);
+
     /// View and modify registers.
     std::array<std::uint32_t, 16>& Regs();
     const std::array<std::uint32_t, 16>& Regs() const;

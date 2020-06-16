@@ -63,7 +63,7 @@ struct Jit::Impl {
     BlockOfCode block_of_code;
     A32EmitX64 emitter;
 
-    const A32::UserConfig conf;
+    A32::UserConfig conf;
 
     // Requests made during execution to invalidate the cache are queued up here.
     size_t invalid_cache_generation = 0;
@@ -87,6 +87,19 @@ struct Jit::Impl {
 
     void Step() {
         block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+    }
+
+    void ExceptionalExit() {
+        if (!conf.wall_clock_cntpct) {
+            const s64 ticks = jit_state.cycles_to_run - jit_state.cycles_remaining;
+            conf.callbacks->AddTicks(ticks);
+        }
+        PerformCacheInvalidation();
+    }
+
+    void ChangeProcessorID(size_t value) {
+        conf.processor_id = value;
+        emitter.ChangeProcessorID(value);
     }
 
     std::string Disassemble(const IR::LocationDescriptor& descriptor) {
@@ -216,6 +229,15 @@ void Jit::Reset() {
 
 void Jit::HaltExecution() {
     impl->jit_state.halt_requested = true;
+}
+
+void Jit::ExceptionalExit() {
+    impl->ExceptionalExit();
+    is_executing = false;
+}
+
+void Jit::ChangeProcessorID(size_t new_processor) {
+    impl->ChangeProcessorID(new_processor);
 }
 
 std::array<u32, 16>& Jit::Regs() {
