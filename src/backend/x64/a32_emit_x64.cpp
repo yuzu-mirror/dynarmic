@@ -905,6 +905,46 @@ static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc,
 }
 
 template<std::size_t bitsize>
+static void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, const Xbyak::RegExp& addr) {
+    switch (bitsize) {
+    case 8:
+        code.movzx(value.cvt32(), code.byte[addr]);
+        return;
+    case 16:
+        code.movzx(value.cvt32(), word[addr]);
+        return;
+    case 32:
+        code.mov(value.cvt32(), dword[addr]);
+        return;
+    case 64:
+        code.mov(value, qword[addr]);
+        return;
+    default:
+        ASSERT_FALSE("Invalid bitsize");
+    }
+}
+
+template<std::size_t bitsize>
+static void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbyak::Reg64& value) {
+    switch (bitsize) {
+    case 8:
+        code.mov(code.byte[addr], value.cvt8());
+        return;
+    case 16:
+        code.mov(word[addr], value.cvt16());
+        return;
+    case 32:
+        code.mov(dword[addr], value.cvt32());
+        return;
+    case 64:
+        code.mov(qword[addr], value);
+        return;
+    default:
+        ASSERT_FALSE("Invalid bitsize");
+    }
+}
+
+template<std::size_t bitsize>
 void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
@@ -936,26 +976,7 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     if (const auto marker = ShouldFastmem(ctx, inst)) {
         const auto location = code.getCurr();
-
-        switch (bitsize) {
-        case 8:
-            code.movzx(value.cvt32(), code.byte[r13 + vaddr]);
-            break;
-        case 16:
-            code.movzx(value.cvt32(), word[r13 + vaddr]);
-            break;
-        case 32:
-            code.mov(value.cvt32(), dword[r13 + vaddr]);
-            break;
-        case 64:
-            code.mov(value, qword[r13 + vaddr]);
-            break;
-        default:
-            ASSERT_FALSE("Invalid bitsize");
-            break;
-        }
-
-        ctx.reg_alloc.DefineValue(inst, value);
+        EmitReadMemoryMov<bitsize>(code, value, r13 + vaddr);
 
         fastmem_patch_info.emplace(
             Common::BitCast<u64>(location),
@@ -966,29 +987,14 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
             }
         );
 
+        ctx.reg_alloc.DefineValue(inst, value);
         return;
     }
 
     Xbyak::Label abort, end;
 
     const auto src_ptr = EmitVAddrLookup(code, ctx.reg_alloc, config, abort, vaddr, value);
-    switch (bitsize) {
-    case 8:
-        code.movzx(value.cvt32(), code.byte[src_ptr]);
-        break;
-    case 16:
-        code.movzx(value.cvt32(), word[src_ptr]);
-        break;
-    case 32:
-        code.mov(value.cvt32(), dword[src_ptr]);
-        break;
-    case 64:
-        code.mov(value, qword[src_ptr]);
-        break;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-        break;
-    }
+    EmitReadMemoryMov<bitsize>(code, value, src_ptr);
     code.jmp(end);
     code.L(abort);
     code.call(wrapped_fn);
@@ -1029,24 +1035,7 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     if (const auto marker = ShouldFastmem(ctx, inst)) {
         const auto location = code.getCurr();
-
-        switch (bitsize) {
-        case 8:
-            code.mov(code.byte[r13 + vaddr], value.cvt8());
-            break;
-        case 16:
-            code.mov(word[r13 + vaddr], value.cvt16());
-            break;
-        case 32:
-            code.mov(dword[r13 + vaddr], value.cvt32());
-            break;
-        case 64:
-            code.mov(qword[r13 + vaddr], value);
-            break;
-        default:
-            ASSERT_FALSE("Invalid bitsize");
-            break;
-        }
+        EmitWriteMemoryMov<bitsize>(code, r13 + vaddr, value);
 
         fastmem_patch_info.emplace(
             Common::BitCast<u64>(location),
@@ -1063,23 +1052,7 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Label abort, end;
 
     const auto dest_ptr = EmitVAddrLookup(code, ctx.reg_alloc, config, abort, vaddr);
-    switch (bitsize) {
-    case 8:
-        code.mov(code.byte[dest_ptr], value.cvt8());
-        break;
-    case 16:
-        code.mov(word[dest_ptr], value.cvt16());
-        break;
-    case 32:
-        code.mov(dword[dest_ptr], value.cvt32());
-        break;
-    case 64:
-        code.mov(qword[dest_ptr], value);
-        break;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-        break;
-    }
+    EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
     code.jmp(end);
     code.L(abort);
     code.call(wrapped_fn);
