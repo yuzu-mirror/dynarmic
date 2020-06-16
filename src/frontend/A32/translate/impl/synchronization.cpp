@@ -103,8 +103,7 @@ bool ArmTranslatorVisitor::arm_LDAEX(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 4);
-    ir.SetRegister(t, ir.ReadMemory32(address)); // AccType::Ordered
+    ir.SetRegister(t, ir.ExclusiveReadMemory32(address)); // AccType::Ordered
     return true;
 }
 
@@ -119,8 +118,7 @@ bool ArmTranslatorVisitor::arm_LDAEXB(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 1);
-    ir.SetRegister(t, ir.ZeroExtendByteToWord(ir.ReadMemory8(address))); // AccType::Ordered
+    ir.SetRegister(t, ir.ZeroExtendByteToWord(ir.ExclusiveReadMemory8(address))); // AccType::Ordered
     return true;
 }
 
@@ -135,12 +133,9 @@ bool ArmTranslatorVisitor::arm_LDAEXD(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 8);
-
+    const auto [lo, hi] = ir.ExclusiveReadMemory64(address); // AccType::Ordered
     // DO NOT SWAP hi AND lo IN BIG ENDIAN MODE, THIS IS CORRECT BEHAVIOUR
-    const auto lo = ir.ReadMemory32(address); // AccType::Ordered
     ir.SetRegister(t, lo);
-    const auto hi = ir.ReadMemory32(ir.Add(address, ir.Imm32(4))); // AccType::Ordered
     ir.SetRegister(t+1, hi);
     return true;
 }
@@ -156,8 +151,7 @@ bool ArmTranslatorVisitor::arm_LDAEXH(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 2);
-    ir.SetRegister(t, ir.ZeroExtendHalfToWord(ir.ReadMemory16(address))); // AccType::Ordered
+    ir.SetRegister(t, ir.ZeroExtendHalfToWord(ir.ExclusiveReadMemory16(address))); // AccType::Ordered
     return true;
 }
 
@@ -302,8 +296,7 @@ bool ArmTranslatorVisitor::arm_LDREX(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 4);
-    ir.SetRegister(t, ir.ReadMemory32(address));
+    ir.SetRegister(t, ir.ExclusiveReadMemory32(address));
     return true;
 }
 
@@ -318,8 +311,7 @@ bool ArmTranslatorVisitor::arm_LDREXB(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 1);
-    ir.SetRegister(t, ir.ZeroExtendByteToWord(ir.ReadMemory8(address)));
+    ir.SetRegister(t, ir.ZeroExtendByteToWord(ir.ExclusiveReadMemory8(address)));
     return true;
 }
 
@@ -334,12 +326,9 @@ bool ArmTranslatorVisitor::arm_LDREXD(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 8);
-
+    const auto [lo, hi] = ir.ExclusiveReadMemory64(address);
     // DO NOT SWAP hi AND lo IN BIG ENDIAN MODE, THIS IS CORRECT BEHAVIOUR
-    const auto lo = ir.ReadMemory32(address);
     ir.SetRegister(t, lo);
-    const auto hi = ir.ReadMemory32(ir.Add(address, ir.Imm32(4)));
     ir.SetRegister(t+1, hi);
     return true;
 }
@@ -355,8 +344,7 @@ bool ArmTranslatorVisitor::arm_LDREXH(Cond cond, Reg n, Reg t) {
     }
 
     const auto address = ir.GetRegister(n);
-    ir.SetExclusive(address, 2);
-    ir.SetRegister(t, ir.ZeroExtendHalfToWord(ir.ReadMemory16(address)));
+    ir.SetRegister(t, ir.ZeroExtendHalfToWord(ir.ExclusiveReadMemory16(address)));
     return true;
 }
 

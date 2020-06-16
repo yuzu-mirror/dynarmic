@@ -55,9 +55,7 @@ struct A32JitState {
     bool check_bit = false;
 
     // Exclusive state
-    static constexpr u32 RESERVATION_GRANULE_MASK = 0xFFFFFFF8;
     u32 exclusive_state = 0;
-    u32 exclusive_address = 0;
 
     static constexpr size_t RSBSize = 8; // MUST be a power of 2.
     static constexpr size_t RSBPtrMask = RSBSize - 1;
@@ -90,7 +88,6 @@ struct A32JitState {
         fpsr_nzcv = src.fpsr_nzcv;
 
         exclusive_state = 0;
-        exclusive_address = 0;
 
         if (reset_rsb) {
             ResetRSB();

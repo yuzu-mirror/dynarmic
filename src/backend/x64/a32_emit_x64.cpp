@@ -9,8 +9,10 @@
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+#include <mp/traits/integer_of_size.h>
 
 #include <dynarmic/A32/coprocessor.h>
+#include <dynarmic/A32/exclusive_monitor.h>
 
 #include "backend/x64/a32_emit_x64.h"
 #include "backend/x64/a32_jitstate.h"
@@ -848,15 +850,6 @@ void A32EmitX64::EmitA32ClearExclusive(A32EmitContext&, IR::Inst*) {
     code.mov(code.byte[r15 + offsetof(A32JitState, exclusive_state)], u8(0));
 }
 
-void A32EmitX64::EmitA32SetExclusive(A32EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(args[1].IsImmediate());
-    const Xbyak::Reg32 address = ctx.reg_alloc.UseGpr(args[0]).cvt32();
-
-    code.mov(code.byte[r15 + offsetof(A32JitState, exclusive_state)], u8(1));
-    code.mov(dword[r15 + offsetof(A32JitState, exclusive_address)], address);
-}
-
 std::optional<A32EmitX64::DoNotFastmemMarker> A32EmitX64::ShouldFastmem(A32EmitContext& ctx, IR::Inst* inst) const {
     if (!conf.fastmem_pointer || !exception_handler.SupportsFastmem()) {
         return std::nullopt;
@@ -1062,43 +1055,82 @@ void A32EmitX64::EmitA32WriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
 }
 
 template <size_t bitsize, auto callback>
-void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
+void A32EmitX64::ExclusiveReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
+    using T = mp::unsigned_integer_of_size<bitsize>;
+
+    ASSERT(conf.global_monitor != nullptr);
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
-    const Xbyak::Reg32 passed = ctx.reg_alloc.ScratchGpr().cvt32();
-    const Xbyak::Reg32 tmp = code.ABI_RETURN.cvt32(); // Use one of the unused HostCall registers.
+
+    ctx.reg_alloc.HostCall(inst, {}, args[0]);
+
+    code.mov(code.byte[r15 + offsetof(A32JitState, exclusive_state)], u8(1));
+    code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(&conf));
+    code.CallLambda(
+        [](A32::UserConfig& conf, u32 vaddr) -> T {
+            return conf.global_monitor->ReadAndMark<T>(conf.processor_id, vaddr, [&]() -> T {
+                return (conf.callbacks->*callback)(vaddr);
+            });
+        }
+    );
+}
+
+template <size_t bitsize, auto callback>
+void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
+    using T = mp::unsigned_integer_of_size<bitsize>;
+
+    ASSERT(conf.global_monitor != nullptr);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.HostCall(inst, {}, args[0], args[1]);
 
     Xbyak::Label end;
 
-    code.mov(passed, u32(1));
+    code.mov(code.ABI_RETURN, u32(1));
     code.cmp(code.byte[r15 + offsetof(A32JitState, exclusive_state)], u8(0));
     code.je(end);
-    code.mov(tmp, code.ABI_PARAM2);
-    code.xor_(tmp, dword[r15 + offsetof(A32JitState, exclusive_address)]);
-    code.test(tmp, A32JitState::RESERVATION_GRANULE_MASK);
-    code.jne(end);
     code.mov(code.byte[r15 + offsetof(A32JitState, exclusive_state)], u8(0));
-    Devirtualize<callback>(conf.callbacks).EmitCall(code);
-    code.xor_(passed, passed);
+    code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(&conf));
+    code.CallLambda(
+        [](A32::UserConfig& conf, u32 vaddr, T value) -> u32 {
+            return conf.global_monitor->DoExclusiveOperation<u8>(conf.processor_id, vaddr,
+                [&](T expected) -> bool {
+                    return (conf.callbacks->*callback)(vaddr, value, expected);
+                }) ? 0 : 1;
+        }
+    );
     code.L(end);
+}
 
-    ctx.reg_alloc.DefineValue(inst, passed);
+void A32EmitX64::EmitA32ExclusiveReadMemory8(A32EmitContext& ctx, IR::Inst* inst) {
+    ExclusiveReadMemory<8, &A32::UserCallbacks::MemoryRead8>(ctx, inst);
+}
+
+void A32EmitX64::EmitA32ExclusiveReadMemory16(A32EmitContext& ctx, IR::Inst* inst) {
+    ExclusiveReadMemory<16, &A32::UserCallbacks::MemoryRead16>(ctx, inst);
+}
+
+void A32EmitX64::EmitA32ExclusiveReadMemory32(A32EmitContext& ctx, IR::Inst* inst) {
+    ExclusiveReadMemory<32, &A32::UserCallbacks::MemoryRead32>(ctx, inst);
+}
+
+void A32EmitX64::EmitA32ExclusiveReadMemory64(A32EmitContext& ctx, IR::Inst* inst) {
+    ExclusiveReadMemory<64, &A32::UserCallbacks::MemoryRead64>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory8(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWriteMemory<8, &A32::UserCallbacks::MemoryWrite8>(ctx, inst);
+    ExclusiveWriteMemory<8, &A32::UserCallbacks::MemoryWriteExclusive8>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory16(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWriteMemory<16, &A32::UserCallbacks::MemoryWrite16>(ctx, inst);
+    ExclusiveWriteMemory<16, &A32::UserCallbacks::MemoryWriteExclusive16>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory32(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWriteMemory<32, &A32::UserCallbacks::MemoryWrite32>(ctx, inst);
+    ExclusiveWriteMemory<32, &A32::UserCallbacks::MemoryWriteExclusive32>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ExclusiveWriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
-    ExclusiveWriteMemory<64, &A32::UserCallbacks::MemoryWrite64>(ctx, inst);
+    ExclusiveWriteMemory<64, &A32::UserCallbacks::MemoryWriteExclusive64>(ctx, inst);
 }
 
 static void EmitCoprocessorException() {

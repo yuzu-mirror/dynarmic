@@ -641,11 +641,14 @@ OPCODE(FPVectorToUnsignedFixed64,                           U128,           U128
 
 // A32 Memory access
 A32OPC(ClearExclusive,                                      Void,                                                                           )
-A32OPC(SetExclusive,                                        Void,           U32,            U8                                              )
 A32OPC(ReadMemory8,                                         U8,             U32                                                             )
 A32OPC(ReadMemory16,                                        U16,            U32                                                             )
 A32OPC(ReadMemory32,                                        U32,            U32                                                             )
 A32OPC(ReadMemory64,                                        U64,            U32                                                             )
+A32OPC(ExclusiveReadMemory8,                                U8,             U32                                                             )
+A32OPC(ExclusiveReadMemory16,                               U16,            U32                                                             )
+A32OPC(ExclusiveReadMemory32,                               U32,            U32                                                             )
+A32OPC(ExclusiveReadMemory64,                               U64,            U32                                                             )
 A32OPC(WriteMemory8,                                        Void,           U32,            U8                                              )
 A32OPC(WriteMemory16,                                       Void,           U32,            U16                                             )
 A32OPC(WriteMemory32,                                       Void,           U32,            U32                                             )

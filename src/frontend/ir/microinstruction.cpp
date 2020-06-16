@@ -101,6 +101,10 @@ bool Inst::IsSharedMemoryReadOrWrite() const {
 
 bool Inst::IsExclusiveMemoryRead() const {
     switch (op) {
+    case Opcode::A32ExclusiveReadMemory8:
+    case Opcode::A32ExclusiveReadMemory16:
+    case Opcode::A32ExclusiveReadMemory32:
+    case Opcode::A32ExclusiveReadMemory64:
     case Opcode::A64ExclusiveReadMemory8:
     case Opcode::A64ExclusiveReadMemory16:
     case Opcode::A64ExclusiveReadMemory32:
@@ -487,7 +491,6 @@ bool Inst::CausesCPUException() const {
 
 bool Inst::AltersExclusiveState() const {
     return op == Opcode::A32ClearExclusive ||
-           op == Opcode::A32SetExclusive   ||
            op == Opcode::A64ClearExclusive ||
            IsExclusiveMemoryRead()         ||
            IsExclusiveMemoryWrite();

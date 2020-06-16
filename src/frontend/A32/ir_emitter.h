@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <utility>
+
 #include "common/common_types.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/ir/ir_emitter.h"
@@ -71,12 +73,15 @@ public:
     void SetFpscrNZCV(const IR::NZCV& new_fpscr_nzcv);
 
     void ClearExclusive();
-    void SetExclusive(const IR::U32& vaddr, size_t byte_size);
     IR::UAny ReadMemory(size_t bitsize, const IR::U32& vaddr);
     IR::U8 ReadMemory8(const IR::U32& vaddr);
     IR::U16 ReadMemory16(const IR::U32& vaddr);
     IR::U32 ReadMemory32(const IR::U32& vaddr);
     IR::U64 ReadMemory64(const IR::U32& vaddr);
+    IR::U8 ExclusiveReadMemory8(const IR::U32& vaddr);
+    IR::U16 ExclusiveReadMemory16(const IR::U32& vaddr);
+    IR::U32 ExclusiveReadMemory32(const IR::U32& vaddr);
+    std::pair<IR::U32, IR::U32> ExclusiveReadMemory64(const IR::U32& vaddr);
     void WriteMemory(size_t bitsize, const IR::U32& vaddr, const IR::UAny& value);
     void WriteMemory8(const IR::U32& vaddr, const IR::U8& value);
     void WriteMemory16(const IR::U32& vaddr, const IR::U16& value);

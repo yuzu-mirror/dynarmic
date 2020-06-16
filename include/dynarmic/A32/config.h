@@ -16,6 +16,7 @@ namespace A32 {
 using VAddr = std::uint32_t;
 
 class Coprocessor;
+class ExclusiveMonitor;
 
 enum class Exception {
     /// An UndefinedFault occured due to executing instruction with an unallocated encoding
@@ -62,6 +63,12 @@ struct UserCallbacks {
     virtual void MemoryWrite32(VAddr vaddr, std::uint32_t value) = 0;
     virtual void MemoryWrite64(VAddr vaddr, std::uint64_t value) = 0;
 
+    // Writes through these callbacks may not be aligned.
+    virtual bool MemoryWriteExclusive8(VAddr /*vaddr*/, std::uint8_t /*value*/, std::uint8_t /*expected*/) { return false; }
+    virtual bool MemoryWriteExclusive16(VAddr /*vaddr*/, std::uint16_t /*value*/, std::uint16_t /*expected*/) { return false; }
+    virtual bool MemoryWriteExclusive32(VAddr /*vaddr*/, std::uint32_t /*value*/, std::uint32_t /*expected*/) { return false; }
+    virtual bool MemoryWriteExclusive64(VAddr /*vaddr*/, std::uint64_t /*value*/, std::uint64_t /*expected*/) { return false; }
+
     // If this callback returns true, the JIT will assume MemoryRead* callbacks will always
     // return the same value at any point in time for this vaddr. The JIT may use this information
     // in optimizations.
@@ -85,6 +92,9 @@ struct UserCallbacks {
 
 struct UserConfig {
     UserCallbacks* callbacks;
+
+    size_t processor_id = 0;
+    ExclusiveMonitor* global_monitor = nullptr;
 
     /// When set to false, this disables all optimizations than can't otherwise be disabled
     /// by setting other configuration options. This includes:

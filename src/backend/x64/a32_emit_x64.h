@@ -103,6 +103,8 @@ protected:
     template<std::size_t bitsize, auto callback>
     void WriteMemory(A32EmitContext& ctx, IR::Inst* inst);
     template<std::size_t bitsize, auto callback>
+    void ExclusiveReadMemory(A32EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize, auto callback>
     void ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst);
 
     // Terminal instruction emitters
