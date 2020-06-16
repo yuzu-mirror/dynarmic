@@ -81,7 +81,10 @@ protected:
 
     void EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize);
     void EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize);
-    void EmitExclusiveWrite(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize);
+    template<std::size_t bitsize, auto callback>
+    void EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize, auto callback>
+    void EmitExclusiveWriteMemory(A64EmitContext& ctx, IR::Inst* inst);
 
     // Microinstruction emitters
     void EmitPushRSB(EmitContext& ctx, IR::Inst* inst);
