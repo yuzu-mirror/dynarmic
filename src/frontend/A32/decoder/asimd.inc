@@ -80,9 +80,9 @@ INST(asimd_VQSUB,           "VQSUB",                    "1111001U0Dzznnnndddd001
 //INST(asimd_VREV32,          "VREV32",                   "111100111-11--00----00001x-0----") // ASIMD
 //INST(asimd_VREV16,          "VREV16",                   "111100111-11--00----00010x-0----") // ASIMD
 //INST(asimd_VPADDL,          "VPADDL",                   "111100111-11--00----0010xx-0----") // ASIMD
-//INST(asimd_VCLS,            "VCLS",                     "111100111-11--00----01000x-0----") // ASIMD
-//INST(asimd_VCLZ,            "VCLZ",                     "111100111-11--00----01001x-0----") // ASIMD
-//INST(asimd_VCNT,            "VCNT",                     "111100111-11--00----01010x-0----") // ASIMD
+INST(asimd_VCLS,            "VCLS",                     "111100111D11zz00dddd01000QM0mmmm") // ASIMD
+INST(asimd_VCLZ,            "VCLZ",                     "111100111D11zz00dddd01001QM0mmmm") // ASIMD
+INST(asimd_VCNT,            "VCNT",                     "111100111D11zz00dddd01010QM0mmmm") // ASIMD
 //INST(asimd_VMVN_reg,        "VMVN_reg",                 "111100111-11--00----01011x-0----") // ASIMD
 //INST(asimd_VPADAL,          "VPADAL",                   "111100111-11--00----0110xx-0----") // ASIMD
 //INST(asimd_VQABS,           "VQABS",                    "111100111-11--00----01110x-0----") // ASIMD

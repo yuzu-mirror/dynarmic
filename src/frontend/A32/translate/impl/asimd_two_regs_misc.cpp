@@ -9,6 +9,81 @@
 
 namespace Dynarmic::A32 {
 
+bool ArmTranslatorVisitor::asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    if (sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto result = [this, m, sz] {
+        const auto reg_m = ir.GetVector(m);
+        const size_t esize = 8U << sz;
+        const auto one = [this, esize]() -> IR::UAny {
+            switch (esize) {
+            case 8:
+                return ir.Imm8(1);
+            case 16:
+                return ir.Imm16(1);
+            default:
+                return ir.Imm32(1);
+            }
+        }();
+
+        const auto shifted = ir.VectorArithmeticShiftRight(esize, reg_m, static_cast<u8>(esize));
+        const auto xored = ir.VectorEor(reg_m, shifted);
+        const auto clz = ir.VectorCountLeadingZeros(esize, xored);
+        return ir.VectorSub(esize, clz, ir.VectorBroadcast(esize, one));
+    }();
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+bool ArmTranslatorVisitor::asimd_VCLZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    if (sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto result = [this, m, sz] {
+        const auto reg_m = ir.GetVector(m);
+        const size_t esize = 8U << sz;
+
+        return ir.VectorCountLeadingZeros(esize, reg_m);
+    }();
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+bool ArmTranslatorVisitor::asimd_VCNT(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    if (sz != 0b00) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto reg_m = ir.GetVector(m);
+    const auto result = ir.VectorPopulationCount(reg_m);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (sz == 0b11 || (F && sz != 0b10)) {
         return UndefinedInstruction();

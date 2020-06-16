@@ -449,6 +449,9 @@ struct ArmTranslatorVisitor final {
     bool asimd_VQSUB(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
 
     // Advanced SIMD two register, miscellaneous
+    bool asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool asimd_VCLZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool asimd_VCNT(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t Vm);
 
