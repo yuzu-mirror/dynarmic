@@ -944,28 +944,13 @@ static void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, con
     }
 }
 
-template<std::size_t bitsize>
+template<std::size_t bitsize, auto callback>
 void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (!config.page_table) {
         ctx.reg_alloc.HostCall(inst, {}, args[0]);
-        switch (bitsize) {
-        case 8:
-            Devirtualize<&A32::UserCallbacks::MemoryRead8>(config.callbacks).EmitCall(code);
-            break;
-        case 16:
-            Devirtualize<&A32::UserCallbacks::MemoryRead16>(config.callbacks).EmitCall(code);
-            break;
-        case 32:
-            Devirtualize<&A32::UserCallbacks::MemoryRead32>(config.callbacks).EmitCall(code);
-            break;
-        case 64:
-            Devirtualize<&A32::UserCallbacks::MemoryRead64>(config.callbacks).EmitCall(code);
-            break;
-        default:
-            UNREACHABLE();
-        }
+        Devirtualize<callback>(config.callbacks).EmitCall(code);
         return;
     }
 
@@ -1003,28 +988,13 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, value);
 }
 
-template<std::size_t bitsize>
+template<std::size_t bitsize, auto callback>
 void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (!config.page_table) {
         ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
-        switch (bitsize) {
-        case 8:
-            Devirtualize<&A32::UserCallbacks::MemoryWrite8>(config.callbacks).EmitCall(code);
-            break;
-        case 16:
-            Devirtualize<&A32::UserCallbacks::MemoryWrite16>(config.callbacks).EmitCall(code);
-            break;
-        case 32:
-            Devirtualize<&A32::UserCallbacks::MemoryWrite32>(config.callbacks).EmitCall(code);
-            break;
-        case 64:
-            Devirtualize<&A32::UserCallbacks::MemoryWrite64>(config.callbacks).EmitCall(code);
-            break;
-        default:
-            UNREACHABLE();
-        }
+        Devirtualize<callback>(config.callbacks).EmitCall(code);
         return;
     }
 
@@ -1060,35 +1030,35 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
 }
 
 void A32EmitX64::EmitA32ReadMemory8(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<8>(ctx, inst);
+    ReadMemory<8, &A32::UserCallbacks::MemoryRead8>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ReadMemory16(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<16>(ctx, inst);
+    ReadMemory<16, &A32::UserCallbacks::MemoryRead16>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ReadMemory32(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<32>(ctx, inst);
+    ReadMemory<32, &A32::UserCallbacks::MemoryRead32>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ReadMemory64(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<64>(ctx, inst);
+    ReadMemory<64, &A32::UserCallbacks::MemoryRead64>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory8(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<8>(ctx, inst);
+    WriteMemory<8, &A32::UserCallbacks::MemoryWrite8>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory16(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<16>(ctx, inst);
+    WriteMemory<16, &A32::UserCallbacks::MemoryWrite16>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory32(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<32>(ctx, inst);
+    WriteMemory<32, &A32::UserCallbacks::MemoryWrite32>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<64>(ctx, inst);
+    WriteMemory<64, &A32::UserCallbacks::MemoryWrite64>(ctx, inst);
 }
 
 template <typename T, void (A32::UserCallbacks::*fn)(A32::VAddr, T)>

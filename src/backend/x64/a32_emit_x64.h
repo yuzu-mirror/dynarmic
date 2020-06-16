@@ -98,9 +98,9 @@ protected:
     FakeCall FastmemCallback(u64 rip);
 
     // Memory access helpers
-    template<std::size_t bitsize>
+    template<std::size_t bitsize, auto callback>
     void ReadMemory(A32EmitContext& ctx, IR::Inst* inst);
-    template<std::size_t bitsize>
+    template<std::size_t bitsize, auto callback>
     void WriteMemory(A32EmitContext& ctx, IR::Inst* inst);
 
     // Terminal instruction emitters
