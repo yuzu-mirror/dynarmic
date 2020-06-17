@@ -83,7 +83,7 @@ INST(asimd_VCLZ,            "VCLZ",                     "111100111D11zz00dddd010
 INST(asimd_VCNT,            "VCNT",                     "111100111D11zz00dddd01010QM0mmmm") // ASIMD
 //INST(asimd_VMVN_reg,        "VMVN_reg",                 "111100111-11--00----01011x-0----") // ASIMD
 //INST(asimd_VPADAL,          "VPADAL",                   "111100111-11--00----0110xx-0----") // ASIMD
-//INST(asimd_VQABS,           "VQABS",                    "111100111-11--00----01110x-0----") // ASIMD
+INST(asimd_VQABS,           "VQABS",                    "111100111D11zz00dddd01110QM0mmmm") // ASIMD
 //INST(asimd_VQNEG,           "VQNEG",                    "111100111-11--00----01111x-0----") // ASIMD
 //INST(asimd_VCGT_zero,       "VCGT (zero)",              "111100111-11--01----0x000x-0----") // ASIMD
 //INST(asimd_VCGE_zero,       "VCGE (zero)",              "111100111-11--01----0x001x-0----") // ASIMD
