@@ -876,14 +876,60 @@ FakeCall A32EmitX64::FastmemCallback(u64 rip_) {
     return ret;
 }
 
-static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc,
-                                     const A32::UserConfig& conf, Xbyak::Label& abort,
-                                     Xbyak::Reg64 vaddr,
-                                     std::optional<Xbyak::Reg64> arg_scratch = {}) {
+static void EmitDetectMisaignedVAddr(BlockOfCode& code, const A32::UserConfig& conf, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg32 vaddr, Xbyak::Reg32 tmp) {
+    constexpr size_t page_bits = 12;
+    constexpr size_t page_size = 1 << page_bits;
+
+    if (bitsize == 8 || (conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
+        return;
+    }
+
+    const u32 align_mask = [bitsize]() -> u32 {
+        switch (bitsize) {
+        case 16:
+            return 0b1;
+        case 32:
+            return 0b11;
+        case 64:
+            return 0b111;
+        }
+        UNREACHABLE();
+    }();
+
+    code.test(vaddr, align_mask);
+
+    if (!conf.only_detect_misalignment_via_page_table_on_page_boundary) {
+        code.jnz(abort, code.T_NEAR);
+        return;
+    }
+
+    const u32 page_align_mask = static_cast<u32>(page_size - 1) & ~align_mask;
+
+    Xbyak::Label detect_boundary, resume;
+
+    code.jnz(detect_boundary, code.T_NEAR);
+    code.L(resume);
+
+    code.SwitchToFarCode();
+    code.L(detect_boundary);
+    code.mov(tmp, vaddr);
+    code.and_(tmp, page_align_mask);
+    code.cmp(tmp, page_align_mask);
+    code.jne(resume, code.T_NEAR);
+    // NOTE: We expect to fallthrough into abort code here.
+    code.SwitchToNearCode();
+}
+
+static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc, const A32::UserConfig& conf, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, std::optional<Xbyak::Reg64> arg_scratch = {}) {
     constexpr size_t page_bits = A32::UserConfig::PAGE_BITS;
     const Xbyak::Reg64 page = arg_scratch ? *arg_scratch : reg_alloc.ScratchGpr();
-    const Xbyak::Reg64 tmp = conf.absolute_offset_page_table ? page : reg_alloc.ScratchGpr();
-    code.mov(tmp, vaddr);
+    const Xbyak::Reg32 tmp = conf.absolute_offset_page_table ? page.cvt32() : reg_alloc.ScratchGpr().cvt32();
+
+    EmitDetectMisaignedVAddr(code, conf, bitsize, abort, vaddr.cvt32(), tmp);
+
+    // TODO: This code assumes vaddr has been zext from 32-bits to 64-bits.
+
+    code.mov(tmp, vaddr.cvt32());
     code.shr(tmp, static_cast<int>(page_bits));
     code.mov(page, qword[r14 + tmp * sizeof(void*)]);
     code.test(page, page);
@@ -892,7 +938,7 @@ static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc,
         return page + vaddr;
     }
     constexpr size_t page_mask = (1 << page_bits) - 1;
-    code.mov(tmp, vaddr);
+    code.mov(tmp, vaddr.cvt32());
     code.and_(tmp, static_cast<u32>(page_mask));
     return page + tmp;
 }
@@ -971,12 +1017,15 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Label abort, end;
 
-    const auto src_ptr = EmitVAddrLookup(code, ctx.reg_alloc, conf, abort, vaddr, value);
+    const auto src_ptr = EmitVAddrLookup(code, ctx.reg_alloc, conf, bitsize, abort, vaddr, value);
     EmitReadMemoryMov<bitsize>(code, value, src_ptr);
     code.jmp(end);
+
+    code.SwitchToFarCode();
     code.L(abort);
     code.call(wrapped_fn);
     code.L(end);
+    code.SwitchToNearCode();
 
     ctx.reg_alloc.DefineValue(inst, value);
 }
@@ -1014,12 +1063,15 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Label abort, end;
 
-    const auto dest_ptr = EmitVAddrLookup(code, ctx.reg_alloc, conf, abort, vaddr);
+    const auto dest_ptr = EmitVAddrLookup(code, ctx.reg_alloc, conf, bitsize, abort, vaddr);
     EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
     code.jmp(end);
+
+    code.SwitchToFarCode();
     code.L(abort);
     code.call(wrapped_fn);
     code.L(end);
+    code.SwitchToNearCode();
 }
 
 void A32EmitX64::EmitA32ReadMemory8(A32EmitContext& ctx, IR::Inst* inst) {

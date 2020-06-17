@@ -120,6 +120,15 @@ struct UserConfig {
     ///       So there might be wrongly faulted pages which maps to nullptr.
     ///       This can be avoided by carefully allocating the memory region.
     bool absolute_offset_page_table = false;
+    /// Determines if we should detect memory accesses via page_table that straddle are
+    /// misaligned. Accesses that straddle page boundaries will fallback to the relevant
+    /// memory callback.
+    /// This value should be the required access sizes this applies to ORed together.
+    /// To detect any access, use: 8 | 16 | 32 | 64.
+    std::uint8_t detect_misaligned_access_via_page_table = 0;
+    /// Determines if the above option only triggers when the misalignment straddles a
+    /// page boundary.
+    bool only_detect_misalignment_via_page_table_on_page_boundary = false;
 
     // Fastmem Pointer
     // This should point to the beginning of a 4GB address space which is in arranged just like
