@@ -5,7 +5,7 @@
 
 #include <catch.hpp>
 
-#include <dynarmic/A64/exclusive_monitor.h>
+#include <dynarmic/exclusive_monitor.h>
 
 #include "common/fp/fpsr.h"
 #include "testenv.h"
@@ -281,7 +281,7 @@ TEST_CASE("A64: FABD", "[a64]") {
 
 TEST_CASE("A64: 128-bit exclusive read/write", "[a64]") {
     A64TestEnv env;
-    Dynarmic::A64::ExclusiveMonitor monitor{1};
+    Dynarmic::ExclusiveMonitor monitor{1};
 
     Dynarmic::A64::UserConfig conf;
     conf.callbacks = &env;

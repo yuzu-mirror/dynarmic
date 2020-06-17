@@ -11,12 +11,15 @@
 #include <memory>
 
 namespace Dynarmic {
+class ExclusiveMonitor;
+} // namespace Dynarmic
+
+namespace Dynarmic {
 namespace A32 {
 
 using VAddr = std::uint32_t;
 
 class Coprocessor;
-class ExclusiveMonitor;
 
 enum class Exception {
     /// An UndefinedFault occured due to executing instruction with an unallocated encoding

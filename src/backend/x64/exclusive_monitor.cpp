@@ -5,11 +5,10 @@
 
 #include <algorithm>
 
-#include <dynarmic/A64/exclusive_monitor.h>
+#include <dynarmic/exclusive_monitor.h>
 #include "common/assert.h"
 
 namespace Dynarmic {
-namespace A64 {
 
 ExclusiveMonitor::ExclusiveMonitor(size_t processor_count) :
     exclusive_addresses(processor_count, INVALID_EXCLUSIVE_ADDRESS), exclusive_values(processor_count) {
@@ -57,6 +56,4 @@ void ExclusiveMonitor::ClearProcessor(size_t processor_id) {
     Unlock();
 }
 
-
-} // namespace A64
 } // namespace Dynarmic

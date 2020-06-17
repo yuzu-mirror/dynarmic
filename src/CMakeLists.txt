@@ -6,7 +6,7 @@ add_library(dynarmic
     ../include/dynarmic/A32/disassembler.h
     ../include/dynarmic/A64/a64.h
     ../include/dynarmic/A64/config.h
-    ../include/dynarmic/A64/exclusive_monitor.h
+    ../include/dynarmic/exclusive_monitor.h
     common/assert.cpp
     common/assert.h
     common/bit_util.h
@@ -259,6 +259,7 @@ if (ARCHITECTURE_x86_64)
         backend/x64/emit_x64_vector_floating_point.cpp
         backend/x64/emit_x64_vector_saturation.cpp
         backend/x64/exception_handler.h
+        backend/x64/exclusive_monitor.cpp
         backend/x64/hostloc.cpp
         backend/x64/hostloc.h
         backend/x64/jitstate_info.h
@@ -273,7 +274,6 @@ if (ARCHITECTURE_x86_64)
         target_sources(dynarmic PRIVATE
             backend/x64/a32_emit_x64.cpp
             backend/x64/a32_emit_x64.h
-            backend/x64/a32_exclusive_monitor.cpp
             backend/x64/a32_interface.cpp
             backend/x64/a32_jitstate.cpp
             backend/x64/a32_jitstate.h
@@ -284,7 +284,6 @@ if (ARCHITECTURE_x86_64)
         target_sources(dynarmic PRIVATE
             backend/x64/a64_emit_x64.cpp
             backend/x64/a64_emit_x64.h
-            backend/x64/a64_exclusive_monitor.cpp
             backend/x64/a64_interface.cpp
             backend/x64/a64_jitstate.cpp
             backend/x64/a64_jitstate.h

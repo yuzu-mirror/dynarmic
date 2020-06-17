@@ -12,7 +12,7 @@
 #include <mp/traits/integer_of_size.h>
 
 #include <dynarmic/A32/coprocessor.h>
-#include <dynarmic/A32/exclusive_monitor.h>
+#include <dynarmic/exclusive_monitor.h>
 
 #include "backend/x64/a32_emit_x64.h"
 #include "backend/x64/a32_jitstate.h"

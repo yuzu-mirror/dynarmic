@@ -9,7 +9,7 @@
 #include <fmt/ostream.h>
 #include <mp/traits/integer_of_size.h>
 
-#include <dynarmic/A64/exclusive_monitor.h>
+#include <dynarmic/exclusive_monitor.h>
 
 #include "backend/x64/a64_emit_x64.h"
 #include "backend/x64/a64_jitstate.h"

@@ -13,7 +13,6 @@
 #include <vector>
 
 namespace Dynarmic {
-namespace A64 {
 
 using VAddr = std::uint64_t;
 using Vector = std::array<std::uint64_t, 2>;
@@ -79,5 +78,4 @@ private:
     std::vector<Vector> exclusive_values;
 };
 
-} // namespace A64
 } // namespace Dynarmic

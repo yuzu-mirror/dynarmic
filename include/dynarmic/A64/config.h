@@ -11,6 +11,10 @@
 #include <memory>
 
 namespace Dynarmic {
+class ExclusiveMonitor;
+} // namespace Dynarmic
+
+namespace Dynarmic {
 namespace A64 {
 
 using VAddr = std::uint64_t;
@@ -113,8 +117,6 @@ struct UserCallbacks {
     // Get value in the emulated counter-timer physical count register.
     virtual std::uint64_t GetCNTPCT() = 0;
 };
-
-class ExclusiveMonitor;
 
 struct UserConfig {
     UserCallbacks* callbacks;
