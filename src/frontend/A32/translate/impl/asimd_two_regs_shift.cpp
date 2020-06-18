@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "common/assert.h"
 #include "common/bit_util.h"
 
 #include "frontend/A32/translate/impl/translate_arm.h"
@@ -53,7 +54,7 @@ bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd,
 
     // Technically just a related encoding (One register and modified immediate instructions)
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
-        return v.UndefinedInstruction();
+        ASSERT_FALSE();
     }
 
     const auto [esize, shift_amount] = ElementSizeAndShiftAmount(true, L, imm6);
@@ -106,7 +107,7 @@ bool ArmTranslatorVisitor::asimd_VSRI(bool D, size_t imm6, size_t Vd, bool L, bo
 
     // Technically just a related encoding (One register and modified immediate instructions)
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
-        return UndefinedInstruction();
+        ASSERT_FALSE();
     }
 
     const auto [esize, shift_amount] = ElementSizeAndShiftAmount(true, L, imm6);
@@ -160,7 +161,7 @@ bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bo
 
     // Technically just a related encoding (One register and modified immediate instructions)
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
-        return UndefinedInstruction();
+        ASSERT_FALSE();
     }
 
     const auto [esize, shift_amount] = ElementSizeAndShiftAmount(false, L, imm6);
