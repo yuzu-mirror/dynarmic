@@ -64,7 +64,7 @@ INST(asimd_VRSHR,           "VRSHR",                    "1111001U1Diiiiiidddd001
 INST(asimd_VRSRA,           "VRSRA",                    "1111001U1Diiiiiidddd0011LQM1mmmm") // ASIMD
 INST(asimd_VSRI,            "VSRI",                     "111100111Diiiiiidddd0100LQM1mmmm") // ASIMD
 INST(asimd_VSHL,            "VSHL",                     "111100101Diiiiiidddd0101LQM1mmmm") // ASIMD
-//INST(asimd_VSLI,            "VSLI",                     "111100111-vvv-------0101LB-1----") // ASIMD
+INST(asimd_VSLI,            "VSLI",                     "111100111Diiiiiidddd0101LQM1mmmm") // ASIMD
 //INST(asimd_VQSHL,           "VQSHL" ,                   "1111001U1-vvv-------011xLB-1----") // ASIMD
 //INST(asimd_VSHRN,           "VSHRN",                    "111100101-vvv-------100000-1----") // ASIMD
 //INST(asimd_VRSHRN,          "VRSHRN",                   "111100101-vvv-------100001-1----") // ASIMD

@@ -126,6 +126,33 @@ bool ArmTranslatorVisitor::asimd_VSRI(bool D, size_t imm6, size_t Vd, bool L, bo
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VSLI(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    // Technically just a related encoding (One register and modified immediate instructions)
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        return UndefinedInstruction();
+    }
+
+    const auto [esize, shift_amount] = ElementSizeAndShiftAmount(false, L, imm6);
+    const u64 mask = Common::Ones<u64>(esize) << shift_amount;
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto reg_d = ir.GetVector(d);
+
+    const auto shifted = ir.VectorLogicalShiftLeft(esize, reg_m, static_cast<u8>(shift_amount));
+    const auto mask_vec = ir.VectorBroadcast(esize, I(esize, mask));
+    const auto result = ir.VectorOr(ir.VectorAnd(reg_d, ir.VectorNot(mask_vec)), shifted);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
