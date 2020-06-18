@@ -2495,12 +2495,86 @@ static D PolynomialMultiply(T lhs, T rhs) {
 }
 
 void EmitX64::EmitVectorPolynomialMultiply8(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasSSE41()) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm alternate = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm mask = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg32 counter = ctx.reg_alloc.ScratchGpr().cvt32();
+
+        Xbyak::Label loop;
+
+        code.pxor(result, result);
+        code.movdqa(mask, code.MConst(xword, 0x0101010101010101, 0x0101010101010101));
+        code.mov(counter, 8);
+
+        code.L(loop);
+        if (code.HasAVX()) {
+            code.vpand(xmm0, xmm_b, mask);
+            code.vpxor(alternate, result, xmm_a);
+        } else {
+            code.movdqa(xmm0, xmm_b);
+            code.movdqa(alternate, result);
+            code.pand(xmm0, mask);
+            code.pxor(alternate, xmm_a);
+        }
+        code.pcmpeqb(xmm0, mask);
+        code.paddb(mask, mask);
+        code.paddb(xmm_a, xmm_a);
+        code.pblendvb(result, alternate);
+        code.dec(counter);
+        code.jnz(loop);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u8>& result, const VectorArray<u8>& a, const VectorArray<u8>& b) {
         std::transform(a.begin(), a.end(), b.begin(), result.begin(), PolynomialMultiply<u8, u8>);
     });
 }
 
 void EmitX64::EmitVectorPolynomialMultiplyLong8(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasSSE41()) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseScratchXmm(args[1]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm alternate = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm mask = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg32 counter = ctx.reg_alloc.ScratchGpr().cvt32();
+
+        Xbyak::Label loop;
+
+        code.pmovzxbw(xmm_a, xmm_a);
+        code.pmovzxbw(xmm_b, xmm_b);
+        code.pxor(result, result);
+        code.movdqa(mask, code.MConst(xword, 0x0001000100010001, 0x0001000100010001));
+        code.mov(counter, 8);
+
+        code.L(loop);
+        if (code.HasAVX()) {
+            code.vpand(xmm0, xmm_b, mask);
+            code.vpxor(alternate, result, xmm_a);
+        } else {
+            code.movdqa(xmm0, xmm_b);
+            code.movdqa(alternate, result);
+            code.pand(xmm0, mask);
+            code.pxor(alternate, xmm_a);
+        }
+        code.pcmpeqw(xmm0, mask);
+        code.paddw(mask, mask);
+        code.paddw(xmm_a, xmm_a);
+        code.pblendvb(result, alternate);
+        code.dec(counter);
+        code.jnz(loop);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u16>& result, const VectorArray<u8>& a, const VectorArray<u8>& b) {
         for (size_t i = 0; i < result.size(); i++) {
             result[i] = PolynomialMultiply<u16, u8>(a[i], b[i]);
