@@ -2509,6 +2509,17 @@ void EmitX64::EmitVectorPolynomialMultiplyLong8(EmitContext& ctx, IR::Inst* inst
 }
 
 void EmitX64::EmitVectorPolynomialMultiplyLong64(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasPCLMULQDQ()) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+
+        code.pclmulqdq(xmm_a, xmm_b, 0x00);
+
+        ctx.reg_alloc.DefineValue(inst, xmm_a);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u64>& result, const VectorArray<u64>& a, const VectorArray<u64>& b) {
         const auto handle_high_bits = [](u64 lhs, u64 rhs) {
             constexpr size_t bit_size = Common::BitSize<u64>();
