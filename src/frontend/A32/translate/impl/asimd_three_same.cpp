@@ -194,4 +194,27 @@ bool ArmTranslatorVisitor::asimd_VQSUB(bool U, bool D, size_t sz, size_t Vn, siz
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VTST(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    if (sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8 << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_n = ir.GetVector(n);
+    const auto reg_m = ir.GetVector(m);
+    const auto anded = ir.VectorAnd(reg_n, reg_m);
+    const auto result = ir.VectorNot(ir.VectorEqual(esize, anded, ir.ZeroVector()));
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32
