@@ -84,4 +84,9 @@ bool ArmTranslatorVisitor::asimd_VRSHR(bool U, bool D, size_t imm6, size_t Vd, b
                       Accumulating::None, Rounding::Round);
 }
 
+bool ArmTranslatorVisitor::asimd_VRSRA(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+    return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
+                      Accumulating::Accumulate, Rounding::Round);
+}
+
 } // namespace Dynarmic::A32
