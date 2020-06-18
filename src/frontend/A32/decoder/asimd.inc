@@ -60,7 +60,7 @@ INST(asimd_VQSUB,           "VQSUB",                    "1111001U0Dzznnnndddd001
 // Two registers and a shift amount
 INST(asimd_SHR,             "SHR",                      "1111001U1Diiiiiidddd0000LQM1mmmm") // ASIMD
 INST(asimd_SRA,             "SRA",                      "1111001U1Diiiiiidddd0001LQM1mmmm") // ASIMD
-//INST(asimd_VRSHR,           "VRSHR",                    "1111001U1-vvv-------0010LB-1----") // ASIMD
+INST(asimd_VRSHR,           "VRSHR",                    "1111001U1Diiiiiidddd0010LQM1mmmm") // ASIMD
 //INST(asimd_VRSRA,           "VRSRA",                    "1111001U1-vvv-------0011LB-1----") // ASIMD
 //INST(asimd_VSRI,            "VSRI",                     "111100111-vvv-------0100LB-1----") // ASIMD
 //INST(asimd_VSHL,            "VSHL",                     "111100101-vvv-------0101LB-1----") // ASIMD

@@ -14,6 +14,17 @@ enum class Accumulating {
     Accumulate
 };
 
+enum class Rounding {
+    None,
+    Round,
+};
+
+IR::U128 PerformRoundingCorrection(ArmTranslatorVisitor& v, size_t esize, u64 round_value, IR::U128 original, IR::U128 shifted) {
+    const auto round_const = v.ir.VectorBroadcast(esize, v.I(esize, round_value));
+    const auto round_correction = v.ir.VectorEqual(esize, v.ir.VectorAnd(original, round_const), round_const);
+    return v.ir.VectorSub(esize, shifted, round_correction);
+}
+
 std::pair<size_t, size_t> ElementSizeAndShiftAmount(bool L, size_t imm6) {
     if (L) {
         return {64, 64 - imm6};
@@ -25,7 +36,7 @@ std::pair<size_t, size_t> ElementSizeAndShiftAmount(bool L, size_t imm6) {
 }
 
 bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm,
-                Accumulating accumulate) {
+                Accumulating accumulate, Rounding rounding) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return v.UndefinedInstruction();
     }
@@ -41,7 +52,12 @@ bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd,
 
     const auto reg_m = v.ir.GetVector(m);
     auto result = U ? v.ir.VectorLogicalShiftRight(esize, reg_m, static_cast<u8>(shift_amount))
-                      : v.ir.VectorArithmeticShiftRight(esize, reg_m, static_cast<u8>(shift_amount));
+                    : v.ir.VectorArithmeticShiftRight(esize, reg_m, static_cast<u8>(shift_amount));
+
+    if (rounding == Rounding::Round) {
+        const u64 round_value = 1ULL << (shift_amount - 1);
+        result = PerformRoundingCorrection(v, esize, round_value, reg_m, result);
+    }
 
     if (accumulate == Accumulating::Accumulate) {
         const auto reg_d = v.ir.GetVector(d);
@@ -54,11 +70,18 @@ bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd,
 } // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_SHR(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
-    return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm, Accumulating::None);
+    return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
+                      Accumulating::None, Rounding::None);
 }
 
 bool ArmTranslatorVisitor::asimd_SRA(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
-    return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm, Accumulating::Accumulate);
+    return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
+                      Accumulating::Accumulate, Rounding::None);
+}
+
+bool ArmTranslatorVisitor::asimd_VRSHR(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+    return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
+                      Accumulating::None, Rounding::Round);
 }
 
 } // namespace Dynarmic::A32
