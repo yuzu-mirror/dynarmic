@@ -1147,7 +1147,7 @@ void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
     code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(&conf));
     code.CallLambda(
         [](A32::UserConfig& conf, u32 vaddr, T value) -> u32 {
-            return conf.global_monitor->DoExclusiveOperation<u8>(conf.processor_id, vaddr,
+            return conf.global_monitor->DoExclusiveOperation<T>(conf.processor_id, vaddr,
                 [&](T expected) -> bool {
                     return (conf.callbacks->*callback)(vaddr, value, expected);
                 }) ? 0 : 1;
