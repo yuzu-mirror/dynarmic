@@ -25,14 +25,24 @@ IR::U128 PerformRoundingCorrection(ArmTranslatorVisitor& v, size_t esize, u64 ro
     return v.ir.VectorSub(esize, shifted, round_correction);
 }
 
-std::pair<size_t, size_t> ElementSizeAndShiftAmount(bool L, size_t imm6) {
-    if (L) {
-        return {64, 64 - imm6};
-    }
+std::pair<size_t, size_t> ElementSizeAndShiftAmount(bool right_shift, bool L, size_t imm6) {
+    if (right_shift) {
+        if (L) {
+            return {64, 64 - imm6};
+        }
 
-    const size_t esize = 8U << Common::HighestSetBit(imm6 >> 3);
-    const size_t shift_amount = (esize * 2) - imm6;
-    return {esize, shift_amount};
+        const size_t esize = 8U << Common::HighestSetBit(imm6 >> 3);
+        const size_t shift_amount = (esize * 2) - imm6;
+        return {esize, shift_amount};
+    } else {
+        if (L) {
+            return {64, imm6};
+        }
+
+        const size_t esize = 8U << Common::HighestSetBit(imm6 >> 3);
+        const size_t shift_amount = imm6 - esize;
+        return {esize, shift_amount};
+    }
 }
 
 bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm,
@@ -46,7 +56,7 @@ bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd,
         return v.UndefinedInstruction();
     }
 
-    const auto [esize, shift_amount] = ElementSizeAndShiftAmount(L, imm6);
+    const auto [esize, shift_amount] = ElementSizeAndShiftAmount(true, L, imm6);
     const auto d = ToVector(Q, Vd, D);
     const auto m = ToVector(Q, Vm, M);
 
@@ -87,6 +97,27 @@ bool ArmTranslatorVisitor::asimd_VRSHR(bool U, bool D, size_t imm6, size_t Vd, b
 bool ArmTranslatorVisitor::asimd_VRSRA(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
                       Accumulating::Accumulate, Rounding::Round);
+}
+
+bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    // Technically just a related encoding (One register and modified immediate instructions)
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        return UndefinedInstruction();
+    }
+
+    const auto [esize, shift_amount] = ElementSizeAndShiftAmount(false, L, imm6);
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto result = ir.VectorLogicalShiftLeft(esize, reg_m, static_cast<u8>(shift_amount));
+
+    ir.SetVector(d, result);
+    return true;
 }
 
 } // namespace Dynarmic::A32
