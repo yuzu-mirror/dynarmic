@@ -465,3 +465,23 @@ TEST_CASE("arm: PackedAbsDiffSumS8", "[arm][A32]") {
     REQUIRE(jit.Regs()[15] == 0x00000008);
     REQUIRE(jit.Cpsr() == 0xb0000010);
 }
+
+TEST_CASE("arm: vclt.f32 with zero", "[arm][A32][.]") {
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xf3b93628, // vclt.f32 d3, d24, #0
+        0xeafffffe, // b +#0
+    };
+
+    jit.ExtRegs()[48] = 0x3a87d9f1;
+    jit.ExtRegs()[49] = 0x80796dc0;
+
+    jit.SetCpsr(0x000001d0); // User-mode
+
+    test_env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.ExtRegs()[6] == 0x00000000);
+    REQUIRE(jit.ExtRegs()[7] == 0x00000000);
+}
