@@ -33,8 +33,12 @@ static RunCodeCallbacks GenRunCodeCallbacks(A64::UserCallbacks* cb, CodePtr (*Lo
     };
 }
 
-static std::function<void(BlockOfCode&)> GenRCP(const A64::UserConfig&) {
-    return [](BlockOfCode&){};
+static std::function<void(BlockOfCode&)> GenRCP(const A64::UserConfig& conf) {
+    return [conf](BlockOfCode& code) {
+        if (conf.page_table) {
+            code.mov(code.r14, Common::BitCast<u64>(conf.page_table));
+        }
+    };
 }
 
 struct Jit::Impl final {

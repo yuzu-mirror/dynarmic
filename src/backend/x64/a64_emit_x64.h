@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <array>
 #include <map>
 #include <tuple>
 
@@ -79,8 +80,10 @@ protected:
     FastDispatchEntry& (*fast_dispatch_table_lookup)(u64) = nullptr;
     void GenTerminalHandlers();
 
-    void EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize);
-    void EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize);
+    template<std::size_t bitsize>
+    void EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize>
+    void EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* inst);
     template<std::size_t bitsize, auto callback>
     void EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst);
     template<std::size_t bitsize, auto callback>

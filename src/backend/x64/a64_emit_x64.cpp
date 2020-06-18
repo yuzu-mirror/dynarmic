@@ -71,7 +71,15 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
-    RegAlloc reg_alloc{code, A64JitState::SpillCount, SpillToOpArg<A64JitState>, any_gpr, any_xmm};
+    static const std::vector<HostLoc> gpr_order = [this]{
+        std::vector<HostLoc> gprs{any_gpr};
+        if (conf.page_table) {
+            gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R14));
+        }
+        return gprs;
+    }();
+
+    RegAlloc reg_alloc{code, A64JitState::SpillCount, SpillToOpArg<A64JitState>, gpr_order, any_xmm};
     A64EmitContext ctx{conf, reg_alloc, block};
 
     // Start emitting.
@@ -728,6 +736,7 @@ namespace {
 
 constexpr size_t page_bits = 12;
 constexpr size_t page_size = 1 << page_bits;
+constexpr size_t page_mask = (1 << page_bits) - 1;
 
 void EmitDetectMisaignedVAddr(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, Xbyak::Reg64 tmp) {
     if (bitsize == 8 || (ctx.conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
@@ -772,16 +781,15 @@ void EmitDetectMisaignedVAddr(BlockOfCode& code, A64EmitContext& ctx, size_t bit
     code.SwitchToNearCode();
 }
 
-Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, std::optional<Xbyak::Reg64> arg_scratch = {}) {
+Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
     const size_t valid_page_index_bits = ctx.conf.page_table_address_space_bits - page_bits;
     const size_t unused_top_bits = 64 - ctx.conf.page_table_address_space_bits;
 
-    const Xbyak::Reg64 page_table = arg_scratch ? *arg_scratch : ctx.reg_alloc.ScratchGpr();
-    const Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 page = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 tmp = ctx.conf.absolute_offset_page_table ? page : ctx.reg_alloc.ScratchGpr();
 
     EmitDetectMisaignedVAddr(code, ctx, bitsize, abort, vaddr, tmp);
 
-    code.mov(page_table, reinterpret_cast<u64>(ctx.conf.page_table));
     code.mov(tmp, vaddr);
     if (unused_top_bits == 0) {
         code.shr(tmp, int(page_bits));
@@ -799,86 +807,108 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bit
         code.test(tmp, u32(-(1 << valid_page_index_bits)));
         code.jnz(abort, code.T_NEAR);
     }
-    code.mov(page_table, qword[page_table + tmp * sizeof(void*)]);
-    code.test(page_table, page_table);
+    code.mov(page, qword[r14 + tmp * sizeof(void*)]);
+    code.test(page, page);
     code.jz(abort, code.T_NEAR);
     if (ctx.conf.absolute_offset_page_table) {
-        return page_table + vaddr;
+        return page + vaddr;
     }
     code.mov(tmp, vaddr);
-    code.and_(tmp, static_cast<u32>(page_size - 1));
-    return page_table + tmp;
+    code.and_(tmp, static_cast<u32>(page_mask));
+    return page + tmp;
+}
+
+template<std::size_t bitsize>
+void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, const Xbyak::RegExp& addr) {
+    switch (bitsize) {
+    case 8:
+        code.movzx(value.cvt32(), code.byte[addr]);
+        return;
+    case 16:
+        code.movzx(value.cvt32(), word[addr]);
+        return;
+    case 32:
+        code.mov(value.cvt32(), dword[addr]);
+        return;
+    case 64:
+        code.mov(value, qword[addr]);
+        return;
+    default:
+        ASSERT_FALSE("Invalid bitsize");
+    }
+}
+
+template<std::size_t bitsize>
+void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbyak::Reg64& value) {
+    switch (bitsize) {
+    case 8:
+        code.mov(code.byte[addr], value.cvt8());
+        return;
+    case 16:
+        code.mov(word[addr], value.cvt16());
+        return;
+    case 32:
+        code.mov(dword[addr], value.cvt32());
+        return;
+    case 64:
+        code.mov(qword[addr], value);
+        return;
+    default:
+        ASSERT_FALSE("Invalid bitsize");
+    }
 }
 
 } // anonymous namepsace
 
-void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize) {
-    Xbyak::Label abort, end;
-
+template<std::size_t bitsize>
+void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr();
 
-    const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr, value);
-    switch (bitsize) {
-    case 8:
-        code.movzx(value.cvt32(), code.byte[src_ptr]);
-        break;
-    case 16:
-        code.movzx(value.cvt32(), word[src_ptr]);
-        break;
-    case 32:
-        code.mov(value.cvt32(), dword[src_ptr]);
-        break;
-    case 64:
-        code.mov(value, qword[src_ptr]);
-        break;
-    }
+    const auto wrapped_fn = read_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
+
+    Xbyak::Label abort, end;
+
+    const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
+    EmitReadMemoryMov<bitsize>(code, value, src_ptr);
     code.L(end);
 
     code.SwitchToFarCode();
     code.L(abort);
-    code.call(read_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())]);
+    code.call(wrapped_fn);
     code.jmp(end, code.T_NEAR);
     code.SwitchToNearCode();
 
     ctx.reg_alloc.DefineValue(inst, value);
 }
 
-void A64EmitX64::EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* inst, size_t bitsize) {
-    Xbyak::Label abort, end;
-
+template<std::size_t bitsize>
+void A64EmitX64::EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
 
+    const auto wrapped_fn = write_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
+
+    Xbyak::Label abort, end;
+
     const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
-    switch (bitsize) {
-    case 8:
-        code.mov(code.byte[dest_ptr], value.cvt8());
-        break;
-    case 16:
-        code.mov(word[dest_ptr], value.cvt16());
-        break;
-    case 32:
-        code.mov(dword[dest_ptr], value.cvt32());
-        break;
-    case 64:
-        code.mov(qword[dest_ptr], value);
-        break;
-    }
+    EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
     code.L(end);
 
     code.SwitchToFarCode();
     code.L(abort);
-    code.call(write_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())]);
+    code.call(wrapped_fn);
     code.jmp(end, code.T_NEAR);
     code.SwitchToNearCode();
 }
 
 void A64EmitX64::EmitA64ReadMemory8(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryRead(ctx, inst, 8);
+        EmitDirectPageTableMemoryRead<8>(ctx, inst);
         return;
     }
 
@@ -889,7 +919,7 @@ void A64EmitX64::EmitA64ReadMemory8(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64ReadMemory16(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryRead(ctx, inst, 16);
+        EmitDirectPageTableMemoryRead<16>(ctx, inst);
         return;
     }
 
@@ -900,7 +930,7 @@ void A64EmitX64::EmitA64ReadMemory16(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64ReadMemory32(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryRead(ctx, inst, 32);
+        EmitDirectPageTableMemoryRead<32>(ctx, inst);
         return;
     }
 
@@ -911,7 +941,7 @@ void A64EmitX64::EmitA64ReadMemory32(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64ReadMemory64(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryRead(ctx, inst, 64);
+        EmitDirectPageTableMemoryRead<64>(ctx, inst);
         return;
     }
 
@@ -950,7 +980,7 @@ void A64EmitX64::EmitA64ReadMemory128(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64WriteMemory8(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite(ctx, inst, 8);
+        EmitDirectPageTableMemoryWrite<8>(ctx, inst);
         return;
     }
 
@@ -961,7 +991,7 @@ void A64EmitX64::EmitA64WriteMemory8(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64WriteMemory16(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite(ctx, inst, 16);
+        EmitDirectPageTableMemoryWrite<16>(ctx, inst);
         return;
     }
 
@@ -972,7 +1002,7 @@ void A64EmitX64::EmitA64WriteMemory16(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64WriteMemory32(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite(ctx, inst, 32);
+        EmitDirectPageTableMemoryWrite<32>(ctx, inst);
         return;
     }
 
@@ -983,7 +1013,7 @@ void A64EmitX64::EmitA64WriteMemory32(A64EmitContext& ctx, IR::Inst* inst) {
 
 void A64EmitX64::EmitA64WriteMemory64(A64EmitContext& ctx, IR::Inst* inst) {
     if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite(ctx, inst, 64);
+        EmitDirectPageTableMemoryWrite<64>(ctx, inst);
         return;
     }
 

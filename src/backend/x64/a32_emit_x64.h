@@ -26,10 +26,13 @@ namespace Dynarmic::Backend::X64 {
 class RegAlloc;
 
 struct A32EmitContext final : public EmitContext {
-    A32EmitContext(RegAlloc& reg_alloc, IR::Block& block);
+    A32EmitContext(const A32::UserConfig& conf, RegAlloc& reg_alloc, IR::Block& block);
+
     A32::LocationDescriptor Location() const;
     bool IsSingleStep() const;
     FP::FPCR FPCR() const override;
+
+    const A32::UserConfig& conf;
 };
 
 class A32EmitX64 final : public EmitX64 {

@@ -60,15 +60,15 @@ static Xbyak::Address MJitStateExtReg(A32::ExtReg reg) {
     ASSERT_FALSE("Should never happen.");
 }
 
-A32EmitContext::A32EmitContext(RegAlloc& reg_alloc, IR::Block& block)
-    : EmitContext(reg_alloc, block) {}
+A32EmitContext::A32EmitContext(const A32::UserConfig& conf, RegAlloc& reg_alloc, IR::Block& block)
+    : EmitContext(reg_alloc, block), conf(conf) {}
 
 A32::LocationDescriptor A32EmitContext::Location() const {
     return A32::LocationDescriptor{block.Location()};
 }
 
 bool A32EmitContext::IsSingleStep() const {
-    return A32::LocationDescriptor{block.Location()}.SingleStepping();
+    return Location().SingleStepping();
 }
 
 FP::FPCR A32EmitContext::FPCR() const {
@@ -105,7 +105,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
     }();
 
     RegAlloc reg_alloc{code, A32JitState::SpillCount, SpillToOpArg<A32JitState>, gpr_order, any_xmm};
-    A32EmitContext ctx{reg_alloc, block};
+    A32EmitContext ctx{conf, reg_alloc, block};
 
     // Start emitting.
     code.align();
@@ -876,11 +876,14 @@ FakeCall A32EmitX64::FastmemCallback(u64 rip_) {
     return ret;
 }
 
-static void EmitDetectMisaignedVAddr(BlockOfCode& code, const A32::UserConfig& conf, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg32 vaddr, Xbyak::Reg32 tmp) {
-    constexpr size_t page_bits = 12;
-    constexpr size_t page_size = 1 << page_bits;
+namespace {
 
-    if (bitsize == 8 || (conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
+constexpr size_t page_bits = 12;
+constexpr size_t page_size = 1 << page_bits;
+constexpr size_t page_mask = (1 << page_bits) - 1;
+
+void EmitDetectMisaignedVAddr(BlockOfCode& code, A32EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg32 vaddr, Xbyak::Reg32 tmp) {
+    if (bitsize == 8 || (ctx.conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
         return;
     }
 
@@ -898,7 +901,7 @@ static void EmitDetectMisaignedVAddr(BlockOfCode& code, const A32::UserConfig& c
 
     code.test(vaddr, align_mask);
 
-    if (!conf.only_detect_misalignment_via_page_table_on_page_boundary) {
+    if (!ctx.conf.only_detect_misalignment_via_page_table_on_page_boundary) {
         code.jnz(abort, code.T_NEAR);
         return;
     }
@@ -920,12 +923,11 @@ static void EmitDetectMisaignedVAddr(BlockOfCode& code, const A32::UserConfig& c
     code.SwitchToNearCode();
 }
 
-static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc, const A32::UserConfig& conf, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, std::optional<Xbyak::Reg64> arg_scratch = {}) {
-    constexpr size_t page_bits = A32::UserConfig::PAGE_BITS;
-    const Xbyak::Reg64 page = arg_scratch ? *arg_scratch : reg_alloc.ScratchGpr();
-    const Xbyak::Reg32 tmp = conf.absolute_offset_page_table ? page.cvt32() : reg_alloc.ScratchGpr().cvt32();
+Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A32EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
+    const Xbyak::Reg64 page = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg32 tmp = ctx.conf.absolute_offset_page_table ? page.cvt32() : ctx.reg_alloc.ScratchGpr().cvt32();
 
-    EmitDetectMisaignedVAddr(code, conf, bitsize, abort, vaddr.cvt32(), tmp);
+    EmitDetectMisaignedVAddr(code, ctx, bitsize, abort, vaddr.cvt32(), tmp);
 
     // TODO: This code assumes vaddr has been zext from 32-bits to 64-bits.
 
@@ -933,18 +935,17 @@ static Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, RegAlloc& reg_alloc, con
     code.shr(tmp, static_cast<int>(page_bits));
     code.mov(page, qword[r14 + tmp * sizeof(void*)]);
     code.test(page, page);
-    code.jz(abort);
-    if (conf.absolute_offset_page_table) {
+    code.jz(abort, code.T_NEAR);
+    if (ctx.conf.absolute_offset_page_table) {
         return page + vaddr;
     }
-    constexpr size_t page_mask = (1 << page_bits) - 1;
     code.mov(tmp, vaddr.cvt32());
     code.and_(tmp, static_cast<u32>(page_mask));
     return page + tmp;
 }
 
 template<std::size_t bitsize>
-static void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, const Xbyak::RegExp& addr) {
+void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, const Xbyak::RegExp& addr) {
     switch (bitsize) {
     case 8:
         code.movzx(value.cvt32(), code.byte[addr]);
@@ -964,7 +965,7 @@ static void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, cons
 }
 
 template<std::size_t bitsize>
-static void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbyak::Reg64& value) {
+void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbyak::Reg64& value) {
     switch (bitsize) {
     case 8:
         code.mov(code.byte[addr], value.cvt8());
@@ -982,6 +983,8 @@ static void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, con
         ASSERT_FALSE("Invalid bitsize");
     }
 }
+
+} // anonymous namespace
 
 template<std::size_t bitsize, auto callback>
 void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
@@ -1017,14 +1020,14 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Label abort, end;
 
-    const auto src_ptr = EmitVAddrLookup(code, ctx.reg_alloc, conf, bitsize, abort, vaddr, value);
+    const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
     EmitReadMemoryMov<bitsize>(code, value, src_ptr);
-    code.jmp(end);
+    code.L(end);
 
     code.SwitchToFarCode();
     code.L(abort);
     code.call(wrapped_fn);
-    code.L(end);
+    code.jmp(end, code.T_NEAR);
     code.SwitchToNearCode();
 
     ctx.reg_alloc.DefineValue(inst, value);
@@ -1063,14 +1066,14 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     Xbyak::Label abort, end;
 
-    const auto dest_ptr = EmitVAddrLookup(code, ctx.reg_alloc, conf, bitsize, abort, vaddr);
+    const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
     EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
-    code.jmp(end);
+    code.L(end);
 
     code.SwitchToFarCode();
     code.L(abort);
     code.call(wrapped_fn);
-    code.L(end);
+    code.jmp(end, code.T_NEAR);
     code.SwitchToNearCode();
 }
 
