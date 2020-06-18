@@ -933,7 +933,7 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A32EmitContext& ctx, size_t bit
 
     code.mov(tmp, vaddr.cvt32());
     code.shr(tmp, static_cast<int>(page_bits));
-    code.mov(page, qword[r14 + tmp * sizeof(void*)]);
+    code.mov(page, qword[r14 + tmp.cvt64() * sizeof(void*)]);
     code.test(page, page);
     code.jz(abort, code.T_NEAR);
     if (ctx.conf.absolute_offset_page_table) {
@@ -941,7 +941,7 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A32EmitContext& ctx, size_t bit
     }
     code.mov(tmp, vaddr.cvt32());
     code.and_(tmp, static_cast<u32>(page_mask));
-    return page + tmp;
+    return page + tmp.cvt64();
 }
 
 template<std::size_t bitsize>
