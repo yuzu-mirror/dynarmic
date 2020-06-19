@@ -247,6 +247,16 @@ void BlockOfCode::SwitchMxcsrOnExit() {
     ldmxcsr(dword[r15 + jsi.offsetof_save_host_MXCSR]);
 }
 
+void BlockOfCode::EnterStandardASIMD() {
+    stmxcsr(dword[r15 + jsi.offsetof_guest_MXCSR]);
+    ldmxcsr(dword[r15 + jsi.offsetof_asimd_MXCSR]);
+}
+
+void BlockOfCode::LeaveStandardASIMD() {
+    stmxcsr(dword[r15 + jsi.offsetof_asimd_MXCSR]);
+    ldmxcsr(dword[r15 + jsi.offsetof_guest_MXCSR]);
+}
+
 void BlockOfCode::UpdateTicks() {
     cb.AddTicks->EmitCall(*this, [this](RegList param) {
         mov(param[0], qword[r15 + jsi.offsetof_cycles_to_run]);

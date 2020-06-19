@@ -55,7 +55,9 @@ u32 A64JitState::GetFpcr() const {
 void A64JitState::SetFpcr(u32 value) {
     fpcr = value & FPCR_MASK;
 
+    asimd_MXCSR &= 0x0000003D;
     guest_MXCSR &= 0x0000003D;
+    asimd_MXCSR |= 0x00001f80;
     guest_MXCSR |= 0x00001f80; // Mask all exceptions
 
     // RMode
@@ -93,9 +95,10 @@ void A64JitState::SetFpcr(u32 value) {
  */
 
 u32 A64JitState::GetFpsr() const {
+    const u32 mxcsr = guest_MXCSR | asimd_MXCSR;
     u32 fpsr = 0;
-    fpsr |= (guest_MXCSR & 0b0000000000001);       // IOC = IE
-    fpsr |= (guest_MXCSR & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
+    fpsr |= (mxcsr & 0b0000000000001);       // IOC = IE
+    fpsr |= (mxcsr & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
     fpsr |= fpsr_exc;
     fpsr |= (fpsr_qc == 0 ? 0 : 1) << 27;
     return fpsr;
@@ -103,6 +106,7 @@ u32 A64JitState::GetFpsr() const {
 
 void A64JitState::SetFpsr(u32 value) {
     guest_MXCSR &= ~0x0000003D;
+    asimd_MXCSR &= ~0x0000003D;
     fpsr_qc = (value >> 27) & 1;
     fpsr_exc = value & 0x9F;
 }

@@ -59,6 +59,10 @@ public:
     void SwitchMxcsrOnEntry();
     /// Code emitter: Makes saved host MXCSR the current MXCSR
     void SwitchMxcsrOnExit();
+    /// Code emitter: Enter standard ASIMD MXCSR region
+    void EnterStandardASIMD();
+    /// Code emitter: Leave standard ASIMD MXCSR region
+    void LeaveStandardASIMD();
     /// Code emitter: Updates cycles remaining my calling cb.AddTicks and cb.GetTicksRemaining
     /// @note this clobbers ABI caller-save registers
     void UpdateTicks();

@@ -165,10 +165,11 @@ u32 A32JitState::Fpscr() const {
     DEBUG_ASSERT((fpsr_nzcv & ~FPSCR_NZCV_MASK) == 0);
 
     const u32 fpcr_mode = static_cast<u32>(upper_location_descriptor) & FPSCR_MODE_MASK;
+    const u32 mxcsr = guest_MXCSR | asimd_MXCSR;
 
     u32 FPSCR = fpcr_mode | fpsr_nzcv;
-    FPSCR |= (guest_MXCSR & 0b0000000000001);       // IOC = IE
-    FPSCR |= (guest_MXCSR & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
+    FPSCR |= (mxcsr & 0b0000000000001);       // IOC = IE
+    FPSCR |= (mxcsr & 0b0000000111100) >> 1;  // IXC, UFC, OFC, DZC = PE, UE, OE, ZE
     FPSCR |= fpsr_exc;
 
     return FPSCR;
@@ -182,10 +183,9 @@ void A32JitState::SetFpscr(u32 FPSCR) {
     upper_location_descriptor |= FPSCR & FPSCR_MODE_MASK;
 
     fpsr_nzcv = FPSCR & FPSCR_NZCV_MASK;
-    guest_MXCSR = 0;
 
-    // Exception masks / enables
-    guest_MXCSR |= 0x00001f80; // mask all
+    guest_MXCSR = 0x00001f80;
+    asimd_MXCSR = 0x00001f80;
 
     // RMode
     const std::array<u32, 4> MXCSR_RMode {0x0, 0x4000, 0x2000, 0x6000};

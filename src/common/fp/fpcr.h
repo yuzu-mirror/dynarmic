@@ -180,6 +180,14 @@ public:
         return value;
     }
 
+    /// Gets the StandardFPSCRValue (A32 ASIMD).
+    FPCR ASIMDStandardValue() const {
+        FPCR stdvalue;
+        stdvalue.AHP(AHP());
+        stdvalue.FZ16(FZ16());
+        return stdvalue;
+    }
+
 private:
     // Bits 0-7, 13-14, and 27-31 are reserved.
     static constexpr u32 mask = 0x07FF9F00;

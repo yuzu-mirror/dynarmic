@@ -48,6 +48,7 @@ struct A32JitState {
 
     // For internal use (See: BlockOfCode::RunCode)
     u32 guest_MXCSR = 0x00001f80;
+    u32 asimd_MXCSR = 0x00001f80;
     u32 save_host_MXCSR = 0;
     s64 cycles_to_run = 0;
     s64 cycles_remaining = 0;
@@ -83,6 +84,7 @@ struct A32JitState {
         cpsr_jaifm = src.cpsr_jaifm;
         ExtReg = src.ExtReg;
         guest_MXCSR = src.guest_MXCSR;
+        asimd_MXCSR = src.asimd_MXCSR;
         fpsr_exc = src.fpsr_exc;
         fpsr_qc = src.fpsr_qc;
         fpsr_nzcv = src.fpsr_nzcv;
