@@ -466,7 +466,7 @@ TEST_CASE("arm: PackedAbsDiffSumS8", "[arm][A32]") {
     REQUIRE(jit.Cpsr() == 0xb0000010);
 }
 
-TEST_CASE("arm: vclt.f32 with zero", "[arm][A32][.]") {
+TEST_CASE("arm: vclt.f32 with zero", "[arm][A32]") {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {

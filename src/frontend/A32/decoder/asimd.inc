@@ -85,11 +85,11 @@ INST(asimd_VMVN_reg,        "VMVN_reg",                 "111100111D11zz00dddd010
 //INST(asimd_VPADAL,          "VPADAL",                   "111100111-11--00----0110xx-0----") // ASIMD
 INST(asimd_VQABS,           "VQABS",                    "111100111D11zz00dddd01110QM0mmmm") // ASIMD
 INST(asimd_VQNEG,           "VQNEG",                    "111100111D11zz00dddd01111QM0mmmm") // ASIMD
-//INST(asimd_VCGT_zero,       "VCGT (zero)",              "111100111-11--01----0x000x-0----") // ASIMD
-//INST(asimd_VCGE_zero,       "VCGE (zero)",              "111100111-11--01----0x001x-0----") // ASIMD
-//INST(asimd_VCEQ_zero,       "VCEQ (zero)",              "111100111-11--01----0x010x-0----") // ASIMD
-//INST(asimd_VCLE_zero,       "VCLE (zero)",              "111100111-11--01----0x011x-0----") // ASIMD
-//INST(asimd_VCLT_zero,       "VCLT (zero)",              "111100111-11--01----0x100x-0----") // ASIMD
+INST(asimd_VCGT_zero,       "VCGT (zero)",              "111100111D11zz01dddd0F000QM0mmmm") // ASIMD
+INST(asimd_VCGE_zero,       "VCGE (zero)",              "111100111D11zz01dddd0F001QM0mmmm") // ASIMD
+INST(asimd_VCEQ_zero,       "VCEQ (zero)",              "111100111D11zz01dddd0F010QM0mmmm") // ASIMD
+INST(asimd_VCLE_zero,       "VCLE (zero)",              "111100111D11zz01dddd0F011QM0mmmm") // ASIMD
+INST(asimd_VCLT_zero,       "VCLT (zero)",              "111100111D11zz01dddd0F100QM0mmmm") // ASIMD
 INST(asimd_VABS,            "VABS",                     "111100111D11zz01dddd0F110QM0mmmm") // ASIMD
 INST(asimd_VNEG,            "VNEG",                     "111100111D11zz01dddd0F111QM0mmmm") // ASIMD
 INST(asimd_VSWP,            "VSWP",                     "111100111D110010dddd00000QM0mmmm") // ASIMD

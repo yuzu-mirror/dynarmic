@@ -5,9 +5,69 @@
 
 #include "common/bit_util.h"
 
+#include <array>
+
 #include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
+namespace {
+enum class Comparison {
+    EQ,
+    GE,
+    GT,
+    LE,
+    LT,
+};
+
+bool CompareWithZero(ArmTranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm, Comparison type) {
+    if (sz == 0b11 || (F && sz != 0b10)) {
+        return v.UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return v.UndefinedInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto result = [&] {
+        const auto reg_m = v.ir.GetVector(m);
+        const auto zero = v.ir.ZeroVector();
+
+        if (F) {
+            switch (type) {
+            case Comparison::EQ:
+                return v.ir.FPVectorEqual(32, reg_m, zero, false);
+            case Comparison::GE:
+                return v.ir.FPVectorGreaterEqual(32, reg_m, zero, false);
+            case Comparison::GT:
+                return v.ir.FPVectorGreater(32, reg_m, zero, false);
+            case Comparison::LE:
+                return v.ir.FPVectorGreaterEqual(32, zero, reg_m, false);
+            case Comparison::LT:
+                return v.ir.FPVectorGreater(32, zero, reg_m, false);
+            }
+
+            return IR::U128{};
+        } else {
+            static constexpr std::array fns{
+                &IREmitter::VectorEqual,
+                &IREmitter::VectorGreaterEqualSigned,
+                &IREmitter::VectorGreaterSigned,
+                &IREmitter::VectorLessEqualSigned,
+                &IREmitter::VectorLessSigned,
+            };
+
+            const size_t esize = 8U << sz;
+            return (v.ir.*fns[static_cast<size_t>(type)])(esize, reg_m, zero);
+        }
+    }();
+
+    v.ir.SetVector(d, result);
+    return true;
+}
+
+} // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool Q, bool M, size_t Vm) {
     if (op + sz >= 3) {
@@ -64,7 +124,7 @@ bool ArmTranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, b
         return ir.VectorOr(ir.VectorLogicalShiftRight(esize, reg_m, 8),
                            ir.VectorLogicalShiftLeft(esize, reg_m, 8));
     }();
-    
+
     ir.SetVector(d, result);
     return true;
 }
@@ -192,6 +252,26 @@ bool ArmTranslatorVisitor::asimd_VQNEG(bool D, size_t sz, size_t Vd, bool Q, boo
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VCGT_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+    return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::GT);
+}
+
+bool ArmTranslatorVisitor::asimd_VCGE_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+    return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::GE);
+}
+
+bool ArmTranslatorVisitor::asimd_VCEQ_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+    return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::EQ);
+}
+
+bool ArmTranslatorVisitor::asimd_VCLE_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+    return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::LE);
+}
+
+bool ArmTranslatorVisitor::asimd_VCLT_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+    return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::LT);
+}
+
 bool ArmTranslatorVisitor::asimd_VABS(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (sz == 0b11 || (F && sz != 0b10)) {
         return UndefinedInstruction();
@@ -222,7 +302,7 @@ bool ArmTranslatorVisitor::asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool
     if (sz == 0b11 || (F && sz != 0b10)) {
         return UndefinedInstruction();
     }
-    
+
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
