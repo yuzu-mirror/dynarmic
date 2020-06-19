@@ -393,6 +393,7 @@ struct ArmTranslatorVisitor final {
     bool vfp_VFMA(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
     bool vfp_VFMS(Cond cond, bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
     bool vfp_VMAXNM(bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
+    bool vfp_VMINNM(bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
 
     // Floating-point move instructions
     bool vfp_VMOV_imm(Cond cond, bool D, Imm<4> imm4H, size_t Vd, bool sz, Imm<4> imm4L);
