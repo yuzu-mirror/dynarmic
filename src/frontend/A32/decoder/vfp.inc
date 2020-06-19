@@ -12,7 +12,7 @@ INST(vfp_VFNMS,            "VFNMS",                   "cccc11101D01nnnndddd101zN
 INST(vfp_VFNMA,            "VFNMA",                   "cccc11101D01nnnndddd101zN1M0mmmm") // VFPv4
 INST(vfp_VFMA,             "VFMA",                    "cccc11101D10nnnndddd101zN0M0mmmm") // VFPv4
 INST(vfp_VFMS,             "VFMS",                    "cccc11101D10nnnndddd101zN1M0mmmm") // VFPv4
-//INST(vfp_VSEL,             "VSEL",                    "111111100Dccnnnndddd101zN0M0mmmm") // VFPv5
+INST(vfp_VSEL,             "VSEL",                    "111111100Dccnnnndddd101zN0M0mmmm") // VFPv5
 INST(vfp_VMAXNM,           "VMAXNNM",                 "111111101D00nnnndddd101zN0M0mmmm") // VFPv5
 INST(vfp_VMINNM,           "VMINNM",                  "111111101D00nnnndddd101zN1M0mmmm") // VFPv5
 
