@@ -421,6 +421,7 @@ struct ArmTranslatorVisitor final {
     bool vfp_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
     bool vfp_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);
     bool vfp_VRINT_rm(bool D, size_t rm, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VCVT_rm(bool D, size_t rm, size_t Vd, bool sz, bool U, bool M, size_t Vm);
 
     // Floating-point system register access
     bool vfp_VMSR(Cond cond, Reg t);

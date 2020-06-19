@@ -826,6 +826,28 @@ bool ArmTranslatorVisitor::vfp_VRINT_rm(bool D, size_t rm, size_t Vd, bool sz, b
     });
 }
 
+// VCVT{A,N,P,M}.F32 <Sd>, <Sm>
+// VCVT{A,N,P,M}.F64 <Sd>, <Dm>
+bool ArmTranslatorVisitor::vfp_VCVT_rm(bool D, size_t rm, size_t Vd, bool sz, bool U, bool M, size_t Vm) {
+    const std::array rm_lookup{
+        FP::RoundingMode::ToNearest_TieAwayFromZero,
+        FP::RoundingMode::ToNearest_TieEven,
+        FP::RoundingMode::TowardsPlusInfinity,
+        FP::RoundingMode::TowardsMinusInfinity,
+    };
+    const FP::RoundingMode rounding_mode = rm_lookup[rm];
+    const bool unsigned_ = !U;
+
+    const auto d = ToExtReg(false, Vd, D);
+    const auto m = ToExtReg(sz, Vm, M);
+
+    return EmitVfpVectorOperation(sz, d, m, [this, rounding_mode, unsigned_](ExtReg d, ExtReg m) {
+        const auto reg_m = ir.GetExtendedRegister(m);
+        const auto result = unsigned_ ? ir.FPToFixedU32(reg_m, 0, rounding_mode) : ir.FPToFixedS32(reg_m, 0, rounding_mode);
+        ir.SetExtendedRegister(d, result);
+    });
+}
+
 // VMSR FPSCR, <Rt>
 bool ArmTranslatorVisitor::vfp_VMSR(Cond cond, Reg t) {
     if (t == Reg::PC) {

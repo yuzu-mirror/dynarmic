@@ -1395,6 +1395,10 @@ public:
         return fmt::format("vrint{}.{} {}, {}", "anpm"[rm], sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
+    std::string vfp_VCVT_rm(bool D, size_t rm, size_t Vd, bool sz, bool U, bool M, size_t Vm) {
+        return fmt::format("vcvt{}.{}.{} {}, {}", "anpm"[rm], U ? "u32" : "s32", sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
+    }
+
     std::string vfp_VMSR(Cond cond, Reg t) {
         return fmt::format("vmsr{} fpscr, {}", CondToString(cond), t);
     }
