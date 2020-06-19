@@ -212,6 +212,24 @@ bool ArmTranslatorVisitor::asimd_VADD_int(bool D, size_t sz, size_t Vn, size_t V
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VSUB_int(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto reg_n = ir.GetVector(n);
+    const auto result = ir.VectorSub(esize, reg_n, reg_m);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VTST(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
