@@ -81,7 +81,7 @@ INST(asimd_VREV,            "VREV{16,32,64}",           "111100111D11zz00dddd000
 INST(asimd_VCLS,            "VCLS",                     "111100111D11zz00dddd01000QM0mmmm") // ASIMD
 INST(asimd_VCLZ,            "VCLZ",                     "111100111D11zz00dddd01001QM0mmmm") // ASIMD
 INST(asimd_VCNT,            "VCNT",                     "111100111D11zz00dddd01010QM0mmmm") // ASIMD
-//INST(asimd_VMVN_reg,        "VMVN_reg",                 "111100111-11--00----01011x-0----") // ASIMD
+INST(asimd_VMVN_reg,        "VMVN_reg",                 "111100111D11zz00dddd01011QM0mmmm") // ASIMD
 //INST(asimd_VPADAL,          "VPADAL",                   "111100111-11--00----0110xx-0----") // ASIMD
 INST(asimd_VQABS,           "VQABS",                    "111100111D11zz00dddd01110QM0mmmm") // ASIMD
 INST(asimd_VQNEG,           "VQNEG",                    "111100111D11zz00dddd01111QM0mmmm") // ASIMD
