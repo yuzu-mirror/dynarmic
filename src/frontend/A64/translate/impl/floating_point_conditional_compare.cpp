@@ -17,7 +17,7 @@ bool FPCompare(TranslatorVisitor& v, Imm<2> type, Vec Vm, Cond cond, Vec Vn, Imm
     const IR::U32U64 operand1 = v.V_scalar(*datasize, Vn);
     const IR::U32U64 operand2 = v.V_scalar(*datasize, Vm);
 
-    const IR::NZCV then_flags = v.ir.FPCompare(operand1, operand2, exc_on_qnan, true);
+    const IR::NZCV then_flags = v.ir.FPCompare(operand1, operand2, exc_on_qnan);
     const IR::NZCV else_flags = v.ir.NZCVFromPackedFlags(v.ir.Imm32(flags));
     v.ir.SetNZCV(v.ir.ConditionalSelect(cond, then_flags, else_flags));
     return true;

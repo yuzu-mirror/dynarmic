@@ -39,7 +39,7 @@ bool MultiplyByElement(TranslatorVisitor& v, bool sz, Imm<1> L, Imm<1> M, Imm<4>
         IR::U32U64 operand1 = v.V_scalar(esize, Vn);
 
         if (extra_behavior == ExtraBehavior::None) {
-            return v.ir.FPMul(operand1, element, true);
+            return v.ir.FPMul(operand1, element);
         }
 
         if (extra_behavior == ExtraBehavior::MultiplyExtended) {
@@ -51,7 +51,7 @@ bool MultiplyByElement(TranslatorVisitor& v, bool sz, Imm<1> L, Imm<1> M, Imm<4>
         }
 
         const IR::U32U64 operand2 = v.V_scalar(esize, Vd);
-        return v.ir.FPMulAdd(operand2, operand1, element, true);
+        return v.ir.FPMulAdd(operand2, operand1, element);
     }();
 
     v.V_scalar(esize, Vd, result);
@@ -85,7 +85,7 @@ bool MultiplyByElementHalfPrecision(TranslatorVisitor& v, Imm<1> L, Imm<1> M, Im
         }
 
         const IR::U16 operand2 = v.V_scalar(esize, Vd);
-        return v.ir.FPMulAdd(operand2, operand1, element, true);
+        return v.ir.FPMulAdd(operand2, operand1, element);
     }();
 
     v.V_scalar(esize, Vd, result);

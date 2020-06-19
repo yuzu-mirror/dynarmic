@@ -275,7 +275,7 @@ bool TranslatorVisitor::FABD_2(bool sz, Vec Vm, Vec Vn, Vec Vd) {
 
     const IR::U32U64 operand1 = V_scalar(esize, Vn);
     const IR::U32U64 operand2 = V_scalar(esize, Vm);
-    const IR::U32U64 result = ir.FPAbs(ir.FPSub(operand1, operand2, true));
+    const IR::U32U64 result = ir.FPAbs(ir.FPSub(operand1, operand2));
 
     V_scalar(esize, Vd, result);
     return true;

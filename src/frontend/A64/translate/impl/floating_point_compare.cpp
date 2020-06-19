@@ -21,7 +21,7 @@ bool FPCompare(TranslatorVisitor& v, Imm<2> type, Vec Vm, Vec Vn, bool exc_on_qn
         operand2 = v.V_scalar(*datasize, Vm);
     }
 
-    const auto nzcv = v.ir.FPCompare(operand1, operand2, exc_on_qnan, true);
+    const auto nzcv = v.ir.FPCompare(operand1, operand2, exc_on_qnan);
     v.ir.SetNZCV(nzcv);
     return true;
 }

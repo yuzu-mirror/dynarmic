@@ -115,10 +115,8 @@ bool TranslatorVisitor::FCMLA_vec(bool Q, Imm<2> size, Vec Vm, Imm<2> rot, Vec V
         const IR::U32U64 operand3_elem1 = ir.VectorGetElement(esize, operand3, first);
         const IR::U32U64 operand3_elem2 = ir.VectorGetElement(esize, operand3, second);
 
-        result = ir.VectorSetElement(esize, result, first,
-                                     ir.FPMulAdd(operand3_elem1, element2, element1, true));
-        result = ir.VectorSetElement(esize, result, second,
-                                     ir.FPMulAdd(operand3_elem2, element4, element3, true));
+        result = ir.VectorSetElement(esize, result, first, ir.FPMulAdd(operand3_elem1, element2, element1));
+        result = ir.VectorSetElement(esize, result, second, ir.FPMulAdd(operand3_elem2, element4, element3));
     }
 
     ir.SetQ(Vd, result);
@@ -166,10 +164,8 @@ bool TranslatorVisitor::FCADD_vec(bool Q, Imm<2> size, Vec Vm, Imm<1> rot, Vec V
         const IR::U32U64 operand1_elem1 = ir.VectorGetElement(esize, operand1, first);
         const IR::U32U64 operand1_elem3 = ir.VectorGetElement(esize, operand1, second);
 
-        result = ir.VectorSetElement(esize, result, first,
-                                     ir.FPAdd(operand1_elem1, element1, true));
-        result = ir.VectorSetElement(esize, result, second,
-                                     ir.FPAdd(operand1_elem3, element3, true));
+        result = ir.VectorSetElement(esize, result, first, ir.FPAdd(operand1_elem1, element1));
+        result = ir.VectorSetElement(esize, result, second, ir.FPAdd(operand1_elem3, element3));
     }
 
     ir.SetQ(Vd, result);

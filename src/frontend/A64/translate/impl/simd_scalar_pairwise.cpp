@@ -23,13 +23,13 @@ bool FPPairwiseMinMax(TranslatorVisitor& v, bool sz, Vec Vn, Vec Vd, MinMaxOpera
     const IR::U32U64 result = [&] {
         switch (operation) {
         case MinMaxOperation::Max:
-            return v.ir.FPMax(element1, element2, true);
+            return v.ir.FPMax(element1, element2);
         case MinMaxOperation::MaxNumeric:
-            return v.ir.FPMaxNumeric(element1, element2, true);
+            return v.ir.FPMaxNumeric(element1, element2);
         case MinMaxOperation::Min:
-            return v.ir.FPMin(element1, element2, true);
+            return v.ir.FPMin(element1, element2);
         case MinMaxOperation::MinNumeric:
-            return v.ir.FPMinNumeric(element1, element2, true);
+            return v.ir.FPMinNumeric(element1, element2);
         default:
             UNREACHABLE();
         }
@@ -57,7 +57,7 @@ bool TranslatorVisitor::FADDP_pair_2(bool size, Vec Vn, Vec Vd) {
 
     const IR::U32U64 operand1 = ir.VectorGetElement(esize, V(128, Vn), 0);
     const IR::U32U64 operand2 = ir.VectorGetElement(esize, V(128, Vn), 1);
-    const IR::U128 result = ir.ZeroExtendToQuad(ir.FPAdd(operand1, operand2, true));
+    const IR::U128 result = ir.ZeroExtendToQuad(ir.FPAdd(operand1, operand2));
     V(128, Vd, result);
     return true;
 }

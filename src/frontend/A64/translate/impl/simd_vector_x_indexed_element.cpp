@@ -296,10 +296,8 @@ bool TranslatorVisitor::FCMLA_elt(bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4
         const IR::U32U64 operand3_elem1 = ir.VectorGetElement(esize, operand3, first);
         const IR::U32U64 operand3_elem2 = ir.VectorGetElement(esize, operand3, second);
 
-        result = ir.VectorSetElement(esize, result, first,
-                                     ir.FPMulAdd(operand3_elem1, element2, element1, true));
-        result = ir.VectorSetElement(esize, result, second,
-                                     ir.FPMulAdd(operand3_elem2, element4, element3, true));
+        result = ir.VectorSetElement(esize, result, first, ir.FPMulAdd(operand3_elem1, element2, element1));
+        result = ir.VectorSetElement(esize, result, second, ir.FPMulAdd(operand3_elem2, element4, element3));
     }
 
     ir.SetQ(Vd, result);
