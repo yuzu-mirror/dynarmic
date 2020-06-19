@@ -22,16 +22,32 @@ using VFPMatcher = Decoder::Matcher<Visitor, u32>;
 
 template<typename V>
 std::optional<std::reference_wrapper<const VFPMatcher<V>>> DecodeVFP(u32 instruction) {
-    static const std::vector<VFPMatcher<V>> table = {
+    using Table = std::vector<VFPMatcher<V>>;
+
+    static const struct Tables {
+        Table unconditional;
+        Table conditional;
+    } tables = []{
+        Table list = {
 
 #define INST(fn, name, bitstring) Decoder::detail::detail<VFPMatcher<V>>::GetMatcher(&V::fn, name, bitstring),
 #include "vfp.inc"
 #undef INST
 
-    };
+        };
 
-    if ((instruction & 0xF0000000) == 0xF0000000)
-        return std::nullopt; // Don't try matching any unconditional instructions.
+        const auto division = std::stable_partition(list.begin(), list.end(), [&](const auto& matcher) {
+            return (matcher.GetMask() & 0xF0000000) == 0xF0000000;
+        });
+
+        return Tables{
+            Table{list.begin(), division},
+            Table{division, list.end()},
+        };
+    }();
+
+    const bool is_unconditional = (instruction & 0xF0000000) == 0xF0000000;
+    const Table& table = is_unconditional ? tables.unconditional : tables.conditional;
 
     const auto matches_instruction = [instruction](const auto& matcher){ return matcher.Matches(instruction); };
 

@@ -12,6 +12,9 @@ INST(vfp_VFNMS,            "VFNMS",                   "cccc11101D01nnnndddd101zN
 INST(vfp_VFNMA,            "VFNMA",                   "cccc11101D01nnnndddd101zN1M0mmmm") // VFPv4
 INST(vfp_VFMA,             "VFMA",                    "cccc11101D10nnnndddd101zN0M0mmmm") // VFPv4
 INST(vfp_VFMS,             "VFMS",                    "cccc11101D10nnnndddd101zN1M0mmmm") // VFPv4
+//INST(vfp_VSEL,             "VSEL",                    "111111100Dccnnnndddd101zN0M0mmmm") // VFPv5
+//INST(vfp_VMAXNM,           "VMAXNNM",                 "111111101D00nnnndddd101zN0M0mmmm") // VFPv5
+//INST(vfp_VMINNM,           "VMINNM",                  "111111101D00nnnndddd101zN1M0mmmm") // VFPv5
 
 // Other floating-point data-processing instructions
 INST(vfp_VMOV_imm,         "VMOV (immediate)",        "cccc11101D11vvvvdddd101z0000vvvv") // VFPv3
@@ -29,6 +32,8 @@ INST(vfp_VCVT_from_int,    "VCVT (from int)",         "cccc11101D111000dddd101zs
 INST(vfp_VCVT_to_u32,      "VCVT (to u32)",           "cccc11101D111100dddd101zr1M0mmmm") // VFPv2
 INST(vfp_VCVT_to_s32,      "VCVT (to s32)",           "cccc11101D111101dddd101zr1M0mmmm") // VFPv2
 //INST(vfp_VCVT_to_fixed,    "VCVT (to fixed)",         "cccc11101D11111Udddd101zx1i0vvvv") // VFPv3
+//INST(vfp_VRINT_rm,         "VRINT{A,N,P,M}",          "111111101D1110mmdddd101z01M0mmmm") // VFPv5
+//INST(vfp_VCVT_rm,          "VCVT{A,N,P,M}",           "111111101D1111mmdddd101zU1M0mmmm") // VFPv5
 
 // Floating-point move instructions
 INST(vfp_VMOV_u32_f64,     "VMOV (core to f64)",      "cccc11100000ddddtttt1011D0010000") // VFPv2
