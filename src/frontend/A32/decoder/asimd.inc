@@ -26,7 +26,8 @@ INST(asimd_VSUB_int,        "VSUB (integer)",           "111100110Dzznnnndddd100
 INST(asimd_VTST,            "VTST",                     "111100100Dzznnnndddd1000NQM1mmmm") // ASIMD
 //INST(asimd_VCEQ_reg,        "VCEG (register)",          "111100110-CC--------1000---1----") // ASIMD
 //INST(asimd_VMLA,            "VMLA/VMLAL/VMLS/VMLSL",    "1111001U0-CC--------1001---0----") // ASIMD
-//INST(asimd_VMUL,            "VMUL/VMULL",               "1111001U0-CC--------1001---1----") // ASIMD
+INST(asimd_VMUL,            "VMUL",                     "1111001P0Dzznnnndddd1001NQM1mmmm") // ASIMD
+//INST(asimd_VMULL,           "VMULL",                    "1111001U1Dzznnnndddd11o0N0M0mmmm") // ASIMD
 //INST(asimd_VPMAX,           "VPMAX/VPMIN",              "1111001U0-CC--------1010---B----") // ASIMD
 //INST(asimd_VQDMULH,         "VQDMULH",                  "111100100-CC--------1011---0----") // ASIMD
 //INST(asimd_VQRDMULH,        "VQRDMULH",                 "111100110-CC--------1011---0----") // ASIMD
