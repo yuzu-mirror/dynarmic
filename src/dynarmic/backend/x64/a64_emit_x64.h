@@ -78,15 +78,6 @@ protected:
     FastDispatchEntry& (*fast_dispatch_table_lookup)(u64) = nullptr;
     void GenTerminalHandlers();
 
-    template<std::size_t bitsize>
-    void EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst);
-    template<std::size_t bitsize>
-    void EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* inst);
-    template<std::size_t bitsize, auto callback>
-    void EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst);
-    template<std::size_t bitsize, auto callback>
-    void EmitExclusiveWriteMemory(A64EmitContext& ctx, IR::Inst* inst);
-
     // Microinstruction emitters
     void EmitPushRSB(EmitContext& ctx, IR::Inst* inst);
 #define OPCODE(...)
@@ -99,6 +90,28 @@ protected:
 
     // Helpers
     std::string LocationDescriptorToFriendlyName(const IR::LocationDescriptor&) const override;
+
+    // Fastmem information
+    using DoNotFastmemMarker = std::tuple<IR::LocationDescriptor, std::ptrdiff_t>;
+    struct FastmemPatchInfo {
+        u64 resume_rip;
+        u64 callback;
+        DoNotFastmemMarker marker;
+    };
+    tsl::robin_map<u64, FastmemPatchInfo> fastmem_patch_info;
+    std::set<DoNotFastmemMarker> do_not_fastmem;
+    std::optional<DoNotFastmemMarker> ShouldFastmem(A64EmitContext& ctx, IR::Inst* inst) const;
+    FakeCall FastmemCallback(u64 rip);
+
+    // Memory access helpers
+    template<std::size_t bitsize, auto callback>
+    void EmitMemoryRead(A64EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize, auto callback>
+    void EmitMemoryWrite(A64EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize, auto callback>
+    void EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst);
+    template<std::size_t bitsize, auto callback>
+    void EmitExclusiveWriteMemory(A64EmitContext& ctx, IR::Inst* inst);
 
     // Terminal instruction emitters
     void EmitTerminalImpl(IR::Term::Interpret terminal, IR::LocationDescriptor initial_location, bool is_single_step) override;

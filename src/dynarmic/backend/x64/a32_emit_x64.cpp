@@ -100,7 +100,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
-    static const std::vector<HostLoc> gpr_order = [this] {
+    const std::vector<HostLoc> gpr_order = [this] {
         std::vector<HostLoc> gprs{any_gpr};
         if (conf.page_table) {
             gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R14));
@@ -1033,10 +1033,12 @@ void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbya
 }  // anonymous namespace
 
 template<std::size_t bitsize, auto callback>
-void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
+void A32EmitX64::EmitMemoryRead(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const auto fastmem_marker = ShouldFastmem(ctx, inst);
 
-    if (!conf.page_table) {
+    if (!conf.page_table && !fastmem_marker) {
+        // Neither fastmem nor page table: Use callbacks
         ctx.reg_alloc.HostCall(inst, {}, args[0]);
         Devirtualize<callback>(conf.callbacks).EmitCall(code);
         return;
@@ -1047,22 +1049,27 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     const auto wrapped_fn = read_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
 
-    if (const auto marker = ShouldFastmem(ctx, inst)) {
+    if (fastmem_marker) {
+        // Use fastmem
+        const auto src_ptr = r13 + vaddr;
+
         const auto location = code.getCurr();
-        EmitReadMemoryMov<bitsize>(code, value, r13 + vaddr);
+        EmitReadMemoryMov<bitsize>(code, value, src_ptr);
 
         fastmem_patch_info.emplace(
             Common::BitCast<u64>(location),
             FastmemPatchInfo{
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
-                *marker,
+                *fastmem_marker,
             });
 
         ctx.reg_alloc.DefineValue(inst, value);
         return;
     }
 
+    // Use page table
+    ASSERT(conf.page_table);
     Xbyak::Label abort, end;
 
     const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
@@ -1079,10 +1086,12 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
 }
 
 template<std::size_t bitsize, auto callback>
-void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
+void A32EmitX64::EmitMemoryWrite(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const auto fastmem_marker = ShouldFastmem(ctx, inst);
 
-    if (!conf.page_table) {
+    if (!conf.page_table && !fastmem_marker) {
+        // Neither fastmem nor page table: Use callbacks
         ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
         Devirtualize<callback>(conf.callbacks).EmitCall(code);
         return;
@@ -1093,21 +1102,26 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
 
     const auto wrapped_fn = write_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
 
-    if (const auto marker = ShouldFastmem(ctx, inst)) {
+    if (fastmem_marker) {
+        // Use fastmem
+        const auto dest_ptr = r13 + vaddr;
+
         const auto location = code.getCurr();
-        EmitWriteMemoryMov<bitsize>(code, r13 + vaddr, value);
+        EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
 
         fastmem_patch_info.emplace(
             Common::BitCast<u64>(location),
             FastmemPatchInfo{
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
-                *marker,
+                *fastmem_marker,
             });
 
         return;
     }
 
+    // Use page table
+    ASSERT(conf.page_table);
     Xbyak::Label abort, end;
 
     const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
@@ -1122,35 +1136,35 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
 }
 
 void A32EmitX64::EmitA32ReadMemory8(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<8, &A32::UserCallbacks::MemoryRead8>(ctx, inst);
+    EmitMemoryRead<8, &A32::UserCallbacks::MemoryRead8>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ReadMemory16(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<16, &A32::UserCallbacks::MemoryRead16>(ctx, inst);
+    EmitMemoryRead<16, &A32::UserCallbacks::MemoryRead16>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ReadMemory32(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<32, &A32::UserCallbacks::MemoryRead32>(ctx, inst);
+    EmitMemoryRead<32, &A32::UserCallbacks::MemoryRead32>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32ReadMemory64(A32EmitContext& ctx, IR::Inst* inst) {
-    ReadMemory<64, &A32::UserCallbacks::MemoryRead64>(ctx, inst);
+    EmitMemoryRead<64, &A32::UserCallbacks::MemoryRead64>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory8(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<8, &A32::UserCallbacks::MemoryWrite8>(ctx, inst);
+    EmitMemoryWrite<8, &A32::UserCallbacks::MemoryWrite8>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory16(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<16, &A32::UserCallbacks::MemoryWrite16>(ctx, inst);
+    EmitMemoryWrite<16, &A32::UserCallbacks::MemoryWrite16>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory32(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<32, &A32::UserCallbacks::MemoryWrite32>(ctx, inst);
+    EmitMemoryWrite<32, &A32::UserCallbacks::MemoryWrite32>(ctx, inst);
 }
 
 void A32EmitX64::EmitA32WriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
-    WriteMemory<64, &A32::UserCallbacks::MemoryWrite64>(ctx, inst);
+    EmitMemoryWrite<64, &A32::UserCallbacks::MemoryWrite64>(ctx, inst);
 }
 
 template<size_t bitsize, auto callback>

@@ -173,6 +173,8 @@ struct UserConfig {
     void* fastmem_pointer = nullptr;
     /// Determines if instructions that pagefault should cause recompilation of that block
     /// with fastmem disabled.
+    /// Recompiled code will use the page_table if this is available, otherwise memory
+    /// accesses will hit the memory callbacks.
     bool recompile_on_fastmem_failure = true;
 
     // Coprocessors

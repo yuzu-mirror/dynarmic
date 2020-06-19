@@ -106,9 +106,9 @@ protected:
 
     // Memory access helpers
     template<std::size_t bitsize, auto callback>
-    void ReadMemory(A32EmitContext& ctx, IR::Inst* inst);
+    void EmitMemoryRead(A32EmitContext& ctx, IR::Inst* inst);
     template<std::size_t bitsize, auto callback>
-    void WriteMemory(A32EmitContext& ctx, IR::Inst* inst);
+    void EmitMemoryWrite(A32EmitContext& ctx, IR::Inst* inst);
     template<std::size_t bitsize, auto callback>
     void ExclusiveReadMemory(A32EmitContext& ctx, IR::Inst* inst);
     template<std::size_t bitsize, auto callback>

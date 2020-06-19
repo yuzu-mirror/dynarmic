@@ -23,6 +23,7 @@
 #include "dynarmic/common/bit_util.h"
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/common/scope_exit.h"
+#include "dynarmic/common/x64_disassemble.h"
 #include "dynarmic/frontend/A64/location_descriptor.h"
 #include "dynarmic/frontend/A64/types.h"
 #include "dynarmic/interface/exclusive_monitor.h"
@@ -60,6 +61,10 @@ A64EmitX64::A64EmitX64(BlockOfCode& code, A64::UserConfig conf, A64::Jit* jit_in
     GenTerminalHandlers();
     code.PreludeComplete();
     ClearFastDispatchTable();
+
+    exception_handler.SetFastmemCallback([this](u64 rip_){
+        return FastmemCallback(rip_);
+    });
 }
 
 A64EmitX64::~A64EmitX64() = default;
@@ -68,10 +73,13 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
-    static const std::vector<HostLoc> gpr_order = [this] {
+    const std::vector<HostLoc> gpr_order = [this] {
         std::vector<HostLoc> gprs{any_gpr};
         if (conf.page_table) {
             gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R14));
+        }
+        if (conf.fastmem_pointer) {
+            gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R13));
         }
         return gprs;
     }();
@@ -737,6 +745,40 @@ void A64EmitX64::EmitA64ClearExclusive(A64EmitContext&, IR::Inst*) {
     code.mov(code.byte[r15 + offsetof(A64JitState, exclusive_state)], u8(0));
 }
 
+std::optional<A64EmitX64::DoNotFastmemMarker> A64EmitX64::ShouldFastmem(A64EmitContext& ctx, IR::Inst* inst) const {
+    if (!conf.fastmem_pointer || !exception_handler.SupportsFastmem()) {
+        return std::nullopt;
+    }
+
+    const auto marker = std::make_tuple(ctx.Location(), ctx.GetInstOffset(inst));
+    if (do_not_fastmem.count(marker) > 0) {
+        return std::nullopt;
+    }
+    return marker;
+}
+
+FakeCall A64EmitX64::FastmemCallback(u64 rip_) {
+    const auto iter = fastmem_patch_info.find(rip_);
+
+    if (iter == fastmem_patch_info.end()) {
+        fmt::print("dynarmic: Segfault happened within JITted code at rip = {:016x}\n", rip_);
+        fmt::print("Segfault wasn't at a fastmem patch location!\n");
+        fmt::print("Now dumping code.......\n\n");
+        Common::DumpDisassembledX64((void*)(rip_ & ~u64(0xFFF)), 0x1000);
+        ASSERT_FALSE("iter != fastmem_patch_info.end()");
+    }
+
+    if (conf.recompile_on_fastmem_failure) {
+        const auto marker = iter->second.marker;
+        do_not_fastmem.emplace(marker);
+        InvalidateBasicBlocks({std::get<0>(marker)});
+    }
+    FakeCall ret;
+    ret.call_rip = iter->second.callback;
+    ret.ret_rip = iter->second.resume_rip;
+    return ret;
+}
+
 namespace {
 
 constexpr size_t page_bits = 12;
@@ -838,6 +880,39 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bit
     return page + tmp;
 }
 
+Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, A64EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
+    const size_t unused_top_bits = 64 - ctx.conf.page_table_address_space_bits;
+
+    if (unused_top_bits == 0) {
+        return r13 + vaddr;
+    } else if (ctx.conf.silently_mirror_page_table) {
+        Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
+        if (unused_top_bits < 32) {
+            code.mov(tmp, vaddr);
+            code.shl(tmp, int(unused_top_bits));
+            code.shr(tmp, int(unused_top_bits));
+        } else if (unused_top_bits == 32) {
+            code.mov(tmp.cvt32(), vaddr.cvt32());
+        } else {
+            code.mov(tmp.cvt32(), vaddr.cvt32());
+            code.and_(tmp, u32((1 << ctx.conf.page_table_address_space_bits) - 1));
+        }
+        return r13 + tmp;
+    } else {
+        if (ctx.conf.page_table_address_space_bits < 32) {
+            code.test(vaddr, u32(-(1 << ctx.conf.page_table_address_space_bits)));
+            code.jnz(abort, code.T_NEAR);
+        } else {
+            // TODO: Consider having TEST as above but coalesce 64-bit constant in register allocator
+            Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
+            code.mov(tmp, vaddr);
+            code.shr(tmp, int(ctx.conf.page_table_address_space_bits));
+            code.jnz(abort, code.T_NEAR);
+        }
+        return r13 + vaddr;
+    }
+}
+
 template<std::size_t bitsize>
 void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, const Xbyak::RegExp& addr) {
     switch (bitsize) {
@@ -880,9 +955,17 @@ void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbya
 
 }  // namespace
 
-template<std::size_t bitsize>
-void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
+template<std::size_t bitsize, auto callback>
+void A64EmitX64::EmitMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const auto fastmem_marker = ShouldFastmem(ctx, inst);
+
+    if (!conf.page_table && !fastmem_marker) {
+        // Neither fastmem nor page table: Use callbacks
+        ctx.reg_alloc.HostCall(inst, {}, args[0]);
+        Devirtualize<callback>(conf.callbacks).EmitCall(code);
+        return;
+    }
 
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.ScratchGpr();
@@ -891,8 +974,27 @@ void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* in
 
     Xbyak::Label abort, end;
 
-    const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
-    EmitReadMemoryMov<bitsize>(code, value, src_ptr);
+    if (fastmem_marker) {
+        // Use fastmem
+        const auto src_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr);
+
+        const auto location = code.getCurr();
+        EmitReadMemoryMov<bitsize>(code, value, src_ptr);
+
+        fastmem_patch_info.emplace(
+            Common::BitCast<u64>(location),
+            FastmemPatchInfo{
+                Common::BitCast<u64>(code.getCurr()),
+                Common::BitCast<u64>(wrapped_fn),
+                *fastmem_marker,
+            }
+        );
+    } else {
+        // Use page table
+        ASSERT(conf.page_table);
+        const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
+        EmitReadMemoryMov<bitsize>(code, value, src_ptr);
+    }
     code.L(end);
 
     code.SwitchToFarCode();
@@ -904,9 +1006,17 @@ void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* in
     ctx.reg_alloc.DefineValue(inst, value);
 }
 
-template<std::size_t bitsize>
-void A64EmitX64::EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* inst) {
+template<std::size_t bitsize, auto callback>
+void A64EmitX64::EmitMemoryWrite(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const auto fastmem_marker = ShouldFastmem(ctx, inst);
+
+    if (!conf.page_table && !fastmem_marker) {
+        // Neither fastmem nor page table: Use callbacks
+        ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
+        Devirtualize<callback>(conf.callbacks).EmitCall(code);
+        return;
+    }
 
     const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
@@ -915,8 +1025,27 @@ void A64EmitX64::EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* i
 
     Xbyak::Label abort, end;
 
-    const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
-    EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
+    if (fastmem_marker) {
+        // Use fastmem
+        const auto dest_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr);
+
+        const auto location = code.getCurr();
+        EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
+
+        fastmem_patch_info.emplace(
+            Common::BitCast<u64>(location),
+            FastmemPatchInfo{
+                Common::BitCast<u64>(code.getCurr()),
+                Common::BitCast<u64>(wrapped_fn),
+                *fastmem_marker,
+            }
+        );
+    } else {
+        // Use page table
+        ASSERT(conf.page_table);
+        const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
+        EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
+    }
     code.L(end);
 
     code.SwitchToFarCode();
@@ -927,47 +1056,19 @@ void A64EmitX64::EmitDirectPageTableMemoryWrite(A64EmitContext& ctx, IR::Inst* i
 }
 
 void A64EmitX64::EmitA64ReadMemory8(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryRead<8>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(inst, {}, args[0]);
-    Devirtualize<&A64::UserCallbacks::MemoryRead8>(conf.callbacks).EmitCall(code);
+    EmitMemoryRead<8, &A64::UserCallbacks::MemoryRead8>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64ReadMemory16(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryRead<16>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(inst, {}, args[0]);
-    Devirtualize<&A64::UserCallbacks::MemoryRead16>(conf.callbacks).EmitCall(code);
+    EmitMemoryRead<16, &A64::UserCallbacks::MemoryRead16>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64ReadMemory32(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryRead<32>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(inst, {}, args[0]);
-    Devirtualize<&A64::UserCallbacks::MemoryRead32>(conf.callbacks).EmitCall(code);
+    EmitMemoryRead<32, &A64::UserCallbacks::MemoryRead32>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64ReadMemory64(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryRead<64>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(inst, {}, args[0]);
-    Devirtualize<&A64::UserCallbacks::MemoryRead64>(conf.callbacks).EmitCall(code);
+    EmitMemoryRead<64, &A64::UserCallbacks::MemoryRead64>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64ReadMemory128(A64EmitContext& ctx, IR::Inst* inst) {
@@ -999,47 +1100,19 @@ void A64EmitX64::EmitA64ReadMemory128(A64EmitContext& ctx, IR::Inst* inst) {
 }
 
 void A64EmitX64::EmitA64WriteMemory8(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite<8>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
-    Devirtualize<&A64::UserCallbacks::MemoryWrite8>(conf.callbacks).EmitCall(code);
+    EmitMemoryWrite<8, &A64::UserCallbacks::MemoryWrite8>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64WriteMemory16(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite<16>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
-    Devirtualize<&A64::UserCallbacks::MemoryWrite16>(conf.callbacks).EmitCall(code);
+    EmitMemoryWrite<16, &A64::UserCallbacks::MemoryWrite16>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64WriteMemory32(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite<32>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
-    Devirtualize<&A64::UserCallbacks::MemoryWrite32>(conf.callbacks).EmitCall(code);
+    EmitMemoryWrite<32, &A64::UserCallbacks::MemoryWrite32>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64WriteMemory64(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        EmitDirectPageTableMemoryWrite<64>(ctx, inst);
-        return;
-    }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(nullptr, {}, args[0], args[1]);
-    Devirtualize<&A64::UserCallbacks::MemoryWrite64>(conf.callbacks).EmitCall(code);
+    EmitMemoryWrite<64, &A64::UserCallbacks::MemoryWrite64>(ctx, inst);
 }
 
 void A64EmitX64::EmitA64WriteMemory128(A64EmitContext& ctx, IR::Inst* inst) {
