@@ -2302,14 +2302,14 @@ U128 IREmitter::FPVectorDiv(size_t esize, const U128& a, const U128& b) {
     UNREACHABLE();
 }
 
-U128 IREmitter::FPVectorEqual(size_t esize, const U128& a, const U128& b) {
+U128 IREmitter::FPVectorEqual(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
     switch (esize) {
     case 16:
-        return Inst<U128>(Opcode::FPVectorEqual16, a, b);
+        return Inst<U128>(Opcode::FPVectorEqual16, a, b, Imm1(fpcr_controlled));
     case 32:
-        return Inst<U128>(Opcode::FPVectorEqual32, a, b);
+        return Inst<U128>(Opcode::FPVectorEqual32, a, b, Imm1(fpcr_controlled));
     case 64:
-        return Inst<U128>(Opcode::FPVectorEqual64, a, b);
+        return Inst<U128>(Opcode::FPVectorEqual64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }
@@ -2336,22 +2336,22 @@ U128 IREmitter::FPVectorFromUnsignedFixed(size_t esize, const U128& a, size_t fb
     UNREACHABLE();
 }
 
-U128 IREmitter::FPVectorGreater(size_t esize, const U128& a, const U128& b) {
+U128 IREmitter::FPVectorGreater(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
     switch (esize) {
     case 32:
-        return Inst<U128>(Opcode::FPVectorGreater32, a, b);
+        return Inst<U128>(Opcode::FPVectorGreater32, a, b, Imm1(fpcr_controlled));
     case 64:
-        return Inst<U128>(Opcode::FPVectorGreater64, a, b);
+        return Inst<U128>(Opcode::FPVectorGreater64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }
 
-U128 IREmitter::FPVectorGreaterEqual(size_t esize, const U128& a, const U128& b) {
+U128 IREmitter::FPVectorGreaterEqual(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
     switch (esize) {
     case 32:
-        return Inst<U128>(Opcode::FPVectorGreaterEqual32, a, b);
+        return Inst<U128>(Opcode::FPVectorGreaterEqual32, a, b, Imm1(fpcr_controlled));
     case 64:
-        return Inst<U128>(Opcode::FPVectorGreaterEqual64, a, b);
+        return Inst<U128>(Opcode::FPVectorGreaterEqual64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }

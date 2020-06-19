@@ -48,8 +48,8 @@ bool A64EmitContext::IsSingleStep() const {
     return Location().SingleStepping();
 }
 
-FP::FPCR A64EmitContext::FPCR() const {
-    return Location().FPCR();
+FP::FPCR A64EmitContext::FPCR(bool fpcr_controlled) const {
+    return fpcr_controlled ? Location().FPCR() : Location().FPCR().ASIMDStandardValue();
 }
 
 bool A64EmitContext::AccurateNaN() const {

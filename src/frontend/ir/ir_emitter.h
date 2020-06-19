@@ -347,11 +347,11 @@ public:
     U128 FPVectorAbs(size_t esize, const U128& a);
     U128 FPVectorAdd(size_t esize, const U128& a, const U128& b);
     U128 FPVectorDiv(size_t esize, const U128& a, const U128& b);
-    U128 FPVectorEqual(size_t esize, const U128& a, const U128& b);
+    U128 FPVectorEqual(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorFromSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);
     U128 FPVectorFromUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);
-    U128 FPVectorGreater(size_t esize, const U128& a, const U128& b);
-    U128 FPVectorGreaterEqual(size_t esize, const U128& a, const U128& b);
+    U128 FPVectorGreater(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
+    U128 FPVectorGreaterEqual(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorMax(size_t esize, const U128& a, const U128& b);
     U128 FPVectorMin(size_t esize, const U128& a, const U128& b);
     U128 FPVectorMul(size_t esize, const U128& a, const U128& b);

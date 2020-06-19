@@ -185,7 +185,7 @@ void A32JitState::SetFpscr(u32 FPSCR) {
     fpsr_nzcv = FPSCR & FPSCR_NZCV_MASK;
 
     guest_MXCSR = 0x00001f80;
-    asimd_MXCSR = 0x00001f80;
+    asimd_MXCSR = 0x00009fc0;
 
     // RMode
     const std::array<u32, 4> MXCSR_RMode {0x0, 0x4000, 0x2000, 0x6000};

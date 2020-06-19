@@ -185,6 +185,8 @@ public:
         FPCR stdvalue;
         stdvalue.AHP(AHP());
         stdvalue.FZ16(FZ16());
+        stdvalue.FZ(true);
+        stdvalue.DN(true);
         return stdvalue;
     }
 

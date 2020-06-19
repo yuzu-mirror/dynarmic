@@ -27,7 +27,7 @@ struct A64EmitContext final : public EmitContext {
 
     A64::LocationDescriptor Location() const;
     bool IsSingleStep() const;
-    FP::FPCR FPCR() const override;
+    FP::FPCR FPCR(bool fpcr_controlled = true) const override;
     bool AccurateNaN() const override;
 
     const A64::UserConfig& conf;

@@ -30,7 +30,7 @@ struct A32EmitContext final : public EmitContext {
 
     A32::LocationDescriptor Location() const;
     bool IsSingleStep() const;
-    FP::FPCR FPCR() const override;
+    FP::FPCR FPCR(bool fpcr_controlled = true) const override;
 
     const A32::UserConfig& conf;
 };

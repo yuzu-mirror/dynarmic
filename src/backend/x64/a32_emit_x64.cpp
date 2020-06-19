@@ -71,8 +71,9 @@ bool A32EmitContext::IsSingleStep() const {
     return Location().SingleStepping();
 }
 
-FP::FPCR A32EmitContext::FPCR() const {
-    return FP::FPCR{Location().FPSCR().Value()};
+FP::FPCR A32EmitContext::FPCR(bool fpcr_controlled) const {
+    const FP::FPCR fpcr = FP::FPCR{Location().FPSCR().Value()};
+    return fpcr_controlled ? fpcr : fpcr.ASIMDStandardValue();
 }
 
 A32EmitX64::A32EmitX64(BlockOfCode& code, A32::UserConfig conf, A32::Jit* jit_interface)
