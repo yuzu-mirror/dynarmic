@@ -1367,6 +1367,14 @@ public:
         return fmt::format("vcvtt{}.{}.{} {}, {}", CondToString(cond), to, from, FPRegStr(convert_from_half ? sz : false, Vd, D), FPRegStr(convert_from_half ? false : sz, Vm, M));
     }
 
+    std::string vfp_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
+        return fmt::format("vcmp{}{}.{} {}, {}", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
+    }
+
+    std::string vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
+        return fmt::format("vcmp{}{}.{} {}, #0.0", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D));
+    }
+
     std::string vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vcvt{}.{}.{} {}, {}", CondToString(cond), !sz ? "f64" : "f32", sz ? "f64" : "f32", FPRegStr(!sz, Vd, D), FPRegStr(sz, Vm, M));
     }
@@ -1383,17 +1391,14 @@ public:
         return fmt::format("vcvt{}{}.s32.{} {}, {}", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
     }
 
-    std::string vfp_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
-        return fmt::format("vcmp{}{}.{} {}, {}", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
-    }
-
-    std::string vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
-        return fmt::format("vcmp{}{}.{} {}, #0.0", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D));
+    std::string vfp_VRINT_rm(bool D, size_t rm, size_t Vd, bool sz, bool M, size_t Vm) {
+        return fmt::format("vrint{}.{} {}, {}", "anpm"[rm], sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
     std::string vfp_VMSR(Cond cond, Reg t) {
         return fmt::format("vmsr{} fpscr, {}", CondToString(cond), t);
     }
+
     std::string vfp_VMRS(Cond cond, Reg t) {
         if (t == Reg::R15) {
             return fmt::format("vmrs{} apsr_nzcv, fpscr", CondToString(cond));

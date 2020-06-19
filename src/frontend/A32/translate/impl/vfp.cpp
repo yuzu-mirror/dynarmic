@@ -5,6 +5,8 @@
 
 #include "frontend/A32/translate/impl/translate_arm.h"
 
+#include <array>
+
 namespace Dynarmic::A32 {
 
 template <typename FnT>
@@ -681,6 +683,46 @@ bool ArmTranslatorVisitor::vfp_VCVTT(Cond cond, bool D, bool op, size_t Vd, bool
     }
 }
 
+// VCMP{E}.F32 <Sd>, <Sm>
+// VCMP{E}.F64 <Dd>, <Dm>
+bool ArmTranslatorVisitor::vfp_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    const auto d = ToExtReg(sz, Vd, D);
+    const auto m = ToExtReg(sz, Vm, M);
+    const auto exc_on_qnan = E;
+    const auto reg_d = ir.GetExtendedRegister(d);
+    const auto reg_m = ir.GetExtendedRegister(m);
+    const auto nzcv = ir.FPCompare(reg_d, reg_m, exc_on_qnan, true);
+
+    ir.SetFpscrNZCV(nzcv);
+    return true;
+}
+
+// VCMP{E}.F32 <Sd>, #0.0
+// VCMP{E}.F64 <Dd>, #0.0
+bool ArmTranslatorVisitor::vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    const auto d = ToExtReg(sz, Vd, D);
+    const auto exc_on_qnan = E;
+    const auto reg_d = ir.GetExtendedRegister(d);
+
+    if (sz) {
+        const auto nzcv = ir.FPCompare(reg_d, ir.Imm64(0), exc_on_qnan, true);
+        ir.SetFpscrNZCV(nzcv);
+    } else {
+        const auto nzcv = ir.FPCompare(reg_d, ir.Imm32(0), exc_on_qnan, true);
+        ir.SetFpscrNZCV(nzcv);
+    }
+
+    return true;
+}
+
 // VCVT<c>.F64.F32 <Dd>, <Sm>
 // VCVT<c>.F32.F64 <Sd>, <Dm>
 bool ArmTranslatorVisitor::vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
@@ -763,44 +805,25 @@ bool ArmTranslatorVisitor::vfp_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz
     return true;
 }
 
-// VCMP{E}.F32 <Sd>, <Sm>
-// VCMP{E}.F64 <Dd>, <Dm>
-bool ArmTranslatorVisitor::vfp_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm) {
-    if (!ConditionPassed(cond)) {
-        return true;
-    }
+// VRINT{A,N,P,M}.F32 <Sd>, <Sm>
+// VRINT{A,N,P,M}.F64 <Dd>, <Dm>
+bool ArmTranslatorVisitor::vfp_VRINT_rm(bool D, size_t rm, size_t Vd, bool sz, bool M, size_t Vm) {
+    const std::array rm_lookup{
+        FP::RoundingMode::ToNearest_TieAwayFromZero,
+        FP::RoundingMode::ToNearest_TieEven,
+        FP::RoundingMode::TowardsPlusInfinity,
+        FP::RoundingMode::TowardsMinusInfinity,
+    };
+    const FP::RoundingMode rounding_mode = rm_lookup[rm];
 
     const auto d = ToExtReg(sz, Vd, D);
     const auto m = ToExtReg(sz, Vm, M);
-    const auto exc_on_qnan = E;
-    const auto reg_d = ir.GetExtendedRegister(d);
-    const auto reg_m = ir.GetExtendedRegister(m);
-    const auto nzcv = ir.FPCompare(reg_d, reg_m, exc_on_qnan, true);
 
-    ir.SetFpscrNZCV(nzcv);
-    return true;
-}
-
-// VCMP{E}.F32 <Sd>, #0.0
-// VCMP{E}.F64 <Dd>, #0.0
-bool ArmTranslatorVisitor::vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E) {
-    if (!ConditionPassed(cond)) {
-        return true;
-    }
-
-    const auto d = ToExtReg(sz, Vd, D);
-    const auto exc_on_qnan = E;
-    const auto reg_d = ir.GetExtendedRegister(d);
-
-    if (sz) {
-        const auto nzcv = ir.FPCompare(reg_d, ir.Imm64(0), exc_on_qnan, true);
-        ir.SetFpscrNZCV(nzcv);
-    } else {
-        const auto nzcv = ir.FPCompare(reg_d, ir.Imm32(0), exc_on_qnan, true);
-        ir.SetFpscrNZCV(nzcv);
-    }
-
-    return true;
+    return EmitVfpVectorOperation(sz, d, m, [this, rounding_mode](ExtReg d, ExtReg m) {
+        const auto reg_m = ir.GetExtendedRegister(m);
+        const auto result = ir.FPRoundInt(reg_m, rounding_mode, false);
+        ir.SetExtendedRegister(d, result);
+    });
 }
 
 // VMSR FPSCR, <Rt>
