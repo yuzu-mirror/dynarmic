@@ -2420,22 +2420,22 @@ U128 IREmitter::FPVectorNeg(size_t esize, const U128& a) {
     UNREACHABLE();
 }
 
-U128 IREmitter::FPVectorPairedAdd(size_t esize, const U128& a, const U128& b) {
+U128 IREmitter::FPVectorPairedAdd(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
     switch (esize) {
     case 32:
-        return Inst<U128>(Opcode::FPVectorPairedAdd32, a, b);
+        return Inst<U128>(Opcode::FPVectorPairedAdd32, a, b, Imm1(fpcr_controlled));
     case 64:
-        return Inst<U128>(Opcode::FPVectorPairedAdd64, a, b);
+        return Inst<U128>(Opcode::FPVectorPairedAdd64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }
 
-U128 IREmitter::FPVectorPairedAddLower(size_t esize, const U128& a, const U128& b) {
+U128 IREmitter::FPVectorPairedAddLower(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
     switch (esize) {
     case 32:
-        return Inst<U128>(Opcode::FPVectorPairedAddLower32, a, b);
+        return Inst<U128>(Opcode::FPVectorPairedAddLower32, a, b, Imm1(fpcr_controlled));
     case 64:
-        return Inst<U128>(Opcode::FPVectorPairedAddLower64, a, b);
+        return Inst<U128>(Opcode::FPVectorPairedAddLower64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }

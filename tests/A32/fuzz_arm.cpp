@@ -110,6 +110,8 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             "arm_UDF",
             // FPSCR is inaccurate
             "vfp_VMRS",
+            // Unimplemented in Unicorn
+            "asimd_VPADD_float",
         };
 
         for (const auto& [fn, bitstring] : list) {

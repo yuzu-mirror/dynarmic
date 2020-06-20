@@ -1117,15 +1117,15 @@ void EmitX64::EmitFPVectorNeg64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitFPVectorPairedAdd32(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<32, PairedIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::haddps);
+    EmitThreeOpVectorOperation<32, PairedIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::haddps);
 }
 
 void EmitX64::EmitFPVectorPairedAdd64(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<64, PairedIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::haddpd);
+    EmitThreeOpVectorOperation<64, PairedIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::haddpd);
 }
 
 void EmitX64::EmitFPVectorPairedAddLower32(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<32, PairedLowerIndexer>(code, ctx, inst, [&](Xbyak::Xmm result, Xbyak::Xmm xmm_b) {
+    EmitThreeOpVectorOperation<32, PairedLowerIndexer, FpcrControlledArgument::Present>(code, ctx, inst, [&](Xbyak::Xmm result, Xbyak::Xmm xmm_b) {
         const Xbyak::Xmm zero = ctx.reg_alloc.ScratchXmm();
         code.xorps(zero, zero);
         code.punpcklqdq(result, xmm_b);
@@ -1134,7 +1134,7 @@ void EmitX64::EmitFPVectorPairedAddLower32(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitFPVectorPairedAddLower64(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<64, PairedLowerIndexer>(code, ctx, inst, [&](Xbyak::Xmm result, Xbyak::Xmm xmm_b) {
+    EmitThreeOpVectorOperation<64, PairedLowerIndexer, FpcrControlledArgument::Present>(code, ctx, inst, [&](Xbyak::Xmm result, Xbyak::Xmm xmm_b) {
         const Xbyak::Xmm zero = ctx.reg_alloc.ScratchXmm();
         code.xorps(zero, zero);
         code.punpcklqdq(result, xmm_b);
