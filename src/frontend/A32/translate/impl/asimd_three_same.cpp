@@ -356,6 +356,12 @@ bool ArmTranslatorVisitor::asimd_VMUL(bool P, bool D, size_t sz, size_t Vn, size
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VADD_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        return ir.FPVectorAdd(32, reg_n, reg_m, false);
+    });
+}
+
 bool ArmTranslatorVisitor::asimd_VMUL_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
         return ir.FPVectorMul(32, reg_n, reg_m, false);

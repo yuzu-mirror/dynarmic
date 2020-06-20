@@ -345,7 +345,7 @@ public:
     U64 FPUnsignedFixedToDouble(const U32U64& a, size_t fbits, FP::RoundingMode rounding);
 
     U128 FPVectorAbs(size_t esize, const U128& a);
-    U128 FPVectorAdd(size_t esize, const U128& a, const U128& b);
+    U128 FPVectorAdd(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorDiv(size_t esize, const U128& a, const U128& b);
     U128 FPVectorEqual(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorFromSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);

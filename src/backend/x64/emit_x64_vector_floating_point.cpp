@@ -548,11 +548,11 @@ void EmitX64::EmitFPVectorAbs64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitFPVectorAdd32(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<32, DefaultIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::addps);
+    EmitThreeOpVectorOperation<32, DefaultIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::addps);
 }
 
 void EmitX64::EmitFPVectorAdd64(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<64, DefaultIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::addpd);
+    EmitThreeOpVectorOperation<64, DefaultIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::addpd);
 }
 
 void EmitX64::EmitFPVectorDiv32(EmitContext& ctx, IR::Inst* inst) {
