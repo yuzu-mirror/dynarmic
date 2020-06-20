@@ -107,6 +107,12 @@ INST(asimd_VRECPE,          "VRECPE",                   "111100111D11zz11dddd010
 INST(asimd_VRSQRTE,         "VRSQRTE",                  "111100111D11zz11dddd010F1QM0mmmm") // ASIMD
 //INST(asimd_VCVT_integer,    "VCVT (integer)",           "111100111-11--11----011xxx-0----") // ASIMD
 
+// Miscellaneous
+//INST(asimd_VEXT,            "VEXT",                     "111100101D11nnnnddddiiiiNQM0mmmm") // ASIMD
+//INST(asimd_VTBL,            "VTBL",                     "111100111D11nnnndddd10zzN0M0mmmm") // ASIMD
+//INST(asimd_VTBX,            "VTBX",                     "111100111D11nnnndddd10zzN1M0mmmm") // ASIMD
+//INST(asimd_VDUP_scalar,     "VDUP (scalar)",            "111100111D11iiiidddd11000QM0mmmm") // ASIMD
+
 // One register and modified immediate
 INST(asimd_VMOV_imm,        "VBIC, VMOV, VMVN, VORR (immediate)",  "1111001a1D000bcdVVVVmmmm0Qo1efgh") // ASIMD
 
