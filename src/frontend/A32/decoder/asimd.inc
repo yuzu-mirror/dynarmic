@@ -32,7 +32,7 @@ INST(asimd_VMUL,            "VMUL",                     "1111001P0Dzznnnndddd100
 //INST(asimd_VPMAX,           "VPMAX/VPMIN",              "1111001U0-CC--------1010---B----") // ASIMD
 //INST(asimd_VQDMULH,         "VQDMULH",                  "111100100-CC--------1011---0----") // ASIMD
 //INST(asimd_VQRDMULH,        "VQRDMULH",                 "111100110-CC--------1011---0----") // ASIMD
-//INST(asimd_VPADD,           "VPADD",                    "1111001U0-CC--------1011---1----") // ASIMD
+INST(asimd_VPADD,           "VPADD",                    "111100100Dzznnnndddd1011NQM1mmmm") // ASIMD
 //INST(asimd_VFMA,            "VFMA/VFMS",                "111100100-CC--------1100---1----") // ASIMD
 INST(asimd_VADD_float,      "VADD (floating-point)",    "111100100D0znnnndddd1101NQM0mmmm") // ASIMD
 INST(asimd_VSUB_float,      "VSUB (floating-point)",    "111100100D1znnnndddd1101NQM0mmmm") // ASIMD
