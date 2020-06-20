@@ -361,7 +361,7 @@ public:
     U128 FPVectorPairedAdd(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorPairedAddLower(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorRecipEstimate(size_t esize, const U128& a);
-    U128 FPVectorRecipStepFused(size_t esize, const U128& a, const U128& b);
+    U128 FPVectorRecipStepFused(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorRoundInt(size_t esize, const U128& operand, FP::RoundingMode rounding, bool exact);
     U128 FPVectorRSqrtEstimate(size_t esize, const U128& a);
     U128 FPVectorRSqrtStepFused(size_t esize, const U128& a, const U128& b);

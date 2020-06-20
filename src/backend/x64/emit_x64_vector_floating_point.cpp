@@ -1176,6 +1176,7 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     if constexpr (fsize != 16) {
         if (code.HasFMA() && code.HasAVX()) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const bool fpcr_controlled = args[2].GetImmediateU1();
 
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -1184,8 +1185,10 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
 
             Xbyak::Label end, fallback;
 
-            code.movaps(result, GetVectorOf<fsize, false, 0, 2>(code));
-            FCODE(vfnmadd231p)(result, operand1, operand2);
+            MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
+                code.movaps(result, GetVectorOf<fsize, false, 0, 2>(code));
+                FCODE(vfnmadd231p)(result, operand1, operand2);
+            });
 
             FCODE(vcmpunordp)(tmp, result, result);
             code.vptest(tmp, tmp);
@@ -1196,7 +1199,7 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
             code.L(fallback);
             code.sub(rsp, 8);
             ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
-            EmitThreeOpFallbackWithoutRegAlloc(code, ctx, result, operand1, operand2, fallback_fn);
+            EmitThreeOpFallbackWithoutRegAlloc(code, ctx, result, operand1, operand2, fallback_fn, fpcr_controlled);
             ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
             code.add(rsp, 8);
             code.jmp(end, code.T_NEAR);
@@ -1207,7 +1210,7 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
         }
     }
 
-    EmitThreeOpFallback(code, ctx, inst, fallback_fn);
+    EmitThreeOpFallback<FpcrControlledArgument::Present>(code, ctx, inst, fallback_fn);
 }
 
 void EmitX64::EmitFPVectorRecipStepFused16(EmitContext& ctx, IR::Inst* inst) {
