@@ -34,6 +34,29 @@ bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, b
 
     return true;
 }
+
+template <typename Callable>
+bool FloatingPointInstruction(ArmTranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return v.UndefinedInstruction();
+    }
+
+    if (sz == 0b1) {
+        return v.UndefinedInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_d = v.ir.GetVector(d);
+    const auto reg_n = v.ir.GetVector(n);
+    const auto reg_m = v.ir.GetVector(m);
+    const auto result = fn(reg_d, reg_n, reg_m);
+
+    v.ir.SetVector(d, result);
+    return true;
+}
 } // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_VHADD(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
@@ -333,46 +356,22 @@ bool ArmTranslatorVisitor::asimd_VMUL(bool P, bool D, size_t sz, size_t Vn, size
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VMUL_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        return ir.FPVectorMul(32, reg_n, reg_m, false);
+    });
+}
+
 bool ArmTranslatorVisitor::asimd_VMAX_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    if (sz == 0b1) {
-        return UndefinedInstruction();
-    }
-
-    const auto d = ToVector(Q, Vd, D);
-    const auto m = ToVector(Q, Vm, M);
-    const auto n = ToVector(Q, Vn, N);
-
-    const auto reg_n = ir.GetVector(n);
-    const auto reg_m = ir.GetVector(m);
-    const auto result = ir.FPVectorMax(32, reg_m, reg_n, false);
-
-    ir.SetVector(d, result);
-    return true;
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        return ir.FPVectorMax(32, reg_n, reg_m, false);
+    });
 }
 
 bool ArmTranslatorVisitor::asimd_VMIN_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    if (sz == 0b1) {
-        return UndefinedInstruction();
-    }
-
-    const auto d = ToVector(Q, Vd, D);
-    const auto m = ToVector(Q, Vm, M);
-    const auto n = ToVector(Q, Vn, N);
-
-    const auto reg_n = ir.GetVector(n);
-    const auto reg_m = ir.GetVector(m);
-    const auto result = ir.FPVectorMin(32, reg_m, reg_n, false);
-
-    ir.SetVector(d, result);
-    return true;
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        return ir.FPVectorMin(32, reg_n, reg_m, false);
+    });
 }
 
 } // namespace Dynarmic::A32

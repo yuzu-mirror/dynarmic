@@ -35,11 +35,6 @@ using namespace Xbyak::util;
 
 namespace {
 
-enum FpcrControlledArgument {
-    Present,
-    Absent,
-};
-
 template<size_t fsize, typename T>
 T ChooseOnFsize([[maybe_unused]] T f32, [[maybe_unused]] T f64) {
     static_assert(fsize == 32 || fsize == 64, "fsize must be either 32 or 64");
@@ -52,6 +47,24 @@ T ChooseOnFsize([[maybe_unused]] T f32, [[maybe_unused]] T f64) {
 }
 
 #define FCODE(NAME) (code.*ChooseOnFsize<fsize>(&Xbyak::CodeGenerator::NAME##s, &Xbyak::CodeGenerator::NAME##d))
+
+enum FpcrControlledArgument {
+    Present,
+    Absent,
+};
+
+template<typename Lambda>
+void MaybeStandardFPSCRValue(BlockOfCode& code, EmitContext& ctx, bool fpcr_controlled, Lambda lambda) {
+    const bool switch_mxcsr = ctx.FPCR(fpcr_controlled) != ctx.FPCR();
+
+    if (switch_mxcsr) {
+        code.EnterStandardASIMD();
+        lambda();
+        code.LeaveStandardASIMD();
+    } else {
+        lambda();
+    }
+}
 
 template<size_t fsize, template<typename> class Indexer, size_t narg>
 struct NaNHandler {
@@ -171,8 +184,8 @@ Xbyak::Address GetVectorOf(BlockOfCode& code) {
 }
 
 template<size_t fsize>
-void ForceToDefaultNaN(BlockOfCode& code, EmitContext& ctx, Xbyak::Xmm result) {
-    if (ctx.FPCR().DN()) {
+void ForceToDefaultNaN(BlockOfCode& code, FP::FPCR fpcr, Xbyak::Xmm result) {
+    if (fpcr.DN()) {
         const Xbyak::Xmm nan_mask = xmm0;
         if (code.HasAVX()) {
             FCODE(vcmpunordp)(nan_mask, result, result);
@@ -287,7 +300,7 @@ void EmitTwoOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
             fn(result, xmm_a);
         }
 
-        ForceToDefaultNaN<fsize>(code, ctx, result);
+        ForceToDefaultNaN<fsize>(code, ctx.FPCR(), result);
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -318,28 +331,32 @@ void EmitTwoOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-template<size_t fsize, template<typename> class Indexer, typename Function>
+template<size_t fsize, template<typename> class Indexer, FpcrControlledArgument fcarg = FpcrControlledArgument::Absent, typename Function>
 void EmitThreeOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn, typename NaNHandler<fsize, Indexer, 3>::function_type nan_handler = NaNHandler<fsize, Indexer, 3>::GetDefault()) {
     static_assert(fsize == 32 || fsize == 64, "fsize must be either 32 or 64");
 
-    if (!ctx.AccurateNaN() || ctx.FPCR().DN()) {
-        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const bool fpcr_controlled = fcarg == FpcrControlledArgument::Absent || args[2].GetImmediateU1();
+
+    if (!ctx.AccurateNaN() || ctx.FPCR(fpcr_controlled).DN()) {
         const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 
         if constexpr (std::is_member_function_pointer_v<Function>) {
-            (code.*fn)(xmm_a, xmm_b);
+            MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
+                (code.*fn)(xmm_a, xmm_b);
+            });
         } else {
-            fn(xmm_a, xmm_b);
+            MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
+                fn(xmm_a, xmm_b);
+            });
         }
 
-        ForceToDefaultNaN<fsize>(code, ctx, xmm_a);
+        ForceToDefaultNaN<fsize>(code, ctx.FPCR(fpcr_controlled), xmm_a);
 
         ctx.reg_alloc.DefineValue(inst, xmm_a);
         return;
     }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseXmm(args[0]);
@@ -495,19 +512,6 @@ void EmitFourOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lam
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-template<typename Lambda>
-void MaybeStandardFPSCRValue(BlockOfCode& code, EmitContext& ctx, bool fpcr_controlled, Lambda lambda) {
-    const bool switch_mxcsr = ctx.FPCR(fpcr_controlled) != ctx.FPCR();
-
-    if (switch_mxcsr) {
-        code.EnterStandardASIMD();
-        lambda();
-        code.LeaveStandardASIMD();
-    } else {
-        lambda();
-    }
-}
-
 } // anonymous namespace
 
 void EmitX64::EmitFPVectorAbs16(EmitContext& ctx, IR::Inst* inst) {
@@ -569,9 +573,9 @@ void EmitX64::EmitFPVectorEqual16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitFPVectorEqual32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
     const bool fpcr_controlled = args[2].GetImmediateU1();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm b = ctx.FPCR(fpcr_controlled).FZ() ? ctx.reg_alloc.UseScratchXmm(args[1]) : ctx.reg_alloc.UseXmm(args[1]);
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
         DenormalsAreZero<32>(code, ctx.FPCR(fpcr_controlled), {a, b}, xmm0);
@@ -583,9 +587,9 @@ void EmitX64::EmitFPVectorEqual32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitFPVectorEqual64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
     const bool fpcr_controlled = args[2].GetImmediateU1();
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm b = ctx.FPCR(fpcr_controlled).FZ() ? ctx.reg_alloc.UseScratchXmm(args[1]) : ctx.reg_alloc.UseXmm(args[1]);
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
         DenormalsAreZero<64>(code, ctx.FPCR(fpcr_controlled), {a, b}, xmm0);
@@ -772,9 +776,9 @@ void EmitX64::EmitFPVectorFromUnsignedFixed64(EmitContext& ctx, IR::Inst* inst) 
 
 void EmitX64::EmitFPVectorGreater32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
     const bool fpcr_controlled = args[2].GetImmediateU1();
+    const Xbyak::Xmm a = ctx.FPCR(fpcr_controlled).FZ() ? ctx.reg_alloc.UseScratchXmm(args[0]) : ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
         DenormalsAreZero<32>(code, ctx.FPCR(fpcr_controlled), {a, b}, xmm0);
@@ -786,9 +790,9 @@ void EmitX64::EmitFPVectorGreater32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitFPVectorGreater64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
     const bool fpcr_controlled = args[2].GetImmediateU1();
+    const Xbyak::Xmm a = ctx.FPCR(fpcr_controlled).FZ() ? ctx.reg_alloc.UseScratchXmm(args[0]) : ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
         DenormalsAreZero<64>(code, ctx.FPCR(fpcr_controlled), {a, b}, xmm0);
@@ -800,9 +804,9 @@ void EmitX64::EmitFPVectorGreater64(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitFPVectorGreaterEqual32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
     const bool fpcr_controlled = args[2].GetImmediateU1();
+    const Xbyak::Xmm a = ctx.FPCR(fpcr_controlled).FZ() ? ctx.reg_alloc.UseScratchXmm(args[0]) : ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
         DenormalsAreZero<32>(code, ctx.FPCR(fpcr_controlled), {a, b}, xmm0);
@@ -814,9 +818,9 @@ void EmitX64::EmitFPVectorGreaterEqual32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitFPVectorGreaterEqual64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
     const bool fpcr_controlled = args[2].GetImmediateU1();
+    const Xbyak::Xmm a = ctx.FPCR(fpcr_controlled).FZ() ? ctx.reg_alloc.UseScratchXmm(args[0]) : ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
         DenormalsAreZero<64>(code, ctx.FPCR(fpcr_controlled), {a, b}, xmm0);
@@ -946,11 +950,11 @@ void EmitX64::EmitFPVectorMin64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitFPVectorMul32(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<32, DefaultIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::mulps);
+    EmitThreeOpVectorOperation<32, DefaultIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::mulps);
 }
 
 void EmitX64::EmitFPVectorMul64(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<64, DefaultIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::mulpd);
+    EmitThreeOpVectorOperation<64, DefaultIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::mulpd);
 }
 
 template<size_t fsize>
