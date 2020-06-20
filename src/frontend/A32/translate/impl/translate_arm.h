@@ -497,6 +497,7 @@ struct ArmTranslatorVisitor final {
     bool asimd_VCLZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VCNT(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VMVN_reg(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool asimd_VPADAL(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm);
     bool asimd_VQABS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VQNEG(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VCGT_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);

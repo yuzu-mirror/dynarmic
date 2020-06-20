@@ -67,6 +67,42 @@ bool CompareWithZero(ArmTranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool
     return true;
 }
 
+enum class AccumulateBehavior {
+    None,
+    Accumulate,
+};
+
+bool PairedAddOperation(ArmTranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm,
+                        AccumulateBehavior accumulate) {
+    if (sz == 0b11) {
+        return v.UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return v.UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    const auto reg_m = v.ir.GetVector(m);
+    const auto result = [&] {
+        const auto tmp = op ? v.ir.VectorPairedAddUnsignedWiden(esize, reg_m)
+                            : v.ir.VectorPairedAddSignedWiden(esize, reg_m);
+
+        if (accumulate == AccumulateBehavior::Accumulate) {
+            const auto reg_d = v.ir.GetVector(d);
+            return v.ir.VectorAdd(esize * 2, reg_d, tmp);
+        }
+
+        return tmp;
+    }();
+
+    v.ir.SetVector(d, result);
+    return true;
+}
+
 } // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool Q, bool M, size_t Vm) {
@@ -130,24 +166,7 @@ bool ArmTranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, b
 }
 
 bool ArmTranslatorVisitor::asimd_VPADDL(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm) {
-    if (sz == 0b11) {
-        return UndefinedInstruction();
-    }
-
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    const size_t esize = 8U << sz;
-    const auto d = ToVector(Q, Vd, D);
-    const auto m = ToVector(Q, Vm, M);
-
-    const auto reg_m = ir.GetVector(m);
-    const auto result = op ? ir.VectorPairedAddUnsignedWiden(esize, reg_m)
-                           : ir.VectorPairedAddSignedWiden(esize, reg_m);
-
-    ir.SetVector(d, result);
-    return true;
+    return PairedAddOperation(*this, D, sz, Vd, op, Q, M, Vm, AccumulateBehavior::None);
 }
 
 bool ArmTranslatorVisitor::asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
@@ -231,6 +250,10 @@ bool ArmTranslatorVisitor::asimd_VMVN_reg(bool D, size_t sz, size_t Vd, bool Q, 
 
     ir.SetVector(d, result);
     return true;
+}
+
+bool ArmTranslatorVisitor::asimd_VPADAL(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm) {
+    return PairedAddOperation(*this, D, sz, Vd, op, Q, M, Vm, AccumulateBehavior::Accumulate);
 }
 
 bool ArmTranslatorVisitor::asimd_VQABS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
