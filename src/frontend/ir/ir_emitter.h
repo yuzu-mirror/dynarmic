@@ -297,7 +297,9 @@ public:
     U128 VectorSignedSaturatedShiftLeft(size_t esize, const U128& a, const U128& b);
     U128 VectorSignedSaturatedShiftLeftUnsigned(size_t esize, const U128& a, const U128& b);
     U128 VectorSub(size_t esize, const U128& a, const U128& b);
+    Table VectorTable(std::vector<U64> values);
     Table VectorTable(std::vector<U128> values);
+    U64 VectorTableLookup(const U64& defaults, const Table& table, const U64& indices);
     U128 VectorTableLookup(const U128& defaults, const Table& table, const U128& indices);
     U128 VectorUnsignedAbsoluteDifference(size_t esize, const U128& a, const U128& b);
     U128 VectorUnsignedRecipEstimate(const U128& a);

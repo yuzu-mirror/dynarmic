@@ -10,6 +10,31 @@
 
 namespace Dynarmic::A32 {
 
+static bool TableLookup(ArmTranslatorVisitor& v, bool is_vtbl, bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
+    const size_t length = len + 1;
+    const auto d = ToVector(false, Vd, D);
+    const auto m = ToVector(false, Vm, M);
+    const auto n = ToVector(false, Vn, N);
+
+    if (RegNumber(n) + length > 32) {
+        return v.UnpredictableInstruction();
+    }
+
+    const IR::Table table = v.ir.VectorTable([&]{
+        std::vector<IR::U64> result;
+        for (size_t i = 0; i < length; ++i) {
+            result.emplace_back(v.ir.GetExtendedRegister(n + i));
+        }
+        return result;
+    }());
+    const IR::U64 indicies = v.ir.GetExtendedRegister(m);
+    const IR::U64 defaults = is_vtbl ? v.ir.Imm64(0) : IR::U64{v.ir.GetExtendedRegister(d)};
+    const IR::U64 result = v.ir.VectorTableLookup(defaults, table, indicies);
+
+    v.ir.SetExtendedRegister(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VEXT(bool D, size_t Vn, size_t Vd, Imm<4> imm4, bool N, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
@@ -33,28 +58,11 @@ bool ArmTranslatorVisitor::asimd_VEXT(bool D, size_t Vn, size_t Vd, Imm<4> imm4,
 }
 
 bool ArmTranslatorVisitor::asimd_VTBL(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
-    const size_t length = len + 1;
-    const auto d = ToVector(false, Vd, D);
-    const auto m = ToVector(false, Vm, M);
-    const auto n = ToVector(false, Vn, N);
+    return TableLookup(*this, true, D, Vn, Vd, len, N, M, Vm);
+}
 
-    if (RegNumber(n) + length > 32) {
-        return UnpredictableInstruction();
-    }
-
-    const IR::U64 table0 = ir.GetExtendedRegister(n);
-    const IR::U64 table1 = length >= 2 ? IR::U64{ir.GetExtendedRegister(n + 1)} : ir.Imm64(0);
-    const IR::U64 table2 = length >= 3 ? IR::U64{ir.GetExtendedRegister(n + 2)} : ir.Imm64(0);
-    const IR::U64 table3 = length == 4 ? IR::U64{ir.GetExtendedRegister(n + 3)} : ir.Imm64(0);
-
-    const IR::Table table = ir.VectorTable(length <= 2
-                                           ? std::vector<IR::U128>{ir.Pack2x64To1x128(table0, table1)}
-                                           : std::vector<IR::U128>{ir.Pack2x64To1x128(table0, table1), ir.Pack2x64To1x128(table2, table3)});
-    const IR::U128 indicies = ir.GetVector(m);
-    const IR::U128 result = ir.VectorTableLookup(ir.ZeroVector(), table, indicies);
-
-    ir.SetVector(d, result);
-    return true;
+bool ArmTranslatorVisitor::asimd_VTBX(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
+    return TableLookup(*this, false, D, Vn, Vd, len, N, M, Vm);
 }
 
 } // namespace Dynarmic::A32

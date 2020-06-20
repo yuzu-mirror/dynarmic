@@ -40,6 +40,9 @@ using A64FullVectorWidth = std::integral_constant<size_t, 128>;
 template <typename T>
 using VectorArray = std::array<T, A64FullVectorWidth::value / Common::BitSize<T>()>;
 
+template <typename T>
+using HalfVectorArray = std::array<T, A64FullVectorWidth::value / Common::BitSize<T>() / 2>;
+
 struct EmitContext {
     EmitContext(RegAlloc& reg_alloc, IR::Block& block);
 

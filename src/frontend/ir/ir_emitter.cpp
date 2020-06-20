@@ -1739,14 +1739,26 @@ U128 IREmitter::VectorSub(size_t esize, const U128& a, const U128& b) {
     UNREACHABLE();
 }
 
+Table IREmitter::VectorTable(std::vector<U64> values) {
+    ASSERT(values.size() >= 1 && values.size() <= 4);
+    values.resize(4);
+    return Inst<Table>(Opcode::VectorTable, values[0], values[1], values[2], values[3]);
+}
+
 Table IREmitter::VectorTable(std::vector<U128> values) {
     ASSERT(values.size() >= 1 && values.size() <= 4);
     values.resize(4);
     return Inst<Table>(Opcode::VectorTable, values[0], values[1], values[2], values[3]);
 }
 
+U64 IREmitter::VectorTableLookup(const U64& defaults, const Table& table, const U64& indices) {
+    ASSERT(table.GetInst()->GetArg(0).GetType() == Type::U64);
+    return Inst<U64>(Opcode::VectorTableLookup64, defaults, table, indices);
+}
+
 U128 IREmitter::VectorTableLookup(const U128& defaults, const Table& table, const U128& indices) {
-    return Inst<U128>(Opcode::VectorTableLookup, defaults, table, indices);
+    ASSERT(table.GetInst()->GetArg(0).GetType() == Type::U128);
+    return Inst<U128>(Opcode::VectorTableLookup128, defaults, table, indices);
 }
 
 U128 IREmitter::VectorUnsignedAbsoluteDifference(size_t esize, const U128& a, const U128& b) {
