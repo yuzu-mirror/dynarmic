@@ -13,6 +13,8 @@ enum class Comparison {
     GE,
     GT,
     EQ,
+    AbsoluteGE,
+    AbsoluteGT,
 };
 
 template <bool WithDst, typename Callable>
@@ -124,6 +126,10 @@ bool FloatComparison(ArmTranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t
             return v.ir.FPVectorGreater(32, reg_n, reg_m, false);
         case Comparison::EQ:
             return v.ir.FPVectorEqual(32, reg_n, reg_m, false);
+        case Comparison::AbsoluteGE:
+            return v.ir.FPVectorGreaterEqual(32, v.ir.FPVectorAbs(32, reg_n), v.ir.FPVectorAbs(32, reg_m), false);
+        case Comparison::AbsoluteGT:
+            return v.ir.FPVectorGreater(32, v.ir.FPVectorAbs(32, reg_n), v.ir.FPVectorAbs(32, reg_m), false);
         default:
             return IR::U128{};
         }
@@ -571,6 +577,11 @@ bool ArmTranslatorVisitor::asimd_VCGE_reg_float(bool D, bool sz, size_t Vn, size
 
 bool ArmTranslatorVisitor::asimd_VCGT_reg_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return FloatComparison(*this, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GT);
+}
+
+bool ArmTranslatorVisitor::asimd_VACGE(bool D, bool op, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    const auto comparison = op ? Comparison::AbsoluteGT : Comparison::AbsoluteGE;
+    return FloatComparison(*this, D, sz, Vn, Vd, N, Q, M, Vm, comparison);
 }
 
 bool ArmTranslatorVisitor::asimd_VMAX_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {

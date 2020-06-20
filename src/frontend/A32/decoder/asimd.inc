@@ -44,7 +44,7 @@ INST(asimd_VMUL_float,      "VMUL (floating-point)",    "111100110D0znnnndddd110
 INST(asimd_VCEQ_reg_float,  "VCEQ (register)",          "111100100D0znnnndddd1110NQM0mmmm") // ASIMD
 INST(asimd_VCGE_reg_float,  "VCGE (register)",          "111100110D0znnnndddd1110NQM0mmmm") // ASIMD
 INST(asimd_VCGT_reg_float,  "VCGT (register)",          "111100110D1znnnndddd1110NQM0mmmm") // ASIMD
-//INST(asimd_VACGE,           "VACGE",                    "111100110-CC--------1110---1----") // ASIMD
+INST(asimd_VACGE,           "VACGE",                    "111100110Doznnnndddd1110NQM1mmmm") // ASIMD
 INST(asimd_VMAX_float,      "VMAX (floating-point)",    "111100100D0znnnndddd1111NQM0mmmm") // ASIMD
 INST(asimd_VMIN_float,      "VMIN (floating-point)",    "111100100D1znnnndddd1111NQM0mmmm") // ASIMD
 INST(asimd_VRECPS,          "VRECPS",                   "111100100D0znnnndddd1111NQM1mmmm") // ASIMD
