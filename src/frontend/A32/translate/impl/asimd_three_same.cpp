@@ -99,6 +99,39 @@ bool IntegerComparison(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_
     v.ir.SetVector(d, result);
     return true;
 }
+
+bool FloatComparison(ArmTranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm,
+                     Comparison comparison) {
+    if (sz) {
+        return v.UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return v.UndefinedInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_n = v.ir.GetVector(n);
+    const auto reg_m = v.ir.GetVector(m);
+    const auto result = [&] {
+        switch (comparison) {
+        case Comparison::GE:
+            return v.ir.FPVectorGreaterEqual(32, reg_n, reg_m, false);
+        case Comparison::GT:
+            return v.ir.FPVectorGreater(32, reg_n, reg_m, false);
+        case Comparison::EQ:
+            return v.ir.FPVectorEqual(32, reg_n, reg_m, false);
+        default:
+            return IR::U128{};
+        }
+    }();
+
+    v.ir.SetVector(d, result);
+    return true;
+}
 } // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_VHADD(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
@@ -526,6 +559,18 @@ bool ArmTranslatorVisitor::asimd_VMUL_float(bool D, bool sz, size_t Vn, size_t V
     return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
         return ir.FPVectorMul(32, reg_n, reg_m, false);
     });
+}
+
+bool ArmTranslatorVisitor::asimd_VCEQ_reg_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatComparison(*this, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::EQ);
+}
+
+bool ArmTranslatorVisitor::asimd_VCGE_reg_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatComparison(*this, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GE);
+}
+
+bool ArmTranslatorVisitor::asimd_VCGT_reg_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatComparison(*this, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GT);
 }
 
 bool ArmTranslatorVisitor::asimd_VMAX_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
