@@ -37,7 +37,8 @@ INST(asimd_VADD_float,      "VADD (floating-point)",    "111100100D0znnnndddd110
 INST(asimd_VSUB_float,      "VSUB (floating-point)",    "111100100D1znnnndddd1101NQM0mmmm") // ASIMD
 INST(asimd_VPADD_float,     "VPADD (floating-point)",   "111100110D0znnnndddd1101NQM0mmmm") // ASIMD
 INST(asimd_VABD_float,      "VABD (floating-point)",    "111100110D1znnnndddd1101NQM0mmmm") // ASIMD
-//INST(asimd_VMLA_float,      "VMLA (floating-point)",    "111100100-CC--------1101---1----") // ASIMD
+INST(asimd_VMLA_float,      "VMLA (floating-point)",    "111100100D0znnnndddd1101NQM1mmmm") // ASIMD
+INST(asimd_VMLS_float,      "VMLS (floating-point)",    "111100100D1znnnndddd1101NQM1mmmm") // ASIMD
 INST(asimd_VMUL_float,      "VMUL (floating-point)",    "111100110D0znnnndddd1101NQM1mmmm") // ASIMD
 //INST(asimd_VCEQ_reg,        "VCEQ (register)",          "111100100-0C--------1110---0----") // ASIMD
 //INST(asimd_VCGE_reg,        "VCGE (register)",          "111100110-0C--------1110---0----") // ASIMD

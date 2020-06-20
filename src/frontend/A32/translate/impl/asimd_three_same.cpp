@@ -381,6 +381,20 @@ bool ArmTranslatorVisitor::asimd_VABD_float(bool D, bool sz, size_t Vn, size_t V
     });
 }
 
+bool ArmTranslatorVisitor::asimd_VMLA_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_d, const auto& reg_n, const auto& reg_m) {
+        const auto product = ir.FPVectorMul(32, reg_n, reg_m, false);
+        return ir.FPVectorAdd(32, reg_d, product, false);
+    });
+}
+
+bool ArmTranslatorVisitor::asimd_VMLS_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto& reg_d, const auto& reg_n, const auto& reg_m) {
+        const auto product = ir.FPVectorMul(32, reg_n, reg_m, false);
+        return ir.FPVectorAdd(32, reg_d, ir.FPVectorNeg(32, product), false);
+    });
+}
+
 bool ArmTranslatorVisitor::asimd_VMUL_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
         return ir.FPVectorMul(32, reg_n, reg_m, false);
