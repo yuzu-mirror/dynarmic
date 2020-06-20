@@ -40,9 +40,22 @@ std::vector<ASIMDMatcher<V>> GetASIMDDecodeTable() {
     const std::set<std::string> comes_first{
         "VBIC, VMOV, VMVN, VORR (immediate)"
     };
+    const std::set<std::string> comes_last{
+        "VMLA (scalar)",
+        "VMLAL (scalar)",
+        "VQDMLAL/VQDMLSL",
+        "VMUL (scalar)",
+        "VMULL (scalar)",
+        "VQDMULL",
+        "VQDMULH",
+        "VQRDMULH",
+    };
 
     std::stable_partition(table.begin(), table.end(), [&](const auto& matcher) {
         return comes_first.count(matcher.GetName()) > 0;
+    });
+    std::stable_partition(table.begin(), table.end(), [&](const auto& matcher) {
+        return comes_last.count(matcher.GetName()) == 0;
     });
 
     return table;

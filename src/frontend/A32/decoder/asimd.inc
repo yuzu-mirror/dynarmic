@@ -50,10 +50,11 @@ INST(asimd_VRECPS,          "VRECPS",                   "111100100D0znnnndddd111
 INST(asimd_VRSQRTS,         "VRSQRTS",                  "111100100D1znnnndddd1111NQM1mmmm") // ASIMD
 
 // Two registers and a scalar
+INST(arm_UDF,               "UNALLOCATED",              "1111001-1-11-------------1-0----") // ASIMD
 //INST(asimd_VMLA_scalar,     "VMLA (scalar)",            "1111001U1-BB--------0x0x-1-0----") // ASIMD
 //INST(asimd_VMLAL_scalar,    "VMLAL (scalar)",           "1111001U1-BB--------0x10-1-0----") // ASIMD
 //INST(asimd_VQDMLAL,         "VQDMLAL/VQDMLSL",          "111100101-BB--------0x11-1-0----") // ASIMD
-//INST(asimd_VMUL_scalar,     "VMUL (scalar)",            "1111001U1-BB--------100x-1-0----") // ASIMD
+INST(asimd_VMUL_scalar,     "VMUL (scalar)",            "1111001Q1Dzznnnndddd100FN1M0mmmm") // ASIMD
 //INST(asimd_VMULL_scalar,    "VMULL (scalar)",           "1111001U1-BB--------1010-1-0----") // ASIMD
 //INST(asimd_VQDMULL,         "VQDMULL",                  "111100101-BB--------1011-1-0----") // ASIMD
 //INST(asimd_VQDMULH,         "VQDMULH",                  "1111001U1-BB--------1100-1-0----") // ASIMD
