@@ -2479,14 +2479,14 @@ U128 IREmitter::FPVectorRoundInt(size_t esize, const U128& operand, FP::Rounding
     UNREACHABLE();
 }
 
-U128 IREmitter::FPVectorRSqrtEstimate(size_t esize, const U128& a) {
+U128 IREmitter::FPVectorRSqrtEstimate(size_t esize, const U128& a, bool fpcr_controlled) {
     switch (esize) {
     case 16:
-        return Inst<U128>(Opcode::FPVectorRSqrtEstimate16, a);
+        return Inst<U128>(Opcode::FPVectorRSqrtEstimate16, a, Imm1(fpcr_controlled));
     case 32:
-        return Inst<U128>(Opcode::FPVectorRSqrtEstimate32, a);
+        return Inst<U128>(Opcode::FPVectorRSqrtEstimate32, a, Imm1(fpcr_controlled));
     case 64:
-        return Inst<U128>(Opcode::FPVectorRSqrtEstimate64, a);
+        return Inst<U128>(Opcode::FPVectorRSqrtEstimate64, a, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }
