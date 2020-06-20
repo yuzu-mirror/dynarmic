@@ -44,6 +44,9 @@ INST(vfp_VMOV_2u32_2f32,   "VMOV (2xcore to 2xf32)",  "cccc11000100uuuutttt10100
 INST(vfp_VMOV_2f32_2u32,   "VMOV (2xf32 to 2xcore)",  "cccc11000101uuuutttt101000M1mmmm") // VFPv2
 INST(vfp_VMOV_2u32_f64,    "VMOV (2xcore to f64)",    "cccc11000100uuuutttt101100M1mmmm") // VFPv2
 INST(vfp_VMOV_f64_2u32,    "VMOV (f64 to 2xcore)",    "cccc11000101uuuutttt101100M1mmmm") // VFPv2
+INST(vfp_VMOV_from_i32,    "VMOV (core to i32)" ,     "cccc111000i0nnnntttt1011N0010000") // VFPv4
+INST(vfp_VMOV_from_i16,    "VMOV (core to i16)" ,     "cccc111000i0nnnntttt1011Ni110000") // ASIMD
+INST(vfp_VMOV_from_i8,     "VMOV (core to i8)",       "cccc111001i0nnnntttt1011Nii10000") // ASIMD
 INST(vfp_VMOV_to_i32,      "VMOV (i32 to core)" ,     "cccc111000i1nnnntttt1011N0010000") // VFPv4
 INST(vfp_VMOV_to_i16,      "VMOV (i16 to core)" ,     "cccc1110U0i1nnnntttt1011Ni110000") // ASIMD
 INST(vfp_VMOV_to_i8,       "VMOV (i8 to core)",       "cccc1110U1i1nnnntttt1011Nii10000") // ASIMD

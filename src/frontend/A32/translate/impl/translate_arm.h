@@ -405,6 +405,9 @@ struct ArmTranslatorVisitor final {
     bool vfp_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
     bool vfp_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
     bool vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
+    bool vfp_VMOV_from_i32(Cond cond, Imm<1> i, size_t Vd, Reg t, bool D);
+    bool vfp_VMOV_from_i16(Cond cond, Imm<1> i1, size_t Vd, Reg t, bool D, Imm<1> i2);
+    bool vfp_VMOV_from_i8(Cond cond, Imm<1> i1, size_t Vd, Reg t, bool D, Imm<2> i2);
     bool vfp_VMOV_to_i32(Cond cond, Imm<1> i, size_t Vn, Reg t, bool N);
     bool vfp_VMOV_to_i16(Cond cond, bool U, Imm<1> i1, size_t Vn, Reg t, bool N, Imm<1> i2);
     bool vfp_VMOV_to_i8(Cond cond, bool U, Imm<1> i1, size_t Vn, Reg t, bool N, Imm<2> i2);

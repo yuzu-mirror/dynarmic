@@ -1347,6 +1347,21 @@ public:
         return fmt::format("vmov{} {}, {}, {}", CondToString(cond), t, t2, FPRegStr(true, Vm, M));
     }
 
+    std::string vfp_VMOV_from_i32(Cond cond, Imm<1> i, size_t Vd, Reg t, bool D) {
+        const size_t index = i.ZeroExtend();
+        return fmt::format("vmov{}.32 {}[{}], {}", CondToString(cond), FPRegStr(true, Vd, D), index, t);
+    }
+
+    std::string vfp_VMOV_from_i16(Cond cond, Imm<1> i1, size_t Vd, Reg t, bool D, Imm<1> i2) {
+        const size_t index = concatenate(i1, i2).ZeroExtend();
+        return fmt::format("vmov{}.{}16 {}[{}], {}", CondToString(cond), FPRegStr(true, Vd, D), index, t);
+    }
+
+    std::string vfp_VMOV_from_i8(Cond cond, Imm<1> i1, size_t Vd, Reg t, bool D, Imm<2> i2) {
+        const size_t index = concatenate(i1, i2).ZeroExtend();
+        return fmt::format("vmov{}.{}8 {}[{}], {}", CondToString(cond), FPRegStr(true, Vd, D), index, t);
+    }
+
     std::string vfp_VMOV_to_i32(Cond cond, Imm<1> i, size_t Vn, Reg t, bool N) {
         const size_t index = i.ZeroExtend();
         return fmt::format("vmov{}.32 {}, {}[{}]", CondToString(cond), t, FPRegStr(true, Vn, N), index);

@@ -523,7 +523,73 @@ bool ArmTranslatorVisitor::vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, s
     return true;
 }
 
-// VMOV<c>.{U16,S16} <Rt>, <Dn[x]>
+// VMOV<c>.32 <Dn[x]>, <Rt>
+bool ArmTranslatorVisitor::vfp_VMOV_from_i32(Cond cond, Imm<1> i, size_t Vd, Reg t, bool D) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (t == Reg::R15) {
+        // TODO: v8 removes UPREDICTABLE for R13
+        return UnpredictableInstruction();
+    }
+
+    const size_t index = i.ZeroExtend();
+    const auto d = ToVector(false, Vd, D);
+
+    const auto reg_d = ir.GetVector(d);
+    const auto scalar = ir.GetRegister(t);
+    const auto result = ir.VectorSetElement(32, reg_d, index, scalar);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+// VMOV<c>.16 <Dn[x]>, <Rt>
+bool ArmTranslatorVisitor::vfp_VMOV_from_i16(Cond cond, Imm<1> i1, size_t Vd, Reg t, bool D, Imm<1> i2) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (t == Reg::R15) {
+        // TODO: v8 removes UPREDICTABLE for R13
+        return UnpredictableInstruction();
+    }
+
+    const size_t index = concatenate(i1, i2).ZeroExtend();
+    const auto d = ToVector(false, Vd, D);
+
+    const auto reg_d = ir.GetVector(d);
+    const auto scalar = ir.LeastSignificantHalf(ir.GetRegister(t));
+    const auto result = ir.VectorSetElement(16, reg_d, index, scalar);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+// VMOV<c>.8 <Dn[x]>, <Rt>
+bool ArmTranslatorVisitor::vfp_VMOV_from_i8(Cond cond, Imm<1> i1, size_t Vd, Reg t, bool D, Imm<2> i2) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (t == Reg::R15) {
+        // TODO: v8 removes UPREDICTABLE for R13
+        return UnpredictableInstruction();
+    }
+
+    const size_t index = concatenate(i1, i2).ZeroExtend();
+    const auto d = ToVector(false, Vd, D);
+
+    const auto reg_d = ir.GetVector(d);
+    const auto scalar = ir.LeastSignificantByte(ir.GetRegister(t));
+    const auto result = ir.VectorSetElement(8, reg_d, index, scalar);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+// VMOV<c>.32 <Rt>, <Dn[x]>
 bool ArmTranslatorVisitor::vfp_VMOV_to_i32(Cond cond, Imm<1> i, size_t Vn, Reg t, bool N) {
     if (!ConditionPassed(cond)) {
         return true;
