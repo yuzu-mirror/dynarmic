@@ -407,6 +407,7 @@ struct ArmTranslatorVisitor final {
     bool vfp_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
     bool vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
     bool vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VDUP(Cond cond, Imm<1> B, bool Q, size_t Vd, Reg t, bool D, Imm<1> E);
 
     // Floating-point misc instructions
     bool vfp_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);

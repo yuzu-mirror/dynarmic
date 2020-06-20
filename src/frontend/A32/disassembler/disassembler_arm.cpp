@@ -119,6 +119,16 @@ public:
         return fmt::format("{}{}", dp_operation ? 'd' : 's', reg_num + 1);
     }
 
+    static std::string VectorStr(bool Q, size_t base, bool bit) {
+        size_t reg_num;
+        if (Q) {
+            reg_num = (base >> 1) + (bit ? 8 : 0);
+        } else {
+            reg_num = base + (bit ? 16 : 0);
+        }
+        return fmt::format("{}{}", Q ? 'q' : 'd', reg_num);
+    }
+
     static std::string CondOrTwo(Cond cond) {
         return cond == Cond::NV ? "2" : CondToString(cond);
     }
@@ -1335,6 +1345,11 @@ public:
 
     std::string vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
         return fmt::format("vmov{} {}, {}, {}", CondToString(cond), t, t2, FPRegStr(true, Vm, M));
+    }
+
+    std::string vfp_VDUP(Cond cond, Imm<1> B, bool Q, size_t Vd, Reg t, bool D, Imm<1> E) {
+        const size_t esize = 32u >> concatenate(B, E).ZeroExtend();
+        return fmt::format("vdup{}.{} {}, {}", CondToString(cond), esize, VectorStr(Q, Vd, D), t);
     }
 
     std::string vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm){

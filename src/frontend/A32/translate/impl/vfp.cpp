@@ -523,6 +523,34 @@ bool ArmTranslatorVisitor::vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, s
     return true;
 }
 
+// VDUP<c>.{8,16,32} <Qd>, <Rt>
+// VDUP<c>.{8,16,32} <Dd>, <Rt>
+bool ArmTranslatorVisitor::vfp_VDUP(Cond cond, Imm<1> B, bool Q, size_t Vd, Reg t, bool D, Imm<1> E) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (Q && Common::Bit<0>(Vd)) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::R15) {
+        return UnpredictableInstruction();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const size_t BE = concatenate(B, E).ZeroExtend();
+    const size_t esize = 32u >> BE;
+
+    if (BE == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    const auto scalar = ir.LeastSignificant(esize, ir.GetRegister(t));
+    const auto result = ir.VectorBroadcast(esize, scalar);
+    ir.SetVector(d, result);
+    return true;
+}
+
 // VMOV<c>.F64 <Dd>, #<imm>
 // VMOV<c>.F32 <Sd>, #<imm>
 bool ArmTranslatorVisitor::vfp_VMOV_imm(Cond cond, bool D, Imm<4> imm4H, size_t Vd, bool sz, Imm<4> imm4L) {
