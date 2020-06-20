@@ -61,6 +61,10 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_last_inst) {
         case IR::Opcode::A32CoprocLoadWords:
         case IR::Opcode::A32CoprocStoreWords:
             return false;
+        // Currently unimplemented in Unicorn
+        case IR::Opcode::FPVectorRecipEstimate16:
+        case IR::Opcode::FPVectorRSqrtEstimate16:
+            return false;
         default:
             continue;
         }
@@ -111,7 +115,7 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             // FPSCR is inaccurate
             "vfp_VMRS",
             // Unimplemented in Unicorn
-            "asimd_VPADD_float", "asimd_VRECPE", "asimd_VRSQRTE",
+            "asimd_VPADD_float",
             // Incorrect Unicorn implementations
             "asimd_VRECPS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
             "asimd_VRSQRTS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
