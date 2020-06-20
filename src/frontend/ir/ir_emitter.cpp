@@ -2513,12 +2513,12 @@ U128 IREmitter::FPVectorSqrt(size_t esize, const U128& a) {
     UNREACHABLE();
 }
 
-U128 IREmitter::FPVectorSub(size_t esize, const U128& a, const U128& b) {
+U128 IREmitter::FPVectorSub(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
     switch (esize) {
     case 32:
-        return Inst<U128>(Opcode::FPVectorSub32, a, b);
+        return Inst<U128>(Opcode::FPVectorSub32, a, b, Imm1(fpcr_controlled));
     case 64:
-        return Inst<U128>(Opcode::FPVectorSub64, a, b);
+        return Inst<U128>(Opcode::FPVectorSub64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }

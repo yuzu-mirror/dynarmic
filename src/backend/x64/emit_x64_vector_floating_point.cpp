@@ -1401,11 +1401,11 @@ void EmitX64::EmitFPVectorSqrt64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitFPVectorSub32(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<32, DefaultIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::subps);
+    EmitThreeOpVectorOperation<32, DefaultIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::subps);
 }
 
 void EmitX64::EmitFPVectorSub64(EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpVectorOperation<64, DefaultIndexer>(code, ctx, inst, &Xbyak::CodeGenerator::subpd);
+    EmitThreeOpVectorOperation<64, DefaultIndexer, FpcrControlledArgument::Present>(code, ctx, inst, &Xbyak::CodeGenerator::subpd);
 }
 
 template<size_t fsize, bool unsigned_>
