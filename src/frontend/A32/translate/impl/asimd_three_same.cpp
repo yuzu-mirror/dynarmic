@@ -86,7 +86,9 @@ bool IntegerComparison(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_
         case Comparison::GT:
             return U ? v.ir.VectorGreaterUnsigned(esize, reg_n, reg_m)
                      : v.ir.VectorGreaterSigned(esize, reg_n, reg_m);
-
+        case Comparison::GE:
+            return U ? v.ir.VectorGreaterEqualUnsigned(esize, reg_n, reg_m)
+                     : v.ir.VectorGreaterEqualSigned(esize, reg_n, reg_m);
         default:
             return IR::U128{};
         }
@@ -257,6 +259,10 @@ bool ArmTranslatorVisitor::asimd_VQSUB(bool U, bool D, size_t sz, size_t Vn, siz
 
 bool ArmTranslatorVisitor::asimd_VCGT_reg(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return IntegerComparison(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GT);
+}
+
+bool ArmTranslatorVisitor::asimd_VCGE_reg(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return IntegerComparison(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GE);
 }
 
 bool ArmTranslatorVisitor::asimd_VADD_int(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {

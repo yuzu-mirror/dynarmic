@@ -13,7 +13,7 @@ INST(asimd_VBIF,            "VBIF",                     "111100110D11nnnndddd000
 INST(asimd_VHSUB,           "VHSUB",                    "1111001U0Dzznnnndddd0010NQM0mmmm") // ASIMD
 INST(asimd_VQSUB,           "VQSUB",                    "1111001U0Dzznnnndddd0010NQM1mmmm") // ASIMD
 INST(asimd_VCGT_reg,        "VCGT (register)",          "1111001U0Dzznnnndddd0011NQM0mmmm") // ASIMD
-//INST(asimd_VCGE_reg,        "VCGE (register)",          "1111001U0-CC--------0011---1----") // ASIMD
+INST(asimd_VCGE_reg,        "VCGE (register)",          "1111001U0Dzznnnndddd0011NQM1mmmm") // ASIMD
 INST(asimd_VSHL_reg,        "VSHL (register)",          "1111001U0Dzznnnndddd0100NQM0mmmm") // ASIMD
 INST(asimd_VQSHL_reg,       "VQSHL (register)",         "1111001U0Dzznnnndddd0100NQM1mmmm") // ASIMD
 INST(asimd_VRSHL,           "VRSHL",                    "1111001U0Dzznnnndddd0101NQM0mmmm") // ASIMD
