@@ -9,6 +9,12 @@
 
 namespace Dynarmic::A32 {
 namespace {
+enum class Comparison {
+    GE,
+    GT,
+    EQ,
+};
+
 template <bool WithDst, typename Callable>
 bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
@@ -53,6 +59,38 @@ bool FloatingPointInstruction(ArmTranslatorVisitor& v, bool D, bool sz, size_t V
     const auto reg_n = v.ir.GetVector(n);
     const auto reg_m = v.ir.GetVector(m);
     const auto result = fn(reg_d, reg_n, reg_m);
+
+    v.ir.SetVector(d, result);
+    return true;
+}
+
+bool IntegerComparison(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm,
+                       Comparison comparison) {
+    if (sz == 0b11) {
+        return v.UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return v.UndefinedInstruction();
+    }
+
+    const size_t esize = 8 << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_n = v.ir.GetVector(n);
+    const auto reg_m = v.ir.GetVector(m);
+    const auto result = [&] {
+        switch (comparison) {
+        case Comparison::GT:
+            return U ? v.ir.VectorGreaterUnsigned(esize, reg_n, reg_m)
+                     : v.ir.VectorGreaterSigned(esize, reg_n, reg_m);
+
+        default:
+            return IR::U128{};
+        }
+    }();
 
     v.ir.SetVector(d, result);
     return true;
@@ -215,6 +253,10 @@ bool ArmTranslatorVisitor::asimd_VQSUB(bool U, bool D, size_t sz, size_t Vn, siz
     ir.SetVector(d, result);
 
     return true;
+}
+
+bool ArmTranslatorVisitor::asimd_VCGT_reg(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return IntegerComparison(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GT);
 }
 
 bool ArmTranslatorVisitor::asimd_VADD_int(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
