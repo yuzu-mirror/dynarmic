@@ -18,7 +18,7 @@ INST(asimd_VSHL_reg,        "VSHL (register)",          "1111001U0Dzznnnndddd010
 INST(asimd_VQSHL_reg,       "VQSHL (register)",         "1111001U0Dzznnnndddd0100NQM1mmmm") // ASIMD
 INST(asimd_VRSHL,           "VRSHL",                    "1111001U0Dzznnnndddd0101NQM0mmmm") // ASIMD
 //INST(asimd_VQRSHL,          "VQRSHL",                   "1111001U0-CC--------0101---1----") // ASIMD
-//INST(asimd_VMAX,            "VMAX/VMIN",                "1111001U0-CC--------0110---B----") // ASIMD
+INST(asimd_VMAX,            "VMAX/VMIN",                "1111001U0Dzznnnnmmmm0110NQMommmm") // ASIMD
 //INST(asimd_VABD,            "VABD/VABDL",               "1111001U0-CC--------0111---0----") // ASIMD
 //INST(asimd_VABA,            "VABA/ABAL",                "1111001U0-CC--------0111---1----") // ASIMD
 INST(asimd_VADD_int,        "VADD (integer)",           "111100100Dzznnnndddd1000NQM0mmmm") // ASIMD

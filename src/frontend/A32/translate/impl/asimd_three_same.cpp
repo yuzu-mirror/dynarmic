@@ -310,6 +310,36 @@ bool ArmTranslatorVisitor::asimd_VRSHL(bool U, bool D, size_t sz, size_t Vn, siz
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VMAX(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, bool op, size_t Vm) {
+    if (sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto reg_n = ir.GetVector(n);
+    const auto result = [&] {
+        if (op) {
+            return U ? ir.VectorMinUnsigned(esize, reg_m, reg_n)
+                     : ir.VectorMinSigned(esize, reg_m, reg_n);
+        } else {
+            return U ? ir.VectorMaxUnsigned(esize, reg_m, reg_n)
+                     : ir.VectorMaxSigned(esize, reg_m, reg_n);
+        }
+    }();
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VTST(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
