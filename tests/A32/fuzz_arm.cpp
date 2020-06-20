@@ -342,3 +342,33 @@ TEST_CASE("A32: Small random block", "[arm]") {
         RunTestInstance(jit, uni, jit_env, uni_env, regs, ext_reg, instructions, cpsr, fpcr);
     }
 }
+
+TEST_CASE("A32: Large random block", "[arm]") {
+    ArmTestEnv jit_env{};
+    ArmTestEnv uni_env{};
+
+    Dynarmic::A32::Jit jit{GetUserConfig(jit_env)};
+    A32Unicorn<ArmTestEnv> uni{uni_env};
+
+    A32Unicorn<ArmTestEnv>::RegisterArray regs;
+    A32Unicorn<ArmTestEnv>::ExtRegArray ext_reg;
+
+    constexpr size_t instruction_count = 100;
+    std::vector<u32> instructions(instruction_count);
+
+    for (size_t iteration = 0; iteration < 10000; ++iteration) {
+        std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
+        std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
+
+        for (size_t j = 0; j < instruction_count; ++j) {
+            instructions[j] = GenRandomInst(j * 4, j == instruction_count - 1);
+        }
+
+        const u64 start_address = 100;
+        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x10;
+        const u32 fpcr = RandomFpcr();
+
+        regs[15] = start_address;
+        RunTestInstance(jit, uni, jit_env, uni_env, regs, ext_reg, instructions, cpsr, fpcr);
+    }
+}
