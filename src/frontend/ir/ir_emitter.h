@@ -364,7 +364,7 @@ public:
     U128 FPVectorRecipStepFused(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorRoundInt(size_t esize, const U128& operand, FP::RoundingMode rounding, bool exact);
     U128 FPVectorRSqrtEstimate(size_t esize, const U128& a);
-    U128 FPVectorRSqrtStepFused(size_t esize, const U128& a, const U128& b);
+    U128 FPVectorRSqrtStepFused(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorSqrt(size_t esize, const U128& a);
     U128 FPVectorSub(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorToSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);

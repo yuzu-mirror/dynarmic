@@ -419,4 +419,10 @@ bool ArmTranslatorVisitor::asimd_VRECPS(bool D, bool sz, size_t Vn, size_t Vd, b
     });
 }
 
+bool ArmTranslatorVisitor::asimd_VRSQRTS(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        return ir.FPVectorRSqrtStepFused(32, reg_n, reg_m, false);
+    });
+}
+
 } // namespace Dynarmic::A32

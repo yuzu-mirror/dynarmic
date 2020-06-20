@@ -112,6 +112,8 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             "vfp_VMRS",
             // Unimplemented in Unicorn
             "asimd_VPADD_float",
+            // Incorrect Unicorn implementations
+            "asimd_VRECPS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
         };
 
         for (const auto& [fn, bitstring] : list) {

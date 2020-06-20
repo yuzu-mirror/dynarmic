@@ -1335,6 +1335,7 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     if constexpr (fsize != 16) {
         if (code.HasFMA() && code.HasAVX()) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const bool fpcr_controlled = args[2].GetImmediateU1();
 
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -1344,28 +1345,30 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
 
             Xbyak::Label end, fallback;
 
-            code.vmovaps(result, GetVectorOf<fsize, false, 0, 3>(code));
-            FCODE(vfnmadd231p)(result, operand1, operand2);
+            MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
+                code.vmovaps(result, GetVectorOf<fsize, false, 0, 3>(code));
+                FCODE(vfnmadd231p)(result, operand1, operand2);
 
-            // An explanation for this is given in EmitFPRSqrtStepFused.
-            code.vmovaps(mask, GetVectorOf<fsize, fsize == 32 ? 0x7f000000 : 0x7fe0000000000000>(code));
-            FCODE(vandp)(tmp, result, mask);
-            if constexpr (fsize == 32) {
-                code.vpcmpeqd(tmp, tmp, mask);
-            } else {
-                code.vpcmpeqq(tmp, tmp, mask);
-            }
-            code.ptest(tmp, tmp);
-            code.jnz(fallback, code.T_NEAR);
+                // An explanation for this is given in EmitFPRSqrtStepFused.
+                code.vmovaps(mask, GetVectorOf<fsize, fsize == 32 ? 0x7f000000 : 0x7fe0000000000000>(code));
+                FCODE(vandp)(tmp, result, mask);
+                if constexpr (fsize == 32) {
+                    code.vpcmpeqd(tmp, tmp, mask);
+                } else {
+                    code.vpcmpeqq(tmp, tmp, mask);
+                }
+                code.ptest(tmp, tmp);
+                code.jnz(fallback, code.T_NEAR);
 
-            FCODE(vmulp)(result, result, GetVectorOf<fsize, false, -1, 1>(code));
-            code.L(end);
+                FCODE(vmulp)(result, result, GetVectorOf<fsize, false, -1, 1>(code));
+                code.L(end);
+            });
 
             code.SwitchToFarCode();
             code.L(fallback);
             code.sub(rsp, 8);
             ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
-            EmitThreeOpFallbackWithoutRegAlloc(code, ctx, result, operand1, operand2, fallback_fn);
+            EmitThreeOpFallbackWithoutRegAlloc(code, ctx, result, operand1, operand2, fallback_fn, fpcr_controlled);
             ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
             code.add(rsp, 8);
             code.jmp(end, code.T_NEAR);
@@ -1376,7 +1379,7 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
         }
     }
 
-    EmitThreeOpFallback(code, ctx, inst, fallback_fn);
+    EmitThreeOpFallback<FpcrControlledArgument::Present>(code, ctx, inst, fallback_fn);
 }
 
 void EmitX64::EmitFPVectorRSqrtStepFused16(EmitContext& ctx, IR::Inst* inst) {

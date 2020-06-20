@@ -47,7 +47,7 @@ INST(asimd_VMUL_float,      "VMUL (floating-point)",    "111100110D0znnnndddd110
 INST(asimd_VMAX_float,      "VMAX (floating-point)",    "111100100D0znnnndddd1111NQM0mmmm") // ASIMD
 INST(asimd_VMIN_float,      "VMIN (floating-point)",    "111100100D1znnnndddd1111NQM0mmmm") // ASIMD
 INST(asimd_VRECPS,          "VRECPS",                   "111100100D0znnnndddd1111NQM1mmmm") // ASIMD
-//INST(asimd_VRSQRTS,         "VRSQRTS",                  "111100100-1C--------1111---1----") // ASIMD
+INST(asimd_VRSQRTS,         "VRSQRTS",                  "111100100D1znnnndddd1111NQM1mmmm") // ASIMD
 
 // Two registers and a scalar
 //INST(asimd_VMLA_scalar,     "VMLA (scalar)",            "1111001U1-BB--------0x0x-1-0----") // ASIMD
