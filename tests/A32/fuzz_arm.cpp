@@ -111,7 +111,7 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             // FPSCR is inaccurate
             "vfp_VMRS",
             // Unimplemented in Unicorn
-            "asimd_VPADD_float",
+            "asimd_VPADD_float", "asimd_VRECPE",
             // Incorrect Unicorn implementations
             "asimd_VRECPS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
         };

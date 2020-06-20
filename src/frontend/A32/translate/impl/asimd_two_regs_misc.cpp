@@ -352,4 +352,31 @@ bool ArmTranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t 
 
     return true;
 }
+
+bool ArmTranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    if (sz == 0b00 || sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    if (!F && sz == 0b01) {
+        // TODO: Implement 16-bit VectorUnsignedRecipEstimate
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto reg_m = ir.GetVector(m);
+    const auto result = F ? ir.FPVectorRecipEstimate(esize, reg_m, false)
+                          : ir.VectorUnsignedRecipEstimate(reg_m);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32

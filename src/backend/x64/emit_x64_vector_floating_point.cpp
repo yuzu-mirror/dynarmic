@@ -378,11 +378,12 @@ void EmitThreeOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-template<typename Lambda>
+template<FpcrControlledArgument fcarg = FpcrControlledArgument::Absent, typename Lambda>
 void EmitTwoOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
     const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const bool fpcr_controlled = fcarg == FpcrControlledArgument::Absent || args[1].GetImmediateU1();
     const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
     const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
     ctx.reg_alloc.EndOfAllocScope();
@@ -392,7 +393,7 @@ void EmitTwoOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lamb
     code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
     code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE + 0 * 16]);
     code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + 1 * 16]);
-    code.mov(code.ABI_PARAM3.cvt32(), ctx.FPCR().Value());
+    code.mov(code.ABI_PARAM3.cvt32(), ctx.FPCR(fpcr_controlled).Value());
     code.lea(code.ABI_PARAM4, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
 
     code.movaps(xword[code.ABI_PARAM2], arg1);
@@ -1144,7 +1145,7 @@ void EmitX64::EmitFPVectorPairedAddLower64(EmitContext& ctx, IR::Inst* inst) {
 
 template<typename FPT>
 static void EmitRecipEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitTwoOpFallback(code, ctx, inst, [](VectorArray<FPT>& result, const VectorArray<FPT>& operand, FP::FPCR fpcr, FP::FPSR& fpsr) {
+    EmitTwoOpFallback<FpcrControlledArgument::Present>(code, ctx, inst, [](VectorArray<FPT>& result, const VectorArray<FPT>& operand, FP::FPCR fpcr, FP::FPSR& fpsr) {
         for (size_t i = 0; i < result.size(); i++) {
             result[i] = FP::FPRecipEstimate<FPT>(operand[i], fpcr, fpsr);
         }
@@ -1188,12 +1189,12 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
             MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
                 code.movaps(result, GetVectorOf<fsize, false, 0, 2>(code));
                 FCODE(vfnmadd231p)(result, operand1, operand2);
-            });
 
-            FCODE(vcmpunordp)(tmp, result, result);
-            code.vptest(tmp, tmp);
-            code.jnz(fallback, code.T_NEAR);
-            code.L(end);
+                FCODE(vcmpunordp)(tmp, result, result);
+                code.vptest(tmp, tmp);
+                code.jnz(fallback, code.T_NEAR);
+                code.L(end);
+            });
 
             code.SwitchToFarCode();
             code.L(fallback);

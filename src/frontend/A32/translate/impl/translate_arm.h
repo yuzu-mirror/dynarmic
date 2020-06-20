@@ -499,6 +499,7 @@ struct ArmTranslatorVisitor final {
     bool asimd_VABS(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t Vm);
+    bool asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
 
     // Advanced SIMD load/store structures
     bool v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t sz, size_t align, Reg m);
