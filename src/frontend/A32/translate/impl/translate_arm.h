@@ -397,7 +397,6 @@ struct ArmTranslatorVisitor final {
     bool vfp_VMINNM(bool D, size_t Vn, size_t Vd, bool sz, bool N, bool M, size_t Vm);
 
     // Floating-point move instructions
-    bool vfp_VMOV_imm(Cond cond, bool D, Imm<4> imm4H, size_t Vd, bool sz, Imm<4> imm4L);
     bool vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D);
     bool vfp_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N);
     bool vfp_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N);
@@ -406,8 +405,13 @@ struct ArmTranslatorVisitor final {
     bool vfp_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
     bool vfp_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
     bool vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm);
-    bool vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VMOV_to_i32(Cond cond, Imm<1> i, size_t Vn, Reg t, bool N);
+    bool vfp_VMOV_to_i16(Cond cond, bool U, Imm<1> i1, size_t Vn, Reg t, bool N, Imm<1> i2);
+    bool vfp_VMOV_to_i8(Cond cond, bool U, Imm<1> i1, size_t Vn, Reg t, bool N, Imm<2> i2);
     bool vfp_VDUP(Cond cond, Imm<1> B, bool Q, size_t Vd, Reg t, bool D, Imm<1> E);
+    bool vfp_VMOV_imm(Cond cond, bool D, Imm<4> imm4H, size_t Vd, bool sz, Imm<4> imm4L);
+    bool vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+
 
     // Floating-point misc instructions
     bool vfp_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);

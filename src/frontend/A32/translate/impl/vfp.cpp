@@ -523,6 +523,71 @@ bool ArmTranslatorVisitor::vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, s
     return true;
 }
 
+// VMOV<c>.{U16,S16} <Rt>, <Dn[x]>
+bool ArmTranslatorVisitor::vfp_VMOV_to_i32(Cond cond, Imm<1> i, size_t Vn, Reg t, bool N) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (t == Reg::R15) {
+        // TODO: v8 removes UPREDICTABLE for R13
+        return UnpredictableInstruction();
+    }
+
+    const size_t index = i.ZeroExtend();
+    const auto n = ToVector(false, Vn, N);
+
+    const auto reg_n = ir.GetVector(n);
+    const auto result = ir.VectorGetElement(32, reg_n, index);
+
+    ir.SetRegister(t, result);
+    return true;
+}
+
+// VMOV<c>.{U16,S16} <Rt>, <Dn[x]>
+bool ArmTranslatorVisitor::vfp_VMOV_to_i16(Cond cond, bool U, Imm<1> i1, size_t Vn, Reg t, bool N, Imm<1> i2) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (t == Reg::R15) {
+        // TODO: v8 removes UPREDICTABLE for R13
+        return UnpredictableInstruction();
+    }
+
+    const size_t index = concatenate(i1, i2).ZeroExtend();
+    const auto n = ToVector(false, Vn, N);
+
+    const auto reg_n = ir.GetVector(n);
+    const auto scalar = ir.VectorGetElement(16, reg_n, index);
+    const auto result = U ? ir.ZeroExtendToWord(scalar) : ir.SignExtendToWord(scalar);
+
+    ir.SetRegister(t, result);
+    return true;
+}
+
+// VMOV<c>.{U8,S8} <Rt>, <Dn[x]>
+bool ArmTranslatorVisitor::vfp_VMOV_to_i8(Cond cond, bool U, Imm<1> i1, size_t Vn, Reg t, bool N, Imm<2> i2) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    if (t == Reg::R15) {
+        // TODO: v8 removes UPREDICTABLE for R13
+        return UnpredictableInstruction();
+    }
+
+    const size_t index = concatenate(i1, i2).ZeroExtend();
+    const auto n = ToVector(false, Vn, N);
+
+    const auto reg_n = ir.GetVector(n);
+    const auto scalar = ir.VectorGetElement(8, reg_n, index);
+    const auto result = U ? ir.ZeroExtendToWord(scalar) : ir.SignExtendToWord(scalar);
+
+    ir.SetRegister(t, result);
+    return true;
+}
+
 // VDUP<c>.{8,16,32} <Qd>, <Rt>
 // VDUP<c>.{8,16,32} <Dd>, <Rt>
 bool ArmTranslatorVisitor::vfp_VDUP(Cond cond, Imm<1> B, bool Q, size_t Vd, Reg t, bool D, Imm<1> E) {
