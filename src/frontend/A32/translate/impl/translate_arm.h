@@ -415,7 +415,6 @@ struct ArmTranslatorVisitor final {
     bool vfp_VMOV_imm(Cond cond, bool D, Imm<4> imm4H, size_t Vd, bool sz, Imm<4> imm4L);
     bool vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
 
-
     // Floating-point misc instructions
     bool vfp_VABS(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp_VNEG(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
@@ -529,6 +528,7 @@ struct ArmTranslatorVisitor final {
     bool asimd_VEXT(bool D, size_t Vn, size_t Vd, Imm<4> imm4, bool N, bool Q, bool M, size_t Vm);
     bool asimd_VTBL(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm);
     bool asimd_VTBX(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm);
+    bool asimd_VDUP_scalar(bool D, Imm<4> imm4, size_t Vd, bool Q, bool M, size_t Vm);
 
     // Advanced SIMD load/store structures
     bool v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t sz, size_t align, Reg m);

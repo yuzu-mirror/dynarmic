@@ -65,4 +65,27 @@ bool ArmTranslatorVisitor::asimd_VTBX(bool D, size_t Vn, size_t Vd, size_t len, 
     return TableLookup(*this, false, D, Vn, Vd, len, N, M, Vm);
 }
 
+bool ArmTranslatorVisitor::asimd_VDUP_scalar(bool D, Imm<4> imm4, size_t Vd, bool Q, bool M, size_t Vm) {
+    if (Q && Common::Bit<0>(Vd)) {
+        return UndefinedInstruction();
+    }
+
+    if (imm4.Bits<0, 2>() == 0b000) {
+        return UndefinedInstruction();
+    }
+
+    const size_t imm4_lsb = Common::LowestSetBit(imm4.ZeroExtend());
+    const size_t esize = 8u << imm4_lsb;
+    const size_t index = imm4.ZeroExtend() >> (imm4_lsb + 1);
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(false, Vm, M);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto scalar = ir.VectorGetElement(esize, reg_m, index);
+    const auto result = ir.VectorBroadcast(esize, scalar);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32
