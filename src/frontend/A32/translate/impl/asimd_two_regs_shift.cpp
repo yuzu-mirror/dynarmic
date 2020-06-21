@@ -175,4 +175,26 @@ bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bo
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VSHRN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+    if (Common::Bits<3, 5>(imm6) == 0) {
+        // TODO: Decode error
+        return UndefinedInstruction();
+    }
+
+    if (Common::Bit<0>(Vm)) {
+        return UndefinedInstruction();
+    }
+
+    const auto [esize, shift_amount] = ElementSizeAndShiftAmount(true, false, imm6);
+    const auto d = ToVector(false, Vd, D);
+    const auto m = ToVector(true, Vm, M);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto wide_result = ir.VectorLogicalShiftRight(2 * esize, reg_m, shift_amount);
+    const auto result = ir.VectorNarrow(2 * esize, wide_result);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32
