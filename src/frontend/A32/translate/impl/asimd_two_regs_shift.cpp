@@ -281,6 +281,11 @@ bool ArmTranslatorVisitor::asimd_VSHRN(bool D, size_t imm6, size_t Vd, bool M, s
                                Rounding::None, Narrowing::Truncation, Signedness::Unsigned);
 }
 
+bool ArmTranslatorVisitor::asimd_VRSHRN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+    return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
+                               Rounding::Round, Narrowing::Truncation, Signedness::Unsigned);
+}
+
 bool ArmTranslatorVisitor::asimd_VQRSHRUN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
                                Rounding::Round, Narrowing::SaturateToUnsigned, Signedness::Signed);
