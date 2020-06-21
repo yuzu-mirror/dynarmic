@@ -790,19 +790,30 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bit
 
     EmitDetectMisaignedVAddr(code, ctx, bitsize, abort, vaddr, tmp);
 
-    code.mov(tmp, vaddr);
     if (unused_top_bits == 0) {
+        code.mov(tmp, vaddr);
         code.shr(tmp, int(page_bits));
     } else if (ctx.conf.silently_mirror_page_table) {
         if (valid_page_index_bits >= 32) {
-            code.shl(tmp, int(unused_top_bits));
-            code.shr(tmp, int(unused_top_bits + page_bits));
+            if (code.HasBMI2()) {
+                const Xbyak::Reg64 bit_count = ctx.reg_alloc.ScratchGpr();
+                code.mov(bit_count, unused_top_bits);
+                code.bzhi(tmp, vaddr, bit_count);
+                code.shr(tmp, int(page_bits));
+                ctx.reg_alloc.Release(bit_count);
+            } else {
+                code.mov(tmp, vaddr);
+                code.shl(tmp, int(unused_top_bits));
+                code.shr(tmp, int(unused_top_bits + page_bits));
+            }
         } else {
+            code.mov(tmp, vaddr);
             code.shr(tmp, int(page_bits));
             code.and_(tmp, u32((1 << valid_page_index_bits) - 1));
         }
     } else {
         ASSERT(valid_page_index_bits < 32);
+        code.mov(tmp, vaddr);
         code.shr(tmp, int(page_bits));
         code.test(tmp, u32(-(1 << valid_page_index_bits)));
         code.jnz(abort, code.T_NEAR);
