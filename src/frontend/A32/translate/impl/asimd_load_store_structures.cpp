@@ -244,7 +244,7 @@ bool ArmTranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, si
         return UndefinedInstruction();
     }
 
-    const size_t ebytes = 1 << sz;
+    const size_t ebytes = size_t(1) << sz;
     const size_t index = Common::Bits(sz + 1, 3, index_align);
     const size_t inc = (sz != 0 && Common::Bit(sz, index_align)) ? 2 : 1;
     const size_t a = Common::Bits(0, sz ? sz - 1 : 0, index_align);
@@ -306,7 +306,7 @@ bool ArmTranslatorVisitor::v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, si
         return UndefinedInstruction();
     }
 
-    const size_t ebytes = 1 << sz;
+    const size_t ebytes = size_t(1) << sz;
     const size_t index = Common::Bits(sz + 1, 3, index_align);
     const size_t inc = (sz != 0 && Common::Bit(sz, index_align)) ? 2 : 1;
     const size_t a = Common::Bits(0, sz ? sz - 1 : 0, index_align);
