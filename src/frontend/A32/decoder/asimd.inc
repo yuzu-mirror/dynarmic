@@ -94,7 +94,7 @@ INST(asimd_VQRSHRUN,        "VQRSHRUN",                 "111100111Diiiiiidddd100
 //INST(asimd_VQSHRN,          "VQSHRN",                   "1111001U1-vvv-------100100-1----") // ASIMD
 INST(asimd_VQRSHRN,         "VQRSHRN",                  "1111001U1Diiiiiidddd100101M1mmmm") // ASIMD
 //INST(asimd_SHLL,            "SHLL",                     "1111001U1-vvv-------101000-1----") // ASIMD
-//INST(asimd_VCVT_fixed,      "VCVT (fixed-point)",       "1111001U1-vvv-------111x0B-1----") // ASIMD
+INST(asimd_VCVT_fixed,      "VCVT (fixed-point)",       "1111001U1Diiiiiidddd111o0QM1mmmm") // ASIMD
 
 // Two registers, miscellaneous
 INST(asimd_VREV,            "VREV{16,32,64}",           "111100111D11zz00dddd000ooQM0mmmm") // ASIMD

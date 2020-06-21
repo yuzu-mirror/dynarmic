@@ -291,4 +291,27 @@ bool ArmTranslatorVisitor::asimd_VQRSHRN(bool U, bool D, size_t imm6, size_t Vd,
                                Rounding::Round, U ? Narrowing::SaturateToUnsigned : Narrowing::SaturateToSigned, U ? Signedness::Unsigned : Signedness::Signed);
 }
 
+bool ArmTranslatorVisitor::asimd_VCVT_fixed(bool U, bool D, size_t imm6, size_t Vd, bool to_fixed, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    ASSERT_MSG((Common::Bits<3, 5>(imm6) != 0), "Decode error");
+
+    if (!Common::Bit<5>(imm6)) {
+        return UndefinedInstruction();
+    }
+
+    const size_t fbits = 64 - imm6;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto result = to_fixed ? (U ? ir.FPVectorToUnsignedFixed(32, reg_m, fbits, FP::RoundingMode::TowardsZero, false) : ir.FPVectorToSignedFixed(32, reg_m, fbits, FP::RoundingMode::TowardsZero, false))
+                                 : (U ? ir.FPVectorFromUnsignedFixed(32, reg_m, fbits, FP::RoundingMode::ToNearest_TieEven, false) : ir.FPVectorFromSignedFixed(32, reg_m, fbits, FP::RoundingMode::ToNearest_TieEven, false));
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32
