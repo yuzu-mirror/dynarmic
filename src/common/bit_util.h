@@ -30,10 +30,19 @@ constexpr T Ones(size_t count) {
 }
 
 /// Extract bits [begin_bit, end_bit] inclusive from value of type T.
+template<typename T>
+constexpr T Bits(const size_t begin_bit, const size_t end_bit, const T value) {
+    ASSERT_MSG(begin_bit <= end_bit, "invalid bit range (position of beginning bit cannot be greater than that of end bit)");
+    ASSERT_MSG(begin_bit < BitSize<T>(), "begin_bit must be smaller than size of T");
+    ASSERT_MSG(end_bit < BitSize<T>(), "end_bit must be smaller than size of T");
+
+    return (value >> begin_bit) & Ones<T>(end_bit - begin_bit + 1);
+}
+
+/// Extract bits [begin_bit, end_bit] inclusive from value of type T.
 template<size_t begin_bit, size_t end_bit, typename T>
 constexpr T Bits(const T value) {
-    static_assert(begin_bit <= end_bit,
-                  "invalid bit range (position of beginning bit cannot be greater than that of end bit)");
+    static_assert(begin_bit <= end_bit, "invalid bit range (position of beginning bit cannot be greater than that of end bit)");
     static_assert(begin_bit < BitSize<T>(), "begin_bit must be smaller than size of T");
     static_assert(end_bit < BitSize<T>(), "end_bit must be smaller than size of T");
 
@@ -43,8 +52,7 @@ constexpr T Bits(const T value) {
 /// Create a mask of type T for bits [begin_bit, end_bit] inclusive.
 template<size_t begin_bit, size_t end_bit, typename T>
 constexpr T Mask() {
-    static_assert(begin_bit <= end_bit,
-                  "invalid bit range (position of beginning bit cannot be greater than that of end bit)");
+    static_assert(begin_bit <= end_bit, "invalid bit range (position of beginning bit cannot be greater than that of end bit)");
     static_assert(begin_bit < BitSize<T>(), "begin_bit must be smaller than size of T");
     static_assert(end_bit < BitSize<T>(), "end_bit must be smaller than size of T");
 
