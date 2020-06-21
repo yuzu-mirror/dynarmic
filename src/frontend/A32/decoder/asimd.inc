@@ -52,13 +52,28 @@ INST(asimd_VMIN_float,      "VMIN (floating-point)",    "111100100D1znnnndddd111
 INST(asimd_VRECPS,          "VRECPS",                   "111100100D0znnnndddd1111NQM1mmmm") // ASIMD
 INST(asimd_VRSQRTS,         "VRSQRTS",                  "111100100D1znnnndddd1111NQM1mmmm") // ASIMD
 
+// Three registers of different lengths
+//INST(asimd_VADDL,           "VADDL/VADDW",              "1111001-1----------------0-0----") // ASIMD
+//INST(asimd_VADDL,           "VADDL/VADDW",              "1111001-1-----------000--0-0----") // ASIMD
+//INST(asimd_VSUBL,           "VSUBL/VSUBW",              "1111001-1-----------001--0-0----") // ASIMD
+//INST(asimd_VADDHN,          "VADDHN",                   "111100101-----------0100-0-0----") // ASIMD
+//INST(asimd_VRADDHN,         "VRADDHN",                  "111100111-----------0100-0-0----") // ASIMD
+// VABAL
+//INST(asimd_VSUBHN,          "VSUBHN",                   "111100101-----------0110-0-0----") // ASIMD
+//INST(asimd_VRSUBHN,         "VRSUBHN",                  "111100111-----------0110-0-0----") // ASIMD
+// VABDL
+// VMLAL
+//INST(asimd_VQDMLAL,         "VQDMLAL",                  "111100101-----------10-1-0-0----") // ASIMD
+// VMULL
+//INST(asimd_VQDMULL,         "VQDMULL",                  "111100101-----------1101-0-0----") // ASIMD
+
 // Two registers and a scalar
 INST(asimd_VMLA_scalar,     "VMLA (scalar)",            "1111001Q1Dzznnnndddd0o0FN1M0mmmm") // ASIMD
 INST(asimd_VMLAL_scalar,    "VMLAL (scalar)",           "1111001U1dzznnnndddd0o10N1M0mmmm") // ASIMD
-//INST(asimd_VQDMLAL,         "VQDMLAL/VQDMLSL",          "111100101-BB--------0x11-1-0----") // ASIMD
+//INST(asimd_VQDMLAL_scalar,  "VQDMLAL/VQDMLSL (scalar)", "111100101-BB--------0x11-1-0----") // ASIMD
 INST(asimd_VMUL_scalar,     "VMUL (scalar)",            "1111001Q1Dzznnnndddd100FN1M0mmmm") // ASIMD
 INST(asimd_VMULL_scalar,    "VMULL (scalar)",           "1111001U1Dzznnnndddd1010N1M0mmmm") // ASIMD
-//INST(asimd_VQDMULL,         "VQDMULL",                  "111100101-BB--------1011-1-0----") // ASIMD
+//INST(asimd_VQDMULL_scalar,  "VQDMULL (scalar)",         "111100101-BB--------1011-1-0----") // ASIMD
 //INST(asimd_VQDMULH,         "VQDMULH",                  "1111001U1-BB--------1100-1-0----") // ASIMD
 //INST(asimd_VQRDMULH,        "VQRDMULH",                 "1111001U1-BB--------1101-1-0----") // ASIMD
 
