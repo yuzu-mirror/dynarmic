@@ -127,5 +127,5 @@ INST(arm_UDF,               "UNALLOCATED",              "111101000--0--------11-
 INST(arm_UDF,               "UNALLOCATED",              "111101001-00--------11----------") // v8
 INST(v8_VLD_all_lanes,      "VLD{1-4} (all lanes)",     "111101001D10nnnndddd11nnzzTammmm") // v8
 INST(arm_UDF,               "UNALLOCATED",              "111101001-10--------1110---1----") // v8
-//INST(v8_VST_single,         "VST{1-4} (single)",        "111101001D00nnnnddddzzNNaaaammmm") // v8
+INST(v8_VST_single,         "VST{1-4} (single)",        "111101001D00nnnnddddzzNNaaaammmm") // v8
 INST(v8_VLD_single,         "VLD{1-4} (single)",        "111101001D10nnnnddddzzNNaaaammmm") // v8

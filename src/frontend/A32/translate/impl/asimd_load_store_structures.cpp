@@ -235,6 +235,68 @@ bool ArmTranslatorVisitor::v8_VLD_all_lanes(bool D, Reg n, size_t Vd, size_t nn,
     return true;
 }
 
+bool ArmTranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
+    const size_t nelem = nn + 1;
+
+    ASSERT_MSG(sz != 0b11, "Decode Error");
+
+    if (nelem == 1 && Common::Bit(sz, index_align)) {
+        return UndefinedInstruction();
+    }
+
+    const size_t ebytes = 1 << sz;
+    const size_t index = Common::Bits(sz + 1, 3, index_align);
+    const size_t inc = (sz != 0 && Common::Bit(sz, index_align)) ? 2 : 1;
+    const size_t a = Common::Bits(0, sz ? sz - 1 : 0, index_align);
+
+    if (nelem == 1 && inc == 2) {
+        return UndefinedInstruction();
+    }
+    if (nelem == 1 && (a != 0b00 && a != 0b11)) {
+        return UndefinedInstruction();
+    }
+    if (nelem == 2 && Common::Bit<1>(a)) {
+        return UndefinedInstruction();
+    }
+    if (nelem == 3 && a != 0b00) {
+        return UndefinedInstruction();
+    }
+    if (nelem == 4 && a == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    // TODO: alignment
+
+    const ExtReg d = ToExtRegD(Vd, D);
+    const size_t d_last = RegNumber(d) + inc * (nelem - 1);
+    if (n == Reg::R15 || d_last + 1 > 32) {
+        return UnpredictableInstruction();
+    }
+
+    const bool wback = m != Reg::R15;
+    const bool register_index = m != Reg::R15 && m != Reg::R13;
+
+    auto address = ir.GetRegister(n);
+    for (size_t i = 0; i < nelem; i++) {
+        const ExtReg ext_reg = d + i * inc;
+        const auto element = ir.VectorGetElement(ebytes * 8, ir.GetVector(ext_reg), index);
+
+        ir.WriteMemory(ebytes * 8, address, element);
+
+        address = ir.Add(address, ir.Imm32(static_cast<u32>(ebytes)));
+    }
+
+    if (wback) {
+        if (register_index) {
+            ir.SetRegister(n, ir.Add(ir.GetRegister(n), ir.GetRegister(m)));
+        } else {
+            ir.SetRegister(n, ir.Add(ir.GetRegister(n), ir.Imm32(static_cast<u32>(nelem * ebytes))));
+        }
+    }
+
+    return true;
+}
+
 bool ArmTranslatorVisitor::v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
     const size_t nelem = nn + 1;
 
@@ -297,5 +359,4 @@ bool ArmTranslatorVisitor::v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, si
 
     return true;
 }
-
 } // namespace Dynarmic::A32
