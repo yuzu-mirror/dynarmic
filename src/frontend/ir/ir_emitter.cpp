@@ -1761,6 +1761,20 @@ U128 IREmitter::VectorTableLookup(const U128& defaults, const Table& table, cons
     return Inst<U128>(Opcode::VectorTableLookup128, defaults, table, indices);
 }
 
+U128 IREmitter::VectorTranspose(size_t esize, const U128& a, const U128& b, bool part) {
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorTranspose8, a, b, Imm1(part));
+    case 16:
+        return Inst<U128>(Opcode::VectorTranspose16, a, b, Imm1(part));
+    case 32:
+        return Inst<U128>(Opcode::VectorTranspose32, a, b, Imm1(part));
+    case 64:
+        return Inst<U128>(Opcode::VectorTranspose64, a, b, Imm1(part));
+    }
+    UNREACHABLE();
+}
+
 U128 IREmitter::VectorUnsignedAbsoluteDifference(size_t esize, const U128& a, const U128& b) {
     switch (esize) {
     case 8:

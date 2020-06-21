@@ -4326,6 +4326,69 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
+void EmitX64::EmitVectorTranspose8(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm lower = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm upper = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const bool part = args[2].GetImmediateU1();
+
+    if (!part) {
+        code.pand(lower, code.MConst(xword, 0x00FF00FF00FF00FF, 0x00FF00FF00FF00FF));
+        code.psllw(upper, 8);
+    } else {
+        code.psrlw(lower, 8);
+        code.pand(upper, code.MConst(xword, 0xFF00FF00FF00FF00, 0xFF00FF00FF00FF00));
+    }
+    code.por(lower, upper);
+
+    ctx.reg_alloc.DefineValue(inst, lower);
+}
+
+void EmitX64::EmitVectorTranspose16(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm lower = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm upper = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const bool part = args[2].GetImmediateU1();
+
+    if (!part) {
+        code.pand(lower, code.MConst(xword, 0x0000FFFF0000FFFF, 0x0000FFFF0000FFFF));
+        code.pslld(upper, 16);
+    } else {
+        code.psrld(lower, 16);
+        code.pand(upper, code.MConst(xword, 0xFFFF0000FFFF0000, 0xFFFF0000FFFF0000));
+    }
+    code.por(lower, upper);
+
+    ctx.reg_alloc.DefineValue(inst, lower);
+}
+
+void EmitX64::EmitVectorTranspose32(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm lower = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm upper = ctx.reg_alloc.UseXmm(args[1]);
+    const bool part = args[2].GetImmediateU1();
+
+    code.shufps(lower, upper, !part ? 0b10001000 : 0b11011101);
+    code.pshufd(lower, lower, 0b11011000);
+
+    ctx.reg_alloc.DefineValue(inst, lower);
+}
+
+void EmitX64::EmitVectorTranspose64(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm lower = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm upper = ctx.reg_alloc.UseXmm(args[1]);
+    const bool part = args[2].GetImmediateU1();
+
+    code.shufpd(lower, upper, !part ? 0b00 : 0b11);
+
+    ctx.reg_alloc.DefineValue(inst, lower);
+}
+
 static void EmitVectorUnsignedAbsoluteDifference(size_t esize, EmitContext& ctx, IR::Inst* inst, BlockOfCode& code) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 

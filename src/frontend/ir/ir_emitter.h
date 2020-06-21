@@ -301,6 +301,7 @@ public:
     Table VectorTable(std::vector<U128> values);
     U64 VectorTableLookup(const U64& defaults, const Table& table, const U64& indices);
     U128 VectorTableLookup(const U128& defaults, const Table& table, const U128& indices);
+    U128 VectorTranspose(size_t esize, const U128& a, const U128& b, bool part);
     U128 VectorUnsignedAbsoluteDifference(size_t esize, const U128& a, const U128& b);
     U128 VectorUnsignedRecipEstimate(const U128& a);
     U128 VectorUnsignedRecipSqrtEstimate(const U128& a);
