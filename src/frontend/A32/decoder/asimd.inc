@@ -22,7 +22,7 @@ INST(asimd_VMAX,            "VMAX/VMIN",                "1111001U0Dzznnnnmmmm011
 INST(asimd_VABD,            "VABD",                     "1111001U0Dzznnnndddd0111NQM0mmmm") // ASIMD
 INST(asimd_VABDL,           "VABDL",                    "1111001U1Dzznnnndddd0111N0M0mmmm") // ASIMD
 INST(asimd_VABA,            "VABA",                     "1111001U0Dzznnnndddd0111NQM1mmmm") // ASIMD
-//INST(asimd_VABAL,           "VABAL",                    "1111001U1Dzznnnndddd0101N0M1mmmm") // ASIMD
+INST(asimd_VABAL,           "VABAL",                    "1111001U1Dzznnnndddd0101N0M0mmmm") // ASIMD
 INST(asimd_VADD_int,        "VADD (integer)",           "111100100Dzznnnndddd1000NQM0mmmm") // ASIMD
 INST(asimd_VSUB_int,        "VSUB (integer)",           "111100110Dzznnnndddd1000NQM0mmmm") // ASIMD
 INST(asimd_VTST,            "VTST",                     "111100100Dzznnnndddd1000NQM1mmmm") // ASIMD

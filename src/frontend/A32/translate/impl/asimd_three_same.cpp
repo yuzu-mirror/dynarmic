@@ -391,6 +391,10 @@ bool ArmTranslatorVisitor::asimd_VABA(bool U, bool D, size_t sz, size_t Vn, size
     return AbsoluteDifference(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, AccumulateBehavior::Accumulate);
 }
 
+bool ArmTranslatorVisitor::asimd_VABAL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+    return AbsoluteDifferenceLong(*this, U, D, sz, Vn, Vd, N, M, Vm, AccumulateBehavior::Accumulate);
+}
+
 bool ArmTranslatorVisitor::asimd_VADD_int(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
