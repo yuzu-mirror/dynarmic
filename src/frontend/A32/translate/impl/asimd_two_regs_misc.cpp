@@ -558,4 +558,26 @@ bool ArmTranslatorVisitor::asimd_VRSQRTE(bool D, size_t sz, size_t Vd, bool F, b
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VCVT_integer(bool D, size_t sz, size_t Vd, bool op, bool U, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    if (sz != 0b10) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto reg_m = ir.GetVector(m);
+    const auto result = op ? (U ? ir.FPVectorToUnsignedFixed(esize, reg_m, 0, FP::RoundingMode::TowardsZero, false)
+                                : ir.FPVectorToSignedFixed(esize, reg_m, 0, FP::RoundingMode::TowardsZero, false))
+                           : (U ? ir.FPVectorFromUnsignedFixed(esize, reg_m, 0, FP::RoundingMode::ToNearest_TieEven, false)
+                                : ir.FPVectorFromSignedFixed(esize, reg_m, 0, FP::RoundingMode::ToNearest_TieEven, false));
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32

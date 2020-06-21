@@ -108,7 +108,7 @@ INST(asimd_VMOVN,           "VMOVN",                    "111100111D11zz10dddd001
 //INST(asimd_VCVT_half,       "VCVT (half-precision)",    "111100111-11--10----011x00-0----") // ASIMD
 INST(asimd_VRECPE,          "VRECPE",                   "111100111D11zz11dddd010F0QM0mmmm") // ASIMD
 INST(asimd_VRSQRTE,         "VRSQRTE",                  "111100111D11zz11dddd010F1QM0mmmm") // ASIMD
-//INST(asimd_VCVT_integer,    "VCVT (integer)",           "111100111-11--11----011xxx-0----") // ASIMD
+INST(asimd_VCVT_integer,    "VCVT (integer)",           "111100111D11zz11dddd011oUQM0mmmm") // ASIMD
 
 // Miscellaneous
 INST(asimd_VEXT,            "VEXT",                     "111100101D11nnnnddddiiiiNQM0mmmm") // ASIMD
