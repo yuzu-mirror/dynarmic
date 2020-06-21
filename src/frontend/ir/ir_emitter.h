@@ -349,29 +349,29 @@ public:
 
     U128 FPVectorAbs(size_t esize, const U128& a);
     U128 FPVectorAdd(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
-    U128 FPVectorDiv(size_t esize, const U128& a, const U128& b);
+    U128 FPVectorDiv(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorEqual(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
-    U128 FPVectorFromSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);
-    U128 FPVectorFromUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);
+    U128 FPVectorFromSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding, bool fpcr_controlled = true);
+    U128 FPVectorFromUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding, bool fpcr_controlled = true);
     U128 FPVectorGreater(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorGreaterEqual(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorMax(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorMin(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorMul(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
-    U128 FPVectorMulAdd(size_t esize, const U128& addend, const U128& op1, const U128& op2);
-    U128 FPVectorMulX(size_t esize, const U128& a, const U128& b);
+    U128 FPVectorMulAdd(size_t esize, const U128& addend, const U128& op1, const U128& op2, bool fpcr_controlled = true);
+    U128 FPVectorMulX(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorNeg(size_t esize, const U128& a);
     U128 FPVectorPairedAdd(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorPairedAddLower(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
     U128 FPVectorRecipEstimate(size_t esize, const U128& a, bool fpcr_controlled = true);
     U128 FPVectorRecipStepFused(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
-    U128 FPVectorRoundInt(size_t esize, const U128& operand, FP::RoundingMode rounding, bool exact);
+    U128 FPVectorRoundInt(size_t esize, const U128& operand, FP::RoundingMode rounding, bool exact, bool fpcr_controlled = true);
     U128 FPVectorRSqrtEstimate(size_t esize, const U128& a, bool fpcr_controlled = true);
     U128 FPVectorRSqrtStepFused(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
-    U128 FPVectorSqrt(size_t esize, const U128& a);
+    U128 FPVectorSqrt(size_t esize, const U128& a, bool fpcr_controlled = true);
     U128 FPVectorSub(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);
-    U128 FPVectorToSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);
-    U128 FPVectorToUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding);
+    U128 FPVectorToSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding, bool fpcr_controlled = true);
+    U128 FPVectorToUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding, bool fpcr_controlled = true);
 
     void Breakpoint();
 
