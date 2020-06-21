@@ -102,6 +102,10 @@ struct Jit::Impl {
         emitter.ChangeProcessorID(value);
     }
 
+    void ClearExclusiveState() {
+        jit_state.exclusive_state = 0;
+    }
+
     std::string Disassemble(const IR::LocationDescriptor& descriptor) {
         auto block = GetBasicBlock(descriptor);
         std::string result = fmt::format("address: {}\nsize: {} bytes\n", block.entrypoint, block.size);
@@ -234,6 +238,10 @@ void Jit::HaltExecution() {
 void Jit::ExceptionalExit() {
     impl->ExceptionalExit();
     is_executing = false;
+}
+
+void Jit::ClearExclusiveState() {
+    impl->ClearExclusiveState();
 }
 
 void Jit::ChangeProcessorID(size_t new_processor) {

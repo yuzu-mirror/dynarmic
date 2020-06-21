@@ -87,6 +87,9 @@ public:
     void SaveContext(Context&) const;
     void LoadContext(const Context&);
 
+    /// Clears exclusive state for this core.
+    void ClearExclusiveState();
+
     /**
      * Returns true if Jit::Run was called but hasn't returned yet.
      * i.e.: We're in a callback.
