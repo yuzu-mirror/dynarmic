@@ -306,6 +306,31 @@ bool ArmTranslatorVisitor::asimd_VCGE_reg(bool U, bool D, size_t sz, size_t Vn, 
     return IntegerComparison(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GE);
 }
 
+bool ArmTranslatorVisitor::asimd_VABA(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    if (sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_d = ir.GetVector(d);
+    const auto reg_m = ir.GetVector(m);
+    const auto reg_n = ir.GetVector(n);
+    const auto absdiff = U ? ir.VectorUnsignedAbsoluteDifference(esize, reg_m, reg_n)
+                           : ir.VectorSignedAbsoluteDifference(esize, reg_m, reg_n);
+    const auto result = ir.VectorAdd(esize, reg_d, absdiff);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VADD_int(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
