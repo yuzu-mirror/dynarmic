@@ -91,7 +91,7 @@ INST(asimd_VSHRN,           "VSHRN",                    "111100101Diiiiiidddd100
 //INST(asimd_VRSHRN,          "VRSHRN",                   "111100101-vvv-------100001-1----") // ASIMD
 INST(asimd_VQSHRUN,         "VQSHRUN",                  "111100111Diiiiiidddd100000M1mmmm") // ASIMD
 INST(asimd_VQRSHRUN,        "VQRSHRUN",                 "111100111Diiiiiidddd100001M1mmmm") // ASIMD
-//INST(asimd_VQSHRN,          "VQSHRN",                   "1111001U1-vvv-------100100-1----") // ASIMD
+INST(asimd_VQSHRN,          "VQSHRN",                   "1111001U1Diiiiiidddd100100M1mmmm") // ASIMD
 INST(asimd_VQRSHRN,         "VQRSHRN",                  "1111001U1Diiiiiidddd100101M1mmmm") // ASIMD
 //INST(asimd_SHLL,            "SHLL",                     "1111001U1-vvv-------101000-1----") // ASIMD
 INST(asimd_VCVT_fixed,      "VCVT (fixed-point)",       "1111001U1Diiiiiidddd111o0QM1mmmm") // ASIMD

@@ -517,6 +517,7 @@ struct ArmTranslatorVisitor final {
     bool asimd_VSHRN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm);
     bool asimd_VQSHRUN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm);
     bool asimd_VQRSHRUN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm);
+    bool asimd_VQSHRN(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm);
     bool asimd_VQRSHRN(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm);
     bool asimd_VCVT_fixed(bool U, bool D, size_t imm6, size_t Vd, bool to_fixed, bool Q, bool M, size_t Vm);
 
