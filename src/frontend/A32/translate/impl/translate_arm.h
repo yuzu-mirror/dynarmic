@@ -545,6 +545,7 @@ struct ArmTranslatorVisitor final {
     bool v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t sz, size_t align, Reg m);
     bool v8_VLD_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t sz, size_t align, Reg m);
     bool v8_VLD_all_lanes(bool D, Reg n, size_t Vd, size_t nn, size_t sz, bool T, bool a, Reg m);
+    bool v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m);
 };
 
 } // namespace Dynarmic::A32
