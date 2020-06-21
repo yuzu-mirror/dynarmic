@@ -1870,8 +1870,7 @@ U16U32U64 IREmitter::FPAbs(const U16U32U64& a) {
     }
 }
 
-U32U64 IREmitter::FPAdd(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPAdd(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -1884,8 +1883,7 @@ U32U64 IREmitter::FPAdd(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
     }
 }
 
-NZCV IREmitter::FPCompare(const U32U64& a, const U32U64& b, bool exc_on_qnan, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+NZCV IREmitter::FPCompare(const U32U64& a, const U32U64& b, bool exc_on_qnan) {
     ASSERT(a.GetType() == b.GetType());
 
     const IR::U1 exc_on_qnan_imm = Imm1(exc_on_qnan);
@@ -1900,8 +1898,7 @@ NZCV IREmitter::FPCompare(const U32U64& a, const U32U64& b, bool exc_on_qnan, bo
     }
 }
 
-U32U64 IREmitter::FPDiv(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPDiv(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -1914,8 +1911,7 @@ U32U64 IREmitter::FPDiv(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
     }
 }
 
-U32U64 IREmitter::FPMax(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPMax(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -1928,8 +1924,7 @@ U32U64 IREmitter::FPMax(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
     }
 }
 
-U32U64 IREmitter::FPMaxNumeric(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPMaxNumeric(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -1942,8 +1937,7 @@ U32U64 IREmitter::FPMaxNumeric(const U32U64& a, const U32U64& b, bool fpcr_contr
     }
 }
 
-U32U64 IREmitter::FPMin(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPMin(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -1956,8 +1950,7 @@ U32U64 IREmitter::FPMin(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
     }
 }
 
-U32U64 IREmitter::FPMinNumeric(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPMinNumeric(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -1970,8 +1963,7 @@ U32U64 IREmitter::FPMinNumeric(const U32U64& a, const U32U64& b, bool fpcr_contr
     }
 }
 
-U32U64 IREmitter::FPMul(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPMul(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -1984,8 +1976,7 @@ U32U64 IREmitter::FPMul(const U32U64& a, const U32U64& b, bool fpcr_controlled) 
     }
 }
 
-U16U32U64 IREmitter::FPMulAdd(const U16U32U64& a, const U16U32U64& b, const U16U32U64& c, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U16U32U64 IREmitter::FPMulAdd(const U16U32U64& a, const U16U32U64& b, const U16U32U64& c) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {
@@ -2122,8 +2113,7 @@ U32U64 IREmitter::FPSqrt(const U32U64& a) {
     }
 }
 
-U32U64 IREmitter::FPSub(const U32U64& a, const U32U64& b, bool fpcr_controlled) {
-    ASSERT(fpcr_controlled);
+U32U64 IREmitter::FPSub(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 
     switch (a.GetType()) {

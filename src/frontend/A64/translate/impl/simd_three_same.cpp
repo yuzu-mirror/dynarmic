@@ -228,7 +228,7 @@ bool FPMinMaxOperation(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Ve
 }
 
 bool FPMinMaxNumericOperation(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd,
-                              IR::U32U64 (IREmitter::* fn)(const IR::U32U64&, const IR::U32U64&, bool)) {
+                              IR::U32U64 (IREmitter::* fn)(const IR::U32U64&, const IR::U32U64&)) {
     if (sz && !Q) {
         return v.ReservedValue();
     }
@@ -244,7 +244,7 @@ bool FPMinMaxNumericOperation(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec
     for (size_t i = 0; i < elements; i++) {
         const IR::UAny elem1 = v.ir.VectorGetElement(esize, operand1, i);
         const IR::UAny elem2 = v.ir.VectorGetElement(esize, operand2, i);
-        const IR::UAny result_elem = (v.ir.*fn)(elem1, elem2, true);
+        const IR::UAny result_elem = (v.ir.*fn)(elem1, elem2);
 
         result = v.ir.VectorSetElement(esize, result, i, result_elem);
     }
@@ -292,7 +292,7 @@ bool PairedMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Ve
 }
 
 bool FPPairedMinMax(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd,
-                    IR::U32U64 (IREmitter::* fn)(const IR::U32U64&, const IR::U32U64&, bool)) {
+                    IR::U32U64 (IREmitter::* fn)(const IR::U32U64&, const IR::U32U64&)) {
     if (sz && !Q) {
         return v.ReservedValue();
     }
@@ -310,7 +310,7 @@ bool FPPairedMinMax(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec V
         for (size_t i = 0; i < elements; i += 2, result_start_index++) {
             const IR::UAny elem1 = v.ir.VectorGetElement(esize, operand, i);
             const IR::UAny elem2 = v.ir.VectorGetElement(esize, operand, i + 1);
-            const IR::UAny result_elem = (v.ir.*fn)(elem1, elem2, true);
+            const IR::UAny result_elem = (v.ir.*fn)(elem1, elem2);
 
             result = v.ir.VectorSetElement(esize, result, result_start_index, result_elem);
         }
