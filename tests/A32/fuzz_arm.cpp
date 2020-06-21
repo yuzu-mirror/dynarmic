@@ -64,6 +64,7 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_last_inst) {
         // Currently unimplemented in Unicorn
         case IR::Opcode::FPVectorRecipEstimate16:
         case IR::Opcode::FPVectorRSqrtEstimate16:
+        case IR::Opcode::VectorPolynomialMultiplyLong64:
             return false;
         default:
             continue;
