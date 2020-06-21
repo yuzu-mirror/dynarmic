@@ -124,3 +124,99 @@ public:
         return 0x10000000000 - ticks_left;
     }
 };
+
+class A64FastmemTestEnv final : public Dynarmic::A64::UserCallbacks {
+public:
+    u64 ticks_left = 0;
+    char* backing_memory = nullptr;
+
+    explicit A64FastmemTestEnv(char* addr) : backing_memory(addr) {}
+
+    template<typename T>
+    T read(u64 vaddr) {
+        T value;
+        memcpy(&value, backing_memory + vaddr, sizeof(T));
+        return value;
+    }
+    template<typename T>
+    void write(u64 vaddr, const T& value) {
+        memcpy(backing_memory + vaddr, &value, sizeof(T));
+    }
+
+    std::uint32_t MemoryReadCode(u64 vaddr) override {
+        return read<std::uint32_t>(vaddr);
+    }
+
+    std::uint8_t MemoryRead8(u64 vaddr) override {
+        return read<std::uint8_t>(vaddr);
+    }
+    std::uint16_t MemoryRead16(u64 vaddr) override {
+        return read<std::uint16_t>(vaddr);
+    }
+    std::uint32_t MemoryRead32(u64 vaddr) override {
+        return read<std::uint32_t>(vaddr);
+    }
+    std::uint64_t MemoryRead64(u64 vaddr) override {
+        return read<std::uint64_t>(vaddr);
+    }
+    Vector MemoryRead128(u64 vaddr) override {
+        return read<Vector>(vaddr);
+    }
+
+    void MemoryWrite8(u64 vaddr, std::uint8_t value) override {
+        write(vaddr, value);
+    }
+    void MemoryWrite16(u64 vaddr, std::uint16_t value) override {
+        write(vaddr, value);
+    }
+    void MemoryWrite32(u64 vaddr, std::uint32_t value) override {
+        write(vaddr, value);
+    }
+    void MemoryWrite64(u64 vaddr, std::uint64_t value) override {
+        write(vaddr, value);
+    }
+    void MemoryWrite128(u64 vaddr, Vector value) override {
+        write(vaddr, value);
+    }
+
+    bool MemoryWriteExclusive8(u64 vaddr, std::uint8_t value, [[maybe_unused]] std::uint8_t expected) override {
+        MemoryWrite8(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive16(u64 vaddr, std::uint16_t value, [[maybe_unused]] std::uint16_t expected) override {
+        MemoryWrite16(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive32(u64 vaddr, std::uint32_t value, [[maybe_unused]] std::uint32_t expected) override {
+        MemoryWrite32(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive64(u64 vaddr, std::uint64_t value, [[maybe_unused]] std::uint64_t expected) override {
+        MemoryWrite64(vaddr, value);
+        return true;
+    }
+    bool MemoryWriteExclusive128(u64 vaddr, Vector value, [[maybe_unused]] Vector expected) override {
+        MemoryWrite128(vaddr, value);
+        return true;
+    }
+
+    void InterpreterFallback(u64 pc, size_t num_instructions) override { ASSERT_MSG(false, "InterpreterFallback({:016x}, {})", pc, num_instructions); }
+
+    void CallSVC(std::uint32_t swi) override { ASSERT_MSG(false, "CallSVC({})", swi); }
+
+    void ExceptionRaised(u64 pc, Dynarmic::A64::Exception) override { ASSERT_MSG(false, "ExceptionRaised({:016x})", pc); }
+
+    void AddTicks(std::uint64_t ticks) override {
+        if (ticks > ticks_left) {
+            ticks_left = 0;
+            return;
+        }
+        ticks_left -= ticks;
+    }
+    std::uint64_t GetTicksRemaining() override {
+        return ticks_left;
+    }
+    std::uint64_t GetCNTPCT() override {
+        return 0x10000000000 - ticks_left;
+    }
+};

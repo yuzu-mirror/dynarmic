@@ -837,3 +837,46 @@ TEST_CASE("A64: Cache Maintenance Instructions", "[a64]") {
     env.ticks_left = 3;
     jit.Run();
 }
+
+TEST_CASE("A64: Memory access (fastmem)", "[a64]") {
+    constexpr size_t address_width = 12;
+    constexpr size_t memory_size = 1ull << address_width; // 4K
+    constexpr size_t page_size = 4 * 1024;
+    constexpr size_t buffer_size = 2 * page_size;
+    char buffer[buffer_size];
+
+    void* buffer_ptr = reinterpret_cast<void*>(buffer);
+    size_t buffer_size_nconst = buffer_size;
+    char* backing_memory = reinterpret_cast<char*>(std::align(page_size, memory_size, buffer_ptr, buffer_size_nconst));
+
+    A64FastmemTestEnv env{backing_memory};
+    Dynarmic::A64::UserConfig config{&env};
+    config.fastmem_pointer = backing_memory;
+    config.page_table_address_space_bits = address_width;
+    config.recompile_on_fastmem_failure = false;
+    config.silently_mirror_page_table = true;
+    config.processor_id = 0;
+
+    Dynarmic::A64::Jit jit{config};
+    memset(backing_memory, 0, memory_size);
+    memcpy(backing_memory + 0x100, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 57);
+
+    env.MemoryWrite32(0, 0xA9401404); // LDP X4, X5, [X0]
+    env.MemoryWrite32(4, 0xF9400046); // LDR X6, [X2]
+    env.MemoryWrite32(8, 0xA9001424); // STP X4, X5, [X1]
+    env.MemoryWrite32(12, 0xF9000066); // STR X6, [X3]
+    env.MemoryWrite32(16, 0x14000000); // B .
+    jit.SetRegister(0, 0x100);
+    jit.SetRegister(1, 0x1F0);
+    jit.SetRegister(2, 0x10F);
+    jit.SetRegister(3, 0x1FF);
+
+    jit.SetPC(0);
+    jit.SetSP(memory_size - 1);
+    jit.SetFpsr(0x03480000);
+    jit.SetPstate(0x30000000);
+    env.ticks_left = 5;
+
+    jit.Run();
+    REQUIRE(strncmp(backing_memory + 0x100, backing_memory + 0x1F0, 23) == 0);
+}
