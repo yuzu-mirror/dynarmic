@@ -570,6 +570,36 @@ bool ArmTranslatorVisitor::asimd_VMLA(bool op, bool D, size_t sz, size_t Vn, siz
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VMLAL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
+    if (sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    if (Common::Bit<0>(Vd)) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(false, Vm, M);
+    const auto n = ToVector(false, Vn, N);
+
+    const auto extend_reg = [&](const auto& reg) {
+        return U ? ir.VectorZeroExtend(esize, reg)
+                 : ir.VectorSignExtend(esize, reg);
+    };
+
+    const auto reg_d = ir.GetVector(d);
+    const auto reg_n = ir.GetVector(n);
+    const auto reg_m = ir.GetVector(m);
+    const auto multiply = ir.VectorMultiply(2 * esize, extend_reg(reg_n), extend_reg(reg_m));
+    const auto result = op ? ir.VectorSub(2 * esize, reg_d, multiply)
+                           : ir.VectorAdd(2 * esize, reg_d, multiply);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VMUL(bool P, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     if (sz == 0b11 || (P && sz != 0b00)) {
         return UndefinedInstruction();
