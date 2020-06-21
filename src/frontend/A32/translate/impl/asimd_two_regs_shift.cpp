@@ -216,6 +216,45 @@ bool ArmTranslatorVisitor::asimd_VSLI(bool D, size_t imm6, size_t Vd, bool L, bo
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VQSHL(bool U, bool D, size_t imm6, size_t Vd, bool op, bool L, bool Q, bool M, size_t Vm) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    if (!U && !op) {
+        return UndefinedInstruction();
+    }
+
+    // Technically just a related encoding (One register and modified immediate instructions)
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        ASSERT_FALSE();
+    }
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto result = [&] {
+        const auto reg_m = ir.GetVector(m);
+        const auto [esize, shift_amount] = ElementSizeAndShiftAmount(false, L, imm6);
+        const IR::U128 shift_vec = ir.VectorBroadcast(esize, I(esize, shift_amount));
+
+        if (U) {
+            if (op) {
+                return ir.VectorUnsignedSaturatedShiftLeft(esize, reg_m, shift_vec);
+            }
+
+            return ir.VectorSignedSaturatedShiftLeftUnsigned(esize, reg_m, shift_vec);
+        }
+        if (op) {
+            return ir.VectorSignedSaturatedShiftLeft(esize, reg_m, shift_vec);
+        }
+
+        return IR::U128{};
+    }();
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
