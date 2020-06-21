@@ -176,6 +176,41 @@ bool AbsoluteDifference(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size
     v.ir.SetVector(d, result);
     return true;
 }
+
+bool AbsoluteDifferenceLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
+                            AccumulateBehavior accumulate) {
+    if (sz == 0b11) {
+        return v.UndefinedInstruction();
+    }
+
+    if (Common::Bit<0>(Vd)) {
+        return v.UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(false, Vm, M);
+    const auto n = ToVector(false, Vn, N);
+
+    const auto reg_m = v.ir.GetVector(m);
+    const auto reg_n = v.ir.GetVector(n);
+    const auto operand_m = v.ir.VectorZeroExtend(esize, v.ir.ZeroExtendToQuad(v.ir.VectorGetElement(64, reg_m, 0)));
+    const auto operand_n = v.ir.VectorZeroExtend(esize, v.ir.ZeroExtendToQuad(v.ir.VectorGetElement(64, reg_n, 0)));
+    const auto result = [&] {
+        const auto absdiff = U ? v.ir.VectorUnsignedAbsoluteDifference(esize, operand_m, operand_n)
+                               : v.ir.VectorSignedAbsoluteDifference(esize, operand_m, operand_n);
+
+        if (accumulate == AccumulateBehavior::Accumulate) {
+            const auto reg_d = v.ir.GetVector(d);
+            return v.ir.VectorAdd(2 * esize, reg_d, absdiff);
+        }
+
+        return absdiff;
+    }();
+
+    v.ir.SetVector(d, result);
+    return true;
+}
 } // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_VHADD(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
@@ -346,6 +381,10 @@ bool ArmTranslatorVisitor::asimd_VCGE_reg(bool U, bool D, size_t sz, size_t Vn, 
 
 bool ArmTranslatorVisitor::asimd_VABD(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return AbsoluteDifference(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, AccumulateBehavior::None);
+}
+
+bool ArmTranslatorVisitor::asimd_VABDL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+    return AbsoluteDifferenceLong(*this, U, D, sz, Vn, Vd, N, M, Vm, AccumulateBehavior::None);
 }
 
 bool ArmTranslatorVisitor::asimd_VABA(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
