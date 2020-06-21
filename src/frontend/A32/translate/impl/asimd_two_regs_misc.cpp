@@ -424,6 +424,73 @@ bool ArmTranslatorVisitor::asimd_VTRN(bool D, size_t sz, size_t Vd, bool Q, bool
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VUZP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    if (sz == 0b11 || (!Q && sz == 0b10)) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    if (d == m) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_d = ir.GetVector(d);
+    const auto reg_m = ir.GetVector(m);
+    auto result_d = ir.VectorDeinterleaveEven(esize, reg_d, reg_m);
+    auto result_m = ir.VectorDeinterleaveOdd(esize, reg_d, reg_m);
+
+    if (!Q) {
+        result_d = ir.VectorShuffleWords(result_d, 0b11011000);
+        result_m = ir.VectorShuffleWords(result_m, 0b11011000);
+    }
+
+    ir.SetVector(d, result_d);
+    ir.SetVector(m, result_m);
+    return true;
+}
+
+bool ArmTranslatorVisitor::asimd_VZIP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    if (sz == 0b11 || (!Q && sz == 0b10)) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    if (d == m) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_d = ir.GetVector(d);
+    const auto reg_m = ir.GetVector(m);
+
+    if (Q){
+        const auto result_d = ir.VectorInterleaveLower(esize, reg_d, reg_m);
+        const auto result_m = ir.VectorInterleaveUpper(esize, reg_d, reg_m);
+
+        ir.SetVector(d, result_d);
+        ir.SetVector(m, result_m);
+    } else {
+        const auto result = ir.VectorInterleaveLower(esize, reg_d, reg_m);
+
+        ir.SetExtendedRegister(d, ir.VectorGetElement(64, result, 0));
+        ir.SetExtendedRegister(m, ir.VectorGetElement(64, result, 1));
+    }
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();

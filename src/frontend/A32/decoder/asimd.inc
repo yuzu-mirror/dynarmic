@@ -100,8 +100,8 @@ INST(asimd_VABS,            "VABS",                     "111100111D11zz01dddd0F1
 INST(asimd_VNEG,            "VNEG",                     "111100111D11zz01dddd0F111QM0mmmm") // ASIMD
 INST(asimd_VSWP,            "VSWP",                     "111100111D110010dddd00000QM0mmmm") // ASIMD
 INST(asimd_VTRN,            "VTRN",                     "111100111D11zz10dddd00001QM0mmmm") // ASIMD
-//INST(asimd_VUZP,            "VUZP",                     "111100111-11--10----00010x-0----") // ASIMD
-//INST(asimd_VZIP,            "VZIP",                     "111100111-11--10----00011x-0----") // ASIMD
+INST(asimd_VUZP,            "VUZP",                     "111100111D11zz10dddd00010QM0mmmm") // ASIMD
+INST(asimd_VZIP,            "VZIP",                     "111100111D11zz10dddd00011QM0mmmm") // ASIMD
 //INST(asimd_VMOVN,           "VMOVN",                    "111100111-11--10----001000-0----") // ASIMD
 //INST(asimd_VQMOVUN,         "VQMOVUN",                  "111100111-11--10----001001-0----") // ASIMD
 //INST(asimd_VQMOVN,          "VQMOVN",                   "111100111-11--10----00101x-0----") // ASIMD
