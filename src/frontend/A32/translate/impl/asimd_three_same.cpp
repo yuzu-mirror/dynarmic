@@ -17,6 +17,11 @@ enum class Comparison {
     AbsoluteGT,
 };
 
+enum class AccumulateBehavior {
+    None,
+    Accumulate,
+};
+
 template <bool WithDst, typename Callable>
 bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
@@ -133,6 +138,39 @@ bool FloatComparison(ArmTranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t
         default:
             return IR::U128{};
         }
+    }();
+
+    v.ir.SetVector(d, result);
+    return true;
+}
+
+bool AbsoluteDifference(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm,
+                        AccumulateBehavior accumulate) {
+    if (sz == 0b11) {
+        return v.UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
+        return v.UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+    const auto n = ToVector(Q, Vn, N);
+
+    const auto reg_m = v.ir.GetVector(m);
+    const auto reg_n = v.ir.GetVector(n);
+    const auto result = [&] {
+        const auto absdiff = U ? v.ir.VectorUnsignedAbsoluteDifference(esize, reg_m, reg_n)
+                               : v.ir.VectorSignedAbsoluteDifference(esize, reg_m, reg_n);
+
+        if (accumulate == AccumulateBehavior::Accumulate) {
+            const auto reg_d = v.ir.GetVector(d);
+            return v.ir.VectorAdd(esize, reg_d, absdiff);
+        }
+
+        return absdiff;
     }();
 
     v.ir.SetVector(d, result);
@@ -306,29 +344,12 @@ bool ArmTranslatorVisitor::asimd_VCGE_reg(bool U, bool D, size_t sz, size_t Vn, 
     return IntegerComparison(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, Comparison::GE);
 }
 
+bool ArmTranslatorVisitor::asimd_VABD(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return AbsoluteDifference(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, AccumulateBehavior::None);
+}
+
 bool ArmTranslatorVisitor::asimd_VABA(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
-    if (sz == 0b11) {
-        return UndefinedInstruction();
-    }
-
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
-    }
-
-    const size_t esize = 8U << sz;
-    const auto d = ToVector(Q, Vd, D);
-    const auto m = ToVector(Q, Vm, M);
-    const auto n = ToVector(Q, Vn, N);
-
-    const auto reg_d = ir.GetVector(d);
-    const auto reg_m = ir.GetVector(m);
-    const auto reg_n = ir.GetVector(n);
-    const auto absdiff = U ? ir.VectorUnsignedAbsoluteDifference(esize, reg_m, reg_n)
-                           : ir.VectorSignedAbsoluteDifference(esize, reg_m, reg_n);
-    const auto result = ir.VectorAdd(esize, reg_d, absdiff);
-
-    ir.SetVector(d, result);
-    return true;
+    return AbsoluteDifference(*this, U, D, sz, Vn, Vd, N, Q, M, Vm, AccumulateBehavior::Accumulate);
 }
 
 bool ArmTranslatorVisitor::asimd_VADD_int(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
