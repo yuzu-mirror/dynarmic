@@ -397,6 +397,33 @@ bool ArmTranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t 
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VTRN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    if (sz == 0b11) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    if (d == m) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_d = ir.GetVector(d);
+    const auto reg_m = ir.GetVector(m);
+    const auto result_d = ir.VectorTranspose(esize, reg_d, reg_m, false);
+    const auto result_m = ir.VectorTranspose(esize, reg_d, reg_m, true);
+
+    ir.SetVector(d, result_d);
+    ir.SetVector(m, result_m);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
