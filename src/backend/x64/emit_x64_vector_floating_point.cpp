@@ -1438,7 +1438,7 @@ void EmitFPVectorToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
 
     const size_t fbits = inst->GetArg(1).GetU8();
     const auto rounding = static_cast<FP::RoundingMode>(inst->GetArg(2).GetU8());
-    const bool fpcr_controlled = inst->GetArg(3).GetU1();
+    [[maybe_unused]] const bool fpcr_controlled = inst->GetArg(3).GetU1();
 
     // TODO: AVX512 implementation
 
