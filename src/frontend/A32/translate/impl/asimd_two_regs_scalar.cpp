@@ -26,7 +26,11 @@ enum class MultiplyBehavior {
 
 bool ScalarMultiply(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm,
                     MultiplyBehavior multiply) {
-    ASSERT_MSG(sz != 0b11, "Decode error");
+    if (sz == 0b11) {
+        // TODO: This should be a decode error.
+        return v.UndefinedInstruction();
+    }
+
     if (sz == 0b00 || (F && sz == 0b01)) {
         return v.UndefinedInstruction();
     }
@@ -65,7 +69,11 @@ bool ScalarMultiply(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t V
 }
 
 bool ScalarMultiplyLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, MultiplyBehavior multiply) {
-    ASSERT_MSG(sz != 0b11, "Decode error");
+    if (sz == 0b11) {
+        // TODO: This should be a decode error.
+        return v.UndefinedInstruction();
+    }
+
     if (sz == 0b00 || Common::Bit<0>(Vd)) {
         return v.UndefinedInstruction();
     }

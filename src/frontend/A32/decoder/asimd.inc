@@ -53,7 +53,6 @@ INST(asimd_VRECPS,          "VRECPS",                   "111100100D0znnnndddd111
 INST(asimd_VRSQRTS,         "VRSQRTS",                  "111100100D1znnnndddd1111NQM1mmmm") // ASIMD
 
 // Two registers and a scalar
-INST(arm_UDF,               "UNALLOCATED",              "1111001-1-11-------------1-0----") // ASIMD
 INST(asimd_VMLA_scalar,     "VMLA (scalar)",            "1111001Q1Dzznnnndddd0o0FN1M0mmmm") // ASIMD
 INST(asimd_VMLAL_scalar,    "VMLAL (scalar)",           "1111001U1dzznnnndddd0o10N1M0mmmm") // ASIMD
 //INST(asimd_VQDMLAL,         "VQDMLAL/VQDMLSL",          "111100101-BB--------0x11-1-0----") // ASIMD
