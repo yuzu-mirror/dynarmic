@@ -169,6 +169,64 @@ bool ArmTranslatorVisitor::asimd_VPADDL(bool D, size_t sz, size_t Vd, bool op, b
     return PairedAddOperation(*this, D, sz, Vd, op, Q, M, Vm, AccumulateBehavior::None);
 }
 
+bool ArmTranslatorVisitor::v8_AESD(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+    if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(true, Vm, M);
+    const auto reg_d = ir.GetVector(d);
+    const auto reg_m = ir.GetVector(m);
+    const auto result = ir.AESDecryptSingleRound(ir.VectorEor(reg_d, reg_m));
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+bool ArmTranslatorVisitor::v8_AESE(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+    if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(true, Vm, M);
+    const auto reg_d = ir.GetVector(d);
+    const auto reg_m = ir.GetVector(m);
+    const auto result = ir.AESEncryptSingleRound(ir.VectorEor(reg_d, reg_m));
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+bool ArmTranslatorVisitor::v8_AESIMC(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+    if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(true, Vm, M);
+    const auto reg_m = ir.GetVector(m);
+    const auto result = ir.AESInverseMixColumns(reg_m);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
+bool ArmTranslatorVisitor::v8_AESMC(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+    if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
+        return UndefinedInstruction();
+    }
+
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(true, Vm, M);
+    const auto reg_m = ir.GetVector(m);
+    const auto result = ir.AESMixColumns(reg_m);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11) {
         return UndefinedInstruction();

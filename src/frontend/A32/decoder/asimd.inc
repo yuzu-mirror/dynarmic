@@ -83,6 +83,10 @@ INST(asimd_VQRSHRN,         "VQRSHRN",                  "1111001U1Diiiiiidddd100
 // Two registers, miscellaneous
 INST(asimd_VREV,            "VREV{16,32,64}",           "111100111D11zz00dddd000ooQM0mmmm") // ASIMD
 INST(asimd_VPADDL,          "VPADDL",                   "111100111D11zz00dddd0010oQM0mmmm") // ASIMD
+INST(v8_AESE,               "AESE",                     "111100111D11zz00dddd001100M0mmmm") // v8
+INST(v8_AESD,               "AESD",                     "111100111D11zz00dddd001101M0mmmm") // v8
+INST(v8_AESMC,              "AESMC",                    "111100111D11zz00dddd001110M0mmmm") // v8
+INST(v8_AESIMC,             "AESIMC",                   "111100111D11zz00dddd001111M0mmmm") // v8
 INST(asimd_VCLS,            "VCLS",                     "111100111D11zz00dddd01000QM0mmmm") // ASIMD
 INST(asimd_VCLZ,            "VCLZ",                     "111100111D11zz00dddd01001QM0mmmm") // ASIMD
 INST(asimd_VCNT,            "VCNT",                     "111100111D11zz00dddd01010QM0mmmm") // ASIMD
