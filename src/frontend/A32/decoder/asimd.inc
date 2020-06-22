@@ -122,8 +122,8 @@ INST(asimd_VTRN,            "VTRN",                     "111100111D11zz10dddd000
 INST(asimd_VUZP,            "VUZP",                     "111100111D11zz10dddd00010QM0mmmm") // ASIMD
 INST(asimd_VZIP,            "VZIP",                     "111100111D11zz10dddd00011QM0mmmm") // ASIMD
 INST(asimd_VMOVN,           "VMOVN",                    "111100111D11zz10dddd001000M0mmmm") // ASIMD
-//INST(asimd_VQMOVUN,         "VQMOVUN",                  "111100111-11--10----001001-0----") // ASIMD
-//INST(asimd_VQMOVN,          "VQMOVN",                   "111100111-11--10----00101x-0----") // ASIMD
+INST(asimd_VQMOVUN,         "VQMOVUN",                  "111100111D11zz10dddd001001M0mmmm") // ASIMD
+INST(asimd_VQMOVN,          "VQMOVN",                   "111100111D11zz10dddd00101oM0mmmm") // ASIMD
 //INST(asimd_VSHLL_max,       "VSHLL_max",                "111100111-11--10----001100-0----") // ASIMD
 //INST(asimd_VCVT_half,       "VCVT (half-precision)",    "111100111-11--10----011x00-0----") // ASIMD
 INST(asimd_VRECPE,          "VRECPE",                   "111100111D11zz11dddd010F0QM0mmmm") // ASIMD

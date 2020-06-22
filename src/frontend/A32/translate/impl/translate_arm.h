@@ -552,6 +552,8 @@ struct ArmTranslatorVisitor final {
     bool asimd_VUZP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VZIP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VMOVN(bool D, size_t sz, size_t Vd, bool M, size_t Vm);
+    bool asimd_VQMOVUN(bool D, size_t sz, size_t Vd, bool M, size_t Vm);
+    bool asimd_VQMOVN(bool D, size_t sz, size_t Vd, bool op, bool M, size_t Vm);
     bool asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VRSQRTE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VCVT_integer(bool D, size_t sz, size_t Vd, bool op, bool U, bool Q, bool M, size_t Vm);
