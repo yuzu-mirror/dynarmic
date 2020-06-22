@@ -966,6 +966,38 @@ bool ArmTranslatorVisitor::vfp_VCVT_from_int(Cond cond, bool D, size_t Vd, bool 
     return true;
 }
 
+// VCVT.F32.{S16,U16,S32,U32} <Sdm>, <Sdm>
+// VCVT.F64.{S16,U16,S32,U32} <Ddm>, <Ddm>
+bool ArmTranslatorVisitor::vfp_VCVT_from_fixed(Cond cond, bool D, bool U, size_t Vd, bool sz, bool sx, Imm<1> i, Imm<4> imm4) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    const size_t size = sx ? 32 : 16;
+    const size_t fbits = size - concatenate(imm4, i).ZeroExtend();
+
+    if (fbits > size) {
+        return UnpredictableInstruction();
+    }
+
+    const auto d = ToExtReg(sz, Vd, D);
+    const auto rounding_mode = FP::RoundingMode::ToNearest_TieEven;
+    const auto reg_d = ir.GetExtendedRegister(d);
+    const auto source = ir.LeastSignificant(size, reg_d);
+
+    if (sz) {
+        const auto result = U ? ir.FPUnsignedFixedToDouble(source, fbits, rounding_mode)
+                              : ir.FPSignedFixedToDouble(source, fbits, rounding_mode);
+        ir.SetExtendedRegister(d, result);
+    } else {
+        const auto result = U ? ir.FPUnsignedFixedToSingle(source, fbits, rounding_mode)
+                              : ir.FPSignedFixedToSingle(source, fbits, rounding_mode);
+        ir.SetExtendedRegister(d, result);
+    }
+
+    return true;
+}
+
 // VCVT{,R}.U32.F32 <Sd>, <Sm>
 // VCVT{,R}.U32.F64 <Sd>, <Dm>
 bool ArmTranslatorVisitor::vfp_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
@@ -995,6 +1027,42 @@ bool ArmTranslatorVisitor::vfp_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz
     const auto result = ir.FPToFixedS32(reg_m, 0, round_towards_zero ? FP::RoundingMode::TowardsZero : ir.current_location.FPSCR().RMode());
 
     ir.SetExtendedRegister(d, result);
+    return true;
+}
+
+// VCVT.{S16,U16,S32,U32}.F32 <Sdm>, <Sdm>
+// VCVT.{S16,U16,S32,U32}.F64 <Ddm>, <Ddm>
+bool ArmTranslatorVisitor::vfp_VCVT_to_fixed(Cond cond, bool D, bool U, size_t Vd, bool sz, bool sx, Imm<1> i, Imm<4> imm4) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    const size_t size = sx ? 32 : 16;
+    const size_t fbits = size - concatenate(imm4, i).ZeroExtend();
+
+    if (fbits > size) {
+        return UnpredictableInstruction();
+    }
+
+    const auto d = ToExtReg(sz, Vd, D);
+    const auto rounding_mode = FP::RoundingMode::TowardsZero;
+    const auto reg_d = ir.GetExtendedRegister(d);
+
+    const auto result = [&]() -> IR::U16U32U64 {
+        if (sx) {
+            return U ? ir.FPToFixedU32(reg_d, fbits, rounding_mode)
+                     : ir.FPToFixedS32(reg_d, fbits, rounding_mode);
+        } else {
+            return U ? ir.FPToFixedU16(reg_d, fbits, rounding_mode)
+                     : ir.FPToFixedS16(reg_d, fbits, rounding_mode);
+        }
+    }();
+
+    if (sz) {
+        ir.SetExtendedRegister(d, U ? ir.ZeroExtendToLong(result) : ir.SignExtendToLong(result));
+    } else {
+        ir.SetExtendedRegister(d, U ? ir.ZeroExtendToWord(result) : ir.SignExtendToWord(result));
+    }
     return true;
 }
 

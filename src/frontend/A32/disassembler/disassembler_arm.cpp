@@ -1436,12 +1436,24 @@ public:
         return fmt::format("vcvt{}.{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", is_signed ? "s32" : "u32", FPRegStr(sz, Vd, D), FPRegStr(false, Vm, M));
     }
 
+    std::string vfp_VCVT_from_fixed(Cond cond, bool D, bool U, size_t Vd, bool sz, bool sx, Imm<1> i, Imm<4> imm4) {
+        const size_t size = sx ? 32 : 16;
+        const size_t fbits = size - concatenate(imm4, i).ZeroExtend();
+        return fmt::format("vcvt{}.{}.{}{} {}, {}, #{}", CondToString(cond), sz ? "f64" : "f32", U ? 'u' : 's', size, FPRegStr(sz, Vd, D), FPRegStr(sz, Vd, D), fbits);
+    }
+
     std::string vfp_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
         return fmt::format("vcvt{}{}.u32.{} {}, {}", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
     }
 
     std::string vfp_VCVT_to_s32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm) {
         return fmt::format("vcvt{}{}.s32.{} {}, {}", round_towards_zero ? "" : "r", CondToString(cond), sz ? "f64" : "f32", FPRegStr(false, Vd, D), FPRegStr(sz, Vm, M));
+    }
+
+    std::string vfp_VCVT_to_fixed(Cond cond, bool D, bool U, size_t Vd, bool sz, bool sx, Imm<1> i, Imm<4> imm4) {
+        const size_t size = sx ? 32 : 16;
+        const size_t fbits = size - concatenate(imm4, i).ZeroExtend();
+        return fmt::format("vcvt{}.{}{}.{} {}, {}, #{}", CondToString(cond), U ? 'u' : 's', size, sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vd, D), fbits);
     }
 
     std::string vfp_VRINT_rm(bool D, size_t rm, size_t Vd, bool sz, bool M, size_t Vm) {

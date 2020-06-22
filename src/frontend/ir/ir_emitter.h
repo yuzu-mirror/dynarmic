@@ -338,14 +338,16 @@ public:
     U32 FPHalfToSingle(const U16& a, FP::RoundingMode rounding);
     U16 FPSingleToHalf(const U32& a, FP::RoundingMode rounding);
     U64 FPSingleToDouble(const U32& a, FP::RoundingMode rounding);
+    U16 FPToFixedS16(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
     U32 FPToFixedS32(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
     U64 FPToFixedS64(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
+    U16 FPToFixedU16(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
     U32 FPToFixedU32(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
     U64 FPToFixedU64(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
-    U32 FPSignedFixedToSingle(const U32U64& a, size_t fbits, FP::RoundingMode rounding);
-    U32 FPUnsignedFixedToSingle(const U32U64& a, size_t fbits, FP::RoundingMode rounding);
-    U64 FPSignedFixedToDouble(const U32U64& a, size_t fbits, FP::RoundingMode rounding);
-    U64 FPUnsignedFixedToDouble(const U32U64& a, size_t fbits, FP::RoundingMode rounding);
+    U32 FPSignedFixedToSingle(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
+    U32 FPUnsignedFixedToSingle(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
+    U64 FPSignedFixedToDouble(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
+    U64 FPUnsignedFixedToDouble(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding);
 
     U128 FPVectorAbs(size_t esize, const U128& a);
     U128 FPVectorAdd(size_t esize, const U128& a, const U128& b, bool fpcr_controlled = true);

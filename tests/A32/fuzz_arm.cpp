@@ -120,6 +120,7 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
             // Incorrect Unicorn implementations
             "asimd_VRECPS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
             "asimd_VRSQRTS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
+            "vfp_VCVT_from_fixed", // Unicorn does not do round-to-nearest-even for this instruction correctly.
         };
 
         for (const auto& [fn, bitstring] : list) {

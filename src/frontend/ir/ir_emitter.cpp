@@ -2150,6 +2150,24 @@ U16 IREmitter::FPSingleToHalf(const U32& a, FP::RoundingMode rounding) {
     return Inst<U16>(Opcode::FPSingleToHalf, a, Imm8(static_cast<u8>(rounding)));
 }
 
+U16 IREmitter::FPToFixedS16(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding) {
+    ASSERT(fbits <= 16);
+
+    const U8 fbits_imm = Imm8(static_cast<u8>(fbits));
+    const U8 rounding_imm = Imm8(static_cast<u8>(rounding));
+
+    switch (a.GetType()) {
+    case Type::U16:
+        return Inst<U16>(Opcode::FPHalfToFixedS16, a, fbits_imm, rounding_imm);
+    case Type::U32:
+        return Inst<U16>(Opcode::FPSingleToFixedS16, a, fbits_imm, rounding_imm);
+    case Type::U64:
+        return Inst<U16>(Opcode::FPDoubleToFixedS16, a, fbits_imm, rounding_imm);
+    default:
+        UNREACHABLE();
+    }
+}
+
 U32 IREmitter::FPToFixedS32(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding) {
     ASSERT(fbits <= 32);
 
@@ -2181,6 +2199,24 @@ U64 IREmitter::FPToFixedS64(const U16U32U64& a, size_t fbits, FP::RoundingMode r
         return Inst<U64>(Opcode::FPSingleToFixedS64, a, fbits_imm, rounding_imm);
     case Type::U64:
         return Inst<U64>(Opcode::FPDoubleToFixedS64, a, fbits_imm, rounding_imm);
+    default:
+        UNREACHABLE();
+    }
+}
+
+U16 IREmitter::FPToFixedU16(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding) {
+    ASSERT(fbits <= 16);
+
+    const U8 fbits_imm = Imm8(static_cast<u8>(fbits));
+    const U8 rounding_imm = Imm8(static_cast<u8>(rounding));
+
+    switch (a.GetType()) {
+    case Type::U16:
+        return Inst<U16>(Opcode::FPHalfToFixedU16, a, fbits_imm, rounding_imm);
+    case Type::U32:
+        return Inst<U16>(Opcode::FPSingleToFixedU16, a, fbits_imm, rounding_imm);
+    case Type::U64:
+        return Inst<U16>(Opcode::FPDoubleToFixedU16, a, fbits_imm, rounding_imm);
     default:
         UNREACHABLE();
     }
@@ -2222,13 +2258,15 @@ U64 IREmitter::FPToFixedU64(const U16U32U64& a, size_t fbits, FP::RoundingMode r
     }
 }
 
-U32 IREmitter::FPSignedFixedToSingle(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
-    ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
+U32 IREmitter::FPSignedFixedToSingle(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding) {
+    ASSERT(fbits <= (a.GetType() == Type::U16 ? 16 : (a.GetType() == Type::U32 ? 32 : 64)));
 
     const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
     const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
 
     switch (a.GetType()) {
+    case Type::U16:
+        return Inst<U32>(Opcode::FPFixedS16ToSingle, a, fbits_imm, rounding_imm);
     case Type::U32:
         return Inst<U32>(Opcode::FPFixedS32ToSingle, a, fbits_imm, rounding_imm);
     case Type::U64:
@@ -2238,13 +2276,15 @@ U32 IREmitter::FPSignedFixedToSingle(const U32U64& a, size_t fbits, FP::Rounding
     }
 }
 
-U32 IREmitter::FPUnsignedFixedToSingle(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
-    ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
+U32 IREmitter::FPUnsignedFixedToSingle(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding) {
+    ASSERT(fbits <= (a.GetType() == Type::U16 ? 16 : (a.GetType() == Type::U32 ? 32 : 64)));
 
     const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
     const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
 
     switch (a.GetType()) {
+    case Type::U16:
+        return Inst<U32>(Opcode::FPFixedU16ToSingle, a, fbits_imm, rounding_imm);
     case Type::U32:
         return Inst<U32>(Opcode::FPFixedU32ToSingle, a, fbits_imm, rounding_imm);
     case Type::U64:
@@ -2254,13 +2294,15 @@ U32 IREmitter::FPUnsignedFixedToSingle(const U32U64& a, size_t fbits, FP::Roundi
     }
 }
 
-U64 IREmitter::FPSignedFixedToDouble(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
-    ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
+U64 IREmitter::FPSignedFixedToDouble(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding) {
+    ASSERT(fbits <= (a.GetType() == Type::U16 ? 16 : (a.GetType() == Type::U32 ? 32 : 64)));
 
     const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
     const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
 
     switch (a.GetType()) {
+    case Type::U16:
+        return Inst<U64>(Opcode::FPFixedS16ToDouble, a, fbits_imm, rounding_imm);
     case Type::U32:
         return Inst<U64>(Opcode::FPFixedS32ToDouble, a, fbits_imm, rounding_imm);
     case Type::U64:
@@ -2270,13 +2312,15 @@ U64 IREmitter::FPSignedFixedToDouble(const U32U64& a, size_t fbits, FP::Rounding
     }
 }
 
-U64 IREmitter::FPUnsignedFixedToDouble(const U32U64& a, size_t fbits, FP::RoundingMode rounding) {
-    ASSERT(fbits <= (a.GetType() == Type::U32 ? 32 : 64));
+U64 IREmitter::FPUnsignedFixedToDouble(const U16U32U64& a, size_t fbits, FP::RoundingMode rounding) {
+    ASSERT(fbits <= (a.GetType() == Type::U16 ? 16 : (a.GetType() == Type::U32 ? 32 : 64)));
 
     const IR::U8 fbits_imm = Imm8(static_cast<u8>(fbits));
     const IR::U8 rounding_imm = Imm8(static_cast<u8>(rounding));
 
     switch (a.GetType()) {
+    case Type::U16:
+        return Inst<U64>(Opcode::FPFixedU16ToDouble, a, fbits_imm, rounding_imm);
     case Type::U32:
         return Inst<U64>(Opcode::FPFixedU32ToDouble, a, fbits_imm, rounding_imm);
     case Type::U64:
