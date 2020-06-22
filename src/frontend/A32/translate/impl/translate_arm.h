@@ -423,6 +423,8 @@ struct ArmTranslatorVisitor final {
     bool vfp_VCVTT(Cond cond, bool D, bool op, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp_VCMP(Cond cond, bool D, size_t Vd, bool sz, bool E, bool M, size_t Vm);
     bool vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E);
+    bool vfp_VRINTR(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VRINTZ(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp_VCVT_from_int(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm);
     bool vfp_VCVT_to_u32(Cond cond, bool D, size_t Vd, bool sz, bool round_towards_zero, bool M, size_t Vm);

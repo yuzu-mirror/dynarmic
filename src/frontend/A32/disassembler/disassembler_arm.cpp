@@ -1420,6 +1420,14 @@ public:
         return fmt::format("vcmp{}{}.{} {}, #0.0", E ? "e" : "", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D));
     }
 
+    std::string vfp_VRINTR(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+        return fmt::format("vrintr{} {}, {}", CondToString(cond), FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
+    }
+
+    std::string vfp_VRINTZ(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+        return fmt::format("vrintz{} {}, {}", CondToString(cond), FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
+    }
+
     std::string vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vcvt{}.{}.{} {}, {}", CondToString(cond), !sz ? "f64" : "f32", sz ? "f64" : "f32", FPRegStr(!sz, Vd, D), FPRegStr(sz, Vm, M));
     }
