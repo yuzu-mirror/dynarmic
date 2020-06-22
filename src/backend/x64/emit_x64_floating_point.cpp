@@ -50,6 +50,7 @@ constexpr u64 f64_nan = 0x7ff8000000000000u;
 constexpr u64 f64_non_sign_mask = 0x7fffffffffffffffu;
 constexpr u64 f64_smallest_normal = 0x0010000000000000u;
 
+constexpr u64 f64_min_s16 = 0xc0e0000000000000u; // -32768 as a double
 constexpr u64 f64_max_s16 = 0x40dfffc000000000u; // 32767 as a double
 constexpr u64 f64_min_u16 = 0x0000000000000000u; // 0 as a double
 constexpr u64 f64_max_u16 = 0x40efffe000000000u; // 65535 as a double
@@ -1275,12 +1276,8 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                 }
             } else {
                 code.minsd(src, code.MConst(xword, unsigned_ ? f64_max_u16 : f64_max_s16));
-                if (unsigned_) {
-                    code.maxsd(src, code.MConst(xword, f64_min_u16));
-                    code.cvttsd2si(result, src); // 64 bit gpr
-                } else {
-                    code.cvttsd2si(result.cvt32(), src);
-                }
+                code.maxsd(src, code.MConst(xword, unsigned_ ? f64_min_u16 : f64_min_s16));
+                code.cvttsd2si(result, src); // 64 bit gpr
             }
 
             ctx.reg_alloc.DefineValue(inst, result);
