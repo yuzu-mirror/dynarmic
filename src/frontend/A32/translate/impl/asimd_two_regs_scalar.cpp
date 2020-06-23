@@ -127,4 +127,32 @@ bool ArmTranslatorVisitor::asimd_VMULL_scalar(bool U, bool D, size_t sz, size_t 
     return ScalarMultiplyLong(*this, U, D, sz, Vn, Vd, N, M, Vm, MultiplyBehavior::Multiply);
 }
 
+bool ArmTranslatorVisitor::asimd_VQDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+    if (sz == 0b11) {
+        // TODO: This should be a decode error.
+        return UndefinedInstruction();
+    }
+
+    if (sz == 0b00) {
+        return UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn))) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto n = ToVector(Q, Vn, N);
+    const auto [m, index] = GetScalarLocation(esize, M, Vm);
+
+    const auto scalar = ir.VectorGetElement(esize, ir.GetVector(m), index);
+    const auto reg_n = ir.GetVector(n);
+    const auto reg_m = ir.VectorBroadcast(esize, scalar);
+    const auto result = ir.VectorSignedSaturatedDoublingMultiply(esize, reg_n, reg_m).upper;
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32
