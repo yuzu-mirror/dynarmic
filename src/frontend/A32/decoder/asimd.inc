@@ -74,7 +74,7 @@ INST(asimd_VMLAL_scalar,    "VMLAL (scalar)",           "1111001U1dzznnnndddd0o1
 //INST(asimd_VQDMLAL_scalar,  "VQDMLAL/VQDMLSL (scalar)", "111100101-BB--------0x11-1-0----") // ASIMD
 INST(asimd_VMUL_scalar,     "VMUL (scalar)",            "1111001Q1Dzznnnndddd100FN1M0mmmm") // ASIMD
 INST(asimd_VMULL_scalar,    "VMULL (scalar)",           "1111001U1Dzznnnndddd1010N1M0mmmm") // ASIMD
-//INST(asimd_VQDMULL_scalar,  "VQDMULL (scalar)",         "111100101-BB--------1011-1-0----") // ASIMD
+INST(asimd_VQDMULL_scalar,  "VQDMULL (scalar)",         "111100101Dzznnnndddd1011N1M0mmmm") // ASIMD
 INST(asimd_VQDMULH_scalar,  "VQDMULH (scalar)",         "1111001Q1Dzznnnndddd1100N1M0mmmm") // ASIMD
 INST(asimd_VQRDMULH_scalar, "VQRDMULH (scalar)",        "1111001Q1Dzznnnndddd1101N1M0mmmm") // ASIMD
 

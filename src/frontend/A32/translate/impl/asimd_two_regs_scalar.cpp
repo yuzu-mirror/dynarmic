@@ -169,6 +169,30 @@ bool ArmTranslatorVisitor::asimd_VMULL_scalar(bool U, bool D, size_t sz, size_t 
     return ScalarMultiplyLong(*this, U, D, sz, Vn, Vd, N, M, Vm, MultiplyBehavior::Multiply);
 }
 
+bool ArmTranslatorVisitor::asimd_VQDMULL_scalar(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+    if (sz == 0b11) {
+        // TODO: This should be a decode error.
+        return UndefinedInstruction();
+    }
+
+    if (sz == 0b00 || Common::Bit<0>(Vd)) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(true, Vd, D);
+    const auto n = ToVector(false, Vn, N);
+    const auto [m, index] = GetScalarLocation(esize, M, Vm);
+
+    const auto scalar = ir.VectorGetElement(esize, ir.GetVector(m), index);
+    const auto reg_n = ir.GetVector(n);
+    const auto reg_m = ir.VectorBroadcast(esize, scalar);
+    const auto result = ir.VectorSignedSaturatedDoublingMultiplyLong(esize, reg_m, reg_n);
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VQDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
     return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::None);
 }
