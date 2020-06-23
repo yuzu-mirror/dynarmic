@@ -24,6 +24,11 @@ enum class MultiplyBehavior {
     MultiplySubtract,
 };
 
+enum class Rounding {
+    None,
+    Round,
+};
+
 bool ScalarMultiply(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm,
                     MultiplyBehavior multiply) {
     if (sz == 0b11) {
@@ -105,6 +110,43 @@ bool ScalarMultiplyLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size
     v.ir.SetVector(d, result);
     return true;
 }
+
+bool ScalarMultiplyReturnHigh(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
+                              Rounding round) {
+    if (sz == 0b11) {
+        // TODO: This should be a decode error.
+        return v.UndefinedInstruction();
+    }
+
+    if (sz == 0b00) {
+        return v.UndefinedInstruction();
+    }
+
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn))) {
+        return v.UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(Q, Vd, D);
+    const auto n = ToVector(Q, Vn, N);
+    const auto [m, index] = GetScalarLocation(esize, M, Vm);
+
+    const auto scalar = v.ir.VectorGetElement(esize, v.ir.GetVector(m), index);
+    const auto reg_n = v.ir.GetVector(n);
+    const auto reg_m = v.ir.VectorBroadcast(esize, scalar);
+    const auto result = [&] {
+        const auto tmp = v.ir.VectorSignedSaturatedDoublingMultiply(esize, reg_n, reg_m);
+
+        if (round == Rounding::Round) {
+            return v.ir.VectorAdd(esize, tmp.upper, v.ir.VectorLogicalShiftRight(esize, tmp.lower, static_cast<u8>(esize - 1)));
+        }
+
+        return tmp.upper;
+    }();
+
+    v.ir.SetVector(d, result);
+    return true;
+}
 } // Anonymous namespace
 
 bool ArmTranslatorVisitor::asimd_VMLA_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool F, bool N, bool M, size_t Vm) {
@@ -128,31 +170,11 @@ bool ArmTranslatorVisitor::asimd_VMULL_scalar(bool U, bool D, size_t sz, size_t 
 }
 
 bool ArmTranslatorVisitor::asimd_VQDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
-    if (sz == 0b11) {
-        // TODO: This should be a decode error.
-        return UndefinedInstruction();
-    }
+    return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::None);
+}
 
-    if (sz == 0b00) {
-        return UndefinedInstruction();
-    }
-
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn))) {
-        return UndefinedInstruction();
-    }
-
-    const size_t esize = 8U << sz;
-    const auto d = ToVector(Q, Vd, D);
-    const auto n = ToVector(Q, Vn, N);
-    const auto [m, index] = GetScalarLocation(esize, M, Vm);
-
-    const auto scalar = ir.VectorGetElement(esize, ir.GetVector(m), index);
-    const auto reg_n = ir.GetVector(n);
-    const auto reg_m = ir.VectorBroadcast(esize, scalar);
-    const auto result = ir.VectorSignedSaturatedDoublingMultiply(esize, reg_n, reg_m).upper;
-
-    ir.SetVector(d, result);
-    return true;
+bool ArmTranslatorVisitor::asimd_VQRDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+    return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::Round);
 }
 
 } // namespace Dynarmic::A32
