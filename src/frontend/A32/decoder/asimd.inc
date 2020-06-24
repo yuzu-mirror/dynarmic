@@ -93,7 +93,7 @@ INST(asimd_VQSHRUN,         "VQSHRUN",                  "111100111Diiiiiidddd100
 INST(asimd_VQRSHRUN,        "VQRSHRUN",                 "111100111Diiiiiidddd100001M1mmmm") // ASIMD
 INST(asimd_VQSHRN,          "VQSHRN",                   "1111001U1Diiiiiidddd100100M1mmmm") // ASIMD
 INST(asimd_VQRSHRN,         "VQRSHRN",                  "1111001U1Diiiiiidddd100101M1mmmm") // ASIMD
-//INST(asimd_SHLL,            "SHLL",                     "1111001U1-vvv-------101000-1----") // ASIMD
+INST(asimd_VSHLL,           "VSHLL",                    "1111001U1Diiiiiidddd101000M1mmmm") // ASIMD
 INST(asimd_VCVT_fixed,      "VCVT (fixed-point)",       "1111001U1Diiiiiidddd111o0QM1mmmm") // ASIMD
 
 // Two registers, miscellaneous
@@ -124,7 +124,7 @@ INST(asimd_VZIP,            "VZIP",                     "111100111D11zz10dddd000
 INST(asimd_VMOVN,           "VMOVN",                    "111100111D11zz10dddd001000M0mmmm") // ASIMD
 INST(asimd_VQMOVUN,         "VQMOVUN",                  "111100111D11zz10dddd001001M0mmmm") // ASIMD
 INST(asimd_VQMOVN,          "VQMOVN",                   "111100111D11zz10dddd00101oM0mmmm") // ASIMD
-//INST(asimd_VSHLL_max,       "VSHLL_max",                "111100111-11--10----001100-0----") // ASIMD
+INST(asimd_VSHLL_max,       "VSHLL_max",                "111100111D11zz10dddd001100M0mmmm") // ASIMD
 //INST(asimd_VCVT_half,       "VCVT (half-precision)",    "111100111-11--10----011x00-0----") // ASIMD
 INST(asimd_VRECPE,          "VRECPE",                   "111100111D11zz11dddd010F0QM0mmmm") // ASIMD
 INST(asimd_VRSQRTE,         "VRSQRTE",                  "111100111D11zz11dddd010F1QM0mmmm") // ASIMD

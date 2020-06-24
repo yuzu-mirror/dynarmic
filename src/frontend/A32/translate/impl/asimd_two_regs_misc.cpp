@@ -595,6 +595,21 @@ bool ArmTranslatorVisitor::asimd_VQMOVN(bool D, size_t sz, size_t Vd, bool op, b
     return true;
 }
 
+bool ArmTranslatorVisitor::asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+    if (sz == 0b11 || Common::Bit<0>(Vd)) {
+        return UndefinedInstruction();
+    }
+    const size_t esize = 8U << sz;
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(false, Vm, M);
+
+    const auto reg_m = ir.GetVector(m);
+    const auto result = ir.VectorLogicalShiftLeft(2 * esize, ir.VectorZeroExtend(esize, reg_m), static_cast<u8>(esize));
+
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool ArmTranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
