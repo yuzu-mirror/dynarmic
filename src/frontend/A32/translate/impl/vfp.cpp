@@ -916,6 +916,23 @@ bool ArmTranslatorVisitor::vfp_VRINTZ(Cond cond, bool D, size_t Vd, bool sz, boo
     return true;
 }
 
+// VRINTX.{F16,F32} <Sd>, <Sm>
+// VRINTX.F64 <Dd>, <Dm>
+bool ArmTranslatorVisitor::vfp_VRINTX(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
+    if (!ConditionPassed(cond)) {
+        return true;
+    }
+
+    const auto d = ToExtReg(sz, Vd, D);
+    const auto m = ToExtReg(sz, Vm, M);
+    const auto reg_m = ir.GetExtendedRegister(m);
+    const auto rounding_mode = ir.current_location.FPSCR().RMode();
+
+    const auto result = ir.FPRoundInt(reg_m, rounding_mode, true);
+    ir.SetExtendedRegister(d, result);
+    return true;
+}
+
 // VCVT<c>.F64.F32 <Dd>, <Sm>
 // VCVT<c>.F32.F64 <Sd>, <Dm>
 bool ArmTranslatorVisitor::vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {

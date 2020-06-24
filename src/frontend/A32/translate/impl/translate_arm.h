@@ -425,6 +425,7 @@ struct ArmTranslatorVisitor final {
     bool vfp_VCMP_zero(Cond cond, bool D, size_t Vd, bool sz, bool E);
     bool vfp_VRINTR(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp_VRINTZ(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
+    bool vfp_VRINTX(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm);
     bool vfp_VCVT_from_int(Cond cond, bool D, size_t Vd, bool sz, bool is_signed, bool M, size_t Vm);
     bool vfp_VCVT_from_fixed(Cond cond, bool D, bool U, size_t Vd, bool sz, bool sx, Imm<1> i, Imm<4> imm4);
