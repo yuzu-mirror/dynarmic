@@ -284,7 +284,7 @@ void EmitTwoOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const bool fpcr_controlled = args[fpcr_controlled_arg_index].GetImmediateU1();
 
-    if (!ctx.AccurateNaN() || ctx.FPCR(fpcr_controlled).DN()) {
+    if (ctx.FPCR(fpcr_controlled).DN()) {
         Xbyak::Xmm result;
 
         if constexpr (std::is_member_function_pointer_v<Function>) {
@@ -336,7 +336,7 @@ void EmitThreeOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const bool fpcr_controlled = args[2].GetImmediateU1();
 
-    if (!ctx.AccurateNaN() || ctx.FPCR(fpcr_controlled).DN()) {
+    if (ctx.FPCR(fpcr_controlled).DN()) {
         const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
 

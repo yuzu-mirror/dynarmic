@@ -52,10 +52,6 @@ FP::FPCR A64EmitContext::FPCR(bool fpcr_controlled) const {
     return fpcr_controlled ? Location().FPCR() : Location().FPCR().ASIMDStandardValue();
 }
 
-bool A64EmitContext::AccurateNaN() const {
-    return conf.floating_point_nan_accuracy == A64::UserConfig::NaNAccuracy::Accurate;
-}
-
 A64EmitX64::A64EmitX64(BlockOfCode& code, A64::UserConfig conf, A64::Jit* jit_interface)
         : EmitX64(code), conf(conf), jit_interface{jit_interface} {
     GenMemory128Accessors();

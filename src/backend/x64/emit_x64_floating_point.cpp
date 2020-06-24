@@ -258,7 +258,7 @@ void FPTwoOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
 
     Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
 
-    if (ctx.AccurateNaN() && !ctx.FPCR().DN()) {
+    if (!ctx.FPCR().DN()) {
         end = ProcessNaN<fsize>(code, result);
     }
     if constexpr (std::is_member_function_pointer_v<Function>) {
@@ -268,7 +268,7 @@ void FPTwoOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
     }
     if (ctx.FPCR().DN()) {
         ForceToDefaultNaN<fsize>(code, result);
-    } else if (ctx.AccurateNaN()) {
+    } else {
         PostProcessNaN<fsize>(code, result, ctx.reg_alloc.ScratchXmm());
     }
     code.L(end);
@@ -282,7 +282,7 @@ void FPThreeOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn)
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (ctx.FPCR().DN() || !ctx.AccurateNaN()) {
+    if (ctx.FPCR().DN()) {
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm operand = ctx.reg_alloc.UseScratchXmm(args[1]);
 
@@ -292,9 +292,7 @@ void FPThreeOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn)
             fn(result, operand);
         }
 
-        if (ctx.AccurateNaN()) {
-            ForceToDefaultNaN<fsize>(code, result);
-        }
+        ForceToDefaultNaN<fsize>(code, result);
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -437,7 +435,7 @@ static void EmitFPMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     code.jmp(end);
 
     code.L(nan);
-    if (ctx.FPCR().DN() || !ctx.AccurateNaN()) {
+    if (ctx.FPCR().DN()) {
         code.movaps(result, code.MConst(xword, fsize == 32 ? f32_nan : f64_nan));
         code.jmp(end);
     } else {
@@ -677,7 +675,7 @@ static void EmitFPMulX(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    const bool do_default_nan = ctx.FPCR().DN() || !ctx.AccurateNaN();
+    const bool do_default_nan = ctx.FPCR().DN();
 
     const Xbyak::Xmm op1 = ctx.reg_alloc.UseXmm(args[0]);
     const Xbyak::Xmm op2 = ctx.reg_alloc.UseXmm(args[1]);
