@@ -35,18 +35,22 @@ using namespace Xbyak::util;
 
 namespace {
 
-template<size_t fsize, typename T>
-T ChooseOnFsize([[maybe_unused]] T f32, [[maybe_unused]] T f64) {
-    static_assert(fsize == 32 || fsize == 64, "fsize must be either 32 or 64");
-
-    if constexpr (fsize == 32) {
-        return f32;
-    } else {
-        return f64;
+#define FCODE(NAME)                                                                         \
+    [&code](auto... args){                                                                  \
+        if constexpr (fsize == 32) {                                                        \
+            code.NAME##s(args...);                                                          \
+        } else {                                                                            \
+            code.NAME##d(args...);                                                          \
+        }                                                                                   \
     }
-}
-
-#define FCODE(NAME) (code.*ChooseOnFsize<fsize>(&Xbyak::CodeGenerator::NAME##s, &Xbyak::CodeGenerator::NAME##d))
+#define ICODE(NAME)                                                                         \
+    [&code](auto... args){                                                                  \
+        if constexpr (fsize == 32) {                                                        \
+            code.NAME##d(args...);                                                          \
+        } else {                                                                            \
+            code.NAME##q(args...);                                                          \
+        }                                                                                   \
+    }
 
 template<typename Lambda>
 void MaybeStandardFPSCRValue(BlockOfCode& code, EmitContext& ctx, bool fpcr_controlled, Lambda lambda) {
@@ -1370,11 +1374,7 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
                 // An explanation for this is given in EmitFPRSqrtStepFused.
                 code.vmovaps(mask, GetVectorOf<fsize, fsize == 32 ? 0x7f000000 : 0x7fe0000000000000>(code));
                 FCODE(vandp)(tmp, result, mask);
-                if constexpr (fsize == 32) {
-                    code.vpcmpeqd(tmp, tmp, mask);
-                } else {
-                    code.vpcmpeqq(tmp, tmp, mask);
-                }
+                ICODE(vpcmpeq)(tmp, tmp, mask);
                 code.ptest(tmp, tmp);
                 code.jnz(fallback, code.T_NEAR);
 
@@ -1517,11 +1517,7 @@ void EmitFPVectorToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                     FCODE(andp)(tmp, xmm0);
                     FCODE(subp)(src, tmp);
                     perform_conversion(src);
-                    if constexpr (fsize == 32) {
-                        code.pslld(xmm0, 31);
-                    } else {
-                        code.psllq(xmm0, 63);
-                    }
+                    ICODE(psll)(xmm0, static_cast<u8>(fsize - 1));
                     FCODE(orp)(src, xmm0);
 
                     // Saturate to max
