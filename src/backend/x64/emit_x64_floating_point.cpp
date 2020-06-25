@@ -61,18 +61,22 @@ constexpr u64 f64_max_s64_lim = 0x43e0000000000000u; // 2^63 as a double (actual
 constexpr u64 f64_min_u64 = 0x0000000000000000u; // 0 as a double
 constexpr u64 f64_max_u64_lim = 0x43f0000000000000u; // 2^64 as a double (actual maximum unrepresentable)
 
-template<size_t fsize, typename T>
-T ChooseOnFsize([[maybe_unused]] T f32, [[maybe_unused]] T f64) {
-    static_assert(fsize == 32 || fsize == 64, "fsize must be either 32 or 64");
-
-    if constexpr (fsize == 32) {
-        return f32;
-    } else {
-        return f64;
+#define FCODE(NAME)                                                                         \
+    [&code](auto... args){                                                                  \
+        if constexpr (fsize == 32) {                                                        \
+            code.NAME##s(args...);                                                          \
+        } else {                                                                            \
+            code.NAME##d(args...);                                                          \
+        }                                                                                   \
     }
-}
-
-#define FCODE(NAME) (code.*ChooseOnFsize<fsize>(&Xbyak::CodeGenerator::NAME##s, &Xbyak::CodeGenerator::NAME##d))
+#define ICODE(NAME)                                                                         \
+    [&code](auto... args){                                                                  \
+        if constexpr (fsize == 32) {                                                        \
+            code.NAME##d(args...);                                                          \
+        } else {                                                                            \
+            code.NAME##q(args...);                                                          \
+        }                                                                                   \
+    }
 
 std::optional<int> ConvertRoundingModeToX64Immediate(FP::RoundingMode rounding_mode) {
     switch (rounding_mode) {
@@ -148,17 +152,10 @@ Xbyak::Label ProcessNaN(BlockOfCode& code, Xbyak::Xmm a) {
 
 template<size_t fsize>
 void PostProcessNaN(BlockOfCode& code, Xbyak::Xmm result, Xbyak::Xmm tmp) {
-    if constexpr (fsize == 32) {
-        code.movaps(tmp, result);
-        code.cmpunordps(tmp, tmp);
-        code.pslld(tmp, 31);
-        code.xorps(result, tmp);
-    } else {
-        code.movaps(tmp, result);
-        code.cmpunordpd(tmp, tmp);
-        code.psllq(tmp, 63);
-        code.xorps(result, tmp);
-    }
+    code.movaps(tmp, result);
+    FCODE(cmpunordp)(tmp, tmp);
+    ICODE(psll)(tmp, int(fsize - 1));
+    code.xorps(result, tmp);
 }
 
 // This is necessary because x86 and ARM differ in they way they return NaNs from floating point operations
