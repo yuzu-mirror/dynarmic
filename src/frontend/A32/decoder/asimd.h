@@ -43,12 +43,12 @@ std::vector<ASIMDMatcher<V>> GetASIMDDecodeTable() {
     const std::set<std::string> comes_last{
         "VMLA (scalar)",
         "VMLAL (scalar)",
-        "VQDMLAL/VQDMLSL",
+        "VQDMLAL/VQDMLSL (scalar)",
         "VMUL (scalar)",
         "VMULL (scalar)",
-        "VQDMULL",
-        "VQDMULH",
-        "VQRDMULH",
+        "VQDMULL (scalar)",
+        "VQDMULH (scalar)",
+        "VQRDMULH (scalar)",
     };
 
     std::stable_partition(table.begin(), table.end(), [&](const auto& matcher) {
