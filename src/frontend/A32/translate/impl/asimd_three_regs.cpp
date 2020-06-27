@@ -22,6 +22,11 @@ enum class AccumulateBehavior {
     Accumulate,
 };
 
+enum class WidenBehaviour {
+    Second,
+    Both,
+};
+
 template <bool WithDst, typename Callable>
 bool BitwiseInstruction(ArmTranslatorVisitor& v, bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
@@ -211,6 +216,36 @@ bool AbsoluteDifferenceLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, 
     v.ir.SetVector(d, result);
     return true;
 }
+
+template <typename Callable>
+bool WideInstruction(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, WidenBehaviour widen_behaviour, Callable fn) {
+    const size_t esize = 8U << sz;
+    const bool widen_second = widen_behaviour == WidenBehaviour::Both;
+
+    if (sz == 0b11) {
+        // Decode error
+        return v.UndefinedInstruction();
+    }
+
+    if (Common::Bit<0>(Vd) || (!widen_second && Common::Bit<0>(Vn))) {
+        return v.UndefinedInstruction();
+    }
+
+    const auto d = ToVector(true, Vd, D);
+    const auto m = ToVector(false, Vm, M);
+    const auto n = ToVector(!widen_second, Vn, N);
+
+    const auto reg_m = v.ir.GetVector(m);
+    const auto reg_n = v.ir.GetVector(n);
+    const auto operand_n = widen_second ? (U ? v.ir.VectorZeroExtend(esize, reg_n) : v.ir.VectorSignExtend(esize, reg_n))
+                                        : reg_n;
+    const auto operand_m = U ? v.ir.VectorZeroExtend(esize, reg_m) : v.ir.VectorSignExtend(esize, reg_m);
+    const auto result = fn(esize * 2, operand_n, operand_m);
+
+    v.ir.SetVector(d, result);
+    return true;
+}
+
 } // Anonymous namespace
 
 // ASIMD Three registers of the same length
@@ -749,6 +784,18 @@ bool ArmTranslatorVisitor::asimd_VRSQRTS(bool D, bool sz, size_t Vn, size_t Vd, 
 }
 
 // ASIMD Three registers of different length
+
+bool ArmTranslatorVisitor::asimd_VADDL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
+    return WideInstruction(*this, U, D, sz, Vn, Vd, N, M, Vm, op ? WidenBehaviour::Second : WidenBehaviour::Both, [this](size_t esize, const auto& reg_n, const auto& reg_m) {
+        return ir.VectorAdd(esize, reg_n, reg_m);
+    });
+}
+
+bool ArmTranslatorVisitor::asimd_VSUBL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
+    return WideInstruction(*this, U, D, sz, Vn, Vd, N, M, Vm, op ? WidenBehaviour::Second : WidenBehaviour::Both, [this](size_t esize, const auto& reg_n, const auto& reg_m) {
+        return ir.VectorSub(esize, reg_n, reg_m);
+    });
+}
 
 bool ArmTranslatorVisitor::asimd_VABAL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
     return AbsoluteDifferenceLong(*this, U, D, sz, Vn, Vd, N, M, Vm, AccumulateBehavior::Accumulate);

@@ -50,9 +50,8 @@ INST(asimd_VRECPS,          "VRECPS",                   "111100100D0znnnndddd111
 INST(asimd_VRSQRTS,         "VRSQRTS",                  "111100100D1znnnndddd1111NQM1mmmm") // ASIMD
 
 // Three registers of different lengths
-//INST(asimd_VADDL,           "VADDL/VADDW",              "1111001-1----------------0-0----") // ASIMD
-//INST(asimd_VADDL,           "VADDL/VADDW",              "1111001-1-----------000--0-0----") // ASIMD
-//INST(asimd_VSUBL,           "VSUBL/VSUBW",              "1111001-1-----------001--0-0----") // ASIMD
+INST(asimd_VADDL,           "VADDL/VADDW",              "1111001U1Dzznnnndddd000oN0M0mmmm") // ASIMD
+INST(asimd_VSUBL,           "VSUBL/VSUBW",              "1111001U1Dzznnnndddd001oN0M0mmmm") // ASIMD
 //INST(asimd_VADDHN,          "VADDHN",                   "111100101-----------0100-0-0----") // ASIMD
 //INST(asimd_VRADDHN,         "VRADDHN",                  "111100111-----------0100-0-0----") // ASIMD
 INST(asimd_VABAL,           "VABAL",                    "1111001U1Dzznnnndddd0101N0M0mmmm") // ASIMD
