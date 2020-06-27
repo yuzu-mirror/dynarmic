@@ -167,8 +167,8 @@ bool AbsoluteDifference(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size
     const auto reg_m = v.ir.GetVector(m);
     const auto reg_n = v.ir.GetVector(n);
     const auto result = [&] {
-        const auto absdiff = U ? v.ir.VectorUnsignedAbsoluteDifference(esize, reg_m, reg_n)
-                               : v.ir.VectorSignedAbsoluteDifference(esize, reg_m, reg_n);
+        const auto absdiff = U ? v.ir.VectorUnsignedAbsoluteDifference(esize, reg_n, reg_m)
+                               : v.ir.VectorSignedAbsoluteDifference(esize, reg_n, reg_m);
 
         if (accumulate == AccumulateBehavior::Accumulate) {
             const auto reg_d = v.ir.GetVector(d);
@@ -436,7 +436,7 @@ bool ArmTranslatorVisitor::asimd_VADD_int(bool D, size_t sz, size_t Vn, size_t V
 
     const auto reg_m = ir.GetVector(m);
     const auto reg_n = ir.GetVector(n);
-    const auto result = ir.VectorAdd(esize, reg_m, reg_n);
+    const auto result = ir.VectorAdd(esize, reg_n, reg_m);
 
     ir.SetVector(d, result);
     return true;
@@ -535,11 +535,11 @@ bool ArmTranslatorVisitor::asimd_VMAX(bool U, bool D, size_t sz, size_t Vn, size
     const auto reg_n = ir.GetVector(n);
     const auto result = [&] {
         if (op) {
-            return U ? ir.VectorMinUnsigned(esize, reg_m, reg_n)
-                     : ir.VectorMinSigned(esize, reg_m, reg_n);
+            return U ? ir.VectorMinUnsigned(esize, reg_n, reg_m)
+                     : ir.VectorMinSigned(esize, reg_n, reg_m);
         } else {
-            return U ? ir.VectorMaxUnsigned(esize, reg_m, reg_n)
-                     : ir.VectorMaxSigned(esize, reg_m, reg_n);
+            return U ? ir.VectorMaxUnsigned(esize, reg_n, reg_m)
+                     : ir.VectorMaxSigned(esize, reg_n, reg_m);
         }
     }();
 
@@ -591,7 +591,7 @@ bool ArmTranslatorVisitor::asimd_VMLA(bool op, bool D, size_t sz, size_t Vn, siz
     const auto reg_n = ir.GetVector(n);
     const auto reg_m = ir.GetVector(m);
     const auto reg_d = ir.GetVector(d);
-    const auto multiply = ir.VectorMultiply(esize, reg_m, reg_n);
+    const auto multiply = ir.VectorMultiply(esize, reg_n, reg_m);
     const auto result = op ? ir.VectorSub(esize, reg_d, multiply)
                            : ir.VectorAdd(esize, reg_d, multiply);
 
@@ -615,8 +615,8 @@ bool ArmTranslatorVisitor::asimd_VMUL(bool P, bool D, size_t sz, size_t Vn, size
 
     const auto reg_n = ir.GetVector(n);
     const auto reg_m = ir.GetVector(m);
-    const auto result = P ? ir.VectorPolynomialMultiply(reg_m, reg_n)
-                          : ir.VectorMultiply(esize, reg_m, reg_n);
+    const auto result = P ? ir.VectorPolynomialMultiply(reg_n, reg_m)
+                          : ir.VectorMultiply(esize, reg_n, reg_m);
 
     ir.SetVector(d, result);
     return true;
@@ -829,8 +829,8 @@ bool ArmTranslatorVisitor::asimd_VMULL(bool U, bool D, size_t sz, size_t Vn, siz
 
     const auto reg_n = ir.GetVector(n);
     const auto reg_m = ir.GetVector(m);
-    const auto result = P ? ir.VectorPolynomialMultiplyLong(esize, reg_m, reg_n)
-                          : ir.VectorMultiply(2 * esize, extend_reg(reg_m), extend_reg(reg_n));
+    const auto result = P ? ir.VectorPolynomialMultiplyLong(esize, reg_n, reg_m)
+                          : ir.VectorMultiply(2 * esize, extend_reg(reg_n), extend_reg(reg_m));
 
     ir.SetVector(d, result);
     return true;

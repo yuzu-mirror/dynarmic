@@ -187,7 +187,7 @@ bool ArmTranslatorVisitor::asimd_VQDMULL_scalar(bool D, size_t sz, size_t Vn, si
     const auto scalar = ir.VectorGetElement(esize, ir.GetVector(m), index);
     const auto reg_n = ir.GetVector(n);
     const auto reg_m = ir.VectorBroadcast(esize, scalar);
-    const auto result = ir.VectorSignedSaturatedDoublingMultiplyLong(esize, reg_m, reg_n);
+    const auto result = ir.VectorSignedSaturatedDoublingMultiplyLong(esize, reg_n, reg_m);
 
     ir.SetVector(d, result);
     return true;
