@@ -126,7 +126,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/impl/asimd_load_store_structures.cpp
         frontend/A32/translate/impl/asimd_misc.cpp
         frontend/A32/translate/impl/asimd_one_reg_modified_immediate.cpp
-        frontend/A32/translate/impl/asimd_three_same.cpp
+        frontend/A32/translate/impl/asimd_three_regs.cpp
         frontend/A32/translate/impl/asimd_two_regs_misc.cpp
         frontend/A32/translate/impl/asimd_two_regs_scalar.cpp
         frontend/A32/translate/impl/asimd_two_regs_shift.cpp
