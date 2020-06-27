@@ -19,7 +19,7 @@ find_library(LIBUNICORN_LIBRARY
              HINTS $ENV{UNICORNDIR})
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(unicorn DEFAULT_MSG LIBUNICORN_LIBRARY LIBUNICORN_INCLUDE_DIR)
+find_package_handle_standard_args(Unicorn DEFAULT_MSG LIBUNICORN_LIBRARY LIBUNICORN_INCLUDE_DIR)
 
 if (UNICORN_FOUND)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
