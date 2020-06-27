@@ -212,7 +212,11 @@ void EmitX64::EmitSignedSaturation(EmitContext& ctx, IR::Inst* inst) {
             const auto no_overflow = IR::Value(false);
             overflow_inst->ReplaceUsesWith(no_overflow);
         }
-        ctx.reg_alloc.DefineValue(inst, args[0]);
+        // TODO: DefineValue directly on Argument
+        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]);
+        code.mov(result.cvt32(), source.cvt32());
+        ctx.reg_alloc.DefineValue(inst, result);
         return;
     }
 

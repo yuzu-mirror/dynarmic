@@ -156,10 +156,7 @@ void EmitX64::EmitVectorGetElement8(EmitContext& ctx, IR::Inst* inst) {
     ASSERT(args[1].IsImmediate());
     const u8 index = args[1].GetImmediateU8();
 
-    if (index == 0) {
-        ctx.reg_alloc.DefineValue(inst, args[0]);
-        return;
-    }
+    // TODO: DefineValue directly on Argument for index == 0
 
     const Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
     const Xbyak::Reg32 dest = ctx.reg_alloc.ScratchGpr().cvt32();
@@ -170,6 +167,8 @@ void EmitX64::EmitVectorGetElement8(EmitContext& ctx, IR::Inst* inst) {
         code.pextrw(dest, source, index / 2);
         if (index % 2 == 1) {
             code.shr(dest, 8);
+        } else {
+            code.and_(dest, 0xFF); // TODO: Remove when zext handling is corrected
         }
     }
 
@@ -181,10 +180,7 @@ void EmitX64::EmitVectorGetElement16(EmitContext& ctx, IR::Inst* inst) {
     ASSERT(args[1].IsImmediate());
     const u8 index = args[1].GetImmediateU8();
 
-    if (index == 0) {
-        ctx.reg_alloc.DefineValue(inst, args[0]);
-        return;
-    }
+    // TODO: DefineValue directly on Argument for index == 0
 
     const Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
     const Xbyak::Reg32 dest = ctx.reg_alloc.ScratchGpr().cvt32();
@@ -197,10 +193,7 @@ void EmitX64::EmitVectorGetElement32(EmitContext& ctx, IR::Inst* inst) {
     ASSERT(args[1].IsImmediate());
     const u8 index = args[1].GetImmediateU8();
 
-    if (index == 0) {
-        ctx.reg_alloc.DefineValue(inst, args[0]);
-        return;
-    }
+    // TODO: DefineValue directly on Argument for index == 0
 
     const Xbyak::Reg32 dest = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -222,7 +215,11 @@ void EmitX64::EmitVectorGetElement64(EmitContext& ctx, IR::Inst* inst) {
     const u8 index = args[1].GetImmediateU8();
 
     if (index == 0) {
-        ctx.reg_alloc.DefineValue(inst, args[0]);
+        // TODO: DefineValue directly on Argument for index == 0
+        const Xbyak::Reg64 dest = ctx.reg_alloc.ScratchGpr().cvt64();
+        const Xbyak::Xmm source = ctx.reg_alloc.UseXmm(args[0]);
+        code.movq(dest, source);
+        ctx.reg_alloc.DefineValue(inst, dest);
         return;
     }
 

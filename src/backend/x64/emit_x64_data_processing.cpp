@@ -51,7 +51,12 @@ void EmitX64::EmitPack2x64To1x128(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitLeastSignificantWord(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.DefineValue(inst, args[0]);
+
+    // TODO: DefineValue directly on Argument
+    const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]);
+    code.mov(result.cvt32(), source.cvt32());
+    ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitMostSignificantWord(EmitContext& ctx, IR::Inst* inst) {
@@ -73,12 +78,22 @@ void EmitX64::EmitMostSignificantWord(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitLeastSignificantHalf(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.DefineValue(inst, args[0]);
+
+    // TODO: DefineValue directly on Argument
+    const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]);
+    code.movzx(result.cvt32(), source.cvt16());
+    ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitLeastSignificantByte(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.DefineValue(inst, args[0]);
+
+    // TODO: DefineValue directly on Argument
+    const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]);
+    code.movzx(result.cvt32(), source.cvt8());
+    ctx.reg_alloc.DefineValue(inst, result);
 }
 
 void EmitX64::EmitMostSignificantBit(EmitContext& ctx, IR::Inst* inst) {
