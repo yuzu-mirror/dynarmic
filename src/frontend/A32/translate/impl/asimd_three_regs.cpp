@@ -220,27 +220,27 @@ bool AbsoluteDifferenceLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, 
 template <typename Callable>
 bool WideInstruction(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, WidenBehaviour widen_behaviour, Callable fn) {
     const size_t esize = 8U << sz;
-    const bool widen_second = widen_behaviour == WidenBehaviour::Both;
+    const bool widen_first = widen_behaviour == WidenBehaviour::Both;
 
     if (sz == 0b11) {
         // Decode error
         return v.UndefinedInstruction();
     }
 
-    if (Common::Bit<0>(Vd) || (!widen_second && Common::Bit<0>(Vn))) {
+    if (Common::Bit<0>(Vd) || (!widen_first && Common::Bit<0>(Vn))) {
         return v.UndefinedInstruction();
     }
 
     const auto d = ToVector(true, Vd, D);
     const auto m = ToVector(false, Vm, M);
-    const auto n = ToVector(!widen_second, Vn, N);
+    const auto n = ToVector(!widen_first, Vn, N);
 
+    const auto reg_d = v.ir.GetVector(d);
     const auto reg_m = v.ir.GetVector(m);
     const auto reg_n = v.ir.GetVector(n);
-    const auto operand_n = widen_second ? (U ? v.ir.VectorZeroExtend(esize, reg_n) : v.ir.VectorSignExtend(esize, reg_n))
-                                        : reg_n;
-    const auto operand_m = U ? v.ir.VectorZeroExtend(esize, reg_m) : v.ir.VectorSignExtend(esize, reg_m);
-    const auto result = fn(esize * 2, operand_n, operand_m);
+    const auto wide_n = U ? v.ir.VectorZeroExtend(esize, reg_n) : v.ir.VectorSignExtend(esize, reg_n);
+    const auto wide_m = U ? v.ir.VectorZeroExtend(esize, reg_m) : v.ir.VectorSignExtend(esize, reg_m);
+    const auto result = fn(esize * 2, reg_d, widen_first ? wide_n : reg_n, wide_m);
 
     v.ir.SetVector(d, result);
     return true;
@@ -786,13 +786,13 @@ bool ArmTranslatorVisitor::asimd_VRSQRTS(bool D, bool sz, size_t Vn, size_t Vd, 
 // ASIMD Three registers of different length
 
 bool ArmTranslatorVisitor::asimd_VADDL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
-    return WideInstruction(*this, U, D, sz, Vn, Vd, N, M, Vm, op ? WidenBehaviour::Second : WidenBehaviour::Both, [this](size_t esize, const auto& reg_n, const auto& reg_m) {
+    return WideInstruction(*this, U, D, sz, Vn, Vd, N, M, Vm, op ? WidenBehaviour::Second : WidenBehaviour::Both, [this](size_t esize, const auto&, const auto& reg_n, const auto& reg_m) {
         return ir.VectorAdd(esize, reg_n, reg_m);
     });
 }
 
 bool ArmTranslatorVisitor::asimd_VSUBL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
-    return WideInstruction(*this, U, D, sz, Vn, Vd, N, M, Vm, op ? WidenBehaviour::Second : WidenBehaviour::Both, [this](size_t esize, const auto& reg_n, const auto& reg_m) {
+    return WideInstruction(*this, U, D, sz, Vn, Vd, N, M, Vm, op ? WidenBehaviour::Second : WidenBehaviour::Both, [this](size_t esize, const auto&, const auto& reg_n, const auto& reg_m) {
         return ir.VectorSub(esize, reg_n, reg_m);
     });
 }
@@ -806,33 +806,11 @@ bool ArmTranslatorVisitor::asimd_VABDL(bool U, bool D, size_t sz, size_t Vn, siz
 }
 
 bool ArmTranslatorVisitor::asimd_VMLAL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
-    if (sz == 0b11) {
-        return UndefinedInstruction();
-    }
-
-    if (Common::Bit<0>(Vd)) {
-        return UndefinedInstruction();
-    }
-
-    const size_t esize = 8U << sz;
-    const auto d = ToVector(true, Vd, D);
-    const auto m = ToVector(false, Vm, M);
-    const auto n = ToVector(false, Vn, N);
-
-    const auto extend_reg = [&](const auto& reg) {
-        return U ? ir.VectorZeroExtend(esize, reg)
-                 : ir.VectorSignExtend(esize, reg);
-    };
-
-    const auto reg_d = ir.GetVector(d);
-    const auto reg_n = ir.GetVector(n);
-    const auto reg_m = ir.GetVector(m);
-    const auto multiply = ir.VectorMultiply(2 * esize, extend_reg(reg_n), extend_reg(reg_m));
-    const auto result = op ? ir.VectorSub(2 * esize, reg_d, multiply)
-                           : ir.VectorAdd(2 * esize, reg_d, multiply);
-
-    ir.SetVector(d, result);
-    return true;
+    return WideInstruction(*this, U, D, sz, Vn, Vd, N, M, Vm, WidenBehaviour::Both, [this, op](size_t esize, const auto& reg_d, const auto& reg_n, const auto& reg_m) {
+        const auto multiply = ir.VectorMultiply(esize, reg_n, reg_m);
+        return op ? ir.VectorSub(esize, reg_d, multiply)
+                  : ir.VectorAdd(esize, reg_d, multiply);
+    });
 }
 
 bool ArmTranslatorVisitor::asimd_VMULL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool P, bool N, bool M, size_t Vm) {
