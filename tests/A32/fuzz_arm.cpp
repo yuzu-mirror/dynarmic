@@ -147,7 +147,7 @@ u32 GenRandomInst(u32 pc, bool is_last_inst) {
 
 Dynarmic::A32::UserConfig GetUserConfig(ArmTestEnv& testenv) {
     Dynarmic::A32::UserConfig user_config;
-    user_config.enable_fast_dispatch = false;
+    user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     user_config.callbacks = &testenv;
     user_config.always_little_endian = true;
     return user_config;

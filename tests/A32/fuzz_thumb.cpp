@@ -28,9 +28,11 @@
 #include "testenv.h"
 #include "unicorn_emu/a32_unicorn.h"
 
-static Dynarmic::A32::UserConfig GetUserConfig(ThumbTestEnv* testenv) {
-    Dynarmic::A32::UserConfig user_config;
-    user_config.enable_fast_dispatch = false;
+using namespace Dynarmic;
+
+static A32::UserConfig GetUserConfig(ThumbTestEnv* testenv) {
+    A32::UserConfig user_config;
+    user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     user_config.callbacks = testenv;
     return user_config;
 }
@@ -76,7 +78,7 @@ private:
     std::function<bool(u16)> is_valid;
 };
 
-static bool DoesBehaviorMatch(const A32Unicorn<ThumbTestEnv>& uni, const Dynarmic::A32::Jit& jit,
+static bool DoesBehaviorMatch(const A32Unicorn<ThumbTestEnv>& uni, const A32::Jit& jit,
                               const WriteRecords& interp_write_records, const WriteRecords& jit_write_records) {
     const auto interp_regs = uni.GetRegisters();
     const auto jit_regs = jit.Regs();
@@ -86,7 +88,7 @@ static bool DoesBehaviorMatch(const A32Unicorn<ThumbTestEnv>& uni, const Dynarmi
            interp_write_records == jit_write_records;
 }
 
-static void RunInstance(size_t run_number, ThumbTestEnv& test_env, A32Unicorn<ThumbTestEnv>& uni, Dynarmic::A32::Jit& jit, const ThumbTestEnv::RegisterArray& initial_regs,
+static void RunInstance(size_t run_number, ThumbTestEnv& test_env, A32Unicorn<ThumbTestEnv>& uni, A32::Jit& jit, const ThumbTestEnv::RegisterArray& initial_regs,
                         size_t instruction_count, size_t instructions_to_execute_count) {
     uni.ClearPageCache();
     jit.ClearCache();
@@ -126,7 +128,7 @@ static void RunInstance(size_t run_number, ThumbTestEnv& test_env, A32Unicorn<Th
 
         printf("\nInstruction Listing: \n");
         for (size_t i = 0; i < instruction_count; i++) {
-            printf("%04x %s\n", test_env.code_mem[i], Dynarmic::A32::DisassembleThumb16(test_env.code_mem[i]).c_str());
+            printf("%04x %s\n", test_env.code_mem[i], A32::DisassembleThumb16(test_env.code_mem[i]).c_str());
         }
 
         printf("\nInitial Register Listing: \n");
@@ -152,20 +154,20 @@ static void RunInstance(size_t run_number, ThumbTestEnv& test_env, A32Unicorn<Th
             printf("[%08x] = %02x\n", record.first, record.second);
         }
 
-        Dynarmic::A32::PSR cpsr;
+        A32::PSR cpsr;
         cpsr.T(true);
 
         size_t num_insts = 0;
         while (num_insts < instructions_to_execute_count) {
-            Dynarmic::A32::LocationDescriptor descriptor = {u32(num_insts * 4), cpsr, Dynarmic::A32::FPSCR{}};
-            Dynarmic::IR::Block ir_block = Dynarmic::A32::Translate(descriptor, [&test_env](u32 vaddr) { return test_env.MemoryReadCode(vaddr); }, {});
-            Dynarmic::Optimization::A32GetSetElimination(ir_block);
-            Dynarmic::Optimization::DeadCodeElimination(ir_block);
-            Dynarmic::Optimization::A32ConstantMemoryReads(ir_block, &test_env);
-            Dynarmic::Optimization::ConstantPropagation(ir_block);
-            Dynarmic::Optimization::DeadCodeElimination(ir_block);
-            Dynarmic::Optimization::VerificationPass(ir_block);
-            printf("\n\nIR:\n%s", Dynarmic::IR::DumpBlock(ir_block).c_str());
+            A32::LocationDescriptor descriptor = {u32(num_insts * 4), cpsr, A32::FPSCR{}};
+            IR::Block ir_block = A32::Translate(descriptor, [&test_env](u32 vaddr) { return test_env.MemoryReadCode(vaddr); }, {});
+            Optimization::A32GetSetElimination(ir_block);
+            Optimization::DeadCodeElimination(ir_block);
+            Optimization::A32ConstantMemoryReads(ir_block, &test_env);
+            Optimization::ConstantPropagation(ir_block);
+            Optimization::DeadCodeElimination(ir_block);
+            Optimization::VerificationPass(ir_block);
+            printf("\n\nIR:\n%s", IR::DumpBlock(ir_block).c_str());
             printf("\n\nx86_64:\n%s", jit.Disassemble().c_str());
             num_insts += ir_block.CycleCount();
         }
@@ -186,7 +188,7 @@ void FuzzJitThumb(const size_t instruction_count, const size_t instructions_to_e
 
     // Prepare test subjects
     A32Unicorn uni{test_env};
-    Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
+    A32::Jit jit{GetUserConfig(&test_env)};
 
     for (size_t run_number = 0; run_number < run_count; run_number++) {
         ThumbTestEnv::RegisterArray initial_regs;
@@ -210,9 +212,9 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         ThumbInstGen("010000ooooxxxxxx"), // Data Processing
         ThumbInstGen("010001000hxxxxxx"), // ADD (high registers)
         ThumbInstGen("0100010101xxxxxx",  // CMP (high registers)
-                     [](u16 inst){ return Dynarmic::Common::Bits<3, 5>(inst) != 0b111; }), // R15 is UNPREDICTABLE
+                     [](u16 inst){ return Common::Bits<3, 5>(inst) != 0b111; }), // R15 is UNPREDICTABLE
         ThumbInstGen("0100010110xxxxxx",  // CMP (high registers)
-                     [](u16 inst){ return Dynarmic::Common::Bits<0, 2>(inst) != 0b111; }), // R15 is UNPREDICTABLE
+                     [](u16 inst){ return Common::Bits<0, 2>(inst) != 0b111; }), // R15 is UNPREDICTABLE
         ThumbInstGen("010001100hxxxxxx"), // MOV (high registers)
         ThumbInstGen("10110000oxxxxxxx"), // Adjust stack pointer
         ThumbInstGen("10110010ooxxxxxx"), // SXT/UXT
@@ -225,15 +227,15 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
         ThumbInstGen("1000xxxxxxxxxxxx"), // LDRH/STRH Rd, [Rn, #offset]
         ThumbInstGen("1001xxxxxxxxxxxx"), // LDR/STR Rd, [SP, #]
         ThumbInstGen("1011010xxxxxxxxx",  // PUSH
-                     [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
+                     [](u16 inst){ return Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
         ThumbInstGen("10111100xxxxxxxx",  // POP (P = 0)
-                     [](u16 inst){ return Dynarmic::Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
+                     [](u16 inst){ return Common::Bits<0, 7>(inst) != 0; }), // Empty reg_list is UNPREDICTABLE
         ThumbInstGen("1100xxxxxxxxxxxx", // STMIA/LDMIA
                      [](u16 inst) {
                          // Ensure that the architecturally undefined case of
                          // the base register being within the list isn't hit.
-                         const u32 rn = Dynarmic::Common::Bits<8, 10>(inst);
-                         return (inst & (1U << rn)) == 0 && Dynarmic::Common::Bits<0, 7>(inst) != 0;
+                         const u32 rn = Common::Bits<8, 10>(inst);
+                         return (inst & (1U << rn)) == 0 && Common::Bits<0, 7>(inst) != 0;
                      }),
         // TODO: We should properly test against swapped
         //       endianness cases, however Unicorn doesn't
@@ -277,7 +279,7 @@ TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
 #if 0
         ThumbInstGen("01000111xmmmm000",  // BLX/BX
                      [](u16 inst){
-                         const u32 Rm = Dynarmic::Common::Bits<3, 6>(inst);
+                         const u32 Rm = Common::Bits<3, 6>(inst);
                          return Rm != 15;
                      }),
 #endif
@@ -287,7 +289,7 @@ TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
         ThumbInstGen("01000110h0xxxxxx"), // MOV (high registers)
         ThumbInstGen("1101ccccxxxxxxxx",  // B<cond>
                      [](u16 inst){
-                         const u32 c = Dynarmic::Common::Bits<9, 12>(inst);
+                         const u32 c = Common::Bits<9, 12>(inst);
                          return c < 0b1110; // Don't want SWI or undefined instructions.
                      }),
         ThumbInstGen("1011o0i1iiiiinnn"), // CBZ/CBNZ
@@ -315,7 +317,7 @@ TEST_CASE("Verify fix for off by one error in MemoryRead32 worked", "[Thumb]") {
 
     // Prepare test subjects
     A32Unicorn<ThumbTestEnv> uni{test_env};
-    Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
+    A32::Jit jit{GetUserConfig(&test_env)};
 
     constexpr ThumbTestEnv::RegisterArray initial_regs {
         0xe90ecd70,

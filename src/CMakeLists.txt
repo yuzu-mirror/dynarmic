@@ -7,6 +7,7 @@ add_library(dynarmic
     ../include/dynarmic/A64/a64.h
     ../include/dynarmic/A64/config.h
     ../include/dynarmic/exclusive_monitor.h
+    ../include/dynarmic/optimization_flags.h
     common/assert.cpp
     common/assert.h
     common/bit_util.h

@@ -176,9 +176,11 @@ private:
         }
 
         IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, [this](u32 vaddr) { return conf.callbacks->MemoryReadCode(vaddr); }, {conf.define_unpredictable_behaviour, conf.hook_hint_instructions});
-        if (conf.enable_optimizations) {
+        if (conf.HasOptimization(OptimizationFlag::GetSetElimination)) {
             Optimization::A32GetSetElimination(ir_block);
             Optimization::DeadCodeElimination(ir_block);
+        }
+        if (conf.HasOptimization(OptimizationFlag::ConstProp)) {
             Optimization::A32ConstantMemoryReads(ir_block, conf.callbacks);
             Optimization::ConstantPropagation(ir_block);
             Optimization::DeadCodeElimination(ir_block);

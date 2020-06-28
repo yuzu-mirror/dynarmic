@@ -140,7 +140,7 @@ void A64EmitX64::InvalidateCacheRanges(const boost::icl::interval_set<u64>& rang
 }
 
 void A64EmitX64::ClearFastDispatchTable() {
-    if (conf.enable_fast_dispatch) {
+    if (conf.HasOptimization(OptimizationFlag::FastDispatch)) {
         fast_dispatch_table.fill({});
     }
 }
@@ -319,7 +319,7 @@ void A64EmitX64::GenTerminalHandlers() {
     code.and_(eax, u32(A64JitState::RSBPtrMask));
     code.mov(dword[r15 + offsetof(A64JitState, rsb_ptr)], eax);
     code.cmp(rbx, qword[r15 + offsetof(A64JitState, rsb_location_descriptors) + rax * sizeof(u64)]);
-    if (conf.enable_fast_dispatch) {
+    if (conf.HasOptimization(OptimizationFlag::FastDispatch)) {
         code.jne(rsb_cache_miss);
     } else {
         code.jne(code.GetReturnFromRunCodeAddress());
@@ -328,7 +328,7 @@ void A64EmitX64::GenTerminalHandlers() {
     code.jmp(rax);
     PerfMapRegister(terminal_handler_pop_rsb_hint, code.getCurr(), "a64_terminal_handler_pop_rsb_hint");
 
-    if (conf.enable_fast_dispatch) {
+    if (conf.HasOptimization(OptimizationFlag::FastDispatch)) {
         code.align();
         terminal_handler_fast_dispatch_hint = code.getCurr<const void*>();
         calculate_location_descriptor();
@@ -362,7 +362,7 @@ void A64EmitX64::GenTerminalHandlers() {
 }
 
 void A64EmitX64::EmitPushRSB(EmitContext& ctx, IR::Inst* inst) {
-    if (!conf.enable_optimizations) {
+    if (!conf.HasOptimization(OptimizationFlag::ReturnStackBuffer)) {
         return;
     }
 
@@ -1212,7 +1212,7 @@ void A64EmitX64::EmitTerminalImpl(IR::Term::ReturnToDispatch, IR::LocationDescri
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDescriptor, bool is_single_step) {
-    if (!conf.enable_optimizations || is_single_step) {
+    if (!conf.HasOptimization(OptimizationFlag::BlockLinking) || is_single_step) {
         code.mov(rax, A64::LocationDescriptor{terminal.next}.PC());
         code.mov(qword[r15 + offsetof(A64JitState, pc)], rax);
         code.ReturnFromRunCode();
@@ -1233,7 +1233,7 @@ void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor, bool is_single_step) {
-    if (!conf.enable_optimizations || is_single_step) {
+    if (!conf.HasOptimization(OptimizationFlag::BlockLinking) || is_single_step) {
         code.mov(rax, A64::LocationDescriptor{terminal.next}.PC());
         code.mov(qword[r15 + offsetof(A64JitState, pc)], rax);
         code.ReturnFromRunCode();
@@ -1249,7 +1249,7 @@ void A64EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::Location
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::PopRSBHint, IR::LocationDescriptor, bool is_single_step) {
-    if (!conf.enable_optimizations || is_single_step) {
+    if (!conf.HasOptimization(OptimizationFlag::ReturnStackBuffer) || is_single_step) {
         code.ReturnFromRunCode();
         return;
     }
@@ -1258,11 +1258,12 @@ void A64EmitX64::EmitTerminalImpl(IR::Term::PopRSBHint, IR::LocationDescriptor, 
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::FastDispatchHint, IR::LocationDescriptor, bool is_single_step) {
-    if (conf.enable_fast_dispatch && !is_single_step) {
-        code.jmp(terminal_handler_fast_dispatch_hint);
-    } else {
+    if (!conf.HasOptimization(OptimizationFlag::FastDispatch) || is_single_step) {
         code.ReturnFromRunCode();
+        return;
     }
+
+    code.jmp(terminal_handler_fast_dispatch_hint);
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::If terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
@@ -1330,7 +1331,7 @@ void A64EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
 
 void A64EmitX64::Unpatch(const IR::LocationDescriptor& location) {
     EmitX64::Unpatch(location);
-    if (conf.enable_fast_dispatch) {
+    if (conf.HasOptimization(OptimizationFlag::FastDispatch)) {
         (*fast_dispatch_table_lookup)(location.Value()) = {};
     }
 }

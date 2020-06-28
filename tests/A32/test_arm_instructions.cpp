@@ -13,7 +13,7 @@ using namespace Dynarmic;
 
 static A32::UserConfig GetUserConfig(ArmTestEnv* testenv) {
     A32::UserConfig user_config;
-    user_config.enable_fast_dispatch = false;
+    user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     user_config.callbacks = testenv;
     return user_config;
 }
@@ -243,7 +243,7 @@ TEST_CASE("arm: Test InvalidateCacheRange", "[arm][A32]") {
 TEST_CASE("arm: Step blx", "[arm]") {
     ArmTestEnv test_env;
     A32::UserConfig config = GetUserConfig(&test_env);
-    config.enable_fast_dispatch = true;
+    config.optimizations |= OptimizationFlag::FastDispatch;
     Dynarmic::A32::Jit jit{config};
     test_env.code_mem = {
         0xe12fff30, // blx r0
@@ -271,7 +271,7 @@ TEST_CASE("arm: Step blx", "[arm]") {
 TEST_CASE("arm: Step bx", "[arm]") {
     ArmTestEnv test_env;
     A32::UserConfig config = GetUserConfig(&test_env);
-    config.enable_fast_dispatch = true;
+    config.optimizations |= OptimizationFlag::FastDispatch;
     Dynarmic::A32::Jit jit{config};
     test_env.code_mem = {
         0xe12fff10, // bx r0

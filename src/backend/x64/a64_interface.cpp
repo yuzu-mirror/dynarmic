@@ -249,14 +249,17 @@ private:
         IR::Block ir_block = A64::Translate(A64::LocationDescriptor{current_location}, get_code,
                                                 {conf.define_unpredictable_behaviour, conf.wall_clock_cntpct});
         Optimization::A64CallbackConfigPass(ir_block, conf);
-        if (conf.enable_optimizations) {
+        if (conf.HasOptimization(OptimizationFlag::GetSetElimination)) {
             Optimization::A64GetSetElimination(ir_block);
             Optimization::DeadCodeElimination(ir_block);
+        }
+        if (conf.HasOptimization(OptimizationFlag::ConstProp)) {
             Optimization::ConstantPropagation(ir_block);
             Optimization::DeadCodeElimination(ir_block);
+        }
+        if (conf.HasOptimization(OptimizationFlag::MiscIROpt)) {
             Optimization::A64MergeInterpretBlocksPass(ir_block, conf.callbacks);
         }
-        // printf("%s\n", IR::DumpBlock(ir_block).c_str());
         Optimization::VerificationPass(ir_block);
         return emitter.Emit(ir_block).entrypoint;
     }

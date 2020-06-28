@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <memory>
 
+#include <dynarmic/optimization_flags.h>
+
 namespace Dynarmic {
 class ExclusiveMonitor;
 } // namespace Dynarmic
@@ -124,13 +126,17 @@ struct UserConfig {
     size_t processor_id = 0;
     ExclusiveMonitor* global_monitor = nullptr;
 
-    /// When set to false, this disables all optimizations than can't otherwise be disabled
-    /// by setting other configuration options. This includes:
+    /// This selects other optimizations than can't otherwise be disabled by setting other
+    /// configuration options. This includes:
     /// - IR optimizations
     /// - Block linking optimizations
     /// - RSB optimizations
     /// This is intended to be used for debugging.
-    bool enable_optimizations = true;
+    OptimizationFlag optimizations = all_optimizations;
+
+    bool HasOptimization(OptimizationFlag f) const {
+        return (f & optimizations) != no_optimizations;
+    }
 
     /// When set to true, UserCallbacks::DataCacheOperationRaised will be called when any
     /// data cache instruction is executed. Notably DC ZVA will not implicitly do anything.
@@ -205,9 +211,6 @@ struct UserConfig {
     /// This tells the translator a wall clock will be used, thus allowing it
     /// to avoid writting certain unnecessary code only needed for cycle timers.
     bool wall_clock_cntpct = false;
-
-    /// This enables the fast dispatcher.
-    bool enable_fast_dispatch = true;
 
     // Determines whether AddTicks and GetTicksRemaining are called.
     // If false, execution will continue until soon after Jit::HaltExecution is called.
