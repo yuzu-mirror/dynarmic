@@ -234,7 +234,9 @@ public:
     U128 VectorCountLeadingZeros(size_t esize, const U128& a);
     U128 VectorEor(const U128& a, const U128& b);
     U128 VectorDeinterleaveEven(size_t esize, const U128& a, const U128& b);
+    U128 VectorDeinterleaveEvenLower(size_t esize, const U128& a, const U128& b);
     U128 VectorDeinterleaveOdd(size_t esize, const U128& a, const U128& b);
+    U128 VectorDeinterleaveOddLower(size_t esize, const U128& a, const U128& b);
     U128 VectorEqual(size_t esize, const U128& a, const U128& b);
     U128 VectorExtract(const U128& a, const U128& b, size_t position);
     U128 VectorExtractLower(const U128& a, const U128& b, size_t position);
