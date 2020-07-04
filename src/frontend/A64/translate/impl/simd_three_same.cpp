@@ -284,7 +284,7 @@ bool PairedMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Ve
     }();
 
     if (datasize == 64) {
-        result = v.ir.VectorShuffleWords(result, 0b11101000);
+        result = v.ir.VectorShuffleWords(result, 0b11011000);
     }
 
     v.V(datasize, Vd, result);
