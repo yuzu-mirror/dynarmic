@@ -252,7 +252,7 @@ bool ArmTranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, si
     if (nelem == 1 && inc == 2) {
         return UndefinedInstruction();
     }
-    if (nelem == 1 && (a != 0b00 && a != 0b11)) {
+    if (nelem == 1 && sz == 2 && (a != 0b00 && a != 0b11)) {
         return UndefinedInstruction();
     }
     if (nelem == 2 && Common::Bit<1>(a)) {
