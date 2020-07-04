@@ -44,16 +44,9 @@ bool VectorUnzip(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec 
 
     const IR::U128 n = v.V(datasize, Vn);
     const IR::U128 m = v.V(datasize, Vm);
-    IR::U128 result = [&] {
-        if (type == UnzipType::Even) {
-            return v.ir.VectorDeinterleaveEven(esize, n, m);
-        }
-        return v.ir.VectorDeinterleaveOdd(esize, n, m);
-    }();
-
-    if (datasize == 64) {
-        result = v.ir.VectorShuffleWords(result, 0b11011000);
-    }
+    const IR::U128 result = type == UnzipType::Even
+                          ? (Q ? v.ir.VectorDeinterleaveEven(esize, n, m) : v.ir.VectorDeinterleaveEvenLower(esize, n, m))
+                          : (Q ? v.ir.VectorDeinterleaveOdd(esize, n, m) : v.ir.VectorDeinterleaveOddLower(esize, n, m));
 
     v.V(datasize, Vd, result);
     return true;
