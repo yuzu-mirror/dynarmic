@@ -803,6 +803,28 @@ bool ArmTranslatorVisitor::asimd_VMIN_float(bool D, bool sz, size_t Vn, size_t V
     });
 }
 
+bool ArmTranslatorVisitor::asimd_VPMAX_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    if (Q) {
+        return UndefinedInstruction();
+    }
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        const auto bottom = ir.VectorDeinterleaveEvenLower(32, reg_n, reg_m);
+        const auto top = ir.VectorDeinterleaveOddLower(32, reg_n, reg_m);
+        return ir.FPVectorMax(32, bottom, top, false);
+    });
+}
+
+bool ArmTranslatorVisitor::asimd_VPMIN_float(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    if (Q) {
+        return UndefinedInstruction();
+    }
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        const auto bottom = ir.VectorDeinterleaveEvenLower(32, reg_n, reg_m);
+        const auto top = ir.VectorDeinterleaveOddLower(32, reg_n, reg_m);
+        return ir.FPVectorMin(32, bottom, top, false);
+    });
+}
+
 bool ArmTranslatorVisitor::asimd_VRECPS(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
         return ir.FPVectorRecipStepFused(32, reg_n, reg_m, false);
