@@ -73,6 +73,10 @@ std::optional<std::tuple<size_t, size_t, size_t>> DecodeType(Imm<4> type, size_t
 } // anoynmous namespace
 
 bool ArmTranslatorVisitor::v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
+    if (type == 0b1011 || type.Bits<2, 3>() == 0b11) {
+        return DecodeError();
+    }
+
     const auto decoded_type = DecodeType(type, size, align);
     if (!decoded_type) {
         return UndefinedInstruction();
@@ -118,6 +122,10 @@ bool ArmTranslatorVisitor::v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type
 }
 
 bool ArmTranslatorVisitor::v8_VLD_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
+    if (type == 0b1011 || type.Bits<2, 3>() == 0b11) {
+        return DecodeError();
+    }
+
     const auto decoded_type = DecodeType(type, size, align);
     if (!decoded_type) {
         return UndefinedInstruction();
@@ -238,7 +246,9 @@ bool ArmTranslatorVisitor::v8_VLD_all_lanes(bool D, Reg n, size_t Vd, size_t nn,
 bool ArmTranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
     const size_t nelem = nn + 1;
 
-    ASSERT_MSG(sz != 0b11, "Decode Error");
+    if (sz == 0b11) {
+        return DecodeError();
+    }
 
     if (nelem == 1 && Common::Bit(sz, index_align)) {
         return UndefinedInstruction();
@@ -300,7 +310,9 @@ bool ArmTranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, si
 bool ArmTranslatorVisitor::v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
     const size_t nelem = nn + 1;
 
-    ASSERT_MSG(sz != 0b11, "Decode Error");
+    if (sz == 0b11) {
+        return DecodeError();
+    }
 
     if (nelem == 1 && Common::Bit(sz, index_align)) {
         return UndefinedInstruction();

@@ -29,6 +29,8 @@ enum class Exception {
     /// An unpredictable instruction is to be executed. Implementation-defined behaviour should now happen.
     /// This behaviour is up to the user of this library to define.
     UnpredictableInstruction,
+    /// A decode error occurred when decoding this instruction. This should never happen.
+    DecodeError,
     /// A SEV instruction was executed. The event register of all PEs should be set. (Hint instruction.)
     SendEvent,
     /// A SEVL instruction was executed. The event register of the current PE should be set. (Hint instruction.)

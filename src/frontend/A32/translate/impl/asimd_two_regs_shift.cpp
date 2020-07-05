@@ -59,13 +59,12 @@ std::pair<size_t, size_t> ElementSizeAndShiftAmount(bool right_shift, bool L, si
 
 bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm,
                 Accumulating accumulate, Rounding rounding) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
-        return v.UndefinedInstruction();
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        return v.DecodeError();
     }
 
-    // Technically just a related encoding (One register and modified immediate instructions)
-    if (!L && Common::Bits<3, 5>(imm6) == 0) {
-        ASSERT_FALSE();
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return v.UndefinedInstruction();
     }
 
     const auto [esize, shift_amount] = ElementSizeAndShiftAmount(true, L, imm6);
@@ -93,8 +92,7 @@ bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd,
 bool ShiftRightNarrowing(ArmTranslatorVisitor& v, bool D, size_t imm6, size_t Vd, bool M, size_t Vm,
                          Rounding rounding, Narrowing narrowing, Signedness signedness) {
     if (Common::Bits<3, 5>(imm6) == 0) {
-        // TODO: Decode error
-        return v.UndefinedInstruction();
+        return v.DecodeError();
     }
 
     if (Common::Bit<0>(Vm)) {
@@ -163,13 +161,12 @@ bool ArmTranslatorVisitor::asimd_VRSRA(bool U, bool D, size_t imm6, size_t Vd, b
 }
 
 bool ArmTranslatorVisitor::asimd_VSRI(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        return DecodeError();
     }
 
-    // Technically just a related encoding (One register and modified immediate instructions)
-    if (!L && Common::Bits<3, 5>(imm6) == 0) {
-        ASSERT_FALSE();
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
     }
 
     const auto [esize, shift_amount] = ElementSizeAndShiftAmount(true, L, imm6);
@@ -190,12 +187,11 @@ bool ArmTranslatorVisitor::asimd_VSRI(bool D, size_t imm6, size_t Vd, bool L, bo
 }
 
 bool ArmTranslatorVisitor::asimd_VSLI(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        return DecodeError();
     }
 
-    // Technically just a related encoding (One register and modified immediate instructions)
-    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
 
@@ -217,17 +213,16 @@ bool ArmTranslatorVisitor::asimd_VSLI(bool D, size_t imm6, size_t Vd, bool L, bo
 }
 
 bool ArmTranslatorVisitor::asimd_VQSHL(bool U, bool D, size_t imm6, size_t Vd, bool op, bool L, bool Q, bool M, size_t Vm) {
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        return DecodeError();
+    }
+
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
 
     if (!U && !op) {
         return UndefinedInstruction();
-    }
-
-    // Technically just a related encoding (One register and modified immediate instructions)
-    if (!L && Common::Bits<3, 5>(imm6) == 0) {
-        ASSERT_FALSE();
     }
 
     const auto d = ToVector(Q, Vd, D);
@@ -256,13 +251,12 @@ bool ArmTranslatorVisitor::asimd_VQSHL(bool U, bool D, size_t imm6, size_t Vd, b
 }
 
 bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
-    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
-        return UndefinedInstruction();
+    if (!L && Common::Bits<3, 5>(imm6) == 0) {
+        return DecodeError();
     }
 
-    // Technically just a related encoding (One register and modified immediate instructions)
-    if (!L && Common::Bits<3, 5>(imm6) == 0) {
-        ASSERT_FALSE();
+    if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
+        return UndefinedInstruction();
     }
 
     const auto [esize, shift_amount] = ElementSizeAndShiftAmount(false, L, imm6);
@@ -307,7 +301,9 @@ bool ArmTranslatorVisitor::asimd_VQRSHRN(bool U, bool D, size_t imm6, size_t Vd,
 }
 
 bool ArmTranslatorVisitor::asimd_VSHLL(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
-    ASSERT_MSG((Common::Bits<3, 5>(imm6) != 0), "Decode error");
+    if (Common::Bits<3, 5>(imm6) == 0) {
+        return DecodeError();
+    }
 
     if (Common::Bit<0>(Vd)) {
         return UndefinedInstruction();
@@ -327,11 +323,13 @@ bool ArmTranslatorVisitor::asimd_VSHLL(bool U, bool D, size_t imm6, size_t Vd, b
 }
 
 bool ArmTranslatorVisitor::asimd_VCVT_fixed(bool U, bool D, size_t imm6, size_t Vd, bool to_fixed, bool Q, bool M, size_t Vm) {
+    if (Common::Bits<3, 5>(imm6) == 0) {
+        return DecodeError();
+    }
+
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
-
-    ASSERT_MSG((Common::Bits<3, 5>(imm6) != 0), "Decode error");
 
     if (!Common::Bit<5>(imm6)) {
         return UndefinedInstruction();

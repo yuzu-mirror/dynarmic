@@ -32,8 +32,7 @@ enum class Rounding {
 bool ScalarMultiply(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm,
                     MultiplyBehavior multiply) {
     if (sz == 0b11) {
-        // TODO: This should be a decode error.
-        return v.UndefinedInstruction();
+        return v.DecodeError();
     }
 
     if (sz == 0b00 || (F && sz == 0b01)) {
@@ -75,8 +74,7 @@ bool ScalarMultiply(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t V
 
 bool ScalarMultiplyLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, MultiplyBehavior multiply) {
     if (sz == 0b11) {
-        // TODO: This should be a decode error.
-        return v.UndefinedInstruction();
+        return v.DecodeError();
     }
 
     if (sz == 0b00 || Common::Bit<0>(Vd)) {
@@ -114,8 +112,7 @@ bool ScalarMultiplyLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size
 bool ScalarMultiplyReturnHigh(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
                               Rounding round) {
     if (sz == 0b11) {
-        // TODO: This should be a decode error.
-        return v.UndefinedInstruction();
+        return v.DecodeError();
     }
 
     if (sz == 0b00) {
@@ -171,8 +168,7 @@ bool ArmTranslatorVisitor::asimd_VMULL_scalar(bool U, bool D, size_t sz, size_t 
 
 bool ArmTranslatorVisitor::asimd_VQDMULL_scalar(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
     if (sz == 0b11) {
-        // TODO: This should be a decode error.
-        return UndefinedInstruction();
+        return DecodeError();
     }
 
     if (sz == 0b00 || Common::Bit<0>(Vd)) {

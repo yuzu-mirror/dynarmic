@@ -185,7 +185,7 @@ bool AbsoluteDifference(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size
 bool AbsoluteDifferenceLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
                             AccumulateBehavior accumulate) {
     if (sz == 0b11) {
-        return v.UndefinedInstruction();
+        return v.DecodeError();
     }
 
     if (Common::Bit<0>(Vd)) {
@@ -223,8 +223,7 @@ bool WideInstruction(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t 
     const bool widen_first = widen_behaviour == WidenBehaviour::Both;
 
     if (sz == 0b11) {
-        // Decode error
-        return v.UndefinedInstruction();
+        return v.DecodeError();
     }
 
     if (Common::Bit<0>(Vd) || (!widen_first && Common::Bit<0>(Vn))) {
@@ -868,7 +867,11 @@ bool ArmTranslatorVisitor::asimd_VMLAL(bool U, bool D, size_t sz, size_t Vn, siz
 }
 
 bool ArmTranslatorVisitor::asimd_VMULL(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool P, bool N, bool M, size_t Vm) {
-    if (sz == 0b11 || (P & (U || sz == 0b10)) || Common::Bit<0>(Vd)) {
+    if (sz == 0b11) {
+        return DecodeError();
+    }
+
+    if ((P & (U || sz == 0b10)) || Common::Bit<0>(Vd)) {
         return UndefinedInstruction();
     }
 

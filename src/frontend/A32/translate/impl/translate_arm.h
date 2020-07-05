@@ -43,6 +43,7 @@ struct ArmTranslatorVisitor final {
     bool InterpretThisInstruction();
     bool UnpredictableInstruction();
     bool UndefinedInstruction();
+    bool DecodeError();
     bool RaiseException(Exception exception);
 
     static u32 ArmExpandImm(int rotate, Imm<8> imm8) {

@@ -1,3 +1,8 @@
+/* This file is part of the dynarmic project.
+ * Copyright (c) 2020 MerryMage
+ * SPDX-License-Identifier: 0BSD
+ */
+
 #include <array>
 #include <utility>
 

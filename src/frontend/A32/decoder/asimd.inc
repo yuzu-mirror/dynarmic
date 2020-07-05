@@ -96,10 +96,6 @@ INST(asimd_VCVT_fixed,      "VCVT (fixed-point)",       "1111001U1Diiiiiidddd111
 // Two registers, miscellaneous
 INST(asimd_VREV,            "VREV{16,32,64}",           "111100111D11zz00dddd000ooQM0mmmm") // ASIMD
 INST(asimd_VPADDL,          "VPADDL",                   "111100111D11zz00dddd0010oQM0mmmm") // ASIMD
-INST(v8_AESE,               "AESE",                     "111100111D11zz00dddd001100M0mmmm") // v8
-INST(v8_AESD,               "AESD",                     "111100111D11zz00dddd001101M0mmmm") // v8
-INST(v8_AESMC,              "AESMC",                    "111100111D11zz00dddd001110M0mmmm") // v8
-INST(v8_AESIMC,             "AESIMC",                   "111100111D11zz00dddd001111M0mmmm") // v8
 INST(asimd_VCLS,            "VCLS",                     "111100111D11zz00dddd01000QM0mmmm") // ASIMD
 INST(asimd_VCLZ,            "VCLZ",                     "111100111D11zz00dddd01001QM0mmmm") // ASIMD
 INST(asimd_VCNT,            "VCNT",                     "111100111D11zz00dddd01010QM0mmmm") // ASIMD
@@ -112,9 +108,11 @@ INST(asimd_VCGE_zero,       "VCGE (zero)",              "111100111D11zz01dddd0F0
 INST(asimd_VCEQ_zero,       "VCEQ (zero)",              "111100111D11zz01dddd0F010QM0mmmm") // ASIMD
 INST(asimd_VCLE_zero,       "VCLE (zero)",              "111100111D11zz01dddd0F011QM0mmmm") // ASIMD
 INST(asimd_VCLT_zero,       "VCLT (zero)",              "111100111D11zz01dddd0F100QM0mmmm") // ASIMD
+INST(arm_UDF,               "UNALLOCATED",              "111100111-11--01----01101--0----") // v8
 INST(asimd_VABS,            "VABS",                     "111100111D11zz01dddd0F110QM0mmmm") // ASIMD
 INST(asimd_VNEG,            "VNEG",                     "111100111D11zz01dddd0F111QM0mmmm") // ASIMD
 INST(asimd_VSWP,            "VSWP",                     "111100111D110010dddd00000QM0mmmm") // ASIMD
+INST(arm_UDF,               "UNALLOCATED",              "111100111-11--10----00000--0----") // ASIMD
 INST(asimd_VTRN,            "VTRN",                     "111100111D11zz10dddd00001QM0mmmm") // ASIMD
 INST(asimd_VUZP,            "VUZP",                     "111100111D11zz10dddd00010QM0mmmm") // ASIMD
 INST(asimd_VZIP,            "VZIP",                     "111100111D11zz10dddd00011QM0mmmm") // ASIMD
@@ -122,19 +120,41 @@ INST(asimd_VMOVN,           "VMOVN",                    "111100111D11zz10dddd001
 INST(asimd_VQMOVUN,         "VQMOVUN",                  "111100111D11zz10dddd001001M0mmmm") // ASIMD
 INST(asimd_VQMOVN,          "VQMOVN",                   "111100111D11zz10dddd00101oM0mmmm") // ASIMD
 INST(asimd_VSHLL_max,       "VSHLL_max",                "111100111D11zz10dddd001100M0mmmm") // ASIMD
-//INST(asimd_VCVT_half,       "VCVT (half-precision)",    "111100111-11--10----011x00-0----") // ASIMD
+INST(arm_UDF,               "UNALLOCATED (VRINTN)",     "111100111-11--10----01000--0----")
+INST(arm_UDF,               "UNALLOCATED (VRINTX)",     "111100111-11--10----01001--0----")
+INST(arm_UDF,               "UNALLOCATED (VRINTA)",     "111100111-11--10----01010--0----")
+INST(arm_UDF,               "UNALLOCATED (VRINTZ)",     "111100111-11--10----01011--0----")
+INST(arm_UDF,               "UNALLOCATED (VRINTM)",     "111100111-11--10----01101--0----")
+INST(arm_UDF,               "UNALLOCATED (VRINTP)",     "111100111-11--10----01111--0----")
+INST(arm_UDF,               "UNALLOCATED (VCVT half)",  "111100111-11--10----011-00-0----") // ASIMD
+INST(arm_UDF,               "UNALLOCATED",              "111100111-11--10----011-01-0----") // ASIMD
+INST(arm_UDF,               "UNALLOCATED (VCVTA)",      "111100111-11--11----0000---0----")
+INST(arm_UDF,               "UNALLOCATED (VCVTN)",      "111100111-11--11----0001---0----")
+INST(arm_UDF,               "UNALLOCATED (VCVTP)",      "111100111-11--11----0010---0----")
+INST(arm_UDF,               "UNALLOCATED (VCVTM)",      "111100111-11--11----0011---0----")
 INST(asimd_VRECPE,          "VRECPE",                   "111100111D11zz11dddd010F0QM0mmmm") // ASIMD
 INST(asimd_VRSQRTE,         "VRSQRTE",                  "111100111D11zz11dddd010F1QM0mmmm") // ASIMD
 INST(asimd_VCVT_integer,    "VCVT (integer)",           "111100111D11zz11dddd011oUQM0mmmm") // ASIMD
+
+// Two registers, cryptography
+INST(v8_AESE,               "AESE",                     "111100111D11zz00dddd001100M0mmmm") // v8
+INST(v8_AESD,               "AESD",                     "111100111D11zz00dddd001101M0mmmm") // v8
+INST(v8_AESMC,              "AESMC",                    "111100111D11zz00dddd001110M0mmmm") // v8
+INST(v8_AESIMC,             "AESIMC",                   "111100111D11zz00dddd001111M0mmmm") // v8
+INST(arm_UDF,               "UNALLOCATED",              "111100111-11--01----001010-0----") // v8
+INST(arm_UDF,               "UNALLOCATED (SHA1H)",      "111100111-11--01----001011-0----") // v8
+INST(arm_UDF,               "UNALLOCATED (SHA1SU1)",    "111100111-11--10----001110-0----") // v8
+INST(arm_UDF,               "UNALLOCATED (SHA256SU0)",  "111100111-11--10----001111-0----") // v8
+
+// One register and modified immediate
+INST(asimd_VMOV_imm,        "VBIC, VMOV, VMVN, VORR (immediate)",  "1111001a1D000bcdVVVVmmmm0Qo1efgh") // ASIMD
 
 // Miscellaneous
 INST(asimd_VEXT,            "VEXT",                     "111100101D11nnnnddddiiiiNQM0mmmm") // ASIMD
 INST(asimd_VTBL,            "VTBL",                     "111100111D11nnnndddd10zzN0M0mmmm") // ASIMD
 INST(asimd_VTBX,            "VTBX",                     "111100111D11nnnndddd10zzN1M0mmmm") // ASIMD
 INST(asimd_VDUP_scalar,     "VDUP (scalar)",            "111100111D11iiiidddd11000QM0mmmm") // ASIMD
-
-// One register and modified immediate
-INST(asimd_VMOV_imm,        "VBIC, VMOV, VMVN, VORR (immediate)",  "1111001a1D000bcdVVVVmmmm0Qo1efgh") // ASIMD
+INST(arm_UDF,               "UNALLOCATED",              "111100111-11--------11-----0----") // ASIMD
 
 // Advanced SIMD load/store structures
 INST(v8_VST_multiple,       "VST{1-4} (multiple)",      "111101000D00nnnnddddxxxxzzaammmm") // v8
@@ -143,6 +163,5 @@ INST(arm_UDF,               "UNALLOCATED",              "111101000--0--------101
 INST(arm_UDF,               "UNALLOCATED",              "111101000--0--------11----------") // v8
 INST(arm_UDF,               "UNALLOCATED",              "111101001-00--------11----------") // v8
 INST(v8_VLD_all_lanes,      "VLD{1-4} (all lanes)",     "111101001D10nnnndddd11nnzzTammmm") // v8
-INST(arm_UDF,               "UNALLOCATED",              "111101001-10--------1110---1----") // v8
 INST(v8_VST_single,         "VST{1-4} (single)",        "111101001D00nnnnddddzzNNaaaammmm") // v8
 INST(v8_VLD_single,         "VLD{1-4} (single)",        "111101001D10nnnnddddzzNNaaaammmm") // v8

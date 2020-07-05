@@ -31,14 +31,13 @@ std::vector<ASIMDMatcher<V>> GetASIMDDecodeTable() {
 
     };
 
-    // If a matcher has more bits in its mask it is more specific, so it should come first.
-    std::stable_sort(table.begin(), table.end(), [](const auto& matcher1, const auto& matcher2) {
-        return Common::BitCount(matcher1.GetMask()) > Common::BitCount(matcher2.GetMask());
-    });
-
-    // Exceptions to the above rule of thumb.
+    // Exceptions to the rule of thumb.
     const std::set<std::string> comes_first{
-        "VBIC, VMOV, VMVN, VORR (immediate)"
+        "VBIC, VMOV, VMVN, VORR (immediate)",
+        "VEXT",
+        "VTBL",
+        "VTBX",
+        "VDUP (scalar)",
     };
     const std::set<std::string> comes_last{
         "VMLA (scalar)",
@@ -50,12 +49,16 @@ std::vector<ASIMDMatcher<V>> GetASIMDDecodeTable() {
         "VQDMULH (scalar)",
         "VQRDMULH (scalar)",
     };
-
-    std::stable_partition(table.begin(), table.end(), [&](const auto& matcher) {
+    const auto sort_begin = std::stable_partition(table.begin(), table.end(), [&](const auto& matcher) {
         return comes_first.count(matcher.GetName()) > 0;
     });
-    std::stable_partition(table.begin(), table.end(), [&](const auto& matcher) {
+    const auto sort_end = std::stable_partition(table.begin(), table.end(), [&](const auto& matcher) {
         return comes_last.count(matcher.GetName()) == 0;
+    });
+
+    // If a matcher has more bits in its mask it is more specific, so it should come first.
+    std::stable_sort(sort_begin, sort_end, [](const auto& matcher1, const auto& matcher2) {
+        return Common::BitCount(matcher1.GetMask()) > Common::BitCount(matcher2.GetMask());
     });
 
     return table;

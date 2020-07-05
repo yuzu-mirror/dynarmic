@@ -10,6 +10,7 @@ add_executable(dynarmic_tests
     A64/a64.cpp
     A64/testenv.h
     cpu_info.cpp
+    decoder_tests.cpp
     fp/FPToFixed.cpp
     fp/FPValue.cpp
     fp/mantissa_util_tests.cpp
