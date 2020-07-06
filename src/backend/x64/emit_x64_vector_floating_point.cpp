@@ -1021,6 +1021,20 @@ void EmitFPVectorMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             ctx.reg_alloc.DefineValue(inst, result);
             return;
         }
+
+        if (ctx.UnsafeOptimizations()) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseScratchXmm(args[1]);
+            const Xbyak::Xmm operand3 = ctx.reg_alloc.UseXmm(args[2]);
+
+            FCODE(mulp)(operand2, operand3);
+            FCODE(addp)(operand1, operand2);
+
+            ctx.reg_alloc.DefineValue(inst, operand1);
+            return;
+        }
     }
 
     EmitFourOpFallback(code, ctx, inst, fallback_fn);

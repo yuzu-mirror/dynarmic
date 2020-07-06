@@ -138,6 +138,9 @@ struct UserConfig {
         return (f & optimizations) != no_optimizations;
     }
 
+    /// This enables unsafe optimizations that reduce emulation accuracy in favour of speed.
+    bool unsafe_optimizations = false;
+
     /// When set to true, UserCallbacks::DataCacheOperationRaised will be called when any
     /// data cache instruction is executed. Notably DC ZVA will not implicitly do anything.
     /// When set to false, UserCallbacks::DataCacheOperationRaised will never be called.

@@ -51,6 +51,8 @@ struct EmitContext {
 
     virtual FP::FPCR FPCR(bool fpcr_controlled = true) const = 0;
 
+    virtual bool UnsafeOptimizations() const { return false; }
+
     RegAlloc& reg_alloc;
     IR::Block& block;
 };
