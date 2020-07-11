@@ -738,8 +738,29 @@ void EmitX64::EmitFPMulX64(EmitContext& ctx, IR::Inst* inst) {
     EmitFPMulX<64>(code, ctx, inst);
 }
 
-template<typename FPT>
+template<size_t fsize>
 static void EmitFPRecipEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    using FPT = mp::unsigned_integer_of_size<fsize>;
+
+    if constexpr (fsize != 16) {
+        if (ctx.UnsafeOptimizations()) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            if constexpr (fsize == 32) {
+                code.rcpss(result, operand);
+            } else {
+                code.cvtsd2ss(result, operand);
+                code.rcpss(result, result);
+                code.cvtss2sd(result, result);
+            }
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+    }
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.HostCall(inst, args[0]);
     code.mov(code.ABI_PARAM2.cvt32(), ctx.FPCR().Value());
@@ -748,19 +769,21 @@ static void EmitFPRecipEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 }
 
 void EmitX64::EmitFPRecipEstimate16(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRecipEstimate<u16>(code, ctx, inst);
+    EmitFPRecipEstimate<16>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPRecipEstimate32(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRecipEstimate<u32>(code, ctx, inst);
+    EmitFPRecipEstimate<32>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPRecipEstimate64(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRecipEstimate<u64>(code, ctx, inst);
+    EmitFPRecipEstimate<64>(code, ctx, inst);
 }
 
-template <typename FPT>
+template <size_t fsize>
 static void EmitFPRecipExponent(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    using FPT = mp::unsigned_integer_of_size<fsize>;
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.HostCall(inst, args[0]);
     code.mov(code.ABI_PARAM2.cvt32(), ctx.FPCR().Value());
@@ -769,15 +792,15 @@ static void EmitFPRecipExponent(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 }
 
 void EmitX64::EmitFPRecipExponent16(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRecipExponent<u16>(code, ctx, inst);
+    EmitFPRecipExponent<16>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPRecipExponent32(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRecipExponent<u32>(code, ctx, inst);
+    EmitFPRecipExponent<32>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPRecipExponent64(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRecipExponent<u64>(code, ctx, inst);
+    EmitFPRecipExponent<64>(code, ctx, inst);
 }
 
 template<size_t fsize>
@@ -911,8 +934,29 @@ void EmitX64::EmitFPRoundInt64(EmitContext& ctx, IR::Inst* inst) {
     EmitFPRound(code, ctx, inst, 64);
 }
 
-template<typename FPT>
+template<size_t fsize>
 static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    using FPT = mp::unsigned_integer_of_size<fsize>;
+
+    if constexpr (fsize != 16) {
+        if (ctx.UnsafeOptimizations()) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            if constexpr (fsize == 32) {
+                code.rsqrtss(result, operand);
+            } else {
+                code.cvtsd2ss(result, operand);
+                code.rsqrtss(result, result);
+                code.cvtss2sd(result, result);
+            }
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+    }
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.HostCall(inst, args[0]);
     code.mov(code.ABI_PARAM2.cvt32(), ctx.FPCR().Value());
@@ -921,15 +965,15 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 }
 
 void EmitX64::EmitFPRSqrtEstimate16(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRSqrtEstimate<u16>(code, ctx, inst);
+    EmitFPRSqrtEstimate<16>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPRSqrtEstimate32(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRSqrtEstimate<u32>(code, ctx, inst);
+    EmitFPRSqrtEstimate<32>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPRSqrtEstimate64(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPRSqrtEstimate<u64>(code, ctx, inst);
+    EmitFPRSqrtEstimate<64>(code, ctx, inst);
 }
 
 template<size_t fsize>

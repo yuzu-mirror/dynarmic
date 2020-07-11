@@ -1178,8 +1178,29 @@ void EmitX64::EmitFPVectorPairedAddLower64(EmitContext& ctx, IR::Inst* inst) {
     });
 }
 
-template<typename FPT>
+template<size_t fsize>
 static void EmitRecipEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    using FPT = mp::unsigned_integer_of_size<fsize>;
+
+    if constexpr (fsize != 16) {
+        if (ctx.UnsafeOptimizations()) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            if constexpr (fsize == 32) {
+                code.rcpps(result, operand);
+            } else {
+                code.cvtpd2ps(result, operand);
+                code.rcpps(result, result);
+                code.cvtps2pd(result, result);
+            }
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+    }
+
     EmitTwoOpFallback(code, ctx, inst, [](VectorArray<FPT>& result, const VectorArray<FPT>& operand, FP::FPCR fpcr, FP::FPSR& fpsr) {
         for (size_t i = 0; i < result.size(); i++) {
             result[i] = FP::FPRecipEstimate<FPT>(operand[i], fpcr, fpsr);
@@ -1188,15 +1209,15 @@ static void EmitRecipEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
 }
 
 void EmitX64::EmitFPVectorRecipEstimate16(EmitContext& ctx, IR::Inst* inst) {
-    EmitRecipEstimate<u16>(code, ctx, inst);
+    EmitRecipEstimate<16>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorRecipEstimate32(EmitContext& ctx, IR::Inst* inst) {
-    EmitRecipEstimate<u32>(code, ctx, inst);
+    EmitRecipEstimate<32>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorRecipEstimate64(EmitContext& ctx, IR::Inst* inst) {
-    EmitRecipEstimate<u64>(code, ctx, inst);
+    EmitRecipEstimate<64>(code, ctx, inst);
 }
 
 template<size_t fsize>
@@ -1337,8 +1358,29 @@ void EmitX64::EmitFPVectorRoundInt64(EmitContext& ctx, IR::Inst* inst) {
     EmitFPVectorRoundInt<64>(code, ctx, inst);
 }
 
-template<typename FPT>
+template<size_t fsize>
 static void EmitRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    using FPT = mp::unsigned_integer_of_size<fsize>;
+
+    if constexpr (fsize != 16) {
+        if (ctx.UnsafeOptimizations()) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            if constexpr (fsize == 32) {
+                code.rsqrtps(result, operand);
+            } else {
+                code.cvtpd2ps(result, operand);
+                code.rsqrtps(result, result);
+                code.cvtps2pd(result, result);
+            }
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+    }
+
     EmitTwoOpFallback(code, ctx, inst, [](VectorArray<FPT>& result, const VectorArray<FPT>& operand, FP::FPCR fpcr, FP::FPSR& fpsr) {
         for (size_t i = 0; i < result.size(); i++) {
             result[i] = FP::FPRSqrtEstimate<FPT>(operand[i], fpcr, fpsr);
@@ -1347,15 +1389,15 @@ static void EmitRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
 }
 
 void EmitX64::EmitFPVectorRSqrtEstimate16(EmitContext& ctx, IR::Inst* inst) {
-    EmitRSqrtEstimate<u16>(code, ctx, inst);
+    EmitRSqrtEstimate<16>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorRSqrtEstimate32(EmitContext& ctx, IR::Inst* inst) {
-    EmitRSqrtEstimate<u32>(code, ctx, inst);
+    EmitRSqrtEstimate<32>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorRSqrtEstimate64(EmitContext& ctx, IR::Inst* inst) {
-    EmitRSqrtEstimate<u64>(code, ctx, inst);
+    EmitRSqrtEstimate<64>(code, ctx, inst);
 }
 
 template<size_t fsize>
