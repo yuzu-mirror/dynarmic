@@ -845,6 +845,21 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             ctx.reg_alloc.DefineValue(inst, result);
             return;
         }
+
+        if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            code.movaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 2>()));
+            FCODE(muls)(operand1, operand2);
+            FCODE(subs)(result, operand1);
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
     }
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -1028,6 +1043,22 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             code.SwitchToNearCode();
 
             ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
+        if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            code.movaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 3>()));
+            FCODE(muls)(operand1, operand2);
+            FCODE(subs)(result, operand1);
+            FCODE(muls)(result, code.MConst(xword, FP::FPValue<FPT, false, -1, 1>()));
+
+            ctx.reg_alloc.DefineValue(inst, operand1);
             return;
         }
     }

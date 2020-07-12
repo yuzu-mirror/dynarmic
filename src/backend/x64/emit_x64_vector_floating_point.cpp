@@ -1267,6 +1267,21 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
             ctx.reg_alloc.DefineValue(inst, result);
             return;
         }
+
+        if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            code.movaps(result, GetVectorOf<fsize, false, 0, 2>(code));
+            FCODE(mulp)(operand1, operand2);
+            FCODE(subp)(result, operand1);
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
     }
 
     EmitThreeOpFallback(code, ctx, inst, fallback_fn);
@@ -1449,6 +1464,22 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
             code.add(rsp, 8);
             code.jmp(end, code.T_NEAR);
             code.SwitchToNearCode();
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
+        if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            code.movaps(result, GetVectorOf<fsize, false, 0, 3>(code));
+            FCODE(mulp)(operand1, operand2);
+            FCODE(subp)(result, operand1);
+            FCODE(mulp)(result, GetVectorOf<fsize, false, -1, 1>(code));
 
             ctx.reg_alloc.DefineValue(inst, result);
             return;
