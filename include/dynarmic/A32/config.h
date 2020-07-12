@@ -109,11 +109,20 @@ struct UserConfig {
     /// - Block linking optimizations
     /// - RSB optimizations
     /// This is intended to be used for debugging.
-    OptimizationFlag optimizations = all_optimizations;
+    OptimizationFlag optimizations = all_safe_optimizations;
 
     bool HasOptimization(OptimizationFlag f) const {
+        if (!unsafe_optimizations) {
+            f &= all_safe_optimizations;
+        }
         return (f & optimizations) != no_optimizations;
     }
+
+    /// This enables unsafe optimizations that reduce emulation accuracy in favour of speed.
+    /// For safety, in order to enable unsafe optimizations you have to set BOTH this flag
+    /// AND the appropriate flag bits above.
+    /// The prefered and tested mode for this library is with unsafe optimizations disabled.
+    bool unsafe_optimizations = false;
 
     // Page Table
     // The page table is used for faster memory access. If an entry in the table is nullptr,

@@ -10,16 +10,39 @@
 namespace Dynarmic {
 
 enum class OptimizationFlag : std::uint32_t {
-    BlockLinking        = 0x01,
-    ReturnStackBuffer   = 0x02,
-    FastDispatch        = 0x04,
-    GetSetElimination   = 0x08,
-    ConstProp           = 0x10,
-    MiscIROpt           = 0x20,
+    /// This optimization avoids dispatcher lookups by allowing emitted basic blocks to jump
+    /// directly to other basic blocks if the destination PC is predictable at JIT-time.
+    /// This is a safe optimization.
+    BlockLinking            = 0x00000001,
+    /// This optimization avoids dispatcher lookups by emulating a return stack buffer. This
+    /// allows for function returns and syscall returns to be predicted at runtime.
+    /// This is a safe optimization.
+    ReturnStackBuffer       = 0x00000002,
+    /// This optimization enables a two-tiered dispatch system.
+    /// A fast dispatcher (written in assembly) first does a look-up in a small MRU cache.
+    /// If this fails, it falls back to the usual slower dispatcher.
+    /// This is a safe optimization.
+    FastDispatch            = 0x00000004,
+    /// This is an IR optimization. This optimization eliminates unnecessary emulated CPU state
+    /// context lookups.
+    /// This is a safe optimization.
+    GetSetElimination       = 0x00000008,
+    /// This is an IR optimization. This optimization does constant propagation.
+    /// This is a safe optimization.
+    ConstProp               = 0x00000010,
+    /// This is enables miscellaneous safe IR optimizations.
+    MiscIROpt               = 0x00000020,
+
+    /// This is an UNSAFE optimization that reduces accuracy of fused multiply-add operations.
+    /// This unfuses fused instructions to improve performance on host CPUs without FMA support.
+    Unsafe_UnfuseFMA        = 0x00010000,
+    /// This is an UNSAFE optimization that reduces accuracy of certain floating-point instructions.
+    /// This allows results of FRECPE and FRSQRTE to have **less** error than spec allows.
+    Unsafe_ReducedErrorFP   = 0x00020000,
 };
 
 constexpr OptimizationFlag no_optimizations = static_cast<OptimizationFlag>(0);
-constexpr OptimizationFlag all_optimizations = static_cast<OptimizationFlag>(~std::uint32_t(0));
+constexpr OptimizationFlag all_safe_optimizations = static_cast<OptimizationFlag>(0x0000FFFF);
 
 constexpr OptimizationFlag operator~(OptimizationFlag f) {
     return static_cast<OptimizationFlag>(~static_cast<std::uint32_t>(f));

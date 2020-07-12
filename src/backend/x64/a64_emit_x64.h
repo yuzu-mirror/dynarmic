@@ -29,7 +29,9 @@ struct A64EmitContext final : public EmitContext {
     bool IsSingleStep() const;
     FP::FPCR FPCR(bool fpcr_controlled = true) const override;
 
-    bool UnsafeOptimizations() const override { return conf.unsafe_optimizations; }
+    bool HasOptimization(OptimizationFlag flag) const override {
+        return conf.HasOptimization(flag);
+    }
 
     const A64::UserConfig& conf;
 };

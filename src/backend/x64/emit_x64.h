@@ -28,6 +28,10 @@ class Block;
 class Inst;
 } // namespace Dynarmic::IR
 
+namespace Dynarmic {
+enum class OptimizationFlag : u32;
+} // namespace Dynarmic
+
 namespace Dynarmic::Backend::X64 {
 
 class BlockOfCode;
@@ -51,7 +55,7 @@ struct EmitContext {
 
     virtual FP::FPCR FPCR(bool fpcr_controlled = true) const = 0;
 
-    virtual bool UnsafeOptimizations() const { return false; }
+    virtual bool HasOptimization(OptimizationFlag flag) const = 0;
 
     RegAlloc& reg_alloc;
     IR::Block& block;

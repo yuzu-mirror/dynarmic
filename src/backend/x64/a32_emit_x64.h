@@ -32,6 +32,10 @@ struct A32EmitContext final : public EmitContext {
     bool IsSingleStep() const;
     FP::FPCR FPCR(bool fpcr_controlled = true) const override;
 
+    bool HasOptimization(OptimizationFlag flag) const override {
+        return conf.HasOptimization(flag);
+    }
+
     const A32::UserConfig& conf;
 };
 
