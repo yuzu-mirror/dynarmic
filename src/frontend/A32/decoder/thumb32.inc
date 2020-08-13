@@ -120,10 +120,11 @@
 //INST(thumb32_MRS_reg_2,      "MRS (reg)",                "111100111110----10-0------0-----")
 //INST(thumb32_HVC,            "HVC",                      "111101111110----1000------------")
 //INST(thumb32_SMC,            "SMC",                      "111101111111----1000000000000000")
-//INST(thumb32_UDF,            "UDF",                      "111101111111----1010------------")
+INST(thumb32_UDF,            "UDF",                      "111101111111----1010------------") // v6T2
 
-//INST(thumb32_BL,             "BL",                       "11110-----------11-1------------")
-//INST(thumb32_BLX,            "BLX",                      "11110-----------11-0------------")
+// Branch instructions
+INST(thumb32_BL_imm,         "BL (imm)",                 "11110Svvvvvvvvvv11j1jvvvvvvvvvvv") // v4T
+INST(thumb32_BLX_imm,        "BLX (imm)",                "11110Svvvvvvvvvv11j0jvvvvvvvvvvv") // v5T
 //INST(thumb32_B,              "B",                        "11110-----------10-1------------")
 //INST(thumb32_B_cond,         "B (cond)",                 "11110-----------10-0------------")
 
@@ -186,9 +187,6 @@
 //INST(thumb32_LDR_reg,        "LDR (reg)",                "111110000101--------000000------")
 //INST(thumb32_LDR_imm8,       "LDR (imm8)",               "111110000101--------1-----------")
 //INST(thumb32_LDR_imm12,      "LDR (imm12)",              "111110001101--------------------")
-
-// Undefined
-//INST(thumb32_UDF,            "UDF",                      "1111100--111--------------------")
 
 // Data Processing (register)
 //INST(thumb32_LSL_reg,        "LSL (reg)",                "11111010000-----1111----0000----")
@@ -307,10 +305,3 @@ INST(thumb32_UMAAL,          "UMAAL",                    "111110111110nnnnllllhh
 //INST(thumb32_MCR,            "MCR",                      "11101110---0---------------1----")
 //INST(thumb32_MRC2,           "MRC2",                     "11111110---1---------------1----")
 //INST(thumb32_MRC,            "MRC",                      "11101110---1---------------1----")
-
-// Branch instructions
-INST(thumb32_BL_imm,         "BL (imm)",                 "11110vvvvvvvvvvv11111vvvvvvvvvvv") // v4T
-INST(thumb32_BLX_imm,        "BLX (imm)",                "11110vvvvvvvvvvv11101vvvvvvvvvvv") // v5T
-
-// Misc instructions
-INST(thumb32_UDF,            "UDF",                      "111101111111----1010------------") // v6T2

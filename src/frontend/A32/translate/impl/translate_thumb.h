@@ -116,10 +116,12 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_B_t1(Cond cond, Imm<8> imm8);
     bool thumb16_B_t2(Imm<11> imm11);
 
-    // thumb32
-    bool thumb32_BL_imm(Imm<11> hi, Imm<11> lo);
-    bool thumb32_BLX_imm(Imm<11> hi, Imm<11> lo);
+    // thumb32 miscellaneous control instructions
     bool thumb32_UDF();
+
+    // thumb32 branch instructions
+    bool thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo);
+    bool thumb32_BLX_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo);
 
     // thumb32 data processing (register) instructions
     bool thumb32_SXTB(Reg d, SignExtendRotation rotate, Reg m);
