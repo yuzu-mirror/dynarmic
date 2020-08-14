@@ -57,7 +57,7 @@ template <typename... Ts>
                 ::Dynarmic::Common::detail::TerminateHelper(#expr "\nMessage: " __VA_ARGS__);   \
             }                                                                                   \
         }()
-    #define ASSERT_FALSE(...) ::Dynarmic::Common::detail::TerminateHelper("false\nMessage: " __VA_ARGS__);
+    #define ASSERT_FALSE(...) ::Dynarmic::Common::detail::TerminateHelper("false\nMessage: " __VA_ARGS__)
 #endif
 
 #if defined(NDEBUG) || defined(DYNARMIC_IGNORE_ASSERTS)
