@@ -155,8 +155,6 @@ void BlockOfCode::ForceReturnFromRunCode(bool mxcsr_already_exited) {
 }
 
 void BlockOfCode::GenRunCode(std::function<void(BlockOfCode&)> rcp) {
-    Xbyak::Label loop, enter_mxcsr_then_loop;
-
     align();
     run_code = getCurr<RunCodeFuncType>();
 
