@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <string>
 
+#include "backend/x64/perf_map.h"
+
 #ifdef __linux__
 
 #include <cstdio>

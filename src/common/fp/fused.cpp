@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "common/fp/fused.h"
 #include "common/fp/mantissa_util.h"
 #include "common/fp/unpacked.h"
 #include "common/u128.h"

@@ -8,6 +8,8 @@
 
 #include <fmt/format.h>
 
+#include "common/assert.h"
+
 namespace Dynarmic::Common {
 
 [[noreturn]] void Terminate(fmt::string_view msg, fmt::format_args args) {

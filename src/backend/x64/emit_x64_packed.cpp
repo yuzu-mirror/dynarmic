@@ -506,7 +506,7 @@ void EmitX64::EmitPackedHalvingSubS16(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, minuend);
 }
 
-void EmitPackedSubAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, bool hi_is_sum, bool is_signed, bool is_halving) {
+static void EmitPackedSubAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, bool hi_is_sum, bool is_signed, bool is_halving) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
