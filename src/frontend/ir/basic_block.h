@@ -47,8 +47,8 @@ public:
     Block(const Block&) = delete;
     Block& operator=(const Block&) = delete;
 
-    Block(Block&&);
-    Block& operator=(Block&&);
+    Block(Block&&) noexcept;
+    Block& operator=(Block&&) noexcept;
 
     bool                   empty()   const { return instructions.empty();   }
     size_type              size()    const { return instructions.size();    }

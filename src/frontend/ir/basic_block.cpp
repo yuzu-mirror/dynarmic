@@ -27,9 +27,9 @@ Block::Block(const LocationDescriptor& location)
 
 Block::~Block() = default;
 
-Block::Block(Block&&) = default;
+Block::Block(Block&&) noexcept = default;
 
-Block& Block::operator=(Block&&) = default;
+Block& Block::operator=(Block&&) noexcept = default;
 
 void Block::AppendNewInst(Opcode opcode, std::initializer_list<IR::Value> args) {
     PrependNewInst(end(), opcode, args);
