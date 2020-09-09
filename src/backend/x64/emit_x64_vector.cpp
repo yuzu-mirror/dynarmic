@@ -2747,40 +2747,48 @@ void EmitX64::EmitVectorReverseBits(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm high_nibble_reg = ctx.reg_alloc.ScratchXmm();
 
-    code.movdqa(high_nibble_reg, code.MConst(xword, 0xF0F0F0F0F0F0F0F0, 0xF0F0F0F0F0F0F0F0));
-    code.pand(high_nibble_reg, data);
-    code.pxor(data, high_nibble_reg);
-    code.psrld(high_nibble_reg, 4);
-
-    if (code.HasSSSE3()) {
-        // High lookup
-        const Xbyak::Xmm high_reversed_reg = ctx.reg_alloc.ScratchXmm();
-        code.movdqa(high_reversed_reg, code.MConst(xword, 0xE060A020C0408000, 0xF070B030D0509010));
-        code.pshufb(high_reversed_reg, data);
-
-        // Low lookup (low nibble equivalent of the above)
-        code.movdqa(data, code.MConst(xword, 0x0E060A020C040800, 0x0F070B030D050901));
-        code.pshufb(data, high_nibble_reg);
-        code.por(data, high_reversed_reg);
+    if (code.HasAVX512_Icelake() && code.HasSSSE3()) {
+        // GFNI(vgf2p8affineqb) and SSSE3(pshuf)
+        // Reverse bits within bytes
+        code.vgf2p8affineqb(data, data, code.MConst(xword_b, 0x8040201008040201), 0);
+        // Reverse bytes within vector
+        code.pshufb(data, code.MConst(xword, 0x0001020304050607, 0x08090a0b0c0d0e0f));
     } else {
-        code.pslld(data, 4);
-        code.por(data, high_nibble_reg);
-
-        code.movdqa(high_nibble_reg, code.MConst(xword, 0xCCCCCCCCCCCCCCCC, 0xCCCCCCCCCCCCCCCC));
+        const Xbyak::Xmm high_nibble_reg = ctx.reg_alloc.ScratchXmm();
+        code.movdqa(high_nibble_reg, code.MConst(xword, 0xF0F0F0F0F0F0F0F0, 0xF0F0F0F0F0F0F0F0));
         code.pand(high_nibble_reg, data);
         code.pxor(data, high_nibble_reg);
-        code.psrld(high_nibble_reg, 2);
-        code.pslld(data, 2);
-        code.por(data, high_nibble_reg);
+        code.psrld(high_nibble_reg, 4);
 
-        code.movdqa(high_nibble_reg, code.MConst(xword, 0xAAAAAAAAAAAAAAAA, 0xAAAAAAAAAAAAAAAA));
-        code.pand(high_nibble_reg, data);
-        code.pxor(data, high_nibble_reg);
-        code.psrld(high_nibble_reg, 1);
-        code.paddd(data, data);
-        code.por(data, high_nibble_reg);
+        if (code.HasSSSE3()) {
+            // High lookup
+            const Xbyak::Xmm high_reversed_reg = ctx.reg_alloc.ScratchXmm();
+            code.movdqa(high_reversed_reg, code.MConst(xword, 0xE060A020C0408000, 0xF070B030D0509010));
+            code.pshufb(high_reversed_reg, data);
+
+            // Low lookup (low nibble equivalent of the above)
+            code.movdqa(data, code.MConst(xword, 0x0E060A020C040800, 0x0F070B030D050901));
+            code.pshufb(data, high_nibble_reg);
+            code.por(data, high_reversed_reg);
+        } else {
+            code.pslld(data, 4);
+            code.por(data, high_nibble_reg);
+
+            code.movdqa(high_nibble_reg, code.MConst(xword, 0xCCCCCCCCCCCCCCCC, 0xCCCCCCCCCCCCCCCC));
+            code.pand(high_nibble_reg, data);
+            code.pxor(data, high_nibble_reg);
+            code.psrld(high_nibble_reg, 2);
+            code.pslld(data, 2);
+            code.por(data, high_nibble_reg);
+
+            code.movdqa(high_nibble_reg, code.MConst(xword, 0xAAAAAAAAAAAAAAAA, 0xAAAAAAAAAAAAAAAA));
+            code.pand(high_nibble_reg, data);
+            code.pxor(data, high_nibble_reg);
+            code.psrld(high_nibble_reg, 1);
+            code.paddd(data, data);
+            code.por(data, high_nibble_reg);
+        }
     }
 
     ctx.reg_alloc.DefineValue(inst, data);
