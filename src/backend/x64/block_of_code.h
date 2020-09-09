@@ -158,6 +158,7 @@ public:
     bool HasFMA() const;
     bool HasAVX2() const;
     bool HasAVX512_Skylake() const;
+    bool HasAVX512_Icelake() const;
     bool HasAVX512_BITALG() const;
 
 private:
