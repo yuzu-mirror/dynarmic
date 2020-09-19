@@ -9,10 +9,12 @@ The {fmt} library API consists of the following parts:
 * :ref:`fmt/core.h <core-api>`: the core API providing argument handling
   facilities and a lightweight subset of formatting functions
 * :ref:`fmt/format.h <format-api>`: the full format API providing compile-time
-  format string checks, output iterator and user-defined type support
+  format string checks, wide string, output iterator and user-defined type
+  support
 * :ref:`fmt/ranges.h <ranges-api>`: additional formatting support for ranges
   and tuples
 * :ref:`fmt/chrono.h <chrono-api>`: date and time formatting
+* :ref:`fmt/compile.h <compile-api>`: format string compilation
 * :ref:`fmt/ostream.h <ostream-api>`: ``std::ostream`` support
 * :ref:`fmt/printf.h <printf-api>`: ``printf`` formatting
 
@@ -43,7 +45,7 @@ participate in an overload resolution if the latter is not a string.
 .. _format:
 
 .. doxygenfunction:: format(const S&, Args&&...)
-.. doxygenfunction:: vformat(const S&, basic_format_args<buffer_context<Char>>)
+.. doxygenfunction:: vformat(const S&, basic_format_args<buffer_context<type_identity_t<Char>>>)
 
 .. _print:
 
@@ -66,6 +68,9 @@ Argument Lists
 .. doxygenfunction:: fmt::make_format_args(const Args&...)
 
 .. doxygenclass:: fmt::format_arg_store
+   :members:
+
+.. doxygenclass:: fmt::dynamic_format_arg_store
    :members:
 
 .. doxygenclass:: fmt::basic_format_args
@@ -96,7 +101,7 @@ locale::
   #include <locale>
 
   std::locale::global(std::locale("en_US.UTF-8"));
-  auto s = fmt::format("{:n}", 1000000);  // s == "1,000,000"
+  auto s = fmt::format("{:L}", 1000000);  // s == "1,000,000"
 
 .. _format-api:
 
@@ -104,7 +109,7 @@ Format API
 ==========
 
 ``fmt/format.h`` defines the full format API providing compile-time format
-string checks, output iterator and user-defined type support.
+string checks, wide string, output iterator and user-defined type support.
 
 Compile-time Format String Checks
 ---------------------------------
@@ -132,6 +137,7 @@ template and implement ``parse`` and ``format`` methods::
 
     // Parses format specifications of the form ['f' | 'e'].
     constexpr auto parse(format_parse_context& ctx) {
+    // auto parse(format_parse_context &ctx) -> decltype(ctx.begin()) // c++11
       // [ctx.begin(), ctx.end()) is a character range that contains a part of
       // the format string starting from the format specifications to be parsed,
       // e.g. in
@@ -159,6 +165,7 @@ template and implement ``parse`` and ``format`` methods::
     // stored in this formatter.
     template <typename FormatContext>
     auto format(const point& p, FormatContext& ctx) {
+    // auto format(const point &p, FormatContext &ctx) -> decltype(ctx.out()) // c++11
       // ctx.out() is an output iterator to write to.
       return format_to(
           ctx.out(),
@@ -178,8 +185,7 @@ example::
 
   enum class color {red, green, blue};
 
-  template <>
-  struct fmt::formatter<color>: formatter<string_view> {
+  template <> struct fmt::formatter<color>: formatter<string_view> {
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
     auto format(color c, FormatContext& ctx) {
@@ -192,6 +198,15 @@ example::
       return formatter<string_view>::format(name, ctx);
     }
   };
+
+Since ``parse`` is inherited from ``formatter<string_view>`` it will recognize
+all string format specifications, for example
+
+.. code-block:: c++
+
+   fmt::format("{:>10}", color::blue)
+
+will return ``"      blue"``.
 
 You can also write a formatter for a hierarchy of classes::
 
@@ -229,7 +244,7 @@ Output Iterator Support
 -----------------------
 
 .. doxygenfunction:: fmt::format_to(OutputIt, const S&, Args&&...)
-.. doxygenfunction:: fmt::format_to_n(OutputIt, std::size_t, string_view, Args&&...)
+.. doxygenfunction:: fmt::format_to_n(OutputIt, size_t, const S&, const Args&...)
 .. doxygenstruct:: fmt::format_to_n_result
    :members:
 
@@ -238,9 +253,9 @@ Literal-based API
 
 The following user-defined literals are defined in ``fmt/format.h``.
 
-.. doxygenfunction:: operator""_format(const char *, std::size_t)
+.. doxygenfunction:: operator""_format(const char *, size_t)
 
-.. doxygenfunction:: operator""_a(const char *, std::size_t)
+.. doxygenfunction:: operator""_a(const char *, size_t)
 
 Utilities
 ---------
@@ -259,7 +274,10 @@ Utilities
 
 .. doxygenfunction:: fmt::join(const Range&, string_view)
 
-.. doxygenfunction:: fmt::join(It, It, string_view)
+.. doxygenfunction:: fmt::join(It, Sentinel, string_view)
+
+.. doxygenclass:: fmt::detail::buffer
+   :members:
 
 .. doxygenclass:: fmt::basic_memory_buffer
    :protected-members:
@@ -317,50 +335,6 @@ arguments, the container that stores pointers to them will be allocated using
 the default allocator. Also floating-point formatting falls back on ``sprintf``
 which may do allocations.
 
-Custom Formatting of Built-in Types
------------------------------------
-
-It is possible to change the way arguments are formatted by providing a
-custom argument formatter class::
-
-  using arg_formatter = fmt::arg_formatter<fmt::buffer_range<char>>;
-
-  // A custom argument formatter that formats negative integers as unsigned
-  // with the ``x`` format specifier.
-  class custom_arg_formatter : public arg_formatter {
-   public:
-    custom_arg_formatter(fmt::format_context& ctx,
-                         fmt::format_parse_context* parse_ctx = nullptr,
-                         fmt::format_specs* spec = nullptr)
-      : arg_formatter(ctx, parse_ctx, spec) {}
-
-    using arg_formatter::operator();
-
-    auto operator()(int value) {
-      if (specs() && specs()->type == 'x')
-        return (*this)(static_cast<unsigned>(value)); // convert to unsigned and format
-      return arg_formatter::operator()(value);
-    }
-  };
-
-  std::string custom_vformat(fmt::string_view format_str, fmt::format_args args) {
-    fmt::memory_buffer buffer;
-    // Pass custom argument formatter as a template arg to vformat_to.
-    fmt::vformat_to<custom_arg_formatter>(buffer, format_str, args);
-    return fmt::to_string(buffer);
-  }
-
-  template <typename ...Args>
-  inline std::string custom_format(
-      fmt::string_view format_str, const Args&... args) {
-    return custom_vformat(format_str, fmt::make_format_args(args...));
-  }
-
-  std::string s = custom_format("{:x}", -42); // s == "ffffffd6"
-
-.. doxygenclass:: fmt::arg_formatter
-   :members:
-
 .. _ranges-api:
 
 Ranges and Tuple Formatting
@@ -399,10 +373,25 @@ formatting::
 
   std::time_t t = std::time(nullptr);
   // Prints "The date is 2016-04-29." (with the current date)
-  fmt::print("The date is {:%Y-%m-%d}.", *std::localtime(&t));
+  fmt::print("The date is {:%Y-%m-%d}.", fmt::localtime(t));
 
 The format string syntax is described in the documentation of
 `strftime <http://en.cppreference.com/w/cpp/chrono/c/strftime>`_.
+
+.. _compile-api:
+
+Format string compilation
+=========================
+
+``fmt/compile.h`` provides format string compilation support. Format strings
+are parsed at compile time and converted into efficient formatting code. This
+supports arguments of built-in and string types as well as user-defined types
+with ``constexpr`` ``parse`` functions in their ``formatter`` specializations.
+Format string compilation can generate more binary code compared to the default
+API and is only recommended in places where formatting is a performance
+bottleneck.
+
+.. doxygendefine:: FMT_COMPILE
 
 .. _ostream-api:
 
@@ -448,3 +437,19 @@ argument type doesn't match its format specification.
 .. doxygenfunction:: fprintf(std::basic_ostream<Char>&, const S&, const Args&...)
 
 .. doxygenfunction:: sprintf(const S&, const Args&...)
+
+Compatibility with C++20 ``std::format``
+========================================
+
+{fmt} implements nearly all of the `C++20 formatting library
+<https://en.cppreference.com/w/cpp/utility/format>`_ with the following
+differences:
+
+* Names are defined in the ``fmt`` namespace instead of ``std`` to avoid
+  collisions with standard library implementations.
+* The ``'L'`` format specifier cannot be combined with presentation specifiers
+  yet.
+* Width calculation doesn't use grapheme clusterization. The latter has been
+  implemented in a separate branch but hasn't been integrated yet.
+* Chrono formatting doesn't support C++20 date types since they are not provided
+  by standard library implementations.
