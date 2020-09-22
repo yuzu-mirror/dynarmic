@@ -190,11 +190,11 @@ void ExecuteA32Instruction(u32 instruction) {
     const auto get_value = [&get_line]() -> std::optional<u32> {
         std::string line = get_line();
         if (line.length() > 2 && line[0] == '0' && line[1] == 'x') line = line.substr(2);
-        if (line.length() > 8) return {};
+        if (line.length() > 8) return std::nullopt;
 
         char* endptr;
         const u32 value = strtol(line.c_str(), &endptr, 16);
-        if (line.c_str() + line.length() != endptr) return {};
+        if (line.c_str() + line.length() != endptr) return std::nullopt;
 
         return value;
     };
