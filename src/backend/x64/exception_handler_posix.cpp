@@ -35,6 +35,7 @@ struct CodeBlockInfo {
 class SigHandler {
 public:
     SigHandler();
+    ~SigHandler();
 
     void AddCodeBlock(CodeBlockInfo info);
     void RemoveCodeBlock(u64 rip);
@@ -47,6 +48,8 @@ private:
     }
 
     bool supports_fast_mem = true;
+
+    void* signal_stack_memory = nullptr;
 
     std::vector<CodeBlockInfo> code_block_infos;
     std::mutex code_block_infos_mutex;
@@ -62,8 +65,10 @@ SigHandler sig_handler;
 SigHandler::SigHandler() {
     constexpr size_t signal_stack_size = std::max(SIGSTKSZ, 2 * 1024 * 1024);
 
+    signal_stack_memory = std::malloc(signal_stack_size);
+
     stack_t signal_stack;
-    signal_stack.ss_sp = std::malloc(signal_stack_size);
+    signal_stack.ss_sp = signal_stack_memory;
     signal_stack.ss_size = signal_stack_size;
     signal_stack.ss_flags = 0;
     if (sigaltstack(&signal_stack, nullptr) != 0) {
@@ -89,6 +94,10 @@ SigHandler::SigHandler() {
         return;
     }
 #endif
+}
+
+SigHandler::~SigHandler() {
+    std::free(signal_stack_memory);
 }
 
 void SigHandler::AddCodeBlock(CodeBlockInfo cbi) {
