@@ -85,9 +85,13 @@ private:
                     arg_index++;
                 }
 
-                ASSERT(arg_index < N);
-                masks[arg_index] |= one << bit_position;
-                shifts[arg_index] = bit_position;
+                if constexpr (N > 0) {
+                    ASSERT(arg_index < N);
+                    masks[arg_index] |= one << bit_position;
+                    shifts[arg_index] = bit_position;
+                } else {
+                    ASSERT_FALSE();
+                }
             }
         }
 
