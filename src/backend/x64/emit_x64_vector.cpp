@@ -1510,11 +1510,17 @@ void EmitX64::EmitVectorLogicalShiftRight8(EmitContext& ctx, IR::Inst* inst) {
     const u8 shift_amount = args[1].GetImmediateU8();
 
     if (shift_amount > 0) {
-        const u64 replicand = 0xFEULL >> shift_amount;
-        const u64 mask = Common::Replicate(replicand, Common::BitSize<u8>());
+        if (code.HasAVX512_Icelake()) {
+            // Galois 8x8 identity matrix, bit-shifted by the shift-amount
+            const u64 shift_matrix = 0x0102040810204080 << (shift_amount * 8);
+            code.vgf2p8affineqb(result, result, code.MConst(xword_b, shift_matrix), 0);
+        } else {
+            const u64 replicand = 0xFEULL >> shift_amount;
+            const u64 mask = Common::Replicate(replicand, Common::BitSize<u8>());
 
-        code.psrlw(result, shift_amount);
-        code.pand(result, code.MConst(xword, mask, mask));
+            code.psrlw(result, shift_amount);
+            code.pand(result, code.MConst(xword, mask, mask));
+        }
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
