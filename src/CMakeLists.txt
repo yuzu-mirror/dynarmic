@@ -233,6 +233,7 @@ if ("A64" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A64/translate/impl/simd_two_register_misc.cpp
         frontend/A64/translate/impl/simd_vector_x_indexed_element.cpp
         frontend/A64/translate/impl/sys_dc.cpp
+        frontend/A64/translate/impl/sys_ic.cpp
         frontend/A64/translate/impl/system.cpp
         frontend/A64/translate/impl/system_flag_format.cpp
         frontend/A64/translate/impl/system_flag_manipulation.cpp

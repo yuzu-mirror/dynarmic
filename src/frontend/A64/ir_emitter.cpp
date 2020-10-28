@@ -56,6 +56,10 @@ void IREmitter::DataCacheOperationRaised(DataCacheOperation op, const IR::U64& v
     Inst(Opcode::A64DataCacheOperationRaised, Imm64(static_cast<u64>(op)), value);
 }
 
+void IREmitter::InstructionCacheOperationRaised(InstructionCacheOperation op, const IR::U64& value) {
+    Inst(Opcode::A64InstructionCacheOperationRaised, Imm64(static_cast<u64>(op)), value);
+}
+
 void IREmitter::DataSynchronizationBarrier() {
     Inst(Opcode::A64DataSynchronizationBarrier);
 }

@@ -108,6 +108,11 @@ INST(DC_CVAU,                "DC CVAU",                                   "11010
 INST(DC_CVAP,                "DC CVAP",                                   "110101010000101101111100001ttttt")
 INST(DC_CIVAC,               "DC CIVAC",                                  "110101010000101101111110001ttttt")
 
+// SYS: Instruction Cache
+INST(IC_IALLU,               "IC IALLU",                                  "11010101000010000111010100011111")
+INST(IC_IALLUIS,             "IC IALLUIS",                                "11010101000010000111000100011111")
+INST(IC_IVAU,                "IC IVAU",                                   "110101010000101101110101001ttttt")
+
 // Unconditional branch (Register)
 INST(BLR,                    "BLR",                                       "1101011000111111000000nnnnn00000")
 INST(BR,                     "BR",                                        "1101011000011111000000nnnnn00000")

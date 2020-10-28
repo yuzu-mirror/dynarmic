@@ -68,6 +68,11 @@ enum class DataCacheOperation {
     ZeroByVA,
 };
 
+enum class InstructionCacheOperation {
+    // IC IVAU
+    InvalidateByVAToPoU,
+};
+
 struct UserCallbacks {
     virtual ~UserCallbacks() = default;
 
@@ -110,6 +115,7 @@ struct UserCallbacks {
 
     virtual void ExceptionRaised(VAddr pc, Exception exception) = 0;
     virtual void DataCacheOperationRaised(DataCacheOperation /*op*/, VAddr /*value*/) {}
+    virtual void InstructionCacheOperationRaised(InstructionCacheOperation /*op*/, VAddr /*value*/) {}
     virtual void InstructionSynchronizationBarrierRaised() {}
 
     // Timing-related callbacks

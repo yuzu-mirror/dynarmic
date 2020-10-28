@@ -174,6 +174,11 @@ struct TranslatorVisitor final {
     bool DC_CVAP(Reg Rt);
     bool DC_CIVAC(Reg Rt);
 
+    // SYS: Instruction Cache
+    bool IC_IALLU();
+    bool IC_IALLUIS();
+    bool IC_IVAU(Reg Rt);
+
     // Unconditional branch (Register)
     bool BR(Reg Rn);
     bool BRA(bool Z, bool M, Reg Rn, Reg Rm);
