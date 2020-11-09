@@ -520,18 +520,19 @@ bool Inst::IsSetCheckBitOperation() const {
 }
 
 bool Inst::MayHaveSideEffects() const {
-    return op == Opcode::PushRSB                        ||
-           op == Opcode::A64DataCacheOperationRaised    ||
-           IsSetCheckBitOperation()                     ||
-           IsBarrier()                                  ||
-           CausesCPUException()                         ||
-           WritesToCoreRegister()                       ||
-           WritesToSystemRegister()                     ||
-           WritesToCPSR()                               ||
-           WritesToFPCR()                               ||
-           WritesToFPSR()                               ||
-           AltersExclusiveState()                       ||
-           IsMemoryWrite()                              ||
+    return op == Opcode::PushRSB                            ||
+           op == Opcode::A64DataCacheOperationRaised        ||
+           op == Opcode::A64InstructionCacheOperationRaised ||
+           IsSetCheckBitOperation()                         ||
+           IsBarrier()                                      ||
+           CausesCPUException()                             ||
+           WritesToCoreRegister()                           ||
+           WritesToSystemRegister()                         ||
+           WritesToCPSR()                                   ||
+           WritesToFPCR()                                   ||
+           WritesToFPSR()                                   ||
+           AltersExclusiveState()                           ||
+           IsMemoryWrite()                                  ||
            IsCoprocessorInstruction();
 }
 

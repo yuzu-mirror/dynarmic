@@ -7,21 +7,19 @@
 
 namespace Dynarmic::A64 {
 
-static bool InstructionCacheInstruction(TranslatorVisitor& v, InstructionCacheOperation op, const Reg Rt) {
-    v.ir.InstructionCacheOperationRaised(op, v.X(64, Rt));
+bool TranslatorVisitor::IC_IALLU() {
+    ir.InstructionCacheOperationRaised(InstructionCacheOperation::InvalidateAllToPoU, ir.Imm64(0));
     return true;
 }
 
-bool TranslatorVisitor::IC_IALLU() {
-    return false;
-}
-
 bool TranslatorVisitor::IC_IALLUIS() {
-    return false;
+    ir.InstructionCacheOperationRaised(InstructionCacheOperation::InvalidateAllToPoUInnerSharable, ir.Imm64(0));
+    return true;
 }
 
 bool TranslatorVisitor::IC_IVAU(Reg Rt) {
-    return InstructionCacheInstruction(*this, InstructionCacheOperation::InvalidateByVAToPoU, Rt);
+    ir.InstructionCacheOperationRaised(InstructionCacheOperation::InvalidateByVAToPoU, X(64, Rt));
+    return true;
 }
 
 } // namespace Dynarmic::A64

@@ -69,8 +69,12 @@ enum class DataCacheOperation {
 };
 
 enum class InstructionCacheOperation {
-    // IC IVAU
+    /// IC IVAU
     InvalidateByVAToPoU,
+    /// IC IALLU
+    InvalidateAllToPoU,
+    /// IC IALLUIS
+    InvalidateAllToPoUInnerSharable
 };
 
 struct UserCallbacks {
