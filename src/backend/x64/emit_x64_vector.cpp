@@ -442,7 +442,7 @@ static void ArithmeticShiftRightByte(EmitContext& ctx, BlockOfCode& code, const 
     if (code.HasAVX512_Icelake()) {
         // Do a logical shift right upon the 8x8 bit-matrix, but shift in
         // `0x80` bytes into the matrix to repeat the most significant bit.
-        const u64 zero_extend = ~(0xFFFFFFFFFFFFFFFF << shift_amount) & 0x8080808080808080;
+        const u64 zero_extend = ~(0xFFFFFFFFFFFFFFFF << (shift_amount * 8)) & 0x8080808080808080;
         const u64 shift_matrix = (0x0102040810204080 >> (shift_amount * 8)) | zero_extend;
         code.vgf2p8affineqb(result, result, code.MConst(xword_b, shift_matrix), 0);
         return;
