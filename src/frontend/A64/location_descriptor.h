@@ -45,7 +45,7 @@ public:
     bool SingleStepping() const { return single_stepping; }
 
     bool operator == (const LocationDescriptor& o) const {
-        return std::tie(pc, fpcr, single_stepping) == std::tie(o.pc, o.fpcr, single_stepping);
+        return std::tie(pc, fpcr, single_stepping) == std::tie(o.pc, o.fpcr, o.single_stepping);
     }
 
     bool operator != (const LocationDescriptor& o) const {
