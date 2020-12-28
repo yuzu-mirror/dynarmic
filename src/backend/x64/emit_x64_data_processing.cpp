@@ -291,8 +291,6 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
     auto& shift_arg = args[1];
     auto& carry_arg = args[2];
 
-    // TODO: Consider using BMI2 instructions like SHLX when arm-in-host flags is implemented.
-
     if (!carry_inst) {
         if (shift_arg.IsImmediate()) {
             const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -303,6 +301,18 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
             } else {
                 code.xor_(result, result);
             }
+
+            ctx.reg_alloc.DefineValue(inst, result);
+        } else if (code.HasBMI2()) {
+            const Xbyak::Reg32 shift = ctx.reg_alloc.UseGpr(shift_arg).cvt32();
+            const Xbyak::Reg32 operand = ctx.reg_alloc.UseGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 zero = ctx.reg_alloc.ScratchGpr().cvt32();
+
+            code.shlx(result, operand, shift);
+            code.xor_(zero, zero);
+            code.cmp(shift.cvt8(), 32);
+            code.cmovnb(result, zero);
 
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
@@ -399,13 +409,25 @@ void EmitX64::EmitLogicalShiftLeft64(EmitContext& ctx, IR::Inst* inst) {
         }
 
         ctx.reg_alloc.DefineValue(inst, result);
+    } else if (code.HasBMI2()) {
+        const Xbyak::Reg64 shift = ctx.reg_alloc.UseGpr(shift_arg);
+        const Xbyak::Reg64 operand = ctx.reg_alloc.UseGpr(operand_arg);
+        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
+
+        code.shlx(result, operand, shift);
+        code.xor_(zero.cvt32(), zero.cvt32());
+        code.cmp(shift.cvt8(), 64);
+        code.cmovnb(result, zero);
+
+        ctx.reg_alloc.DefineValue(inst, result);
     } else {
         ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
         const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
         const Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
 
         // The x64 SHL instruction masks the shift count by 0x1F before performing the shift.
-        // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
+        // ARM differs from the behaviour: It does not mask the count, so shifts above 63 result in zeros.
 
         code.shl(result, code.cl);
         code.xor_(zero.cvt32(), zero.cvt32());
@@ -434,6 +456,18 @@ void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             } else {
                 code.xor_(result, result);
             }
+
+            ctx.reg_alloc.DefineValue(inst, result);
+        } else if (code.HasBMI2()) {
+            const Xbyak::Reg32 shift = ctx.reg_alloc.UseGpr(shift_arg).cvt32();
+            const Xbyak::Reg32 operand = ctx.reg_alloc.UseGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 zero = ctx.reg_alloc.ScratchGpr().cvt32();
+
+            code.shrx(result, operand, shift);
+            code.xor_(zero, zero);
+            code.cmp(shift.cvt8(), 32);
+            code.cmovnb(result, zero);
 
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
@@ -531,13 +565,25 @@ void EmitX64::EmitLogicalShiftRight64(EmitContext& ctx, IR::Inst* inst) {
         }
 
         ctx.reg_alloc.DefineValue(inst, result);
+    } else if (code.HasBMI2()) {
+        const Xbyak::Reg64 shift = ctx.reg_alloc.UseGpr(shift_arg);
+        const Xbyak::Reg64 operand = ctx.reg_alloc.UseGpr(operand_arg);
+        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
+
+        code.shrx(result, operand, shift);
+        code.xor_(zero.cvt32(), zero.cvt32());
+        code.cmp(shift.cvt8(), 63);
+        code.cmovnb(result, zero);
+
+        ctx.reg_alloc.DefineValue(inst, result);
     } else {
         ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
         const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
         const Xbyak::Reg64 zero = ctx.reg_alloc.ScratchGpr();
 
         // The x64 SHR instruction masks the shift count by 0x1F before performing the shift.
-        // ARM differs from the behaviour: It does not mask the count, so shifts above 31 result in zeros.
+        // ARM differs from the behaviour: It does not mask the count, so shifts above 63 result in zeros.
 
         code.shr(result, code.cl);
         code.xor_(zero.cvt32(), zero.cvt32());
@@ -564,6 +610,22 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             code.sar(result, u8(shift < 31 ? shift : 31));
 
             ctx.reg_alloc.DefineValue(inst, result);
+        } else if (code.HasBMI2()) {
+            const Xbyak::Reg32 shift = ctx.reg_alloc.UseScratchGpr(shift_arg).cvt32();
+            const Xbyak::Reg32 operand = ctx.reg_alloc.UseGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 const31 = ctx.reg_alloc.ScratchGpr().cvt32();
+
+            // The 32-bit x64 SAR instruction masks the shift count by 0x1F before performing the shift.
+            // ARM differs from the behaviour: It does not mask the count.
+
+            // We note that all shift values above 31 have the same behaviour as 31 does, so we saturate `shift` to 31.
+            code.mov(const31, 31);
+            code.cmp(shift.cvt8(), 31);
+            code.cmovnb(shift, const31);
+            code.sarx(result, operand, shift);
+
+            ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
             const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
@@ -574,9 +636,8 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
 
             // We note that all shift values above 31 have the same behaviour as 31 does, so we saturate `shift` to 31.
             code.mov(const31, 31);
-            code.movzx(code.ecx, code.cl);
-            code.cmp(code.ecx, u32(31));
-            code.cmovg(code.ecx, const31);
+            code.cmp(code.cl, u32(31));
+            code.cmova(code.ecx, const31);
             code.sar(result, code.cl);
 
             ctx.reg_alloc.DefineValue(inst, result);
@@ -648,6 +709,18 @@ void EmitX64::EmitArithmeticShiftRight64(EmitContext& ctx, IR::Inst* inst) {
         code.sar(result, u8(shift < 63 ? shift : 63));
 
         ctx.reg_alloc.DefineValue(inst, result);
+    } else if (code.HasBMI2()) {
+        const Xbyak::Reg64 shift = ctx.reg_alloc.UseScratchGpr(shift_arg);
+        const Xbyak::Reg64 operand = ctx.reg_alloc.UseGpr(operand_arg);
+        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+        const Xbyak::Reg64 const63 = ctx.reg_alloc.ScratchGpr();
+
+        code.mov(const63.cvt32(), 63);
+        code.cmp(shift.cvt8(), 63);
+        code.cmovnb(shift, const63);
+        code.sarx(result, operand, shift);
+
+        ctx.reg_alloc.DefineValue(inst, result);
     } else {
         ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
         const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
@@ -658,8 +731,7 @@ void EmitX64::EmitArithmeticShiftRight64(EmitContext& ctx, IR::Inst* inst) {
 
         // We note that all shift values above 63 have the same behaviour as 63 does, so we saturate `shift` to 63.
         code.mov(const63, 63);
-        code.movzx(code.ecx, code.cl);
-        code.cmp(code.ecx, u32(63));
+        code.cmp(code.cl, u32(63));
         code.cmovg(code.ecx, const63);
         code.sar(result, code.cl);
 
@@ -676,7 +748,15 @@ void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
     auto& carry_arg = args[2];
 
     if (!carry_inst) {
-        if (shift_arg.IsImmediate()) {
+        if (shift_arg.IsImmediate() && code.HasBMI2()) {
+            const u8 shift = shift_arg.GetImmediateU8();
+            const Xbyak::Reg32 operand = ctx.reg_alloc.UseGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+
+            code.rorx(result, operand, shift);
+
+            ctx.reg_alloc.DefineValue(inst, result);
+        } else if (shift_arg.IsImmediate()) {
             const u8 shift = shift_arg.GetImmediateU8();
             const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
 
@@ -751,7 +831,15 @@ void EmitX64::EmitRotateRight64(EmitContext& ctx, IR::Inst* inst) {
     auto& operand_arg = args[0];
     auto& shift_arg = args[1];
 
-    if (shift_arg.IsImmediate()) {
+    if (shift_arg.IsImmediate() && code.HasBMI2()) {
+        const u8 shift = shift_arg.GetImmediateU8();
+        const Xbyak::Reg64 operand = ctx.reg_alloc.UseGpr(operand_arg);
+        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr();
+
+        code.rorx(result, operand, shift);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+    } else if (shift_arg.IsImmediate()) {
         const u8 shift = shift_arg.GetImmediateU8();
         const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(operand_arg);
 
