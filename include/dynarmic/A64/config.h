@@ -188,6 +188,11 @@ struct UserConfig {
     /// Determines the size of page_table. Valid values are between 12 and 64 inclusive.
     /// This is only used if page_table is not nullptr.
     size_t page_table_address_space_bits = 36;
+    /// Masks out the first N bits in host pointers from the page table.
+    /// The intention behind this is to allow users of Dynarmic to pack attributes in the
+    /// same integer and update the pointer attribute pair atomically.
+    /// If the configured value is 3, all pointers will be forcefully aligned to 8 bytes.
+    int page_table_pointer_mask_bits = 0;
     /// Determines what happens if the guest accesses an entry that is off the end of the
     /// page table. If true, Dynarmic will silently mirror page_table's address space. If
     /// false, accessing memory outside of page_table bounds will result in a call to the
