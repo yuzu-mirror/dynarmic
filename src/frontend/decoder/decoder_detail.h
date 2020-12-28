@@ -63,15 +63,12 @@ private:
      */
     template<size_t N>
     static auto GetArgInfo(const char* const bitstring) {
-        const auto one = static_cast<opcode_type>(1);
         std::array<opcode_type, N> masks = {};
         std::array<size_t, N> shifts = {};
         size_t arg_index = 0;
         char ch = 0;
 
         for (size_t i = 0; i < opcode_bitsize; i++) {
-            const size_t bit_position = opcode_bitsize - i - 1;
-
             if (bitstring[i] == '0' || bitstring[i] == '1' || bitstring[i] == '-') {
                 if (ch != 0) {
                     ch = 0;
@@ -86,8 +83,10 @@ private:
                 }
 
                 if constexpr (N > 0) {
+                    const size_t bit_position = opcode_bitsize - i - 1;
+
                     ASSERT(arg_index < N);
-                    masks[arg_index] |= one << bit_position;
+                    masks[arg_index] |= static_cast<opcode_type>(1) << bit_position;
                     shifts[arg_index] = bit_position;
                 } else {
                     ASSERT_FALSE();
