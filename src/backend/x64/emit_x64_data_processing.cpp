@@ -1090,19 +1090,21 @@ static void EmitSub(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
     // TODO: Optimize CMP case.
     // Note that x64 CF is inverse of what the ARM carry flag is here.
 
+    bool invert_output_carry = true;
+
     if (args[1].IsImmediate() && args[1].GetType() == IR::Type::U32) {
         const u32 op_arg = args[1].GetImmediateU32();
         if (carry_in.IsImmediate()) {
             if (carry_in.GetImmediateU1()) {
                 code.sub(result, op_arg);
             } else {
-                code.stc();
-                code.sbb(result, op_arg);
+                code.add(result, ~op_arg);
+                invert_output_carry = false;
             }
         } else {
             code.bt(carry.cvt32(), 0);
-            code.cmc();
-            code.sbb(result, op_arg);
+            code.adc(result, ~op_arg);
+            invert_output_carry = false;
         }
     } else {
         OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
@@ -1122,14 +1124,20 @@ static void EmitSub(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
     }
 
     if (nzcv_inst) {
-        code.cmc();
+        if (invert_output_carry) {
+            code.cmc();
+        }
         code.lahf();
         code.seto(code.al);
         ctx.reg_alloc.DefineValue(nzcv_inst, nzcv);
         ctx.EraseInstruction(nzcv_inst);
     }
     if (carry_inst) {
-        code.setnc(carry);
+        if (invert_output_carry) {
+            code.setnc(carry);
+        } else {
+            code.setc(carry);
+        }
         ctx.reg_alloc.DefineValue(carry_inst, carry);
         ctx.EraseInstruction(carry_inst);
     }
