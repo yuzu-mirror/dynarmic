@@ -810,6 +810,22 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
     if constexpr (fsize != 16) {
+        if (code.HasFMA() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+            Xbyak::Label end, fallback;
+
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            code.movaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 2>()));
+            FCODE(vfnmadd231s)(result, operand1, operand2);
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
         if (code.HasFMA()) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 

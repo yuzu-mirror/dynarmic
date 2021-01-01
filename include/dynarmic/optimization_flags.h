@@ -39,6 +39,9 @@ enum class OptimizationFlag : std::uint32_t {
     /// This is an UNSAFE optimization that reduces accuracy of certain floating-point instructions.
     /// This allows results of FRECPE and FRSQRTE to have **less** error than spec allows.
     Unsafe_ReducedErrorFP   = 0x00020000,
+    /// This is an UNSAFE optimization that causes floating-point instructions to not produce correct NaNs.
+    /// This may also result in inaccurate results when instructions are given certain special values.
+    Unsafe_InaccurateNaN    = 0x00040000,
 };
 
 constexpr OptimizationFlag no_optimizations = static_cast<OptimizationFlag>(0);
