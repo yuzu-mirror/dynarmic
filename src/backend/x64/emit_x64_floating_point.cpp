@@ -590,9 +590,20 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
     if constexpr (fsize != 16) {
-        if (code.HasFMA()) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
+        if (code.HasFMA() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+            const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm operand3 = ctx.reg_alloc.UseXmm(args[2]);
+
+            FCODE(vfmadd231s)(result, operand2, operand3);
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
+        if (code.HasFMA()) {
             Xbyak::Label end, fallback;
 
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -641,8 +652,6 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         }
 
         if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseScratchXmm(args[1]);
             const Xbyak::Xmm operand3 = ctx.reg_alloc.UseXmm(args[2]);
@@ -1014,6 +1023,21 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
     if constexpr (fsize != 16) {
+        if (code.HasFMA() && code.HasAVX() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+            code.vmovaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 3>()));
+            FCODE(vfnmadd231s)(result, operand1, operand2);
+            FCODE(vmuls)(result, result, code.MConst(xword, FP::FPValue<FPT, false, -1, 1>()));
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
         if (code.HasFMA() && code.HasAVX()) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 

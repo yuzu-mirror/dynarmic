@@ -985,11 +985,23 @@ void EmitFPVectorMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     };
 
     if constexpr (fsize != 16) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        const bool fpcr_controlled = args[3].GetImmediateU1();
+
         if (code.HasFMA() && code.HasAVX()) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+            const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
+            const Xbyak::Xmm xmm_c = ctx.reg_alloc.UseXmm(args[2]);
 
-            const bool fpcr_controlled = args[3].GetImmediateU1();
+            MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
+                FCODE(vfmadd231p)(result, xmm_b, xmm_c);
+            });
 
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
+        if (code.HasFMA() && code.HasAVX()) {
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseXmm(args[0]);
             const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
@@ -1025,8 +1037,6 @@ void EmitFPVectorMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         }
 
         if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseScratchXmm(args[1]);
             const Xbyak::Xmm operand3 = ctx.reg_alloc.UseXmm(args[2]);
@@ -1233,10 +1243,24 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     };
 
     if constexpr (fsize != 16) {
-        if (code.HasFMA() && code.HasAVX()) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-            const bool fpcr_controlled = args[2].GetImmediateU1();
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        const bool fpcr_controlled = args[2].GetImmediateU1();
 
+        if (code.HasFMA() && code.HasAVX() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+
+            MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
+                code.movaps(result, GetVectorOf<fsize, false, 0, 2>(code));
+                FCODE(vfnmadd231p)(result, operand1, operand2);
+            });
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
+        if (code.HasFMA() && code.HasAVX()) {
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
@@ -1269,8 +1293,6 @@ static void EmitRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
         }
 
         if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -1428,10 +1450,25 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     };
 
     if constexpr (fsize != 16) {
-        if (code.HasFMA() && code.HasAVX()) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-            const bool fpcr_controlled = args[2].GetImmediateU1();
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        const bool fpcr_controlled = args[2].GetImmediateU1();
 
+        if (code.HasFMA() && code.HasAVX() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+            const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+
+            MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&]{
+                code.vmovaps(result, GetVectorOf<fsize, false, 0, 3>(code));
+                FCODE(vfnmadd231p)(result, operand1, operand2);
+                FCODE(vmulp)(result, result, GetVectorOf<fsize, false, -1, 1>(code));
+            });
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
+
+        if (code.HasFMA() && code.HasAVX()) {
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
@@ -1470,8 +1507,6 @@ static void EmitRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
         }
 
         if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
