@@ -1080,7 +1080,7 @@ static void EmitSub(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& carry_in = args[2];
-    const bool is_cmp = inst->UseCount() == !!carry_inst + !!overflow_inst + !!nzcv_inst && carry_in.IsImmediate() && carry_in.GetImmediateU1();
+    const bool is_cmp = inst->UseCount() == size_t(!!carry_inst + !!overflow_inst + !!nzcv_inst) && carry_in.IsImmediate() && carry_in.GetImmediateU1();
 
     const Xbyak::Reg64 nzcv = DoNZCV(code, ctx.reg_alloc, nzcv_inst);
     const Xbyak::Reg result = (is_cmp ? ctx.reg_alloc.UseGpr(args[0]) : ctx.reg_alloc.UseScratchGpr(args[0])).changeBit(bitsize);
