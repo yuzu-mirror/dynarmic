@@ -257,7 +257,7 @@ void FPTwoOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
 
     Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
 
-    if (!ctx.FPCR().DN()) {
+    if (!ctx.FPCR().DN() && !ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
         end = ProcessNaN<fsize>(code, result);
     }
     if constexpr (std::is_member_function_pointer_v<Function>) {
@@ -265,7 +265,9 @@ void FPTwoOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
     } else {
         fn(result);
     }
-    if (ctx.FPCR().DN()) {
+    if (ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+        // Do nothing
+    } else if (ctx.FPCR().DN()) {
         ForceToDefaultNaN<fsize>(code, result);
     } else {
         PostProcessNaN<fsize>(code, result, ctx.reg_alloc.ScratchXmm());
@@ -280,6 +282,20 @@ void FPThreeOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn)
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm operand = ctx.reg_alloc.UseScratchXmm(args[1]);
+
+        if constexpr (std::is_member_function_pointer_v<Function>) {
+            (code.*fn)(result, operand);
+        } else {
+            fn(result, operand);
+        }
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
 
     if (ctx.FPCR().DN()) {
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
