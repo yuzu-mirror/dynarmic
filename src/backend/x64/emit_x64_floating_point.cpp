@@ -283,7 +283,7 @@ void FPThreeOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn)
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+    if (ctx.FPCR().DN() || ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm operand = ctx.reg_alloc.UseScratchXmm(args[1]);
 
@@ -293,21 +293,9 @@ void FPThreeOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn)
             fn(result, operand);
         }
 
-        ctx.reg_alloc.DefineValue(inst, result);
-        return;
-    }
-
-    if (ctx.FPCR().DN()) {
-        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-        const Xbyak::Xmm operand = ctx.reg_alloc.UseScratchXmm(args[1]);
-
-        if constexpr (std::is_member_function_pointer_v<Function>) {
-            (code.*fn)(result, operand);
-        } else {
-            fn(result, operand);
+        if (!ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
+            ForceToDefaultNaN<fsize>(code, result);
         }
-
-        ForceToDefaultNaN<fsize>(code, result);
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -605,9 +593,9 @@ template<size_t fsize>
 static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
-    if constexpr (fsize != 16) {
-        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
+    if constexpr (fsize != 16) {
         if (code.HasFMA() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
             const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
@@ -680,7 +668,6 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         }
     }
 
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.HostCall(inst, args[0], args[1], args[2]);
     code.mov(code.ABI_PARAM4.cvt32(), ctx.FPCR().Value());
 #ifdef _WIN32
@@ -834,10 +821,10 @@ template<size_t fsize>
 static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
     if constexpr (fsize != 16) {
         if (code.HasFMA() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             Xbyak::Label end, fallback;
 
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -852,8 +839,6 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
         }
 
         if (code.HasFMA()) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             Xbyak::Label end, fallback;
 
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -888,8 +873,6 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
         }
 
         if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -903,7 +886,6 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
         }
     }
 
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.HostCall(inst, args[0], args[1]);
     code.mov(code.ABI_PARAM3.cvt32(), ctx.FPCR().Value());
     code.lea(code.ABI_PARAM4, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
@@ -1038,10 +1020,10 @@ template<size_t fsize>
 static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
     if constexpr (fsize != 16) {
         if (code.HasFMA() && code.HasAVX() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -1055,8 +1037,6 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
         }
 
         if (code.HasFMA() && code.HasAVX()) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             Xbyak::Label end, fallback;
 
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
@@ -1103,8 +1083,6 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
         }
 
         if (ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
-            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
             const Xbyak::Xmm operand1 = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -1119,7 +1097,6 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
         }
     }
 
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.HostCall(inst, args[0], args[1]);
     code.mov(code.ABI_PARAM3.cvt32(), ctx.FPCR().Value());
     code.lea(code.ABI_PARAM4, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
