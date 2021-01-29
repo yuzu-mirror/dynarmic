@@ -90,6 +90,8 @@ struct UserCallbacks {
 
     virtual void ExceptionRaised(VAddr pc, Exception exception) = 0;
 
+    virtual void InstructionSynchronizationBarrierRaised() {}
+
     // Timing-related callbacks
     // ticks ticks have passed
     virtual void AddTicks(std::uint64_t ticks) = 0;
@@ -163,6 +165,11 @@ struct UserConfig {
 
     // Coprocessors
     std::array<std::shared_ptr<Coprocessor>, 16> coprocessors{};
+
+    /// When set to true, UserCallbacks::InstructionSynchronizationBarrierRaised will be
+    /// called when an ISB instruction is executed.
+    /// When set to false, ISB will be treated as a NOP instruction.
+    bool hook_isb = false;
 
     /// Hint instructions would cause ExceptionRaised to be called with the appropriate
     /// argument.
