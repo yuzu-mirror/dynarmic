@@ -720,10 +720,12 @@ void A32EmitX64::EmitA32DataMemoryBarrier(A32EmitContext&, IR::Inst*) {
 }
 
 void A32EmitX64::EmitA32InstructionSynchronizationBarrier(A32EmitContext& ctx, IR::Inst*) {
-    ctx.reg_alloc.HostCall(nullptr);
+    if (!conf.hook_isb) {
+       return;
+    }
 
-    code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(jit_interface));
-    code.CallLambda([](A32::Jit* jit) { jit->ClearCache(); });
+    ctx.reg_alloc.HostCall(nullptr);
+    Devirtualize<&A32::UserCallbacks::InstructionSynchronizationBarrierRaised>(conf.callbacks).EmitCall(code);
 }
 
 void A32EmitX64::EmitA32BXWritePC(A32EmitContext& ctx, IR::Inst* inst) {
