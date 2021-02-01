@@ -182,6 +182,19 @@ bool ThumbTranslatorVisitor::thumb32_USUB16(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_QADD8(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedSaturatedAddS8(reg_n, reg_m);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_QADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -241,6 +254,19 @@ bool ThumbTranslatorVisitor::thumb32_QSUB16(Reg n, Reg d, Reg m) {
     const auto reg_m = ir.GetRegister(m);
     const auto reg_n = ir.GetRegister(n);
     const auto result = ir.PackedSaturatedSubS16(reg_n, reg_m);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_UQADD8(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedSaturatedAddU8(reg_n, reg_m);
 
     ir.SetRegister(d, result);
     return true;
