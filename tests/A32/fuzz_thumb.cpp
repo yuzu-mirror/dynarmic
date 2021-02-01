@@ -386,6 +386,8 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
                      three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1011mmmm", // QDSUB
                      three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0001mmmm", // QSAX
+                     three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1010mmmm", // QSUB
                      three_reg_not_r15),
         ThumbInstGen("111110101001nnnn1111dddd1010mmmm", // RBIT
@@ -439,6 +441,8 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
         ThumbInstGen("111110101001nnnn1111dddd0101mmmm", // UQADD16
                      three_reg_not_r15),
         ThumbInstGen("111110101010nnnn1111dddd0101mmmm", // UQASX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0101mmmm", // UQSAX
                      three_reg_not_r15),
         ThumbInstGen("111110101110nnnn1111dddd0100mmmm", // USAX
                      three_reg_not_r15),
