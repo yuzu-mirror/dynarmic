@@ -115,6 +115,9 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_BL_imm(Imm<11> hi, Imm<11> lo);
     bool thumb32_BLX_imm(Imm<11> hi, Imm<11> lo);
     bool thumb32_UDF();
+
+    // thumb32 miscellaneous instructions
+    bool thumb32_CLZ(Reg n, Reg d, Reg m);
 };
 
 } // namespace Dynarmic::A32

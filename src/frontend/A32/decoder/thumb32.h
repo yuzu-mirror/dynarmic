@@ -284,7 +284,7 @@ std::optional<std::reference_wrapper<const Thumb32Matcher<V>>> DecodeThumb32(u32
         //INST(&V::thumb32_RBIT,           "RBIT",                     "111110101001----1111----1010----"),
         //INST(&V::thumb32_REVSH,          "REVSH",                    "111110101001----1111----1011----"),
         //INST(&V::thumb32_SEL,            "SEL",                      "111110101010----1111----1000----"),
-        //INST(&V::thumb32_CLZ,            "CLZ",                      "111110101011----1111----1000----"),
+        INST(&V::thumb32_CLZ,            "CLZ",                      "111110101011nnnn1111dddd1000mmmm"),
 
         // Multiply, Multiply Accumulate, and Absolute Difference
         //INST(&V::thumb32_MUL,            "MUL",                      "111110110000----1111----0000----"),
