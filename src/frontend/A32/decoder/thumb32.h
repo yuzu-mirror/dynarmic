@@ -276,7 +276,7 @@ std::optional<std::reference_wrapper<const Thumb32Matcher<V>>> DecodeThumb32(u32
 
         // Miscellaneous Operations
         //INST(&V::thumb32_QADD,           "QADD",                     "111110101000----1111----1000----"),
-        //INST(&V::thumb32_QDADD,          "QDADD",                    "111110101000----1111----1001----"),
+        INST(&V::thumb32_QDADD,          "QDADD",                    "111110101000nnnn1111dddd1001mmmm"),
         //INST(&V::thumb32_QSUB,           "QSUB",                     "111110101000----1111----1010----"),
         INST(&V::thumb32_QDSUB,          "QDSUB",                    "111110101000nnnn1111dddd1011mmmm"),
         INST(&V::thumb32_REV,            "REV",                      "111110101001nnnn1111dddd1000mmmm"),
