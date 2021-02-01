@@ -6,6 +6,13 @@
 #include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
+static IR::U32 Pack2x16To1x32(A32::IREmitter& ir, IR::U32 lo, IR::U32 hi) {
+    return ir.Or(ir.And(lo, ir.Imm32(0xFFFF)), ir.LogicalShiftLeft(hi, ir.Imm8(16), ir.Imm1(0)).result);
+}
+
+static IR::U16 MostSignificantHalf(A32::IREmitter& ir, IR::U32 value) {
+    return ir.LeastSignificantHalf(ir.LogicalShiftRight(value, ir.Imm8(16), ir.Imm1(0)).result);
+}
 
 bool ThumbTranslatorVisitor::thumb32_SADD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
@@ -188,6 +195,25 @@ bool ThumbTranslatorVisitor::thumb32_QADD16(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_QASX(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto Rn = ir.GetRegister(n);
+    const auto Rm = ir.GetRegister(m);
+    const auto Rn_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(Rn));
+    const auto Rn_hi = ir.SignExtendHalfToWord(MostSignificantHalf(ir, Rn));
+    const auto Rm_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(Rm));
+    const auto Rm_hi = ir.SignExtendHalfToWord(MostSignificantHalf(ir, Rm));
+    const auto diff = ir.SignedSaturation(ir.Sub(Rn_lo, Rm_hi), 16).result;
+    const auto sum = ir.SignedSaturation(ir.Add(Rn_hi, Rm_lo), 16).result;
+    const auto result = Pack2x16To1x32(ir, diff, sum);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_UQADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -196,6 +222,25 @@ bool ThumbTranslatorVisitor::thumb32_UQADD16(Reg n, Reg d, Reg m) {
     const auto reg_m = ir.GetRegister(m);
     const auto reg_n = ir.GetRegister(n);
     const auto result = ir.PackedSaturatedAddU16(reg_n, reg_m);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_UQASX(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto Rn = ir.GetRegister(n);
+    const auto Rm = ir.GetRegister(m);
+    const auto Rn_lo = ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(Rn));
+    const auto Rn_hi = ir.ZeroExtendHalfToWord(MostSignificantHalf(ir, Rn));
+    const auto Rm_lo = ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(Rm));
+    const auto Rm_hi = ir.ZeroExtendHalfToWord(MostSignificantHalf(ir, Rm));
+    const auto diff = ir.UnsignedSaturation(ir.Sub(Rn_lo, Rm_hi), 16).result;
+    const auto sum = ir.UnsignedSaturation(ir.Add(Rn_hi, Rm_lo), 16).result;
+    const auto result = Pack2x16To1x32(ir, diff, sum);
 
     ir.SetRegister(d, result);
     return true;
