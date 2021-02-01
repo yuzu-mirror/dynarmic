@@ -159,11 +159,13 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_SHADD16(Reg n, Reg d, Reg m);
     bool thumb32_SHASX(Reg n, Reg d, Reg m);
     bool thumb32_SHSAX(Reg n, Reg d, Reg m);
+    bool thumb32_SHSUB8(Reg n, Reg d, Reg m);
     bool thumb32_SHSUB16(Reg n, Reg d, Reg m);
     bool thumb32_UHADD8(Reg n, Reg d, Reg m);
     bool thumb32_UHADD16(Reg n, Reg d, Reg m);
     bool thumb32_UHASX(Reg n, Reg d, Reg m);
     bool thumb32_UHSAX(Reg n, Reg d, Reg m);
+    bool thumb32_UHSUB8(Reg n, Reg d, Reg m);
     bool thumb32_UHSUB16(Reg n, Reg d, Reg m);
 };
 
