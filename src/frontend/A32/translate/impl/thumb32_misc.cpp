@@ -44,6 +44,20 @@ bool ThumbTranslatorVisitor::thumb32_RBIT(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_REV16(Reg n, Reg d, Reg m) {
+    if (m != n || d == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto lo = ir.And(ir.LogicalShiftRight(reg_m, ir.Imm8(8), ir.Imm1(0)).result, ir.Imm32(0x00FF00FF));
+    const auto hi = ir.And(ir.LogicalShiftLeft(reg_m, ir.Imm8(8), ir.Imm1(0)).result, ir.Imm32(0xFF00FF00));
+    const auto result = ir.Or(lo, hi);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_REVSH(Reg n, Reg d, Reg m) {
     if (m != n || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
