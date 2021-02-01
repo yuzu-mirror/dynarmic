@@ -154,6 +154,9 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_UQSAX(Reg n, Reg d, Reg m);
     bool thumb32_UQSUB8(Reg n, Reg d, Reg m);
     bool thumb32_UQSUB16(Reg n, Reg d, Reg m);
+
+    bool thumb32_SHADD16(Reg n, Reg d, Reg m);
+    bool thumb32_UHADD16(Reg n, Reg d, Reg m);
 };
 
 } // namespace Dynarmic::A32
