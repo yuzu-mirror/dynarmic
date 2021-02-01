@@ -388,6 +388,19 @@ bool ThumbTranslatorVisitor::thumb32_SHASX(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SHSAX(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedHalvingSubAddS16(reg_n, reg_m);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_UHADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -409,6 +422,19 @@ bool ThumbTranslatorVisitor::thumb32_UHASX(Reg n, Reg d, Reg m) {
     const auto reg_m = ir.GetRegister(m);
     const auto reg_n = ir.GetRegister(n);
     const auto result = ir.PackedHalvingAddSubU16(reg_n, reg_m);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_UHSAX(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedHalvingSubAddU16(reg_n, reg_m);
 
     ir.SetRegister(d, result);
     return true;
