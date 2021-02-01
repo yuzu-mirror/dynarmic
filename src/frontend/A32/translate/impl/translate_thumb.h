@@ -127,6 +127,10 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_REV16(Reg n, Reg d, Reg m);
     bool thumb32_REVSH(Reg n, Reg d, Reg m);
     bool thumb32_SEL(Reg n, Reg d, Reg m);
+
+    // thumb32 parallel add/sub instructions
+    bool thumb32_SADD16(Reg n, Reg d, Reg m);
+    bool thumb32_UADD16(Reg n, Reg d, Reg m);
 };
 
 } // namespace Dynarmic::A32

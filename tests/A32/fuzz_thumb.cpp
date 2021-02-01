@@ -361,6 +361,13 @@ TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb][Thumb16
 }
 
 TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
+    const auto three_reg_not_r15 = [](u32 inst) {
+        const auto d = Common::Bits<8, 11>(inst);
+        const auto m = Common::Bits<0, 3>(inst);
+        const auto n = Common::Bits<16, 19>(inst);
+        return d != 15 && m != 15 && n != 15;
+    };
+
     const std::array instructions = {
         ThumbInstGen("111110101011nnnn1111dddd1000mmmm", // CLZ
                      [](u32 inst) {
@@ -370,33 +377,13 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
                          return m == n && d != 15 && m != 15;
                      }),
         ThumbInstGen("111110101000nnnn1111dddd1000mmmm", // QADD
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1001mmmm", // QDADD
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1011mmmm", // QDSUB
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1010mmmm", // QSUB
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
         ThumbInstGen("111110101001nnnn1111dddd1010mmmm", // RBIT
                      [](u32 inst) {
                          const auto d = Common::Bits<8, 11>(inst);
@@ -425,13 +412,12 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
                          const auto n = Common::Bits<16, 19>(inst);
                          return m == n && d != 15 && m != 15;
                      }),
+        ThumbInstGen("111110101001nnnn1111dddd0000mmmm", // SADD16
+                     three_reg_not_r15),
         ThumbInstGen("111110101010nnnn1111dddd1000mmmm", // SEL
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
+        ThumbInstGen("111110101001nnnn1111dddd0100mmmm", // UADD16
+                     three_reg_not_r15),
     };
 
     const auto instruction_select = [&]() -> u32 {
