@@ -19,6 +19,18 @@ bool ThumbTranslatorVisitor::thumb32_CLZ(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_REVSH(Reg n, Reg d, Reg m) {
+    if (m != n || d == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto rev_half = ir.ByteReverseHalf(ir.LeastSignificantHalf(reg_m));
+
+    ir.SetRegister(d, ir.SignExtendHalfToWord(rev_half));
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SEL(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
