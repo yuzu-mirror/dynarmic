@@ -237,7 +237,7 @@ std::optional<std::reference_wrapper<const Thumb32Matcher<V>>> DecodeThumb32(u32
         // Parallel Addition and Subtraction (signed)
         INST(&V::thumb32_SADD16,         "SADD16",                   "111110101001nnnn1111dddd0000mmmm"),
         INST(&V::thumb32_SASX,           "SASX",                     "111110101010nnnn1111dddd0000mmmm"),
-        //INST(&V::thumb32_SSAX,           "SSAX",                     "111110101110----1111----0000----"),
+        INST(&V::thumb32_SSAX,           "SSAX",                     "111110101110nnnn1111dddd0000mmmm"),
         //INST(&V::thumb32_SSUB16,         "SSUB16",                   "111110101101----1111----0000----"),
         //INST(&V::thumb32_SADD8,          "SADD8",                    "111110101000----1111----0000----"),
         //INST(&V::thumb32_SSUB8,          "SSUB8",                    "111110101100----1111----0000----"),
@@ -257,7 +257,7 @@ std::optional<std::reference_wrapper<const Thumb32Matcher<V>>> DecodeThumb32(u32
         // Parallel Addition and Subtraction (unsigned)
         INST(&V::thumb32_UADD16,         "UADD16",                   "111110101001nnnn1111dddd0100mmmm"),
         INST(&V::thumb32_UASX,           "UASX",                     "111110101010nnnn1111dddd0100mmmm"),
-        //INST(&V::thumb32_USAX,           "USAX",                     "111110101110----1111----0100----"),
+        INST(&V::thumb32_USAX,           "USAX",                     "111110101110nnnn1111dddd0100mmmm"),
         //INST(&V::thumb32_USUB16,         "USUB16",                   "111110101101----1111----0100----"),
         //INST(&V::thumb32_UADD8,          "UADD8",                    "111110101000----1111----0100----"),
         //INST(&V::thumb32_USUB8,          "USUB8",                    "111110101100----1111----0100----"),
