@@ -361,6 +361,13 @@ TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb][Thumb16
 }
 
 TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
+    const auto three_reg_not_r15 = [](u32 inst) {
+        const auto d = Common::Bits<8, 11>(inst);
+        const auto m = Common::Bits<0, 3>(inst);
+        const auto n = Common::Bits<16, 19>(inst);
+        return d != 15 && m != 15 && n != 15;
+    };
+
     const std::array instructions = {
         ThumbInstGen("111110101011nnnn1111dddd1000mmmm", // CLZ
                      [](u32 inst) {
@@ -370,33 +377,25 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
                          return m == n && d != 15 && m != 15;
                      }),
         ThumbInstGen("111110101000nnnn1111dddd1000mmmm", // QADD
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
+        ThumbInstGen("111110101000nnnn1111dddd0001mmmm", // QADD8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101001nnnn1111dddd0001mmmm", // QADD16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101010nnnn1111dddd0001mmmm", // QASX
+                     three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1001mmmm", // QDADD
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1011mmmm", // QDSUB
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0001mmmm", // QSAX
+                     three_reg_not_r15),
         ThumbInstGen("111110101000nnnn1111dddd1010mmmm", // QSUB
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
+        ThumbInstGen("111110101100nnnn1111dddd0001mmmm", // QSUB8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101101nnnn1111dddd0001mmmm", // QSUB16
+                     three_reg_not_r15),
         ThumbInstGen("111110101001nnnn1111dddd1010mmmm", // RBIT
                      [](u32 inst) {
                          const auto d = Common::Bits<8, 11>(inst);
@@ -425,13 +424,68 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
                          const auto n = Common::Bits<16, 19>(inst);
                          return m == n && d != 15 && m != 15;
                      }),
+        ThumbInstGen("111110101000nnnn1111dddd0000mmmm", // SADD8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101001nnnn1111dddd0000mmmm", // SADD16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101010nnnn1111dddd0000mmmm", // SASX
+                     three_reg_not_r15),
         ThumbInstGen("111110101010nnnn1111dddd1000mmmm", // SEL
-                     [](u32 inst) {
-                         const auto d = Common::Bits<8, 11>(inst);
-                         const auto m = Common::Bits<0, 3>(inst);
-                         const auto n = Common::Bits<16, 19>(inst);
-                         return d != 15 && m != 15 && n != 15;
-                     }),
+                     three_reg_not_r15),
+        ThumbInstGen("111110101000nnnn1111dddd0010mmmm", // SHADD8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101001nnnn1111dddd0010mmmm", // SHADD16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101010nnnn1111dddd0010mmmm", // SHASX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0010mmmm", // SHSAX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101100nnnn1111dddd0010mmmm", // SHSUB8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101101nnnn1111dddd0010mmmm", // SHSUB16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0000mmmm", // SSAX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101100nnnn1111dddd0000mmmm", // SSUB8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101101nnnn1111dddd0000mmmm", // SSUB16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101000nnnn1111dddd0100mmmm", // UADD8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101001nnnn1111dddd0100mmmm", // UADD16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101010nnnn1111dddd0100mmmm", // UASX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101000nnnn1111dddd0110mmmm", // UHADD8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101001nnnn1111dddd0110mmmm", // UHADD16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101010nnnn1111dddd0110mmmm", // UHASX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0110mmmm", // UHSAX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101100nnnn1111dddd0110mmmm", // UHSUB8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101101nnnn1111dddd0110mmmm", // UHSUB16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101000nnnn1111dddd0101mmmm", // UQADD8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101001nnnn1111dddd0101mmmm", // UQADD16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101010nnnn1111dddd0101mmmm", // UQASX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0101mmmm", // UQSAX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101100nnnn1111dddd0101mmmm", // UQSUB8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101101nnnn1111dddd0101mmmm", // UQSUB16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101110nnnn1111dddd0100mmmm", // USAX
+                     three_reg_not_r15),
+        ThumbInstGen("111110101100nnnn1111dddd0100mmmm", // USUB8
+                     three_reg_not_r15),
+        ThumbInstGen("111110101101nnnn1111dddd0100mmmm", // USUB16
+                     three_reg_not_r15),
     };
 
     const auto instruction_select = [&]() -> u32 {
