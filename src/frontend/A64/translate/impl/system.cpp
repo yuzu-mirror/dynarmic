@@ -21,6 +21,8 @@ enum class SystemRegisterEncoding : u32 {
     FPCR = 0b11'011'0100'0100'000,
     // Floating-point Status Register
     FPSR = 0b11'011'0100'0100'001,
+    // NZCV, Condition Flags
+    NZCV = 0b11'011'0100'0010'000,
     // Read/Write Software Thread ID Register
     TPIDR_EL0 = 0b11'011'1101'0000'010,
     // Read-Only Software Thread ID Register
@@ -103,6 +105,9 @@ bool TranslatorVisitor::MSR_reg(Imm<1> o0, Imm<3> op1, Imm<4> CRn, Imm<4> CRm, I
     case SystemRegisterEncoding::FPSR:
         ir.SetFPSR(X(32, Rt));
         return true;
+    case SystemRegisterEncoding::NZCV:
+        ir.SetNZCVRaw(X(32, Rt));
+        return true;
     case SystemRegisterEncoding::TPIDR_EL0:
         ir.SetTPIDR(X(64, Rt));
         return true;
@@ -138,6 +143,9 @@ bool TranslatorVisitor::MRS(Imm<1> o0, Imm<3> op1, Imm<4> CRn, Imm<4> CRm, Imm<3
         return true;
     case SystemRegisterEncoding::FPSR:
         X(32, Rt, ir.GetFPSR());
+        return true;
+    case SystemRegisterEncoding::NZCV:
+        X(32, Rt, ir.GetNZCVRaw());
         return true;
     case SystemRegisterEncoding::TPIDR_EL0:
         X(64, Rt, ir.GetTPIDR());
