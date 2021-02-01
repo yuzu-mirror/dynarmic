@@ -369,6 +369,13 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
                          const auto n = Common::Bits<16, 19>(inst);
                          return m == n && d != 15 && m != 15;
                      }),
+        ThumbInstGen("111110101000nnnn1111dddd1000mmmm", // QADD
+                     [](u32 inst) {
+                         const auto d = Common::Bits<8, 11>(inst);
+                         const auto m = Common::Bits<0, 3>(inst);
+                         const auto n = Common::Bits<16, 19>(inst);
+                         return d != 15 && m != 15 && n != 15;
+                     }),
         ThumbInstGen("111110101000nnnn1111dddd1001mmmm", // QDADD
                      [](u32 inst) {
                          const auto d = Common::Bits<8, 11>(inst);

@@ -19,6 +19,20 @@ bool ThumbTranslatorVisitor::thumb32_CLZ(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_QADD(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.SignedSaturatedAdd(reg_m, reg_n);
+
+    ir.SetRegister(d, result.result);
+    ir.OrQFlag(result.overflow);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_QDADD(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
