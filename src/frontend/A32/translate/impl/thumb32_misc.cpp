@@ -44,6 +44,17 @@ bool ThumbTranslatorVisitor::thumb32_RBIT(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_REV(Reg n, Reg d, Reg m) {
+    if (m != n || d == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto result = ir.ByteReverseWord(ir.GetRegister(m));
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_REV16(Reg n, Reg d, Reg m) {
     if (m != n || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();

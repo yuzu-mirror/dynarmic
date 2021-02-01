@@ -279,7 +279,7 @@ std::optional<std::reference_wrapper<const Thumb32Matcher<V>>> DecodeThumb32(u32
         //INST(&V::thumb32_QDADD,          "QDADD",                    "111110101000----1111----1001----"),
         //INST(&V::thumb32_QSUB,           "QSUB",                     "111110101000----1111----1010----"),
         //INST(&V::thumb32_QDSUB,          "QDSUB",                    "111110101000----1111----1011----"),
-        //INST(&V::thumb32_REV,            "REV",                      "111110101001----1111----1000----"),
+        INST(&V::thumb32_REV,            "REV",                      "111110101001nnnn1111dddd1000mmmm"),
         INST(&V::thumb32_REV16,          "REV16",                    "111110101001nnnn1111dddd1001mmmm"),
         INST(&V::thumb32_RBIT,           "RBIT",                     "111110101001nnnn1111dddd1010mmmm"),
         INST(&V::thumb32_REVSH,          "REVSH",                    "111110101001nnnn1111dddd1011mmmm"),
