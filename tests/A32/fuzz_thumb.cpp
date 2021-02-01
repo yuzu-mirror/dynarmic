@@ -249,7 +249,7 @@ void FuzzJitThumb32(const size_t instruction_count, const size_t instructions_to
     }
 }
 
-TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
+TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb][Thumb16]") {
     const std::array instructions = {
         ThumbInstGen("00000xxxxxxxxxxx"), // LSL <Rd>, <Rm>, #<imm5>
         ThumbInstGen("00001xxxxxxxxxxx"), // LSR <Rd>, <Rm>, #<imm5>
@@ -317,7 +317,7 @@ TEST_CASE("Fuzz Thumb instructions set 1", "[JitX64][Thumb]") {
 #endif
 }
 
-TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb]") {
+TEST_CASE("Fuzz Thumb instructions set 2 (affects PC)", "[JitX64][Thumb][Thumb16]") {
     const std::array instructions = {
         // TODO: We currently can't test BX/BLX as we have
         //       no way of preventing the unpredictable
@@ -393,7 +393,7 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
     }
 }
 
-TEST_CASE("Verify fix for off by one error in MemoryRead32 worked", "[Thumb]") {
+TEST_CASE("Verify fix for off by one error in MemoryRead32 worked", "[Thumb][Thumb16]") {
     ThumbTestEnv test_env;
 
     // Prepare test subjects
