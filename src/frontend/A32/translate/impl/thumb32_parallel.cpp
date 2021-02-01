@@ -7,6 +7,20 @@
 
 namespace Dynarmic::A32 {
 
+bool ThumbTranslatorVisitor::thumb32_SADD8(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedAddS8(reg_n, reg_m);
+
+    ir.SetRegister(d, result.result);
+    ir.SetGEFlags(result.ge);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -57,6 +71,20 @@ bool ThumbTranslatorVisitor::thumb32_SSUB16(Reg n, Reg d, Reg m) {
     const auto reg_m = ir.GetRegister(m);
     const auto reg_n = ir.GetRegister(n);
     const auto result = ir.PackedSubS16(reg_n, reg_m);
+
+    ir.SetRegister(d, result.result);
+    ir.SetGEFlags(result.ge);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_UADD8(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedAddU8(reg_n, reg_m);
 
     ir.SetRegister(d, result.result);
     ir.SetGEFlags(result.ge);

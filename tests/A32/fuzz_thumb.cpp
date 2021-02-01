@@ -412,6 +412,8 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
                          const auto n = Common::Bits<16, 19>(inst);
                          return m == n && d != 15 && m != 15;
                      }),
+        ThumbInstGen("111110101000nnnn1111dddd0000mmmm", // SADD8
+                     three_reg_not_r15),
         ThumbInstGen("111110101001nnnn1111dddd0000mmmm", // SADD16
                      three_reg_not_r15),
         ThumbInstGen("111110101010nnnn1111dddd0000mmmm", // SASX
@@ -421,6 +423,8 @@ TEST_CASE("Fuzz Thumb32 instructions set", "[JitX64][Thumb][Thumb32]") {
         ThumbInstGen("111110101110nnnn1111dddd0000mmmm", // SSAX
                      three_reg_not_r15),
         ThumbInstGen("111110101101nnnn1111dddd0000mmmm", // SSUB16
+                     three_reg_not_r15),
+        ThumbInstGen("111110101000nnnn1111dddd0100mmmm", // UADD8
                      three_reg_not_r15),
         ThumbInstGen("111110101001nnnn1111dddd0100mmmm", // UADD16
                      three_reg_not_r15),
