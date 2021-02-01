@@ -120,6 +120,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_CLZ(Reg n, Reg d, Reg m);
     bool thumb32_QDADD(Reg n, Reg d, Reg m);
     bool thumb32_QDSUB(Reg n, Reg d, Reg m);
+    bool thumb32_QSUB(Reg n, Reg d, Reg m);
     bool thumb32_RBIT(Reg n, Reg d, Reg m);
     bool thumb32_REV(Reg n, Reg d, Reg m);
     bool thumb32_REV16(Reg n, Reg d, Reg m);
