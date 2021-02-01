@@ -8,25 +8,26 @@
 namespace Dynarmic::A64 {
 
 // Register encodings used by MRS and MSR.
+// Order of fields: op0, CRn, op1, op2, CRm.
 enum class SystemRegisterEncoding : u32 {
     // Counter-timer Frequency register
-    CNTFRQ_EL0 = 0b11'011'1110'0000'000,
+    CNTFRQ_EL0 = 0b11'1110'011'000'0000,
     // Counter-timer Physical Count register
-    CNTPCT_EL0 = 0b11'011'1110'0000'001,
+    CNTPCT_EL0 = 0b11'1110'011'001'0000,
     // Cache Type Register
-    CTR_EL0 = 0b11'011'0000'0000'001,
+    CTR_EL0 = 0b11'0000'011'001'0000,
     // Data Cache Zero ID register
-    DCZID_EL0 = 0b11'011'0000'0000'111,
+    DCZID_EL0 = 0b11'0000'011'111'0000,
     // Floating-point Control Register
-    FPCR = 0b11'011'0100'0100'000,
+    FPCR = 0b11'0100'011'000'0100,
     // Floating-point Status Register
-    FPSR = 0b11'011'0100'0100'001,
+    FPSR = 0b11'0100'011'001'0100,
     // NZCV, Condition Flags
-    NZCV = 0b11'011'0100'0010'000,
+    NZCV = 0b11'0100'011'000'0010,
     // Read/Write Software Thread ID Register
-    TPIDR_EL0 = 0b11'011'1101'0000'010,
+    TPIDR_EL0 = 0b11'1101'011'010'0000,
     // Read-Only Software Thread ID Register
-    TPIDRRO_EL0 = 0b11'011'1101'0000'011,
+    TPIDRRO_EL0 = 0b11'1101'011'011'0000,
 };
 
 bool TranslatorVisitor::HINT([[maybe_unused]] Imm<4> CRm, [[maybe_unused]] Imm<3> op2) {
@@ -95,7 +96,7 @@ bool TranslatorVisitor::ISB(Imm<4> /*CRm*/) {
 }
 
 bool TranslatorVisitor::MSR_reg(Imm<1> o0, Imm<3> op1, Imm<4> CRn, Imm<4> CRm, Imm<3> op2, Reg Rt) {
-    const auto sys_reg = concatenate(Imm<1>{1}, o0, op1, CRn, CRm, op2).ZeroExtend<SystemRegisterEncoding>();
+    const auto sys_reg = concatenate(Imm<1>{1}, o0, CRn, op1, op2, CRm).ZeroExtend<SystemRegisterEncoding>();
     switch (sys_reg) {
     case SystemRegisterEncoding::FPCR:
         ir.SetFPCR(X(32, Rt));
@@ -118,7 +119,7 @@ bool TranslatorVisitor::MSR_reg(Imm<1> o0, Imm<3> op1, Imm<4> CRn, Imm<4> CRm, I
 }
 
 bool TranslatorVisitor::MRS(Imm<1> o0, Imm<3> op1, Imm<4> CRn, Imm<4> CRm, Imm<3> op2, Reg Rt) {
-    const auto sys_reg = concatenate(Imm<1>{1}, o0, op1, CRn, CRm, op2).ZeroExtend<SystemRegisterEncoding>();
+    const auto sys_reg = concatenate(Imm<1>{1}, o0, CRn, op1, op2, CRm).ZeroExtend<SystemRegisterEncoding>();
     switch (sys_reg) {
     case SystemRegisterEncoding::CNTFRQ_EL0:
         X(32, Rt, ir.GetCNTFRQ());
