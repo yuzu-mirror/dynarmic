@@ -246,6 +246,19 @@ bool ThumbTranslatorVisitor::thumb32_QSAX(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_QSUB8(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedSaturatedSubS8(reg_n, reg_m);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_QSUB16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -318,6 +331,19 @@ bool ThumbTranslatorVisitor::thumb32_UQSAX(Reg n, Reg d, Reg m) {
     const auto sum = ir.UnsignedSaturation(ir.Add(Rn_lo, Rm_hi), 16).result;
     const auto diff = ir.UnsignedSaturation(ir.Sub(Rn_hi, Rm_lo), 16).result;
     const auto result = Pack2x16To1x32(ir, sum, diff);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_UQSUB8(Reg n, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.PackedSaturatedSubU8(reg_n, reg_m);
 
     ir.SetRegister(d, result);
     return true;
