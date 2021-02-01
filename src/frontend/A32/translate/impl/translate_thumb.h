@@ -118,6 +118,7 @@ struct ThumbTranslatorVisitor final {
 
     // thumb32 miscellaneous instructions
     bool thumb32_CLZ(Reg n, Reg d, Reg m);
+    bool thumb32_SEL(Reg n, Reg d, Reg m);
 };
 
 } // namespace Dynarmic::A32
