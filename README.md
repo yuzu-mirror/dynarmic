@@ -199,7 +199,7 @@ Legal
 
 dynarmic is under a 0BSD license. See LICENSE.txt for more details.
 
-dynarmic uses several other libraries, whose licenes are included below:
+dynarmic uses several other libraries, whose licenses are included below:
 
 ### catch
 
