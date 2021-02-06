@@ -261,7 +261,7 @@ INST(thumb32_SEL,            "SEL",                      "111110101010nnnn1111dd
 INST(thumb32_CLZ,            "CLZ",                      "111110101011nnnn1111dddd1000mmmm")
 
 // Multiply, Multiply Accumulate, and Absolute Difference
-//INST(thumb32_MUL,            "MUL",                      "111110110000----1111----0000----")
+INST(thumb32_MUL,            "MUL",                      "111110110000nnnn1111dddd0000mmmm")
 //INST(thumb32_MLA,            "MLA",                      "111110110000------------0000----")
 //INST(thumb32_MLS,            "MLS",                      "111110110000------------0001----")
 //INST(thumb32_SMULXY,         "SMULXY",                   "111110110001----1111----00------")
