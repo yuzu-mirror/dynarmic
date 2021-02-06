@@ -129,6 +129,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_SEL(Reg n, Reg d, Reg m);
 
     // thumb32 multiply instructions
+    bool thumb32_MLA(Reg n, Reg a, Reg d, Reg m);
     bool thumb32_MUL(Reg n, Reg d, Reg m);
 
     // thumb32 parallel add/sub instructions
