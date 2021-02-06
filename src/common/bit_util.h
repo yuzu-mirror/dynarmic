@@ -218,18 +218,18 @@ constexpr T RotateRight(T value, size_t amount) {
     return static_cast<T>((x >> amount) | (x << (BitSize<T>() - amount)));
 }
 
-constexpr u16 Swap16(u16 value) {
+constexpr u16 SwapBytes16(u16 value) {
     return static_cast<u16>(u32{value} >> 8 | u32{value} << 8);
 }
 
-constexpr u32 Swap32(u32 value) {
+constexpr u32 SwapBytes32(u32 value) {
     return ((value & 0xFF000000U) >> 24) |
            ((value & 0x00FF0000U) >>  8) |
            ((value & 0x0000FF00U) <<  8) |
            ((value & 0x000000FFU) << 24);
 }
 
-constexpr u64 Swap64(u64 value) {
+constexpr u64 SwapBytes64(u64 value) {
     return  ((value & 0xFF00000000000000ULL) >> 56) |
             ((value & 0x00FF000000000000ULL) >> 40) |
             ((value & 0x0000FF0000000000ULL) >> 24) |

@@ -138,13 +138,13 @@ void FoldByteReverse(IR::Inst& inst, Op op) {
     }
 
     if (op == Op::ByteReverseWord) {
-        const u32 result = Common::Swap32(static_cast<u32>(operand.GetImmediateAsU64()));
+        const u32 result = Common::SwapBytes32(static_cast<u32>(operand.GetImmediateAsU64()));
         inst.ReplaceUsesWith(IR::Value{result});
     } else if (op == Op::ByteReverseHalf) {
-        const u16 result = Common::Swap16(static_cast<u16>(operand.GetImmediateAsU64()));
+        const u16 result = Common::SwapBytes16(static_cast<u16>(operand.GetImmediateAsU64()));
         inst.ReplaceUsesWith(IR::Value{result});
     } else {
-        const u64 result = Common::Swap64(operand.GetImmediateAsU64());
+        const u64 result = Common::SwapBytes64(operand.GetImmediateAsU64());
         inst.ReplaceUsesWith(IR::Value{result});
     }
 }
