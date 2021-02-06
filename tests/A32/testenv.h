@@ -23,7 +23,14 @@ public:
     using RegisterArray = std::array<u32, 16>;
     using ExtRegsArray = std::array<u32, 64>;
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4309) // C4309: 'static_cast': truncation of constant value
+#endif
     static constexpr InstructionType infinite_loop = static_cast<InstructionType>(infinite_loop_u32);
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
     u64 ticks_left = 0;
     bool code_mem_modified_by_guest = false;
