@@ -105,6 +105,7 @@ bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descri
             should_continue = visitor.thumb16_UDF();
         }
     } else {
+        thumb_instruction = Common::SwapHalves32(thumb_instruction);
         if (const auto decoder = DecodeThumb32<ThumbTranslatorVisitor>(thumb_instruction)) {
             should_continue = decoder->get().call(visitor, thumb_instruction);
         } else {
