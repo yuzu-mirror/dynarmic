@@ -37,18 +37,21 @@ public:
         } while (code_mem.size() % 2 != 0);
     }
 
+    bool IsInCodeMem(u32 vaddr) const {
+        return vaddr < sizeof(InstructionType) * code_mem.size();
+    }
+
     std::uint32_t MemoryReadCode(u32 vaddr) override {
-        const size_t index = vaddr / sizeof(InstructionType);
-        if (index < code_mem.size()) {
+        if (IsInCodeMem(vaddr)) {
             u32 value;
-            std::memcpy(&value, &code_mem[index], sizeof(u32));
+            std::memcpy(&value, &code_mem[vaddr / sizeof(InstructionType)], sizeof(u32));
             return value;
         }
         return infinite_loop_u32; // B .
     }
 
     std::uint8_t MemoryRead8(u32 vaddr) override {
-        if (vaddr < sizeof(InstructionType) * code_mem.size()) {
+        if (IsInCodeMem(vaddr)) {
             return reinterpret_cast<u8*>(code_mem.data())[vaddr];
         }
         if (auto iter = modified_memory.find(vaddr); iter != modified_memory.end()) {

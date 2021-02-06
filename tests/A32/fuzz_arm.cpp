@@ -215,6 +215,8 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
 
     jit_env.code_mem.resize(code_mem_size);
     uni_env.code_mem.resize(code_mem_size);
+    std::fill(jit_env.code_mem.begin(), jit_env.code_mem.end(), TestEnv::infinite_loop);
+    std::fill(uni_env.code_mem.begin(), uni_env.code_mem.end(), TestEnv::infinite_loop);
 
     std::copy(instructions.begin(), instructions.end(), jit_env.code_mem.begin() + num_words);
     std::copy(instructions.begin(), instructions.end(), uni_env.code_mem.begin() + num_words);
@@ -240,20 +242,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
     jit_env.ticks_left = ticks_left;
     jit.Run();
 
-    uni_env.ticks_left = [&]{
-        if constexpr (std::is_same_v<TestEnv, ThumbTestEnv>) {
-            // Unicorn counts thumb instructions weirdly:
-            // A 32-bit thumb instruction counts as two.
-            // Except for branch instructions which count as one???
-            if (instructions.size() <= 1)
-                return ticks_left;
-            if ((instructions[instructions.size() - 2] & 0xF800) <= 0xE800)
-                return instructions.size();
-            return instructions.size() - 1;
-        } else {
-            return ticks_left;
-        }
-    }();
+    uni_env.ticks_left = instructions.size(); // Unicorn counts thumb instructions weirdly.
     uni.Run();
 
     SCOPE_FAIL {

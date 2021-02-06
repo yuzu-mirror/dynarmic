@@ -44,6 +44,9 @@ void A32Unicorn<TestEnvironment>::Run() {
     constexpr u64 pc_mask = std::is_same_v<TestEnvironment, ArmTestEnv> ? 0 : 1;
     while (testenv.ticks_left > 0) {
         const u32 pc = GetPC() | pc_mask;
+        if (!testenv.IsInCodeMem(pc)) {
+            return;
+        }
         if (auto cerr_ = uc_emu_start(uc, pc, END_ADDRESS, 0, 1)) {
             ASSERT_MSG(false, "uc_emu_start failed @ {:08x} (code = {:08x}) with error {} ({})", pc, testenv.MemoryReadCode(pc), cerr_, uc_strerror(cerr_));
         }
