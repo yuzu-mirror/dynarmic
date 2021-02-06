@@ -35,10 +35,16 @@ u32 RandomFpcr() {
 }
 
 InstructionGenerator::InstructionGenerator(const char* format){
-    ASSERT(std::strlen(format) == 32);
+    const size_t format_len = std::strlen(format);
+    ASSERT(format_len == 16 || format_len == 32);
 
-    for (int i = 0; i < 32; i++) {
-        const u32 bit = 1u << (31 - i);
+    if (format_len == 16) {
+        // Begin with 16 zeros
+        mask |= 0xFFFF0000;
+    }
+
+    for (size_t i = 0; i < format_len; i++) {
+        const u32 bit = 1u << (format_len - i - 1);
         switch (format[i]) {
         case '0':
             mask |= bit;

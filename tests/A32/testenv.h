@@ -16,18 +16,26 @@
 #include "common/assert.h"
 #include "common/common_types.h"
 
-template <typename InstructionType_, u32 infinite_loop>
+template <typename InstructionType_, u32 infinite_loop_u32>
 class A32TestEnv final : public Dynarmic::A32::UserCallbacks {
 public:
     using InstructionType = InstructionType_;
     using RegisterArray = std::array<u32, 16>;
     using ExtRegsArray = std::array<u32, 64>;
 
+    static constexpr InstructionType infinite_loop = static_cast<InstructionType>(infinite_loop_u32);
+
     u64 ticks_left = 0;
     bool code_mem_modified_by_guest = false;
     std::vector<InstructionType> code_mem;
     std::map<u32, u8> modified_memory;
     std::vector<std::string> interrupts;
+
+    void PadCodeMem() {
+        do {
+            code_mem.push_back(infinite_loop);
+        } while (code_mem.size() % 2 != 0);
+    }
 
     std::uint32_t MemoryReadCode(u32 vaddr) override {
         const size_t index = vaddr / sizeof(InstructionType);
@@ -36,7 +44,7 @@ public:
             std::memcpy(&value, &code_mem[index], sizeof(u32));
             return value;
         }
-        return infinite_loop; // B .
+        return infinite_loop_u32; // B .
     }
 
     std::uint8_t MemoryRead8(u32 vaddr) override {
@@ -81,7 +89,7 @@ public:
 
     void CallSVC(std::uint32_t swi) override { ASSERT_MSG(false, "CallSVC({})", swi); }
 
-    void ExceptionRaised(u32 pc, Dynarmic::A32::Exception /*exception*/) override { ASSERT_MSG(false, "ExceptionRaised({:08x})", pc); }
+    void ExceptionRaised(u32 pc, Dynarmic::A32::Exception /*exception*/) override { ASSERT_MSG(false, "ExceptionRaised({:08x}) code = {:08x}", pc, MemoryReadCode(pc)); }
 
     void AddTicks(std::uint64_t ticks) override {
         if (ticks > ticks_left) {
