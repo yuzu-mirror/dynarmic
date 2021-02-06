@@ -218,6 +218,11 @@ constexpr T RotateRight(T value, size_t amount) {
     return static_cast<T>((x >> amount) | (x << (BitSize<T>() - amount)));
 }
 
+constexpr u32 SwapHalves32(u32 value) {
+    return ((value & 0xFFFF0000U) >> 16) |
+           ((value & 0x0000FFFFU) << 16);
+}
+
 constexpr u16 SwapBytes16(u16 value) {
     return static_cast<u16>(u32{value} >> 8 | u32{value} << 8);
 }
