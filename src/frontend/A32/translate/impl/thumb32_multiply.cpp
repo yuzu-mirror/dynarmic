@@ -8,7 +8,7 @@
 namespace Dynarmic::A32 {
 
 bool ThumbTranslatorVisitor::thumb32_MLA(Reg n, Reg a, Reg d, Reg m) {
-    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
 
@@ -22,7 +22,7 @@ bool ThumbTranslatorVisitor::thumb32_MLA(Reg n, Reg a, Reg d, Reg m) {
 }
 
 bool ThumbTranslatorVisitor::thumb32_MLS(Reg n, Reg a, Reg d, Reg m) {
-    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
 
@@ -45,6 +45,25 @@ bool ThumbTranslatorVisitor::thumb32_MUL(Reg n, Reg d, Reg m) {
     const auto result = ir.Mul(reg_n, reg_m);
 
     ir.SetRegister(d, result);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_SMLAXY(Reg n, Reg a, Reg d, bool N, bool M, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const IR::U32 n32 = ir.GetRegister(n);
+    const IR::U32 m32 = ir.GetRegister(m);
+    const IR::U32 n16 = N ? ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result
+                          : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+    const IR::U32 m16 = M ? ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result
+                          : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+    const IR::U32 product = ir.Mul(n16, m16);
+    const auto result_overflow = ir.AddWithCarry(product, ir.GetRegister(a), ir.Imm1(0));
+
+    ir.SetRegister(d, result_overflow.result);
+    ir.OrQFlag(result_overflow.overflow);
     return true;
 }
 
@@ -79,7 +98,7 @@ bool ThumbTranslatorVisitor::thumb32_USAD8(Reg n, Reg d, Reg m) {
 }
 
 bool ThumbTranslatorVisitor::thumb32_USADA8(Reg n, Reg a, Reg d, Reg m) {
-    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
 
