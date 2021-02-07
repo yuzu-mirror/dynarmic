@@ -133,6 +133,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_MLS(Reg n, Reg a, Reg d, Reg m);
     bool thumb32_MUL(Reg n, Reg d, Reg m);
     bool thumb32_SMLAXY(Reg n, Reg a, Reg d, bool N, bool M, Reg m);
+    bool thumb32_SMMUL(Reg n, Reg d, bool R, Reg m);
     bool thumb32_SMUAD(Reg n, Reg d, bool M, Reg m);
     bool thumb32_SMUSD(Reg n, Reg d, bool M, Reg m);
     bool thumb32_SMULXY(Reg n, Reg d, bool N, bool M, Reg m);

@@ -272,7 +272,7 @@ INST(thumb32_SMUAD,          "SMUAD",                    "111110110010nnnn1111dd
 //INST(thumb32_SMLAWY,         "SMLAWY",                   "111110110011------------000-----")
 INST(thumb32_SMUSD,          "SMUSD",                    "111110110100nnnn1111dddd000Mmmmm")
 //INST(thumb32_SMLSD,          "SMLSD",                    "111110110100------------000-----")
-//INST(thumb32_SMMUL,          "SMMUL",                    "111110110101----1111----000-----")
+INST(thumb32_SMMUL,          "SMMUL",                    "111110110101nnnn1111dddd000Mmmmm")
 //INST(thumb32_SMMLA,          "SMMLA",                    "111110110101------------000-----")
 //INST(thumb32_SMMLS,          "SMMLS",                    "111110110110------------000-----")
 INST(thumb32_USAD8,          "USAD8",                    "111110110111nnnn1111dddd0000mmmm")
