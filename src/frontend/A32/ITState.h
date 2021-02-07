@@ -22,6 +22,9 @@ public:
     }
 
     IR::Cond Cond() const {
+        if (value == 0b00000000) {
+            return IR::Cond::AL;
+        }
         return static_cast<IR::Cond>(Common::Bits<4, 7>(value));
     }
 
