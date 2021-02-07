@@ -287,7 +287,7 @@ INST(thumb32_SMLAL,          "SMLAL",                    "111110111100nnnnllllhh
 //INST(thumb32_SMLALXY,        "SMLALXY",                  "111110111100------------10------")
 //INST(thumb32_SMLALD,         "SMLALD",                   "111110111100------------110-----")
 //INST(thumb32_SMLSLD,         "SMLSLD",                   "111110111101------------110-----")
-//INST(thumb32_UMLAL,          "UMLAL",                    "111110111110------------0000----")
+INST(thumb32_UMLAL,          "UMLAL",                    "111110111110nnnnllllhhhh0000mmmm")
 //INST(thumb32_UMAAL,          "UMAAL",                    "111110111110------------0110----")
 
 // Coprocessor
