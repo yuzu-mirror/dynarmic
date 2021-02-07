@@ -10,23 +10,13 @@
 #include "frontend/imm.h"
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/location_descriptor.h"
+#include "frontend/A32/translate/conditional_state.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A32/types.h"
 
 namespace Dynarmic::A32 {
 
 enum class Exception;
-
-enum class ConditionalState {
-    /// We haven't met any conditional instructions yet.
-    None,
-    /// Current instruction is a conditional. This marks the end of this basic block.
-    Break,
-    /// This basic block is made up solely of conditional instructions.
-    Translating,
-    /// This basic block is made up of conditional instructions followed by unconditional instructions.
-    Trailing,
-};
 
 struct ArmTranslatorVisitor final {
     using instruction_return_type = bool;

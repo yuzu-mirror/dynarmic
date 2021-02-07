@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <algorithm>
-
 #include <dynarmic/A32/config.h>
 
 #include "common/assert.h"
@@ -12,22 +10,13 @@
 #include "frontend/A32/decoder/asimd.h"
 #include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/location_descriptor.h"
+#include "frontend/A32/translate/conditional_state.h"
 #include "frontend/A32/translate/impl/translate_arm.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A32/types.h"
 #include "frontend/ir/basic_block.h"
 
 namespace Dynarmic::A32 {
-
-static bool CondCanContinue(ConditionalState cond_state, const A32::IREmitter& ir) {
-    ASSERT_MSG(cond_state != ConditionalState::Break, "Should never happen.");
-
-    if (cond_state == ConditionalState::None)
-        return true;
-
-    // TODO: This is more conservative than necessary.
-    return std::all_of(ir.block.begin(), ir.block.end(), [](const IR::Inst& inst) { return !inst.WritesToCPSR(); });
-}
 
 IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, const TranslationOptions& options) {
     const bool single_step = descriptor.SingleStepping();
@@ -102,53 +91,7 @@ bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descript
 }
 
 bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
-    ASSERT_MSG(cond_state != ConditionalState::Break,
-               "This should never happen. We requested a break but that wasn't honored.");
-    if (cond == Cond::NV) {
-        // NV conditional is obsolete
-        ir.ExceptionRaised(Exception::UnpredictableInstruction);
-        return false;
-    }
-
-    if (cond_state == ConditionalState::Translating) {
-        if (ir.block.ConditionFailedLocation() != ir.current_location || cond == Cond::AL) {
-            cond_state = ConditionalState::Trailing;
-        } else {
-            if (cond == ir.block.GetCondition()) {
-                ir.block.SetConditionFailedLocation(ir.current_location.AdvancePC(4));
-                ir.block.ConditionFailedCycleCount()++;
-                return true;
-            }
-
-            // cond has changed, abort
-            cond_state = ConditionalState::Break;
-            ir.SetTerm(IR::Term::LinkBlockFast{ir.current_location});
-            return false;
-        }
-    }
-
-    if (cond == Cond::AL) {
-        // Everything is fine with the world
-        return true;
-    }
-
-    // non-AL cond
-
-    if (!ir.block.empty()) {
-        // We've already emitted instructions. Quit for now, we'll make a new block here later.
-        cond_state = ConditionalState::Break;
-        ir.SetTerm(IR::Term::LinkBlockFast{ir.current_location});
-        return false;
-    }
-
-    // We've not emitted instructions yet.
-    // We'll emit one instruction, and set the block-entry conditional appropriately.
-
-    cond_state = ConditionalState::Translating;
-    ir.block.SetCondition(cond);
-    ir.block.SetConditionFailedLocation(ir.current_location.AdvancePC(4));
-    ir.block.ConditionFailedCycleCount() = ir.block.CycleCount() + 1;
-    return true;
+    return IsConditionPassed(cond, cond_state, ir, 4);
 }
 
 bool ArmTranslatorVisitor::InterpretThisInstruction() {
