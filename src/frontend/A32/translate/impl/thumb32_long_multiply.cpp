@@ -29,6 +29,30 @@ bool ThumbTranslatorVisitor::thumb32_SMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SMLALXY(Reg n, Reg dLo, Reg dHi, bool N, bool M, Reg m) {
+    if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    if (dHi == dLo) {
+        return UnpredictableInstruction();
+    }
+
+    const IR::U32 n32 = ir.GetRegister(n);
+    const IR::U32 m32 = ir.GetRegister(m);
+    const IR::U32 n16 = N ? ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result
+                          : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+    const IR::U32 m16 = M ? ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result
+                          : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+    const IR::U64 product = ir.SignExtendWordToLong(ir.Mul(n16, m16));
+    const auto addend = ir.Pack2x32To1x64(ir.GetRegister(dLo), ir.GetRegister(dHi));
+    const auto result = ir.Add(product, addend);
+
+    ir.SetRegister(dLo, ir.LeastSignificantWord(result));
+    ir.SetRegister(dHi, ir.MostSignificantWord(result).result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();

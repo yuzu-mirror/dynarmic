@@ -118,6 +118,7 @@ struct ThumbTranslatorVisitor final {
 
     // thumb32 long multiply, long multiply accumulate, and divide instructions
     bool thumb32_SMLAL(Reg n, Reg dLo, Reg dHi, Reg m);
+    bool thumb32_SMLALXY(Reg n, Reg dLo, Reg dHi, bool N, bool M, Reg m);
     bool thumb32_SMULL(Reg n, Reg dLo, Reg dHi, Reg m);
     bool thumb32_UMLAL(Reg n, Reg dLo, Reg dHi, Reg m);
     bool thumb32_UMULL(Reg n, Reg dLo, Reg dHi, Reg m);
