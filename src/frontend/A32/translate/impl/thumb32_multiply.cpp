@@ -48,6 +48,23 @@ bool ThumbTranslatorVisitor::thumb32_MUL(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SMULXY(Reg n, Reg d, bool N, bool M, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto n32 = ir.GetRegister(n);
+    const auto m32 = ir.GetRegister(m);
+    const auto n16 = N ? ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result
+                       : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+    const auto m16 = M ? ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result
+                       : ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+    const auto result = ir.Mul(n16, m16);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_USAD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();

@@ -264,7 +264,7 @@ INST(thumb32_CLZ,            "CLZ",                      "111110101011nnnn1111dd
 INST(thumb32_MUL,            "MUL",                      "111110110000nnnn1111dddd0000mmmm")
 INST(thumb32_MLA,            "MLA",                      "111110110000nnnnaaaadddd0000mmmm")
 INST(thumb32_MLS,            "MLS",                      "111110110000nnnnaaaadddd0001mmmm")
-//INST(thumb32_SMULXY,         "SMULXY",                   "111110110001----1111----00------")
+INST(thumb32_SMULXY,         "SMULXY",                   "111110110001nnnn1111dddd00NMmmmm")
 //INST(thumb32_SMLAXY,         "SMLAXY",                   "111110110001------------00------")
 //INST(thumb32_SMUAD,          "SMUAD",                    "111110110010----1111----000-----")
 //INST(thumb32_SMLAD,          "SMLAD",                    "111110110010------------000-----")
