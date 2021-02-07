@@ -88,11 +88,15 @@ public:
         return LocationDescriptor(arm_pc, cpsr, A32::FPSCR{new_fpscr & FPSCR_MODE_MASK}, single_stepping);
     }
 
-    LocationDescriptor AdvanceIT() const {
+    LocationDescriptor SetIT(ITState new_it) const {
         PSR new_cpsr = cpsr;
-        new_cpsr.IT(new_cpsr.IT().Advance());
+        new_cpsr.IT(new_it);
 
         return LocationDescriptor(arm_pc, new_cpsr, fpscr, single_stepping);
+    }
+
+    LocationDescriptor AdvanceIT() const {
+        return SetIT(IT().Advance());
     }
 
     LocationDescriptor SetSingleStepping(bool new_single_stepping) const {
