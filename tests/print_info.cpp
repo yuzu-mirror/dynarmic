@@ -54,7 +54,7 @@ const char* GetNameOfA64Instruction(u32 instruction) {
 }
 
 void PrintA32Instruction(u32 instruction) {
-    fmt::print("{:08x} {}\n", instruction, Common::DisassembleAArch32(instruction));
+    fmt::print("{:08x} {}\n", instruction, Common::DisassembleAArch32(false, 0, (u8*)&instruction, sizeof(instruction)));
     fmt::print("Name: {}\n", GetNameOfA32Instruction(instruction));
 
     const A32::LocationDescriptor location{0, {}, {}};

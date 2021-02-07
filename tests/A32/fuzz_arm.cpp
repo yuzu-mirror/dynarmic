@@ -16,8 +16,8 @@
 #include "common/common_types.h"
 #include "common/fp/fpcr.h"
 #include "common/fp/fpsr.h"
+#include "common/llvm_disassemble.h"
 #include "common/scope_exit.h"
-#include "frontend/A32/disassembler/disassembler.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A32/types.h"
@@ -247,10 +247,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
 
     SCOPE_FAIL {
         fmt::print("Instruction Listing:\n");
-        for (u32 instruction : instructions) {
-            fmt::print("{:08x} {}\n", instruction, A32::DisassembleArm(instruction));
-        }
-        fmt::print("\n");
+        fmt::print("{}\n", Common::DisassembleAArch32(std::is_same_v<TestEnv, ThumbTestEnv>, initial_pc, (const u8*)instructions.data(), instructions.size() * sizeof(instructions[0])));
 
         fmt::print("Initial register listing:\n");
         for (size_t i = 0; i < regs.size(); ++i) {

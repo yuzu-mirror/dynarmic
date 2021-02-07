@@ -54,20 +54,38 @@ std::string DisassembleX64(const void* begin, const void* end) {
     return result;
 }
 
-std::string DisassembleAArch32([[maybe_unused]] u32 instruction, [[maybe_unused]] u64 pc) {
+std::string DisassembleAArch32([[maybe_unused]] bool is_thumb, [[maybe_unused]] u32 pc, [[maybe_unused]] const u8* instructions, [[maybe_unused]] size_t length) {
     std::string result;
 
 #ifdef DYNARMIC_USE_LLVM
     LLVMInitializeARMTargetInfo();
     LLVMInitializeARMTargetMC();
     LLVMInitializeARMDisassembler();
-    LLVMDisasmContextRef llvm_ctx = LLVMCreateDisasm("armv8-arm", nullptr, 0, nullptr, nullptr);
+    LLVMDisasmContextRef llvm_ctx = LLVMCreateDisasm(is_thumb ? "thumbv8-arm" : "armv8-arm", nullptr, 0, nullptr, nullptr);
     LLVMSetDisasmOptions(llvm_ctx, LLVMDisassembler_Option_AsmPrinterVariant);
 
-    char buffer[80];
-    size_t inst_size = LLVMDisasmInstruction(llvm_ctx, (u8*)&instruction, sizeof(instruction), pc, buffer, sizeof(buffer));
-    result = inst_size > 0 ? buffer : "<invalid instruction>";
-    result += '\n';
+    char buffer[1024];
+    while (length) {
+        size_t inst_size = LLVMDisasmInstruction(llvm_ctx, const_cast<u8*>(instructions), length, pc, buffer, sizeof(buffer));
+
+        result += fmt::format("{:08x}    ", pc);
+        for (size_t i = 0; i < 4; i++) {
+            if (i < inst_size) {
+                result += fmt::format("{:02x}", instructions[inst_size - i - 1]);
+            } else {
+                result += "  ";
+            }
+        }
+        result += inst_size > 0 ? buffer : "<invalid instruction>";
+        result += '\n';
+
+        if (inst_size == 0) inst_size = is_thumb ? 2 : 4;
+        if (length <= inst_size) break;
+
+        pc += inst_size;
+        instructions += inst_size;
+        length -= inst_size;
+    }
 
     LLVMDisasmDispose(llvm_ctx);
 #else
