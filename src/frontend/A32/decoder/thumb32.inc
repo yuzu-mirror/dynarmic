@@ -279,7 +279,7 @@ INST(thumb32_USAD8,          "USAD8",                    "111110110111nnnn1111dd
 INST(thumb32_USADA8,         "USADA8",                   "111110110111nnnnaaaadddd0000mmmm")
 
 // Long Multiply, Long Multiply Accumulate, and Divide
-//INST(thumb32_SMULL,          "SMULL",                    "111110111000------------0000----")
+INST(thumb32_SMULL,          "SMULL",                    "111110111000nnnnllllhhhh0000mmmm")
 //INST(thumb32_SDIV,           "SDIV",                     "111110111001------------1111----")
 //INST(thumb32_UMULL,          "UMULL",                    "111110111010------------0000----")
 //INST(thumb32_UDIV,           "UDIV",                     "111110111011------------1111----")
