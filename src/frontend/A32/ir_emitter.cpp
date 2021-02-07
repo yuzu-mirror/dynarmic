@@ -121,6 +121,10 @@ void IREmitter::LoadWritePC(const IR::U32& value) {
     }
 }
 
+void IREmitter::UpdateUpperLocationDescriptor() {
+    Inst(Opcode::A32UpdateUpperLocationDescriptor);
+}
+
 void IREmitter::CallSupervisor(const IR::U32& value) {
     Inst(Opcode::A32CallSupervisor, value);
 }

@@ -47,6 +47,7 @@ public:
     void BranchWritePC(const IR::U32& value);
     void BXWritePC(const IR::U32& value);
     void LoadWritePC(const IR::U32& value);
+    void UpdateUpperLocationDescriptor();
 
     void CallSupervisor(const IR::U32& value);
     void ExceptionRaised(Exception exception);

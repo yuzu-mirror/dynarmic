@@ -31,6 +31,7 @@ A32OPC(GetGEFlags,                                          U32,                
 A32OPC(SetGEFlags,                                          Void,           U32                                                             )
 A32OPC(SetGEFlagsCompressed,                                Void,           U32                                                             )
 A32OPC(BXWritePC,                                           Void,           U32                                                             )
+A32OPC(UpdateUpperLocationDescriptor,                       Void,                                                                           )
 A32OPC(CallSupervisor,                                      Void,           U32                                                             )
 A32OPC(ExceptionRaised,                                     Void,           U32,            U64                                             )
 A32OPC(DataSynchronizationBarrier,                          Void,                                                                           )
