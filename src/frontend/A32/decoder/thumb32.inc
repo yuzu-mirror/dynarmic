@@ -283,7 +283,7 @@ INST(thumb32_SMULL,          "SMULL",                    "111110111000nnnnllllhh
 //INST(thumb32_SDIV,           "SDIV",                     "111110111001------------1111----")
 INST(thumb32_UMULL,          "UMULL",                    "111110111010nnnnllllhhhh0000mmmm")
 //INST(thumb32_UDIV,           "UDIV",                     "111110111011------------1111----")
-//INST(thumb32_SMLAL,          "SMLAL",                    "111110111100------------0000----")
+INST(thumb32_SMLAL,          "SMLAL",                    "111110111100nnnnllllhhhh0000mmmm")
 //INST(thumb32_SMLALXY,        "SMLALXY",                  "111110111100------------10------")
 //INST(thumb32_SMLALD,         "SMLALD",                   "111110111100------------110-----")
 //INST(thumb32_SMLSLD,         "SMLSLD",                   "111110111101------------110-----")
