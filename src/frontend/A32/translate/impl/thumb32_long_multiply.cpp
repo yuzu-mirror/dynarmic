@@ -6,6 +6,26 @@
 #include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
+namespace {
+using DivideFunction = IR::U32U64 (IREmitter::*)(const IR::U32U64&, const IR::U32U64&);
+
+bool DivideOperation(ThumbTranslatorVisitor& v, Reg d, Reg m, Reg n, DivideFunction fn) {
+    if (d == Reg::PC || m == Reg::PC || n == Reg::PC) {
+        return v.UnpredictableInstruction();
+    }
+
+    const IR::U32 operand1 = v.ir.GetRegister(n);
+    const IR::U32 operand2 = v.ir.GetRegister(m);
+    const IR::U32 result = (v.ir.*fn)(operand1, operand2);
+
+    v.ir.SetRegister(d, result);
+    return true;
+}
+} // Anonymous namespace
+
+bool ThumbTranslatorVisitor::thumb32_SDIV(Reg n, Reg d, Reg m) {
+    return DivideOperation(*this, d, m, n, &IREmitter::SignedDiv);
+}
 
 bool ThumbTranslatorVisitor::thumb32_SMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
@@ -131,6 +151,10 @@ bool ThumbTranslatorVisitor::thumb32_SMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
     ir.SetRegister(dLo, lo);
     ir.SetRegister(dHi, hi);
     return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_UDIV(Reg n, Reg d, Reg m) {
+    return DivideOperation(*this, d, m, n, &IREmitter::UnsignedDiv);
 }
 
 bool ThumbTranslatorVisitor::thumb32_UMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
