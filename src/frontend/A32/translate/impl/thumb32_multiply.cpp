@@ -245,6 +245,25 @@ bool ThumbTranslatorVisitor::thumb32_SMULXY(Reg n, Reg d, bool N, bool M, Reg m)
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SMLAWY(Reg n, Reg a, Reg d, bool M, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const IR::U64 n32 = ir.SignExtendWordToLong(ir.GetRegister(n));
+    IR::U32 m32 = ir.GetRegister(m);
+    if (M) {
+        m32 = ir.LogicalShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+    }
+    const IR::U64 m16 = ir.SignExtendWordToLong(ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32)));
+    const auto product = ir.LeastSignificantWord(ir.LogicalShiftRight(ir.Mul(n32, m16), ir.Imm8(16)));
+    const auto result_overflow = ir.AddWithCarry(product, ir.GetRegister(a), ir.Imm1(0));
+
+    ir.SetRegister(d, result_overflow.result);
+    ir.OrQFlag(result_overflow.overflow);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SMULWY(Reg n, Reg d, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
