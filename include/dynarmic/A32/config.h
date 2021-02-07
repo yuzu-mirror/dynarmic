@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 
+#include <dynarmic/A32/arch_version.h>
 #include <dynarmic/optimization_flags.h>
 
 namespace Dynarmic {
@@ -104,6 +105,10 @@ struct UserConfig {
 
     size_t processor_id = 0;
     ExclusiveMonitor* global_monitor = nullptr;
+
+    /// Select the architecture version to use.
+    /// There are minor behavioural differences between versions.
+    ArchVersion arch_version = ArchVersion::v8;
 
     /// This selects other optimizations than can't otherwise be disabled by setting other
     /// configuration options. This includes:

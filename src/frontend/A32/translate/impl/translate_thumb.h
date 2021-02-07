@@ -19,7 +19,7 @@ enum class Exception;
 struct ThumbTranslatorVisitor final {
     using instruction_return_type = bool;
 
-    explicit ThumbTranslatorVisitor(IR::Block& block, LocationDescriptor descriptor, const TranslationOptions& options) : ir(block, descriptor), options(options) {
+    explicit ThumbTranslatorVisitor(IR::Block& block, LocationDescriptor descriptor, const TranslationOptions& options) : ir(block, descriptor, options.arch_version), options(options) {
         ASSERT_MSG(descriptor.TFlag(), "The processor must be in Thumb mode");
     }
 
