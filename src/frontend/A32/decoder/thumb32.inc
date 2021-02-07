@@ -261,9 +261,9 @@ INST(thumb32_SEL,            "SEL",                      "111110101010nnnn1111dd
 INST(thumb32_CLZ,            "CLZ",                      "111110101011nnnn1111dddd1000mmmm")
 
 // Multiply, Multiply Accumulate, and Absolute Difference
-//INST(thumb32_MUL,            "MUL",                      "111110110000----1111----0000----")
-//INST(thumb32_MLA,            "MLA",                      "111110110000------------0000----")
-//INST(thumb32_MLS,            "MLS",                      "111110110000------------0001----")
+INST(thumb32_MUL,            "MUL",                      "111110110000nnnn1111dddd0000mmmm")
+INST(thumb32_MLA,            "MLA",                      "111110110000nnnnaaaadddd0000mmmm")
+INST(thumb32_MLS,            "MLS",                      "111110110000nnnnaaaadddd0001mmmm")
 //INST(thumb32_SMULXY,         "SMULXY",                   "111110110001----1111----00------")
 //INST(thumb32_SMLAXY,         "SMLAXY",                   "111110110001------------00------")
 //INST(thumb32_SMUAD,          "SMUAD",                    "111110110010----1111----000-----")
@@ -275,8 +275,8 @@ INST(thumb32_CLZ,            "CLZ",                      "111110101011nnnn1111dd
 //INST(thumb32_SMMUL,          "SMMUL",                    "111110110101----1111----000-----")
 //INST(thumb32_SMMLA,          "SMMLA",                    "111110110101------------000-----")
 //INST(thumb32_SMMLS,          "SMMLS",                    "111110110110------------000-----")
-//INST(thumb32_USAD8,          "USAD8",                    "111110110111----1111----0000----")
-//INST(thumb32_USADA8,         "USADA8",                   "111110110111------------0000----")
+INST(thumb32_USAD8,          "USAD8",                    "111110110111nnnn1111dddd0000mmmm")
+INST(thumb32_USADA8,         "USADA8",                   "111110110111nnnnaaaadddd0000mmmm")
 
 // Long Multiply, Long Multiply Accumulate, and Divide
 //INST(thumb32_SMULL,          "SMULL",                    "111110111000------------0000----")
