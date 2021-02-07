@@ -133,6 +133,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_MLS(Reg n, Reg a, Reg d, Reg m);
     bool thumb32_MUL(Reg n, Reg d, Reg m);
     bool thumb32_USAD8(Reg n, Reg d, Reg m);
+    bool thumb32_USADA8(Reg n, Reg a, Reg d, Reg m);
 
     // thumb32 parallel add/sub instructions
     bool thumb32_SADD8(Reg n, Reg d, Reg m);

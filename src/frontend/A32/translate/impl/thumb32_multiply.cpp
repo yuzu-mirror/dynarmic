@@ -61,4 +61,19 @@ bool ThumbTranslatorVisitor::thumb32_USAD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_USADA8(Reg n, Reg a, Reg d, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto reg_a = ir.GetRegister(a);
+    const auto reg_m = ir.GetRegister(m);
+    const auto reg_n = ir.GetRegister(n);
+    const auto tmp = ir.PackedAbsDiffSumS8(reg_n, reg_m);
+    const auto result = ir.AddWithCarry(reg_a, tmp, ir.Imm1(0));
+
+    ir.SetRegister(d, result.result);
+    return true;
+}
+
 } // namespace Dynarmic::A32
