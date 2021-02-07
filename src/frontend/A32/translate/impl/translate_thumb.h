@@ -9,6 +9,7 @@
 #include "frontend/imm.h"
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/location_descriptor.h"
+#include "frontend/A32/translate/conditional_state.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A32/types.h"
 
@@ -24,7 +25,10 @@ struct ThumbTranslatorVisitor final {
     }
 
     A32::IREmitter ir;
+    ConditionalState cond_state = ConditionalState::None;
     TranslationOptions options;
+
+    bool ConditionPassed(bool is_thumb_16);
 
     bool InterpretThisInstruction();
     bool UnpredictableInstruction();
@@ -83,12 +87,13 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_ADD_sp_t1(Reg d, Imm<8> imm8);
     bool thumb16_ADD_sp_t2(Imm<7> imm7);
     bool thumb16_SUB_sp(Imm<7> imm7);
-    bool thumb16_NOP();
     bool thumb16_SEV();
     bool thumb16_SEVL();
     bool thumb16_WFE();
     bool thumb16_WFI();
     bool thumb16_YIELD();
+    bool thumb16_NOP();
+    bool thumb16_IT(Imm<8> imm8);
     bool thumb16_SXTH(Reg m, Reg d);
     bool thumb16_SXTB(Reg m, Reg d);
     bool thumb16_UXTH(Reg m, Reg d);

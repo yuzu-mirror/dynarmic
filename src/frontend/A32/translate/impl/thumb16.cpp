@@ -697,11 +697,6 @@ bool ThumbTranslatorVisitor::thumb16_SUB_sp(Imm<7> imm7) {
     return true;
 }
 
-// NOP<c>
-bool ThumbTranslatorVisitor::thumb16_NOP() {
-    return true;
-}
-
 // SEV<c>
 bool ThumbTranslatorVisitor::thumb16_SEV() {
     if (!options.hook_hint_instructions) {
@@ -740,6 +735,26 @@ bool ThumbTranslatorVisitor::thumb16_YIELD() {
         return true;
     }
     return RaiseException(Exception::Yield);
+}
+
+// NOP<c>
+bool ThumbTranslatorVisitor::thumb16_NOP() {
+    return true;
+}
+
+// IT{<x>{<y>{<z>}}} <cond>
+bool ThumbTranslatorVisitor::thumb16_IT(Imm<8> imm8) {
+    ASSERT_MSG((imm8.Bits<0, 3>() != 0b0000), "Decode Error");
+    if (imm8.Bits<4, 7>() == 0b1111 || (imm8.Bits<4, 7>() == 0b1110 && Common::BitCount(imm8.Bits<0, 3>()) != 1)) {
+        return UnpredictableInstruction();
+    }
+    if (ir.current_location.IT().IsInITBlock()) {
+        return UnpredictableInstruction();
+    }
+
+    const auto next_location = ir.current_location.AdvancePC(2).SetIT(ITState{imm8.ZeroExtend<u8>()});
+    ir.SetTerm(IR::Term::LinkBlockFast{next_location});
+    return false;
 }
 
 // SXTH <Rd>, <Rm>

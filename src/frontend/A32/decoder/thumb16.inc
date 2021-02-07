@@ -60,12 +60,15 @@ INST(thumb16_ADD_sp_t2,      "ADD (SP plus imm, T2)",    "101100000vvvvvvv") // 
 INST(thumb16_SUB_sp,         "SUB (SP minus imm)",       "101100001vvvvvvv") // v4T
 
 // Hint instructions
-INST(thumb16_NOP,            "NOP",                      "1011111100000000") // v6T2
 INST(thumb16_SEV,            "SEV",                      "1011111101000000") // v7
 INST(thumb16_SEVL,           "SEVL",                     "1011111101010000") // v8
 INST(thumb16_WFE,            "WFE",                      "1011111100100000") // v7
 INST(thumb16_WFI,            "WFI",                      "1011111100110000") // v7
 INST(thumb16_YIELD,          "YIELD",                    "1011111100010000") // v7
+INST(thumb16_NOP,            "NOP",                      "10111111----0000") // v7
+
+// IT instruction
+INST(thumb16_IT,             "IT",                       "10111111iiiiiiii") // v7
 
 // Miscellaneous 16-bit instructions
 INST(thumb16_SXTH,           "SXTH",                     "1011001000mmmddd") // v6

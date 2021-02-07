@@ -269,6 +269,25 @@ public:
         return "yield";
     }
 
+    std::string thumb16_IT(Imm<8> imm8) {
+        const Cond firstcond = imm8.Bits<4, 7, Cond>();
+        const bool firstcond0 = imm8.Bit<4>();
+        const auto [x, y, z] = [&]{
+            if (imm8.Bits<0, 3>() == 0b1000) {
+                return std::make_tuple("", "", "");
+            }
+            if (imm8.Bits<0, 2>() == 0b100) {
+                return std::make_tuple(imm8.Bit<3>() == firstcond0 ? "t" : "e", "", "");
+            }
+            if (imm8.Bits<0, 1>() == 0b10) {
+                return std::make_tuple(imm8.Bit<3>() == firstcond0 ? "t" : "e", imm8.Bit<2>() == firstcond0 ? "t" : "e", "");
+            }
+            // Sanity note: Here imm8.Bit<0>() is guaranteed to be == 1. (imm8 can never be 0bxxxx0000)
+            return std::make_tuple(imm8.Bit<3>() == firstcond0 ? "t" : "e", imm8.Bit<2>() == firstcond0 ? "t" : "e", imm8.Bit<1>() == firstcond0 ? "t" : "e");
+        }();
+        return fmt::format("it{}{}{} {}", x, y, z, firstcond);
+    }
+
     std::string thumb16_SXTH(Reg m, Reg d) {
         return fmt::format("sxth {}, {}", d, m);
     }
