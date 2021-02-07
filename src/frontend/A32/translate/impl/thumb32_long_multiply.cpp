@@ -175,4 +175,24 @@ bool ThumbTranslatorVisitor::thumb32_UMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_UMAAL(Reg n, Reg dLo, Reg dHi, Reg m) {
+    if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    if (dHi == dLo) {
+        return UnpredictableInstruction();
+    }
+
+    const auto lo64 = ir.ZeroExtendWordToLong(ir.GetRegister(dLo));
+    const auto hi64 = ir.ZeroExtendWordToLong(ir.GetRegister(dHi));
+    const auto n64 = ir.ZeroExtendWordToLong(ir.GetRegister(n));
+    const auto m64 = ir.ZeroExtendWordToLong(ir.GetRegister(m));
+    const auto result = ir.Add(ir.Add(ir.Mul(n64, m64), hi64), lo64);
+
+    ir.SetRegister(dLo, ir.LeastSignificantWord(result));
+    ir.SetRegister(dHi, ir.MostSignificantWord(result).result);
+    return true;
+}
+
 } // namespace Dynarmic::A32
