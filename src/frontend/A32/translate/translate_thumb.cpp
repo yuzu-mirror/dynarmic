@@ -25,7 +25,7 @@ enum class ThumbInstSize {
 };
 
 bool IsThumb16(u16 first_part) {
-    return (first_part & 0xF800) <= 0xE800;
+    return (first_part & 0xF800) < 0xE800;
 }
 
 std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryReadCodeFuncType memory_read_code) {
