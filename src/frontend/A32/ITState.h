@@ -24,32 +24,20 @@ public:
     IR::Cond Cond() const {
         return static_cast<IR::Cond>(Common::Bits<4, 7>(value));
     }
-    void Cond(IR::Cond cond) {
-        value = Common::ModifyBits<4, 7>(value, static_cast<u8>(cond));
-    }
-
-    u8 Mask() const {
-        return Common::Bits<0, 3>(value);
-    }
-    void Mask(u8 mask) {
-        value = Common::ModifyBits<0, 3>(value, mask);
-    }
 
     bool IsInITBlock() const {
-        return Mask() != 0b0000;
+        return Common::Bits<0, 3>(value) != 0b0000;
     }
 
     bool IsLastInITBlock() const {
-        return Mask() == 0b1000;
+        return Common::Bits<0, 3>(value) == 0b1000;
     }
 
     ITState Advance() const {
-        ITState result{*this};
-        result.Mask(result.Mask() << 1);
-        if (result.Mask() == 0) {
-            return ITState{0};
+        if (Common::Bits<0, 2>(value) == 0b000) {
+            return ITState{0b00000000};
         }
-        return result;
+        return ITState{Common::ModifyBits<0, 4>(value, static_cast<u8>(Common::Bits<0, 4>(value) << 1))};
     }
 
     u8 Value() const {
@@ -57,7 +45,7 @@ public:
     }
 
 private:
-    u8 value;
+    u8 value = 0;
 };
 
 inline bool operator==(ITState lhs, ITState rhs) {
