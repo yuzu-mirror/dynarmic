@@ -77,6 +77,33 @@ bool ThumbTranslatorVisitor::thumb32_SMLAD(Reg n, Reg a, Reg d, bool X, Reg m) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SMLSD(Reg n, Reg a, Reg d, bool X, Reg m) {
+    if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const IR::U32 n32 = ir.GetRegister(n);
+    const IR::U32 m32 = ir.GetRegister(m);
+    const IR::U32 n_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(n32));
+    const IR::U32 n_hi = ir.ArithmeticShiftRight(n32, ir.Imm8(16), ir.Imm1(0)).result;
+
+    IR::U32 m_lo = ir.SignExtendHalfToWord(ir.LeastSignificantHalf(m32));
+    IR::U32 m_hi = ir.ArithmeticShiftRight(m32, ir.Imm8(16), ir.Imm1(0)).result;
+    if (X) {
+        std::swap(m_lo, m_hi);
+    }
+
+    const IR::U32 product_lo = ir.Mul(n_lo, m_lo);
+    const IR::U32 product_hi = ir.Mul(n_hi, m_hi);
+    const IR::U32 addend = ir.GetRegister(a);
+    const IR::U32 product = ir.Sub(product_lo, product_hi);
+    auto result_overflow = ir.AddWithCarry(product, addend, ir.Imm1(0));
+
+    ir.SetRegister(d, result_overflow.result);
+    ir.OrQFlag(result_overflow.overflow);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SMLAXY(Reg n, Reg a, Reg d, bool N, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
