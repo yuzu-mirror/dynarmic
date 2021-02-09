@@ -154,6 +154,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/impl/synchronization.cpp
         frontend/A32/translate/impl/thumb16.cpp
         frontend/A32/translate/impl/thumb32.cpp
+        frontend/A32/translate/impl/thumb32_long_multiply.cpp
         frontend/A32/translate/impl/thumb32_misc.cpp
         frontend/A32/translate/impl/thumb32_multiply.cpp
         frontend/A32/translate/impl/thumb32_parallel.cpp

@@ -121,6 +121,18 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_BLX_imm(Imm<11> hi, Imm<11> lo);
     bool thumb32_UDF();
 
+    // thumb32 long multiply, long multiply accumulate, and divide instructions
+    bool thumb32_SDIV(Reg n, Reg d, Reg m);
+    bool thumb32_SMLAL(Reg n, Reg dLo, Reg dHi, Reg m);
+    bool thumb32_SMLALD(Reg n, Reg dLo, Reg dHi, bool M, Reg m);
+    bool thumb32_SMLALXY(Reg n, Reg dLo, Reg dHi, bool N, bool M, Reg m);
+    bool thumb32_SMLSLD(Reg n, Reg dLo, Reg dHi, bool M, Reg m);
+    bool thumb32_SMULL(Reg n, Reg dLo, Reg dHi, Reg m);
+    bool thumb32_UDIV(Reg n, Reg d, Reg m);
+    bool thumb32_UMAAL(Reg n, Reg dLo, Reg dHi, Reg m);
+    bool thumb32_UMLAL(Reg n, Reg dLo, Reg dHi, Reg m);
+    bool thumb32_UMULL(Reg n, Reg dLo, Reg dHi, Reg m);
+
     // thumb32 miscellaneous instructions
     bool thumb32_CLZ(Reg n, Reg d, Reg m);
     bool thumb32_QADD(Reg n, Reg d, Reg m);

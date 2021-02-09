@@ -279,16 +279,16 @@ INST(thumb32_USAD8,          "USAD8",                    "111110110111nnnn1111dd
 INST(thumb32_USADA8,         "USADA8",                   "111110110111nnnnaaaadddd0000mmmm")
 
 // Long Multiply, Long Multiply Accumulate, and Divide
-//INST(thumb32_SMULL,          "SMULL",                    "111110111000------------0000----")
-//INST(thumb32_SDIV,           "SDIV",                     "111110111001------------1111----")
-//INST(thumb32_UMULL,          "UMULL",                    "111110111010------------0000----")
-//INST(thumb32_UDIV,           "UDIV",                     "111110111011------------1111----")
-//INST(thumb32_SMLAL,          "SMLAL",                    "111110111100------------0000----")
-//INST(thumb32_SMLALXY,        "SMLALXY",                  "111110111100------------10------")
-//INST(thumb32_SMLALD,         "SMLALD",                   "111110111100------------110-----")
-//INST(thumb32_SMLSLD,         "SMLSLD",                   "111110111101------------110-----")
-//INST(thumb32_UMLAL,          "UMLAL",                    "111110111110------------0000----")
-//INST(thumb32_UMAAL,          "UMAAL",                    "111110111110------------0110----")
+INST(thumb32_SMULL,          "SMULL",                    "111110111000nnnnllllhhhh0000mmmm")
+INST(thumb32_SDIV,           "SDIV",                     "111110111001nnnn1111dddd1111mmmm")
+INST(thumb32_UMULL,          "UMULL",                    "111110111010nnnnllllhhhh0000mmmm")
+INST(thumb32_UDIV,           "UDIV",                     "111110111011nnnn1111dddd1111mmmm")
+INST(thumb32_SMLAL,          "SMLAL",                    "111110111100nnnnllllhhhh0000mmmm")
+INST(thumb32_SMLALXY,        "SMLALXY",                  "111110111100nnnnllllhhhh10NMmmmm")
+INST(thumb32_SMLALD,         "SMLALD",                   "111110111100nnnnllllhhhh110Mmmmm")
+INST(thumb32_SMLSLD,         "SMLSLD",                   "111110111101nnnnllllhhhh110Mmmmm")
+INST(thumb32_UMLAL,          "UMLAL",                    "111110111110nnnnllllhhhh0000mmmm")
+INST(thumb32_UMAAL,          "UMAAL",                    "111110111110nnnnllllhhhh0110mmmm")
 
 // Coprocessor
 //INST(thumb32_MCRR2,          "MCRR2",                    "111111000100--------------------")
