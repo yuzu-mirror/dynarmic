@@ -11,6 +11,20 @@ static IR::U32 Rotate(A32::IREmitter& ir, Reg m, SignExtendRotation rotate) {
     return ir.RotateRight(ir.GetRegister(m), ir.Imm8(rotate_by), ir.Imm1(0)).result;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SXTB16(Reg d, SignExtendRotation rotate, Reg m) {
+    if (d == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto rotated = Rotate(ir, m, rotate);
+    const auto low_byte = ir.And(rotated, ir.Imm32(0x00FF00FF));
+    const auto sign_bit = ir.And(rotated, ir.Imm32(0x00800080));
+    const auto result = ir.Or(low_byte, ir.Mul(sign_bit, ir.Imm32(0x1FE)));
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SXTH(Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
