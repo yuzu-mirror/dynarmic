@@ -25,6 +25,21 @@ bool ThumbTranslatorVisitor::thumb32_SXTB16(Reg d, SignExtendRotation rotate, Re
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SXTAB16(Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+    if (d == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto rotated = Rotate(ir, m, rotate);
+    const auto low_byte = ir.And(rotated, ir.Imm32(0x00FF00FF));
+    const auto sign_bit = ir.And(rotated, ir.Imm32(0x00800080));
+    const auto addend = ir.Or(low_byte, ir.Mul(sign_bit, ir.Imm32(0x1FE)));
+    const auto result = ir.PackedAddU16(addend, ir.GetRegister(n)).result;
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SXTH(Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
