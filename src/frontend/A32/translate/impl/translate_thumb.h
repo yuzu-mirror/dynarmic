@@ -124,6 +124,7 @@ struct ThumbTranslatorVisitor final {
     // thumb32 data processing (register) instructions
     bool thumb32_SXTH(Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_SXTAH(Reg n, Reg d, SignExtendRotation rotate, Reg m);
+    bool thumb32_UXTH(Reg d, SignExtendRotation rotate, Reg m);
 
     // thumb32 long multiply, long multiply accumulate, and divide instructions
     bool thumb32_SDIV(Reg n, Reg d, Reg m);
