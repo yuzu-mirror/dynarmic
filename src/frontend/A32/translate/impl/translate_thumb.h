@@ -130,6 +130,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_SXTAH(Reg n, Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_UXTB(Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_UXTB16(Reg d, SignExtendRotation rotate, Reg m);
+    bool thumb32_UXTAB(Reg n, Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_UXTAB16(Reg n, Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_UXTH(Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_UXTAH(Reg n, Reg d, SignExtendRotation rotate, Reg m);

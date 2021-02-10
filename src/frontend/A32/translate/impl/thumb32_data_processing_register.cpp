@@ -114,6 +114,19 @@ bool ThumbTranslatorVisitor::thumb32_UXTB16(Reg d, SignExtendRotation rotate, Re
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_UXTAB(Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+    if (d == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto rotated = Rotate(ir, m, rotate);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.Add(reg_n, ir.ZeroExtendByteToWord(ir.LeastSignificantByte(rotated)));
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_UXTAB16(Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
