@@ -205,7 +205,7 @@ INST(thumb32_UXTB16,         "UXTB16",                   "11111010001111111111dd
 INST(thumb32_UXTAB16,        "UXTAB16",                  "111110100011nnnn1111dddd10rrmmmm")
 INST(thumb32_SXTB,           "SXTB",                     "11111010010011111111dddd10rrmmmm")
 INST(thumb32_SXTAB,          "SXTAB",                    "111110100100nnnn1111dddd10rrmmmm")
-//INST(thumb32_UXTB,           "UXTB",                     "11111010010111111111----1-------")
+INST(thumb32_UXTB,           "UXTB",                     "11111010010111111111dddd10rrmmmm")
 //INST(thumb32_UXTAB,          "UXTAB",                    "111110100101----1111----1-------")
 
 // Parallel Addition and Subtraction (signed)
