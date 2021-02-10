@@ -48,4 +48,17 @@ bool ThumbTranslatorVisitor::thumb32_UXTH(Reg d, SignExtendRotation rotate, Reg 
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_UXTAH(Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+    if (d == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto rotated = Rotate(ir, m, rotate);
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.Add(reg_n, ir.ZeroExtendHalfToWord(ir.LeastSignificantHalf(rotated)));
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 } // namespace Dynarmic::A32

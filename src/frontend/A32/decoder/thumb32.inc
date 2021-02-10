@@ -198,7 +198,7 @@
 INST(thumb32_SXTH,           "SXTH",                     "11111010000011111111dddd10rrmmmm")
 INST(thumb32_SXTAH,          "SXTAH",                    "111110100000nnnn1111dddd10rrmmmm")
 INST(thumb32_UXTH,           "UXTH",                     "11111010000111111111dddd10rrmmmm")
-//INST(thumb32_UXTAH,          "UXTAH",                    "111110100001----1111----1-------")
+INST(thumb32_UXTAH,          "UXTAH",                    "111110100001nnnn1111dddd10rrmmmm")
 //INST(thumb32_SXTB16,         "SXTB16",                   "11111010001011111111----1-------")
 //INST(thumb32_SXTAB16,        "SXTAB16",                  "111110100010----1111----1-------")
 //INST(thumb32_UXTB16,         "UXTB16",                   "11111010001111111111----1-------")
