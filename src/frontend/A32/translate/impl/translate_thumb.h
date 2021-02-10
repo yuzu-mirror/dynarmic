@@ -122,6 +122,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_UDF();
 
     // thumb32 data processing (register) instructions
+    bool thumb32_SXTB(Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_SXTB16(Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_SXTAB16(Reg n, Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_SXTH(Reg d, SignExtendRotation rotate, Reg m);
