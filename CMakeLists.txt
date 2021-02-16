@@ -97,6 +97,12 @@ else()
         list(APPEND DYNARMIC_CXX_FLAGS
              -Wfatal-errors)
     endif()
+
+    if (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
+        # Bracket depth determines maximum size of a fold expression in Clang since 9c9974c3ccb6.
+        # And this in turns limits the size of a std::array.
+        list(APPEND DYNARMIC_CXX_FLAGS -fbracket-depth=1024)
+    endif()
 endif()
 
 # Arch detection
