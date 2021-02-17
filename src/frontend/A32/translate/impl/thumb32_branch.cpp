@@ -44,8 +44,4 @@ bool ThumbTranslatorVisitor::thumb32_BLX_imm(Imm<11> hi, Imm<11> lo) {
     return false;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UDF() {
-    return thumb16_UDF();
-}
-
 } // namespace Dynarmic::A32

@@ -153,7 +153,8 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/impl/status_register_access.cpp
         frontend/A32/translate/impl/synchronization.cpp
         frontend/A32/translate/impl/thumb16.cpp
-        frontend/A32/translate/impl/thumb32.cpp
+        frontend/A32/translate/impl/thumb32_branch.cpp
+        frontend/A32/translate/impl/thumb32_control.cpp
         frontend/A32/translate/impl/thumb32_data_processing_register.cpp
         frontend/A32/translate/impl/thumb32_long_multiply.cpp
         frontend/A32/translate/impl/thumb32_misc.cpp
