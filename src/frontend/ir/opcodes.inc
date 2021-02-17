@@ -69,6 +69,7 @@ A64OPC(SetPC,                                               Void,           U64 
 A64OPC(CallSupervisor,                                      Void,           U32                                                             )
 A64OPC(ExceptionRaised,                                     Void,           U64,            U64                                             )
 A64OPC(DataCacheOperationRaised,                            Void,           U64,            U64                                             )
+A64OPC(InstructionCacheOperationRaised,                     Void,           U64,            U64                                             )
 A64OPC(DataSynchronizationBarrier,                          Void,                                                                           )
 A64OPC(DataMemoryBarrier,                                   Void,                                                                           )
 A64OPC(InstructionSynchronizationBarrier,                   Void,                                                                           )
