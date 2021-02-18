@@ -54,7 +54,7 @@
 
 // Data Processing (Modified Immediate)
 INST(thumb32_TST_imm,        "TST (imm)",                "11110v000001nnnn0vvv1111vvvvvvvv")
-//INST(thumb32_AND_imm,        "AND (imm)",                "11110-00000-----0---------------")
+INST(thumb32_AND_imm,        "AND (imm)",                "11110v00000Snnnn0vvvddddvvvvvvvv")
 //INST(thumb32_BIC_imm,        "BIC (imm)",                "11110-00001-----0---------------")
 //INST(thumb32_MOV_imm,        "MOV (imm)",                "11110000010-11110---------------")
 //INST(thumb32_ORR_imm,        "ORR (imm)",                "11110-00010-----0---------------")
