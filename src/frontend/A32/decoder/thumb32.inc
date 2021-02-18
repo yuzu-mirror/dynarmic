@@ -53,7 +53,7 @@
 //INST(thumb32_RSB_reg,        "RSB (reg)",                "11101011110---------------------")
 
 // Data Processing (Modified Immediate)
-//INST(thumb32_TST_imm,        "TST (imm)",                "11110-000001----0---1111--------")
+INST(thumb32_TST_imm,        "TST (imm)",                "11110v000001nnnn0vvv1111vvvvvvvv")
 //INST(thumb32_AND_imm,        "AND (imm)",                "11110-00000-----0---------------")
 //INST(thumb32_BIC_imm,        "BIC (imm)",                "11110-00001-----0---------------")
 //INST(thumb32_MOV_imm,        "MOV (imm)",                "11110000010-11110---------------")
