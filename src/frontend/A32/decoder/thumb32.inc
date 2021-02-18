@@ -57,7 +57,7 @@ INST(thumb32_TST_imm,        "TST (imm)",                "11110v000001nnnn0vvv11
 INST(thumb32_AND_imm,        "AND (imm)",                "11110v00000Snnnn0vvvddddvvvvvvvv")
 INST(thumb32_BIC_imm,        "BIC (imm)",                "11110v00001Snnnn0vvvddddvvvvvvvv")
 INST(thumb32_MOV_imm,        "MOV (imm)",                "11110v00010S11110vvvddddvvvvvvvv")
-//INST(thumb32_ORR_imm,        "ORR (imm)",                "11110-00010-----0---------------")
+INST(thumb32_ORR_imm,        "ORR (imm)",                "11110v00010Snnnn0vvvddddvvvvvvvv")
 //INST(thumb32_MVN_imm,        "MVN (imm)",                "11110000011-11110---------------")
 //INST(thumb32_ORN_imm,        "ORN (imm)",                "11110-00011-----0---------------")
 //INST(thumb32_TEQ_imm,        "TEQ (imm)",                "11110-001001----0---1111--------")
