@@ -7,6 +7,11 @@
 
 namespace Dynarmic::A32 {
 
+bool ThumbTranslatorVisitor::thumb32_DSB([[maybe_unused]] Imm<4> option) {
+    ir.DataSynchronizationBarrier();
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_UDF() {
     return thumb16_UDF();
 }

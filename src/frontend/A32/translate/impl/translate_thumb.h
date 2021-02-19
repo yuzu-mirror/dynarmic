@@ -160,6 +160,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_EOR_imm(Imm<1> i, bool S, Reg n, Imm<3> imm3, Reg d, Imm<8> imm8);
 
     // thumb32 miscellaneous control instructions
+    bool thumb32_DSB(Imm<4> option);
     bool thumb32_UDF();
 
     // thumb32 branch instructions
