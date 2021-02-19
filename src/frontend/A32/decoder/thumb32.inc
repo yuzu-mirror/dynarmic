@@ -76,7 +76,7 @@ INST(thumb32_EOR_imm,        "EOR (imm)",                "11110v00100Snnnn0vvvdd
 //INST(thumb32_MOVW_imm,       "MOVW (imm)",               "11110-100100----0---------------")
 //INST(thumb32_ADR,            "ADR",                      "11110-10101011110---------------")
 //INST(thumb32_SUB_imm_2,      "SUB (imm)",                "11110-101010----0---------------")
-//INST(thumb32_MOVT,           "MOVT",                     "11110-101100----0---------------")
+INST(thumb32_MOVT,           "MOVT",                     "11110i101100iiii0iiiddddiiiiiiii")
 //INST(thumb32_SSAT,           "SSAT",                     "11110-110000----0---------------")
 //INST(thumb32_SSAT16,         "SSAT16",                   "11110-110010----0000----00------")
 //INST(thumb32_SSAT,           "SSAT",                     "11110-110010----0---------------")

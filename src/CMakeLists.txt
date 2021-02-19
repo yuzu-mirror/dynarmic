@@ -157,6 +157,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/impl/thumb32_control.cpp
         frontend/A32/translate/impl/thumb32_data_processing_register.cpp
         frontend/A32/translate/impl/thumb32_data_processing_modified_immediate.cpp
+        frontend/A32/translate/impl/thumb32_data_processing_plain_binary_immediate.cpp
         frontend/A32/translate/impl/thumb32_long_multiply.cpp
         frontend/A32/translate/impl/thumb32_misc.cpp
         frontend/A32/translate/impl/thumb32_multiply.cpp
