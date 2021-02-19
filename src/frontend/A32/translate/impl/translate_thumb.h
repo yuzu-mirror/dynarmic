@@ -161,6 +161,7 @@ struct ThumbTranslatorVisitor final {
 
     // thumb32 data processing (plain binary immediate) instructions.
     bool thumb32_MOVT(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8);
+    bool thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8);
 
     // thumb32 miscellaneous control instructions
     bool thumb32_UDF();

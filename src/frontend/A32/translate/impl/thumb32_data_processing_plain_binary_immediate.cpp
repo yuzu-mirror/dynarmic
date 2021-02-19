@@ -20,4 +20,15 @@ bool ThumbTranslatorVisitor::thumb32_MOVT(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3,
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8) {
+    if (d == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const IR::U32 imm = ir.Imm32(concatenate(imm4, imm1, imm3, imm8).ZeroExtend());
+
+    ir.SetRegister(d, imm);
+    return true;
+}
+
 } // namespace Dynarmic::A32
