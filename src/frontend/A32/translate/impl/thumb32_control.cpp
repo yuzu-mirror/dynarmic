@@ -17,6 +17,13 @@ bool ThumbTranslatorVisitor::thumb32_DSB([[maybe_unused]] Imm<4> option) {
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_ISB([[maybe_unused]] Imm<4> option) {
+    ir.InstructionSynchronizationBarrier();
+    ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
+    ir.SetTerm(IR::Term::ReturnToDispatch{});
+    return false;
+}
+
 bool ThumbTranslatorVisitor::thumb32_UDF() {
     return thumb16_UDF();
 }

@@ -162,6 +162,7 @@ struct ThumbTranslatorVisitor final {
     // thumb32 miscellaneous control instructions
     bool thumb32_DMB(Imm<4> option);
     bool thumb32_DSB(Imm<4> option);
+    bool thumb32_ISB(Imm<4> option);
     bool thumb32_UDF();
 
     // thumb32 branch instructions
