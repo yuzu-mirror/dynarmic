@@ -106,7 +106,7 @@ INST(thumb32_EOR_imm,        "EOR (imm)",                "11110v00100Snnnn0vvvdd
 
 //INST(thumb32_ENTERX,         "ENTERX",                   "111100111011----10-0----0001----")
 //INST(thumb32_LEAVEX,         "LEAVEX",                   "111100111011----10-0----0000----")
-//INST(thumb32_CLREX,          "CLREX",                    "111100111011----10-0----0010----")
+INST(thumb32_CLREX,          "CLREX",                    "11110011101111111000111100101111")
 INST(thumb32_DSB,            "DSB",                      "1111001110111111100011110100oooo")
 INST(thumb32_DMB,            "DMB",                      "1111001110111111100011110101oooo")
 INST(thumb32_ISB,            "ISB",                      "1111001110111111100011110110oooo")
