@@ -989,7 +989,7 @@ void EmitFPVectorMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     };
 
     if constexpr (fsize != 16) {
-        if (code.HasFMA() && code.HasAVX() && ctx.HasOptimization(OptimizationFlag::Unsafe_UnfuseFMA)) {
+        if (code.HasFMA() && code.HasAVX() && ctx.HasOptimization(OptimizationFlag::Unsafe_InaccurateNaN)) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
             const bool fpcr_controlled = args[3].GetImmediateU1();
 
