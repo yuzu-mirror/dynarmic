@@ -7,6 +7,14 @@
 
 namespace Dynarmic::A32 {
 
+bool ThumbTranslatorVisitor::thumb32_BXJ(Reg m) {
+    if (m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    return thumb16_BX(m);
+}
+
 bool ThumbTranslatorVisitor::thumb32_CLREX() {
     ir.ClearExclusive();
     return true;
