@@ -170,6 +170,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_ISB(Imm<4> option);
     bool thumb32_NOP();
     bool thumb32_SEV();
+    bool thumb32_SEVL();
     bool thumb32_UDF();
     bool thumb32_WFE();
     bool thumb32_WFI();
