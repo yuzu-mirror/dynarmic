@@ -24,6 +24,7 @@ bool ThumbTranslatorVisitor::thumb32_DSB([[maybe_unused]] Imm<4> option) {
 
 bool ThumbTranslatorVisitor::thumb32_ISB([[maybe_unused]] Imm<4> option) {
     ir.InstructionSynchronizationBarrier();
+    ir.UpdateUpperLocationDescriptor();
     ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
     ir.SetTerm(IR::Term::ReturnToDispatch{});
     return false;

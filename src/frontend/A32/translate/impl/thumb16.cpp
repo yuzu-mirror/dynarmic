@@ -860,7 +860,7 @@ bool ThumbTranslatorVisitor::thumb16_SETEND(bool E) {
         return true;
     }
 
-    ir.SetTerm(IR::Term::LinkBlock{ir.current_location.AdvancePC(2).SetEFlag(E)});
+    ir.SetTerm(IR::Term::LinkBlock{ir.current_location.AdvancePC(2).SetEFlag(E).AdvanceIT()});
     return false;
 }
 
@@ -967,8 +967,8 @@ bool ThumbTranslatorVisitor::thumb16_CBZ_CBNZ(bool nonzero, Imm<1> i, Imm<5> imm
     ir.SetCheckBit(ir.IsZero(rn));
 
     const auto [cond_pass, cond_fail] = [this, imm, nonzero] {
-        const auto skip = IR::Term::LinkBlock{ir.current_location.AdvancePC(2)};
-        const auto branch = IR::Term::LinkBlock{ir.current_location.AdvancePC(imm + 4)};
+        const auto skip = IR::Term::LinkBlock{ir.current_location.AdvancePC(2).AdvanceIT()};
+        const auto branch = IR::Term::LinkBlock{ir.current_location.AdvancePC(imm + 4).AdvanceIT()};
 
         if (nonzero) {
             return std::make_pair(skip, branch);
