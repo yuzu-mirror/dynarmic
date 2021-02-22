@@ -34,6 +34,10 @@ bool ThumbTranslatorVisitor::thumb32_NOP() {
     return thumb16_NOP();
 }
 
+bool ThumbTranslatorVisitor::thumb32_SEV() {
+    return thumb16_SEV();
+}
+
 bool ThumbTranslatorVisitor::thumb32_UDF() {
     return thumb16_UDF();
 }
