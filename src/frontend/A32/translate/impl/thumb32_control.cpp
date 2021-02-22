@@ -42,6 +42,10 @@ bool ThumbTranslatorVisitor::thumb32_WFE() {
     return thumb16_WFE();
 }
 
+bool ThumbTranslatorVisitor::thumb32_WFI() {
+    return thumb16_WFI();
+}
+
 bool ThumbTranslatorVisitor::thumb32_YIELD() {
     return thumb16_YIELD();
 }

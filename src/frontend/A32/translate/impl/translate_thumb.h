@@ -171,6 +171,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_NOP();
     bool thumb32_UDF();
     bool thumb32_WFE();
+    bool thumb32_WFI();
     bool thumb32_YIELD();
 
     // thumb32 branch instructions
