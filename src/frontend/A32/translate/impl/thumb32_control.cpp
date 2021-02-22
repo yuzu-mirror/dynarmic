@@ -30,8 +30,32 @@ bool ThumbTranslatorVisitor::thumb32_ISB([[maybe_unused]] Imm<4> option) {
     return false;
 }
 
+bool ThumbTranslatorVisitor::thumb32_NOP() {
+    return thumb16_NOP();
+}
+
+bool ThumbTranslatorVisitor::thumb32_SEV() {
+    return thumb16_SEV();
+}
+
+bool ThumbTranslatorVisitor::thumb32_SEVL() {
+    return thumb16_SEVL();
+}
+
 bool ThumbTranslatorVisitor::thumb32_UDF() {
     return thumb16_UDF();
+}
+
+bool ThumbTranslatorVisitor::thumb32_WFE() {
+    return thumb16_WFE();
+}
+
+bool ThumbTranslatorVisitor::thumb32_WFI() {
+    return thumb16_WFI();
+}
+
+bool ThumbTranslatorVisitor::thumb32_YIELD() {
+    return thumb16_YIELD();
 }
 
 } // namespace Dynarmic::A32
