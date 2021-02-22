@@ -30,6 +30,10 @@ bool ThumbTranslatorVisitor::thumb32_ISB([[maybe_unused]] Imm<4> option) {
     return false;
 }
 
+bool ThumbTranslatorVisitor::thumb32_NOP() {
+    return thumb16_NOP();
+}
+
 bool ThumbTranslatorVisitor::thumb32_UDF() {
     return thumb16_UDF();
 }
