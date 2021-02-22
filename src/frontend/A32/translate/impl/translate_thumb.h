@@ -164,6 +164,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8);
 
     // thumb32 miscellaneous control instructions
+    bool thumb32_BXJ(Reg m);
     bool thumb32_CLREX();
     bool thumb32_DMB(Imm<4> option);
     bool thumb32_DSB(Imm<4> option);
