@@ -189,7 +189,7 @@ INST(thumb32_BLX_imm,        "BLX (imm)",                "11110Svvvvvvvvvv11j0jv
 //INST(thumb32_LDR_imm12,      "LDR (imm12)",              "111110001101--------------------")
 
 // Data Processing (register)
-//INST(thumb32_LSL_reg,        "LSL (reg)",                "11111010000-----1111----0000----")
+INST(thumb32_LSL_reg,        "LSL (reg)",                "111110100000mmmm1111dddd0000ssss")
 //INST(thumb32_LSR_reg,        "LSR (reg)",                "11111010001-----1111----0000----")
 //INST(thumb32_ASR_reg,        "ASR (reg)",                "11111010010-----1111----0000----")
 //INST(thumb32_ROR_reg,        "ROR (reg)",                "11111010011-----1111----0000----")
