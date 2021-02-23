@@ -11,6 +11,19 @@ static IR::U32 Rotate(A32::IREmitter& ir, Reg m, SignExtendRotation rotate) {
     return ir.RotateRight(ir.GetRegister(m), ir.Imm8(rotate_by), ir.Imm1(0)).result;
 }
 
+bool ThumbTranslatorVisitor::thumb32_ASR_reg(Reg m, Reg d, Reg s) {
+    if (d == Reg::PC || m == Reg::PC || s == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto shift_s = ir.LeastSignificantByte(ir.GetRegister(s));
+    const auto apsr_c = ir.GetCFlag();
+    const auto result_carry = ir.ArithmeticShiftRight(ir.GetRegister(m), shift_s, apsr_c);
+
+    ir.SetRegister(d, result_carry.result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_LSL_reg(Reg m, Reg d, Reg s) {
     if (d == Reg::PC || m == Reg::PC || s == Reg::PC) {
         return UnpredictableInstruction();
