@@ -34,6 +34,48 @@ static bool Saturation16(ThumbTranslatorVisitor& v, Reg n, Reg d, size_t saturat
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_BFC(Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb) {
+    if (d == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const u32 lsbit = concatenate(imm3, imm2).ZeroExtend();
+    const u32 msbit = msb.ZeroExtend();
+
+    if (msbit < lsbit) {
+        return UnpredictableInstruction();
+    }
+
+    const u32 mask = ~(Common::Ones<u32>(msbit - lsbit + 1) << lsbit);
+    const auto reg_d = ir.GetRegister(d);
+    const auto result = ir.And(reg_d, ir.Imm32(mask));
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_BFI(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb) {
+    if (d == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const u32 lsbit = concatenate(imm3, imm2).ZeroExtend();
+    const u32 msbit = msb.ZeroExtend();
+
+    if (msbit < lsbit) {
+        return UnpredictableInstruction();
+    }
+
+    const u32 inclusion_mask = Common::Ones<u32>(msbit - lsbit + 1) << lsbit;
+    const u32 exclusion_mask = ~inclusion_mask;
+    const IR::U32 operand1 = ir.And(ir.GetRegister(d), ir.Imm32(exclusion_mask));
+    const IR::U32 operand2 = ir.And(ir.LogicalShiftLeft(ir.GetRegister(n), ir.Imm8(u8(lsbit))), ir.Imm32(inclusion_mask));
+    const IR::U32 result = ir.Or(operand1, operand2);
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_MOVT(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
