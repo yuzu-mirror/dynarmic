@@ -77,15 +77,13 @@ INST(thumb32_MOVW_imm,       "MOVW (imm)",               "11110i100100iiii0iiidd
 //INST(thumb32_ADR,            "ADR",                      "11110-10101011110---------------")
 INST(thumb32_SUB_imm_2,      "SUB (imm)",                "11110i10101011010iiiddddiiiiiiii")
 INST(thumb32_MOVT,           "MOVT",                     "11110i101100iiii0iiiddddiiiiiiii")
-//INST(thumb32_SSAT,           "SSAT",                     "11110-110000----0---------------")
-//INST(thumb32_SSAT,           "SSAT",                     "11110-110010----0---------------")
 INST(thumb32_SSAT16,         "SSAT16",                   "111100110010nnnn0000dddd0000iiii")
+INST(thumb32_USAT16,         "USAT16",                   "111100111010nnnn0000dddd0000iiii")
+INST(thumb32_SSAT,           "SSAT",                     "1111001100s0nnnn0iiiddddii0bbbbb")
+INST(thumb32_USAT,           "USAT",                     "1111001110s0nnnn0iiiddddii0bbbbb")
 INST(thumb32_SBFX,           "SBFX",                     "111100110100nnnn0iiiddddii0wwwww")
 INST(thumb32_BFC,            "BFC",                      "11110011011011110iiiddddii0bbbbb")
 INST(thumb32_BFI,            "BFI",                      "111100110110nnnn0iiiddddii0bbbbb")
-//INST(thumb32_USAT,           "USAT",                     "11110-111000----0---------------")
-//INST(thumb32_USAT,           "USAT",                     "11110-111010----0---------------")
-INST(thumb32_USAT16,         "USAT16",                   "111100111010nnnn0000dddd0000iiii")
 INST(thumb32_UBFX,           "UBFX",                     "111100111100nnnn0iiiddddii0wwwww")
 
 // Branches and Miscellaneous Control

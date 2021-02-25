@@ -67,6 +67,8 @@ struct ThumbTranslatorVisitor final {
     bool UndefinedInstruction();
     bool RaiseException(Exception exception);
 
+    IR::ResultAndCarry<IR::U32> EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in);
+
     // thumb16
     bool thumb16_LSL_imm(Imm<5> imm5, Reg m, Reg d);
     bool thumb16_LSR_imm(Imm<5> imm5, Reg m, Reg d);
@@ -166,9 +168,11 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_MOVT(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8);
     bool thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8);
     bool thumb32_SBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1);
+    bool thumb32_SSAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm);
     bool thumb32_SSAT16(Reg n, Reg d, Imm<4> sat_imm);
     bool thumb32_SUB_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8);
     bool thumb32_UBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1);
+    bool thumb32_USAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm);
     bool thumb32_USAT16(Reg n, Reg d, Imm<4> sat_imm);
 
     // thumb32 miscellaneous control instructions

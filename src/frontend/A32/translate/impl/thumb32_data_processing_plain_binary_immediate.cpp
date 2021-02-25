@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "common/assert.h"
 #include "common/bit_util.h"
 #include "frontend/A32/translate/impl/translate_thumb.h"
 
@@ -16,6 +17,24 @@ static IR::U16 MostSignificantHalf(A32::IREmitter& ir, IR::U32 value) {
 }
 
 using SaturationFunction = IR::ResultAndOverflow<IR::U32> (IREmitter::*)(const IR::U32&, size_t);
+
+static bool Saturation(ThumbTranslatorVisitor& v, bool sh, Reg n, Reg d, Imm<5> shift_amount, size_t saturate_to, SaturationFunction sat_fn) {
+    if (d == Reg::PC || n == Reg::PC) {
+        return v.UnpredictableInstruction();
+    }
+
+    if (sh && shift_amount == 0) {
+        ASSERT_FALSE("Invalid decode");
+    }
+
+    const auto shift = sh ? ShiftType::ASR : ShiftType::LSL;
+    const auto operand = v.EmitImmShift(v.ir.GetRegister(n), shift, shift_amount, v.ir.GetCFlag());
+    const auto result = (v.ir.*sat_fn)(operand.result, saturate_to);
+
+    v.ir.SetRegister(d, result.result);
+    v.ir.OrQFlag(result.overflow);
+    return true;
+}
 
 static bool Saturation16(ThumbTranslatorVisitor& v, Reg n, Reg d, size_t saturate_to, SaturationFunction sat_fn) {
     if (d == Reg::PC || n == Reg::PC) {
@@ -138,6 +157,10 @@ bool ThumbTranslatorVisitor::thumb32_SBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SSAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm) {
+    return Saturation(*this, sh, n, d, concatenate(imm3, imm2), sat_imm.ZeroExtend() + 1, &IREmitter::SignedSaturation);
+}
+
 bool ThumbTranslatorVisitor::thumb32_SSAT16(Reg n, Reg d, Imm<4> sat_imm) {
     return Saturation16(*this, n, d, sat_imm.ZeroExtend() + 1, &IREmitter::SignedSaturation);
 }
@@ -173,6 +196,10 @@ bool ThumbTranslatorVisitor::thumb32_UBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2
 
     ir.SetRegister(d, result);
     return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_USAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm) {
+    return Saturation(*this, sh, n, d, concatenate(imm3, imm2), sat_imm.ZeroExtend(), &IREmitter::UnsignedSaturation);
 }
 
 bool ThumbTranslatorVisitor::thumb32_USAT16(Reg n, Reg d, Imm<4> sat_imm) {
