@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "common/bit_util.h"
 #include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
@@ -100,8 +101,52 @@ bool ThumbTranslatorVisitor::thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> i
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_SBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1) {
+    if (d == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const u32 lsbit = concatenate(imm3, imm2).ZeroExtend();
+    const u32 widthm1_value = widthm1.ZeroExtend();
+    const u32 msb = lsbit + widthm1_value;
+    if (msb >= Common::BitSize<u32>()) {
+        return UnpredictableInstruction();
+    }
+
+    constexpr size_t max_width = Common::BitSize<u32>();
+    const auto width = widthm1_value + 1;
+    const auto left_shift_amount = static_cast<u8>(max_width - width - lsbit);
+    const auto right_shift_amount = static_cast<u8>(max_width - width);
+    const auto operand = ir.GetRegister(n);
+    const auto tmp = ir.LogicalShiftLeft(operand, ir.Imm8(left_shift_amount));
+    const auto result = ir.ArithmeticShiftRight(tmp, ir.Imm8(right_shift_amount));
+
+    ir.SetRegister(d, result);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_SSAT16(Reg n, Reg d, Imm<4> sat_imm) {
     return Saturation16(*this, n, d, sat_imm.ZeroExtend() + 1, &IREmitter::SignedSaturation);
+}
+
+bool ThumbTranslatorVisitor::thumb32_UBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1) {
+    if (d == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const u32 lsbit = concatenate(imm3, imm2).ZeroExtend();
+    const u32 widthm1_value = widthm1.ZeroExtend();
+    const u32 msb = lsbit + widthm1_value;
+    if (msb >= Common::BitSize<u32>()) {
+        return UnpredictableInstruction();
+    }
+
+    const auto operand = ir.GetRegister(n);
+    const auto mask = ir.Imm32(Common::Ones<u32>(widthm1_value + 1));
+    const auto result = ir.And(ir.LogicalShiftRight(operand, ir.Imm8(u8(lsbit))), mask);
+
+    ir.SetRegister(d, result);
+    return true;
 }
 
 bool ThumbTranslatorVisitor::thumb32_USAT16(Reg n, Reg d, Imm<4> sat_imm) {
