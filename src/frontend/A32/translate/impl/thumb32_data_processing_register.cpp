@@ -6,9 +6,42 @@
 #include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
-static IR::U32 Rotate(A32::IREmitter& ir, Reg m, SignExtendRotation rotate) {
+namespace {
+IR::U32 Rotate(A32::IREmitter& ir, Reg m, SignExtendRotation rotate) {
     const u8 rotate_by = static_cast<u8>(static_cast<size_t>(rotate) * 8);
     return ir.RotateRight(ir.GetRegister(m), ir.Imm8(rotate_by), ir.Imm1(0)).result;
+}
+
+using ShiftFunction = IR::ResultAndCarry<IR::U32> (IREmitter::*)(const IR::U32&, const IR::U8&, const IR::U1&);
+
+bool ShiftInstruction(ThumbTranslatorVisitor& v, Reg m, Reg d, Reg s, ShiftFunction shift_fn) {
+    if (d == Reg::PC || m == Reg::PC || s == Reg::PC) {
+        return v.UnpredictableInstruction();
+    }
+
+    const auto shift_s = v.ir.LeastSignificantByte(v.ir.GetRegister(s));
+    const auto apsr_c = v.ir.GetCFlag();
+    const auto result_carry = (v.ir.*shift_fn)(v.ir.GetRegister(m), shift_s, apsr_c);
+
+    v.ir.SetRegister(d, result_carry.result);
+    return true;
+}
+} // Anonymous namespace
+
+bool ThumbTranslatorVisitor::thumb32_ASR_reg(Reg m, Reg d, Reg s) {
+    return ShiftInstruction(*this, m, d, s, &IREmitter::ArithmeticShiftRight);
+}
+
+bool ThumbTranslatorVisitor::thumb32_LSL_reg(Reg m, Reg d, Reg s) {
+    return ShiftInstruction(*this, m, d, s, &IREmitter::LogicalShiftLeft);
+}
+
+bool ThumbTranslatorVisitor::thumb32_LSR_reg(Reg m, Reg d, Reg s) {
+    return ShiftInstruction(*this, m, d, s, &IREmitter::LogicalShiftRight);
+}
+
+bool ThumbTranslatorVisitor::thumb32_ROR_reg(Reg m, Reg d, Reg s) {
+    return ShiftInstruction(*this, m, d, s, &IREmitter::RotateRight);
 }
 
 bool ThumbTranslatorVisitor::thumb32_SXTB(Reg d, SignExtendRotation rotate, Reg m) {
