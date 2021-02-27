@@ -60,6 +60,7 @@ INST(WFE,                    "WFE",                                       "11010
 INST(WFI,                    "WFI",                                       "11010101000000110010000001111111")
 INST(SEV,                    "SEV",                                       "11010101000000110010000010011111")
 INST(SEVL,                   "SEVL",                                      "11010101000000110010000010111111")
+//INST(DGH,                    "DGH",                                       "11010101000000110010000011011111") // v8.6
 //INST(XPAC_1,                 "XPACD, XPACI, XPACLRI",                     "110110101100000101000D11111ddddd")
 //INST(XPAC_2,                 "XPACD, XPACI, XPACLRI",                     "11010101000000110010000011111111")
 //INST(PACIA_1,                "PACIA, PACIA1716, PACIASP, PACIAZ, PACIZA", "110110101100000100Z000nnnnnddddd")
@@ -611,6 +612,12 @@ INST(FMLS_vec_1,             "FMLS (vector)",                             "0Q001
 //INST(FMINP_vec_1,            "FMINP (vector)",                            "0Q101110110mmmmm001101nnnnnddddd")
 
 // Data Processing - FP and SIMD - SIMD Three same extra
+//INST(SMMLA_vec,              "SMMLA",                                     "01001110100mmmmm101001nnnnnddddd") // v8.6
+//INST(UMMLA_vec,              "UMMLA",                                     "01101110100mmmmm101001nnnnnddddd") // v8.6
+//INST(USMMLA_vec,             "USMMLA",                                    "01001110100mmmmm101011nnnnnddddd") // v8.6
+//INST(SUDOT_element,          "SUDOT (by element)",                        "0Q00111100LMmmmm1111H0nnnnnddddd") // v8.6
+//INST(USDOT_element,          "USDOT (by_element)",                        "0Q00111110LMmmmm1111H0nnnnnddddd") // v8.6
+//INST(USDOT_vec,              "USDOT (vector)",                            "0Q001110100mmmmm100111nnnnnddddd") // v8.6
 INST(SDOT_vec,               "SDOT (vector)",                             "0Q001110zz0mmmmm100101nnnnnddddd")
 INST(UDOT_vec,               "UDOT (vector)",                             "0Q101110zz0mmmmm100101nnnnnddddd")
 INST(FCMLA_vec,              "FCMLA",                                     "0Q101110zz0mmmmm110rr1nnnnnddddd")
@@ -1005,3 +1012,12 @@ INST(FMADD_float,            "FMADD",                                     "00011
 INST(FMSUB_float,            "FMSUB",                                     "00011111yy0mmmmm1aaaaannnnnddddd")
 INST(FNMADD_float,           "FNMADD",                                    "00011111yy1mmmmm0aaaaannnnnddddd")
 INST(FNMSUB_float,           "FNMSUB",                                    "00011111yy1mmmmm1aaaaannnnnddddd")
+
+// BFloat16
+//INST(BFCVT,                  "BFCVT",                                     "0001111001100011010000nnnnnddddd") // v8.6
+//INST(BFCVTN,                 "BFCVTN{2}",                                 "0Q00111010100001011010nnnnnddddd") // v8.6
+//INST(BFDOT_element,          "BFDOT (by element)",                        "0Q00111101LMmmmm1111H0nnnnnddddd") // v8.6
+//INST(BFDOT_vec,              "BFDOT (vector)",                            "0Q101110010mmmmm111111nnnnnddddd") // v8.6
+//INST(BFMLALX_element,        "BFMLALX (by element)",                      "0Q00111111LMmmmm1111H0nnnnnddddd") // v8.6
+//INST(BFMLALX_vector,         "BFMLALX (vector)",                          "0Q101110110mmmmm111111nnnnnddddd") // v8.6
+//INST(BFMMLA,                 "BFMMLA",                                    "01101110010mmmmm111011nnnnnddddd") // v8.6
