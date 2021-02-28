@@ -228,4 +228,19 @@ bool ThumbTranslatorVisitor::thumb32_SBC_imm(Imm<1> i, bool S, Reg n, Imm<3> imm
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_CMP_imm(Imm<1> i, Reg n, Imm<3> imm3, Imm<8> imm8) {
+    if (n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto imm32 = ThumbExpandImm(i, imm3, imm8);
+    const auto result = ir.SubWithCarry(ir.GetRegister(n), ir.Imm32(imm32), ir.Imm1(1));
+
+    ir.SetNFlag(ir.MostSignificantBit(result.result));
+    ir.SetZFlag(ir.IsZero(result.result));
+    ir.SetCFlag(result.carry);
+    ir.SetVFlag(result.overflow);
+    return true;
+}
+
 } // namespace Dynarmic::A32
