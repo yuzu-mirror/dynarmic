@@ -67,7 +67,7 @@ INST(thumb32_ADD_imm_1,      "ADD (imm)",                "11110v01000Snnnn0vvvdd
 INST(thumb32_ADC_imm,        "ADC (imm)",                "11110v01010Snnnn0vvvddddvvvvvvvv")
 INST(thumb32_SBC_imm,        "SBC (imm)",                "11110v01011Snnnn0vvvddddvvvvvvvv")
 INST(thumb32_CMP_imm,        "CMP (imm)",                "11110v011011nnnn0vvv1111vvvvvvvv")
-//INST(thumb32_SUB_imm_1,      "SUB (imm)",                "11110-01101-----0---------------")
+INST(thumb32_SUB_imm_1,      "SUB (imm)",                "11110v01101Snnnn0vvvddddvvvvvvvv")
 //INST(thumb32_RSB_imm,        "RSB (imm)",                "11110-01110-----0---------------")
 
 // Data Processing (Plain Binary Immediate)
