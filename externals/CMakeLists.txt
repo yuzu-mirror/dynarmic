@@ -25,6 +25,10 @@ add_library(robin_map INTERFACE)
 add_library(tsl::robin_map ALIAS robin_map)
 target_include_directories(robin_map SYSTEM INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/robin-map/include>")
 
+# vixl
+
+add_subdirectory(vixl)
+
 # xbyak
 
 if (NOT TARGET xbyak)
