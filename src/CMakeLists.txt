@@ -162,6 +162,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/impl/thumb32_misc.cpp
         frontend/A32/translate/impl/thumb32_multiply.cpp
         frontend/A32/translate/impl/thumb32_parallel.cpp
+        frontend/A32/translate/impl/thumb32_store_single_data_item.cpp
         frontend/A32/translate/impl/translate_arm.h
         frontend/A32/translate/impl/translate_thumb.h
         frontend/A32/translate/impl/vfp.cpp
