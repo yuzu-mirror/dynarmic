@@ -77,6 +77,7 @@ INST(thumb32_MOVW_imm,       "MOVW (imm)",               "11110i100100iiii0iiidd
 //INST(thumb32_ADR,            "ADR",                      "11110-10101011110---------------")
 INST(thumb32_SUB_imm_2,      "SUB (imm)",                "11110i10101011010iiiddddiiiiiiii")
 INST(thumb32_MOVT,           "MOVT",                     "11110i101100iiii0iiiddddiiiiiiii")
+INST(thumb32_UDF,            "Invalid decoding",         "11110011-010----0000----0001----")
 INST(thumb32_SSAT16,         "SSAT16",                   "111100110010nnnn0000dddd0000iiii")
 INST(thumb32_USAT16,         "USAT16",                   "111100111010nnnn0000dddd0000iiii")
 INST(thumb32_SSAT,           "SSAT",                     "1111001100s0nnnn0iiiddddii0bbbbb")
