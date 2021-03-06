@@ -124,7 +124,7 @@ INST(thumb32_UDF,            "UDF",                      "111101111111----1010--
 // Branch instructions
 INST(thumb32_BL_imm,         "BL (imm)",                 "11110Svvvvvvvvvv11j1jvvvvvvvvvvv") // v4T
 INST(thumb32_BLX_imm,        "BLX (imm)",                "11110Svvvvvvvvvv11j0jvvvvvvvvvvv") // v5T
-//INST(thumb32_B,              "B",                        "11110-----------10-1------------")
+INST(thumb32_B,              "B",                        "11110Svvvvvvvvvv10j1jvvvvvvvvvvv")
 //INST(thumb32_B_cond,         "B (cond)",                 "11110-----------10-0------------")
 
 // Store Single Data Item
