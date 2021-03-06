@@ -38,7 +38,7 @@ INST(thumb32_MVN_reg,        "MVN (reg)",                "11101010011S11110vvvdd
 INST(thumb32_ORN_reg,        "ORN (reg)",                "11101010011Snnnn0vvvddddvvttmmmm")
 INST(thumb32_TEQ_reg,        "TEQ (reg)",                "111010101001nnnn0vvv1111vvttmmmm")
 INST(thumb32_EOR_reg,        "EOR (reg)",                "11101010100Snnnn0vvvddddvvttmmmm")
-//INST(thumb32_PKH,            "PKH",                      "11101010110---------------------")
+INST(thumb32_PKH,            "PKH",                      "111010101100nnnn0vvvddddvvt0mmmm")
 //INST(thumb32_CMN_reg,        "CMN (reg)",                "111010110001--------1111--------")
 //INST(thumb32_ADD_reg,        "ADD (reg)",                "11101011000---------------------")
 //INST(thumb32_ADC_reg,        "ADC (reg)",                "11101011010---------------------")
