@@ -56,6 +56,27 @@ struct ThumbTranslatorVisitor final {
         return ThumbExpandImm_C(i, imm3, imm8, ir.Imm1(0)).imm32;
     }
 
+    IR::ResultAndCarry<IR::U32> EmitImmShift(IR::U32 value, ShiftType type, Imm<3> imm3, Imm<2> imm2, IR::U1 carry_in) {
+        u8 imm5_value = concatenate(imm3, imm2).ZeroExtend<u8>();
+        switch (type) {
+        case ShiftType::LSL:
+            return ir.LogicalShiftLeft(value, ir.Imm8(imm5_value), carry_in);
+        case ShiftType::LSR:
+            imm5_value = imm5_value ? imm5_value : 32;
+            return ir.LogicalShiftRight(value, ir.Imm8(imm5_value), carry_in);
+        case ShiftType::ASR:
+            imm5_value = imm5_value ? imm5_value : 32;
+            return ir.ArithmeticShiftRight(value, ir.Imm8(imm5_value), carry_in);
+        case ShiftType::ROR:
+            if (imm5_value) {
+                return ir.RotateRight(value, ir.Imm8(imm5_value), carry_in);
+            } else {
+                return ir.RotateRightExtended(value, carry_in);
+            }
+        }
+        UNREACHABLE();
+    }
+
     A32::IREmitter ir;
     ConditionalState cond_state = ConditionalState::None;
     TranslationOptions options;
@@ -149,6 +170,9 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_SVC(Imm<8> imm8);
     bool thumb16_B_t1(Cond cond, Imm<8> imm8);
     bool thumb16_B_t2(Imm<11> imm11);
+
+    // thumb32 data processing (shifted register) instructions
+    bool thumb32_TST_reg(Reg n, Imm<3> imm3, Imm<2> imm2, ShiftType type, Reg m);
 
     // thumb32 data processing (modified immediate) instructions
     bool thumb32_TST_imm(Imm<1> i, Reg n, Imm<3> imm3, Imm<8> imm8);

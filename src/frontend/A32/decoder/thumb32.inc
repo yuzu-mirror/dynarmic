@@ -29,7 +29,7 @@
 //INST(thumb32_LDREXD,         "LDREXD",                   "111010001101------------0111----")
 
 // Data Processing (Shifted Register)
-//INST(thumb32_TST_reg,        "TST (reg)",                "111010100001--------1111--------")
+INST(thumb32_TST_reg,        "TST (reg)",                "111010100001nnnn0vvv1111vvttmmmm")
 //INST(thumb32_AND_reg,        "AND (reg)",                "11101010000---------------------")
 //INST(thumb32_BIC_reg,        "BIC (reg)",                "11101010001---------------------")
 //INST(thumb32_MOV_reg,        "MOV (reg)",                "11101010010-1111-000----0000----")
