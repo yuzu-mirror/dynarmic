@@ -170,4 +170,19 @@ bool ThumbTranslatorVisitor::thumb32_PKH(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2,
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_CMN_reg(Reg n, Imm<3> imm3, Imm<2> imm2, ShiftType type, Reg m) {
+    if (n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto shifted = EmitImmShift(ir.GetRegister(m), type, imm3, imm2, ir.GetCFlag());
+    const auto result = ir.AddWithCarry(ir.GetRegister(n), shifted.result, ir.Imm1(0));
+
+    ir.SetNFlag(ir.MostSignificantBit(result.result));
+    ir.SetZFlag(ir.IsZero(result.result));
+    ir.SetCFlag(result.carry);
+    ir.SetVFlag(result.overflow);
+    return true;
+}
+
 } // namespace Dynarmic::A32
