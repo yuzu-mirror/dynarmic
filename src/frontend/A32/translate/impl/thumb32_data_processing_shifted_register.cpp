@@ -137,4 +137,22 @@ bool ThumbTranslatorVisitor::thumb32_TEQ_reg(Reg n, Imm<3> imm3, Imm<2> imm2, Sh
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_EOR_reg(bool S, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, ShiftType type, Reg m) {
+    ASSERT_MSG(!(d == Reg::PC && S), "Decode error");
+
+    if ((d == Reg::PC && !S) || n == Reg::PC || m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto shifted = EmitImmShift(ir.GetRegister(m), type, imm3, imm2, ir.GetCFlag());
+    const auto result = ir.Eor(ir.GetRegister(n), shifted.result);
+    ir.SetRegister(d, result);
+    if (S) {
+        ir.SetNFlag(ir.MostSignificantBit(result));
+        ir.SetZFlag(ir.IsZero(result));
+        ir.SetCFlag(shifted.carry);
+    }
+    return true;
+}
+
 } // namespace Dynarmic::A32
