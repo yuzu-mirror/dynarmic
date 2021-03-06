@@ -45,7 +45,7 @@ INST(thumb32_ADC_reg,        "ADC (reg)",                "11101011010Snnnn0vvvdd
 INST(thumb32_SBC_reg,        "SBC (reg)",                "11101011011Snnnn0vvvddddvvttmmmm")
 INST(thumb32_CMP_reg,        "CMP (reg)",                "111010111011nnnn0vvv1111vvttmmmm")
 INST(thumb32_SUB_reg,        "SUB (reg)",                "11101011101Snnnn0vvvddddvvttmmmm")
-//INST(thumb32_RSB_reg,        "RSB (reg)",                "11101011110---------------------")
+INST(thumb32_RSB_reg,        "RSB (reg)",                "11101011110Snnnn0vvvddddvvttmmmm")
 
 // Data Processing (Modified Immediate)
 INST(thumb32_TST_imm,        "TST (imm)",                "11110v000001nnnn0vvv1111vvvvvvvv")
