@@ -158,11 +158,11 @@ INST(thumb32_LDRB_reg,       "LDRB (reg)",               "111110000001nnnntttt00
 INST(thumb32_LDRBT,          "LDRBT",                    "111110000001nnnntttt1110iiiiiiii")
 INST(thumb32_LDRB_imm8,      "LDRB (imm8)",              "111110000001nnnntttt1PUWiiiiiiii")
 INST(thumb32_LDRB_imm12,     "LDRB (imm12)",             "111110001001nnnnttttiiiiiiiiiiii")
-//INST(thumb32_LDRSB_lit,      "LDRSB (lit)",              "11111001-0011111----------------")
-//INST(thumb32_LDRSB_reg,      "LDRSB (reg)",              "111110010001--------000000------")
-//INST(thumb32_LDRSBT,         "LDRSBT",                   "111110010001--------1110--------")
-//INST(thumb32_LDRSB_imm8,     "LDRSB (imm8)",             "111110010001--------1-----------")
-//INST(thumb32_LDRSB_imm12,    "LDRSB (imm12)",            "111110011001--------------------")
+INST(thumb32_LDRSB_lit,      "LDRSB (lit)",              "11111001U0011111ttttiiiiiiiiiiii")
+INST(thumb32_LDRSB_reg,      "LDRSB (reg)",              "111110010001nnnntttt000000iimmmm")
+INST(thumb32_LDRSBT,         "LDRSBT",                   "111110010001nnnntttt1110iiiiiiii")
+INST(thumb32_LDRSB_imm8,     "LDRSB (imm8)",             "111110010001nnnntttt1PUWiiiiiiii")
+INST(thumb32_LDRSB_imm12,    "LDRSB (imm12)",            "111110011001nnnnttttiiiiiiiiiiii")
 
 // Load Halfword and Memory Hints
 //INST(thumb32_LDRH_lit,       "LDRH (lit)",               "11111000-0111111----------------")
