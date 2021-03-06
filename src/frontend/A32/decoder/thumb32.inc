@@ -125,7 +125,8 @@ INST(thumb32_UDF,            "UDF",                      "111101111111----1010--
 INST(thumb32_BL_imm,         "BL (imm)",                 "11110Svvvvvvvvvv11j1jvvvvvvvvvvv") // v4T
 INST(thumb32_BLX_imm,        "BLX (imm)",                "11110Svvvvvvvvvv11j0jvvvvvvvvvvv") // v5T
 INST(thumb32_B,              "B",                        "11110Svvvvvvvvvv10j1jvvvvvvvvvvv")
-//INST(thumb32_B_cond,         "B (cond)",                 "11110-----------10-0------------")
+INST(thumb32_UDF,            "Invalid decoding",         "11110-111-------10-0------------")
+INST(thumb32_B_cond,         "B (cond)",                 "11110Sccccvvvvvv10i0ivvvvvvvvvvv")
 
 // Store Single Data Item
 //INST(thumb32_STRB_imm_1,     "STRB (imm)",               "111110000000--------1--1--------")

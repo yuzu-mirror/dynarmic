@@ -200,6 +200,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo);
     bool thumb32_BLX_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo);
     bool thumb32_B(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo);
+    bool thumb32_B_cond(Imm<1> S, Cond cond, Imm<6> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo);
 
     // thumb32 store single data item instructions
     bool thumb32_STRB(Reg n, Reg t, Imm<2> imm2, Reg m);
