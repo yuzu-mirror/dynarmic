@@ -17,6 +17,14 @@ static bool PLDHandler(ThumbTranslatorVisitor& v, bool W) {
     return v.RaiseException(exception);
 }
 
+static bool PLIHandler(ThumbTranslatorVisitor& v) {
+    if (!v.options.hook_hint_instructions) {
+        return true;
+    }
+
+    return v.RaiseException(Exception::PreloadInstruction);
+}
+
 bool ThumbTranslatorVisitor::thumb32_PLD_lit([[maybe_unused]] bool U,
                                              [[maybe_unused]] Imm<12> imm12) {
     return PLDHandler(*this, false);
@@ -43,6 +51,31 @@ bool ThumbTranslatorVisitor::thumb32_PLD_reg(bool W,
     }
 
     return PLDHandler(*this, W);
+}
+
+bool ThumbTranslatorVisitor::thumb32_PLI_lit([[maybe_unused]] bool U,
+                                             [[maybe_unused]] Imm<12> imm12) {
+    return PLIHandler(*this);
+}
+
+bool ThumbTranslatorVisitor::thumb32_PLI_imm8([[maybe_unused]] Reg n,
+                                              [[maybe_unused]] Imm<8> imm8) {
+    return PLIHandler(*this);
+}
+
+bool ThumbTranslatorVisitor::thumb32_PLI_imm12([[maybe_unused]] Reg n,
+                                               [[maybe_unused]] Imm<12> imm12) {
+    return PLIHandler(*this);
+}
+
+bool ThumbTranslatorVisitor::thumb32_PLI_reg([[maybe_unused]] Reg n,
+                                             [[maybe_unused]] Imm<2> imm2,
+                                             Reg m) {
+    if (m == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    return PLIHandler(*this);
 }
 
 } // namespace Dynarmic::A32

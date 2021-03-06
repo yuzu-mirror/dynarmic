@@ -48,6 +48,8 @@ enum class Exception {
     PreloadData,
     /// A PLDW instruction was executed. (Hint instruction.)
     PreloadDataWithIntentToWrite,
+    /// A PLI instruction was executed. (Hint instruction.)
+    PreloadInstruction,
 };
 
 /// These function pointers may be inserted into compiled code.
