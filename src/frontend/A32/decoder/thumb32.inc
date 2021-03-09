@@ -177,11 +177,11 @@ INST(thumb32_LDRSB_imm12,    "LDRSB (imm12)",            "111110011001nnnnttttii
 //INST(thumb32_NOP,            "NOP",                      "111110011011----1111------------")
 
 // Load Word
-//INST(thumb32_LDR_lit,        "LDR (lit)",                "11111000-1011111----------------")
-//INST(thumb32_LDRT,           "LDRT",                     "111110000101--------1110--------")
-//INST(thumb32_LDR_reg,        "LDR (reg)",                "111110000101--------000000------")
-//INST(thumb32_LDR_imm8,       "LDR (imm8)",               "111110000101--------1-----------")
-//INST(thumb32_LDR_imm12,      "LDR (imm12)",              "111110001101--------------------")
+INST(thumb32_LDR_lit,        "LDR (lit)",                "11111000U1011111ttttiiiiiiiiiiii")
+INST(thumb32_LDRT,           "LDRT",                     "111110000101nnnntttt1110iiiiiiii")
+INST(thumb32_LDR_reg,        "LDR (reg)",                "111110000101nnnntttt000000iimmmm")
+INST(thumb32_LDR_imm8,       "LDR (imm8)",               "111110000101nnnntttt1PUWiiiiiiii")
+INST(thumb32_LDR_imm12,      "LDR (imm12)",              "111110001101nnnnttttiiiiiiiiiiii")
 
 // Data Processing (register)
 INST(thumb32_LSL_reg,        "LSL (reg)",                "111110100000mmmm1111dddd0000ssss")
