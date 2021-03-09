@@ -142,6 +142,7 @@ INST(thumb32_STR_reg,        "STR (reg)",                "111110000100nnnntttt00
 
 // Load Byte and Memory Hints
 INST(thumb32_PLD_lit,        "PLD (lit)",                "11111000U00111111111iiiiiiiiiiii")
+INST(thumb32_PLD_lit,        "PLD (lit)",                "11111000U01111111111iiiiiiiiiiii")
 INST(thumb32_PLD_reg,        "PLD (reg)",                "1111100000W1nnnn1111000000iimmmm")
 INST(thumb32_PLD_imm8,       "PLD (imm8)",               "1111100000W1nnnn11111100iiiiiiii")
 INST(thumb32_PLD_imm12,      "PLD (imm12)",              "1111100010W1nnnn1111iiiiiiiiiiii")
