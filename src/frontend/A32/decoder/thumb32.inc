@@ -142,6 +142,7 @@ INST(thumb32_STR_reg,        "STR (reg)",                "111110000100nnnntttt00
 
 // Load Byte and Memory Hints
 INST(thumb32_PLD_lit,        "PLD (lit)",                "11111000U00111111111iiiiiiiiiiii")
+INST(thumb32_PLD_lit,        "PLD (lit)",                "11111000U01111111111iiiiiiiiiiii")
 INST(thumb32_PLD_reg,        "PLD (reg)",                "1111100000W1nnnn1111000000iimmmm")
 INST(thumb32_PLD_imm8,       "PLD (imm8)",               "1111100000W1nnnn11111100iiiiiiii")
 INST(thumb32_PLD_imm12,      "PLD (imm12)",              "1111100010W1nnnn1111iiiiiiiiiiii")
@@ -161,20 +162,20 @@ INST(thumb32_LDRSB_imm8,     "LDRSB (imm8)",             "111110010001nnnntttt1P
 INST(thumb32_LDRSB_imm12,    "LDRSB (imm12)",            "111110011001nnnnttttiiiiiiiiiiii")
 
 // Load Halfword and Memory Hints
-//INST(thumb32_LDRH_lit,       "LDRH (lit)",               "11111000-0111111----------------")
-//INST(thumb32_LDRH_reg,       "LDRH (reg)",               "111110000011--------000000------")
-//INST(thumb32_LDRHT,          "LDRHT",                    "111110000011--------1110--------")
-//INST(thumb32_LDRH_imm8,      "LDRH (imm8)",              "111110000011--------1-----------")
-//INST(thumb32_LDRH_imm12,     "LDRH (imm12)",             "111110001011--------------------")
-//INST(thumb32_LDRSH_lit,      "LDRSH (lit)",              "11111001-0111111----------------")
-//INST(thumb32_LDRSH_reg,      "LDRSH (reg)",              "111110010011--------000000------")
-//INST(thumb32_LDRSHT,         "LDRSHT",                   "111110010011--------1110--------")
-//INST(thumb32_LDRSH_imm8,     "LDRSH (imm8)",             "111110010011--------1-----------")
-//INST(thumb32_LDRSH_imm12,    "LDRSH (imm12)",            "111110011011--------------------")
-//INST(thumb32_NOP,            "NOP",                      "111110010011----1111000000------")
-//INST(thumb32_NOP,            "NOP",                      "111110010011----11111100--------")
-//INST(thumb32_NOP,            "NOP",                      "11111001-01111111111------------")
-//INST(thumb32_NOP,            "NOP",                      "111110011011----1111------------")
+INST(thumb32_LDRH_lit,       "LDRH (lit)",               "11111000U0111111ttttiiiiiiiiiiii")
+INST(thumb32_LDRH_reg,       "LDRH (reg)",               "111110000011nnnntttt000000iimmmm")
+INST(thumb32_LDRHT,          "LDRHT",                    "111110000011nnnntttt1110iiiiiiii")
+INST(thumb32_LDRH_imm8,      "LDRH (imm8)",              "111110000011nnnntttt1PUWiiiiiiii")
+INST(thumb32_LDRH_imm12,     "LDRH (imm12)",             "111110001011nnnnttttiiiiiiiiiiii")
+INST(thumb32_NOP,            "NOP",                      "11111001-01111111111------------")
+INST(thumb32_LDRSH_lit,      "LDRSH (lit)",              "11111001U0111111ttttiiiiiiiiiiii")
+INST(thumb32_NOP,            "NOP",                      "111110010011----1111000000------")
+INST(thumb32_LDRSH_reg,      "LDRSH (reg)",              "111110010011nnnntttt000000iimmmm")
+INST(thumb32_LDRSHT,         "LDRSHT",                   "111110010011nnnntttt1110iiiiiiii")
+INST(thumb32_NOP,            "NOP",                      "111110010011----11111100--------")
+INST(thumb32_NOP,            "NOP",                      "111110011011----1111------------")
+INST(thumb32_LDRSH_imm8,     "LDRSH (imm8)",             "111110010011nnnntttt1PUWiiiiiiii")
+INST(thumb32_LDRSH_imm12,    "LDRSH (imm12)",            "111110011011nnnnttttiiiiiiiiiiii")
 
 // Load Word
 INST(thumb32_LDR_lit,        "LDR (lit)",                "11111000U1011111ttttiiiiiiiiiiii")

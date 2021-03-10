@@ -267,6 +267,18 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_LDRSB_imm12(Reg n, Reg t, Imm<12> imm12);
     bool thumb32_LDRSBT(Reg n, Reg t, Imm<8> imm8);
 
+    // thumb32 load halfword instructions
+    bool thumb32_LDRH_lit(bool U, Reg t, Imm<12> imm12);
+    bool thumb32_LDRH_reg(Reg n, Reg t, Imm<2> imm2, Reg m);
+    bool thumb32_LDRH_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8);
+    bool thumb32_LDRH_imm12(Reg n, Reg t, Imm<12> imm12);
+    bool thumb32_LDRHT(Reg n, Reg t, Imm<8> imm8);
+    bool thumb32_LDRSH_lit(bool U, Reg t, Imm<12> imm12);
+    bool thumb32_LDRSH_reg(Reg n, Reg t, Imm<2> imm2, Reg m);
+    bool thumb32_LDRSH_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8);
+    bool thumb32_LDRSH_imm12(Reg n, Reg t, Imm<12> imm12);
+    bool thumb32_LDRSHT(Reg n, Reg t, Imm<8> imm8);
+
     // thumb32 load word instructions
     bool thumb32_LDR_lit(bool U, Reg t, Imm<12> imm12);
     bool thumb32_LDR_reg(Reg n, Reg t, Imm<2> imm2, Reg m);
