@@ -61,6 +61,8 @@ INST(WFI,                    "WFI",                                       "11010
 INST(SEV,                    "SEV",                                       "11010101000000110010000010011111")
 INST(SEVL,                   "SEVL",                                      "11010101000000110010000010111111")
 //INST(DGH,                    "DGH",                                       "11010101000000110010000011011111") // v8.6
+//INST(WFET,                   "WFET",                                      "110101010000001100010000000ddddd") // v8.7
+//INST(WFIT,                   "WFIT",                                      "110101010000001100010000001ddddd") // v8.7
 //INST(XPAC_1,                 "XPACD, XPACI, XPACLRI",                     "110110101100000101000D11111ddddd")
 //INST(XPAC_2,                 "XPACD, XPACI, XPACLRI",                     "11010101000000110010000011111111")
 //INST(PACIA_1,                "PACIA, PACIA1716, PACIASP, PACIAZ, PACIZA", "110110101100000100Z000nnnnnddddd")
@@ -267,6 +269,10 @@ INST(LDTRSW,                 "LDTRSW",                                    "10111
 //INST(LDUMIN,                 "LDUMIN, LDUMINA, LDUMINAL, LDUMINL",        "1-111000AR1sssss011100nnnnnttttt")
 //INST(SWP,                    "SWP, SWPA, SWPAL, SWPL",                    "1-111000AR1sssss100000nnnnnttttt")
 //INST(LDAPR,                  "LDAPR",                                     "1-11100010111111110000nnnnnttttt")
+//INST(LD64B,                  "LD64B",                                     "1111100000111111110100nnnnnttttt") // v8.7
+//INST(ST64B,                  "ST64B",                                     "1111100000111111100100nnnnnttttt") // v8.7
+//INST(ST64BV,                 "ST64BV",                                    "11111000001sssss101100nnnnnttttt") // v8.7
+//INST(ST64BV0,                "ST64BV0",                                   "11111000001sssss101000nnnnnttttt") // v8.7
 
 // Loads and stores - Load/Store register (register offset)
 INST(STRx_reg,               "STRx (register)",                           "zz111000o01mmmmmxxxS10nnnnnttttt")
