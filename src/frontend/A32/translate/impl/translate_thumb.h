@@ -171,6 +171,9 @@ struct ThumbTranslatorVisitor final {
     bool thumb16_B_t1(Cond cond, Imm<8> imm8);
     bool thumb16_B_t2(Imm<11> imm11);
 
+    // thumb32 load/store multiple instructions
+    bool thumb32_STMIA(bool W, Reg n, Imm<15> reg_list);
+
     // thumb32 data processing (shifted register) instructions
     bool thumb32_TST_reg(Reg n, Imm<3> imm3, Imm<2> imm2, ShiftType type, Reg m);
     bool thumb32_AND_reg(bool S, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, ShiftType type, Reg m);
