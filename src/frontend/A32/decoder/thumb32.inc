@@ -134,10 +134,10 @@ INST(thumb32_STRH_imm_2,     "STRH (imm)",               "111110000010nnnntttt11
 INST(thumb32_STRH_imm_3,     "STRH (imm)",               "111110001010nnnnttttiiiiiiiiiiii")
 INST(thumb32_STRHT,          "STRHT",                    "111110000010nnnntttt1110iiiiiiii")
 INST(thumb32_STRH,           "STRH (reg)",               "111110000010nnnntttt000000iimmmm")
-//INST(thumb32_STR_imm_1,      "STR (imm)",                "111110000100--------1--1--------")
-//INST(thumb32_STR_imm_2,      "STR (imm)",                "111110000100--------1100--------")
-//INST(thumb32_STR_imm_3,      "STR (imm)",                "111110001100--------------------")
-//INST(thumb32_STRT,           "STRT",                     "111110000100--------1110--------")
+INST(thumb32_STR_imm_1,      "STR (imm)",                "111110000100nnnntttt1PU1iiiiiiii")
+INST(thumb32_STR_imm_2,      "STR (imm)",                "111110000100nnnntttt1100iiiiiiii")
+INST(thumb32_STR_imm_3,      "STR (imm)",                "111110001100nnnnttttiiiiiiiiiiii")
+INST(thumb32_STRT,           "STRT",                     "111110000100nnnntttt1110iiiiiiii")
 INST(thumb32_STR_reg,        "STR (reg)",                "111110000100nnnntttt000000iimmmm")
 
 // Load Byte and Memory Hints
