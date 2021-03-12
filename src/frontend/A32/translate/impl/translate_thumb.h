@@ -248,6 +248,10 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_STRB_imm_3(Reg n, Reg t, Imm<12> imm12);
     bool thumb32_STRBT(Reg n, Reg t, Imm<8> imm8);
     bool thumb32_STRB(Reg n, Reg t, Imm<2> imm2, Reg m);
+    bool thumb32_STRH_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8);
+    bool thumb32_STRH_imm_2(Reg n, Reg t, Imm<8> imm8);
+    bool thumb32_STRH_imm_3(Reg n, Reg t, Imm<12> imm12);
+    bool thumb32_STRHT(Reg n, Reg t, Imm<8> imm8);
     bool thumb32_STRH(Reg n, Reg t, Imm<2> imm2, Reg m);
     bool thumb32_STR_reg(Reg n, Reg t, Imm<2> imm2, Reg m);
 
