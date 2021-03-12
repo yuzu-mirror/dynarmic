@@ -29,16 +29,190 @@ static bool StoreRegister(ThumbTranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, 
     return true;
 }
 
+using StoreImmFn = void (*)(ThumbTranslatorVisitor&, const IR::U32&, const IR::U32&);
+
+static void StoreImmByteFn(ThumbTranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
+    v.ir.WriteMemory8(address, v.ir.LeastSignificantByte(data));
+}
+
+static void StoreImmHalfFn(ThumbTranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
+    v.ir.WriteMemory16(address, v.ir.LeastSignificantHalf(data));
+}
+
+static void StoreImmWordFn(ThumbTranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
+    v.ir.WriteMemory32(address, data);
+}
+
+static bool StoreImmediate(ThumbTranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W, Imm<12> imm12,
+                           StoreImmFn store_fn) {
+    const auto imm32 = imm12.ZeroExtend();
+    const auto reg_n = v.ir.GetRegister(n);
+    const auto reg_t = v.ir.GetRegister(t);
+
+    const IR::U32 offset_address = U ? v.ir.Add(reg_n, v.ir.Imm32(imm32))
+                                     : v.ir.Sub(reg_n, v.ir.Imm32(imm32));
+    const IR::U32 address = P ? offset_address
+                              : reg_n;
+
+    store_fn(v, address, reg_t);
+    if (W) {
+        v.ir.SetRegister(n, offset_address);
+    }
+
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRB_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC || n == t) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, P, U, true, Imm<12>{imm8.ZeroExtend()}, StoreImmByteFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRB_imm_2(Reg n, Reg t, Imm<8> imm8) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, true, false, false, Imm<12>{imm8.ZeroExtend()}, StoreImmByteFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRB_imm_3(Reg n, Reg t, Imm<12> imm12) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, true, true, false, imm12, StoreImmByteFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRBT(Reg n, Reg t, Imm<8> imm8) {
+    // TODO: Add an unpredictable instruction path if this
+    //       is executed in hypervisor mode if we ever support
+    //       privileged execution levels.
+
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    // Treat this as a normal STRB, given we don't support
+    // execution levels other than EL0 currently.
+    return StoreImmediate(*this, n, t, true, true, false, Imm<12>{imm8.ZeroExtend()}, StoreImmByteFn);
+}
+
 bool ThumbTranslatorVisitor::thumb32_STRB(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return StoreRegister(*this, n, t, imm2, m, [this](const IR::U32& offset_address, const IR::U32& data) {
         ir.WriteMemory8(offset_address, ir.LeastSignificantByte(data));
     });
 }
 
+bool ThumbTranslatorVisitor::thumb32_STRH_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC || n == t) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, P, U, true, Imm<12>{imm8.ZeroExtend()}, StoreImmHalfFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRH_imm_2(Reg n, Reg t, Imm<8> imm8) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, true, false, false, Imm<12>{imm8.ZeroExtend()}, StoreImmHalfFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRH_imm_3(Reg n, Reg t, Imm<12> imm12) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, true, true, false, imm12, StoreImmHalfFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRHT(Reg n, Reg t, Imm<8> imm8) {
+    // TODO: Add an unpredictable instruction path if this
+    //       is executed in hypervisor mode if we ever support
+    //       privileged execution levels.
+
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    // Treat this as a normal STRH, given we don't support
+    // execution levels other than EL0 currently.
+    return StoreImmediate(*this, n, t, true, true, false, Imm<12>{imm8.ZeroExtend()}, StoreImmHalfFn);
+}
+
 bool ThumbTranslatorVisitor::thumb32_STRH(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return StoreRegister(*this, n, t, imm2, m, [this](const IR::U32& offset_address, const IR::U32& data) {
         ir.WriteMemory16(offset_address, ir.LeastSignificantHalf(data));
     });
+}
+
+bool ThumbTranslatorVisitor::thumb32_STR_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC || n == t) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, P, U, true, Imm<12>{imm8.ZeroExtend()}, StoreImmWordFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STR_imm_2(Reg n, Reg t, Imm<8> imm8) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, true, false, false, Imm<12>{imm8.ZeroExtend()}, StoreImmWordFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STR_imm_3(Reg n, Reg t, Imm<12> imm12) {
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    return StoreImmediate(*this, n, t, true, true, false, imm12, StoreImmWordFn);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRT(Reg n, Reg t, Imm<8> imm8) {
+    // TODO: Add an unpredictable instruction path if this
+    //       is executed in hypervisor mode if we ever support
+    //       privileged execution levels.
+
+    if (n == Reg::PC) {
+        return UndefinedInstruction();
+    }
+    if (t == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    // Treat this as a normal STR, given we don't support
+    // execution levels other than EL0 currently.
+    return StoreImmediate(*this, n, t, true, true, false, Imm<12>{imm8.ZeroExtend()}, StoreImmWordFn);
 }
 
 bool ThumbTranslatorVisitor::thumb32_STR_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
