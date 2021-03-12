@@ -5,7 +5,7 @@ INST(thumb32_STMIA,          "STMIA/STMEA",              "1110100010W0nnnn0iiiii
 //INST(thumb32_POP,            "POP",                      "1110100010111101----------------")
 //INST(thumb32_LDMIA,          "LDMIA/LDMFD",              "1110100010-1--------------------")
 //INST(thumb32_PUSH,           "PUSH",                     "1110100100101101----------------")
-//INST(thumb32_STMDB,          "STMDB/STMFD",              "1110100100-0--------------------")
+INST(thumb32_STMDB,          "STMDB/STMFD",              "1110100100W0nnnn0iiiiiiiiiiiiiii")
 //INST(thumb32_LDMDB,          "LDMDB/LDMEA",              "1110100100-1--------------------")
 //INST(thumb32_SRS_1,          "SRS",                      "1110100110-0--------------------")
 //INST(thumb32_RFE_2,          "RFE",                      "1110100110-1--------------------")
