@@ -209,6 +209,8 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_RSB_imm(Imm<1> i, bool S, Reg n, Imm<3> imm3, Reg d, Imm<8> imm8);
 
     // thumb32 data processing (plain binary immediate) instructions.
+    bool thumb32_ADR_t2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8);
+    bool thumb32_ADR_t3(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8);
     bool thumb32_ADD_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8);
     bool thumb32_BFC(Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb);
     bool thumb32_BFI(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb);

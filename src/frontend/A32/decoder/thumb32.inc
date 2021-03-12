@@ -66,10 +66,10 @@ INST(thumb32_SUB_imm_1,      "SUB (imm)",                "11110v01101Snnnn0vvvdd
 INST(thumb32_RSB_imm,        "RSB (imm)",                "11110v01110Snnnn0vvvddddvvvvvvvv")
 
 // Data Processing (Plain Binary Immediate)
-//INST(thumb32_ADR,            "ADR",                      "11110-10000011110---------------")
+INST(thumb32_ADR_t3,         "ADR",                      "11110i10000011110iiiddddiiiiiiii")
 INST(thumb32_ADD_imm_2,      "ADD (imm)",                "11110i10000011010iiiddddiiiiiiii")
 INST(thumb32_MOVW_imm,       "MOVW (imm)",               "11110i100100iiii0iiiddddiiiiiiii")
-//INST(thumb32_ADR,            "ADR",                      "11110-10101011110---------------")
+INST(thumb32_ADR_t2,         "ADR",                      "11110i10101011110iiiddddiiiiiiii")
 INST(thumb32_SUB_imm_2,      "SUB (imm)",                "11110i10101011010iiiddddiiiiiiii")
 INST(thumb32_MOVT,           "MOVT",                     "11110i101100iiii0iiiddddiiiiiiii")
 INST(thumb32_UDF,            "Invalid decoding",         "11110011-010----0000----0001----")

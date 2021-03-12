@@ -52,6 +52,30 @@ static bool Saturation16(ThumbTranslatorVisitor& v, Reg n, Reg d, size_t saturat
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_ADR_t2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
+    if (d == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto imm32 = concatenate(imm1, imm3, imm8).ZeroExtend();
+    const auto result = ir.AlignPC(4) - imm32;
+
+    ir.SetRegister(d, ir.Imm32(result));
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_ADR_t3(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
+    if (d == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto imm32 = concatenate(imm1, imm3, imm8).ZeroExtend();
+    const auto result = ir.AlignPC(4) + imm32;
+
+    ir.SetRegister(d, ir.Imm32(result));
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_ADD_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
