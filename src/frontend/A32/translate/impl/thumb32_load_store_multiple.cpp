@@ -105,6 +105,10 @@ bool ThumbTranslatorVisitor::thumb32_POP(Imm<16> reg_list) {
     return thumb32_LDMIA(true, Reg::SP, reg_list);
 }
 
+bool ThumbTranslatorVisitor::thumb32_PUSH(Imm<15> reg_list) {
+    return thumb32_STMDB(true, Reg::SP, reg_list);
+}
+
 bool ThumbTranslatorVisitor::thumb32_STMIA(bool W, Reg n, Imm<15> reg_list) {
     const auto regs_imm = reg_list.ZeroExtend();
     const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));

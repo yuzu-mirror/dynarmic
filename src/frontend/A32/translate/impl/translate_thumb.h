@@ -175,6 +175,7 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_LDMDB(bool W, Reg n, Imm<16> reg_list);
     bool thumb32_LDMIA(bool W, Reg n, Imm<16> reg_list);
     bool thumb32_POP(Imm<16> reg_list);
+    bool thumb32_PUSH(Imm<15> reg_list);
     bool thumb32_STMIA(bool W, Reg n, Imm<15> reg_list);
     bool thumb32_STMDB(bool W, Reg n, Imm<15> reg_list);
 
