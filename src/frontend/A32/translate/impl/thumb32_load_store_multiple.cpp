@@ -36,6 +36,21 @@ static bool LDMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list,
     return true;
 }
 
+static bool STMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list,
+                      const IR::U32& start_address, const IR::U32& writeback_address) {
+    auto address = start_address;
+    for (size_t i = 0; i <= 14; i++) {
+        if (Common::Bit(i, list)) {
+            ir.WriteMemory32(address, ir.GetRegister(static_cast<Reg>(i)));
+            address = ir.Add(address, ir.Imm32(4));
+        }
+    }
+    if (W) {
+        ir.SetRegister(n, writeback_address);
+    }
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_LDMIA(bool W, Reg n, Imm<16> reg_list) {
     const auto regs_imm = reg_list.ZeroExtend();
     const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));
@@ -75,18 +90,9 @@ bool ThumbTranslatorVisitor::thumb32_STMIA(bool W, Reg n, Imm<15> reg_list) {
         return UnpredictableInstruction();
     }
 
-    IR::U32 address = ir.GetRegister(n);
-    for (size_t i = 0; i < 15; i++) {
-        if (Common::Bit(i, regs_imm)) {
-            ir.WriteMemory32(address, ir.GetRegister(static_cast<Reg>(i)));
-            address = ir.Add(address, ir.Imm32(4));
-        }
-    }
-
-    if (W) {
-        ir.SetRegister(n, address);
-    }
-    return true;
+    const auto start_address = ir.GetRegister(n);
+    const auto writeback_address = ir.Add(start_address, ir.Imm32(num_regs * 4));
+    return STMHelper(ir, W, n, regs_imm, start_address, writeback_address);
 }
 
 bool ThumbTranslatorVisitor::thumb32_STMDB(bool W, Reg n, Imm<15> reg_list) {
@@ -103,20 +109,9 @@ bool ThumbTranslatorVisitor::thumb32_STMDB(bool W, Reg n, Imm<15> reg_list) {
         return UnpredictableInstruction();
     }
 
+    // Start address is the same as the writeback address.
     const IR::U32 start_address = ir.Sub(ir.GetRegister(n), ir.Imm32(4 * num_regs));
-    IR::U32 address = start_address;
-
-    for (size_t i = 0; i < 15; i++) {
-        if (Common::Bit(i, regs_imm)) {
-            ir.WriteMemory32(address, ir.GetRegister(static_cast<Reg>(i)));
-            address = ir.Add(address, ir.Imm32(4));
-        }
-    }
-
-    if (W) {
-        ir.SetRegister(n, start_address);
-    }
-    return true;
+    return STMHelper(ir, W, n, regs_imm, start_address, start_address);
 }
 
 } // namespace Dynarmic::A32
