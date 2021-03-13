@@ -163,6 +163,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/impl/thumb32_data_processing_shifted_register.cpp
         frontend/A32/translate/impl/thumb32_load_byte.cpp
         frontend/A32/translate/impl/thumb32_load_halfword.cpp
+        frontend/A32/translate/impl/thumb32_load_store_multiple.cpp
         frontend/A32/translate/impl/thumb32_load_word.cpp
         frontend/A32/translate/impl/thumb32_long_multiply.cpp
         frontend/A32/translate/impl/thumb32_misc.cpp
