@@ -51,6 +51,31 @@ static bool STMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list,
     return true;
 }
 
+bool ThumbTranslatorVisitor::thumb32_LDMDB(bool W, Reg n, Imm<16> reg_list) {
+    const auto regs_imm = reg_list.ZeroExtend();
+    const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));
+
+    if (n == Reg::PC || num_regs < 2) {
+        return UnpredictableInstruction();
+    }
+    if (reg_list.Bit<15>() && reg_list.Bit<14>()) {
+        return UnpredictableInstruction();
+    }
+    if (W && Common::Bit(static_cast<size_t>(n), regs_imm)) {
+        return UnpredictableInstruction();
+    }
+    if (reg_list.Bit<13>()) {
+        return UnpredictableInstruction();
+    }
+    if (reg_list.Bit<15>() && ITBlockCheck(ir)) {
+        return UnpredictableInstruction();
+    }
+
+    // Start address is the same as the writeback address.
+    const IR::U32 start_address = ir.Sub(ir.GetRegister(n), ir.Imm32(4 * num_regs));
+    return LDMHelper(ir, W, n, regs_imm, start_address, start_address);
+}
+
 bool ThumbTranslatorVisitor::thumb32_LDMIA(bool W, Reg n, Imm<16> reg_list) {
     const auto regs_imm = reg_list.ZeroExtend();
     const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));
