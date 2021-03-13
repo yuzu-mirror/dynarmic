@@ -39,6 +39,42 @@ static bool TableBranch(ThumbTranslatorVisitor& v, Reg n, Reg m, bool half) {
     return false;
 }
 
+static bool StoreDual(ThumbTranslatorVisitor& v, bool P, bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8) {
+    if (W && (n == t || n == t2)) {
+        return v.UnpredictableInstruction();
+    }
+    if (n == Reg::PC || t == Reg::PC || t2 == Reg::PC) {
+        return v.UnpredictableInstruction();
+    }
+
+    const u32 imm = imm8.ZeroExtend() << 2;
+    const IR::U32 reg_n = v.ir.GetRegister(n);
+    const IR::U32 reg_t = v.ir.GetRegister(t);
+    const IR::U32 reg_t2 = v.ir.GetRegister(t2);
+
+    const IR::U32 offset_address = U ? v.ir.Add(reg_n, v.ir.Imm32(imm))
+                                     : v.ir.Sub(reg_n, v.ir.Imm32(imm));
+    const IR::U32 address_1 = P ? offset_address
+                                : reg_n;
+    const IR::U32 address_2 = v.ir.Add(address_1, v.ir.Imm32(4));
+
+    v.ir.WriteMemory32(address_1, reg_t);
+    v.ir.WriteMemory32(address_2, reg_t2);
+
+    if (W) {
+        v.ir.SetRegister(n, offset_address);
+    }
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRD_imm_1(bool U, Reg n, Reg t, Reg t2, Imm<8> imm8) {
+    return StoreDual(*this, false, U, true, n, t, t2, imm8);
+}
+
+bool ThumbTranslatorVisitor::thumb32_STRD_imm_2(bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8) {
+    return StoreDual(*this, true, U, W, n, t, t2, imm8);
+}
+
 bool ThumbTranslatorVisitor::thumb32_TBB(Reg n, Reg m) {
     return TableBranch(*this, n, m, false);
 }

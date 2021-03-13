@@ -180,6 +180,8 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_STMDB(bool W, Reg n, Imm<15> reg_list);
 
     // thumb32 load/store dual, load/store exclusive, table branch instructions
+    bool thumb32_STRD_imm_1(bool U, Reg n, Reg t, Reg t2, Imm<8> imm8);
+    bool thumb32_STRD_imm_2(bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8);
     bool thumb32_TBB(Reg n, Reg m);
     bool thumb32_TBH(Reg n, Reg m);
 

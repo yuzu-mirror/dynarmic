@@ -13,8 +13,8 @@ INST(thumb32_LDMDB,          "LDMDB/LDMEA",              "1110100100W1nnnniiiiii
 // Load/Store Dual, Load/Store Exclusive, Table Branch
 //INST(thumb32_STREX,          "STREX",                    "111010000100--------------------")
 //INST(thumb32_LDREX,          "LDREX",                    "111010000101--------------------")
-//INST(thumb32_STRD_imm_1,     "STRD (imm)",               "11101000-110--------------------")
-//INST(thumb32_STRD_imm_2,     "STRD (imm)",               "11101001-1-0--------------------")
+INST(thumb32_STRD_imm_1,     "STRD (imm)",               "11101000U110nnnnttttssssiiiiiiii")
+INST(thumb32_STRD_imm_2,     "STRD (imm)",               "11101001U1W0nnnnttttssssiiiiiiii")
 //INST(thumb32_LDRD_imm_1,     "LDRD (lit)",               "11101000-1111111----------------")
 //INST(thumb32_LDRD_imm_2,     "LDRD (lit)",               "11101001-1-11111----------------")
 //INST(thumb32_LDRD_imm_1,     "LDRD (imm)",               "11101000-111--------------------")
