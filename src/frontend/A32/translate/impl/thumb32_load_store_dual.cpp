@@ -39,6 +39,32 @@ static bool TableBranch(ThumbTranslatorVisitor& v, Reg n, Reg m, bool half) {
     return false;
 }
 
+static bool LoadDualImmediate(ThumbTranslatorVisitor& v, bool P, bool U, bool W,
+                              Reg n, Reg t, Reg t2, Imm<8> imm8) {
+    if (W && (n == t || n == t2)) {
+        return v.UnpredictableInstruction();
+    }
+    if (t == Reg::PC || t2 == Reg::PC || t == t2) {
+        return v.UnpredictableInstruction();
+    }
+
+    const u32 imm = imm8.ZeroExtend() << 2;
+    const IR::U32 reg_n = v.ir.GetRegister(n);
+    const IR::U32 offset_address = U ? v.ir.Add(reg_n, v.ir.Imm32(imm))
+                                     : v.ir.Sub(reg_n, v.ir.Imm32(imm));
+    const IR::U32 address_1 = P ? offset_address
+                                : reg_n;
+    const IR::U32 address_2 = v.ir.Add(address_1, v.ir.Imm32(4));
+
+    v.ir.SetRegister(t, v.ir.ReadMemory32(address_1));
+    v.ir.SetRegister(t2, v.ir.ReadMemory32(address_2));
+
+    if (W) {
+        v.ir.SetRegister(n, offset_address);
+    }
+    return true;
+}
+
 static bool LoadDualLiteral(ThumbTranslatorVisitor& v, bool U, bool W, Reg t, Reg t2, Imm<8> imm8) {
     if (t == Reg::PC || t2 == Reg::PC || t == t2) {
         return v.UnpredictableInstruction();
@@ -83,6 +109,14 @@ static bool StoreDual(ThumbTranslatorVisitor& v, bool P, bool U, bool W, Reg n, 
         v.ir.SetRegister(n, offset_address);
     }
     return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_LDRD_imm_1(bool U, Reg n, Reg t, Reg t2, Imm<8> imm8) {
+    return LoadDualImmediate(*this, false, U, true, n, t, t2, imm8);
+}
+
+bool ThumbTranslatorVisitor::thumb32_LDRD_imm_2(bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8) {
+    return LoadDualImmediate(*this, true, U, W, n, t, t2, imm8);
 }
 
 bool ThumbTranslatorVisitor::thumb32_LDRD_lit_1(bool U, Reg t, Reg t2, Imm<8> imm8) {
