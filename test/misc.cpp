@@ -815,4 +815,32 @@ CYBOZU_TEST_AUTO(tileloadd)
 	CYBOZU_TEST_EXCEPTION(c.notSupported(), std::exception);
 	CYBOZU_TEST_EXCEPTION(c.notSupported2(), std::exception);
 }
+
+CYBOZU_TEST_AUTO(vnni)
+{
+	struct Code : Xbyak::CodeGenerator {
+		Code()
+		{
+			// default encoding is EVEX
+			vpdpbusd(xm0, xm1, xm2);
+			vpdpbusd(xm0, xm1, xm2, EvexEncoding); // EVEX
+			vpdpbusd(xm0, xm1, xm2, VexEncoding); // VEX
+		}
+		void badVex()
+		{
+			vpdpbusd(xm0, xm1, xm31, VexEncoding);
+		}
+	} c;
+	const uint8_t tbl[] = {
+		0x62, 0xF2, 0x75, 0x08, 0x50, 0xC2,
+		0x62, 0xF2, 0x75, 0x08, 0x50, 0xC2,
+		0xC4, 0xE2, 0x71, 0x50, 0xC2,
+	};
+	const size_t n = sizeof(tbl) / sizeof(tbl[0]);
+	CYBOZU_TEST_EQUAL(c.getSize(), n);
+	CYBOZU_TEST_EQUAL_ARRAY(c.getCode(), tbl, n);
+
+	CYBOZU_TEST_EXCEPTION(c.badVex(), std::exception);
+}
+
 #endif

@@ -368,6 +368,7 @@ public:
 	static const Type tAMX_TILE = uint64_t(1) << 59;
 	static const Type tAMX_INT8 = uint64_t(1) << 60;
 	static const Type tAMX_BF16 = uint64_t(1) << 61;
+	static const Type tAVX_VNNI = uint64_t(1) << 62;
 
 	Cpu()
 		: type_(NONE)
@@ -389,19 +390,35 @@ public:
 		if (ECX == get32bitAsBE(amd)) {
 			type_ |= tAMD;
 			getCpuid(0x80000001, data);
-			if (EDX & (1U << 31)) type_ |= t3DN;
-			if (EDX & (1U << 15)) type_ |= tCMOV;
-			if (EDX & (1U << 30)) type_ |= tE3DN;
-			if (EDX & (1U << 22)) type_ |= tMMX2;
-			if (EDX & (1U << 27)) type_ |= tRDTSCP;
+			if (EDX & (1U << 31)) {
+				type_ |= t3DN;
+				// 3DNow! implies support for PREFETCHW on AMD
+				type_ |= tPREFETCHW;
+			}
+
+			if (EDX & (1U << 29)) {
+				// Long mode implies support for PREFETCHW on AMD
+				type_ |= tPREFETCHW;
+			}
 		}
 		if (ECX == get32bitAsBE(intel)) {
 			type_ |= tINTEL;
+		}
+
+		// Extended flags information
+		getCpuid(0x80000000, data);
+		if (EAX >= 0x80000001) {
 			getCpuid(0x80000001, data);
+
+			if (EDX & (1U << 31)) type_ |= t3DN;
+			if (EDX & (1U << 30)) type_ |= tE3DN;
 			if (EDX & (1U << 27)) type_ |= tRDTSCP;
+			if (EDX & (1U << 22)) type_ |= tMMX2;
+			if (EDX & (1U << 15)) type_ |= tCMOV;
 			if (ECX & (1U << 5)) type_ |= tLZCNT;
 			if (ECX & (1U << 8)) type_ |= tPREFETCHW;
 		}
+
 		getCpuid(1, data);
 		if (ECX & (1U << 0)) type_ |= tSSE3;
 		if (ECX & (1U << 9)) type_ |= tSSSE3;
@@ -426,7 +443,11 @@ public:
 			if ((bv & 6) == 6) {
 				if (ECX & (1U << 28)) type_ |= tAVX;
 				if (ECX & (1U << 12)) type_ |= tFMA;
-				if (((bv >> 5) & 7) == 7) {
+				// do *not* check AVX-512 state on macOS because it has on-demand AVX-512 support
+#if !defined(__APPLE__)
+				if (((bv >> 5) & 7) == 7)
+#endif
+				{
 					getCpuidEx(7, 0, data);
 					if (EBX & (1U << 16)) type_ |= tAVX512F;
 					if (type_ & tAVX512F) {
@@ -449,16 +470,12 @@ public:
 						if (EDX & (1U << 3)) type_ |= tAVX512_4FMAPS;
 						if (EDX & (1U << 8)) type_ |= tAVX512_VP2INTERSECT;
 					}
-					// EAX=07H, ECX=1
-					getCpuidEx(7, 1, data);
-					if (type_ & tAVX512F) {
-						if (EAX & (1U << 5)) type_ |= tAVX512_BF16;
-					}
 				}
 			}
 		}
 		if (maxNum >= 7) {
 			getCpuidEx(7, 0, data);
+			const uint32_t maxNumSubLeaves = EAX;
 			if (type_ & tAVX && (EBX & (1U << 5))) type_ |= tAVX2;
 			if (EBX & (1U << 3)) type_ |= tBMI1;
 			if (EBX & (1U << 8)) type_ |= tBMI2;
@@ -474,6 +491,13 @@ public:
 			if (EDX & (1U << 24)) type_ |= tAMX_TILE;
 			if (EDX & (1U << 25)) type_ |= tAMX_INT8;
 			if (EDX & (1U << 22)) type_ |= tAMX_BF16;
+			if (maxNumSubLeaves >= 1) {
+				getCpuidEx(7, 1, data);
+				if (EAX & (1U << 4)) type_ |= tAVX_VNNI;
+				if (type_ & tAVX512F) {
+					if (EAX & (1U << 5)) type_ |= tAVX512_BF16;
+				}
+			}
 		}
 		setFamily();
 		setNumCores();
