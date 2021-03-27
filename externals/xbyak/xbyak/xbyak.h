@@ -108,7 +108,7 @@
 	#endif
 #endif
 
-#if (__cplusplus >= 201103) || (_MSC_VER >= 1800)
+#if (__cplusplus >= 201103) || (defined(_MSC_VER) && _MSC_VER >= 1800)
 	#undef XBYAK_TLS
 	#define XBYAK_TLS thread_local
 	#define XBYAK_VARIADIC_TEMPLATE
@@ -117,8 +117,11 @@
 	#define XBYAK_NOEXCEPT throw()
 #endif
 
-#if (__cplusplus >= 201402L) || (_MSC_VER >= 1910) // Visual Studio 2017 version 15.0
-	#define XBYAK_CONSTEXPR constexpr // require c++14 or later
+// require c++14 or later
+// Visual Studio 2017 version 15.0 or later
+// g++-6 or later
+#if ((__cplusplus >= 201402L) && !(!defined(__clang__) && defined(__GNUC__) && (__GNUC__ <= 5))) || (defined(_MSC_VER) && _MSC_VER >= 1910)
+	#define XBYAK_CONSTEXPR constexpr
 #else
 	#define XBYAK_CONSTEXPR
 #endif
@@ -135,7 +138,7 @@ namespace Xbyak {
 
 enum {
 	DEFAULT_MAX_CODE_SIZE = 4096,
-	VERSION = 0x5970 /* 0xABCD = A.BC(D) */
+	VERSION = 0x5991 /* 0xABCD = A.BC(D) */
 };
 
 #ifndef MIE_INTEGER_TYPE_DEFINED
@@ -413,16 +416,16 @@ public:
 	{
 		const size_t alignedSizeM1 = inner::ALIGN_PAGE_SIZE - 1;
 		size = (size + alignedSizeM1) & ~alignedSizeM1;
-#if defined(XBYAK_USE_MAP_JIT)
+#if defined(MAP_ANONYMOUS)
 		int mode = MAP_PRIVATE | MAP_ANONYMOUS;
-		const int mojaveVersion = 18;
-		if (util::getMacOsVersion() >= mojaveVersion) mode |= MAP_JIT;
-#elif defined(MAP_ANONYMOUS)
-		const int mode = MAP_PRIVATE | MAP_ANONYMOUS;
 #elif defined(MAP_ANON)
-		const int mode = MAP_PRIVATE | MAP_ANON;
+		int mode = MAP_PRIVATE | MAP_ANON;
 #else
 		#error "not supported"
+#endif
+#if defined(XBYAK_USE_MAP_JIT)
+		const int mojaveVersion = 18;
+		if (util::getMacOsVersion() >= mojaveVersion) mode |= MAP_JIT;
 #endif
 		void *p = mmap(NULL, size, PROT_READ | PROT_WRITE, mode, -1, 0);
 		if (p == MAP_FAILED) XBYAK_THROW_RET(ERR_CANT_ALLOC, 0)
@@ -923,6 +926,10 @@ inline RegExp operator+(const RegExp& a, const RegExp& b)
 inline RegExp operator*(const Reg& r, int scale)
 {
 	return RegExp(r, scale);
+}
+inline RegExp operator*(int scale, const Reg& r)
+{
+	return r * scale;
 }
 inline RegExp operator-(const RegExp& e, size_t disp)
 {
@@ -1538,6 +1545,12 @@ inline const uint8_t* Label::getAddress() const
 	if (!mgr->getOffset(&offset, *this)) return 0;
 	return mgr->getCode() + offset;
 }
+
+typedef enum {
+	DefaultEncoding,
+	VexEncoding,
+	EvexEncoding
+} PreferredEncoding;
 
 class CodeGenerator : public CodeArray {
 public:
@@ -2292,6 +2305,19 @@ private:
 		if (addr.hasZero()) XBYAK_THROW(ERR_INVALID_ZERO)
 		if (addr.getRegExp().getIndex().getKind() != kind) XBYAK_THROW(ERR_BAD_VSIB_ADDRESSING)
 		opVex(x, 0, addr, type, code);
+	}
+	void opVnni(const Xmm& x1, const Xmm& x2, const Operand& op, int type, int code0, PreferredEncoding encoding)
+	{
+		if (encoding == DefaultEncoding) {
+			encoding = EvexEncoding;
+		}
+		if (encoding == EvexEncoding) {
+#ifdef XBYAK_DISABLE_AVX512
+			XBYAK_THROW(ERR_EVEX_IS_INVALID)
+#endif
+			type |= T_MUST_EVEX;
+		}
+		opAVX_X_X_XM(x1, x2, op, type, code0);
 	}
 	void opInOut(const Reg& a, const Reg& d, uint8_t code)
 	{
