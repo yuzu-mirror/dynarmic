@@ -2770,12 +2770,8 @@ void EmitX64::EmitVectorReverseBits(EmitContext& ctx, IR::Inst* inst) {
 
     const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
 
-    if (code.HasAVX512_Icelake() && code.HasSSSE3()) {
-        // GFNI(vgf2p8affineqb) and SSSE3(pshuf)
-        // Reverse bits within bytes
+    if (code.HasAVX512_Icelake()) {
         code.vgf2p8affineqb(data, data, code.MConst(xword_b, 0x8040201008040201), 0);
-        // Reverse bytes within vector
-        code.pshufb(data, code.MConst(xword, 0x0001020304050607, 0x08090a0b0c0d0e0f));
     } else {
         const Xbyak::Xmm high_nibble_reg = ctx.reg_alloc.ScratchXmm();
         code.movdqa(high_nibble_reg, code.MConst(xword, 0xF0F0F0F0F0F0F0F0, 0xF0F0F0F0F0F0F0F0));
