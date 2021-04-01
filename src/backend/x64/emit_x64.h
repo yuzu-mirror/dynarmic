@@ -94,7 +94,7 @@ protected:
     virtual std::string LocationDescriptorToFriendlyName(const IR::LocationDescriptor&) const = 0;
     void EmitAddCycles(size_t cycles);
     Xbyak::Label EmitCond(IR::Cond cond);
-    BlockDescriptor RegisterBlock(const IR::LocationDescriptor& location_descriptor, CodePtr entrypoint, size_t size);
+    BlockDescriptor RegisterBlock(const IR::LocationDescriptor& location_descriptor, CodePtr entrypoint, CodePtr entrypoint_far, size_t size);
     void PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, IR::LocationDescriptor target);
 
     // Terminal instruction emitters

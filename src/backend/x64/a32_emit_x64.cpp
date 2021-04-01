@@ -115,6 +115,9 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
     // Start emitting.
     code.align();
     const u8* const entrypoint = code.getCurr();
+    code.SwitchToFarCode();
+    const u8* const entrypoint_far = code.getCurr();
+    code.SwitchToNearCode();
 
     EmitCondPrelude(ctx);
 
@@ -160,7 +163,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
     const auto range = boost::icl::discrete_interval<u32>::closed(descriptor.PC(), end_location.PC() - 1);
     block_ranges.AddRange(range, descriptor);
 
-    return RegisterBlock(descriptor, entrypoint, size);
+    return RegisterBlock(descriptor, entrypoint, entrypoint_far, size);
 }
 
 void A32EmitX64::ClearCache() {

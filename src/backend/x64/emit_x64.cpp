@@ -264,8 +264,11 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
     return pass;
 }
 
-EmitX64::BlockDescriptor EmitX64::RegisterBlock(const IR::LocationDescriptor& descriptor, CodePtr entrypoint, size_t size) {
+EmitX64::BlockDescriptor EmitX64::RegisterBlock(const IR::LocationDescriptor& descriptor, CodePtr entrypoint, CodePtr entrypoint_far, size_t size) {
     PerfMapRegister(entrypoint, code.getCurr(), LocationDescriptorToFriendlyName(descriptor));
+    code.SwitchToFarCode();
+    PerfMapRegister(entrypoint_far, code.getCurr(), LocationDescriptorToFriendlyName(descriptor) + "_far");
+    code.SwitchToNearCode();
     Patch(descriptor, entrypoint);
 
     BlockDescriptor block_desc{entrypoint, size};
