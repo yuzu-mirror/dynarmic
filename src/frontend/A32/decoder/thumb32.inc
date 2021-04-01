@@ -11,7 +11,7 @@ INST(thumb32_LDMDB,          "LDMDB/LDMEA",              "1110100100W1nnnniiiiii
 //INST(thumb32_RFE_2,          "RFE",                      "1110100110-1--------------------")
 
 // Load/Store Dual, Load/Store Exclusive, Table Branch
-//INST(thumb32_STREX,          "STREX",                    "111010000100--------------------")
+INST(thumb32_STREX,          "STREX",                    "111010000100nnnnttttddddiiiiiiii")
 //INST(thumb32_LDREX,          "LDREX",                    "111010000101--------------------")
 INST(thumb32_STRD_imm_1,     "STRD (imm)",               "11101000U110nnnnttttssssiiiiiiii")
 INST(thumb32_STRD_imm_2,     "STRD (imm)",               "11101001U1W0nnnnttttssssiiiiiiii")
@@ -19,9 +19,9 @@ INST(thumb32_LDRD_lit_1,     "LDRD (lit)",               "11101000U1111111ttttss
 INST(thumb32_LDRD_lit_2,     "LDRD (lit)",               "11101001U1W11111ttttssssiiiiiiii")
 INST(thumb32_LDRD_imm_1,     "LDRD (imm)",               "11101000U111nnnnttttssssiiiiiiii")
 INST(thumb32_LDRD_imm_2,     "LDRD (imm)",               "11101001U1W1nnnnttttssssiiiiiiii")
-//INST(thumb32_STREXB,         "STREXB",                   "111010001100------------0100----")
-//INST(thumb32_STREXH,         "STREXH",                   "111010001100------------0101----")
-//INST(thumb32_STREXD,         "STREXD",                   "111010001100------------0111----")
+INST(thumb32_STREXB,         "STREXB",                   "111010001100nnnntttt11110100dddd")
+INST(thumb32_STREXH,         "STREXH",                   "111010001100nnnntttt11110101dddd")
+INST(thumb32_STREXD,         "STREXD",                   "111010001100nnnnttttuuuu0111dddd")
 INST(thumb32_TBB,            "TBB",                      "111010001101nnnn111100000000mmmm")
 INST(thumb32_TBH,            "TBH",                      "111010001101nnnn111100000001mmmm")
 //INST(thumb32_LDREXB,         "LDREXB",                   "111010001101------------0100----")

@@ -135,6 +135,67 @@ bool ThumbTranslatorVisitor::thumb32_STRD_imm_2(bool U, bool W, Reg n, Reg t, Re
     return StoreDual(*this, true, U, W, n, t, t2, imm8);
 }
 
+bool ThumbTranslatorVisitor::thumb32_STREX(Reg n, Reg t, Reg d, Imm<8> imm8) {
+    if (d == Reg::PC || t == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    if (d == n || d == t) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm8.ZeroExtend()));
+    const auto value = ir.GetRegister(t);
+    const auto passed = ir.ExclusiveWriteMemory32(address, value);
+    ir.SetRegister(d, passed);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_STREXB(Reg n, Reg t, Reg d) {
+    if (d == Reg::PC || t == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    if (d == n || d == t) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.GetRegister(n);
+    const auto value = ir.LeastSignificantByte(ir.GetRegister(t));
+    const auto passed = ir.ExclusiveWriteMemory8(address, value);
+    ir.SetRegister(d, passed);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_STREXD(Reg n, Reg t, Reg t2, Reg d) {
+    if (d == Reg::PC || t == Reg::PC || t2 == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    if (d == n || d == t || d == t2) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.GetRegister(n);
+    const auto value_lo = ir.GetRegister(t);
+    const auto value_hi = ir.GetRegister(t2);
+    const auto passed = ir.ExclusiveWriteMemory64(address, value_lo, value_hi);
+    ir.SetRegister(d, passed);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_STREXH(Reg n, Reg t, Reg d) {
+    if (d == Reg::PC || t == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+    if (d == n || d == t) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.GetRegister(n);
+    const auto value = ir.LeastSignificantHalf(ir.GetRegister(t));
+    const auto passed = ir.ExclusiveWriteMemory16(address, value);
+    ir.SetRegister(d, passed);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_TBB(Reg n, Reg m) {
     return TableBranch(*this, n, m, false);
 }

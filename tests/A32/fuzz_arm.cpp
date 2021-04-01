@@ -166,6 +166,12 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
             "thumb16_BKPT",
             "thumb16_IT",
             "thumb16_SETEND",
+
+            // Exclusive load/stores
+            "thumb32_STREX",
+            "thumb32_STREXB",
+            "thumb32_STREXD",
+            "thumb32_STREXH",
         };
 
         for (const auto& [fn, bitstring] : list) {
