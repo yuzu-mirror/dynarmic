@@ -179,6 +179,16 @@ struct ThumbTranslatorVisitor final {
     bool thumb32_STMIA(bool W, Reg n, Imm<15> reg_list);
     bool thumb32_STMDB(bool W, Reg n, Imm<15> reg_list);
 
+    // thumb32 load/store dual, load/store exclusive, table branch instructions
+    bool thumb32_LDRD_imm_1(bool U, Reg n, Reg t, Reg t2, Imm<8> imm8);
+    bool thumb32_LDRD_imm_2(bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8);
+    bool thumb32_LDRD_lit_1(bool U, Reg t, Reg t2, Imm<8> imm8);
+    bool thumb32_LDRD_lit_2(bool U, bool W, Reg t, Reg t2, Imm<8> imm8);
+    bool thumb32_STRD_imm_1(bool U, Reg n, Reg t, Reg t2, Imm<8> imm8);
+    bool thumb32_STRD_imm_2(bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8);
+    bool thumb32_TBB(Reg n, Reg m);
+    bool thumb32_TBH(Reg n, Reg m);
+
     // thumb32 data processing (shifted register) instructions
     bool thumb32_TST_reg(Reg n, Imm<3> imm3, Imm<2> imm2, ShiftType type, Reg m);
     bool thumb32_AND_reg(bool S, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, ShiftType type, Reg m);
