@@ -44,8 +44,8 @@ const std::array<Xbyak::Reg64, 6> BlockOfCode::ABI_PARAMS = {BlockOfCode::ABI_PA
 
 namespace {
 
-constexpr size_t TOTAL_CODE_SIZE = 128 * 1024 * 1024;
-constexpr size_t FAR_CODE_OFFSET = 100 * 1024 * 1024;
+constexpr size_t TOTAL_CODE_SIZE = 256 * 1024 * 1024;
+constexpr size_t FAR_CODE_OFFSET = 200 * 1024 * 1024;
 constexpr size_t CONSTANT_POOL_SIZE = 2 * 1024 * 1024;
 
 class CustomXbyakAllocator : public Xbyak::Allocator {
