@@ -90,6 +90,7 @@ struct Jit::Impl {
     }
 
     void ExceptionalExit() {
+        ClearExclusiveState();
         if (!conf.wall_clock_cntpct) {
             const s64 ticks = jit_state.cycles_to_run - jit_state.cycles_remaining;
             conf.callbacks->AddTicks(ticks);
