@@ -245,6 +245,13 @@ struct UserConfig {
     // Determines whether AddTicks and GetTicksRemaining are called.
     // If false, execution will continue until soon after Jit::HaltExecution is called.
     // bool enable_ticks = true; // TODO
+
+    // Minimum size is about 8MiB. Maximum size is about 2GiB. Maximum size is limited by
+    // the maximum length of a x64 jump.
+    size_t code_cache_size = 256 * 1024 * 1024; // bytes
+    // Determines the relative size of the near and far code caches. Must be smaller than
+    // code_cache_size.
+    size_t far_code_offset = 200 * 1024 * 1024; // bytes
 };
 
 } // namespace A64

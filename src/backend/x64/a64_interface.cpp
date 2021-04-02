@@ -45,7 +45,7 @@ struct Jit::Impl final {
 public:
     Impl(Jit* jit, UserConfig conf)
         : conf(conf)
-        , block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, GenRCP(conf))
+        , block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, conf.code_cache_size, conf.far_code_offset, GenRCP(conf))
         , emitter(block_of_code, conf, jit)
     {
         ASSERT(conf.page_table_address_space_bits >= 12 && conf.page_table_address_space_bits <= 64);

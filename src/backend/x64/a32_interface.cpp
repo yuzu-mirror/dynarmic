@@ -53,7 +53,7 @@ static std::function<void(BlockOfCode&)> GenRCP(const A32::UserConfig& conf) {
 
 struct Jit::Impl {
     Impl(Jit* jit, A32::UserConfig conf)
-            : block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, GenRCP(conf))
+            : block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, conf.code_cache_size, conf.far_code_offset, GenRCP(conf))
             , emitter(block_of_code, conf, jit)
             , conf(std::move(conf))
             , jit_interface(jit)
