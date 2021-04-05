@@ -47,6 +47,11 @@ void OpenFile() {
 
 namespace detail {
 void PerfMapRegister(const void* start, const void* end, std::string_view friendly_name) {
+    if (start == end) {
+        // Nothing to register
+        return;
+    }
+
     std::lock_guard guard{mutex};
 
     if (!file) {
