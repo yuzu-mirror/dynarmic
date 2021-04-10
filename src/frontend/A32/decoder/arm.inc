@@ -6,8 +6,8 @@ INST(arm_ISB,           "ISB",                 "1111010101111111111100000110oooo
 // Branch instructions
 INST(arm_BLX_imm,       "BLX (imm)",           "1111101hvvvvvvvvvvvvvvvvvvvvvvvv") // v5
 INST(arm_BLX_reg,       "BLX (reg)",           "cccc000100101111111111110011mmmm") // v5
-INST(arm_B,             "B",                   "cccc1010vvvvvvvvvvvvvvvvvvvvvvvv") // all
-INST(arm_BL,            "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv") // all
+INST(arm_B,             "B",                   "cccc1010vvvvvvvvvvvvvvvvvvvvvvvv") // v1
+INST(arm_BL,            "BL",                  "cccc1011vvvvvvvvvvvvvvvvvvvvvvvv") // v1
 INST(arm_BX,            "BX",                  "cccc000100101111111111110001mmmm") // v4T
 INST(arm_BXJ,           "BXJ",                 "cccc000100101111111111110010mmmm") // v5J
 
@@ -25,59 +25,59 @@ INST(arm_MRRC,          "MRRC",                "cccc11000101uuuuttttppppooooMMMM
 INST(arm_STC,           "STC",                 "cccc110pudw0nnnnDDDDppppvvvvvvvv") // v2  (STC2:  v5)
 
 // Data Processing instructions
-INST(arm_ADC_imm,       "ADC (imm)",           "cccc0010101Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_ADC_reg,       "ADC (reg)",           "cccc0000101Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_ADC_rsr,       "ADC (rsr)",           "cccc0000101Snnnnddddssss0rr1mmmm") // all
-INST(arm_ADD_imm,       "ADD (imm)",           "cccc0010100Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_ADD_reg,       "ADD (reg)",           "cccc0000100Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_ADD_rsr,       "ADD (rsr)",           "cccc0000100Snnnnddddssss0rr1mmmm") // all
-INST(arm_AND_imm,       "AND (imm)",           "cccc0010000Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_AND_reg,       "AND (reg)",           "cccc0000000Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_AND_rsr,       "AND (rsr)",           "cccc0000000Snnnnddddssss0rr1mmmm") // all
-INST(arm_BIC_imm,       "BIC (imm)",           "cccc0011110Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_BIC_reg,       "BIC (reg)",           "cccc0001110Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_BIC_rsr,       "BIC (rsr)",           "cccc0001110Snnnnddddssss0rr1mmmm") // all
-INST(arm_CMN_imm,       "CMN (imm)",           "cccc00110111nnnn0000rrrrvvvvvvvv") // all
-INST(arm_CMN_reg,       "CMN (reg)",           "cccc00010111nnnn0000vvvvvrr0mmmm") // all
-INST(arm_CMN_rsr,       "CMN (rsr)",           "cccc00010111nnnn0000ssss0rr1mmmm") // all
-INST(arm_CMP_imm,       "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv") // all
-INST(arm_CMP_reg,       "CMP (reg)",           "cccc00010101nnnn0000vvvvvrr0mmmm") // all
-INST(arm_CMP_rsr,       "CMP (rsr)",           "cccc00010101nnnn0000ssss0rr1mmmm") // all
-INST(arm_EOR_imm,       "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_EOR_reg,       "EOR (reg)",           "cccc0000001Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_EOR_rsr,       "EOR (rsr)",           "cccc0000001Snnnnddddssss0rr1mmmm") // all
-INST(arm_MOV_imm,       "MOV (imm)",           "cccc0011101S0000ddddrrrrvvvvvvvv") // all
-INST(arm_MOV_reg,       "MOV (reg)",           "cccc0001101S0000ddddvvvvvrr0mmmm") // all
-INST(arm_MOV_rsr,       "MOV (rsr)",           "cccc0001101S0000ddddssss0rr1mmmm") // all
-INST(arm_MVN_imm,       "MVN (imm)",           "cccc0011111S0000ddddrrrrvvvvvvvv") // all
-INST(arm_MVN_reg,       "MVN (reg)",           "cccc0001111S0000ddddvvvvvrr0mmmm") // all
-INST(arm_MVN_rsr,       "MVN (rsr)",           "cccc0001111S0000ddddssss0rr1mmmm") // all
-INST(arm_ORR_imm,       "ORR (imm)",           "cccc0011100Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_ORR_reg,       "ORR (reg)",           "cccc0001100Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_ORR_rsr,       "ORR (rsr)",           "cccc0001100Snnnnddddssss0rr1mmmm") // all
-INST(arm_RSB_imm,       "RSB (imm)",           "cccc0010011Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_RSB_reg,       "RSB (reg)",           "cccc0000011Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_RSB_rsr,       "RSB (rsr)",           "cccc0000011Snnnnddddssss0rr1mmmm") // all
-INST(arm_RSC_imm,       "RSC (imm)",           "cccc0010111Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_RSC_reg,       "RSC (reg)",           "cccc0000111Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_RSC_rsr,       "RSC (rsr)",           "cccc0000111Snnnnddddssss0rr1mmmm") // all
-INST(arm_SBC_imm,       "SBC (imm)",           "cccc0010110Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_SBC_reg,       "SBC (reg)",           "cccc0000110Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_SBC_rsr,       "SBC (rsr)",           "cccc0000110Snnnnddddssss0rr1mmmm") // all
-INST(arm_SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // all
-INST(arm_SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm") // all
-INST(arm_SUB_rsr,       "SUB (rsr)",           "cccc0000010Snnnnddddssss0rr1mmmm") // all
-INST(arm_TEQ_imm,       "TEQ (imm)",           "cccc00110011nnnn0000rrrrvvvvvvvv") // all
-INST(arm_TEQ_reg,       "TEQ (reg)",           "cccc00010011nnnn0000vvvvvrr0mmmm") // all
-INST(arm_TEQ_rsr,       "TEQ (rsr)",           "cccc00010011nnnn0000ssss0rr1mmmm") // all
-INST(arm_TST_imm,       "TST (imm)",           "cccc00110001nnnn0000rrrrvvvvvvvv") // all
-INST(arm_TST_reg,       "TST (reg)",           "cccc00010001nnnn0000vvvvvrr0mmmm") // all
-INST(arm_TST_rsr,       "TST (rsr)",           "cccc00010001nnnn0000ssss0rr1mmmm") // all
+INST(arm_ADC_imm,       "ADC (imm)",           "cccc0010101Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_ADC_reg,       "ADC (reg)",           "cccc0000101Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_ADC_rsr,       "ADC (rsr)",           "cccc0000101Snnnnddddssss0rr1mmmm") // v1
+INST(arm_ADD_imm,       "ADD (imm)",           "cccc0010100Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_ADD_reg,       "ADD (reg)",           "cccc0000100Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_ADD_rsr,       "ADD (rsr)",           "cccc0000100Snnnnddddssss0rr1mmmm") // v1
+INST(arm_AND_imm,       "AND (imm)",           "cccc0010000Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_AND_reg,       "AND (reg)",           "cccc0000000Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_AND_rsr,       "AND (rsr)",           "cccc0000000Snnnnddddssss0rr1mmmm") // v1
+INST(arm_BIC_imm,       "BIC (imm)",           "cccc0011110Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_BIC_reg,       "BIC (reg)",           "cccc0001110Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_BIC_rsr,       "BIC (rsr)",           "cccc0001110Snnnnddddssss0rr1mmmm") // v1
+INST(arm_CMN_imm,       "CMN (imm)",           "cccc00110111nnnn0000rrrrvvvvvvvv") // v1
+INST(arm_CMN_reg,       "CMN (reg)",           "cccc00010111nnnn0000vvvvvrr0mmmm") // v1
+INST(arm_CMN_rsr,       "CMN (rsr)",           "cccc00010111nnnn0000ssss0rr1mmmm") // v1
+INST(arm_CMP_imm,       "CMP (imm)",           "cccc00110101nnnn0000rrrrvvvvvvvv") // v1
+INST(arm_CMP_reg,       "CMP (reg)",           "cccc00010101nnnn0000vvvvvrr0mmmm") // v1
+INST(arm_CMP_rsr,       "CMP (rsr)",           "cccc00010101nnnn0000ssss0rr1mmmm") // v1
+INST(arm_EOR_imm,       "EOR (imm)",           "cccc0010001Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_EOR_reg,       "EOR (reg)",           "cccc0000001Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_EOR_rsr,       "EOR (rsr)",           "cccc0000001Snnnnddddssss0rr1mmmm") // v1
+INST(arm_MOV_imm,       "MOV (imm)",           "cccc0011101S0000ddddrrrrvvvvvvvv") // v1
+INST(arm_MOV_reg,       "MOV (reg)",           "cccc0001101S0000ddddvvvvvrr0mmmm") // v1
+INST(arm_MOV_rsr,       "MOV (rsr)",           "cccc0001101S0000ddddssss0rr1mmmm") // v1
+INST(arm_MVN_imm,       "MVN (imm)",           "cccc0011111S0000ddddrrrrvvvvvvvv") // v1
+INST(arm_MVN_reg,       "MVN (reg)",           "cccc0001111S0000ddddvvvvvrr0mmmm") // v1
+INST(arm_MVN_rsr,       "MVN (rsr)",           "cccc0001111S0000ddddssss0rr1mmmm") // v1
+INST(arm_ORR_imm,       "ORR (imm)",           "cccc0011100Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_ORR_reg,       "ORR (reg)",           "cccc0001100Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_ORR_rsr,       "ORR (rsr)",           "cccc0001100Snnnnddddssss0rr1mmmm") // v1
+INST(arm_RSB_imm,       "RSB (imm)",           "cccc0010011Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_RSB_reg,       "RSB (reg)",           "cccc0000011Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_RSB_rsr,       "RSB (rsr)",           "cccc0000011Snnnnddddssss0rr1mmmm") // v1
+INST(arm_RSC_imm,       "RSC (imm)",           "cccc0010111Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_RSC_reg,       "RSC (reg)",           "cccc0000111Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_RSC_rsr,       "RSC (rsr)",           "cccc0000111Snnnnddddssss0rr1mmmm") // v1
+INST(arm_SBC_imm,       "SBC (imm)",           "cccc0010110Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_SBC_reg,       "SBC (reg)",           "cccc0000110Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_SBC_rsr,       "SBC (rsr)",           "cccc0000110Snnnnddddssss0rr1mmmm") // v1
+INST(arm_SUB_imm,       "SUB (imm)",           "cccc0010010Snnnnddddrrrrvvvvvvvv") // v1
+INST(arm_SUB_reg,       "SUB (reg)",           "cccc0000010Snnnnddddvvvvvrr0mmmm") // v1
+INST(arm_SUB_rsr,       "SUB (rsr)",           "cccc0000010Snnnnddddssss0rr1mmmm") // v1
+INST(arm_TEQ_imm,       "TEQ (imm)",           "cccc00110011nnnn0000rrrrvvvvvvvv") // v1
+INST(arm_TEQ_reg,       "TEQ (reg)",           "cccc00010011nnnn0000vvvvvrr0mmmm") // v1
+INST(arm_TEQ_rsr,       "TEQ (rsr)",           "cccc00010011nnnn0000ssss0rr1mmmm") // v1
+INST(arm_TST_imm,       "TST (imm)",           "cccc00110001nnnn0000rrrrvvvvvvvv") // v1
+INST(arm_TST_reg,       "TST (reg)",           "cccc00010001nnnn0000vvvvvrr0mmmm") // v1
+INST(arm_TST_rsr,       "TST (rsr)",           "cccc00010001nnnn0000ssss0rr1mmmm") // v1
 
 // Exception Generating instructions
 INST(arm_BKPT,          "BKPT",                "cccc00010010vvvvvvvvvvvv0111vvvv") // v5
-INST(arm_SVC,           "SVC",                 "cccc1111vvvvvvvvvvvvvvvvvvvvvvvv") // all
-INST(arm_UDF,           "UDF",                 "111001111111------------1111----") // all
+INST(arm_SVC,           "SVC",                 "cccc1111vvvvvvvvvvvvvvvvvvvvvvvv") // v1
+INST(arm_UDF,           "UDF",                 "111001111111------------1111----")
 
 // Extension instructions
 INST(arm_SXTB,          "SXTB",                "cccc011010101111ddddrr000111mmmm") // v6
@@ -132,62 +132,62 @@ INST(arm_LDAEXH,        "LDAEXH",              "cccc00011111nnnndddd111010011111
 INST(arm_LDREXH,        "LDREXH",              "cccc00011111nnnndddd111110011111") // v6K
 
 // Load/Store instructions
-INST(arm_LDRBT,         "LDRBT (A1)",          "----0100-111--------------------")
-INST(arm_LDRBT,         "LDRBT (A2)",          "----0110-111---------------0----")
-INST(arm_LDRHT,         "LDRHT (A1)",          "----0000-111------------1011----")
-INST(arm_LDRHT,         "LDRHT (A1)",          "----0000-1111111--------1011----")
-INST(arm_LDRHT,         "LDRHT (A2)",          "----0000-011--------00001011----")
-INST(arm_LDRSBT,        "LDRSBT (A1)",         "----0000-111------------1101----")
-INST(arm_LDRSBT,        "LDRSBT (A2)",         "----0000-011--------00001101----")
-INST(arm_LDRSHT,        "LDRSHT (A1)",         "----0000-111------------1111----")
-INST(arm_LDRSHT,        "LDRSHT (A2)",         "----0000-011--------00001111----")
-INST(arm_LDRT,          "LDRT (A1)",           "----0100-011--------------------")
-INST(arm_LDRT,          "LDRT (A2)",           "----0110-011---------------0----")
-INST(arm_STRBT,         "STRBT (A1)",          "----0100-110--------------------")
-INST(arm_STRBT,         "STRBT (A2)",          "----0110-110---------------0----")
-INST(arm_STRHT,         "STRHT (A1)",          "----0000-110------------1011----")
-INST(arm_STRHT,         "STRHT (A2)",          "----0000-010--------00001011----")
-INST(arm_STRT,          "STRT (A1)",           "----0100-010--------------------")
-INST(arm_STRT,          "STRT (A2)",           "----0110-010---------------0----")
-INST(arm_LDR_lit,       "LDR (lit)",           "cccc0101u0011111ttttvvvvvvvvvvvv")
-INST(arm_LDR_imm,       "LDR (imm)",           "cccc010pu0w1nnnnttttvvvvvvvvvvvv")
-INST(arm_LDR_reg,       "LDR (reg)",           "cccc011pu0w1nnnnttttvvvvvrr0mmmm")
-INST(arm_LDRB_lit,      "LDRB (lit)",          "cccc0101u1011111ttttvvvvvvvvvvvv")
-INST(arm_LDRB_imm,      "LDRB (imm)",          "cccc010pu1w1nnnnttttvvvvvvvvvvvv")
-INST(arm_LDRB_reg,      "LDRB (reg)",          "cccc011pu1w1nnnnttttvvvvvrr0mmmm")
-INST(arm_LDRD_lit,      "LDRD (lit)",          "cccc0001u1001111ttttvvvv1101vvvv")
+INST(arm_LDRBT,         "LDRBT (A1)",          "----0100-111--------------------") // v1
+INST(arm_LDRBT,         "LDRBT (A2)",          "----0110-111---------------0----") // v1
+INST(arm_LDRHT,         "LDRHT (A1)",          "----0000-111------------1011----") // v6T2
+INST(arm_LDRHT,         "LDRHT (A1)",          "----0000-1111111--------1011----") // v6T2
+INST(arm_LDRHT,         "LDRHT (A2)",          "----0000-011--------00001011----") // v6T2
+INST(arm_LDRSBT,        "LDRSBT (A1)",         "----0000-111------------1101----") // v6T2
+INST(arm_LDRSBT,        "LDRSBT (A2)",         "----0000-011--------00001101----") // v6T2
+INST(arm_LDRSHT,        "LDRSHT (A1)",         "----0000-111------------1111----") // v6T2
+INST(arm_LDRSHT,        "LDRSHT (A2)",         "----0000-011--------00001111----") // v6T2
+INST(arm_LDRT,          "LDRT (A1)",           "----0100-011--------------------") // v1
+INST(arm_LDRT,          "LDRT (A2)",           "----0110-011---------------0----") // v1
+INST(arm_STRBT,         "STRBT (A1)",          "----0100-110--------------------") // v1
+INST(arm_STRBT,         "STRBT (A2)",          "----0110-110---------------0----") // v1
+INST(arm_STRHT,         "STRHT (A1)",          "----0000-110------------1011----") // v6T2
+INST(arm_STRHT,         "STRHT (A2)",          "----0000-010--------00001011----") // v6T2
+INST(arm_STRT,          "STRT (A1)",           "----0100-010--------------------") // v1
+INST(arm_STRT,          "STRT (A2)",           "----0110-010---------------0----") // v1
+INST(arm_LDR_lit,       "LDR (lit)",           "cccc0101u0011111ttttvvvvvvvvvvvv") // v1
+INST(arm_LDR_imm,       "LDR (imm)",           "cccc010pu0w1nnnnttttvvvvvvvvvvvv") // v1
+INST(arm_LDR_reg,       "LDR (reg)",           "cccc011pu0w1nnnnttttvvvvvrr0mmmm") // v1
+INST(arm_LDRB_lit,      "LDRB (lit)",          "cccc0101u1011111ttttvvvvvvvvvvvv") // v1
+INST(arm_LDRB_imm,      "LDRB (imm)",          "cccc010pu1w1nnnnttttvvvvvvvvvvvv") // v1
+INST(arm_LDRB_reg,      "LDRB (reg)",          "cccc011pu1w1nnnnttttvvvvvrr0mmmm") // v1
+INST(arm_LDRD_lit,      "LDRD (lit)",          "cccc0001u1001111ttttvvvv1101vvvv") // v5E
 INST(arm_LDRD_imm,      "LDRD (imm)",          "cccc000pu1w0nnnnttttvvvv1101vvvv") // v5E
 INST(arm_LDRD_reg,      "LDRD (reg)",          "cccc000pu0w0nnnntttt00001101mmmm") // v5E
-INST(arm_LDRH_lit,      "LDRH (lit)",          "cccc000pu1w11111ttttvvvv1011vvvv")
-INST(arm_LDRH_imm,      "LDRH (imm)",          "cccc000pu1w1nnnnttttvvvv1011vvvv")
-INST(arm_LDRH_reg,      "LDRH (reg)",          "cccc000pu0w1nnnntttt00001011mmmm")
-INST(arm_LDRSB_lit,     "LDRSB (lit)",         "cccc0001u1011111ttttvvvv1101vvvv")
-INST(arm_LDRSB_imm,     "LDRSB (imm)",         "cccc000pu1w1nnnnttttvvvv1101vvvv")
-INST(arm_LDRSB_reg,     "LDRSB (reg)",         "cccc000pu0w1nnnntttt00001101mmmm")
-INST(arm_LDRSH_lit,     "LDRSH (lit)",         "cccc0001u1011111ttttvvvv1111vvvv")
-INST(arm_LDRSH_imm,     "LDRSH (imm)",         "cccc000pu1w1nnnnttttvvvv1111vvvv")
-INST(arm_LDRSH_reg,     "LDRSH (reg)",         "cccc000pu0w1nnnntttt00001111mmmm")
-INST(arm_STR_imm,       "STR (imm)",           "cccc010pu0w0nnnnttttvvvvvvvvvvvv")
-INST(arm_STR_reg,       "STR (reg)",           "cccc011pu0w0nnnnttttvvvvvrr0mmmm")
-INST(arm_STRB_imm,      "STRB (imm)",          "cccc010pu1w0nnnnttttvvvvvvvvvvvv")
-INST(arm_STRB_reg,      "STRB (reg)",          "cccc011pu1w0nnnnttttvvvvvrr0mmmm")
+INST(arm_LDRH_lit,      "LDRH (lit)",          "cccc000pu1w11111ttttvvvv1011vvvv") // v4
+INST(arm_LDRH_imm,      "LDRH (imm)",          "cccc000pu1w1nnnnttttvvvv1011vvvv") // v4
+INST(arm_LDRH_reg,      "LDRH (reg)",          "cccc000pu0w1nnnntttt00001011mmmm") // v4
+INST(arm_LDRSB_lit,     "LDRSB (lit)",         "cccc0001u1011111ttttvvvv1101vvvv") // v4
+INST(arm_LDRSB_imm,     "LDRSB (imm)",         "cccc000pu1w1nnnnttttvvvv1101vvvv") // v4
+INST(arm_LDRSB_reg,     "LDRSB (reg)",         "cccc000pu0w1nnnntttt00001101mmmm") // v4
+INST(arm_LDRSH_lit,     "LDRSH (lit)",         "cccc0001u1011111ttttvvvv1111vvvv") // v4
+INST(arm_LDRSH_imm,     "LDRSH (imm)",         "cccc000pu1w1nnnnttttvvvv1111vvvv") // v4
+INST(arm_LDRSH_reg,     "LDRSH (reg)",         "cccc000pu0w1nnnntttt00001111mmmm") // v4
+INST(arm_STR_imm,       "STR (imm)",           "cccc010pu0w0nnnnttttvvvvvvvvvvvv") // v1
+INST(arm_STR_reg,       "STR (reg)",           "cccc011pu0w0nnnnttttvvvvvrr0mmmm") // v1
+INST(arm_STRB_imm,      "STRB (imm)",          "cccc010pu1w0nnnnttttvvvvvvvvvvvv") // v1
+INST(arm_STRB_reg,      "STRB (reg)",          "cccc011pu1w0nnnnttttvvvvvrr0mmmm") // v1
 INST(arm_STRD_imm,      "STRD (imm)",          "cccc000pu1w0nnnnttttvvvv1111vvvv") // v5E
 INST(arm_STRD_reg,      "STRD (reg)",          "cccc000pu0w0nnnntttt00001111mmmm") // v5E
-INST(arm_STRH_imm,      "STRH (imm)",          "cccc000pu1w0nnnnttttvvvv1011vvvv")
-INST(arm_STRH_reg,      "STRH (reg)",          "cccc000pu0w0nnnntttt00001011mmmm")
+INST(arm_STRH_imm,      "STRH (imm)",          "cccc000pu1w0nnnnttttvvvv1011vvvv") // v4
+INST(arm_STRH_reg,      "STRH (reg)",          "cccc000pu0w0nnnntttt00001011mmmm") // v4
 
 // Load/Store Multiple instructions
-INST(arm_LDM,           "LDM",                 "cccc100010w1nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_LDMDA,         "LDMDA",               "cccc100000w1nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_LDMDB,         "LDMDB",               "cccc100100w1nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_LDMIB,         "LDMIB",               "cccc100110w1nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_LDM_usr,       "LDM (usr reg)",       "----100--101--------------------") // all
-INST(arm_LDM_eret,      "LDM (exce ret)",      "----100--1-1----1---------------") // all
-INST(arm_STM,           "STM",                 "cccc100010w0nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_STMDA,         "STMDA",               "cccc100000w0nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_STMDB,         "STMDB",               "cccc100100w0nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_STMIB,         "STMIB",               "cccc100110w0nnnnxxxxxxxxxxxxxxxx") // all
-INST(arm_STM_usr,       "STM (usr reg)",       "----100--100--------------------") // all
+INST(arm_LDM,           "LDM",                 "cccc100010w1nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_LDMDA,         "LDMDA",               "cccc100000w1nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_LDMDB,         "LDMDB",               "cccc100100w1nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_LDMIB,         "LDMIB",               "cccc100110w1nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_LDM_usr,       "LDM (usr reg)",       "----100--101--------------------") // v1
+INST(arm_LDM_eret,      "LDM (exce ret)",      "----100--1-1----1---------------") // v1
+INST(arm_STM,           "STM",                 "cccc100010w0nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_STMDA,         "STMDA",               "cccc100000w0nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_STMDB,         "STMDB",               "cccc100100w0nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_STMIB,         "STMIB",               "cccc100110w0nnnnxxxxxxxxxxxxxxxx") // v1
+INST(arm_STM_usr,       "STM (usr reg)",       "----100--100--------------------") // v1
 
 // Miscellaneous instructions
 INST(arm_BFC,           "BFC",                 "cccc0111110vvvvvddddvvvvv0011111") // v6T2
