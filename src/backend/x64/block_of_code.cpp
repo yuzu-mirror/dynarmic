@@ -120,7 +120,7 @@ size_t BlockOfCode::SpaceRemaining() const {
         return 0;
     if (current_far_ptr >= &top_[maxSize_])
         return 0;
-    return std::min(current_near_ptr - reinterpret_cast<const u8*>(far_code_begin), current_far_ptr - &top_[maxSize_]);
+    return std::min(reinterpret_cast<const u8*>(far_code_begin) - current_near_ptr, &top_[maxSize_] - current_far_ptr);
 }
 
 void BlockOfCode::RunCode(void* jit_state, CodePtr code_ptr) const {
