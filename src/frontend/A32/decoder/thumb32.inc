@@ -12,7 +12,7 @@ INST(thumb32_LDMDB,          "LDMDB/LDMEA",              "1110100100W1nnnniiiiii
 
 // Load/Store Dual, Load/Store Exclusive, Table Branch
 INST(thumb32_STREX,          "STREX",                    "111010000100nnnnttttddddiiiiiiii")
-//INST(thumb32_LDREX,          "LDREX",                    "111010000101--------------------")
+INST(thumb32_LDREX,          "LDREX",                    "111010000101nnnntttt1111iiiiiiii")
 INST(thumb32_STRD_imm_1,     "STRD (imm)",               "11101000U110nnnnttttssssiiiiiiii")
 INST(thumb32_STRD_imm_2,     "STRD (imm)",               "11101001U1W0nnnnttttssssiiiiiiii")
 INST(thumb32_LDRD_lit_1,     "LDRD (lit)",               "11101000U1111111ttttssssiiiiiiii")
@@ -24,9 +24,9 @@ INST(thumb32_STREXH,         "STREXH",                   "111010001100nnnntttt11
 INST(thumb32_STREXD,         "STREXD",                   "111010001100nnnnttttuuuu0111dddd")
 INST(thumb32_TBB,            "TBB",                      "111010001101nnnn111100000000mmmm")
 INST(thumb32_TBH,            "TBH",                      "111010001101nnnn111100000001mmmm")
-//INST(thumb32_LDREXB,         "LDREXB",                   "111010001101------------0100----")
-//INST(thumb32_LDREXH,         "LDREXH",                   "111010001101------------0101----")
-//INST(thumb32_LDREXD,         "LDREXD",                   "111010001101------------0111----")
+INST(thumb32_LDREXB,         "LDREXB",                   "111010001101nnnntttt111101001111")
+INST(thumb32_LDREXH,         "LDREXH",                   "111010001101nnnntttt111101011111")
+INST(thumb32_LDREXD,         "LDREXD",                   "111010001101nnnnttttuuuu01111111")
 
 // Data Processing (Shifted Register)
 INST(thumb32_TST_reg,        "TST (reg)",                "111010100001nnnn0vvv1111vvttmmmm")

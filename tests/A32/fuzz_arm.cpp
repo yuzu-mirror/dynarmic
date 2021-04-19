@@ -168,6 +168,10 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
             "thumb16_SETEND",
 
             // Exclusive load/stores
+            "thumb32_LDREX",
+            "thumb32_LDREXB",
+            "thumb32_LDREXD",
+            "thumb32_LDREXH",
             "thumb32_STREX",
             "thumb32_STREXB",
             "thumb32_STREXD",

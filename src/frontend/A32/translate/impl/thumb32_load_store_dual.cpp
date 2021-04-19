@@ -135,6 +135,56 @@ bool ThumbTranslatorVisitor::thumb32_STRD_imm_2(bool U, bool W, Reg n, Reg t, Re
     return StoreDual(*this, true, U, W, n, t, t2, imm8);
 }
 
+bool ThumbTranslatorVisitor::thumb32_LDREX(Reg n, Reg t, Imm<8> imm8) {
+    if (t == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm8.ZeroExtend() << 2));
+    const auto value = ir.ExclusiveReadMemory32(address);
+
+    ir.SetRegister(t, value);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_LDREXB(Reg n, Reg t) {
+    if (t == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.GetRegister(n);
+    const auto value = ir.ZeroExtendToWord(ir.ExclusiveReadMemory8(address));
+
+    ir.SetRegister(t, value);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_LDREXD(Reg n, Reg t, Reg t2) {
+    if (t == Reg::PC || t2 == Reg::PC || t == t2 || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.GetRegister(n);
+    const auto [lo, hi] = ir.ExclusiveReadMemory64(address);
+
+    // DO NOT SWAP hi AND lo IN BIG ENDIAN MODE, THIS IS CORRECT BEHAVIOUR
+    ir.SetRegister(t, lo);
+    ir.SetRegister(t2, hi);
+    return true;
+}
+
+bool ThumbTranslatorVisitor::thumb32_LDREXH(Reg n, Reg t) {
+    if (t == Reg::PC || n == Reg::PC) {
+        return UnpredictableInstruction();
+    }
+
+    const auto address = ir.GetRegister(n);
+    const auto value = ir.ZeroExtendToWord(ir.ExclusiveReadMemory16(address));
+
+    ir.SetRegister(t, value);
+    return true;
+}
+
 bool ThumbTranslatorVisitor::thumb32_STREX(Reg n, Reg t, Reg d, Imm<8> imm8) {
     if (d == Reg::PC || t == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
