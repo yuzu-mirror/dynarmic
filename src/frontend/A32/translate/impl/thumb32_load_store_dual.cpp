@@ -143,7 +143,7 @@ bool ThumbTranslatorVisitor::thumb32_STREX(Reg n, Reg t, Reg d, Imm<8> imm8) {
         return UnpredictableInstruction();
     }
 
-    const auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm8.ZeroExtend()));
+    const auto address = ir.Add(ir.GetRegister(n), ir.Imm32(imm8.ZeroExtend() << 2));
     const auto value = ir.GetRegister(t);
     const auto passed = ir.ExclusiveWriteMemory32(address, value);
     ir.SetRegister(d, passed);
