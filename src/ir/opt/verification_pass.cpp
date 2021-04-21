@@ -8,11 +8,11 @@
 
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
-#include "frontend/ir/type.h"
-#include "ir_opt/passes.h"
+#include "ir/basic_block.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
+#include "ir/opt/passes.h"
+#include "ir/type.h"
 
 namespace Dynarmic::Optimization {
 

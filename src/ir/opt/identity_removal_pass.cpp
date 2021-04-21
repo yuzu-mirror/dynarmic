@@ -6,9 +6,9 @@
 #include <vector>
 
 #include "common/iterator_util.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/opcodes.h"
-#include "ir_opt/passes.h"
+#include "ir/basic_block.h"
+#include "ir/opcodes.h"
+#include "ir/opt/passes.h"
 
 namespace Dynarmic::Optimization {
 

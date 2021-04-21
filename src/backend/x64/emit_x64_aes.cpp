@@ -8,7 +8,7 @@
 #include "backend/x64/emit_x64.h"
 #include "common/common_types.h"
 #include "common/crypto/aes.h"
-#include "frontend/ir/microinstruction.h"
+#include "ir/microinstruction.h"
 
 namespace Dynarmic::Backend::X64 {
 

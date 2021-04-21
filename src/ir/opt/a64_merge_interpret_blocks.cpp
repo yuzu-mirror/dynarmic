@@ -9,8 +9,8 @@
 #include "common/common_types.h"
 #include "frontend/A64/location_descriptor.h"
 #include "frontend/A64/translate/translate.h"
-#include "frontend/ir/basic_block.h"
-#include "ir_opt/passes.h"
+#include "ir/basic_block.h"
+#include "ir/opt/passes.h"
 
 namespace Dynarmic::Optimization {
 

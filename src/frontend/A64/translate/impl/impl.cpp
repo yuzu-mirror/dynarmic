@@ -4,8 +4,8 @@
  */
 
 #include "common/bit_util.h"
-#include "frontend/ir/terminal.h"
 #include "frontend/A64/translate/impl/impl.h"
+#include "ir/terminal.h"
 
 namespace Dynarmic::A64 {
 

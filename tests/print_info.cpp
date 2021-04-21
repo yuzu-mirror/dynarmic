@@ -27,8 +27,8 @@
 #include "frontend/A64/location_descriptor.h"
 #include "frontend/A64/translate/impl/impl.h"
 #include "frontend/A64/translate/translate.h"
-#include "frontend/ir/basic_block.h"
-#include "ir_opt/passes.h"
+#include "ir/basic_block.h"
+#include "ir/opt/passes.h"
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>

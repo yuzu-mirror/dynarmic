@@ -4,8 +4,8 @@
  */
 
 #include "common/assert.h"
-#include "frontend/ir/ir_emitter.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/ir_emitter.h"
+#include "ir/opcodes.h"
 
 namespace Dynarmic::IR {
 

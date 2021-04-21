@@ -12,10 +12,10 @@
 
 #include "common/common_types.h"
 #include "common/intrusive_list.h"
-#include "frontend/ir/location_descriptor.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/terminal.h"
-#include "frontend/ir/value.h"
+#include "ir/location_descriptor.h"
+#include "ir/microinstruction.h"
+#include "ir/terminal.h"
+#include "ir/value.h"
 
 namespace Dynarmic::Common {
 class Pool;

@@ -13,7 +13,7 @@
 
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "frontend/ir/cond.h"
+#include "ir/cond.h"
 
 namespace Dynarmic::A32 {
 

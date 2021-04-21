@@ -17,9 +17,9 @@
 #include "backend/x64/hostloc.h"
 #include "backend/x64/oparg.h"
 #include "common/common_types.h"
-#include "frontend/ir/cond.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/value.h"
+#include "ir/cond.h"
+#include "ir/microinstruction.h"
+#include "ir/value.h"
 
 namespace Dynarmic::Backend::X64 {
 

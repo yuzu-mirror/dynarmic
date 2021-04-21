@@ -80,29 +80,29 @@ add_library(dynarmic
     frontend/decoder/matcher.h
     frontend/imm.cpp
     frontend/imm.h
-    frontend/ir/basic_block.cpp
-    frontend/ir/basic_block.h
-    frontend/ir/cond.h
-    frontend/ir/ir_emitter.cpp
-    frontend/ir/ir_emitter.h
-    frontend/ir/location_descriptor.cpp
-    frontend/ir/location_descriptor.h
-    frontend/ir/microinstruction.cpp
-    frontend/ir/microinstruction.h
-    frontend/ir/opcodes.cpp
-    frontend/ir/opcodes.h
-    frontend/ir/opcodes.inc
-    frontend/ir/terminal.h
-    frontend/ir/type.cpp
-    frontend/ir/type.h
-    frontend/ir/value.cpp
-    frontend/ir/value.h
-    ir_opt/constant_propagation_pass.cpp
-    ir_opt/dead_code_elimination_pass.cpp
-    ir_opt/identity_removal_pass.cpp
-    ir_opt/ir_matcher.h
-    ir_opt/passes.h
-    ir_opt/verification_pass.cpp
+    ir/basic_block.cpp
+    ir/basic_block.h
+    ir/cond.h
+    ir/ir_emitter.cpp
+    ir/ir_emitter.h
+    ir/location_descriptor.cpp
+    ir/location_descriptor.h
+    ir/microinstruction.cpp
+    ir/microinstruction.h
+    ir/opcodes.cpp
+    ir/opcodes.h
+    ir/opcodes.inc
+    ir/opt/constant_propagation_pass.cpp
+    ir/opt/dead_code_elimination_pass.cpp
+    ir/opt/identity_removal_pass.cpp
+    ir/opt/ir_matcher.h
+    ir/opt/passes.h
+    ir/opt/verification_pass.cpp
+    ir/terminal.h
+    ir/type.cpp
+    ir/type.h
+    ir/value.cpp
+    ir/value.h
 )
 
 if ("A32" IN_LIST DYNARMIC_FRONTENDS)
@@ -178,8 +178,8 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/translate.h
         frontend/A32/translate/translate_arm.cpp
         frontend/A32/translate/translate_thumb.cpp
-        ir_opt/a32_constant_memory_reads_pass.cpp
-        ir_opt/a32_get_set_elimination_pass.cpp
+        ir/opt/a32_constant_memory_reads_pass.cpp
+        ir/opt/a32_get_set_elimination_pass.cpp
     )
 endif()
 
@@ -252,9 +252,9 @@ if ("A64" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A64/translate/impl/system_flag_manipulation.cpp
         frontend/A64/translate/translate.cpp
         frontend/A64/translate/translate.h
-        ir_opt/a64_callback_config_pass.cpp
-        ir_opt/a64_get_set_elimination_pass.cpp
-        ir_opt/a64_merge_interpret_blocks.cpp
+        ir/opt/a64_callback_config_pass.cpp
+        ir/opt/a64_get_set_elimination_pass.cpp
+        ir/opt/a64_merge_interpret_blocks.cpp
     )
 endif()
 

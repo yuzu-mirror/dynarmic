@@ -7,10 +7,10 @@
 
 #include "common/common_types.h"
 #include "frontend/A64/types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/opcodes.h"
-#include "frontend/ir/value.h"
-#include "ir_opt/passes.h"
+#include "ir/basic_block.h"
+#include "ir/opcodes.h"
+#include "ir/opt/passes.h"
+#include "ir/value.h"
 
 namespace Dynarmic::Optimization {
 

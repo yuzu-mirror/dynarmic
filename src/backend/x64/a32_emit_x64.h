@@ -19,7 +19,7 @@
 #include "backend/x64/block_range_information.h"
 #include "backend/x64/emit_x64.h"
 #include "frontend/A32/location_descriptor.h"
-#include "frontend/ir/terminal.h"
+#include "ir/terminal.h"
 
 namespace Dynarmic::Backend::X64 {
 
@@ -89,7 +89,7 @@ protected:
 #define OPCODE(...)
 #define A32OPC(name, type, ...) void EmitA32##name(A32EmitContext& ctx, IR::Inst* inst);
 #define A64OPC(...)
-#include "frontend/ir/opcodes.inc"
+#include "ir/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
 #undef A64OPC

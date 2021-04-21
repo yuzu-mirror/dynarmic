@@ -6,7 +6,7 @@
 #include <ostream>
 #include <fmt/format.h>
 
-#include "frontend/ir/location_descriptor.h"
+#include "ir/location_descriptor.h"
 
 namespace Dynarmic::IR {
 

@@ -15,9 +15,9 @@
 #include "common/memory_pool.h"
 #include "frontend/A32/types.h"
 #include "frontend/A64/types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/cond.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/basic_block.h"
+#include "ir/cond.h"
+#include "ir/opcodes.h"
 
 namespace Dynarmic::IR {
 

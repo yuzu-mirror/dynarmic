@@ -14,7 +14,7 @@
 #include "frontend/A32/translate/impl/translate_arm.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A32/types.h"
-#include "frontend/ir/basic_block.h"
+#include "ir/basic_block.h"
 
 namespace Dynarmic::A32 {
 

@@ -13,7 +13,7 @@
 #include "common/assert.h"
 #include "frontend/A32/decoder/asimd.h"
 #include "frontend/A32/translate/impl/translate_arm.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/opcodes.h"
 
 using namespace Dynarmic;
 

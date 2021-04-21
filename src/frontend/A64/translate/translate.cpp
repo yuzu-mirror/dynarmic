@@ -7,8 +7,8 @@
 #include "frontend/A64/location_descriptor.h"
 #include "frontend/A64/translate/impl/impl.h"
 #include "frontend/A64/translate/translate.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/terminal.h"
+#include "ir/basic_block.h"
+#include "ir/terminal.h"
 
 namespace Dynarmic::A64 {
 

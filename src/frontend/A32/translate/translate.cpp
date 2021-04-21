@@ -5,7 +5,7 @@
 
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/translate.h"
-#include "frontend/ir/basic_block.h"
+#include "ir/basic_block.h"
 
 namespace Dynarmic::A32 {
 

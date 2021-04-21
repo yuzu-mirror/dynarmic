@@ -9,8 +9,8 @@
 
 #include "common/common_types.h"
 #include "frontend/A32/location_descriptor.h"
-#include "frontend/ir/ir_emitter.h"
-#include "frontend/ir/value.h"
+#include "ir/ir_emitter.h"
+#include "ir/value.h"
 
 namespace Dynarmic::A32 {
 

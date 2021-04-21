@@ -6,8 +6,8 @@
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
 #include "common/common_types.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
 
 namespace Dynarmic::Backend::X64 {
 

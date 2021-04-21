@@ -28,8 +28,8 @@
 #include "common/fp/op.h"
 #include "common/fp/rounding_mode.h"
 #include "common/lut_from_list.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
+#include "ir/basic_block.h"
+#include "ir/microinstruction.h"
 
 namespace Dynarmic::Backend::X64 {
 

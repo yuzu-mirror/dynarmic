@@ -7,7 +7,7 @@
 
 #include "common/common_types.h"
 #include "common/bit_util.h"
-#include "frontend/ir/cond.h"
+#include "ir/cond.h"
 
 namespace Dynarmic::A32 {
 

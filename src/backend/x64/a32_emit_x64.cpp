@@ -29,9 +29,9 @@
 #include "common/variant_util.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/basic_block.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
 
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.
@@ -136,7 +136,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
             A32EmitX64::EmitA32##name(ctx, inst);  \
             break;
 #define A64OPC(...)
-#include "frontend/ir/opcodes.inc"
+#include "ir/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
 #undef A64OPC

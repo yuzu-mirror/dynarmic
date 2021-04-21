@@ -6,7 +6,7 @@
 #include "common/assert.h"
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/types.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/opcodes.h"
 
 #include <dynarmic/A32/arch_version.h>
 

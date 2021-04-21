@@ -24,9 +24,9 @@
 #include "common/llvm_disassemble.h"
 #include "common/scope_exit.h"
 #include "frontend/A32/translate/translate.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/location_descriptor.h"
-#include "ir_opt/passes.h"
+#include "ir/basic_block.h"
+#include "ir/location_descriptor.h"
+#include "ir/opt/passes.h"
 
 namespace Dynarmic::A32 {
 

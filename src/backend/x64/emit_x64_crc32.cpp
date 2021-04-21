@@ -9,7 +9,7 @@
 #include "backend/x64/block_of_code.h"
 #include "backend/x64/emit_x64.h"
 #include "common/crypto/crc32.h"
-#include "frontend/ir/microinstruction.h"
+#include "ir/microinstruction.h"
 
 namespace Dynarmic::Backend::X64 {
 

@@ -16,9 +16,9 @@
 #include <mp/typelist/list.h>
 #include <mp/typelist/prepend.h>
 
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
-#include "frontend/ir/value.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
+#include "ir/value.h"
 
 namespace Dynarmic::Optimization::IRMatcher {
 

@@ -7,7 +7,7 @@
 #include <ostream>
 #include <string>
 
-#include "frontend/ir/type.h"
+#include "ir/type.h"
 
 namespace Dynarmic::IR {
 

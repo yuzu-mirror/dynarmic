@@ -10,9 +10,9 @@
 #include "backend/x64/emit_x64.h"
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/basic_block.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
 
 namespace Dynarmic::Backend::X64 {
 

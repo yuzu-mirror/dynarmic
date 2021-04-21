@@ -20,8 +20,8 @@
 #include "backend/x64/reg_alloc.h"
 #include "common/bit_util.h"
 #include "common/fp/fpcr.h"
-#include "frontend/ir/location_descriptor.h"
-#include "frontend/ir/terminal.h"
+#include "ir/location_descriptor.h"
+#include "ir/terminal.h"
 
 namespace Dynarmic::IR {
 class Block;
@@ -85,7 +85,7 @@ protected:
 #define OPCODE(name, type, ...) void Emit##name(EmitContext& ctx, IR::Inst* inst);
 #define A32OPC(...)
 #define A64OPC(...)
-#include "frontend/ir/opcodes.inc"
+#include "ir/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
 #undef A64OPC

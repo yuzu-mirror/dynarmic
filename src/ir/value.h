@@ -9,7 +9,7 @@
 
 #include "common/assert.h"
 #include "common/common_types.h"
-#include "frontend/ir/type.h"
+#include "ir/type.h"
 
 namespace Dynarmic::A32 {
 enum class ExtReg;

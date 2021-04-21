@@ -12,7 +12,7 @@
 #include "common/bit_util.h"
 #include "common/common_types.h"
 #include "common/fp/fpcr.h"
-#include "frontend/ir/location_descriptor.h"
+#include "ir/location_descriptor.h"
 
 namespace Dynarmic::A64 {
 

@@ -6,10 +6,10 @@
 #include <dynarmic/A64/config.h>
 
 #include "frontend/A64/ir_emitter.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
-#include "ir_opt/passes.h"
+#include "ir/basic_block.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
+#include "ir/opt/passes.h"
 
 namespace Dynarmic::Optimization {
 

@@ -9,7 +9,7 @@
 
 #include "common/common_types.h"
 #include "common/intrusive_list.h"
-#include "frontend/ir/value.h"
+#include "ir/value.h"
 
 namespace Dynarmic::IR {
 

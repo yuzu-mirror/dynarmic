@@ -5,10 +5,10 @@
 
 #include "common/assert.h"
 #include "common/bit_util.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
-#include "frontend/ir/type.h"
-#include "frontend/ir/value.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
+#include "ir/type.h"
+#include "ir/value.h"
 
 namespace Dynarmic::IR {
 

@@ -11,7 +11,7 @@
 #include <boost/icl/interval_set.hpp>
 #include <tsl/robin_set.h>
 
-#include "frontend/ir/location_descriptor.h"
+#include "ir/location_descriptor.h"
 
 namespace Dynarmic::Backend::X64 {
 

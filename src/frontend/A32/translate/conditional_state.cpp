@@ -11,7 +11,7 @@
 #include "common/common_types.h"
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/translate/conditional_state.h"
-#include "frontend/ir/cond.h"
+#include "ir/cond.h"
 
 namespace Dynarmic::A32 {
 

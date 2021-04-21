@@ -12,7 +12,7 @@
 #include "frontend/A32/FPSCR.h"
 #include "frontend/A32/PSR.h"
 #include "frontend/A32/ITState.h"
-#include "frontend/ir/location_descriptor.h"
+#include "ir/location_descriptor.h"
 
 namespace Dynarmic::A32 {
 

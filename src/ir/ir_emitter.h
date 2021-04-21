@@ -6,10 +6,10 @@
 #pragma once
 
 #include "common/common_types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/location_descriptor.h"
-#include "frontend/ir/terminal.h"
-#include "frontend/ir/value.h"
+#include "ir/basic_block.h"
+#include "ir/location_descriptor.h"
+#include "ir/terminal.h"
+#include "ir/value.h"
 
 namespace Dynarmic::FP {
 enum class RoundingMode;

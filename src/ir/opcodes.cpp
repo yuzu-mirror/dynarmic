@@ -11,8 +11,8 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include "frontend/ir/opcodes.h"
-#include "frontend/ir/type.h"
+#include "ir/opcodes.h"
+#include "ir/type.h"
 
 namespace Dynarmic::IR {
 

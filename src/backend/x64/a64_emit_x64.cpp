@@ -25,10 +25,10 @@
 #include "common/scope_exit.h"
 #include "frontend/A64/location_descriptor.h"
 #include "frontend/A64/types.h"
-#include "frontend/ir/basic_block.h"
-#include "frontend/ir/cond.h"
-#include "frontend/ir/microinstruction.h"
-#include "frontend/ir/opcodes.h"
+#include "ir/basic_block.h"
+#include "ir/cond.h"
+#include "ir/microinstruction.h"
+#include "ir/opcodes.h"
 
 // TODO: Have ARM flags in host flags and not have them use up GPR registers unless necessary.
 // TODO: Actually implement that proper instruction selector you've always wanted to sweetheart.
@@ -102,7 +102,7 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
         case IR::Opcode::A64##name:                \
             A64EmitX64::EmitA64##name(ctx, inst);  \
             break;
-#include "frontend/ir/opcodes.inc"
+#include "ir/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
 #undef A64OPC

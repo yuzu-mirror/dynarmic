@@ -8,8 +8,8 @@
 #include <boost/variant.hpp>
 
 #include "common/common_types.h"
-#include "frontend/ir/cond.h"
-#include "frontend/ir/location_descriptor.h"
+#include "ir/cond.h"
+#include "ir/location_descriptor.h"
 
 namespace Dynarmic::IR {
 namespace Term {
