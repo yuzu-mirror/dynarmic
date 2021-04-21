@@ -11,6 +11,7 @@
 #include "backend/x64/a32_jitstate.h"
 #include "backend/x64/abi.h"
 #include "backend/x64/block_of_code.h"
+#include "backend/x64/hostloc.h"
 #include "backend/x64/perf_map.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
@@ -24,22 +25,22 @@
 namespace Dynarmic::Backend::X64 {
 
 #ifdef _WIN32
-const Xbyak::Reg64 BlockOfCode::ABI_RETURN = Xbyak::util::rax;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM1 = Xbyak::util::rcx;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM2 = Xbyak::util::rdx;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM3 = Xbyak::util::r8;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM4 = Xbyak::util::r9;
-const std::array<Xbyak::Reg64, 4> BlockOfCode::ABI_PARAMS = {BlockOfCode::ABI_PARAM1, BlockOfCode::ABI_PARAM2, BlockOfCode::ABI_PARAM3, BlockOfCode::ABI_PARAM4};
+const Xbyak::Reg64 BlockOfCode::ABI_RETURN = HostLocToReg64(Dynarmic::Backend::X64::ABI_RETURN);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM1 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM1);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM2 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM2);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM3 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM3);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM4 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM4);
+const std::array<Xbyak::Reg64, ABI_PARAM_COUNT> BlockOfCode::ABI_PARAMS = {BlockOfCode::ABI_PARAM1, BlockOfCode::ABI_PARAM2, BlockOfCode::ABI_PARAM3, BlockOfCode::ABI_PARAM4};
 #else
-const Xbyak::Reg64 BlockOfCode::ABI_RETURN = Xbyak::util::rax;
-const Xbyak::Reg64 BlockOfCode::ABI_RETURN2 = Xbyak::util::rdx;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM1 = Xbyak::util::rdi;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM2 = Xbyak::util::rsi;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM3 = Xbyak::util::rdx;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM4 = Xbyak::util::rcx;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM5 = Xbyak::util::r8;
-const Xbyak::Reg64 BlockOfCode::ABI_PARAM6 = Xbyak::util::r9;
-const std::array<Xbyak::Reg64, 6> BlockOfCode::ABI_PARAMS = {BlockOfCode::ABI_PARAM1, BlockOfCode::ABI_PARAM2, BlockOfCode::ABI_PARAM3, BlockOfCode::ABI_PARAM4, BlockOfCode::ABI_PARAM5, BlockOfCode::ABI_PARAM6};
+const Xbyak::Reg64 BlockOfCode::ABI_RETURN = HostLocToReg64(Dynarmic::Backend::X64::ABI_RETURN);
+const Xbyak::Reg64 BlockOfCode::ABI_RETURN2 = HostLocToReg64(Dynarmic::Backend::X64::ABI_RETURN2);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM1 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM1);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM2 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM2);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM3 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM3);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM4 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM4);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM5 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM5);
+const Xbyak::Reg64 BlockOfCode::ABI_PARAM6 = HostLocToReg64(Dynarmic::Backend::X64::ABI_PARAM6);
+const std::array<Xbyak::Reg64, ABI_PARAM_COUNT> BlockOfCode::ABI_PARAMS = {BlockOfCode::ABI_PARAM1, BlockOfCode::ABI_PARAM2, BlockOfCode::ABI_PARAM3, BlockOfCode::ABI_PARAM4, BlockOfCode::ABI_PARAM5, BlockOfCode::ABI_PARAM6};
 #endif
 
 namespace {

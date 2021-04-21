@@ -6,6 +6,7 @@
 
 #include <array>
 
+#include "common/common_types.h"
 #include "backend/x64/hostloc.h"
 
 namespace Dynarmic::Backend::X64 {
@@ -15,6 +16,8 @@ class BlockOfCode;
 #ifdef _WIN32
 
 constexpr HostLoc ABI_RETURN = HostLoc::RAX;
+
+constexpr size_t ABI_PARAM_COUNT = 4;
 
 constexpr HostLoc ABI_PARAM1 = HostLoc::RCX;
 constexpr HostLoc ABI_PARAM2 = HostLoc::RDX;
@@ -63,11 +66,16 @@ constexpr size_t ABI_SHADOW_SPACE = 32; // bytes
 #else
 
 constexpr HostLoc ABI_RETURN = HostLoc::RAX;
+constexpr HostLoc ABI_RETURN2 = HostLoc::RDX;
+
+constexpr size_t ABI_PARAM_COUNT = 6;
 
 constexpr HostLoc ABI_PARAM1 = HostLoc::RDI;
 constexpr HostLoc ABI_PARAM2 = HostLoc::RSI;
 constexpr HostLoc ABI_PARAM3 = HostLoc::RDX;
 constexpr HostLoc ABI_PARAM4 = HostLoc::RCX;
+constexpr HostLoc ABI_PARAM5 = HostLoc::R8;
+constexpr HostLoc ABI_PARAM6 = HostLoc::R9;
 
 constexpr std::array<HostLoc, 25> ABI_ALL_CALLER_SAVE = {
     HostLoc::RAX,
