@@ -81,6 +81,7 @@ BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi, size_t total_cod
         , far_code_offset(far_code_offset)
         , constant_pool(*this, CONSTANT_POOL_SIZE)
 {
+    ASSERT(total_code_size > far_code_offset);
     EnableWriting();
     GenRunCode(rcp);
 }
