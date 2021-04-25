@@ -406,22 +406,17 @@ void EmitThreeOpVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-template<size_t fpcr_controlled_arg_index = 1, typename Lambda>
-void EmitTwoOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
+template<typename Lambda>
+void EmitTwoOpFallbackWithoutRegAlloc(BlockOfCode& code, EmitContext& ctx, Xbyak::Xmm result, Xbyak::Xmm arg1, Lambda lambda, bool fpcr_controlled) {
     const auto fn = static_cast<mp::equivalent_function_type<Lambda>*>(lambda);
 
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const bool fpcr_controlled = args[fpcr_controlled_arg_index].GetImmediateU1();
-    const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
-    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
-    ctx.reg_alloc.EndOfAllocScope();
-    ctx.reg_alloc.HostCall(nullptr);
+    const u32 fpcr = ctx.FPCR(fpcr_controlled).Value();
 
     constexpr u32 stack_space = 2 * 16;
     code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
     code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE + 0 * 16]);
     code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + 1 * 16]);
-    code.mov(code.ABI_PARAM3.cvt32(), ctx.FPCR(fpcr_controlled).Value());
+    code.mov(code.ABI_PARAM3.cvt32(), fpcr);
     code.lea(code.ABI_PARAM4, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
 
     code.movaps(xword[code.ABI_PARAM2], arg1);
@@ -429,6 +424,19 @@ void EmitTwoOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lamb
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + 0 * 16]);
 
     code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+}
+
+template<size_t fpcr_controlled_arg_index = 1, typename Lambda>
+void EmitTwoOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+    ctx.reg_alloc.EndOfAllocScope();
+    ctx.reg_alloc.HostCall(nullptr);
+
+    const bool fpcr_controlled = args[fpcr_controlled_arg_index].GetImmediateU1();
+
+    EmitTwoOpFallbackWithoutRegAlloc(code, ctx, result, arg1, lambda, fpcr_controlled);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -1435,6 +1443,12 @@ template<size_t fsize>
 static void EmitRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mp::unsigned_integer_of_size<fsize>;
 
+    const auto fallback_fn = [](VectorArray<FPT>& result, const VectorArray<FPT>& operand, FP::FPCR fpcr, FP::FPSR& fpsr) {
+        for (size_t i = 0; i < result.size(); i++) {
+            result[i] = FP::FPRSqrtEstimate<FPT>(operand[i], fpcr, fpsr);
+        }
+    };
+
     if constexpr (fsize != 16) {
         if (ctx.HasOptimization(OptimizationFlag::Unsafe_ReducedErrorFP)) {
             auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -1454,11 +1468,7 @@ static void EmitRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
         }
     }
 
-    EmitTwoOpFallback(code, ctx, inst, [](VectorArray<FPT>& result, const VectorArray<FPT>& operand, FP::FPCR fpcr, FP::FPSR& fpsr) {
-        for (size_t i = 0; i < result.size(); i++) {
-            result[i] = FP::FPRSqrtEstimate<FPT>(operand[i], fpcr, fpsr);
-        }
-    });
+    EmitTwoOpFallback(code, ctx, inst, fallback_fn);
 }
 
 void EmitX64::EmitFPVectorRSqrtEstimate16(EmitContext& ctx, IR::Inst* inst) {

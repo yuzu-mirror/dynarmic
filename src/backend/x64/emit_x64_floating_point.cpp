@@ -995,6 +995,111 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
             ctx.reg_alloc.DefineValue(inst, result);
             return;
         }
+
+        // TODO: VRSQRT14SS implementation (AVX512F)
+
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+        const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm value = ctx.reg_alloc.ScratchXmm();
+        [[maybe_unused]] const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
+
+        Xbyak::Label fallback, bad_values, end;
+
+        if constexpr (fsize == 64) {
+            code.cvtsd2ss(value, operand);
+
+            if (ctx.FPCR().RMode() == FP::RoundingMode::TowardsMinusInfinity || ctx.FPCR().RMode() == FP::RoundingMode::TowardsZero) {
+                code.ucomiss(value, code.MConst(xword, FP::FPInfo<u32>::MaxNormal(false)));
+                code.je(bad_values, code.T_NEAR);
+            }
+        } else {
+            code.movaps(value, operand);
+        }
+
+        code.movaps(xmm0, code.MConst(xword, 0xFFFF8000));
+        code.pand(value, xmm0);
+        code.por(value, code.MConst(xword, 0x00008000));
+
+        // Detect NaNs, negatives, zeros, denormals and infinities
+        code.ucomiss(value, code.MConst(xword, 0x00800000));
+        code.jna(bad_values, code.T_NEAR);
+
+        code.sqrtss(value, value);
+
+        code.movd(result, code.MConst(xword, 0x3F800000));
+        code.divss(result, value);
+
+        code.paddd(result, code.MConst(xword, 0x00004000));
+        code.pand(result, xmm0);
+
+        if constexpr (fsize == 64) {
+            code.cvtss2sd(result, result);
+        }
+        code.L(end);
+
+        code.SwitchToFarCode();
+
+        code.L(bad_values);
+        bool needs_fallback = false;
+        if constexpr (fsize == 32) {
+            Xbyak::Label default_nan;
+
+            code.movd(tmp, operand);
+
+            if (!ctx.FPCR().FZ()) {
+                if (ctx.FPCR().DN()) {
+                    // a > 0x80000000
+                    code.cmp(tmp, 0x80000000);
+                    code.ja(default_nan, code.T_NEAR);
+                }
+
+                // a > 0 && a < 0x00800000;
+                code.sub(tmp, 1);
+                code.cmp(tmp, 0x007FFFFF);
+                code.jb(fallback);
+                needs_fallback = true;
+            }
+
+            code.rsqrtss(result, operand);
+
+            if (ctx.FPCR().DN()) {
+                code.ucomiss(result, result);
+                code.jnp(end, code.T_NEAR);
+            } else {
+                // FZ ? (a >= 0x80800000 && a <= 0xFF800000) : (a >= 0x80000001 && a <= 0xFF800000)
+                // !FZ path takes into account the subtraction by one from the earlier block
+                code.add(tmp, ctx.FPCR().FZ() ? 0x7F800000 : 0x80000000);
+                code.cmp(tmp, ctx.FPCR().FZ() ? 0x7F000001 : 0x7F800000);
+                code.jnb(end, code.T_NEAR);
+            }
+
+            code.L(default_nan);
+            code.movd(result, code.MConst(xword, 0x7FC00000));
+            code.jmp(end, code.T_NEAR);
+        } else {
+            needs_fallback = true;
+        }
+
+        code.L(fallback);
+        if (needs_fallback) {
+            code.sub(rsp, 8);
+            ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
+            code.movq(code.ABI_PARAM1, operand);
+            code.mov(code.ABI_PARAM2.cvt32(), ctx.FPCR().Value());
+            code.lea(code.ABI_PARAM3, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
+            code.CallFunction(&FP::FPRSqrtEstimate<FPT>);
+            code.movq(result, rax);
+            ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
+            code.add(rsp, 8);
+            code.jmp(end, code.T_NEAR);
+        }
+
+        code.SwitchToNearCode();
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
     }
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);

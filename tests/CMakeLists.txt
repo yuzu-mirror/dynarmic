@@ -19,6 +19,13 @@ add_executable(dynarmic_tests
     rand_int.h
 )
 
+if (NOT MSVC)
+    target_sources(dynarmic_tests PRIVATE
+        rsqrt_test.cpp
+        rsqrt_test_fn.s
+    )
+endif()
+
 if (DYNARMIC_TESTS_USE_UNICORN)
     target_sources(dynarmic_tests PRIVATE
         A32/fuzz_arm.cpp
@@ -47,7 +54,7 @@ create_target_directory_groups(dynarmic_print_info)
 target_link_libraries(dynarmic_tests PRIVATE dynarmic boost catch fmt mp xbyak)
 target_include_directories(dynarmic_tests PRIVATE . ../src)
 target_compile_options(dynarmic_tests PRIVATE ${DYNARMIC_CXX_FLAGS})
-target_compile_definitions(dynarmic_tests PRIVATE FMT_USE_USER_DEFINED_LITERALS=0)
+target_compile_definitions(dynarmic_tests PRIVATE FMT_USE_USER_DEFINED_LITERALS=0 CATCH_CONFIG_ENABLE_BENCHMARKING=1)
 
 target_link_libraries(dynarmic_print_info PRIVATE dynarmic boost catch fmt mp)
 target_include_directories(dynarmic_print_info PRIVATE . ../src)

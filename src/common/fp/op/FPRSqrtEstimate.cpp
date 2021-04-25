@@ -35,6 +35,7 @@ FPT FPRSqrtEstimate(FPT op, FPCR fpcr, FPSR& fpsr) {
     }
 
     if (type == FPType::Infinity) {
+        // Note: Just +Inf reaches here, negatives are handled in the case above.
         return FPInfo<FPT>::Zero(false);
     }
 
