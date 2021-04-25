@@ -139,7 +139,7 @@ static u32 GenFloatInst(u64 pc, bool is_last_inst) {
         const size_t index = RandInt<size_t>(0, instruction_generators.size() - 1);
         const u32 instruction = instruction_generators[index].Generate();
 
-        if ((instruction & 0x00800000) == 0 && ShouldTestInst(instruction, pc, is_last_inst)) {
+        if (ShouldTestInst(instruction, pc, is_last_inst)) {
             return instruction;
         }
     }
@@ -410,6 +410,9 @@ TEST_CASE("A64: Floating point instructions", "[a64]") {
     };
 
     const auto gen_float = [&]{
+        if (RandInt<size_t>(0, 1) == 0) {
+            return RandInt<u64>(0, 0xffffffff);
+        }
         return float_numbers[RandInt<size_t>(0, float_numbers.size() - 1)];
     };
 
