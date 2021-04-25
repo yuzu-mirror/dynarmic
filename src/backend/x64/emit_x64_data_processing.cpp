@@ -171,11 +171,11 @@ static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst*
         code.cmovns(else_, then_);
         break;
     case IR::Cond::VS: //v
-        code.add(nzcv.cvt8(), 0x7F);
+        code.cmp(nzcv.cvt8(), 0x81);
         code.cmovo(else_, then_);
         break;
     case IR::Cond::VC: //!v
-        code.add(nzcv.cvt8(), 0x7F);
+        code.cmp(nzcv.cvt8(), 0x81);
         code.cmovno(else_, then_);
         break;
     case IR::Cond::HI: //c & !z
@@ -189,22 +189,22 @@ static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst*
         code.cmovna(else_, then_);
         break;
     case IR::Cond::GE: // n == v
-        code.add(nzcv.cvt8(), 0x7F);
+        code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovge(else_, then_);
         break;
     case IR::Cond::LT: // n != v
-        code.add(nzcv.cvt8(), 0x7F);
+        code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovl(else_, then_);
         break;
     case IR::Cond::GT: // !z & (n == v)
-        code.add(nzcv.cvt8(), 0x7F);
+        code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovg(else_, then_);
         break;
     case IR::Cond::LE: // z | (n != v)
-        code.add(nzcv.cvt8(), 0x7F);
+        code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovle(else_, then_);
         break;

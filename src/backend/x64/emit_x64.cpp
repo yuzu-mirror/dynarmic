@@ -219,11 +219,11 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
         code.jns(pass);
         break;
     case IR::Cond::VS: //v
-        code.add(al, 0x7F);
+        code.cmp(al, 0x81);
         code.jo(pass);
         break;
     case IR::Cond::VC: //!v
-        code.add(al, 0x7F);
+        code.cmp(al, 0x81);
         code.jno(pass);
         break;
     case IR::Cond::HI: //c & !z
@@ -237,22 +237,22 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
         code.jna(pass);
         break;
     case IR::Cond::GE: // n == v
-        code.add(al, 0x7F);
+        code.cmp(al, 0x81);
         code.sahf();
         code.jge(pass);
         break;
     case IR::Cond::LT: // n != v
-        code.add(al, 0x7F);
+        code.cmp(al, 0x81);
         code.sahf();
         code.jl(pass);
         break;
     case IR::Cond::GT: // !z & (n == v)
-        code.add(al, 0x7F);
+        code.cmp(al, 0x81);
         code.sahf();
         code.jg(pass);
         break;
     case IR::Cond::LE: // z | (n != v)
-        code.add(al, 0x7F);
+        code.cmp(al, 0x81);
         code.sahf();
         code.jle(pass);
         break;
