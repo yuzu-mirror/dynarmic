@@ -1005,47 +1005,32 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
         const Xbyak::Xmm value = ctx.reg_alloc.ScratchXmm();
         [[maybe_unused]] const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
 
-        Xbyak::Label fallback, bad_values, end;
+        Xbyak::Label fallback, bad_values, end, default_nan;
+        bool needs_fallback = false;
 
-        if constexpr (fsize == 64) {
-            code.cvtsd2ss(value, operand);
+        code.movaps(value, operand);
 
-            if (ctx.FPCR().RMode() == FP::RoundingMode::TowardsMinusInfinity || ctx.FPCR().RMode() == FP::RoundingMode::TowardsZero) {
-                code.ucomiss(value, code.MConst(xword, FP::FPInfo<u32>::MaxNormal(false)));
-                code.je(bad_values, code.T_NEAR);
-            }
-        } else {
-            code.movaps(value, operand);
-        }
-
-        code.movaps(xmm0, code.MConst(xword, 0xFFFF8000));
+        code.movaps(xmm0, code.MConst(xword, fsize == 32 ? 0xFFFF8000 : 0xFFFF'F000'0000'0000));
         code.pand(value, xmm0);
-        code.por(value, code.MConst(xword, 0x00008000));
+        code.por(value, code.MConst(xword, fsize == 32 ? 0x00008000 : 0x0000'1000'0000'0000));
 
         // Detect NaNs, negatives, zeros, denormals and infinities
-        code.ucomiss(value, code.MConst(xword, 0x00800000));
+        FCODE(ucomis)(value, code.MConst(xword, FPT(1) << FP::FPInfo<FPT>::explicit_mantissa_width));
         code.jna(bad_values, code.T_NEAR);
 
-        code.sqrtss(value, value);
+        FCODE(sqrts)(value, value);
+        ICODE(mov)(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 1>()));
+        FCODE(divs)(result, value);
 
-        code.movd(result, code.MConst(xword, 0x3F800000));
-        code.divss(result, value);
-
-        code.paddd(result, code.MConst(xword, 0x00004000));
+        ICODE(padd)(result, code.MConst(xword, fsize == 32 ? 0x00004000 : 0x0000'0800'0000'0000));
         code.pand(result, xmm0);
 
-        if constexpr (fsize == 64) {
-            code.cvtss2sd(result, result);
-        }
         code.L(end);
 
         code.SwitchToFarCode();
 
         code.L(bad_values);
-        bool needs_fallback = false;
         if constexpr (fsize == 32) {
-            Xbyak::Label default_nan;
-
             code.movd(tmp, operand);
 
             if (!ctx.FPCR().FZ()) {
@@ -1079,7 +1064,53 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
             code.movd(result, code.MConst(xword, 0x7FC00000));
             code.jmp(end, code.T_NEAR);
         } else {
-            needs_fallback = true;
+            Xbyak::Label nan, zero;
+
+            code.movaps(value, operand);
+            DenormalsAreZero<fsize>(code, ctx, {value});
+            code.pxor(result, result);
+
+            code.ucomisd(value, result);
+            if (ctx.FPCR().DN()) {
+                code.jc(default_nan);
+                code.je(zero);
+            } else {
+                code.jp(nan);
+                code.je(zero);
+                code.jc(default_nan);
+            }
+
+            if (!ctx.FPCR().FZ()) {
+                needs_fallback = true;
+                code.jmp(fallback);
+            } else {
+                // result = 0
+                code.jmp(end, code.T_NEAR);
+            }
+
+            code.L(zero);
+            if (code.HasAVX()) {
+                code.vpor(result, value, code.MConst(xword, 0x7FF0'0000'0000'0000));
+            } else {
+                code.movaps(result, value);
+                code.por(result, code.MConst(xword, 0x7FF0'0000'0000'0000));
+            }
+            code.jmp(end, code.T_NEAR);
+
+            code.L(nan);
+            if (!ctx.FPCR().DN()) {
+                if (code.HasAVX()) {
+                    code.vpor(result, operand, code.MConst(xword, 0x0008'0000'0000'0000));
+                } else {
+                    code.movaps(result, operand);
+                    code.por(result, code.MConst(xword, 0x0008'0000'0000'0000));
+                }
+                code.jmp(end, code.T_NEAR);
+            }
+
+            code.L(default_nan);
+            code.movq(result, code.MConst(xword, 0x7FF8'0000'0000'0000));
+            code.jmp(end, code.T_NEAR);
         }
 
         code.L(fallback);
