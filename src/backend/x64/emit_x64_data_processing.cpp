@@ -355,36 +355,19 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
             ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
-            ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
+            ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
             const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
             const Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
 
-            // TODO: Optimize this.
-
-            code.inLocalLabel();
-
-            code.cmp(code.cl, 32);
-            code.ja(".Rs_gt32");
-            code.je(".Rs_eq32");
-            // if (Rs & 0xFF < 32) {
-            code.bt(carry.cvt32(), 0); // Set the carry flag for correct behaviour in the case when Rs & 0xFF == 0
-            code.shl(result, code.cl);
+            code.mov(tmp, 63);
+            code.cmp(code.cl, 63);
+            code.cmova(code.ecx, tmp);
+            code.shl(result.cvt64(), 32);
+            code.bt(carry.cvt32(), 0);
+            code.shl(result.cvt64(), code.cl);
             code.setc(carry.cvt8());
-            code.jmp(".end");
-            // } else if (Rs & 0xFF > 32) {
-            code.L(".Rs_gt32");
-            code.xor_(result, result);
-            code.xor_(carry, carry);
-            code.jmp(".end");
-            // } else if (Rs & 0xFF == 32) {
-            code.L(".Rs_eq32");
-            code.mov(carry, result);
-            code.and_(carry, 1);
-            code.xor_(result, result);
-            // }
-            code.L(".end");
-
-            code.outLocalLabel();
+            code.shr(result.cvt64(), 32);
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
             ctx.EraseInstruction(carry_inst);
