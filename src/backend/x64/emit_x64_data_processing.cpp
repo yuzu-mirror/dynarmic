@@ -745,28 +745,16 @@ void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
             const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
             const Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
 
-            // TODO: Optimize
+            Xbyak::Label end;
 
-            code.inLocalLabel();
-
-            // if (Rs & 0xFF == 0) goto end;
             code.test(code.cl, code.cl);
-            code.jz(".end");
+            code.jz(end);
 
-            code.and_(code.ecx, u32(0x1F));
-            code.jz(".zero_1F");
-            // if (Rs & 0x1F != 0) {
             code.ror(result, code.cl);
-            code.setc(carry);
-            code.jmp(".end");
-            // } else {
-            code.L(".zero_1F");
             code.bt(result, u8(31));
             code.setc(carry);
-            // }
-            code.L(".end");
 
-            code.outLocalLabel();
+            code.L(end);
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
             ctx.EraseInstruction(carry_inst);
