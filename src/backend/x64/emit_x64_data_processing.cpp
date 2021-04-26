@@ -626,32 +626,18 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
-            ctx.reg_alloc.Use(shift_arg, HostLoc::RCX);
-            const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(operand_arg).cvt32();
-            const Xbyak::Reg8 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt8();
+            ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
+            const Xbyak::Reg32 operand = ctx.reg_alloc.UseGpr(operand_arg).cvt32();
+            const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+            const Xbyak::Reg32 carry = ctx.reg_alloc.UseScratchGpr(carry_arg).cvt32();
 
-            // TODO: Optimize this.
-
-            code.inLocalLabel();
-
-            code.cmp(code.cl, u32(31));
-            code.ja(".Rs_gt31");
-            // if (Rs & 0xFF == 0) goto end;
-            code.test(code.cl, code.cl);
-            code.jz(".end");
-            // if (Rs & 0xFF <= 31) {
-            code.sar(result, code.cl);
-            code.setc(carry);
-            code.jmp(".end");
-            // } else if (Rs & 0xFF > 31) {
-            code.L(".Rs_gt31");
-            code.sar(result, 31); // 31 produces the same results as anything above 31
-            code.bt(result, 31);
-            code.setc(carry);
-            // }
-            code.L(".end");
-
-            code.outLocalLabel();
+            code.mov(result, 63);
+            code.cmp(code.cl, 63);
+            code.cmovnb(code.ecx, result);
+            code.movsxd(result.cvt64(), operand);
+            code.bt(carry.cvt32(), 0);
+            code.sar(result.cvt64(), code.cl);
+            code.setc(carry.cvt8());
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
             ctx.EraseInstruction(carry_inst);
