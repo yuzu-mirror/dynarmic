@@ -681,7 +681,7 @@ void EmitX64::EmitArithmeticShiftRight64(EmitContext& ctx, IR::Inst* inst) {
         // We note that all shift values above 63 have the same behaviour as 63 does, so we saturate `shift` to 63.
         code.mov(const63, 63);
         code.cmp(code.cl, u32(63));
-        code.cmovg(code.ecx, const63);
+        code.cmovnb(code.ecx, const63);
         code.sar(result, code.cl);
 
         ctx.reg_alloc.DefineValue(inst, result);
