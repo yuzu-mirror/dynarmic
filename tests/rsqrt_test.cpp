@@ -27,6 +27,9 @@ extern "C" u32 rsqrt_fallback(u32 value) {
     FP::FPSR fpsr;
     return FP::FPRSqrtEstimate(value, fpcr, fpsr);
 }
+extern "C" u32 _rsqrt_fallback(u32 value) {
+    return rsqrt_fallback(value);
+}
 
 void Test(u32 value) {
     FP::FPCR fpcr;

@@ -17,7 +17,7 @@
 .global _rsqrt_fallback
 
 .text
-.intel_syntax
+.intel_syntax noprefix
 
 .align 16
 min_pos_denorm:
