@@ -97,11 +97,6 @@ public:
         is_executing = false;
     }
 
-    void ChangeProcessorID(size_t value) {
-        conf.processor_id = value;
-        emitter.ChangeProcessorID(value);
-    }
-
     void ClearCache() {
         invalidate_entire_cache = true;
         RequestCacheInvalidation();
@@ -292,7 +287,7 @@ private:
 
     bool is_executing = false;
 
-    UserConfig conf;
+    const UserConfig conf;
     A64JitState jit_state;
     BlockOfCode block_of_code;
     A64EmitX64 emitter;
@@ -332,10 +327,6 @@ void Jit::HaltExecution() {
 
 void Jit::ExceptionalExit() {
     impl->ExceptionalExit();
-}
-
-void Jit::ChangeProcessorID(size_t new_processor) {
-    impl->ChangeProcessorID(new_processor);
 }
 
 u64 Jit::GetSP() const {

@@ -66,9 +66,6 @@ public:
      */
     void ExceptionalExit();
 
-    /// HACK: Change processor ID.
-    void ChangeProcessorID(std::size_t new_processor);
-
     /// View and modify registers.
     std::array<std::uint32_t, 16>& Regs();
     const std::array<std::uint32_t, 16>& Regs() const;

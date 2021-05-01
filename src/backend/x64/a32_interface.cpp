@@ -63,7 +63,7 @@ struct Jit::Impl {
     BlockOfCode block_of_code;
     A32EmitX64 emitter;
 
-    A32::UserConfig conf;
+    const A32::UserConfig conf;
 
     // Requests made during execution to invalidate the cache are queued up here.
     size_t invalid_cache_generation = 0;
@@ -96,11 +96,6 @@ struct Jit::Impl {
             conf.callbacks->AddTicks(ticks);
         }
         PerformCacheInvalidation();
-    }
-
-    void ChangeProcessorID(size_t value) {
-        conf.processor_id = value;
-        emitter.ChangeProcessorID(value);
     }
 
     void ClearExclusiveState() {
@@ -245,10 +240,6 @@ void Jit::ExceptionalExit() {
 
 void Jit::ClearExclusiveState() {
     impl->ClearExclusiveState();
-}
-
-void Jit::ChangeProcessorID(size_t new_processor) {
-    impl->ChangeProcessorID(new_processor);
 }
 
 std::array<u32, 16>& Jit::Regs() {
