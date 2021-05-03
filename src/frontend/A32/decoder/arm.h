@@ -26,7 +26,7 @@ template <typename V>
 std::vector<ArmMatcher<V>> GetArmDecodeTable() {
     std::vector<ArmMatcher<V>> table = {
 
-#define INST(fn, name, bitstring) Decoder::detail::detail<ArmMatcher<V>>::GetMatcher(&V::fn, name, bitstring),
+#define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(ArmMatcher, fn, name, Decoder::detail::StringToArray<32>(bitstring)),
 #include "arm.inc"
 #undef INST
 

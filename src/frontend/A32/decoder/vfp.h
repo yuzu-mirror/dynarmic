@@ -30,7 +30,7 @@ std::optional<std::reference_wrapper<const VFPMatcher<V>>> DecodeVFP(u32 instruc
     } tables = []{
         Table list = {
 
-#define INST(fn, name, bitstring) Decoder::detail::detail<VFPMatcher<V>>::GetMatcher(&V::fn, name, bitstring),
+#define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(VFPMatcher, fn, name, Decoder::detail::StringToArray<32>(bitstring)),
 #include "vfp.inc"
 #undef INST
 

@@ -22,7 +22,7 @@ template<typename V>
 std::optional<std::reference_wrapper<const Thumb32Matcher<V>>> DecodeThumb32(u32 instruction) {
     static const std::vector<Thumb32Matcher<V>> table = {
 
-#define INST(fn, name, bitstring) Decoder::detail::detail<Thumb32Matcher<V>>::GetMatcher(&V::fn, name, bitstring),
+#define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(Thumb32Matcher, fn, name, Decoder::detail::StringToArray<32>(bitstring)),
 #include "thumb32.inc"
 #undef INST
 

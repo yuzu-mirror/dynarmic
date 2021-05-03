@@ -17,6 +17,15 @@
 namespace Dynarmic::Decoder {
 namespace detail {
 
+template <size_t N>
+inline constexpr std::array<char, N> StringToArray(const char (&str)[N + 1]) {
+    std::array<char, N> result;
+    for (size_t i = 0; i < N; i++) {
+        result[i] = str[i];
+    }
+    return result;
+}
+
 /**
  * Helper functions for the decoders.
  *
@@ -24,7 +33,6 @@ namespace detail {
  */
 template<class MatcherT>
 struct detail {
-private:
     using opcode_type  = typename MatcherT::opcode_type;
     using visitor_type = typename MatcherT::visitor_type;
 
@@ -35,7 +43,7 @@ private:
      * A '0' in a bitstring indicates that a zero must be present at that bit position.
      * A '1' in a bitstring indicates that a one must be present at that bit position.
      */
-    static constexpr auto GetMaskAndExpect(const char* const bitstring) {
+    static constexpr auto GetMaskAndExpect(std::array<char, opcode_bitsize> bitstring) {
         const auto one = static_cast<opcode_type>(1);
         opcode_type mask = 0, expect = 0;
         for (size_t i = 0; i < opcode_bitsize; i++) {
@@ -62,7 +70,7 @@ private:
      * An argument is specified by a continuous string of the same character.
      */
     template<size_t N>
-    static auto GetArgInfo(const char* const bitstring) {
+    static constexpr auto GetArgInfo(std::array<char, opcode_bitsize> bitstring) {
         std::array<opcode_type, N> masks = {};
         std::array<size_t, N> shifts = {};
         size_t arg_index = 0;
@@ -85,11 +93,12 @@ private:
                 if constexpr (N > 0) {
                     const size_t bit_position = opcode_bitsize - i - 1;
 
-                    ASSERT(arg_index < N);
+                    if (arg_index >= N) throw std::out_of_range("Unexpected field");
+
                     masks[arg_index] |= static_cast<opcode_type>(1) << bit_position;
                     shifts[arg_index] = bit_position;
                 } else {
-                    ASSERT_FALSE();
+                    throw std::out_of_range("Unexpected field");
                 }
             }
         }
@@ -148,23 +157,23 @@ private:
 #pragma warning(pop)
 #endif
 
-public:
     /**
      * Creates a matcher that can match and parse instructions based on bitstring.
      * See also: GetMaskAndExpect and GetArgInfo for format of bitstring.
      */
-    template<typename FnT>
-    static auto GetMatcher(FnT fn, const char* const name, const char* const bitstring) {
-        constexpr size_t args_count = mp::parameter_count_v<FnT>;
+    template<typename FnT, size_t args_count = mp::parameter_count_v<FnT>>
+    static auto GetMatcher(FnT fn, const char* const name, std::tuple<opcode_type, opcode_type> mask_and_expect, std::tuple<std::array<opcode_type, args_count>, std::array<size_t, args_count>> masks_and_shifts) {
         using Iota = std::make_index_sequence<args_count>;
 
-        const auto [mask, expect] = GetMaskAndExpect(bitstring);
-        const auto [arg_masks, arg_shifts] = GetArgInfo<args_count>(bitstring);
+        const auto [mask, expect] = mask_and_expect;
+        const auto [arg_masks, arg_shifts] = masks_and_shifts;
         const auto proxy_fn = VisitorCaller<FnT>::Make(Iota(), fn, arg_masks, arg_shifts);
 
         return MatcherT(name, mask, expect, proxy_fn);
     }
 };
+
+#define DYNARMIC_DECODER_GET_MATCHER(MatcherT, fn, name, bitstring) Decoder::detail::detail<MatcherT<V>>::GetMatcher(&V::fn, name, Decoder::detail::detail<MatcherT<V>>::GetMaskAndExpect(bitstring), Decoder::detail::detail<MatcherT<V>>::template GetArgInfo<mp::parameter_count_v<decltype(&V::fn)>>(bitstring))
 
 } // namespace detail
 } // namespace Dynarmic::Decoder

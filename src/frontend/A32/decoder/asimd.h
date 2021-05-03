@@ -25,7 +25,7 @@ template <typename V>
 std::vector<ASIMDMatcher<V>> GetASIMDDecodeTable() {
     std::vector<ASIMDMatcher<V>> table = {
 
-#define INST(fn, name, bitstring) Decoder::detail::detail<ASIMDMatcher<V>>::GetMatcher(&V::fn, name, bitstring),
+#define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(ASIMDMatcher, fn, name, Decoder::detail::StringToArray<32>(bitstring)),
 #include "asimd.inc"
 #undef INST
 

@@ -23,7 +23,7 @@ template<typename V>
 std::optional<std::reference_wrapper<const Thumb16Matcher<V>>> DecodeThumb16(u16 instruction) {
     static const std::vector<Thumb16Matcher<V>> table = {
 
-#define INST(fn, name, bitstring) Decoder::detail::detail<Thumb16Matcher<V>>::GetMatcher(&V::fn, name, bitstring),
+#define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(Thumb16Matcher, fn, name, Decoder::detail::StringToArray<16>(bitstring)),
 #include "thumb16.inc"
 #undef INST
 

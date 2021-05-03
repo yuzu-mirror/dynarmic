@@ -31,10 +31,10 @@ inline size_t ToFastLookupIndex(u32 instruction) {
 }
 } // namespace detail
 
-template <typename Visitor>
-DecodeTable<Visitor> GetDecodeTable() {
-    std::vector<Matcher<Visitor>> list = {
-#define INST(fn, name, bitstring) Decoder::detail::detail<Matcher<Visitor>>::GetMatcher(&Visitor::fn, name, bitstring),
+template <typename V>
+DecodeTable<V> GetDecodeTable() {
+    std::vector<Matcher<V>> list = {
+#define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(Matcher, fn, name, Decoder::detail::StringToArray<32>(bitstring)),
 #include "a64.inc"
 #undef INST
     };
@@ -55,7 +55,7 @@ DecodeTable<Visitor> GetDecodeTable() {
         return comes_first.count(matcher.GetName()) > 0;
     });
 
-    DecodeTable<Visitor> table{};
+    DecodeTable<V> table{};
     for (size_t i = 0; i < table.size(); ++i) {
         for (auto matcher : list) {
             const auto expect = detail::ToFastLookupIndex(matcher.GetExpected());
@@ -68,15 +68,15 @@ DecodeTable<Visitor> GetDecodeTable() {
     return table;
 }
 
-template<typename Visitor>
-std::optional<std::reference_wrapper<const Matcher<Visitor>>> Decode(u32 instruction) {
-    static const auto table = GetDecodeTable<Visitor>();
+template<typename V>
+std::optional<std::reference_wrapper<const Matcher<V>>> Decode(u32 instruction) {
+    static const auto table = GetDecodeTable<V>();
 
     const auto matches_instruction = [instruction](const auto& matcher) { return matcher.Matches(instruction); };
 
     const auto& subtable = table[detail::ToFastLookupIndex(instruction)];
     auto iter = std::find_if(subtable.begin(), subtable.end(), matches_instruction);
-    return iter != subtable.end() ? std::optional<std::reference_wrapper<const Matcher<Visitor>>>(*iter) : std::nullopt;
+    return iter != subtable.end() ? std::optional<std::reference_wrapper<const Matcher<V>>>(*iter) : std::nullopt;
 }
 
 } // namespace Dynarmic::A64
