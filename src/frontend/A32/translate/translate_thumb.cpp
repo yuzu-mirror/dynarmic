@@ -11,6 +11,7 @@
 #include "common/bit_util.h"
 #include "frontend/A32/decoder/thumb16.h"
 #include "frontend/A32/decoder/thumb32.h"
+#include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/conditional_state.h"
@@ -88,6 +89,12 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
             } else {
                 if (const auto decoder = DecodeThumb32<TranslatorVisitor>(thumb_instruction)) {
                     should_continue = decoder->get().call(visitor, thumb_instruction);
+                } else if ((thumb_instruction & 0xEC000000) == 0xEC000000) {
+                    if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(thumb_instruction)) {
+                        should_continue = vfp_decoder->get().call(visitor, thumb_instruction);
+                    } else {
+                        should_continue = visitor.thumb32_UDF();
+                    }
                 } else {
                     should_continue = visitor.thumb32_UDF();
                 }
@@ -134,6 +141,12 @@ bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descri
         thumb_instruction = Common::SwapHalves32(thumb_instruction);
         if (const auto decoder = DecodeThumb32<TranslatorVisitor>(thumb_instruction)) {
             should_continue = decoder->get().call(visitor, thumb_instruction);
+        } else if ((thumb_instruction & 0xEC000000) == 0xEC000000) {
+            if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(thumb_instruction)) {
+                should_continue = vfp_decoder->get().call(visitor, thumb_instruction);
+            } else {
+                should_continue = visitor.thumb32_UDF();
+            }
         } else {
             should_continue = visitor.thumb32_UDF();
         }

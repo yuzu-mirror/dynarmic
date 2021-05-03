@@ -158,6 +158,12 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
 #undef INST
         };
 
+        const std::vector<std::tuple<std::string, const char*>> vfp_list {
+#define INST(fn, name, bitstring) {#fn, bitstring},
+#include "frontend/A32/decoder/vfp.inc"
+#undef INST
+        };
+
         std::vector<InstructionGenerator> generators;
         std::vector<InstructionGenerator> invalid;
 
@@ -176,6 +182,13 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
             "thumb32_STREXB",
             "thumb32_STREXD",
             "thumb32_STREXH",
+
+            // FPSCR is inaccurate
+            "vfp_VMRS",
+
+            // Unicorn has incorrect implementation (incorrect rounding and unsets CPSR.T??)
+            "vfp_VCVT_to_fixed",
+            "vfp_VCVT_from_fixed",
         };
 
         for (const auto& [fn, bitstring] : list) {
@@ -184,6 +197,17 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
                 continue;
             }
             generators.emplace_back(InstructionGenerator{bitstring});
+        }
+        for (const auto& [fn, bs] : vfp_list) {
+            std::string bitstring = bs;
+            if (bitstring.substr(0, 4) == "cccc" || bitstring.substr(0, 4) == "----") {
+                bitstring.replace(0, 4, "1110");
+            }
+            if (std::find(do_not_test.begin(), do_not_test.end(), fn) != do_not_test.end()) {
+                invalid.emplace_back(InstructionGenerator{bitstring.c_str()});
+                continue;
+            }
+            generators.emplace_back(InstructionGenerator{bitstring.c_str()});
         }
         return InstructionGeneratorInfo{generators, invalid};
     }();
