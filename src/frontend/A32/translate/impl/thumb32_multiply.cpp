@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
-bool ThumbTranslatorVisitor::thumb32_MLA(Reg n, Reg a, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_MLA(Reg n, Reg a, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -21,7 +21,7 @@ bool ThumbTranslatorVisitor::thumb32_MLA(Reg n, Reg a, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_MLS(Reg n, Reg a, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_MLS(Reg n, Reg a, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -35,7 +35,7 @@ bool ThumbTranslatorVisitor::thumb32_MLS(Reg n, Reg a, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_MUL(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_MUL(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -48,7 +48,7 @@ bool ThumbTranslatorVisitor::thumb32_MUL(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLAD(Reg n, Reg a, Reg d, bool X, Reg m) {
+bool TranslatorVisitor::thumb32_SMLAD(Reg n, Reg a, Reg d, bool X, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -77,7 +77,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLAD(Reg n, Reg a, Reg d, bool X, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLSD(Reg n, Reg a, Reg d, bool X, Reg m) {
+bool TranslatorVisitor::thumb32_SMLSD(Reg n, Reg a, Reg d, bool X, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -104,7 +104,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLSD(Reg n, Reg a, Reg d, bool X, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLAXY(Reg n, Reg a, Reg d, bool N, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMLAXY(Reg n, Reg a, Reg d, bool N, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -123,7 +123,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLAXY(Reg n, Reg a, Reg d, bool N, bool M,
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMMLA(Reg n, Reg a, Reg d, bool R, Reg m) {
+bool TranslatorVisitor::thumb32_SMMLA(Reg n, Reg a, Reg d, bool R, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -142,7 +142,7 @@ bool ThumbTranslatorVisitor::thumb32_SMMLA(Reg n, Reg a, Reg d, bool R, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMMLS(Reg n, Reg a, Reg d, bool R, Reg m) {
+bool TranslatorVisitor::thumb32_SMMLS(Reg n, Reg a, Reg d, bool R, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -161,7 +161,7 @@ bool ThumbTranslatorVisitor::thumb32_SMMLS(Reg n, Reg a, Reg d, bool R, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMMUL(Reg n, Reg d, bool R, Reg m) {
+bool TranslatorVisitor::thumb32_SMMUL(Reg n, Reg d, bool R, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -179,7 +179,7 @@ bool ThumbTranslatorVisitor::thumb32_SMMUL(Reg n, Reg d, bool R, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMUAD(Reg n, Reg d, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMUAD(Reg n, Reg d, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -204,7 +204,7 @@ bool ThumbTranslatorVisitor::thumb32_SMUAD(Reg n, Reg d, bool M, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMUSD(Reg n, Reg d, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMUSD(Reg n, Reg d, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -228,7 +228,7 @@ bool ThumbTranslatorVisitor::thumb32_SMUSD(Reg n, Reg d, bool M, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMULXY(Reg n, Reg d, bool N, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMULXY(Reg n, Reg d, bool N, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -245,7 +245,7 @@ bool ThumbTranslatorVisitor::thumb32_SMULXY(Reg n, Reg d, bool N, bool M, Reg m)
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLAWY(Reg n, Reg a, Reg d, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMLAWY(Reg n, Reg a, Reg d, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -264,7 +264,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLAWY(Reg n, Reg a, Reg d, bool M, Reg m) 
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMULWY(Reg n, Reg d, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMULWY(Reg n, Reg d, bool M, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -281,7 +281,7 @@ bool ThumbTranslatorVisitor::thumb32_SMULWY(Reg n, Reg d, bool M, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_USAD8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_USAD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -294,7 +294,7 @@ bool ThumbTranslatorVisitor::thumb32_USAD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_USADA8(Reg n, Reg a, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_USADA8(Reg n, Reg a, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }

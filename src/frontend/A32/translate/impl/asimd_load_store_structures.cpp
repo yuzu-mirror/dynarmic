@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 #include <optional>
 #include <tuple>
@@ -72,7 +72,7 @@ std::optional<std::tuple<size_t, size_t, size_t>> DecodeType(Imm<4> type, size_t
 }
 } // anoynmous namespace
 
-bool ArmTranslatorVisitor::v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
+bool TranslatorVisitor::v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
     if (type == 0b1011 || type.Bits<2, 3>() == 0b11) {
         return DecodeError();
     }
@@ -121,7 +121,7 @@ bool ArmTranslatorVisitor::v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type
     return true;
 }
 
-bool ArmTranslatorVisitor::v8_VLD_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
+bool TranslatorVisitor::v8_VLD_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
     if (type == 0b1011 || type.Bits<2, 3>() == 0b11) {
         return DecodeError();
     }
@@ -178,7 +178,7 @@ bool ArmTranslatorVisitor::v8_VLD_multiple(bool D, Reg n, size_t Vd, Imm<4> type
     return true;
 }
 
-bool ArmTranslatorVisitor::v8_VLD_all_lanes(bool D, Reg n, size_t Vd, size_t nn, size_t sz, bool T, bool a, Reg m) {
+bool TranslatorVisitor::v8_VLD_all_lanes(bool D, Reg n, size_t Vd, size_t nn, size_t sz, bool T, bool a, Reg m) {
     const size_t nelem = nn + 1;
 
     if (nelem == 1 && (sz == 0b11 || (sz == 0b00 && a))) {
@@ -243,7 +243,7 @@ bool ArmTranslatorVisitor::v8_VLD_all_lanes(bool D, Reg n, size_t Vd, size_t nn,
     return true;
 }
 
-bool ArmTranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
+bool TranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
     const size_t nelem = nn + 1;
 
     if (sz == 0b11) {
@@ -307,7 +307,7 @@ bool ArmTranslatorVisitor::v8_VST_single(bool D, Reg n, size_t Vd, size_t sz, si
     return true;
 }
 
-bool ArmTranslatorVisitor::v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
+bool TranslatorVisitor::v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m) {
     const size_t nelem = nn + 1;
 
     if (sz == 0b11) {

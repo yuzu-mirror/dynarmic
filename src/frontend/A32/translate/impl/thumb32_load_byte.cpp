@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include <dynarmic/A32/config.h>
-#include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
-static bool PLDHandler(ThumbTranslatorVisitor& v, bool W) {
+static bool PLDHandler(TranslatorVisitor& v, bool W) {
     if (!v.options.hook_hint_instructions) {
         return true;
     }
@@ -17,7 +18,7 @@ static bool PLDHandler(ThumbTranslatorVisitor& v, bool W) {
     return v.RaiseException(exception);
 }
 
-static bool PLIHandler(ThumbTranslatorVisitor& v) {
+static bool PLIHandler(TranslatorVisitor& v) {
     if (!v.options.hook_hint_instructions) {
         return true;
     }
@@ -27,7 +28,7 @@ static bool PLIHandler(ThumbTranslatorVisitor& v) {
 
 using ExtensionFunction = IR::U32 (IREmitter::*)(const IR::U8&);
 
-static bool LoadByteLiteral(ThumbTranslatorVisitor& v, bool U, Reg t, Imm<12> imm12,
+static bool LoadByteLiteral(TranslatorVisitor& v, bool U, Reg t, Imm<12> imm12,
                             ExtensionFunction ext_fn) {
     const u32 imm32 = imm12.ZeroExtend();
     const u32 base = v.ir.AlignPC(4);
@@ -38,7 +39,7 @@ static bool LoadByteLiteral(ThumbTranslatorVisitor& v, bool U, Reg t, Imm<12> im
     return true;
 }
 
-static bool LoadByteRegister(ThumbTranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, Reg m,
+static bool LoadByteRegister(TranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, Reg m,
                              ExtensionFunction ext_fn) {
     if (m == Reg::PC) {
         return v.UnpredictableInstruction();
@@ -54,8 +55,8 @@ static bool LoadByteRegister(ThumbTranslatorVisitor& v, Reg n, Reg t, Imm<2> imm
     return true;
 }
 
-static bool LoadByteImmediate(ThumbTranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W,
-                              Imm<12> imm12, ExtensionFunction ext_fn) {
+static bool LoadByteImmediate(TranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W, Imm<12> imm12,
+                              ExtensionFunction ext_fn) {
     const u32 imm32 = imm12.ZeroExtend();
     const IR::U32 reg_n = v.ir.GetRegister(n);
     const IR::U32 offset_address = U ? v.ir.Add(reg_n, v.ir.Imm32(imm32))
@@ -70,27 +71,19 @@ static bool LoadByteImmediate(ThumbTranslatorVisitor& v, Reg n, Reg t, bool P, b
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLD_lit([[maybe_unused]] bool U,
-                                             [[maybe_unused]] Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_PLD_lit(bool /*U*/, Imm<12> /*imm12*/) {
     return PLDHandler(*this, false);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLD_imm8(bool W,
-                                              [[maybe_unused]] Reg n,
-                                              [[maybe_unused]] Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_PLD_imm8(bool W, Reg /*n*/, Imm<8> /*imm8*/) {
     return PLDHandler(*this, W);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLD_imm12(bool W,
-                                               [[maybe_unused]] Reg n,
-                                               [[maybe_unused]] Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_PLD_imm12(bool W, Reg /*n*/, Imm<12> /*imm12*/) {
     return PLDHandler(*this, W);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLD_reg(bool W,
-                                             [[maybe_unused]] Reg n,
-                                             [[maybe_unused]] Imm<2> imm2,
-                                             Reg m) {
+bool TranslatorVisitor::thumb32_PLD_reg(bool W, Reg /*n*/, Imm<2> /*imm2*/, Reg m) {
     if (m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -98,24 +91,19 @@ bool ThumbTranslatorVisitor::thumb32_PLD_reg(bool W,
     return PLDHandler(*this, W);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLI_lit([[maybe_unused]] bool U,
-                                             [[maybe_unused]] Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_PLI_lit(bool /*U*/, Imm<12> /*imm12*/) {
     return PLIHandler(*this);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLI_imm8([[maybe_unused]] Reg n,
-                                              [[maybe_unused]] Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_PLI_imm8(Reg /*n*/, Imm<8> /*imm8*/) {
     return PLIHandler(*this);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLI_imm12([[maybe_unused]] Reg n,
-                                               [[maybe_unused]] Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_PLI_imm12(Reg /*n*/, Imm<12> /*imm12*/) {
     return PLIHandler(*this);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PLI_reg([[maybe_unused]] Reg n,
-                                             [[maybe_unused]] Imm<2> imm2,
-                                             Reg m) {
+bool TranslatorVisitor::thumb32_PLI_reg(Reg /*n*/, Imm<2> /*imm2*/, Reg m) {
     if (m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -123,11 +111,12 @@ bool ThumbTranslatorVisitor::thumb32_PLI_reg([[maybe_unused]] Reg n,
     return PLIHandler(*this);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRB_lit(bool U, Reg t, Imm<12> imm12) {
-    return LoadByteLiteral(*this, U, t, imm12, &IREmitter::ZeroExtendByteToWord);
+bool TranslatorVisitor::thumb32_LDRB_lit(bool U, Reg t, Imm<12> imm12) {
+    return LoadByteLiteral(*this, U, t, imm12,
+                           &IREmitter::ZeroExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRB_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRB_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
     if (t == Reg::PC && W) {
         return UnpredictableInstruction();
     }
@@ -142,16 +131,17 @@ bool ThumbTranslatorVisitor::thumb32_LDRB_imm8(Reg n, Reg t, bool P, bool U, boo
                              &IREmitter::ZeroExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRB_imm12(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDRB_imm12(Reg n, Reg t, Imm<12> imm12) {
     return LoadByteImmediate(*this, n, t, true, true, false, imm12,
                              &IREmitter::ZeroExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRB_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
-    return LoadByteRegister(*this, n, t, imm2, m, &IREmitter::ZeroExtendByteToWord);
+bool TranslatorVisitor::thumb32_LDRB_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
+    return LoadByteRegister(*this, n, t, imm2, m,
+                            &IREmitter::ZeroExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRBT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRBT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution modes.
@@ -165,11 +155,12 @@ bool ThumbTranslatorVisitor::thumb32_LDRBT(Reg n, Reg t, Imm<8> imm8) {
     return thumb32_LDRB_imm8(n, t, true, true, false, imm8);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSB_lit(bool U, Reg t, Imm<12> imm12) {
-    return LoadByteLiteral(*this, U, t, imm12, &IREmitter::SignExtendByteToWord);
+bool TranslatorVisitor::thumb32_LDRSB_lit(bool U, Reg t, Imm<12> imm12) {
+    return LoadByteLiteral(*this, U, t, imm12,
+                           &IREmitter::SignExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSB_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRSB_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
     if (t == Reg::PC && W) {
         return UnpredictableInstruction();
     }
@@ -184,16 +175,17 @@ bool ThumbTranslatorVisitor::thumb32_LDRSB_imm8(Reg n, Reg t, bool P, bool U, bo
                              &IREmitter::SignExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSB_imm12(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDRSB_imm12(Reg n, Reg t, Imm<12> imm12) {
     return LoadByteImmediate(*this, n, t, true, true, false, imm12,
                              &IREmitter::SignExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSB_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
-    return LoadByteRegister(*this, n, t, imm2, m, &IREmitter::SignExtendByteToWord);
+bool TranslatorVisitor::thumb32_LDRSB_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
+    return LoadByteRegister(*this, n, t, imm2, m,
+                            &IREmitter::SignExtendByteToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSBT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRSBT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution modes.

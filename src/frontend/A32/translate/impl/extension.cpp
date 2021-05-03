@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
@@ -13,12 +13,12 @@ static IR::U32 Rotate(A32::IREmitter& ir, Reg m, SignExtendRotation rotate) {
 }
 
 // SXTAB<c> <Rd>, <Rn>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -31,12 +31,12 @@ bool ArmTranslatorVisitor::arm_SXTAB(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 // SXTAB16<c> <Rd>, <Rn>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -51,12 +51,12 @@ bool ArmTranslatorVisitor::arm_SXTAB16(Cond cond, Reg n, Reg d, SignExtendRotati
 }
 
 // SXTAH<c> <Rd>, <Rn>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -69,12 +69,12 @@ bool ArmTranslatorVisitor::arm_SXTAH(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 // SXTB<c> <Rd>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -86,12 +86,12 @@ bool ArmTranslatorVisitor::arm_SXTB(Cond cond, Reg d, SignExtendRotation rotate,
 }
 
 // SXTB16<c> <Rd>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -105,12 +105,12 @@ bool ArmTranslatorVisitor::arm_SXTB16(Cond cond, Reg d, SignExtendRotation rotat
 }
 
 // SXTH<c> <Rd>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -122,12 +122,12 @@ bool ArmTranslatorVisitor::arm_SXTH(Cond cond, Reg d, SignExtendRotation rotate,
 }
 
 // UXTAB<c> <Rd>, <Rn>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -140,12 +140,12 @@ bool ArmTranslatorVisitor::arm_UXTAB(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 // UXTAB16<c> <Rd>, <Rn>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -159,12 +159,12 @@ bool ArmTranslatorVisitor::arm_UXTAB16(Cond cond, Reg n, Reg d, SignExtendRotati
 }
 
 // UXTAH<c> <Rd>, <Rn>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -177,12 +177,12 @@ bool ArmTranslatorVisitor::arm_UXTAH(Cond cond, Reg n, Reg d, SignExtendRotation
 }
 
 // UXTB<c> <Rd>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -193,12 +193,12 @@ bool ArmTranslatorVisitor::arm_UXTB(Cond cond, Reg d, SignExtendRotation rotate,
 }
 
 // UXTB16<c> <Rd>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -210,12 +210,12 @@ bool ArmTranslatorVisitor::arm_UXTB16(Cond cond, Reg d, SignExtendRotation rotat
 }
 
 // UXTH<c> <Rd>, <Rm>{, <rotation>}
-bool ArmTranslatorVisitor::arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
+bool TranslatorVisitor::arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 

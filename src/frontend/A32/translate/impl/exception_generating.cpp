@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <dynarmic/A32/config.h>
+#include "frontend/A32/translate/impl/translate.h"
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include <dynarmic/A32/config.h>
 
 namespace Dynarmic::A32 {
 
 // BKPT #<imm16>
-bool ArmTranslatorVisitor::arm_BKPT(Cond cond, Imm<12> /*imm12*/, Imm<4> /*imm4*/) {
+bool TranslatorVisitor::arm_BKPT(Cond cond, Imm<12> /*imm12*/, Imm<4> /*imm4*/) {
     if (cond != Cond::AL && !options.define_unpredictable_behaviour) {
         return UnpredictableInstruction();
     }
     // UNPREDICTABLE: The instruction executes conditionally.
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -26,8 +26,8 @@ bool ArmTranslatorVisitor::arm_BKPT(Cond cond, Imm<12> /*imm12*/, Imm<4> /*imm4*
 }
 
 // SVC<c> #<imm24>
-bool ArmTranslatorVisitor::arm_SVC(Cond cond, Imm<24> imm24) {
-    if (!ConditionPassed(cond)) {
+bool TranslatorVisitor::arm_SVC(Cond cond, Imm<24> imm24) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -40,7 +40,7 @@ bool ArmTranslatorVisitor::arm_SVC(Cond cond, Imm<24> imm24) {
 }
 
 // UDF<c> #<imm16>
-bool ArmTranslatorVisitor::arm_UDF() {
+bool TranslatorVisitor::arm_UDF() {
     return UndefinedInstruction();
 }
 

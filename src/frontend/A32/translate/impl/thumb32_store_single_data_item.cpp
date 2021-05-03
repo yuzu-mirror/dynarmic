@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
 template <typename StoreRegFn>
-static bool StoreRegister(ThumbTranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, Reg m, StoreRegFn store_fn) {
+static bool StoreRegister(TranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, Reg m, StoreRegFn store_fn) {
     if (n == Reg::PC) {
         return v.UndefinedInstruction();
     }
@@ -29,21 +29,21 @@ static bool StoreRegister(ThumbTranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, 
     return true;
 }
 
-using StoreImmFn = void (*)(ThumbTranslatorVisitor&, const IR::U32&, const IR::U32&);
+using StoreImmFn = void (*)(TranslatorVisitor&, const IR::U32&, const IR::U32&);
 
-static void StoreImmByteFn(ThumbTranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
+static void StoreImmByteFn(TranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
     v.ir.WriteMemory8(address, v.ir.LeastSignificantByte(data));
 }
 
-static void StoreImmHalfFn(ThumbTranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
+static void StoreImmHalfFn(TranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
     v.ir.WriteMemory16(address, v.ir.LeastSignificantHalf(data));
 }
 
-static void StoreImmWordFn(ThumbTranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
+static void StoreImmWordFn(TranslatorVisitor& v, const IR::U32& address, const IR::U32& data) {
     v.ir.WriteMemory32(address, data);
 }
 
-static bool StoreImmediate(ThumbTranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W, Imm<12> imm12,
+static bool StoreImmediate(TranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W, Imm<12> imm12,
                            StoreImmFn store_fn) {
     const auto imm32 = imm12.ZeroExtend();
     const auto reg_n = v.ir.GetRegister(n);
@@ -62,7 +62,7 @@ static bool StoreImmediate(ThumbTranslatorVisitor& v, Reg n, Reg t, bool P, bool
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRB_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STRB_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -72,7 +72,7 @@ bool ThumbTranslatorVisitor::thumb32_STRB_imm_1(Reg n, Reg t, bool P, bool U, Im
     return StoreImmediate(*this, n, t, P, U, true, Imm<12>{imm8.ZeroExtend()}, StoreImmByteFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRB_imm_2(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STRB_imm_2(Reg n, Reg t, Imm<8> imm8) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -82,7 +82,7 @@ bool ThumbTranslatorVisitor::thumb32_STRB_imm_2(Reg n, Reg t, Imm<8> imm8) {
     return StoreImmediate(*this, n, t, true, false, false, Imm<12>{imm8.ZeroExtend()}, StoreImmByteFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRB_imm_3(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_STRB_imm_3(Reg n, Reg t, Imm<12> imm12) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -92,7 +92,7 @@ bool ThumbTranslatorVisitor::thumb32_STRB_imm_3(Reg n, Reg t, Imm<12> imm12) {
     return StoreImmediate(*this, n, t, true, true, false, imm12, StoreImmByteFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRBT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STRBT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution levels.
@@ -109,13 +109,13 @@ bool ThumbTranslatorVisitor::thumb32_STRBT(Reg n, Reg t, Imm<8> imm8) {
     return StoreImmediate(*this, n, t, true, true, false, Imm<12>{imm8.ZeroExtend()}, StoreImmByteFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRB(Reg n, Reg t, Imm<2> imm2, Reg m) {
+bool TranslatorVisitor::thumb32_STRB(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return StoreRegister(*this, n, t, imm2, m, [this](const IR::U32& offset_address, const IR::U32& data) {
         ir.WriteMemory8(offset_address, ir.LeastSignificantByte(data));
     });
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRH_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STRH_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -125,7 +125,7 @@ bool ThumbTranslatorVisitor::thumb32_STRH_imm_1(Reg n, Reg t, bool P, bool U, Im
     return StoreImmediate(*this, n, t, P, U, true, Imm<12>{imm8.ZeroExtend()}, StoreImmHalfFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRH_imm_2(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STRH_imm_2(Reg n, Reg t, Imm<8> imm8) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -135,7 +135,7 @@ bool ThumbTranslatorVisitor::thumb32_STRH_imm_2(Reg n, Reg t, Imm<8> imm8) {
     return StoreImmediate(*this, n, t, true, false, false, Imm<12>{imm8.ZeroExtend()}, StoreImmHalfFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRH_imm_3(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_STRH_imm_3(Reg n, Reg t, Imm<12> imm12) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -145,7 +145,7 @@ bool ThumbTranslatorVisitor::thumb32_STRH_imm_3(Reg n, Reg t, Imm<12> imm12) {
     return StoreImmediate(*this, n, t, true, true, false, imm12, StoreImmHalfFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRHT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STRHT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution levels.
@@ -162,13 +162,13 @@ bool ThumbTranslatorVisitor::thumb32_STRHT(Reg n, Reg t, Imm<8> imm8) {
     return StoreImmediate(*this, n, t, true, true, false, Imm<12>{imm8.ZeroExtend()}, StoreImmHalfFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRH(Reg n, Reg t, Imm<2> imm2, Reg m) {
+bool TranslatorVisitor::thumb32_STRH(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return StoreRegister(*this, n, t, imm2, m, [this](const IR::U32& offset_address, const IR::U32& data) {
         ir.WriteMemory16(offset_address, ir.LeastSignificantHalf(data));
     });
 }
 
-bool ThumbTranslatorVisitor::thumb32_STR_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STR_imm_1(Reg n, Reg t, bool P, bool U, Imm<8> imm8) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -178,7 +178,7 @@ bool ThumbTranslatorVisitor::thumb32_STR_imm_1(Reg n, Reg t, bool P, bool U, Imm
     return StoreImmediate(*this, n, t, P, U, true, Imm<12>{imm8.ZeroExtend()}, StoreImmWordFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STR_imm_2(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STR_imm_2(Reg n, Reg t, Imm<8> imm8) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -188,7 +188,7 @@ bool ThumbTranslatorVisitor::thumb32_STR_imm_2(Reg n, Reg t, Imm<8> imm8) {
     return StoreImmediate(*this, n, t, true, false, false, Imm<12>{imm8.ZeroExtend()}, StoreImmWordFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STR_imm_3(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_STR_imm_3(Reg n, Reg t, Imm<12> imm12) {
     if (n == Reg::PC) {
         return UndefinedInstruction();
     }
@@ -198,7 +198,7 @@ bool ThumbTranslatorVisitor::thumb32_STR_imm_3(Reg n, Reg t, Imm<12> imm12) {
     return StoreImmediate(*this, n, t, true, true, false, imm12, StoreImmWordFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STRT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_STRT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution levels.
@@ -215,7 +215,7 @@ bool ThumbTranslatorVisitor::thumb32_STRT(Reg n, Reg t, Imm<8> imm8) {
     return StoreImmediate(*this, n, t, true, true, false, Imm<12>{imm8.ZeroExtend()}, StoreImmWordFn);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STR_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
+bool TranslatorVisitor::thumb32_STR_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return StoreRegister(*this, n, t, imm2, m, [this](const IR::U32& offset_address, const IR::U32& data) {
         ir.WriteMemory32(offset_address, data);
     });

@@ -11,7 +11,7 @@
 #include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/conditional_state.h"
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A32/types.h"
 #include "ir/basic_block.h"
@@ -22,18 +22,19 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType mem
     const bool single_step = descriptor.SingleStepping();
 
     IR::Block block{descriptor};
-    ArmTranslatorVisitor visitor{block, descriptor, options};
+    TranslatorVisitor visitor{block, descriptor, options};
 
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();
         const u32 arm_instruction = memory_read_code(arm_pc);
+        visitor.current_instruction_size = 4;
 
-        if (const auto vfp_decoder = DecodeVFP<ArmTranslatorVisitor>(arm_instruction)) {
+        if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(arm_instruction)) {
             should_continue = vfp_decoder->get().call(visitor, arm_instruction);
-        } else if (const auto asimd_decoder = DecodeASIMD<ArmTranslatorVisitor>(arm_instruction)) {
+        } else if (const auto asimd_decoder = DecodeASIMD<TranslatorVisitor>(arm_instruction)) {
             should_continue = asimd_decoder->get().call(visitor, arm_instruction);
-        } else if (const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction)) {
+        } else if (const auto decoder = DecodeArm<TranslatorVisitor>(arm_instruction)) {
             should_continue = decoder->get().call(visitor, arm_instruction);
         } else {
             should_continue = visitor.arm_UDF();
@@ -65,16 +66,16 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType mem
 }
 
 bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descriptor, u32 arm_instruction) {
-    ArmTranslatorVisitor visitor{block, descriptor, {}};
+    TranslatorVisitor visitor{block, descriptor, {}};
 
     // TODO: Proper cond handling
 
     bool should_continue = true;
-    if (const auto vfp_decoder = DecodeVFP<ArmTranslatorVisitor>(arm_instruction)) {
+    if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(arm_instruction)) {
         should_continue = vfp_decoder->get().call(visitor, arm_instruction);
-    } else if (const auto asimd_decoder = DecodeASIMD<ArmTranslatorVisitor>(arm_instruction)) {
+    } else if (const auto asimd_decoder = DecodeASIMD<TranslatorVisitor>(arm_instruction)) {
         should_continue = asimd_decoder->get().call(visitor, arm_instruction);
-    } else if (const auto decoder = DecodeArm<ArmTranslatorVisitor>(arm_instruction)) {
+    } else if (const auto decoder = DecodeArm<TranslatorVisitor>(arm_instruction)) {
         should_continue = decoder->get().call(visitor, arm_instruction);
     } else {
         should_continue = visitor.arm_UDF();
@@ -88,90 +89,6 @@ bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descript
     block.SetEndLocation(visitor.ir.current_location);
 
     return should_continue;
-}
-
-bool ArmTranslatorVisitor::ConditionPassed(Cond cond) {
-    return IsConditionPassed(cond, cond_state, ir, 4);
-}
-
-bool ArmTranslatorVisitor::InterpretThisInstruction() {
-    ir.SetTerm(IR::Term::Interpret(ir.current_location));
-    return false;
-}
-
-bool ArmTranslatorVisitor::UnpredictableInstruction() {
-    ir.ExceptionRaised(Exception::UnpredictableInstruction);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
-}
-
-bool ArmTranslatorVisitor::UndefinedInstruction() {
-    ir.ExceptionRaised(Exception::UndefinedInstruction);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
-}
-
-bool ArmTranslatorVisitor::DecodeError() {
-    ir.ExceptionRaised(Exception::DecodeError);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
-}
-
-bool ArmTranslatorVisitor::RaiseException(Exception exception) {
-    ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
-    ir.ExceptionRaised(exception);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
-}
-
-IR::UAny ArmTranslatorVisitor::I(size_t bitsize, u64 value) {
-    switch (bitsize) {
-    case 8:
-        return ir.Imm8(static_cast<u8>(value));
-    case 16:
-        return ir.Imm16(static_cast<u16>(value));
-    case 32:
-        return ir.Imm32(static_cast<u32>(value));
-    case 64:
-        return ir.Imm64(value);
-    default:
-        ASSERT_FALSE("Imm - get: Invalid bitsize");
-    }
-}
-
-IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in) {
-    u8 imm5_value = imm5.ZeroExtend<u8>();
-    switch (type) {
-    case ShiftType::LSL:
-        return ir.LogicalShiftLeft(value, ir.Imm8(imm5_value), carry_in);
-    case ShiftType::LSR:
-        imm5_value = imm5_value ? imm5_value : 32;
-        return ir.LogicalShiftRight(value, ir.Imm8(imm5_value), carry_in);
-    case ShiftType::ASR:
-        imm5_value = imm5_value ? imm5_value : 32;
-        return ir.ArithmeticShiftRight(value, ir.Imm8(imm5_value), carry_in);
-    case ShiftType::ROR:
-        if (imm5_value) {
-            return ir.RotateRight(value, ir.Imm8(imm5_value), carry_in);
-        } else {
-            return ir.RotateRightExtended(value, carry_in);
-        }
-    }
-    UNREACHABLE();
-}
-
-IR::ResultAndCarry<IR::U32> ArmTranslatorVisitor::EmitRegShift(IR::U32 value, ShiftType type, IR::U8 amount, IR::U1 carry_in) {
-    switch (type) {
-    case ShiftType::LSL:
-        return ir.LogicalShiftLeft(value, amount, carry_in);
-    case ShiftType::LSR:
-        return ir.LogicalShiftRight(value, amount, carry_in);
-    case ShiftType::ASR:
-        return ir.ArithmeticShiftRight(value, amount, carry_in);
-    case ShiftType::ROR:
-        return ir.RotateRight(value, amount, carry_in);
-    }
-    UNREACHABLE();
 }
 
 } // namespace Dynarmic::A32

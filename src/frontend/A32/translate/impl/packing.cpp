@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
 // PKHBT<c> <Rd>, <Rn>, <Rm>{, LSL #<imm>}
-bool ArmTranslatorVisitor::arm_PKHBT(Cond cond, Reg n, Reg d, Imm<5> imm5, Reg m) {
+bool TranslatorVisitor::arm_PKHBT(Cond cond, Reg n, Reg d, Imm<5> imm5, Reg m) {
     if (n == Reg::PC || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -26,12 +26,12 @@ bool ArmTranslatorVisitor::arm_PKHBT(Cond cond, Reg n, Reg d, Imm<5> imm5, Reg m
 }
 
 // PKHTB<c> <Rd>, <Rn>, <Rm>{, ASR #<imm>}
-bool ArmTranslatorVisitor::arm_PKHTB(Cond cond, Reg n, Reg d, Imm<5> imm5, Reg m) {
+bool TranslatorVisitor::arm_PKHTB(Cond cond, Reg n, Reg d, Imm<5> imm5, Reg m) {
     if (n == Reg::PC || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 

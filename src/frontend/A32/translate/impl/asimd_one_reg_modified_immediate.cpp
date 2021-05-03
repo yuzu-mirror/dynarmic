@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include "common/assert.h"
 #include "common/bit_util.h"
 
-#include "frontend/A32/translate/impl/translate_arm.h"
-
 namespace Dynarmic::A32 {
 
-bool ArmTranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, Imm<1> d, size_t Vd,
+bool TranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, Imm<1> d, size_t Vd,
                                           Imm<4> cmode, bool Q, bool op, Imm<1> e, Imm<1> f, Imm<1> g, Imm<1> h) {
     if (Q && Common::Bit<0>(Vd)) {
         return UndefinedInstruction();

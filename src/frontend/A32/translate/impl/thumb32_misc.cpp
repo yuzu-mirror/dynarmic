@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
-bool ThumbTranslatorVisitor::thumb32_CLZ(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_CLZ(Reg n, Reg d, Reg m) {
     if (m != n || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -19,7 +19,7 @@ bool ThumbTranslatorVisitor::thumb32_CLZ(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QADD(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QADD(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -33,7 +33,7 @@ bool ThumbTranslatorVisitor::thumb32_QADD(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QDADD(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QDADD(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -49,7 +49,7 @@ bool ThumbTranslatorVisitor::thumb32_QDADD(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QDSUB(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QDSUB(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -65,7 +65,7 @@ bool ThumbTranslatorVisitor::thumb32_QDSUB(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QSUB(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QSUB(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -79,7 +79,7 @@ bool ThumbTranslatorVisitor::thumb32_QSUB(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_RBIT(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_RBIT(Reg n, Reg d, Reg m) {
     if (m != n || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -104,7 +104,7 @@ bool ThumbTranslatorVisitor::thumb32_RBIT(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_REV(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_REV(Reg n, Reg d, Reg m) {
     if (m != n || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -115,7 +115,7 @@ bool ThumbTranslatorVisitor::thumb32_REV(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_REV16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_REV16(Reg n, Reg d, Reg m) {
     if (m != n || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -129,7 +129,7 @@ bool ThumbTranslatorVisitor::thumb32_REV16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_REVSH(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_REVSH(Reg n, Reg d, Reg m) {
     if (m != n || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -141,7 +141,7 @@ bool ThumbTranslatorVisitor::thumb32_REVSH(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SEL(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SEL(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }

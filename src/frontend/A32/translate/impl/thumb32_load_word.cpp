@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 static bool ITBlockCheck(const A32::IREmitter& ir) {
     return ir.current_location.IT().IsInITBlock() && !ir.current_location.IT().IsLastInITBlock();
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDR_lit(bool U, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDR_lit(bool U, Reg t, Imm<12> imm12) {
     if (t == Reg::PC && ITBlockCheck(ir)) {
         return UnpredictableInstruction();
     }
@@ -31,7 +31,7 @@ bool ThumbTranslatorVisitor::thumb32_LDR_lit(bool U, Reg t, Imm<12> imm12) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDR_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDR_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
     if (!P && !W) {
         return UndefinedInstruction();
     }
@@ -71,7 +71,7 @@ bool ThumbTranslatorVisitor::thumb32_LDR_imm8(Reg n, Reg t, bool P, bool U, bool
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDR_imm12(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDR_imm12(Reg n, Reg t, Imm<12> imm12) {
     if (t == Reg::PC && ITBlockCheck(ir)) {
         return UnpredictableInstruction();
     }
@@ -92,7 +92,7 @@ bool ThumbTranslatorVisitor::thumb32_LDR_imm12(Reg n, Reg t, Imm<12> imm12) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDR_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
+bool TranslatorVisitor::thumb32_LDR_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
     if (m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -117,7 +117,7 @@ bool ThumbTranslatorVisitor::thumb32_LDR_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution levels.

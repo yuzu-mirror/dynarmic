@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include "common/assert.h"
 #include "common/bit_util.h"
 
-#include "frontend/A32/translate/impl/translate_arm.h"
-
 namespace Dynarmic::A32 {
 
-static bool TableLookup(ArmTranslatorVisitor& v, bool is_vtbl, bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
+static bool TableLookup(TranslatorVisitor& v, bool is_vtbl, bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
     const size_t length = len + 1;
     const auto d = ToVector(false, Vd, D);
     const auto m = ToVector(false, Vm, M);
@@ -35,7 +35,7 @@ static bool TableLookup(ArmTranslatorVisitor& v, bool is_vtbl, bool D, size_t Vn
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VEXT(bool D, size_t Vn, size_t Vd, Imm<4> imm4, bool N, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VEXT(bool D, size_t Vn, size_t Vd, Imm<4> imm4, bool N, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
@@ -57,15 +57,15 @@ bool ArmTranslatorVisitor::asimd_VEXT(bool D, size_t Vn, size_t Vd, Imm<4> imm4,
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VTBL(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VTBL(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
     return TableLookup(*this, true, D, Vn, Vd, len, N, M, Vm);
 }
 
-bool ArmTranslatorVisitor::asimd_VTBX(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VTBX(bool D, size_t Vn, size_t Vd, size_t len, bool N, bool M, size_t Vm) {
     return TableLookup(*this, false, D, Vn, Vd, len, N, M, Vm);
 }
 
-bool ArmTranslatorVisitor::asimd_VDUP_scalar(bool D, Imm<4> imm4, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VDUP_scalar(bool D, Imm<4> imm4, size_t Vd, bool Q, bool M, size_t Vm) {
     if (Q && Common::Bit<0>(Vd)) {
         return UndefinedInstruction();
     }

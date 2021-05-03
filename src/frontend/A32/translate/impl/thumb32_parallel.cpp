@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 static IR::U32 Pack2x16To1x32(A32::IREmitter& ir, IR::U32 lo, IR::U32 hi) {
@@ -14,7 +14,7 @@ static IR::U16 MostSignificantHalf(A32::IREmitter& ir, IR::U32 value) {
     return ir.LeastSignificantHalf(ir.LogicalShiftRight(value, ir.Imm8(16), ir.Imm1(0)).result);
 }
 
-bool ThumbTranslatorVisitor::thumb32_SADD8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SADD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -28,7 +28,7 @@ bool ThumbTranslatorVisitor::thumb32_SADD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SADD16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -42,7 +42,7 @@ bool ThumbTranslatorVisitor::thumb32_SADD16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SASX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SASX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -56,7 +56,7 @@ bool ThumbTranslatorVisitor::thumb32_SASX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SSAX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SSAX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -70,7 +70,7 @@ bool ThumbTranslatorVisitor::thumb32_SSAX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SSUB8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SSUB8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -84,7 +84,7 @@ bool ThumbTranslatorVisitor::thumb32_SSUB8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SSUB16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SSUB16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -98,7 +98,7 @@ bool ThumbTranslatorVisitor::thumb32_SSUB16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UADD8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UADD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -112,7 +112,7 @@ bool ThumbTranslatorVisitor::thumb32_UADD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UADD16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -126,7 +126,7 @@ bool ThumbTranslatorVisitor::thumb32_UADD16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UASX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UASX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -140,7 +140,7 @@ bool ThumbTranslatorVisitor::thumb32_UASX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_USAX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_USAX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -154,7 +154,7 @@ bool ThumbTranslatorVisitor::thumb32_USAX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_USUB8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_USUB8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -168,7 +168,7 @@ bool ThumbTranslatorVisitor::thumb32_USUB8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_USUB16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_USUB16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -182,7 +182,7 @@ bool ThumbTranslatorVisitor::thumb32_USUB16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QADD8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QADD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -195,7 +195,7 @@ bool ThumbTranslatorVisitor::thumb32_QADD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QADD16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -208,7 +208,7 @@ bool ThumbTranslatorVisitor::thumb32_QADD16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QASX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QASX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -227,7 +227,7 @@ bool ThumbTranslatorVisitor::thumb32_QASX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QSAX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QSAX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -246,7 +246,7 @@ bool ThumbTranslatorVisitor::thumb32_QSAX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QSUB8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QSUB8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -259,7 +259,7 @@ bool ThumbTranslatorVisitor::thumb32_QSUB8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_QSUB16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_QSUB16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -272,7 +272,7 @@ bool ThumbTranslatorVisitor::thumb32_QSUB16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UQADD8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UQADD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -285,7 +285,7 @@ bool ThumbTranslatorVisitor::thumb32_UQADD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UQADD16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UQADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -298,7 +298,7 @@ bool ThumbTranslatorVisitor::thumb32_UQADD16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UQASX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UQASX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -317,7 +317,7 @@ bool ThumbTranslatorVisitor::thumb32_UQASX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UQSAX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UQSAX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -336,7 +336,7 @@ bool ThumbTranslatorVisitor::thumb32_UQSAX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UQSUB8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UQSUB8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -349,7 +349,7 @@ bool ThumbTranslatorVisitor::thumb32_UQSUB8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UQSUB16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UQSUB16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -362,7 +362,7 @@ bool ThumbTranslatorVisitor::thumb32_UQSUB16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SHADD8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SHADD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -375,7 +375,7 @@ bool ThumbTranslatorVisitor::thumb32_SHADD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SHADD16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SHADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -388,7 +388,7 @@ bool ThumbTranslatorVisitor::thumb32_SHADD16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SHASX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SHASX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -401,7 +401,7 @@ bool ThumbTranslatorVisitor::thumb32_SHASX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SHSAX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SHSAX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -414,7 +414,7 @@ bool ThumbTranslatorVisitor::thumb32_SHSAX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SHSUB8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SHSUB8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -427,7 +427,7 @@ bool ThumbTranslatorVisitor::thumb32_SHSUB8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SHSUB16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SHSUB16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -440,7 +440,7 @@ bool ThumbTranslatorVisitor::thumb32_SHSUB16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UHADD8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UHADD8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -453,7 +453,7 @@ bool ThumbTranslatorVisitor::thumb32_UHADD8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UHADD16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UHADD16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -466,7 +466,7 @@ bool ThumbTranslatorVisitor::thumb32_UHADD16(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UHASX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UHASX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -479,7 +479,7 @@ bool ThumbTranslatorVisitor::thumb32_UHASX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UHSAX(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UHSAX(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -492,7 +492,7 @@ bool ThumbTranslatorVisitor::thumb32_UHSAX(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UHSUB8(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UHSUB8(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -505,7 +505,7 @@ bool ThumbTranslatorVisitor::thumb32_UHSUB8(Reg n, Reg d, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UHSUB16(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UHSUB16(Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }

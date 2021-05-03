@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 namespace {
 using DivideFunction = IR::U32U64 (IREmitter::*)(const IR::U32U64&, const IR::U32U64&);
 
-bool DivideOperation(ThumbTranslatorVisitor& v, Reg d, Reg m, Reg n, DivideFunction fn) {
+bool DivideOperation(TranslatorVisitor& v, Reg d, Reg m, Reg n, DivideFunction fn) {
     if (d == Reg::PC || m == Reg::PC || n == Reg::PC) {
         return v.UnpredictableInstruction();
     }
@@ -23,11 +23,11 @@ bool DivideOperation(ThumbTranslatorVisitor& v, Reg d, Reg m, Reg n, DivideFunct
 }
 } // Anonymous namespace
 
-bool ThumbTranslatorVisitor::thumb32_SDIV(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_SDIV(Reg n, Reg d, Reg m) {
     return DivideOperation(*this, d, m, n, &IREmitter::SignedDiv);
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
+bool TranslatorVisitor::thumb32_SMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -49,7 +49,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLALD(Reg n, Reg dLo, Reg dHi, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMLALD(Reg n, Reg dLo, Reg dHi, bool M, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -79,7 +79,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLALD(Reg n, Reg dLo, Reg dHi, bool M, Reg
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLALXY(Reg n, Reg dLo, Reg dHi, bool N, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMLALXY(Reg n, Reg dLo, Reg dHi, bool N, bool M, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -103,7 +103,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLALXY(Reg n, Reg dLo, Reg dHi, bool N, bo
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMLSLD(Reg n, Reg dLo, Reg dHi, bool M, Reg m) {
+bool TranslatorVisitor::thumb32_SMLSLD(Reg n, Reg dLo, Reg dHi, bool M, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -133,7 +133,7 @@ bool ThumbTranslatorVisitor::thumb32_SMLSLD(Reg n, Reg dLo, Reg dHi, bool M, Reg
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
+bool TranslatorVisitor::thumb32_SMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -153,11 +153,11 @@ bool ThumbTranslatorVisitor::thumb32_SMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UDIV(Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::thumb32_UDIV(Reg n, Reg d, Reg m) {
     return DivideOperation(*this, d, m, n, &IREmitter::UnsignedDiv);
 }
 
-bool ThumbTranslatorVisitor::thumb32_UMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
+bool TranslatorVisitor::thumb32_UMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -179,7 +179,7 @@ bool ThumbTranslatorVisitor::thumb32_UMLAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
+bool TranslatorVisitor::thumb32_UMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -199,7 +199,7 @@ bool ThumbTranslatorVisitor::thumb32_UMULL(Reg n, Reg dLo, Reg dHi, Reg m) {
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UMAAL(Reg n, Reg dLo, Reg dHi, Reg m) {
+bool TranslatorVisitor::thumb32_UMAAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }

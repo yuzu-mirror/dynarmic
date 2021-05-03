@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
 // MLA{S}<c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n) {
+bool TranslatorVisitor::arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -28,12 +28,12 @@ bool ArmTranslatorVisitor::arm_MLA(Cond cond, bool S, Reg d, Reg a, Reg m, Reg n
 }
 
 // MLS<c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_MLS(Cond cond, Reg d, Reg a, Reg m, Reg n) {
+bool TranslatorVisitor::arm_MLS(Cond cond, Reg d, Reg a, Reg m, Reg n) {
     if (d == Reg::PC || a == Reg::PC || m == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -47,12 +47,12 @@ bool ArmTranslatorVisitor::arm_MLS(Cond cond, Reg d, Reg a, Reg m, Reg n) {
 }
 
 // MUL{S}<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_MUL(Cond cond, bool S, Reg d, Reg m, Reg n) {
+bool TranslatorVisitor::arm_MUL(Cond cond, bool S, Reg d, Reg m, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -68,7 +68,7 @@ bool ArmTranslatorVisitor::arm_MUL(Cond cond, bool S, Reg d, Reg m, Reg n) {
 
 
 // SMLAL{S}<c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+bool TranslatorVisitor::arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -77,7 +77,7 @@ bool ArmTranslatorVisitor::arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -100,7 +100,7 @@ bool ArmTranslatorVisitor::arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
 }
 
 // SMULL{S}<c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+bool TranslatorVisitor::arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -109,7 +109,7 @@ bool ArmTranslatorVisitor::arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -130,7 +130,7 @@ bool ArmTranslatorVisitor::arm_SMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
 }
 
 // UMAAL<c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n) {
+bool TranslatorVisitor::arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -139,7 +139,7 @@ bool ArmTranslatorVisitor::arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n) 
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -155,7 +155,7 @@ bool ArmTranslatorVisitor::arm_UMAAL(Cond cond, Reg dHi, Reg dLo, Reg m, Reg n) 
 }
 
 // UMLAL{S}<c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+bool TranslatorVisitor::arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -164,7 +164,7 @@ bool ArmTranslatorVisitor::arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -186,7 +186,7 @@ bool ArmTranslatorVisitor::arm_UMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
 }
 
 // UMULL{S}<c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
+bool TranslatorVisitor::arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -195,7 +195,7 @@ bool ArmTranslatorVisitor::arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -216,7 +216,7 @@ bool ArmTranslatorVisitor::arm_UMULL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m,
 }
 
 // SMLAL<x><y><c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, bool N, Reg n) {
+bool TranslatorVisitor::arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, bool N, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -225,7 +225,7 @@ bool ArmTranslatorVisitor::arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool 
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -245,12 +245,12 @@ bool ArmTranslatorVisitor::arm_SMLALxy(Cond cond, Reg dHi, Reg dLo, Reg m, bool 
 }
 
 // SMLA<x><y><c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_SMLAxy(Cond cond, Reg d, Reg a, Reg m, bool M, bool N, Reg n) {
+bool TranslatorVisitor::arm_SMLAxy(Cond cond, Reg d, Reg a, Reg m, bool M, bool N, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -269,12 +269,12 @@ bool ArmTranslatorVisitor::arm_SMLAxy(Cond cond, Reg d, Reg a, Reg m, bool M, bo
 }
 
 // SMUL<x><y><c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMULxy(Cond cond, Reg d, Reg m, bool M, bool N, Reg n) {
+bool TranslatorVisitor::arm_SMULxy(Cond cond, Reg d, Reg m, bool M, bool N, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -291,12 +291,12 @@ bool ArmTranslatorVisitor::arm_SMULxy(Cond cond, Reg d, Reg m, bool M, bool N, R
 }
 
 // SMLAW<y><c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_SMLAWy(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMLAWy(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -315,12 +315,12 @@ bool ArmTranslatorVisitor::arm_SMLAWy(Cond cond, Reg d, Reg a, Reg m, bool M, Re
 }
 
 // SMULW<y><c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -337,12 +337,12 @@ bool ArmTranslatorVisitor::arm_SMULWy(Cond cond, Reg d, Reg m, bool M, Reg n) {
 }
 
 // SMMLA{R}<c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
+bool TranslatorVisitor::arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC /* no check for a */) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -361,12 +361,12 @@ bool ArmTranslatorVisitor::arm_SMMLA(Cond cond, Reg d, Reg a, Reg m, bool R, Reg
 }
 
 // SMMLS{R}<c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_SMMLS(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
+bool TranslatorVisitor::arm_SMMLS(Cond cond, Reg d, Reg a, Reg m, bool R, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC || a == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -385,12 +385,12 @@ bool ArmTranslatorVisitor::arm_SMMLS(Cond cond, Reg d, Reg a, Reg m, bool R, Reg
 }
 
 // SMMUL{R}<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n) {
+bool TranslatorVisitor::arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -408,7 +408,7 @@ bool ArmTranslatorVisitor::arm_SMMUL(Cond cond, Reg d, Reg m, bool R, Reg n) {
 }
 
 // SMLAD{X}<c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
     if (a == Reg::PC) {
         return arm_SMUAD(cond, d, m, M, n);
     }
@@ -417,7 +417,7 @@ bool ArmTranslatorVisitor::arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -445,7 +445,7 @@ bool ArmTranslatorVisitor::arm_SMLAD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg
 }
 
 // SMLALD{X}<c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -454,7 +454,7 @@ bool ArmTranslatorVisitor::arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -480,7 +480,7 @@ bool ArmTranslatorVisitor::arm_SMLALD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M
 }
 
 // SMLSD{X}<c> <Rd>, <Rn>, <Rm>, <Ra>
-bool ArmTranslatorVisitor::arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg n) {
     if (a == Reg::PC) {
         return arm_SMUSD(cond, d, m, M, n);
     }
@@ -489,7 +489,7 @@ bool ArmTranslatorVisitor::arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -516,7 +516,7 @@ bool ArmTranslatorVisitor::arm_SMLSD(Cond cond, Reg d, Reg a, Reg m, bool M, Reg
 }
 
 // SMLSLD{X}<c> <RdLo>, <RdHi>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -525,7 +525,7 @@ bool ArmTranslatorVisitor::arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -551,12 +551,12 @@ bool ArmTranslatorVisitor::arm_SMLSLD(Cond cond, Reg dHi, Reg dLo, Reg m, bool M
 }
 
 // SMUAD{X}<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMUAD(Cond cond, Reg d, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMUAD(Cond cond, Reg d, Reg m, bool M, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -581,12 +581,12 @@ bool ArmTranslatorVisitor::arm_SMUAD(Cond cond, Reg d, Reg m, bool M, Reg n) {
 }
 
 // SMUSD{X}<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SMUSD(Cond cond, Reg d, Reg m, bool M, Reg n) {
+bool TranslatorVisitor::arm_SMUSD(Cond cond, Reg d, Reg m, bool M, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 

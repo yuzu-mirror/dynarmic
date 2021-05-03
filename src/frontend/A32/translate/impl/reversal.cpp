@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
 // RBIT<c> <Rd>, <Rm>
-bool ArmTranslatorVisitor::arm_RBIT(Cond cond, Reg d, Reg m) {
+bool TranslatorVisitor::arm_RBIT(Cond cond, Reg d, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -38,12 +38,12 @@ bool ArmTranslatorVisitor::arm_RBIT(Cond cond, Reg d, Reg m) {
 }
 
 // REV<c> <Rd>, <Rm>
-bool ArmTranslatorVisitor::arm_REV(Cond cond, Reg d, Reg m) {
+bool TranslatorVisitor::arm_REV(Cond cond, Reg d, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -53,12 +53,12 @@ bool ArmTranslatorVisitor::arm_REV(Cond cond, Reg d, Reg m) {
 }
 
 // REV16<c> <Rd>, <Rm>
-bool ArmTranslatorVisitor::arm_REV16(Cond cond, Reg d, Reg m) {
+bool TranslatorVisitor::arm_REV16(Cond cond, Reg d, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -72,12 +72,12 @@ bool ArmTranslatorVisitor::arm_REV16(Cond cond, Reg d, Reg m) {
 }
 
 // REVSH<c> <Rd>, <Rm>
-bool ArmTranslatorVisitor::arm_REVSH(Cond cond, Reg d, Reg m) {
+bool TranslatorVisitor::arm_REVSH(Cond cond, Reg d, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 

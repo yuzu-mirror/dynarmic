@@ -3,24 +3,25 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include "common/bit_util.h"
-#include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
 
 // CPS<effect> <iflags>{, #<mode>}
 // CPS #<mode>
-bool ArmTranslatorVisitor::arm_CPS() {
+bool TranslatorVisitor::arm_CPS() {
     return InterpretThisInstruction();
 }
 
 // MRS<c> <Rd>, <spec_reg>
-bool ArmTranslatorVisitor::arm_MRS(Cond cond, Reg d) {
+bool TranslatorVisitor::arm_MRS(Cond cond, Reg d) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -29,10 +30,10 @@ bool ArmTranslatorVisitor::arm_MRS(Cond cond, Reg d) {
 }
 
 // MSR<c> <spec_reg>, #<const>
-bool ArmTranslatorVisitor::arm_MSR_imm(Cond cond, int mask, int rotate, Imm<8> imm8) {
+bool TranslatorVisitor::arm_MSR_imm(Cond cond, int mask, int rotate, Imm<8> imm8) {
     ASSERT_MSG(mask != 0, "Decode error");
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -61,7 +62,7 @@ bool ArmTranslatorVisitor::arm_MSR_imm(Cond cond, int mask, int rotate, Imm<8> i
 }
 
 // MSR<c> <spec_reg>, <Rn>
-bool ArmTranslatorVisitor::arm_MSR_reg(Cond cond, int mask, Reg n) {
+bool TranslatorVisitor::arm_MSR_reg(Cond cond, int mask, Reg n) {
     if (mask == 0) {
         return UnpredictableInstruction();
     }
@@ -70,7 +71,7 @@ bool ArmTranslatorVisitor::arm_MSR_reg(Cond cond, int mask, Reg n) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -102,18 +103,18 @@ bool ArmTranslatorVisitor::arm_MSR_reg(Cond cond, int mask, Reg n) {
 }
 
 // RFE{<amode>} <Rn>{!}
-bool ArmTranslatorVisitor::arm_RFE() {
+bool TranslatorVisitor::arm_RFE() {
     return InterpretThisInstruction();
 }
 
 // SETEND <endian_specifier>
-bool ArmTranslatorVisitor::arm_SETEND(bool E) {
+bool TranslatorVisitor::arm_SETEND(bool E) {
     ir.SetTerm(IR::Term::LinkBlock{ir.current_location.AdvancePC(4).SetEFlag(E)});
     return false;
 }
 
 // SRS{<amode>} SP{!}, #<mode>
-bool ArmTranslatorVisitor::arm_SRS() {
+bool TranslatorVisitor::arm_SRS() {
     return InterpretThisInstruction();
 }
 

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include <utility>
 
 #include "common/assert.h"
 #include "common/bit_util.h"
-
-#include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
 namespace {
@@ -29,7 +29,7 @@ enum class Rounding {
     Round,
 };
 
-bool ScalarMultiply(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm,
+bool ScalarMultiply(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm,
                     MultiplyBehavior multiply) {
     if (sz == 0b11) {
         return v.DecodeError();
@@ -72,7 +72,8 @@ bool ScalarMultiply(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t V
     return true;
 }
 
-bool ScalarMultiplyLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, MultiplyBehavior multiply) {
+bool ScalarMultiplyLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
+                        MultiplyBehavior multiply) {
     if (sz == 0b11) {
         return v.DecodeError();
     }
@@ -109,7 +110,7 @@ bool ScalarMultiplyLong(ArmTranslatorVisitor& v, bool U, bool D, size_t sz, size
     return true;
 }
 
-bool ScalarMultiplyReturnHigh(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
+bool ScalarMultiplyReturnHigh(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
                               Rounding round) {
     if (sz == 0b11) {
         return v.DecodeError();
@@ -146,27 +147,27 @@ bool ScalarMultiplyReturnHigh(ArmTranslatorVisitor& v, bool Q, bool D, size_t sz
 }
 } // Anonymous namespace
 
-bool ArmTranslatorVisitor::asimd_VMLA_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool F, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VMLA_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool F, bool N, bool M, size_t Vm) {
     const auto behavior = op ? MultiplyBehavior::MultiplySubtract
                              : MultiplyBehavior::MultiplyAccumulate;
     return ScalarMultiply(*this, Q, D, sz, Vn, Vd, F, N, M, Vm, behavior);
 }
 
-bool ArmTranslatorVisitor::asimd_VMLAL_scalar(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VMLAL_scalar(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool N, bool M, size_t Vm) {
     const auto behavior = op ? MultiplyBehavior::MultiplySubtract
                              : MultiplyBehavior::MultiplyAccumulate;
     return ScalarMultiplyLong(*this, U, D, sz, Vn, Vd, N, M, Vm, behavior);
 }
 
-bool ArmTranslatorVisitor::asimd_VMUL_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VMUL_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm) {
     return ScalarMultiply(*this, Q, D, sz, Vn, Vd, F, N, M, Vm, MultiplyBehavior::Multiply);
 }
 
-bool ArmTranslatorVisitor::asimd_VMULL_scalar(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VMULL_scalar(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
     return ScalarMultiplyLong(*this, U, D, sz, Vn, Vd, N, M, Vm, MultiplyBehavior::Multiply);
 }
 
-bool ArmTranslatorVisitor::asimd_VQDMULL_scalar(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQDMULL_scalar(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
     if (sz == 0b11) {
         return DecodeError();
     }
@@ -189,11 +190,11 @@ bool ArmTranslatorVisitor::asimd_VQDMULL_scalar(bool D, size_t sz, size_t Vn, si
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VQDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
     return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::None);
 }
 
-bool ArmTranslatorVisitor::asimd_VQRDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQRDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
     return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::Round);
 }
 

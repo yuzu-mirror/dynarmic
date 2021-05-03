@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
 // BL <label>
-bool ThumbTranslatorVisitor::thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo) {
+bool TranslatorVisitor::thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo) {
     const Imm<1> i1{j1 == S};
     const Imm<1> i2{j2 == S};
 
@@ -28,7 +28,7 @@ bool ThumbTranslatorVisitor::thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm
 }
 
 // BLX <label>
-bool ThumbTranslatorVisitor::thumb32_BLX_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo) {
+bool TranslatorVisitor::thumb32_BLX_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo) {
     const Imm<1> i1{j1 == S};
     const Imm<1> i2{j2 == S};
 
@@ -52,7 +52,7 @@ bool ThumbTranslatorVisitor::thumb32_BLX_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Im
     return false;
 }
 
-bool ThumbTranslatorVisitor::thumb32_B(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo) {
+bool TranslatorVisitor::thumb32_B(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo) {
     const Imm<1> i1{j1 == S};
     const Imm<1> i2{j2 == S};
 
@@ -68,7 +68,7 @@ bool ThumbTranslatorVisitor::thumb32_B(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j
     return false;
 }
 
-bool ThumbTranslatorVisitor::thumb32_B_cond(Imm<1> S, Cond cond, Imm<6> hi, Imm<1> i1, Imm<1> i2, Imm<11> lo) {
+bool TranslatorVisitor::thumb32_B_cond(Imm<1> S, Cond cond, Imm<6> hi, Imm<1> i1, Imm<1> i2, Imm<11> lo) {
     if (ir.current_location.IT().IsInITBlock()) {
         return UnpredictableInstruction();
     }

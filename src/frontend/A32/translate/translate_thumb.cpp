@@ -14,7 +14,7 @@
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/location_descriptor.h"
 #include "frontend/A32/translate/conditional_state.h"
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/imm.h"
 
@@ -69,23 +69,24 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
     const bool single_step = descriptor.SingleStepping();
 
     IR::Block block{descriptor};
-    ThumbTranslatorVisitor visitor{block, descriptor, options};
+    TranslatorVisitor visitor{block, descriptor, options};
 
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();
         const auto [thumb_instruction, inst_size] = ReadThumbInstruction(arm_pc, memory_read_code);
         const bool is_thumb_16 = inst_size == ThumbInstSize::Thumb16;
+        visitor.current_instruction_size = is_thumb_16 ? 2 : 4;
 
-        if (IsUnconditionalInstruction(is_thumb_16, thumb_instruction) || visitor.ConditionPassed(is_thumb_16)) {
+        if (IsUnconditionalInstruction(is_thumb_16, thumb_instruction) || visitor.ThumbConditionPassed()) {
             if (is_thumb_16) {
-                if (const auto decoder = DecodeThumb16<ThumbTranslatorVisitor>(static_cast<u16>(thumb_instruction))) {
+                if (const auto decoder = DecodeThumb16<TranslatorVisitor>(static_cast<u16>(thumb_instruction))) {
                     should_continue = decoder->get().call(visitor, static_cast<u16>(thumb_instruction));
                 } else {
                     should_continue = visitor.thumb16_UDF();
                 }
             } else {
-                if (const auto decoder = DecodeThumb32<ThumbTranslatorVisitor>(thumb_instruction)) {
+                if (const auto decoder = DecodeThumb32<TranslatorVisitor>(thumb_instruction)) {
                     should_continue = decoder->get().call(visitor, thumb_instruction);
                 } else {
                     should_continue = visitor.thumb32_UDF();
@@ -119,19 +120,19 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
 }
 
 bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descriptor, u32 thumb_instruction) {
-    ThumbTranslatorVisitor visitor{block, descriptor, {}};
+    TranslatorVisitor visitor{block, descriptor, {}};
 
     const bool is_thumb_16 = IsThumb16(static_cast<u16>(thumb_instruction));
     bool should_continue = true;
     if (is_thumb_16) {
-        if (const auto decoder = DecodeThumb16<ThumbTranslatorVisitor>(static_cast<u16>(thumb_instruction))) {
+        if (const auto decoder = DecodeThumb16<TranslatorVisitor>(static_cast<u16>(thumb_instruction))) {
             should_continue = decoder->get().call(visitor, static_cast<u16>(thumb_instruction));
         } else {
             should_continue = visitor.thumb16_UDF();
         }
     } else {
         thumb_instruction = Common::SwapHalves32(thumb_instruction);
-        if (const auto decoder = DecodeThumb32<ThumbTranslatorVisitor>(thumb_instruction)) {
+        if (const auto decoder = DecodeThumb32<TranslatorVisitor>(thumb_instruction)) {
             should_continue = decoder->get().call(visitor, thumb_instruction);
         } else {
             should_continue = visitor.thumb32_UDF();
@@ -145,56 +146,6 @@ bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descri
     block.SetEndLocation(visitor.ir.current_location);
 
     return should_continue;
-}
-
-bool ThumbTranslatorVisitor::ConditionPassed(bool is_thumb_16) {
-    const Cond cond = ir.current_location.IT().Cond();
-    return IsConditionPassed(cond, cond_state, ir, is_thumb_16 ? 2 : 4);
-}
-
-bool ThumbTranslatorVisitor::InterpretThisInstruction() {
-    ir.SetTerm(IR::Term::Interpret(ir.current_location));
-    return false;
-}
-
-bool ThumbTranslatorVisitor::UnpredictableInstruction() {
-    ir.ExceptionRaised(Exception::UnpredictableInstruction);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
-}
-
-bool ThumbTranslatorVisitor::UndefinedInstruction() {
-    ir.ExceptionRaised(Exception::UndefinedInstruction);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
-}
-
-bool ThumbTranslatorVisitor::RaiseException(Exception exception) {
-    ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 2)); // TODO: T32
-    ir.ExceptionRaised(exception);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
-}
-
-IR::ResultAndCarry<IR::U32> ThumbTranslatorVisitor::EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in) {
-    u8 imm5_value = imm5.ZeroExtend<u8>();
-    switch (type) {
-    case ShiftType::LSL:
-        return ir.LogicalShiftLeft(value, ir.Imm8(imm5_value), carry_in);
-    case ShiftType::LSR:
-        imm5_value = imm5_value ? imm5_value : 32;
-        return ir.LogicalShiftRight(value, ir.Imm8(imm5_value), carry_in);
-    case ShiftType::ASR:
-        imm5_value = imm5_value ? imm5_value : 32;
-        return ir.ArithmeticShiftRight(value, ir.Imm8(imm5_value), carry_in);
-    case ShiftType::ROR:
-        if (imm5_value) {
-            return ir.RotateRight(value, ir.Imm8(imm5_value), carry_in);
-        } else {
-            return ir.RotateRightExtended(value, carry_in);
-        }
-    }
-    UNREACHABLE();
 }
 
 } // namespace Dynarmic::A32

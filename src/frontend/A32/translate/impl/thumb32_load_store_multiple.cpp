@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include "common/bit_util.h"
-#include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
 static bool ITBlockCheck(const A32::IREmitter& ir) {
@@ -51,7 +52,7 @@ static bool STMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list,
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDMDB(bool W, Reg n, Imm<16> reg_list) {
+bool TranslatorVisitor::thumb32_LDMDB(bool W, Reg n, Imm<16> reg_list) {
     const auto regs_imm = reg_list.ZeroExtend();
     const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));
 
@@ -76,7 +77,7 @@ bool ThumbTranslatorVisitor::thumb32_LDMDB(bool W, Reg n, Imm<16> reg_list) {
     return LDMHelper(ir, W, n, regs_imm, start_address, start_address);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDMIA(bool W, Reg n, Imm<16> reg_list) {
+bool TranslatorVisitor::thumb32_LDMIA(bool W, Reg n, Imm<16> reg_list) {
     const auto regs_imm = reg_list.ZeroExtend();
     const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));
 
@@ -101,15 +102,15 @@ bool ThumbTranslatorVisitor::thumb32_LDMIA(bool W, Reg n, Imm<16> reg_list) {
     return LDMHelper(ir, W, n, regs_imm, start_address, writeback_address);
 }
 
-bool ThumbTranslatorVisitor::thumb32_POP(Imm<16> reg_list) {
+bool TranslatorVisitor::thumb32_POP(Imm<16> reg_list) {
     return thumb32_LDMIA(true, Reg::SP, reg_list);
 }
 
-bool ThumbTranslatorVisitor::thumb32_PUSH(Imm<15> reg_list) {
+bool TranslatorVisitor::thumb32_PUSH(Imm<15> reg_list) {
     return thumb32_STMDB(true, Reg::SP, reg_list);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STMIA(bool W, Reg n, Imm<15> reg_list) {
+bool TranslatorVisitor::thumb32_STMIA(bool W, Reg n, Imm<15> reg_list) {
     const auto regs_imm = reg_list.ZeroExtend();
     const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));
 
@@ -128,7 +129,7 @@ bool ThumbTranslatorVisitor::thumb32_STMIA(bool W, Reg n, Imm<15> reg_list) {
     return STMHelper(ir, W, n, regs_imm, start_address, writeback_address);
 }
 
-bool ThumbTranslatorVisitor::thumb32_STMDB(bool W, Reg n, Imm<15> reg_list) {
+bool TranslatorVisitor::thumb32_STMDB(bool W, Reg n, Imm<15> reg_list) {
     const auto regs_imm = reg_list.ZeroExtend();
     const auto num_regs = static_cast<u32>(Common::BitCount(regs_imm));
 

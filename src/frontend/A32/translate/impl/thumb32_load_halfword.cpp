@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_thumb.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
 using ExtensionFunction = IR::U32 (IREmitter::*)(const IR::U16&);
 
-static bool LoadHalfLiteral(ThumbTranslatorVisitor& v, bool U, Reg t, Imm<12> imm12,
+static bool LoadHalfLiteral(TranslatorVisitor& v, bool U, Reg t, Imm<12> imm12,
                             ExtensionFunction ext_fn) {
     const auto imm32 = imm12.ZeroExtend();
     const auto base = v.ir.AlignPC(4);
@@ -20,7 +20,7 @@ static bool LoadHalfLiteral(ThumbTranslatorVisitor& v, bool U, Reg t, Imm<12> im
     return true;
 }
 
-static bool LoadHalfRegister(ThumbTranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, Reg m,
+static bool LoadHalfRegister(TranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, Reg m,
                              ExtensionFunction ext_fn) {
     if (m == Reg::PC) {
         return v.UnpredictableInstruction();
@@ -36,7 +36,7 @@ static bool LoadHalfRegister(ThumbTranslatorVisitor& v, Reg n, Reg t, Imm<2> imm
     return true;
 }
 
-static bool LoadHalfImmediate(ThumbTranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W,
+static bool LoadHalfImmediate(TranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W,
                               Imm<12> imm12, ExtensionFunction ext_fn) {
     const u32 imm32 = imm12.ZeroExtend();
     const IR::U32 reg_n = v.ir.GetRegister(n);
@@ -54,15 +54,15 @@ static bool LoadHalfImmediate(ThumbTranslatorVisitor& v, Reg n, Reg t, bool P, b
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRH_lit(bool U, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDRH_lit(bool U, Reg t, Imm<12> imm12) {
     return LoadHalfLiteral(*this, U, t, imm12, &IREmitter::ZeroExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRH_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
+bool TranslatorVisitor::thumb32_LDRH_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return LoadHalfRegister(*this, n, t, imm2, m, &IREmitter::ZeroExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRH_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRH_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
     if (!P && !W) {
         return UndefinedInstruction();
     }
@@ -77,12 +77,12 @@ bool ThumbTranslatorVisitor::thumb32_LDRH_imm8(Reg n, Reg t, bool P, bool U, boo
                              &IREmitter::ZeroExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRH_imm12(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDRH_imm12(Reg n, Reg t, Imm<12> imm12) {
     return LoadHalfImmediate(*this, n, t, true, true, false, imm12,
                              &IREmitter::ZeroExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRHT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRHT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution levels.
@@ -96,15 +96,15 @@ bool ThumbTranslatorVisitor::thumb32_LDRHT(Reg n, Reg t, Imm<8> imm8) {
     return thumb32_LDRH_imm8(n, t, true, true, false, imm8);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSH_lit(bool U, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDRSH_lit(bool U, Reg t, Imm<12> imm12) {
     return LoadHalfLiteral(*this, U, t, imm12, &IREmitter::SignExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSH_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
+bool TranslatorVisitor::thumb32_LDRSH_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
     return LoadHalfRegister(*this, n, t, imm2, m, &IREmitter::SignExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSH_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRSH_imm8(Reg n, Reg t, bool P, bool U, bool W, Imm<8> imm8) {
     if (!P && !W) {
         return UndefinedInstruction();
     }
@@ -119,12 +119,12 @@ bool ThumbTranslatorVisitor::thumb32_LDRSH_imm8(Reg n, Reg t, bool P, bool U, bo
                              &IREmitter::SignExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSH_imm12(Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::thumb32_LDRSH_imm12(Reg n, Reg t, Imm<12> imm12) {
     return LoadHalfImmediate(*this, n, t, true, true, false, imm12,
                              &IREmitter::SignExtendHalfToWord);
 }
 
-bool ThumbTranslatorVisitor::thumb32_LDRSHT(Reg n, Reg t, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_LDRSHT(Reg n, Reg t, Imm<8> imm8) {
     // TODO: Add an unpredictable instruction path if this
     //       is executed in hypervisor mode if we ever support
     //       privileged execution levels.

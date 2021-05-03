@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "common/bit_util.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 #include <array>
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "common/bit_util.h"
 
 namespace Dynarmic::A32 {
 namespace {
@@ -19,7 +19,8 @@ enum class Comparison {
     LT,
 };
 
-bool CompareWithZero(ArmTranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm, Comparison type) {
+bool CompareWithZero(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm,
+                     Comparison type) {
     if (sz == 0b11 || (F && sz != 0b10)) {
         return v.UndefinedInstruction();
     }
@@ -72,7 +73,7 @@ enum class AccumulateBehavior {
     Accumulate,
 };
 
-bool PairedAddOperation(ArmTranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm,
+bool PairedAddOperation(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm,
                         AccumulateBehavior accumulate) {
     if (sz == 0b11) {
         return v.UndefinedInstruction();
@@ -105,7 +106,7 @@ bool PairedAddOperation(ArmTranslatorVisitor& v, bool D, size_t sz, size_t Vd, b
 
 } // Anonymous namespace
 
-bool ArmTranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool Q, bool M, size_t Vm) {
     if (op + sz >= 3) {
         return UndefinedInstruction();
     }
@@ -165,11 +166,11 @@ bool ArmTranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, b
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VPADDL(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VPADDL(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm) {
     return PairedAddOperation(*this, D, sz, Vd, op, Q, M, Vm, AccumulateBehavior::None);
 }
 
-bool ArmTranslatorVisitor::v8_AESD(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_AESD(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
     if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
         return UndefinedInstruction();
     }
@@ -184,7 +185,7 @@ bool ArmTranslatorVisitor::v8_AESD(bool D, size_t sz, size_t Vd, bool M, size_t 
     return true;
 }
 
-bool ArmTranslatorVisitor::v8_AESE(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_AESE(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
     if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
         return UndefinedInstruction();
     }
@@ -199,7 +200,7 @@ bool ArmTranslatorVisitor::v8_AESE(bool D, size_t sz, size_t Vd, bool M, size_t 
     return true;
 }
 
-bool ArmTranslatorVisitor::v8_AESIMC(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_AESIMC(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
     if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
         return UndefinedInstruction();
     }
@@ -213,7 +214,7 @@ bool ArmTranslatorVisitor::v8_AESIMC(bool D, size_t sz, size_t Vd, bool M, size_
     return true;
 }
 
-bool ArmTranslatorVisitor::v8_AESMC(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_AESMC(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
     if (sz != 0b00 || Common::Bit<0>(Vd) || Common::Bit<0>(Vm)) {
         return UndefinedInstruction();
     }
@@ -227,7 +228,7 @@ bool ArmTranslatorVisitor::v8_AESMC(bool D, size_t sz, size_t Vd, bool M, size_t
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11) {
         return UndefinedInstruction();
     }
@@ -251,7 +252,7 @@ bool ArmTranslatorVisitor::asimd_VCLS(bool D, size_t sz, size_t Vd, bool Q, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VCLZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCLZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11) {
         return UndefinedInstruction();
     }
@@ -273,7 +274,7 @@ bool ArmTranslatorVisitor::asimd_VCLZ(bool D, size_t sz, size_t Vd, bool Q, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VCNT(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCNT(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz != 0b00) {
         return UndefinedInstruction();
     }
@@ -291,7 +292,7 @@ bool ArmTranslatorVisitor::asimd_VCNT(bool D, size_t sz, size_t Vd, bool Q, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VMVN_reg(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VMVN_reg(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz != 0b00) {
         return UndefinedInstruction();
     }
@@ -310,11 +311,11 @@ bool ArmTranslatorVisitor::asimd_VMVN_reg(bool D, size_t sz, size_t Vd, bool Q, 
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VPADAL(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VPADAL(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm) {
     return PairedAddOperation(*this, D, sz, Vd, op, Q, M, Vm, AccumulateBehavior::Accumulate);
 }
 
-bool ArmTranslatorVisitor::asimd_VQABS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQABS(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11) {
         return UndefinedInstruction();
     }
@@ -334,7 +335,7 @@ bool ArmTranslatorVisitor::asimd_VQABS(bool D, size_t sz, size_t Vd, bool Q, boo
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VQNEG(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQNEG(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11) {
         return UndefinedInstruction();
     }
@@ -354,27 +355,27 @@ bool ArmTranslatorVisitor::asimd_VQNEG(bool D, size_t sz, size_t Vd, bool Q, boo
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VCGT_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCGT_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::GT);
 }
 
-bool ArmTranslatorVisitor::asimd_VCGE_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCGE_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::GE);
 }
 
-bool ArmTranslatorVisitor::asimd_VCEQ_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCEQ_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::EQ);
 }
 
-bool ArmTranslatorVisitor::asimd_VCLE_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCLE_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::LE);
 }
 
-bool ArmTranslatorVisitor::asimd_VCLT_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCLT_zero(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     return CompareWithZero(*this, D, sz, Vd, F, Q, M, Vm, Comparison::LT);
 }
 
-bool ArmTranslatorVisitor::asimd_VABS(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VABS(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (sz == 0b11 || (F && sz != 0b10)) {
         return UndefinedInstruction();
     }
@@ -400,7 +401,7 @@ bool ArmTranslatorVisitor::asimd_VABS(bool D, size_t sz, size_t Vd, bool F, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (sz == 0b11 || (F && sz != 0b10)) {
         return UndefinedInstruction();
     }
@@ -426,7 +427,7 @@ bool ArmTranslatorVisitor::asimd_VNEG(bool D, size_t sz, size_t Vd, bool F, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
@@ -455,7 +456,7 @@ bool ArmTranslatorVisitor::asimd_VSWP(bool D, size_t Vd, bool Q, bool M, size_t 
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VTRN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VTRN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11) {
         return UndefinedInstruction();
     }
@@ -482,7 +483,7 @@ bool ArmTranslatorVisitor::asimd_VTRN(bool D, size_t sz, size_t Vd, bool Q, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VUZP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VUZP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11 || (!Q && sz == 0b10)) {
         return UndefinedInstruction();
     }
@@ -514,7 +515,7 @@ bool ArmTranslatorVisitor::asimd_VUZP(bool D, size_t sz, size_t Vd, bool Q, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VZIP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VZIP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     if (sz == 0b11 || (!Q && sz == 0b10)) {
         return UndefinedInstruction();
     }
@@ -549,7 +550,7 @@ bool ArmTranslatorVisitor::asimd_VZIP(bool D, size_t sz, size_t Vd, bool Q, bool
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VMOVN(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VMOVN(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
     if (sz == 0b11 || Common::Bit<0>(Vm)) {
         return UndefinedInstruction();
     }
@@ -564,7 +565,7 @@ bool ArmTranslatorVisitor::asimd_VMOVN(bool D, size_t sz, size_t Vd, bool M, siz
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VQMOVUN(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQMOVUN(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
     if (sz == 0b11 || Common::Bit<0>(Vm)) {
         return UndefinedInstruction();
     }
@@ -579,7 +580,7 @@ bool ArmTranslatorVisitor::asimd_VQMOVUN(bool D, size_t sz, size_t Vd, bool M, s
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VQMOVN(bool D, size_t sz, size_t Vd, bool op, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQMOVN(bool D, size_t sz, size_t Vd, bool op, bool M, size_t Vm) {
     if (sz == 0b11 || Common::Bit<0>(Vm)) {
         return UndefinedInstruction();
     }
@@ -595,7 +596,7 @@ bool ArmTranslatorVisitor::asimd_VQMOVN(bool D, size_t sz, size_t Vd, bool op, b
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M, size_t Vm) {
     if (sz == 0b11 || Common::Bit<0>(Vd)) {
         return UndefinedInstruction();
     }
@@ -610,7 +611,7 @@ bool ArmTranslatorVisitor::asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M,
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
@@ -636,7 +637,7 @@ bool ArmTranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bo
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VRSQRTE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VRSQRTE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }
@@ -662,7 +663,7 @@ bool ArmTranslatorVisitor::asimd_VRSQRTE(bool D, size_t sz, size_t Vd, bool F, b
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VCVT_integer(bool D, size_t sz, size_t Vd, bool op, bool U, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCVT_integer(bool D, size_t sz, size_t Vd, bool op, bool U, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
     }

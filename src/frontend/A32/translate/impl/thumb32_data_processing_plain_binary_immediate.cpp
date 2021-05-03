@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include "common/assert.h"
 #include "common/bit_util.h"
-#include "frontend/A32/translate/impl/translate_thumb.h"
 
 namespace Dynarmic::A32 {
 static IR::U32 Pack2x16To1x32(A32::IREmitter& ir, IR::U32 lo, IR::U32 hi) {
@@ -18,7 +19,7 @@ static IR::U16 MostSignificantHalf(A32::IREmitter& ir, IR::U32 value) {
 
 using SaturationFunction = IR::ResultAndOverflow<IR::U32> (IREmitter::*)(const IR::U32&, size_t);
 
-static bool Saturation(ThumbTranslatorVisitor& v, bool sh, Reg n, Reg d, Imm<5> shift_amount, size_t saturate_to, SaturationFunction sat_fn) {
+static bool Saturation(TranslatorVisitor& v, bool sh, Reg n, Reg d, Imm<5> shift_amount, size_t saturate_to, SaturationFunction sat_fn) {
     ASSERT_MSG(!(sh && shift_amount == 0), "Invalid decode");
 
     if (d == Reg::PC || n == Reg::PC) {
@@ -34,7 +35,7 @@ static bool Saturation(ThumbTranslatorVisitor& v, bool sh, Reg n, Reg d, Imm<5> 
     return true;
 }
 
-static bool Saturation16(ThumbTranslatorVisitor& v, Reg n, Reg d, size_t saturate_to, SaturationFunction sat_fn) {
+static bool Saturation16(TranslatorVisitor& v, Reg n, Reg d, size_t saturate_to, SaturationFunction sat_fn) {
     if (d == Reg::PC || n == Reg::PC) {
         return v.UnpredictableInstruction();
     }
@@ -52,7 +53,7 @@ static bool Saturation16(ThumbTranslatorVisitor& v, Reg n, Reg d, size_t saturat
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_ADR_t2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_ADR_t2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -64,7 +65,7 @@ bool ThumbTranslatorVisitor::thumb32_ADR_t2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_ADR_t3(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_ADR_t3(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -76,7 +77,7 @@ bool ThumbTranslatorVisitor::thumb32_ADR_t3(Imm<1> imm1, Imm<3> imm3, Reg d, Imm
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_ADD_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_ADD_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -89,7 +90,7 @@ bool ThumbTranslatorVisitor::thumb32_ADD_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, 
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_BFC(Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb) {
+bool TranslatorVisitor::thumb32_BFC(Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -109,7 +110,7 @@ bool ThumbTranslatorVisitor::thumb32_BFC(Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5>
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_BFI(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb) {
+bool TranslatorVisitor::thumb32_BFI(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> msb) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -131,7 +132,7 @@ bool ThumbTranslatorVisitor::thumb32_BFI(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2,
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_MOVT(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_MOVT(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -144,7 +145,7 @@ bool ThumbTranslatorVisitor::thumb32_MOVT(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3,
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -155,7 +156,7 @@ bool ThumbTranslatorVisitor::thumb32_MOVW_imm(Imm<1> imm1, Imm<4> imm4, Imm<3> i
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1) {
+bool TranslatorVisitor::thumb32_SBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -179,15 +180,15 @@ bool ThumbTranslatorVisitor::thumb32_SBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_SSAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm) {
+bool TranslatorVisitor::thumb32_SSAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm) {
     return Saturation(*this, sh, n, d, concatenate(imm3, imm2), sat_imm.ZeroExtend() + 1, &IREmitter::SignedSaturation);
 }
 
-bool ThumbTranslatorVisitor::thumb32_SSAT16(Reg n, Reg d, Imm<4> sat_imm) {
+bool TranslatorVisitor::thumb32_SSAT16(Reg n, Reg d, Imm<4> sat_imm) {
     return Saturation16(*this, n, d, sat_imm.ZeroExtend() + 1, &IREmitter::SignedSaturation);
 }
 
-bool ThumbTranslatorVisitor::thumb32_SUB_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
+bool TranslatorVisitor::thumb32_SUB_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -200,7 +201,7 @@ bool ThumbTranslatorVisitor::thumb32_SUB_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, 
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_UBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1) {
+bool TranslatorVisitor::thumb32_UBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> widthm1) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -220,11 +221,11 @@ bool ThumbTranslatorVisitor::thumb32_UBFX(Reg n, Imm<3> imm3, Reg d, Imm<2> imm2
     return true;
 }
 
-bool ThumbTranslatorVisitor::thumb32_USAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm) {
+bool TranslatorVisitor::thumb32_USAT(bool sh, Reg n, Imm<3> imm3, Reg d, Imm<2> imm2, Imm<5> sat_imm) {
     return Saturation(*this, sh, n, d, concatenate(imm3, imm2), sat_imm.ZeroExtend(), &IREmitter::UnsignedSaturation);
 }
 
-bool ThumbTranslatorVisitor::thumb32_USAT16(Reg n, Reg d, Imm<4> sat_imm) {
+bool TranslatorVisitor::thumb32_USAT16(Reg n, Reg d, Imm<4> sat_imm) {
     return Saturation16(*this, n, d, sat_imm.ZeroExtend(), &IREmitter::UnsignedSaturation);
 }
 

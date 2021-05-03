@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "common/bit_util.h"
+#include "frontend/A32/translate/impl/translate.h"
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "common/bit_util.h"
 
 namespace Dynarmic::A32 {
 
 // B <label>
-bool ArmTranslatorVisitor::arm_B(Cond cond, Imm<24> imm24) {
-    if (!ConditionPassed(cond)) {
+bool TranslatorVisitor::arm_B(Cond cond, Imm<24> imm24) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -22,8 +22,8 @@ bool ArmTranslatorVisitor::arm_B(Cond cond, Imm<24> imm24) {
 }
 
 // BL <label>
-bool ArmTranslatorVisitor::arm_BL(Cond cond, Imm<24> imm24) {
-    if (!ConditionPassed(cond)) {
+bool TranslatorVisitor::arm_BL(Cond cond, Imm<24> imm24) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -37,7 +37,7 @@ bool ArmTranslatorVisitor::arm_BL(Cond cond, Imm<24> imm24) {
 }
 
 // BLX <label>
-bool ArmTranslatorVisitor::arm_BLX_imm(bool H, Imm<24> imm24) {
+bool TranslatorVisitor::arm_BLX_imm(bool H, Imm<24> imm24) {
     ir.PushRSB(ir.current_location.AdvancePC(4));
     ir.SetRegister(Reg::LR, ir.Imm32(ir.current_location.PC() + 4));
 
@@ -48,12 +48,12 @@ bool ArmTranslatorVisitor::arm_BLX_imm(bool H, Imm<24> imm24) {
 }
 
 // BLX <Rm>
-bool ArmTranslatorVisitor::arm_BLX_reg(Cond cond, Reg m) {
+bool TranslatorVisitor::arm_BLX_reg(Cond cond, Reg m) {
     if (m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -65,8 +65,8 @@ bool ArmTranslatorVisitor::arm_BLX_reg(Cond cond, Reg m) {
 }
 
 // BX <Rm>
-bool ArmTranslatorVisitor::arm_BX(Cond cond, Reg m) {
-    if (!ConditionPassed(cond)) {
+bool TranslatorVisitor::arm_BX(Cond cond, Reg m) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -80,7 +80,7 @@ bool ArmTranslatorVisitor::arm_BX(Cond cond, Reg m) {
     return false;
 }
 
-bool ArmTranslatorVisitor::arm_BXJ(Cond cond, Reg m) {
+bool TranslatorVisitor::arm_BXJ(Cond cond, Reg m) {
     // Jazelle not supported
     return arm_BX(cond, m);
 }

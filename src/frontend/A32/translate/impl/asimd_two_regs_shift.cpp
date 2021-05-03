@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include "common/assert.h"
 #include "common/bit_util.h"
-
-#include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
 namespace {
@@ -31,7 +31,7 @@ enum class Signedness {
     Unsigned
 };
 
-IR::U128 PerformRoundingCorrection(ArmTranslatorVisitor& v, size_t esize, u64 round_value, IR::U128 original, IR::U128 shifted) {
+IR::U128 PerformRoundingCorrection(TranslatorVisitor& v, size_t esize, u64 round_value, IR::U128 original, IR::U128 shifted) {
     const auto round_const = v.ir.VectorBroadcast(esize, v.I(esize, round_value));
     const auto round_correction = v.ir.VectorEqual(esize, v.ir.VectorAnd(original, round_const), round_const);
     return v.ir.VectorSub(esize, shifted, round_correction);
@@ -57,7 +57,7 @@ std::pair<size_t, size_t> ElementSizeAndShiftAmount(bool right_shift, bool L, si
     }
 }
 
-bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm,
+bool ShiftRight(TranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm,
                 Accumulating accumulate, Rounding rounding) {
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
         return v.DecodeError();
@@ -89,7 +89,7 @@ bool ShiftRight(ArmTranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd,
     return true;
 }
 
-bool ShiftRightNarrowing(ArmTranslatorVisitor& v, bool D, size_t imm6, size_t Vd, bool M, size_t Vm,
+bool ShiftRightNarrowing(TranslatorVisitor& v, bool D, size_t imm6, size_t Vd, bool M, size_t Vm,
                          Rounding rounding, Narrowing narrowing, Signedness signedness) {
     if (Common::Bits<3, 5>(imm6) == 0) {
         return v.DecodeError();
@@ -140,27 +140,27 @@ bool ShiftRightNarrowing(ArmTranslatorVisitor& v, bool D, size_t imm6, size_t Vd
 }
 } // Anonymous namespace
 
-bool ArmTranslatorVisitor::asimd_SHR(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_SHR(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
                       Accumulating::None, Rounding::None);
 }
 
-bool ArmTranslatorVisitor::asimd_SRA(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_SRA(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
                       Accumulating::Accumulate, Rounding::None);
 }
 
-bool ArmTranslatorVisitor::asimd_VRSHR(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VRSHR(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
                       Accumulating::None, Rounding::Round);
 }
 
-bool ArmTranslatorVisitor::asimd_VRSRA(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VRSRA(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
                       Accumulating::Accumulate, Rounding::Round);
 }
 
-bool ArmTranslatorVisitor::asimd_VSRI(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VSRI(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
         return DecodeError();
     }
@@ -186,7 +186,7 @@ bool ArmTranslatorVisitor::asimd_VSRI(bool D, size_t imm6, size_t Vd, bool L, bo
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VSLI(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VSLI(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
         return DecodeError();
     }
@@ -212,7 +212,7 @@ bool ArmTranslatorVisitor::asimd_VSLI(bool D, size_t imm6, size_t Vd, bool L, bo
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VQSHL(bool U, bool D, size_t imm6, size_t Vd, bool op, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQSHL(bool U, bool D, size_t imm6, size_t Vd, bool op, bool L, bool Q, bool M, size_t Vm) {
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
         return DecodeError();
     }
@@ -250,7 +250,7 @@ bool ArmTranslatorVisitor::asimd_VQSHL(bool U, bool D, size_t imm6, size_t Vd, b
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
         return DecodeError();
     }
@@ -270,37 +270,37 @@ bool ArmTranslatorVisitor::asimd_VSHL(bool D, size_t imm6, size_t Vd, bool L, bo
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VSHRN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VSHRN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
                                Rounding::None, Narrowing::Truncation, Signedness::Unsigned);
 }
 
-bool ArmTranslatorVisitor::asimd_VRSHRN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VRSHRN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
                                Rounding::Round, Narrowing::Truncation, Signedness::Unsigned);
 }
 
-bool ArmTranslatorVisitor::asimd_VQRSHRUN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQRSHRUN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
                                Rounding::Round, Narrowing::SaturateToUnsigned, Signedness::Signed);
 }
 
-bool ArmTranslatorVisitor::asimd_VQSHRUN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQSHRUN(bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
                                Rounding::None, Narrowing::SaturateToUnsigned, Signedness::Signed);
 }
 
-bool ArmTranslatorVisitor::asimd_VQSHRN(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQSHRN(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
                                Rounding::None, U ? Narrowing::SaturateToUnsigned : Narrowing::SaturateToSigned, U ? Signedness::Unsigned : Signedness::Signed);
 }
 
-bool ArmTranslatorVisitor::asimd_VQRSHRN(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VQRSHRN(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     return ShiftRightNarrowing(*this, D, imm6, Vd, M, Vm,
                                Rounding::Round, U ? Narrowing::SaturateToUnsigned : Narrowing::SaturateToSigned, U ? Signedness::Unsigned : Signedness::Signed);
 }
 
-bool ArmTranslatorVisitor::asimd_VSHLL(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VSHLL(bool U, bool D, size_t imm6, size_t Vd, bool M, size_t Vm) {
     if (Common::Bits<3, 5>(imm6) == 0) {
         return DecodeError();
     }
@@ -322,7 +322,7 @@ bool ArmTranslatorVisitor::asimd_VSHLL(bool U, bool D, size_t imm6, size_t Vd, b
     return true;
 }
 
-bool ArmTranslatorVisitor::asimd_VCVT_fixed(bool U, bool D, size_t imm6, size_t Vd, bool to_fixed, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::asimd_VCVT_fixed(bool U, bool D, size_t imm6, size_t Vd, bool to_fixed, bool Q, bool M, size_t Vm) {
     if (Common::Bits<3, 5>(imm6) == 0) {
         return DecodeError();
     }

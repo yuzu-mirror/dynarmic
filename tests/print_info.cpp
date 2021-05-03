@@ -21,7 +21,7 @@
 #include "frontend/A32/decoder/asimd.h"
 #include "frontend/A32/decoder/vfp.h"
 #include "frontend/A32/location_descriptor.h"
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 #include "frontend/A32/translate/translate.h"
 #include "frontend/A64/decoder/a64.h"
 #include "frontend/A64/location_descriptor.h"
@@ -36,11 +36,11 @@
 using namespace Dynarmic;
 
 const char* GetNameOfA32Instruction(u32 instruction) {
-    if (auto vfp_decoder = A32::DecodeVFP<A32::ArmTranslatorVisitor>(instruction)) {
+    if (auto vfp_decoder = A32::DecodeVFP<A32::TranslatorVisitor>(instruction)) {
         return vfp_decoder->get().GetName();
-    } else if (auto asimd_decoder = A32::DecodeASIMD<A32::ArmTranslatorVisitor>(instruction)) {
+    } else if (auto asimd_decoder = A32::DecodeASIMD<A32::TranslatorVisitor>(instruction)) {
         return asimd_decoder->get().GetName();
-    } else if (auto decoder = A32::DecodeArm<A32::ArmTranslatorVisitor>(instruction)) {
+    } else if (auto decoder = A32::DecodeArm<A32::TranslatorVisitor>(instruction)) {
         return decoder->get().GetName();
     }
     return "<null>";

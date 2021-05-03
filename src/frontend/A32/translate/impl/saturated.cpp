@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
@@ -18,12 +18,12 @@ static IR::U16 MostSignificantHalf(A32::IREmitter& ir, IR::U32 value) {
 // Saturation instructions
 
 // SSAT<c> <Rd>, #<imm>, <Rn>{, <shift>}
-bool ArmTranslatorVisitor::arm_SSAT(Cond cond, Imm<5> sat_imm, Reg d, Imm<5> imm5, bool sh, Reg n) {
+bool TranslatorVisitor::arm_SSAT(Cond cond, Imm<5> sat_imm, Reg d, Imm<5> imm5, bool sh, Reg n) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -38,12 +38,12 @@ bool ArmTranslatorVisitor::arm_SSAT(Cond cond, Imm<5> sat_imm, Reg d, Imm<5> imm
 }
 
 // SSAT16<c> <Rd>, #<imm>, <Rn>
-bool ArmTranslatorVisitor::arm_SSAT16(Cond cond, Imm<4> sat_imm, Reg d, Reg n) {
+bool TranslatorVisitor::arm_SSAT16(Cond cond, Imm<4> sat_imm, Reg d, Reg n) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -60,12 +60,12 @@ bool ArmTranslatorVisitor::arm_SSAT16(Cond cond, Imm<4> sat_imm, Reg d, Reg n) {
 }
 
 // USAT<c> <Rd>, #<imm5>, <Rn>{, <shift>}
-bool ArmTranslatorVisitor::arm_USAT(Cond cond, Imm<5> sat_imm, Reg d, Imm<5> imm5, bool sh, Reg n) {
+bool TranslatorVisitor::arm_USAT(Cond cond, Imm<5> sat_imm, Reg d, Imm<5> imm5, bool sh, Reg n) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -80,12 +80,12 @@ bool ArmTranslatorVisitor::arm_USAT(Cond cond, Imm<5> sat_imm, Reg d, Imm<5> imm
 }
 
 // USAT16<c> <Rd>, #<imm4>, <Rn>
-bool ArmTranslatorVisitor::arm_USAT16(Cond cond, Imm<4> sat_imm, Reg d, Reg n) {
+bool TranslatorVisitor::arm_USAT16(Cond cond, Imm<4> sat_imm, Reg d, Reg n) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -105,12 +105,12 @@ bool ArmTranslatorVisitor::arm_USAT16(Cond cond, Imm<4> sat_imm, Reg d, Reg n) {
 // Saturated Add/Subtract instructions
 
 // QADD<c> <Rd>, <Rm>, <Rn>
-bool ArmTranslatorVisitor::arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -124,12 +124,12 @@ bool ArmTranslatorVisitor::arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 // QSUB<c> <Rd>, <Rm>, <Rn>
-bool ArmTranslatorVisitor::arm_QSUB(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_QSUB(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -143,12 +143,12 @@ bool ArmTranslatorVisitor::arm_QSUB(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 // QDADD<c> <Rd>, <Rm>, <Rn>
-bool ArmTranslatorVisitor::arm_QDADD(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_QDADD(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -164,12 +164,12 @@ bool ArmTranslatorVisitor::arm_QDADD(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 // QDSUB<c> <Rd>, <Rm>, <Rn>
-bool ArmTranslatorVisitor::arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -187,12 +187,12 @@ bool ArmTranslatorVisitor::arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
 // Parallel saturated instructions
 
 // QASX<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_QASX(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_QASX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -211,12 +211,12 @@ bool ArmTranslatorVisitor::arm_QASX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 // QSAX<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -235,12 +235,12 @@ bool ArmTranslatorVisitor::arm_QSAX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 // UQASX<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_UQASX(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_UQASX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -259,12 +259,12 @@ bool ArmTranslatorVisitor::arm_UQASX(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 // UQSAX<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 

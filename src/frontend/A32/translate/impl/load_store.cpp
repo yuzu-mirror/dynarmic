@@ -3,46 +3,46 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
-bool ArmTranslatorVisitor::arm_LDRBT() {
+bool TranslatorVisitor::arm_LDRBT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_LDRHT() {
+bool TranslatorVisitor::arm_LDRHT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_LDRSBT() {
+bool TranslatorVisitor::arm_LDRSBT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_LDRSHT() {
+bool TranslatorVisitor::arm_LDRSHT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_LDRT() {
+bool TranslatorVisitor::arm_LDRT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_STRBT() {
+bool TranslatorVisitor::arm_STRBT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_STRHT() {
+bool TranslatorVisitor::arm_STRHT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_STRT() {
+bool TranslatorVisitor::arm_STRT() {
     // System instructions unimplemented
     return UndefinedInstruction();
 }
@@ -63,8 +63,8 @@ static IR::U32 GetAddress(A32::IREmitter& ir, bool P, bool U, bool W, Reg n, IR:
 }
 
 // LDR <Rt>, [PC, #+/-<imm>]
-bool ArmTranslatorVisitor::arm_LDR_lit(Cond cond, bool U, Reg t, Imm<12> imm12) {
-    if (!ConditionPassed(cond)) {
+bool TranslatorVisitor::arm_LDR_lit(Cond cond, bool U, Reg t, Imm<12> imm12) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -85,7 +85,7 @@ bool ArmTranslatorVisitor::arm_LDR_lit(Cond cond, bool U, Reg t, Imm<12> imm12) 
 
 // LDR <Rt>, [<Rn>, #+/-<imm>]{!}
 // LDR <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
     if (n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -95,7 +95,7 @@ bool ArmTranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n,
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -122,7 +122,7 @@ bool ArmTranslatorVisitor::arm_LDR_imm(Cond cond, bool P, bool U, bool W, Reg n,
 
 // LDR <Rt>, [<Rn>, #+/-<Rm>]{!}
 // LDR <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
+bool TranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
     ASSERT_MSG(!(!P && W), "T form of instruction unimplemented");
     if (m == Reg::PC) {
         return UnpredictableInstruction();
@@ -132,7 +132,7 @@ bool ArmTranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n,
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -151,12 +151,12 @@ bool ArmTranslatorVisitor::arm_LDR_reg(Cond cond, bool P, bool U, bool W, Reg n,
 }
 
 // LDRB <Rt>, [PC, #+/-<imm>]
-bool ArmTranslatorVisitor::arm_LDRB_lit(Cond cond, bool U, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::arm_LDRB_lit(Cond cond, bool U, Reg t, Imm<12> imm12) {
     if (t == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -172,7 +172,7 @@ bool ArmTranslatorVisitor::arm_LDRB_lit(Cond cond, bool U, Reg t, Imm<12> imm12)
 
 // LDRB <Rt>, [<Rn>, #+/-<imm>]{!}
 // LDRB <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
     if (n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -186,7 +186,7 @@ bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -201,7 +201,7 @@ bool ArmTranslatorVisitor::arm_LDRB_imm(Cond cond, bool P, bool U, bool W, Reg n
 
 // LDRB <Rt>, [<Rn>, #+/-<Rm>]{!}
 // LDRB <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
+bool TranslatorVisitor::arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
     ASSERT_MSG(!(!P && W), "T form of instruction unimplemented");
     if (t == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -211,7 +211,7 @@ bool ArmTranslatorVisitor::arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -224,7 +224,7 @@ bool ArmTranslatorVisitor::arm_LDRB_reg(Cond cond, bool P, bool U, bool W, Reg n
 }
 
 // LDRD <Rt>, <Rt2>, [PC, #+/-<imm>]
-bool ArmTranslatorVisitor::arm_LDRD_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRD_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (RegNumber(t) % 2 == 1) {
         return UnpredictableInstruction();
     }
@@ -233,7 +233,7 @@ bool ArmTranslatorVisitor::arm_LDRD_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, 
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -253,7 +253,7 @@ bool ArmTranslatorVisitor::arm_LDRD_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, 
 
 // LDRD <Rt>, [<Rn>, #+/-<imm>]{!}
 // LDRD <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -274,7 +274,7 @@ bool ArmTranslatorVisitor::arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -294,7 +294,7 @@ bool ArmTranslatorVisitor::arm_LDRD_imm(Cond cond, bool P, bool U, bool W, Reg n
 
 // LDRD <Rt>, [<Rn>, #+/-<Rm>]{!}
 // LDRD <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+bool TranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     if (RegNumber(t) % 2 == 1) {
         return UnpredictableInstruction();
     }
@@ -311,7 +311,7 @@ bool ArmTranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -328,7 +328,7 @@ bool ArmTranslatorVisitor::arm_LDRD_reg(Cond cond, bool P, bool U, bool W, Reg n
 }
 
 // LDRH <Rt>, [PC, #-/+<imm>]
-bool ArmTranslatorVisitor::arm_LDRH_lit(Cond cond, bool P, bool U, bool W, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRH_lit(Cond cond, bool P, bool U, bool W, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     ASSERT_MSG(!(!P && W), "T form of instruction unimplemented");
     if (P == W) {
         return UnpredictableInstruction();
@@ -338,7 +338,7 @@ bool ArmTranslatorVisitor::arm_LDRH_lit(Cond cond, bool P, bool U, bool W, Reg t
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -354,7 +354,7 @@ bool ArmTranslatorVisitor::arm_LDRH_lit(Cond cond, bool P, bool U, bool W, Reg t
 
 // LDRH <Rt>, [<Rn>, #+/-<imm>]{!}
 // LDRH <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -368,7 +368,7 @@ bool ArmTranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -383,7 +383,7 @@ bool ArmTranslatorVisitor::arm_LDRH_imm(Cond cond, bool P, bool U, bool W, Reg n
 
 // LDRH <Rt>, [<Rn>, #+/-<Rm>]{!}
 // LDRH <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+bool TranslatorVisitor::arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     ASSERT_MSG(!(!P && W), "T form of instruction unimplemented");
     if (t == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -393,7 +393,7 @@ bool ArmTranslatorVisitor::arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -406,12 +406,12 @@ bool ArmTranslatorVisitor::arm_LDRH_reg(Cond cond, bool P, bool U, bool W, Reg n
 }
 
 // LDRSB <Rt>, [PC, #+/-<imm>]
-bool ArmTranslatorVisitor::arm_LDRSB_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRSB_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (t == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -428,7 +428,7 @@ bool ArmTranslatorVisitor::arm_LDRSB_lit(Cond cond, bool U, Reg t, Imm<4> imm8a,
 
 // LDRSB <Rt>, [<Rn>, #+/-<imm>]{!}
 // LDRSB <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -442,7 +442,7 @@ bool ArmTranslatorVisitor::arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg 
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -457,7 +457,7 @@ bool ArmTranslatorVisitor::arm_LDRSB_imm(Cond cond, bool P, bool U, bool W, Reg 
 
 // LDRSB <Rt>, [<Rn>, #+/-<Rm>]{!}
 // LDRSB <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+bool TranslatorVisitor::arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     ASSERT_MSG(!(!P && W), "T form of instruction unimplemented");
     if (t == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -467,7 +467,7 @@ bool ArmTranslatorVisitor::arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg 
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -480,12 +480,12 @@ bool ArmTranslatorVisitor::arm_LDRSB_reg(Cond cond, bool P, bool U, bool W, Reg 
 }
 
 // LDRSH <Rt>, [PC, #-/+<imm>]
-bool ArmTranslatorVisitor::arm_LDRSH_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRSH_lit(Cond cond, bool U, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (t == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -501,7 +501,7 @@ bool ArmTranslatorVisitor::arm_LDRSH_lit(Cond cond, bool U, Reg t, Imm<4> imm8a,
 
 // LDRSH <Rt>, [<Rn>, #+/-<imm>]{!}
 // LDRSH <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -515,7 +515,7 @@ bool ArmTranslatorVisitor::arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg 
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -530,7 +530,7 @@ bool ArmTranslatorVisitor::arm_LDRSH_imm(Cond cond, bool P, bool U, bool W, Reg 
 
 // LDRSH <Rt>, [<Rn>, #+/-<Rm>]{!}
 // LDRSH <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+bool TranslatorVisitor::arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     ASSERT_MSG(!(!P && W), "T form of instruction unimplemented");
     if (t == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
@@ -540,7 +540,7 @@ bool ArmTranslatorVisitor::arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg 
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -554,12 +554,12 @@ bool ArmTranslatorVisitor::arm_LDRSH_reg(Cond cond, bool P, bool U, bool W, Reg 
 
 // STR <Rt>, [<Rn>, #+/-<imm>]{!}
 // STR <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
     if ((!P || W) && (n == Reg::PC || n == t)) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -571,7 +571,7 @@ bool ArmTranslatorVisitor::arm_STR_imm(Cond cond, bool P, bool U, bool W, Reg n,
 
 // STR <Rt>, [<Rn>, #+/-<Rm>]{!}
 // STR <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
+bool TranslatorVisitor::arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
     if (m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -580,7 +580,7 @@ bool ArmTranslatorVisitor::arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n,
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -592,7 +592,7 @@ bool ArmTranslatorVisitor::arm_STR_reg(Cond cond, bool P, bool U, bool W, Reg n,
 
 // STRB <Rt>, [<Rn>, #+/-<imm>]{!}
 // STRB <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
+bool TranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<12> imm12) {
     if (t == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -601,7 +601,7 @@ bool ArmTranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -613,7 +613,7 @@ bool ArmTranslatorVisitor::arm_STRB_imm(Cond cond, bool P, bool U, bool W, Reg n
 
 // STRB <Rt>, [<Rn>, #+/-<Rm>]{!}
 // STRB <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
+bool TranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<5> imm5, ShiftType shift, Reg m) {
     if (t == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -622,7 +622,7 @@ bool ArmTranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -634,7 +634,7 @@ bool ArmTranslatorVisitor::arm_STRB_reg(Cond cond, bool P, bool U, bool W, Reg n
 
 // STRD <Rt>, [<Rn>, #+/-<imm>]{!}
 // STRD <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (size_t(t) % 2 != 0) {
         return UnpredictableInstruction();
     }
@@ -652,7 +652,7 @@ bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -670,7 +670,7 @@ bool ArmTranslatorVisitor::arm_STRD_imm(Cond cond, bool P, bool U, bool W, Reg n
 
 // STRD <Rt>, [<Rn>, #+/-<Rm>]{!}
 // STRD <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+bool TranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     if (size_t(t) % 2 != 0) {
         return UnpredictableInstruction();
     }
@@ -688,7 +688,7 @@ bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -705,7 +705,7 @@ bool ArmTranslatorVisitor::arm_STRD_reg(Cond cond, bool P, bool U, bool W, Reg n
 
 // STRH <Rt>, [<Rn>, #+/-<imm>]{!}
 // STRH <Rt>, [<Rn>], #+/-<imm>
-bool ArmTranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
+bool TranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Imm<4> imm8a, Imm<4> imm8b) {
     if (t == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -714,7 +714,7 @@ bool ArmTranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -728,7 +728,7 @@ bool ArmTranslatorVisitor::arm_STRH_imm(Cond cond, bool P, bool U, bool W, Reg n
 
 // STRH <Rt>, [<Rn>, #+/-<Rm>]{!}
 // STRH <Rt>, [<Rn>], #+/-<Rm>
-bool ArmTranslatorVisitor::arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
+bool TranslatorVisitor::arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n, Reg t, Reg m) {
     if (t == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -737,7 +737,7 @@ bool ArmTranslatorVisitor::arm_STRH_reg(Cond cond, bool P, bool U, bool W, Reg n
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -771,7 +771,7 @@ static bool LDMHelper(A32::IREmitter& ir, bool W, Reg n, RegList list, IR::U32 s
 }
 
 // LDM <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_LDM(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_LDM(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
@@ -779,7 +779,7 @@ bool ArmTranslatorVisitor::arm_LDM(Cond cond, bool W, Reg n, RegList list) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -789,7 +789,7 @@ bool ArmTranslatorVisitor::arm_LDM(Cond cond, bool W, Reg n, RegList list) {
 }
 
 // LDMDA <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
@@ -797,7 +797,7 @@ bool ArmTranslatorVisitor::arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -807,7 +807,7 @@ bool ArmTranslatorVisitor::arm_LDMDA(Cond cond, bool W, Reg n, RegList list) {
 }
 
 // LDMDB <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
@@ -815,7 +815,7 @@ bool ArmTranslatorVisitor::arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -825,7 +825,7 @@ bool ArmTranslatorVisitor::arm_LDMDB(Cond cond, bool W, Reg n, RegList list) {
 }
 
 // LDMIB <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
@@ -833,7 +833,7 @@ bool ArmTranslatorVisitor::arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -842,11 +842,11 @@ bool ArmTranslatorVisitor::arm_LDMIB(Cond cond, bool W, Reg n, RegList list) {
     return LDMHelper(ir, W, n, list, start_address, writeback_address);
 }
 
-bool ArmTranslatorVisitor::arm_LDM_usr() {
+bool TranslatorVisitor::arm_LDM_usr() {
     return InterpretThisInstruction();
 }
 
-bool ArmTranslatorVisitor::arm_LDM_eret() {
+bool TranslatorVisitor::arm_LDM_eret() {
     return InterpretThisInstruction();
 }
 
@@ -868,12 +868,12 @@ static bool STMHelper(A32::IREmitter& ir, bool W, Reg n, RegList list, IR::U32 s
 }
 
 // STM <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_STM(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_STM(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -883,12 +883,12 @@ bool ArmTranslatorVisitor::arm_STM(Cond cond, bool W, Reg n, RegList list) {
 }
 
 // STMDA <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_STMDA(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_STMDA(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -898,12 +898,12 @@ bool ArmTranslatorVisitor::arm_STMDA(Cond cond, bool W, Reg n, RegList list) {
 }
 
 // STMDB <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_STMDB(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_STMDB(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -913,12 +913,12 @@ bool ArmTranslatorVisitor::arm_STMDB(Cond cond, bool W, Reg n, RegList list) {
 }
 
 // STMIB <Rn>{!}, <reg_list>
-bool ArmTranslatorVisitor::arm_STMIB(Cond cond, bool W, Reg n, RegList list) {
+bool TranslatorVisitor::arm_STMIB(Cond cond, bool W, Reg n, RegList list) {
     if (n == Reg::PC || Common::BitCount(list) < 1) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -927,7 +927,7 @@ bool ArmTranslatorVisitor::arm_STMIB(Cond cond, bool W, Reg n, RegList list) {
     return STMHelper(ir, W, n, list, start_address, writeback_address);
 }
 
-bool ArmTranslatorVisitor::arm_STM_usr() {
+bool TranslatorVisitor::arm_STM_usr() {
     return InterpretThisInstruction();
 }
 

@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "frontend/A32/translate/impl/translate.h"
+
 #include "common/bit_util.h"
-#include "frontend/A32/translate/impl/translate_arm.h"
 
 namespace Dynarmic::A32 {
 
 // BFC<c> <Rd>, #<lsb>, #<width>
-bool ArmTranslatorVisitor::arm_BFC(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb) {
+bool TranslatorVisitor::arm_BFC(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -17,7 +18,7 @@ bool ArmTranslatorVisitor::arm_BFC(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -32,7 +33,7 @@ bool ArmTranslatorVisitor::arm_BFC(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb) {
 }
 
 // BFI<c> <Rd>, <Rn>, #<lsb>, #<width>
-bool ArmTranslatorVisitor::arm_BFI(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb, Reg n) {
+bool TranslatorVisitor::arm_BFI(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb, Reg n) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -40,7 +41,7 @@ bool ArmTranslatorVisitor::arm_BFI(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb, Reg
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -57,12 +58,12 @@ bool ArmTranslatorVisitor::arm_BFI(Cond cond, Imm<5> msb, Reg d, Imm<5> lsb, Reg
 }
 
 // CLZ<c> <Rd>, <Rm>
-bool ArmTranslatorVisitor::arm_CLZ(Cond cond, Reg d, Reg m) {
+bool TranslatorVisitor::arm_CLZ(Cond cond, Reg d, Reg m) {
     if (d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -71,12 +72,12 @@ bool ArmTranslatorVisitor::arm_CLZ(Cond cond, Reg d, Reg m) {
 }
 
 // MOVT<c> <Rd>, #<imm16>
-bool ArmTranslatorVisitor::arm_MOVT(Cond cond, Imm<4> imm4, Reg d, Imm<12> imm12) {
+bool TranslatorVisitor::arm_MOVT(Cond cond, Imm<4> imm4, Reg d, Imm<12> imm12) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -88,12 +89,12 @@ bool ArmTranslatorVisitor::arm_MOVT(Cond cond, Imm<4> imm4, Reg d, Imm<12> imm12
     return true;
 }
 
-bool ArmTranslatorVisitor::arm_MOVW(Cond cond, Imm<4> imm4, Reg d, Imm<12> imm12) {
+bool TranslatorVisitor::arm_MOVW(Cond cond, Imm<4> imm4, Reg d, Imm<12> imm12) {
     if (d == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -104,7 +105,7 @@ bool ArmTranslatorVisitor::arm_MOVW(Cond cond, Imm<4> imm4, Reg d, Imm<12> imm12
 }
 
 // SBFX<c> <Rd>, <Rn>, #<lsb>, #<width>
-bool ArmTranslatorVisitor::arm_SBFX(Cond cond, Imm<5> widthm1, Reg d, Imm<5> lsb, Reg n) {
+bool TranslatorVisitor::arm_SBFX(Cond cond, Imm<5> widthm1, Reg d, Imm<5> lsb, Reg n) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -116,7 +117,7 @@ bool ArmTranslatorVisitor::arm_SBFX(Cond cond, Imm<5> widthm1, Reg d, Imm<5> lsb
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -133,12 +134,12 @@ bool ArmTranslatorVisitor::arm_SBFX(Cond cond, Imm<5> widthm1, Reg d, Imm<5> lsb
 }
 
 // SEL<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SEL(Cond cond, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_SEL(Cond cond, Reg n, Reg d, Reg m) {
     if (n == Reg::PC || d == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -151,7 +152,7 @@ bool ArmTranslatorVisitor::arm_SEL(Cond cond, Reg n, Reg d, Reg m) {
 }
 
 // UBFX<c> <Rd>, <Rn>, #<lsb>, #<width>
-bool ArmTranslatorVisitor::arm_UBFX(Cond cond, Imm<5> widthm1, Reg d, Imm<5> lsb, Reg n) {
+bool TranslatorVisitor::arm_UBFX(Cond cond, Imm<5> widthm1, Reg d, Imm<5> lsb, Reg n) {
     if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -163,7 +164,7 @@ bool ArmTranslatorVisitor::arm_UBFX(Cond cond, Imm<5> widthm1, Reg d, Imm<5> lsb
         return UnpredictableInstruction();
     }
 
-    if (!ConditionPassed(cond)) {
+    if (!ArmConditionPassed(cond)) {
         return true;
     }
 

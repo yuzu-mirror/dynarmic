@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
@@ -37,7 +37,7 @@ enum class CRCType {
     ISO,
 };
 
-bool CRC32Variant(ArmTranslatorVisitor& v, Cond cond, Imm<2> sz, Reg n, Reg d, Reg m, CRCType type) {
+bool CRC32Variant(TranslatorVisitor& v, Cond cond, Imm<2> sz, Reg n, Reg d, Reg m, CRCType type) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return v.UnpredictableInstruction();
     }
@@ -83,12 +83,12 @@ bool CRC32Variant(ArmTranslatorVisitor& v, Cond cond, Imm<2> sz, Reg n, Reg d, R
 } // Anonymous namespace
 
 // CRC32{B,H,W}{<q>} <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_CRC32(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_CRC32(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
     return CRC32Variant(*this, cond, sz, n, d, m, CRCType::ISO);
 }
 
 // CRC32C{B,H,W}{<q>} <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_CRC32C(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
+bool TranslatorVisitor::arm_CRC32C(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
     return CRC32Variant(*this, cond, sz, n, d, m, CRCType::Castagnoli);
 }
 

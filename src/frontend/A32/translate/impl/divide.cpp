@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "frontend/A32/translate/impl/translate_arm.h"
+#include "frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 namespace {
 using DivideFunction = IR::U32U64 (IREmitter::*)(const IR::U32U64&, const IR::U32U64&);
 
-bool DivideOperation(ArmTranslatorVisitor& v, Cond cond, Reg d, Reg m, Reg n,
+bool DivideOperation(TranslatorVisitor& v, Cond cond, Reg d, Reg m, Reg n,
                      DivideFunction fn) {
     if (d == Reg::PC || m == Reg::PC || n == Reg::PC) {
         return v.UnpredictableInstruction();
     }
 
-    if (!v.ConditionPassed(cond)) {
+    if (!v.ArmConditionPassed(cond)) {
         return true;
     }
 
@@ -29,12 +29,12 @@ bool DivideOperation(ArmTranslatorVisitor& v, Cond cond, Reg d, Reg m, Reg n,
 } // Anonymous namespace
 
 // SDIV<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_SDIV(Cond cond, Reg d, Reg m, Reg n) {
+bool TranslatorVisitor::arm_SDIV(Cond cond, Reg d, Reg m, Reg n) {
     return DivideOperation(*this, cond, d, m, n, &IREmitter::SignedDiv);
 }
 
 // UDIV<c> <Rd>, <Rn>, <Rm>
-bool ArmTranslatorVisitor::arm_UDIV(Cond cond, Reg d, Reg m, Reg n) {
+bool TranslatorVisitor::arm_UDIV(Cond cond, Reg d, Reg m, Reg n) {
     return DivideOperation(*this, cond, d, m, n, &IREmitter::UnsignedDiv);
 }
 
