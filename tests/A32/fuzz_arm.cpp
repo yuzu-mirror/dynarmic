@@ -164,6 +164,12 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
 #undef INST
         };
 
+        const std::vector<std::tuple<std::string, const char*>> asimd_list {
+#define INST(fn, name, bitstring) {#fn, bitstring},
+#include "frontend/A32/decoder/asimd.inc"
+#undef INST
+        };
+
         std::vector<InstructionGenerator> generators;
         std::vector<InstructionGenerator> invalid;
 
@@ -189,6 +195,8 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
             // Unicorn has incorrect implementation (incorrect rounding and unsets CPSR.T??)
             "vfp_VCVT_to_fixed",
             "vfp_VCVT_from_fixed",
+            "asimd_VRECPS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
+            "asimd_VRSQRTS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
         };
 
         for (const auto& [fn, bitstring] : list) {
@@ -202,6 +210,23 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
             std::string bitstring = bs;
             if (bitstring.substr(0, 4) == "cccc" || bitstring.substr(0, 4) == "----") {
                 bitstring.replace(0, 4, "1110");
+            }
+            if (std::find(do_not_test.begin(), do_not_test.end(), fn) != do_not_test.end()) {
+                invalid.emplace_back(InstructionGenerator{bitstring.c_str()});
+                continue;
+            }
+            generators.emplace_back(InstructionGenerator{bitstring.c_str()});
+        }
+        for (const auto& [fn, bs] : asimd_list) {
+            std::string bitstring = bs;
+            if (bitstring.substr(0, 7) == "1111001") {
+                const char U = bitstring[7];
+                bitstring.replace(0, 8, "111-1111");
+                bitstring[3] = U;
+            } else if (bitstring.substr(0, 8) == "11110100") {
+                bitstring.replace(0, 8, "11111001");
+            } else {
+                ASSERT_FALSE("Unhandled ASIMD instruction: {} {}", fn, bs);
             }
             if (std::find(do_not_test.begin(), do_not_test.end(), fn) != do_not_test.end()) {
                 invalid.emplace_back(InstructionGenerator{bitstring.c_str()});

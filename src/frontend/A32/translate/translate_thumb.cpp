@@ -9,6 +9,7 @@
 
 #include "common/assert.h"
 #include "common/bit_util.h"
+#include "frontend/A32/decoder/asimd.h"
 #include "frontend/A32/decoder/thumb16.h"
 #include "frontend/A32/decoder/thumb32.h"
 #include "frontend/A32/decoder/vfp.h"
@@ -64,6 +65,20 @@ std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryReadCodeFu
     return std::make_tuple(static_cast<u32>((first_part << 16) | second_part), ThumbInstSize::Thumb32);
 }
 
+// Convert from thumb ASIMD format to ARM ASIMD format.
+u32 ConvertASIMDInstruction(u32 thumb_instruction) {
+    if ((thumb_instruction & 0xEF000000) == 0xEF000000) {
+        const bool U = Common::Bit<28>(thumb_instruction);
+        return 0xF2000000 | (U << 24) | (thumb_instruction & 0x00FFFFFF);
+    }
+
+    if ((thumb_instruction & 0xFF000000) == 0xF9000000) {
+        return 0xF4000000 | (thumb_instruction & 0x00FFFFFF);
+    }
+
+    return 0xF7F0A000; // UDF
+}
+
 } // local namespace
 
 IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, const TranslationOptions& options) {
@@ -92,6 +107,8 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
                 } else if ((thumb_instruction & 0xEC000000) == 0xEC000000) {
                     if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(thumb_instruction)) {
                         should_continue = vfp_decoder->get().call(visitor, thumb_instruction);
+                    } else if (const auto asimd_decoder = DecodeASIMD<TranslatorVisitor>(ConvertASIMDInstruction(thumb_instruction))) {
+                        should_continue = asimd_decoder->get().call(visitor, ConvertASIMDInstruction(thumb_instruction));
                     } else {
                         should_continue = visitor.thumb32_UDF();
                     }
@@ -144,6 +161,8 @@ bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descri
         } else if ((thumb_instruction & 0xEC000000) == 0xEC000000) {
             if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(thumb_instruction)) {
                 should_continue = vfp_decoder->get().call(visitor, thumb_instruction);
+            } else if (const auto asimd_decoder = DecodeASIMD<TranslatorVisitor>(ConvertASIMDInstruction(thumb_instruction))) {
+                should_continue = asimd_decoder->get().call(visitor, ConvertASIMDInstruction(thumb_instruction));
             } else {
                 should_continue = visitor.thumb32_UDF();
             }
