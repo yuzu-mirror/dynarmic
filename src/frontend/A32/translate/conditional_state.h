@@ -14,6 +14,7 @@ enum class Cond;
 namespace Dynarmic::A32 {
 
 class IREmitter;
+struct TranslatorVisitor;
 
 enum class ConditionalState {
     /// We haven't met any conditional instructions yet.
@@ -27,6 +28,6 @@ enum class ConditionalState {
 };
 
 bool CondCanContinue(ConditionalState cond_state, const A32::IREmitter& ir);
-bool IsConditionPassed(IR::Cond cond, ConditionalState& cond_state, A32::IREmitter& ir, int instruction_size);
+bool IsConditionPassed(TranslatorVisitor& v, IR::Cond cond);
 
 } // namespace Dynarmic::A32

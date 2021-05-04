@@ -7,10 +7,8 @@
 
 namespace Dynarmic::A64 {
 
-bool TranslatorVisitor::BRK([[maybe_unused]] Imm<16> imm16) {
-    ir.ExceptionRaised(Exception::Breakpoint);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
+bool TranslatorVisitor::BRK(Imm<16> /*imm16*/) {
+    return RaiseException(Exception::Breakpoint);
 }
 
 bool TranslatorVisitor::SVC(Imm<16> imm16) {

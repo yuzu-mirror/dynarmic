@@ -20,9 +20,7 @@ bool TranslatorVisitor::arm_BKPT(Cond cond, Imm<12> /*imm12*/, Imm<4> /*imm4*/) 
         return true;
     }
 
-    ir.ExceptionRaised(Exception::Breakpoint);
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
+    return RaiseException(Exception::Breakpoint);
 }
 
 // SVC<c> #<imm24>

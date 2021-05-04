@@ -11,6 +11,7 @@
 #include "common/common_types.h"
 #include "frontend/A32/ir_emitter.h"
 #include "frontend/A32/translate/conditional_state.h"
+#include "frontend/A32/translate/impl/translate.h"
 #include "ir/cond.h"
 
 namespace Dynarmic::A32 {
@@ -25,29 +26,29 @@ bool CondCanContinue(ConditionalState cond_state, const A32::IREmitter& ir) {
     return std::all_of(ir.block.begin(), ir.block.end(), [](const IR::Inst& inst) { return !inst.WritesToCPSR(); });
 }
 
-bool IsConditionPassed(IR::Cond cond, ConditionalState& cond_state, A32::IREmitter& ir, int instruction_size) {
-    ASSERT_MSG(cond_state != ConditionalState::Break,
+bool IsConditionPassed(TranslatorVisitor& v, IR::Cond cond) {
+    ASSERT_MSG(v.cond_state != ConditionalState::Break,
                "This should never happen. We requested a break but that wasn't honored.");
 
     if (cond == IR::Cond::NV) {
         // NV conditional is obsolete
-        ir.ExceptionRaised(Exception::UnpredictableInstruction);
+        v.RaiseException(Exception::UnpredictableInstruction);
         return false;
     }
 
-    if (cond_state == ConditionalState::Translating) {
-        if (ir.block.ConditionFailedLocation() != ir.current_location || cond == IR::Cond::AL) {
-            cond_state = ConditionalState::Trailing;
+    if (v.cond_state == ConditionalState::Translating) {
+        if (v.ir.block.ConditionFailedLocation() != v.ir.current_location || cond == IR::Cond::AL) {
+            v.cond_state = ConditionalState::Trailing;
         } else {
-            if (cond == ir.block.GetCondition()) {
-                ir.block.SetConditionFailedLocation(ir.current_location.AdvancePC(instruction_size).AdvanceIT());
-                ir.block.ConditionFailedCycleCount()++;
+            if (cond == v.ir.block.GetCondition()) {
+                v.ir.block.SetConditionFailedLocation(v.ir.current_location.AdvancePC(v.current_instruction_size).AdvanceIT());
+                v.ir.block.ConditionFailedCycleCount()++;
                 return true;
             }
 
             // cond has changed, abort
-            cond_state = ConditionalState::Break;
-            ir.SetTerm(IR::Term::LinkBlockFast{ir.current_location});
+            v.cond_state = ConditionalState::Break;
+            v.ir.SetTerm(IR::Term::LinkBlockFast{v.ir.current_location});
             return false;
         }
     }
@@ -59,20 +60,20 @@ bool IsConditionPassed(IR::Cond cond, ConditionalState& cond_state, A32::IREmitt
 
     // non-AL cond
 
-    if (!ir.block.empty()) {
+    if (!v.ir.block.empty()) {
         // We've already emitted instructions. Quit for now, we'll make a new block here later.
-        cond_state = ConditionalState::Break;
-        ir.SetTerm(IR::Term::LinkBlockFast{ir.current_location});
+        v.cond_state = ConditionalState::Break;
+        v.ir.SetTerm(IR::Term::LinkBlockFast{v.ir.current_location});
         return false;
     }
 
     // We've not emitted instructions yet.
     // We'll emit one instruction, and set the block-entry conditional appropriately.
 
-    cond_state = ConditionalState::Translating;
-    ir.block.SetCondition(cond);
-    ir.block.SetConditionFailedLocation(ir.current_location.AdvancePC(instruction_size).AdvanceIT());
-    ir.block.ConditionFailedCycleCount() = ir.block.CycleCount() + 1;
+    v.cond_state = ConditionalState::Translating;
+    v.ir.block.SetCondition(cond);
+    v.ir.block.SetConditionFailedLocation(v.ir.current_location.AdvancePC(v.current_instruction_size).AdvanceIT());
+    v.ir.block.ConditionFailedCycleCount() = v.ir.block.CycleCount() + 1;
     return true;
 }
 

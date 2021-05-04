@@ -903,11 +903,7 @@ bool TranslatorVisitor::thumb16_REVSH(Reg m, Reg d) {
 
 // BKPT #<imm8>
 bool TranslatorVisitor::thumb16_BKPT(Imm<8> /*imm8*/) {
-    ir.ExceptionRaised(Exception::Breakpoint);
-    ir.UpdateUpperLocationDescriptor();
-    ir.LoadWritePC(ir.Imm32(ir.current_location.PC()));
-    ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
-    return false;
+    return RaiseException(Exception::Breakpoint);
 }
 
 // STM <Rn>!, <reg_list>

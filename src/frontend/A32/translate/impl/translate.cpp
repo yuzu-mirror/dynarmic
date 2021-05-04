@@ -12,12 +12,12 @@
 namespace Dynarmic::A32 {
 
 bool TranslatorVisitor::ArmConditionPassed(Cond cond) {
-    return IsConditionPassed(cond, cond_state, ir, 4);
+    return IsConditionPassed(*this, cond);
 }
 
 bool TranslatorVisitor::ThumbConditionPassed() {
     const Cond cond = ir.current_location.IT().Cond();
-    return IsConditionPassed(cond, cond_state, ir, static_cast<int>(current_instruction_size));
+    return IsConditionPassed(*this, cond);
 }
 
 bool TranslatorVisitor::VFPConditionPassed(Cond cond) {
@@ -46,6 +46,7 @@ bool TranslatorVisitor::DecodeError() {
 }
 
 bool TranslatorVisitor::RaiseException(Exception exception) {
+    ir.UpdateUpperLocationDescriptor();
     ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + static_cast<u32>(current_instruction_size)));
     ir.ExceptionRaised(exception);
     ir.SetTerm(IR::Term::CheckHalt{IR::Term::ReturnToDispatch{}});
