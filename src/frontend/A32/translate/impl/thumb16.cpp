@@ -1002,7 +1002,7 @@ bool TranslatorVisitor::thumb16_BLX_reg(Reg m) {
         return UnpredictableInstruction();
     }
 
-    ir.PushRSB(ir.current_location.AdvancePC(2));
+    ir.PushRSB(ir.current_location.AdvancePC(2).AdvanceIT());
     ir.UpdateUpperLocationDescriptor();
     ir.BXWritePC(ir.GetRegister(m));
     ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 2) | 1));
@@ -1013,9 +1013,9 @@ bool TranslatorVisitor::thumb16_BLX_reg(Reg m) {
 // SVC #<imm8>
 bool TranslatorVisitor::thumb16_SVC(Imm<8> imm8) {
     const u32 imm32 = imm8.ZeroExtend();
+    ir.PushRSB(ir.current_location.AdvancePC(2).AdvanceIT());
     ir.UpdateUpperLocationDescriptor();
     ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 2));
-    ir.PushRSB(ir.current_location.AdvancePC(2));
     ir.CallSupervisor(ir.Imm32(imm32));
     ir.SetTerm(IR::Term::CheckHalt{IR::Term::PopRSBHint{}});
     return false;

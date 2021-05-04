@@ -16,7 +16,7 @@ bool TranslatorVisitor::thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j
         return UnpredictableInstruction();
     }
 
-    ir.PushRSB(ir.current_location.AdvancePC(4));
+    ir.PushRSB(ir.current_location.AdvancePC(4).AdvanceIT());
     ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 4) | 1));
 
     const s32 imm32 = static_cast<s32>((concatenate(S, i1, i2, hi, lo).SignExtend<u32>() << 1) + 4);
@@ -40,7 +40,7 @@ bool TranslatorVisitor::thumb32_BLX_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> 
         return UnpredictableInstruction();
     }
 
-    ir.PushRSB(ir.current_location.AdvancePC(4));
+    ir.PushRSB(ir.current_location.AdvancePC(4).AdvanceIT());
     ir.SetRegister(Reg::LR, ir.Imm32((ir.current_location.PC() + 4) | 1));
 
     const s32 imm32 = static_cast<s32>(concatenate(S, i1, i2, hi, lo).SignExtend<u32>() << 1);

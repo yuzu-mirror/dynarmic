@@ -1137,8 +1137,9 @@ bool TranslatorVisitor::vfp_VMSR(Cond cond, Reg t) {
     }
 
     // TODO: Replace this with a local cache.
-    ir.PushRSB(ir.current_location.AdvancePC(4));
+    ir.PushRSB(ir.current_location.AdvancePC(4).AdvanceIT());
 
+    ir.UpdateUpperLocationDescriptor();
     ir.SetFpscr(ir.GetRegister(t));
     ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
     ir.SetTerm(IR::Term::PopRSBHint{});

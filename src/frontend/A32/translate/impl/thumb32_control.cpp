@@ -93,11 +93,13 @@ bool TranslatorVisitor::thumb32_MSR_reg(bool write_spsr, Reg n, Imm<4> mask) {
             ir.SetGEFlagsCompressed(ir.And(value, ir.Imm32(0x000F0000)));
         }
     } else {
+        ir.UpdateUpperLocationDescriptor();
+
         const u32 cpsr_mask = (write_nzcvq ? 0xF8000000 : 0) | (write_g ? 0x000F0000 : 0) | 0x00000200;
         const auto old_cpsr = ir.And(ir.GetCpsr(), ir.Imm32(~cpsr_mask));
         const auto new_cpsr = ir.And(value, ir.Imm32(cpsr_mask));
         ir.SetCpsr(ir.Or(old_cpsr, new_cpsr));
-        ir.PushRSB(ir.current_location.AdvancePC(4));
+        ir.PushRSB(ir.current_location.AdvancePC(4).AdvanceIT());
         ir.BranchWritePC(ir.Imm32(ir.current_location.PC() + 4));
         ir.SetTerm(IR::Term::CheckHalt{IR::Term::PopRSBHint{}});
         return false;
