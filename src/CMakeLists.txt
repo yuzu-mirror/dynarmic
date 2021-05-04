@@ -293,6 +293,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         backend/x64/perf_map.h
         backend/x64/reg_alloc.cpp
         backend/x64/reg_alloc.h
+        backend/x64/stack_layout.h
     )
 
     if ("A32" IN_LIST DYNARMIC_FRONTENDS)

@@ -39,13 +39,6 @@ struct A32JitState {
 
     alignas(16) std::array<u32, 64> ExtReg{}; // Extension registers.
 
-    static constexpr size_t SpillCount = 64;
-    alignas(16) std::array<std::array<u64, 2>, SpillCount> spill{}; // Spill.
-    static Xbyak::Address GetSpillLocationFromIndex(size_t i) {
-        using namespace Xbyak::util;
-        return xword[r15 + offsetof(A32JitState, spill) + i * sizeof(u64) * 2];
-    }
-
     // For internal use (See: BlockOfCode::RunCode)
     u32 guest_MXCSR = 0x00001f80;
     u32 asimd_MXCSR = 0x00009fc0;

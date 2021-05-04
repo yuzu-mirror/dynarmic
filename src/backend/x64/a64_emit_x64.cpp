@@ -75,7 +75,7 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
         return gprs;
     }();
 
-    RegAlloc reg_alloc{code, A64JitState::SpillCount, SpillToOpArg<A64JitState>, gpr_order, any_xmm};
+    RegAlloc reg_alloc{code, gpr_order, any_xmm};
     A64EmitContext ctx{conf, reg_alloc, block};
 
     // Start emitting.

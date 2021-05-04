@@ -12,6 +12,7 @@
 
 #include "backend/x64/abi.h"
 #include "backend/x64/reg_alloc.h"
+#include "backend/x64/stack_layout.h"
 #include "common/assert.h"
 
 namespace Dynarmic::Backend::X64 {
@@ -223,12 +224,11 @@ bool Argument::IsInMemory() const {
     return HostLocIsSpill(*reg_alloc.ValueLocation(value.GetInst()));
 }
 
-RegAlloc::RegAlloc(BlockOfCode& code, size_t num_spills, std::function<Xbyak::Address(HostLoc)> spill_to_addr, std::vector<HostLoc> gpr_order, std::vector<HostLoc> xmm_order)
+RegAlloc::RegAlloc(BlockOfCode& code, std::vector<HostLoc> gpr_order, std::vector<HostLoc> xmm_order)
     : gpr_order(gpr_order)
     , xmm_order(xmm_order)
-    , hostloc_info(NonSpillHostLocCount + num_spills)
+    , hostloc_info(NonSpillHostLocCount + SpillCount)
     , code(code)
-    , spill_to_addr(std::move(spill_to_addr))
 {}
 
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
@@ -629,7 +629,7 @@ void RegAlloc::EmitMove(size_t bit_width, HostLoc to, HostLoc from) {
             MAYBE_AVX(movd, HostLocToReg64(to).cvt32(), HostLocToXmm(from));
         }
     } else if (HostLocIsXMM(to) && HostLocIsSpill(from)) {
-        const Xbyak::Address spill_addr = spill_to_addr(from);
+        const Xbyak::Address spill_addr = SpillToOpArg(from);
         ASSERT(spill_addr.getBit() >= bit_width);
         switch (bit_width) {
         case 128:
@@ -647,7 +647,7 @@ void RegAlloc::EmitMove(size_t bit_width, HostLoc to, HostLoc from) {
             UNREACHABLE();
         }
     } else if (HostLocIsSpill(to) && HostLocIsXMM(from)) {
-        const Xbyak::Address spill_addr = spill_to_addr(to);
+        const Xbyak::Address spill_addr = SpillToOpArg(to);
         ASSERT(spill_addr.getBit() >= bit_width);
         switch (bit_width) {
         case 128:
@@ -667,16 +667,16 @@ void RegAlloc::EmitMove(size_t bit_width, HostLoc to, HostLoc from) {
     } else if (HostLocIsGPR(to) && HostLocIsSpill(from)) {
         ASSERT(bit_width != 128);
         if (bit_width == 64) {
-            code.mov(HostLocToReg64(to), spill_to_addr(from));
+            code.mov(HostLocToReg64(to), SpillToOpArg(from));
         } else {
-            code.mov(HostLocToReg64(to).cvt32(), spill_to_addr(from));
+            code.mov(HostLocToReg64(to).cvt32(), SpillToOpArg(from));
         }
     } else if (HostLocIsSpill(to) && HostLocIsGPR(from)) {
         ASSERT(bit_width != 128);
         if (bit_width == 64) {
-            code.mov(spill_to_addr(to), HostLocToReg64(from));
+            code.mov(SpillToOpArg(to), HostLocToReg64(from));
         } else {
-            code.mov(spill_to_addr(to), HostLocToReg64(from).cvt32());
+            code.mov(SpillToOpArg(to), HostLocToReg64(from).cvt32());
         }
     } else {
         ASSERT_FALSE("Invalid RegAlloc::EmitMove");

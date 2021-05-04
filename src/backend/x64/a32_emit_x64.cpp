@@ -109,7 +109,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
         return gprs;
     }();
 
-    RegAlloc reg_alloc{code, A32JitState::SpillCount, SpillToOpArg<A32JitState>, gpr_order, any_xmm};
+    RegAlloc reg_alloc{code, gpr_order, any_xmm};
     A32EmitContext ctx{conf, reg_alloc, block};
 
     // Start emitting.
