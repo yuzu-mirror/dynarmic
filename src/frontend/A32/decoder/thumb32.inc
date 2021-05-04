@@ -84,10 +84,7 @@ INST(thumb32_UBFX,           "UBFX",                     "111100111100nnnn0iiidd
 
 // Branches and Miscellaneous Control
 //INST(thumb32_MSR_banked,     "MSR (banked)",             "11110011100-----10-0------1-----")
-//INST(thumb32_MSR_reg_1,      "MSR (reg)",                "111100111001----10-0------0-----")
-//INST(thumb32_MSR_reg_2,      "MSR (reg)",                "111100111000----10-0--01--0-----")
-//INST(thumb32_MSR_reg_3,      "MSR (reg)",                "111100111000----10-0--1---0-----")
-//INST(thumb32_MSR_reg_4,      "MSR (reg)",                "111100111000----10-0--00--0-----")
+INST(thumb32_MSR_reg,        "MSR (reg)",                "11110011100Rnnnn1000mmmm00000000")
 
 INST(thumb32_NOP,            "NOP",                      "11110011101011111000000000000000")
 INST(thumb32_YIELD,          "YIELD",                    "11110011101011111000000000000001")

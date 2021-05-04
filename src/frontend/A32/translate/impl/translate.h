@@ -576,6 +576,7 @@ struct TranslatorVisitor final {
     bool thumb32_WFI();
     bool thumb32_YIELD();
     bool thumb32_MSR_reg(bool R, Reg n, Imm<4> mask);
+    bool thumb32_MRS_reg(bool R, Reg d);
 
     // thumb32 branch instructions
     bool thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Imm<11> lo);
