@@ -66,4 +66,19 @@ bool TranslatorVisitor::thumb32_YIELD() {
     return thumb16_YIELD();
 }
 
+bool TranslatorVisitor::thumb32_MRS_reg(bool read_spsr, Reg d) {
+    if (d == Reg::R15) {
+        return UnpredictableInstruction();
+    }
+
+    // TODO: Revisit when implementing more than user mode.
+
+    if (read_spsr) {
+        return UndefinedInstruction();
+    }
+
+    ir.SetRegister(d, ir.GetCpsr());
+    return true;
+}
+
 } // namespace Dynarmic::A32

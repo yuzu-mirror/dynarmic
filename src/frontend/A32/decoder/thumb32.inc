@@ -110,8 +110,7 @@ INST(thumb32_BXJ,            "BXJ",                      "111100111100mmmm100011
 //INST(thumb32_SUBS_pc_lr,     "SUBS PC, LR",              "111100111101111010001111--------")
 
 //INST(thumb32_MRS_banked,     "MRS (banked)",             "11110011111-----10-0------1-----")
-//INST(thumb32_MRS_reg_1,      "MRS (reg)",                "111100111111----10-0------0-----")
-//INST(thumb32_MRS_reg_2,      "MRS (reg)",                "111100111110----10-0------0-----")
+INST(thumb32_MRS_reg,        "MRS (reg)",                "11110011111R11111000dddd00000000")
 //INST(thumb32_HVC,            "HVC",                      "111101111110----1000------------")
 //INST(thumb32_SMC,            "SMC",                      "111101111111----1000000000000000")
 INST(thumb32_UDF,            "UDF",                      "111101111111----1010------------") // v6T2
