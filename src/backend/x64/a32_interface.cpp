@@ -89,15 +89,6 @@ struct Jit::Impl {
         block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
     }
 
-    void ExceptionalExit() {
-        ClearExclusiveState();
-        if (!conf.wall_clock_cntpct) {
-            const s64 ticks = jit_state.cycles_to_run - jit_state.cycles_remaining;
-            conf.callbacks->AddTicks(ticks);
-        }
-        PerformCacheInvalidation();
-    }
-
     void ClearExclusiveState() {
         jit_state.exclusive_state = 0;
     }
@@ -231,11 +222,6 @@ void Jit::Reset() {
 
 void Jit::HaltExecution() {
     impl->jit_state.halt_requested = true;
-}
-
-void Jit::ExceptionalExit() {
-    impl->ExceptionalExit();
-    is_executing = false;
 }
 
 void Jit::ClearExclusiveState() {

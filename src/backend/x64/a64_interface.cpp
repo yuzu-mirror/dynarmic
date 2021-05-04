@@ -87,16 +87,6 @@ public:
         PerformRequestedCacheInvalidation();
     }
 
-    void ExceptionalExit() {
-        ClearExclusiveState();
-        if (!conf.wall_clock_cntpct) {
-            const s64 ticks = jit_state.cycles_to_run - jit_state.cycles_remaining;
-            conf.callbacks->AddTicks(ticks);
-        }
-        PerformRequestedCacheInvalidation();
-        is_executing = false;
-    }
-
     void ClearCache() {
         invalidate_entire_cache = true;
         RequestCacheInvalidation();
@@ -323,10 +313,6 @@ void Jit::Reset() {
 
 void Jit::HaltExecution() {
     impl->HaltExecution();
-}
-
-void Jit::ExceptionalExit() {
-    impl->ExceptionalExit();
 }
 
 u64 Jit::GetSP() const {

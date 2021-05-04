@@ -59,13 +59,6 @@ public:
      */
     void HaltExecution();
 
-    /**
-     * HACK:
-     * Exits execution from a callback, the callback must rewind the stack or
-     * never return to dynarmic from it's current stack.
-     */
-    void ExceptionalExit();
-
     /// View and modify registers.
     std::array<std::uint32_t, 16>& Regs();
     const std::array<std::uint32_t, 16>& Regs() const;
