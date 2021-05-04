@@ -12,9 +12,7 @@ namespace Dynarmic::Backend::X64 {
 struct JitStateInfo {
     template <typename JitStateType>
     JitStateInfo(const JitStateType&)
-        : offsetof_cycles_remaining(offsetof(JitStateType, cycles_remaining))
-        , offsetof_cycles_to_run(offsetof(JitStateType, cycles_to_run))
-        , offsetof_guest_MXCSR(offsetof(JitStateType, guest_MXCSR))
+        : offsetof_guest_MXCSR(offsetof(JitStateType, guest_MXCSR))
         , offsetof_asimd_MXCSR(offsetof(JitStateType, asimd_MXCSR))
         , offsetof_rsb_ptr(offsetof(JitStateType, rsb_ptr))
         , rsb_ptr_mask(JitStateType::RSBPtrMask)
@@ -25,8 +23,6 @@ struct JitStateInfo {
         , offsetof_fpsr_qc(offsetof(JitStateType, fpsr_qc))
     {}
 
-    const size_t offsetof_cycles_remaining;
-    const size_t offsetof_cycles_to_run;
     const size_t offsetof_guest_MXCSR;
     const size_t offsetof_asimd_MXCSR;
     const size_t offsetof_rsb_ptr;

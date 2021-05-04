@@ -787,16 +787,16 @@ void A32EmitX64::EmitA32CallSupervisor(A32EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.HostCall(nullptr);
 
     code.SwitchMxcsrOnExit();
-    code.mov(code.ABI_PARAM2, qword[r15 + offsetof(A32JitState, cycles_to_run)]);
-    code.sub(code.ABI_PARAM2, qword[r15 + offsetof(A32JitState, cycles_remaining)]);
+    code.mov(code.ABI_PARAM2, qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_to_run)]);
+    code.sub(code.ABI_PARAM2, qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_remaining)]);
     Devirtualize<&A32::UserCallbacks::AddTicks>(conf.callbacks).EmitCall(code);
     ctx.reg_alloc.EndOfAllocScope();
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.HostCall(nullptr, {}, args[0]);
     Devirtualize<&A32::UserCallbacks::CallSVC>(conf.callbacks).EmitCall(code);
     Devirtualize<&A32::UserCallbacks::GetTicksRemaining>(conf.callbacks).EmitCall(code);
-    code.mov(qword[r15 + offsetof(A32JitState, cycles_to_run)], code.ABI_RETURN);
-    code.mov(qword[r15 + offsetof(A32JitState, cycles_remaining)], code.ABI_RETURN);
+    code.mov(qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_to_run)], code.ABI_RETURN);
+    code.mov(qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_remaining)], code.ABI_RETURN);
     code.SwitchMxcsrOnEntry();
 }
 
@@ -1538,7 +1538,7 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
         return;
     }
 
-    code.cmp(qword[r15 + offsetof(A32JitState, cycles_remaining)], 0);
+    code.cmp(qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_remaining)], 0);
 
     patch_information[terminal.next].jg.emplace_back(code.getCurr());
     if (const auto next_bb = GetBasicBlock(terminal.next)) {

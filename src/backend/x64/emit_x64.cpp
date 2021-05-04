@@ -11,6 +11,7 @@
 #include "backend/x64/emit_x64.h"
 #include "backend/x64/nzcv_util.h"
 #include "backend/x64/perf_map.h"
+#include "backend/x64/stack_layout.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
@@ -181,8 +182,8 @@ void EmitX64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitAddCycles(size_t cycles) {
-    ASSERT(cycles < std::numeric_limits<u32>::max());
-    code.sub(qword[r15 + code.GetJitStateInfo().offsetof_cycles_remaining], static_cast<u32>(cycles));
+    ASSERT(cycles < std::numeric_limits<s32>::max());
+    code.sub(qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_remaining)], static_cast<u32>(cycles));
 }
 
 Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {

@@ -14,6 +14,9 @@ namespace Dynarmic::Backend::X64 {
 constexpr size_t SpillCount = 64;
 
 struct alignas(16) StackLayout {
+    s64 cycles_remaining;
+    s64 cycles_to_run;
+
     std::array<std::array<u64, 2>, SpillCount> spill;
 
     u32 save_host_MXCSR;
