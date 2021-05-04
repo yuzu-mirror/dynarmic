@@ -230,13 +230,13 @@ void BlockOfCode::GenRunCode(std::function<void(BlockOfCode&)> rcp) {
 }
 
 void BlockOfCode::SwitchMxcsrOnEntry() {
-    stmxcsr(dword[r15 + jsi.offsetof_save_host_MXCSR]);
+    stmxcsr(dword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, save_host_MXCSR)]);
     ldmxcsr(dword[r15 + jsi.offsetof_guest_MXCSR]);
 }
 
 void BlockOfCode::SwitchMxcsrOnExit() {
     stmxcsr(dword[r15 + jsi.offsetof_guest_MXCSR]);
-    ldmxcsr(dword[r15 + jsi.offsetof_save_host_MXCSR]);
+    ldmxcsr(dword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, save_host_MXCSR)]);
 }
 
 void BlockOfCode::EnterStandardASIMD() {
