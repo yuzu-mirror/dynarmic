@@ -17,6 +17,8 @@ struct alignas(16) StackLayout {
     std::array<std::array<u64, 2>, SpillCount> spill;
 
     u32 save_host_MXCSR;
+
+    bool check_bit;
 };
 
 static_assert(sizeof(StackLayout) % 16 == 0);

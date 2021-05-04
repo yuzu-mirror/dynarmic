@@ -22,6 +22,7 @@
 #include "backend/x64/emit_x64.h"
 #include "backend/x64/nzcv_util.h"
 #include "backend/x64/perf_map.h"
+#include "backend/x64/stack_layout.h"
 #include "common/assert.h"
 #include "common/bit_util.h"
 #include "common/common_types.h"
@@ -324,7 +325,7 @@ void A32EmitX64::GenTerminalHandlers() {
 void A32EmitX64::EmitA32SetCheckBit(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Reg8 to_store = ctx.reg_alloc.UseGpr(args[0]).cvt8();
-    code.mov(code.byte[r15 + offsetof(A32JitState, check_bit)], to_store);
+    code.mov(code.byte[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, check_bit)], to_store);
 }
 
 void A32EmitX64::EmitA32GetRegister(A32EmitContext& ctx, IR::Inst* inst) {
@@ -1601,7 +1602,7 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::If terminal, IR::LocationDescriptor 
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::CheckBit terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
     Xbyak::Label fail;
-    code.cmp(code.byte[r15 + offsetof(A32JitState, check_bit)], u8(0));
+    code.cmp(code.byte[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, check_bit)], u8(0));
     code.jz(fail);
     EmitTerminal(terminal.then_, initial_location, is_single_step);
     code.L(fail);

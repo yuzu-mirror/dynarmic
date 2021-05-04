@@ -45,7 +45,6 @@ struct A32JitState {
     s64 cycles_to_run = 0;
     s64 cycles_remaining = 0;
     bool halt_requested = false;
-    bool check_bit = false;
 
     // Exclusive state
     u32 exclusive_state = 0;

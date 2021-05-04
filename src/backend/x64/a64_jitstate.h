@@ -48,7 +48,6 @@ struct A64JitState {
     s64 cycles_to_run = 0;
     s64 cycles_remaining = 0;
     bool halt_requested = false;
-    bool check_bit = false;
 
     // Exclusive state
     static constexpr u64 RESERVATION_GRANULE_MASK = 0xFFFF'FFFF'FFFF'FFF0ull;
