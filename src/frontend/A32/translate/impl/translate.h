@@ -641,10 +641,10 @@ struct TranslatorVisitor final {
     bool thumb32_LDRT(Reg n, Reg t, Imm<8> imm8);
 
     // thumb32 data processing (register) instructions
-    bool thumb32_ASR_reg(Reg m, Reg d, Reg s);
-    bool thumb32_LSL_reg(Reg m, Reg d, Reg s);
-    bool thumb32_LSR_reg(Reg m, Reg d, Reg s);
-    bool thumb32_ROR_reg(Reg m, Reg d, Reg s);
+    bool thumb32_ASR_reg(bool S, Reg m, Reg d, Reg s);
+    bool thumb32_LSL_reg(bool S, Reg m, Reg d, Reg s);
+    bool thumb32_LSR_reg(bool S, Reg m, Reg d, Reg s);
+    bool thumb32_ROR_reg(bool S, Reg m, Reg d, Reg s);
     bool thumb32_SXTB(Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_SXTB16(Reg d, SignExtendRotation rotate, Reg m);
     bool thumb32_SXTAB(Reg n, Reg d, SignExtendRotation rotate, Reg m);
