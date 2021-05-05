@@ -77,14 +77,14 @@ bool TranslatorVisitor::thumb32_ADR_t3(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> i
     return true;
 }
 
-bool TranslatorVisitor::thumb32_ADD_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
-    if (d == Reg::PC) {
+bool TranslatorVisitor::thumb32_ADD_imm_2(Imm<1> imm1, Reg n, Imm<3> imm3, Reg d, Imm<8> imm8) {
+    if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
     const u32 imm = concatenate(imm1, imm3, imm8).ZeroExtend();
-    const auto sp = ir.GetRegister(Reg::SP);
-    const auto result = ir.AddWithCarry(sp, ir.Imm32(imm), ir.Imm1(0));
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.AddWithCarry(reg_n, ir.Imm32(imm), ir.Imm1(0));
 
     ir.SetRegister(d, result.result);
     return true;
@@ -188,14 +188,14 @@ bool TranslatorVisitor::thumb32_SSAT16(Reg n, Reg d, Imm<4> sat_imm) {
     return Saturation16(*this, n, d, sat_imm.ZeroExtend() + 1, &IREmitter::SignedSaturation);
 }
 
-bool TranslatorVisitor::thumb32_SUB_imm_2(Imm<1> imm1, Imm<3> imm3, Reg d, Imm<8> imm8) {
-    if (d == Reg::PC) {
+bool TranslatorVisitor::thumb32_SUB_imm_2(Imm<1> imm1, Reg n, Imm<3> imm3, Reg d, Imm<8> imm8) {
+    if (d == Reg::PC || n == Reg::PC) {
         return UnpredictableInstruction();
     }
 
     const u32 imm = concatenate(imm1, imm3, imm8).ZeroExtend();
-    const auto sp = ir.GetRegister(Reg::SP);
-    const auto result = ir.SubWithCarry(sp, ir.Imm32(imm), ir.Imm1(1));
+    const auto reg_n = ir.GetRegister(n);
+    const auto result = ir.SubWithCarry(reg_n, ir.Imm32(imm), ir.Imm1(1));
 
     ir.SetRegister(d, result.result);
     return true;
