@@ -15,6 +15,7 @@
 #include <dynarmic/A32/a32.h>
 #include <dynarmic/A32/disassembler.h>
 
+#include "common/bit_util.h"
 #include "common/common_types.h"
 #include "common/llvm_disassemble.h"
 #include "frontend/A32/decoder/arm.h"
@@ -86,6 +87,29 @@ void PrintA64Instruction(u32 instruction) {
     fmt::print("{}\n", IR::DumpBlock(block));
 
     Optimization::A64GetSetElimination(block);
+    Optimization::DeadCodeElimination(block);
+    Optimization::ConstantPropagation(block);
+    Optimization::DeadCodeElimination(block);
+    Optimization::IdentityRemovalPass(block);
+
+    fmt::print("Optimized IR:\n");
+    fmt::print("{}\n", IR::DumpBlock(block));
+}
+
+void PrintThumbInstruction(u32 instruction) {
+    const size_t inst_size = (instruction >> 16) == 0 ? 2 : 4;
+    if (inst_size == 4) instruction = Common::SwapHalves32(instruction);
+
+    fmt::print("{:08x} {}\n", instruction, Common::DisassembleAArch32(true, 0, (u8*)&instruction, inst_size));
+
+    const A32::LocationDescriptor location{0, A32::PSR{0x1F0}, {}};
+    IR::Block block{location};
+    const bool should_continue = A32::TranslateSingleInstruction(block, location, instruction);
+    fmt::print("should_continue: {}\n\n", should_continue);
+    fmt::print("IR:\n");
+    fmt::print("{}\n", IR::DumpBlock(block));
+
+    Optimization::A32GetSetElimination(block);
     Optimization::DeadCodeElimination(block);
     Optimization::ConstantPropagation(block);
     Optimization::DeadCodeElimination(block);
@@ -259,7 +283,7 @@ void ExecuteA32Instruction(u32 instruction) {
 
 int main(int argc, char** argv) {
     if (argc < 3 || argc > 4) {
-        fmt::print("usage: {} <a32/a64> <instruction_in_hex> [-exec]\n", argv[0]);
+        fmt::print("usage: {} <a32/a64/thumb> <instruction_in_hex> [-exec]\n", argv[0]);
         return 1;
     }
 
@@ -281,8 +305,10 @@ int main(int argc, char** argv) {
         PrintA32Instruction(instruction);
     } else if (strcmp(argv[1], "a64") == 0) {
         PrintA64Instruction(instruction);
+    } else if (strcmp(argv[1], "t32") == 0 || strcmp(argv[1], "t16") == 0 || strcmp(argv[1], "thumb") == 0) {
+        PrintThumbInstruction(instruction);
     } else {
-        fmt::print("Invalid mode: {}\nValid values: a32, a64\n", argv[1]);
+        fmt::print("Invalid mode: {}\nValid values: a32, a64, thumb\n", argv[1]);
         return 1;
     }
 
@@ -294,8 +320,8 @@ int main(int argc, char** argv) {
 
         if (strcmp(argv[1], "a32") == 0) {
             ExecuteA32Instruction(instruction);
-        } else if (strcmp(argv[1], "a64") == 0) {
-            fmt::print("Executing a64 code not currently supported\n");
+        } else {
+            fmt::print("Executing in this mode not currently supported\n");
             return 1;
         }
     }
