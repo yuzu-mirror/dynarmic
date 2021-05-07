@@ -110,6 +110,5 @@ const HostLocList any_xmm = {
 
 Xbyak::Reg64 HostLocToReg64(HostLoc loc);
 Xbyak::Xmm HostLocToXmm(HostLoc loc);
-Xbyak::Address SpillToOpArg(HostLoc loc);
 
 } // namespace Dynarmic::Backend::X64

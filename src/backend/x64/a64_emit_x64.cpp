@@ -1101,7 +1101,7 @@ void A64EmitX64::EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst) {
 
         code.mov(code.byte[r15 + offsetof(A64JitState, exclusive_state)], u8(1));
         code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(&conf));
-        code.sub(rsp, 16 + ABI_SHADOW_SPACE);
+        ctx.reg_alloc.AllocStackSpace(16 + ABI_SHADOW_SPACE);
         code.lea(code.ABI_PARAM3, ptr[rsp + ABI_SHADOW_SPACE]);
         code.CallLambda(
             [](A64::UserConfig& conf, u64 vaddr, A64::Vector& ret) {
@@ -1111,7 +1111,7 @@ void A64EmitX64::EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst) {
             }
         );
         code.movups(result, xword[rsp + ABI_SHADOW_SPACE]);
-        code.add(rsp, 16 + ABI_SHADOW_SPACE);
+        ctx.reg_alloc.ReleaseStackSpace(16 + ABI_SHADOW_SPACE);
 
         ctx.reg_alloc.DefineValue(inst, result);
     }
@@ -1170,7 +1170,7 @@ void A64EmitX64::EmitExclusiveWriteMemory(A64EmitContext& ctx, IR::Inst* inst) {
             }
         );
     } else {
-        code.sub(rsp, 16 + ABI_SHADOW_SPACE);
+        ctx.reg_alloc.AllocStackSpace(16 + ABI_SHADOW_SPACE);
         code.lea(code.ABI_PARAM3, ptr[rsp + ABI_SHADOW_SPACE]);
         code.movaps(xword[code.ABI_PARAM3], xmm1);
         code.CallLambda(
@@ -1181,7 +1181,7 @@ void A64EmitX64::EmitExclusiveWriteMemory(A64EmitContext& ctx, IR::Inst* inst) {
                     }) ? 0 : 1;
             }
         );
-        code.add(rsp, 16 + ABI_SHADOW_SPACE);
+        ctx.reg_alloc.ReleaseStackSpace(16 + ABI_SHADOW_SPACE);
     }
     code.L(end);
 }

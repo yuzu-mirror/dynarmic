@@ -21,14 +21,4 @@ Xbyak::Xmm HostLocToXmm(HostLoc loc) {
     return Xbyak::Xmm(static_cast<int>(loc) - static_cast<int>(HostLoc::XMM0));
 }
 
-Xbyak::Address SpillToOpArg(HostLoc loc) {
-    ASSERT(HostLocIsSpill(loc));
-
-    size_t i = static_cast<size_t>(loc) - static_cast<size_t>(HostLoc::FirstSpill);
-    ASSERT_MSG(i < SpillCount, "Spill index greater than number of available spill locations");
-
-    using namespace Xbyak::util;
-    return xword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, spill) + i * sizeof(u64) * 2];
-}
-
 } // namespace Dynarmic::Backend::X64

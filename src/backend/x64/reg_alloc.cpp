@@ -438,6 +438,20 @@ void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_r
     }
 }
 
+void RegAlloc::AllocStackSpace(size_t stack_space) {
+    ASSERT(stack_space < static_cast<size_t>(std::numeric_limits<s32>::max()));
+    ASSERT(reserved_stack_space == 0);
+    reserved_stack_space = stack_space;
+    code.sub(code.rsp, static_cast<u32>(stack_space));
+}
+
+void RegAlloc::ReleaseStackSpace(size_t stack_space) {
+    ASSERT(stack_space < static_cast<size_t>(std::numeric_limits<s32>::max()));
+    ASSERT(reserved_stack_space == stack_space);
+    reserved_stack_space = 0;
+    code.add(code.rsp, static_cast<u32>(stack_space));
+}
+
 void RegAlloc::EndOfAllocScope() {
     for (auto& iter : hostloc_info) {
         iter.ReleaseAll();
@@ -691,6 +705,16 @@ void RegAlloc::EmitExchange(HostLoc a, HostLoc b) {
     } else {
         ASSERT_FALSE("Invalid RegAlloc::EmitExchange");
     }
+}
+
+Xbyak::Address RegAlloc::SpillToOpArg(HostLoc loc) {
+    ASSERT(HostLocIsSpill(loc));
+
+    size_t i = static_cast<size_t>(loc) - static_cast<size_t>(HostLoc::FirstSpill);
+    ASSERT_MSG(i < SpillCount, "Spill index greater than number of available spill locations");
+
+    using namespace Xbyak::util;
+    return xword[rsp + reserved_stack_space + ABI_SHADOW_SPACE + offsetof(StackLayout, spill) + i * sizeof(u64) * 2];
 }
 
 } // namespace Dynarmic::Backend::X64

@@ -24,7 +24,8 @@ static void EmitAESFunction(RegAlloc::ArgumentInfo args, EmitContext& ctx, Block
     ctx.reg_alloc.EndOfAllocScope();
 
     ctx.reg_alloc.HostCall(nullptr);
-    code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
+
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE]);
     code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + sizeof(AES::State)]);
@@ -32,7 +33,7 @@ static void EmitAESFunction(RegAlloc::ArgumentInfo args, EmitContext& ctx, Block
     code.CallFunction(fn);
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE]);
 
-    code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }

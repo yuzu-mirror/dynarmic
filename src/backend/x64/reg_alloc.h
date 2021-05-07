@@ -127,6 +127,9 @@ public:
 
     // TODO: Values in host flags
 
+    void AllocStackSpace(size_t stack_space);
+    void ReleaseStackSpace(size_t stack_space);
+
     void EndOfAllocScope();
 
     void AssertNoMoreUses();
@@ -160,8 +163,11 @@ private:
     const HostLocInfo& LocInfo(HostLoc loc) const;
 
     BlockOfCode& code;
+    size_t reserved_stack_space = 0;
     void EmitMove(size_t bit_width, HostLoc to, HostLoc from);
     void EmitExchange(HostLoc a, HostLoc b);
+
+    Xbyak::Address SpillToOpArg(HostLoc loc);
 };
 
 } // namespace Dynarmic::Backend::X64

@@ -59,7 +59,7 @@ static void EmitOneArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Ins
     ctx.reg_alloc.EndOfAllocScope();
 
     ctx.reg_alloc.HostCall(nullptr);
-    code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
     code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE + 0 * 16]);
     code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + 1 * 16]);
 
@@ -67,7 +67,7 @@ static void EmitOneArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Ins
     code.CallFunction(fn);
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + 0 * 16]);
 
-    code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -82,7 +82,7 @@ static void EmitOneArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext
     ctx.reg_alloc.EndOfAllocScope();
 
     ctx.reg_alloc.HostCall(nullptr);
-    code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
     code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE + 0 * 16]);
     code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + 1 * 16]);
 
@@ -90,7 +90,7 @@ static void EmitOneArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext
     code.CallFunction(fn);
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + 0 * 16]);
 
-    code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], code.ABI_RETURN.cvt8());
 
@@ -108,7 +108,7 @@ static void EmitTwoArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext
     ctx.reg_alloc.EndOfAllocScope();
 
     ctx.reg_alloc.HostCall(nullptr);
-    code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
     code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE + 0 * 16]);
     code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + 1 * 16]);
     code.lea(code.ABI_PARAM3, ptr[rsp + ABI_SHADOW_SPACE + 2 * 16]);
@@ -118,7 +118,7 @@ static void EmitTwoArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext
     code.CallFunction(fn);
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + 0 * 16]);
 
-    code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], code.ABI_RETURN.cvt8());
 
@@ -136,7 +136,7 @@ static void EmitTwoArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Ins
     ctx.reg_alloc.EndOfAllocScope();
 
     ctx.reg_alloc.HostCall(nullptr);
-    code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
     code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE + 0 * 16]);
     code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + 1 * 16]);
     code.lea(code.ABI_PARAM3, ptr[rsp + ABI_SHADOW_SPACE + 2 * 16]);
@@ -146,7 +146,7 @@ static void EmitTwoArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Ins
     code.CallFunction(fn);
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + 0 * 16]);
 
-    code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -4272,7 +4272,7 @@ void EmitX64::EmitVectorTableLookup64(EmitContext& ctx, IR::Inst* inst) {
     }
 
     const u32 stack_space = static_cast<u32>(6 * 8);
-    code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
     for (size_t i = 0; i < table_size; ++i) {
         const Xbyak::Xmm table_value = ctx.reg_alloc.UseXmm(table[i]);
         code.movq(qword[rsp + ABI_SHADOW_SPACE + i * 8], table_value);
@@ -4304,7 +4304,7 @@ void EmitX64::EmitVectorTableLookup64(EmitContext& ctx, IR::Inst* inst) {
     );
 
     code.movq(result, qword[rsp + ABI_SHADOW_SPACE + 4 * 8]);
-    code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }
@@ -4402,7 +4402,7 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
     }
 
     const u32 stack_space = static_cast<u32>((table_size + 2) * 16);
-    code.sub(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
     for (size_t i = 0; i < table_size; ++i) {
         const Xbyak::Xmm table_value = ctx.reg_alloc.UseXmm(table[i]);
         code.movaps(xword[rsp + ABI_SHADOW_SPACE + i * 16], table_value);
@@ -4434,7 +4434,7 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
     );
 
     code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + (table_size + 0) * 16]);
-    code.add(rsp, stack_space + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
 
     ctx.reg_alloc.DefineValue(inst, result);
 }

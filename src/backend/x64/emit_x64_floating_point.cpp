@@ -671,11 +671,11 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.HostCall(inst, args[0], args[1], args[2]);
     code.mov(code.ABI_PARAM4.cvt32(), ctx.FPCR().Value());
 #ifdef _WIN32
-    code.sub(rsp, 16 + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.AllocStackSpace(16 + ABI_SHADOW_SPACE);
     code.lea(rax, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
     code.mov(qword[rsp + ABI_SHADOW_SPACE], rax);
     code.CallFunction(&FP::FPMulAdd<FPT>);
-    code.add(rsp, 16 + ABI_SHADOW_SPACE);
+    ctx.reg_alloc.ReleaseStackSpace(16 + ABI_SHADOW_SPACE);
 #else
     code.lea(code.ABI_PARAM5, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
     code.CallFunction(&FP::FPMulAdd<FPT>);
