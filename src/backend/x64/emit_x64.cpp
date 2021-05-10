@@ -161,7 +161,7 @@ void EmitX64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {
         value |= Common::Bit<28>(args[0].GetImmediateU32()) ? (1 << 0) : 0;
         code.mov(nzcv, value);
         ctx.reg_alloc.DefineValue(inst, nzcv);
-    } else if (code.HasFastBMI2()) {
+    } else if (code.HasHostFeature(HostFeature::FastBMI2)) {
         const Xbyak::Reg32 nzcv = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
 

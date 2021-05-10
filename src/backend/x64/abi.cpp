@@ -61,7 +61,7 @@ void ABI_PushRegistersAndAdjustStack(BlockOfCode& code, size_t frame_size, const
     size_t xmm_offset = frame_info.xmm_offset;
     for (HostLoc xmm : regs) {
         if (HostLocIsXMM(xmm)) {
-            if (code.HasAVX()) {
+            if (code.HasHostFeature(HostFeature::AVX)) {
                 code.vmovaps(code.xword[rsp + xmm_offset], HostLocToXmm(xmm));
             } else {
                 code.movaps(code.xword[rsp + xmm_offset], HostLocToXmm(xmm));
@@ -83,7 +83,7 @@ void ABI_PopRegistersAndAdjustStack(BlockOfCode& code, size_t frame_size, const 
     size_t xmm_offset = frame_info.xmm_offset;
     for (HostLoc xmm : regs) {
         if (HostLocIsXMM(xmm)) {
-            if (code.HasAVX()) {
+            if (code.HasHostFeature(HostFeature::AVX)) {
                 code.vmovaps(HostLocToXmm(xmm), code.xword[rsp + xmm_offset]);
             } else {
                 code.movaps(HostLocToXmm(xmm), code.xword[rsp + xmm_offset]);

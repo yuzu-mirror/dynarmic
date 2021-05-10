@@ -19,7 +19,7 @@ namespace CRC32 = Common::Crypto::CRC32;
 static void EmitCRC32Castagnoli(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, const int data_size) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (code.HasSSE42()) {
+    if (code.HasHostFeature(HostFeature::SSE42)) {
         const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[1]).changeBit(data_size);
         code.crc32(crc, value);
@@ -35,7 +35,7 @@ static void EmitCRC32Castagnoli(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, const int data_size) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (code.HasPCLMULQDQ() && data_size < 32) {
+    if (code.HasHostFeature(HostFeature::PCLMULQDQ) && data_size < 32) {
         const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg64 value = ctx.reg_alloc.UseScratchGpr(args[1]);
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
@@ -49,7 +49,7 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
         code.movd(xmm_tmp, value.cvt32());
         code.pslldq(xmm_tmp, (64 - data_size) / 8);
 
-        if (code.HasAVX()) {
+        if (code.HasHostFeature(HostFeature::AVX)) {
             code.vpclmulqdq(xmm_value, xmm_tmp, xmm_const, 0x00);
             code.pclmulqdq(xmm_value, xmm_const, 0x10);
             code.pxor(xmm_value, xmm_tmp);
@@ -66,7 +66,7 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
         return;
     }
 
-    if (code.HasPCLMULQDQ() && data_size == 32) {
+    if (code.HasHostFeature(HostFeature::PCLMULQDQ) && data_size == 32) {
         const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 value = ctx.reg_alloc.UseGpr(args[1]).cvt32();
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();
@@ -87,7 +87,7 @@ static void EmitCRC32ISO(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, co
         return;
     }
 
-    if (code.HasPCLMULQDQ() && data_size == 64) {
+    if (code.HasHostFeature(HostFeature::PCLMULQDQ) && data_size == 64) {
         const Xbyak::Reg32 crc = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg64 value = ctx.reg_alloc.UseGpr(args[1]);
         const Xbyak::Xmm xmm_value = ctx.reg_alloc.ScratchXmm();

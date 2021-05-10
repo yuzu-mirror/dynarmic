@@ -73,6 +73,56 @@ void ProtectMemory(const void* base, size_t size, bool is_executable) {
 }
 #endif
 
+HostFeature GetHostFeatures()
+{
+    HostFeature features = {};
+
+#ifdef DYNARMIC_ENABLE_CPU_FEATURE_DETECTION
+    using Cpu = Xbyak::util::Cpu;
+    Xbyak::util::Cpu cpu_info;
+
+    if (cpu_info.has(Cpu::tSSSE3))          features |= HostFeature::SSSE3;
+    if (cpu_info.has(Cpu::tSSE41))          features |= HostFeature::SSE41;
+    if (cpu_info.has(Cpu::tSSE42))          features |= HostFeature::SSE42;
+    if (cpu_info.has(Cpu::tAVX))            features |= HostFeature::AVX;
+    if (cpu_info.has(Cpu::tAVX2))           features |= HostFeature::AVX2;
+    if (cpu_info.has(Cpu::tAVX512F))        features |= HostFeature::AVX512F;
+    if (cpu_info.has(Cpu::tAVX512CD))       features |= HostFeature::AVX512CD;
+    if (cpu_info.has(Cpu::tAVX512VL))       features |= HostFeature::AVX512VL;
+    if (cpu_info.has(Cpu::tAVX512BW))       features |= HostFeature::AVX512BW;
+    if (cpu_info.has(Cpu::tAVX512DQ))       features |= HostFeature::AVX512DQ;
+    if (cpu_info.has(Cpu::tAVX512_BITALG))  features |= HostFeature::AVX512BITALG;
+    if (cpu_info.has(Cpu::tPCLMULQDQ))      features |= HostFeature::PCLMULQDQ;
+    if (cpu_info.has(Cpu::tF16C))           features |= HostFeature::F16C;
+    if (cpu_info.has(Cpu::tFMA))            features |= HostFeature::FMA;
+    if (cpu_info.has(Cpu::tAESNI))          features |= HostFeature::AES;
+    if (cpu_info.has(Cpu::tPOPCNT))         features |= HostFeature::POPCNT;
+    if (cpu_info.has(Cpu::tBMI1))           features |= HostFeature::BMI1;
+    if (cpu_info.has(Cpu::tBMI2))           features |= HostFeature::BMI2;
+    if (cpu_info.has(Cpu::tLZCNT))          features |= HostFeature::LZCNT;
+    if (cpu_info.has(Cpu::tGFNI))           features |= HostFeature::GFNI;
+
+    if (cpu_info.has(Cpu::tBMI2)) {
+        // BMI2 instructions such as pdep and pext have been very slow up until Zen 3.
+        // Check for Zen 3 or newer by its family (0x19).
+        // See also: https://en.wikichip.org/wiki/amd/cpuid
+        if (cpu_info.has(Cpu::tAMD)) {
+            std::array<u32, 4> data{};
+            cpu_info.getCpuid(1, data.data());
+            const u32 family_base     = Common::Bits< 8, 11>(data[0]);
+            const u32 family_extended = Common::Bits<20, 27>(data[0]);
+            const u32 family = family_base + family_extended;
+            if (family >= 0x19)
+                features |= HostFeature::FastBMI2;
+        } else {
+            features |= HostFeature::FastBMI2;
+        }
+    }
+#endif
+
+    return features;
+}
+
 } // anonymous namespace
 
 BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi, size_t total_code_size, size_t far_code_offset, std::function<void(BlockOfCode&)> rcp)
@@ -81,6 +131,7 @@ BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi, size_t total_cod
         , jsi(jsi)
         , far_code_offset(far_code_offset)
         , constant_pool(*this, CONSTANT_POOL_SIZE)
+        , host_features(GetHostFeatures())
 {
     ASSERT(total_code_size > far_code_offset);
     EnableWriting();
@@ -315,108 +366,6 @@ void BlockOfCode::EnsurePatchLocationSize(CodePtr begin, size_t size) {
     size_t current_size = getCurr<const u8*>() - reinterpret_cast<const u8*>(begin);
     ASSERT(current_size <= size);
     nop(size - current_size);
-}
-
-bool BlockOfCode::HasSSSE3() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tSSSE3);
-}
-
-bool BlockOfCode::HasSSE41() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tSSE41);
-}
-
-bool BlockOfCode::HasSSE42() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tSSE42);
-}
-
-bool BlockOfCode::HasPCLMULQDQ() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tPCLMULQDQ);
-}
-
-bool BlockOfCode::HasAVX() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tAVX);
-}
-
-bool BlockOfCode::HasF16C() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tF16C);
-}
-
-bool BlockOfCode::HasAESNI() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tAESNI);
-}
-
-bool BlockOfCode::HasLZCNT() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tLZCNT);
-}
-
-bool BlockOfCode::HasBMI1() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tBMI1);
-}
-
-bool BlockOfCode::HasBMI2() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tBMI2);
-}
-
-bool BlockOfCode::HasFastBMI2() const {
-    if (DoesCpuSupport(Xbyak::util::Cpu::tBMI2)) {
-        // BMI2 instructions such as pdep and pext have been very slow up until Zen 3.
-        // Check for Zen 3 or newer by its family (0x19).
-        // See also: https://en.wikichip.org/wiki/amd/cpuid
-        if (DoesCpuSupport(Xbyak::util::Cpu::tAMD)) {
-            std::array<u32, 4> data{};
-            cpu_info.getCpuid(1, data.data());
-            const u32 family_base     = Common::Bits< 8, 11>(data[0]);
-            const u32 family_extended = Common::Bits<20, 27>(data[0]);
-            const u32 family = family_base + family_extended;
-            return family >= 0x19;
-        }
-        return true;
-    }
-    return false;
-}
-
-bool BlockOfCode::HasFMA() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tFMA);
-}
-
-bool BlockOfCode::HasAVX2() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tAVX2);
-}
-
-bool BlockOfCode::HasAVX512_Skylake() const {
-    // The feature set formerly known as AVX3.2. (Introduced with Skylake.)
-    return DoesCpuSupport(Xbyak::util::Cpu::tAVX512F)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512CD)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512BW)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512DQ)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512VL);
-}
-
-bool BlockOfCode::HasAVX512_Icelake() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tAVX512F)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512CD)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512BW)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512DQ)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512VL)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512_VPOPCNTDQ)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512_VNNI)
-        && DoesCpuSupport(Xbyak::util::Cpu::tGFNI)
-        && DoesCpuSupport(Xbyak::util::Cpu::tVAES)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512_VBMI2)
-        && DoesCpuSupport(Xbyak::util::Cpu::tAVX512_BITALG)
-        && DoesCpuSupport(Xbyak::util::Cpu::tVPCLMULQDQ);
-}
-
-bool BlockOfCode::HasAVX512_BITALG() const {
-    return DoesCpuSupport(Xbyak::util::Cpu::tAVX512_BITALG);
-}
-
-bool BlockOfCode::DoesCpuSupport([[maybe_unused]] Xbyak::util::Cpu::Type type) const {
-#ifdef DYNARMIC_ENABLE_CPU_FEATURE_DETECTION
-    return cpu_info.has(type);
-#else
-    return false;
-#endif
 }
 
 } // namespace Dynarmic::Backend::X64

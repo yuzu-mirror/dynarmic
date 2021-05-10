@@ -288,6 +288,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         backend/x64/exclusive_monitor.cpp
         backend/x64/hostloc.cpp
         backend/x64/hostloc.h
+        backend/x64/host_feature.h
         backend/x64/jitstate_info.h
         backend/x64/oparg.h
         backend/x64/perf_map.cpp

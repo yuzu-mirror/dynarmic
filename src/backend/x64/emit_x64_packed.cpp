@@ -76,7 +76,7 @@ void EmitX64::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
     code.paddw(xmm_a, xmm_b);
 
     if (ge_inst) {
-        if (code.HasSSE41()) {
+        if (code.HasHostFeature(HostFeature::SSE41)) {
             const Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm ones = ctx.reg_alloc.ScratchXmm();
 
@@ -199,7 +199,7 @@ void EmitX64::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseXmm(args[1]);
         const Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
@@ -685,7 +685,7 @@ void EmitX64::EmitPackedSelect(EmitContext& ctx, IR::Inst* inst) {
         code.por(from, ge);
 
         ctx.reg_alloc.DefineValue(inst, from);
-    } else if (code.HasBMI1()) {
+    } else if (code.HasHostFeature(HostFeature::BMI1)) {
         const Xbyak::Reg32 ge = ctx.reg_alloc.UseGpr(args[0]).cvt32();
         const Xbyak::Reg32 to = ctx.reg_alloc.UseScratchGpr(args[1]).cvt32();
         const Xbyak::Reg32 from = ctx.reg_alloc.UseScratchGpr(args[2]).cvt32();

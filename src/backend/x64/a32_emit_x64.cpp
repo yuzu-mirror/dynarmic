@@ -295,7 +295,7 @@ void A32EmitX64::GenTerminalHandlers() {
         calculate_location_descriptor();
         code.L(rsb_cache_miss);
         code.mov(r12, reinterpret_cast<u64>(fast_dispatch_table.data()));
-        if (code.HasSSE42()) {
+        if (code.HasHostFeature(HostFeature::SSE42)) {
             code.crc32(ebp, r12d);
         }
         code.and_(ebp, fast_dispatch_table_mask);
@@ -313,7 +313,7 @@ void A32EmitX64::GenTerminalHandlers() {
         code.align();
         fast_dispatch_table_lookup = code.getCurr<FastDispatchEntry&(*)(u64)>();
         code.mov(code.ABI_PARAM2, reinterpret_cast<u64>(fast_dispatch_table.data()));
-        if (code.HasSSE42()) {
+        if (code.HasHostFeature(HostFeature::SSE42)) {
             code.crc32(code.ABI_PARAM1.cvt32(), code.ABI_PARAM2.cvt32());
         }
         code.and_(code.ABI_PARAM1.cvt32(), fast_dispatch_table_mask);
@@ -428,7 +428,7 @@ void A32EmitX64::EmitA32GetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
     const Xbyak::Reg32 tmp2 = ctx.reg_alloc.ScratchGpr().cvt32();
 
-    if (code.HasFastBMI2()) {
+    if (code.HasHostFeature(HostFeature::FastBMI2)) {
         // Here we observe that cpsr_et and cpsr_ge are right next to each other in memory,
         // so we load them both at the same time with one 64-bit read. This allows us to
         // extract all of their bits together at once with one pext.
@@ -456,7 +456,7 @@ void A32EmitX64::EmitA32GetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
     code.or_(result, tmp);
 
     code.mov(tmp2, dword[r15 + offsetof(A32JitState, cpsr_nzcv)]);
-    if (code.HasFastBMI2()) {
+    if (code.HasHostFeature(HostFeature::FastBMI2)) {
         code.mov(tmp, NZCV::x64_mask);
         code.pext(tmp2, tmp2, tmp);
         code.shl(tmp2, 28);
@@ -490,7 +490,7 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
     // cpsr_nzcv
     code.mov(tmp, cpsr);
     code.shr(tmp, 28);
-    if (code.HasFastBMI2()) {
+    if (code.HasHostFeature(HostFeature::FastBMI2)) {
         code.mov(tmp2, NZCV::x64_mask);
         code.pdep(tmp, tmp, tmp2);
     } else {
@@ -504,7 +504,7 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
     code.and_(tmp, 0x07F0FDDF);
     code.mov(dword[r15 + offsetof(A32JitState, cpsr_jaifm)], tmp);
 
-    if (code.HasFastBMI2()) {
+    if (code.HasHostFeature(HostFeature::FastBMI2)) {
         // cpsr_et and cpsr_ge
         static_assert(offsetof(A32JitState, upper_location_descriptor) + 4 == offsetof(A32JitState, cpsr_ge));
         // This mask is 0x7FFF0000, because we do not want the MSB to be sign extended to the upper dword.
@@ -546,7 +546,7 @@ void A32EmitX64::EmitA32SetCpsrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
         const u32 imm = args[0].GetImmediateU32();
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], NZCV::ToX64(imm));
-    } else if (code.HasFastBMI2()) {
+    } else if (code.HasHostFeature(HostFeature::FastBMI2)) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -571,7 +571,7 @@ void A32EmitX64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], NZCV::ToX64(imm));
         code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_q)], u8((imm & 0x08000000) != 0 ? 1 : 0));
-    } else if (code.HasFastBMI2()) {
+    } else if (code.HasHostFeature(HostFeature::FastBMI2)) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -698,7 +698,7 @@ void A32EmitX64::EmitA32SetGEFlagsCompressed(A32EmitContext& ctx, IR::Inst* inst
         ge |= Common::Bit<16>(imm) ? 0x000000FF : 0;
 
         code.mov(dword[r15 + offsetof(A32JitState, cpsr_ge)], ge);
-    } else if (code.HasFastBMI2()) {
+    } else if (code.HasHostFeature(HostFeature::FastBMI2)) {
         const Xbyak::Reg32 a = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
         const Xbyak::Reg32 b = ctx.reg_alloc.ScratchGpr().cvt32();
 
@@ -860,7 +860,7 @@ void A32EmitX64::EmitA32GetFpscrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
 void A32EmitX64::EmitA32SetFpscrNZCV(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (code.HasFastBMI2()) {
+    if (code.HasHostFeature(HostFeature::FastBMI2)) {
         const Xbyak::Reg32 value = ctx.reg_alloc.UseGpr(args[0]).cvt32();
         const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
 

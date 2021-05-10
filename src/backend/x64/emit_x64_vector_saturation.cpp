@@ -28,7 +28,7 @@ void EmitVectorSaturatedNative(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
 
     (code.*unsaturated_fn)(xmm0, addend);
     (code.*sub_fn)(xmm0, result);
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         code.ptest(xmm0, xmm0);
     } else {
         const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
@@ -96,7 +96,7 @@ void EmitVectorSignedSaturated(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     }
     code.pxor(tmp, code.MConst(xword, msb_mask, msb_mask));
 
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         code.ptest(xmm0, code.MConst(xword, msb_mask, msb_mask));
     } else {
         if constexpr (esize == 32) {
@@ -109,7 +109,7 @@ void EmitVectorSignedSaturated(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     code.setnz(overflow);
     code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
 
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         if constexpr (esize == 32) {
             code.blendvps(result, tmp);
         } else {
@@ -196,7 +196,7 @@ void EmitX64::EmitVectorUnsignedSaturatedAdd32(EmitContext& ctx, IR::Inst* inst)
 
     code.por(result, tmp);
 
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         code.ptest(tmp, tmp);
     } else {
         code.movmskps(overflow.cvt32(), tmp);
@@ -232,7 +232,7 @@ void EmitX64::EmitVectorUnsignedSaturatedAdd64(EmitContext& ctx, IR::Inst* inst)
 
     code.por(result, tmp);
 
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         code.ptest(tmp, tmp);
     } else {
         code.movmskpd(overflow.cvt32(), tmp);
@@ -273,7 +273,7 @@ void EmitX64::EmitVectorUnsignedSaturatedSub32(EmitContext& ctx, IR::Inst* inst)
     code.psubd(tmp, xmm0);
     code.psrad(tmp, 31);
 
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         code.ptest(tmp, tmp);
     } else {
         code.movmskps(overflow.cvt32(), tmp);
@@ -308,7 +308,7 @@ void EmitX64::EmitVectorUnsignedSaturatedSub64(EmitContext& ctx, IR::Inst* inst)
     code.psrad(tmp, 31);
     code.pshufd(tmp, tmp, 0b11110101);
 
-    if (code.HasSSE41()) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
         code.ptest(tmp, tmp);
     } else {
         code.movmskpd(overflow.cvt32(), tmp);

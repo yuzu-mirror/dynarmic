@@ -19,7 +19,7 @@ namespace Dynarmic::Backend::X64 {
 
 #define MAYBE_AVX(OPCODE, ...)                                          \
     [&] {                                                               \
-        if (code.HasAVX()) {                                            \
+        if (code.HasHostFeature(HostFeature::AVX)) {                    \
             code.v##OPCODE(__VA_ARGS__);                                \
         } else {                                                        \
             code.OPCODE(__VA_ARGS__);                                   \
