@@ -200,6 +200,9 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
             "vfp_VCVT_from_fixed",
             "asimd_VRECPS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
             "asimd_VRSQRTS", // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
+
+            // Coprocessor
+            "thumb32_CDP", "thumb32_LDC", "thumb32_MCR", "thumb32_MCRR", "thumb32_MRC", "thumb32_MRRC", "thumb32_STC",
         };
 
         for (const auto& [fn, bitstring] : list) {
