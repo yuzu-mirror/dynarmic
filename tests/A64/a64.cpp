@@ -89,6 +89,28 @@ TEST_CASE("A64: REV16", "[a64]") {
     REQUIRE(jit.GetPC() == 8);
 }
 
+TEST_CASE("A64: XTN", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x0e212803); // XTN v3.8b, v0.8h
+    env.code_mem.emplace_back(0x0e612824); // XTN v4.4h, v1.4s
+    env.code_mem.emplace_back(0x0ea12845); // XTN v5.2s, v2.2d
+    env.code_mem.emplace_back(0x14000000); // B .
+
+    jit.SetPC(0);
+    jit.SetVector(0, {0x3333222211110000, 0x7777666655554444});
+    jit.SetVector(1, {0x1111111100000000, 0x3333333322222222});
+    jit.SetVector(2, {0x0000000000000000, 0x1111111111111111});
+
+    env.ticks_left = 4;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(3) == Vector{0x7766554433221100, 0x0000000000000000});
+    REQUIRE(jit.GetVector(4) == Vector{0x3333222211110000, 0x0000000000000000});
+    REQUIRE(jit.GetVector(5) == Vector{0x1111111100000000, 0x0000000000000000});
+}
+
 TEST_CASE("A64: AND", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};

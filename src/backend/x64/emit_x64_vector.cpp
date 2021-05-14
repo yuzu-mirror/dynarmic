@@ -2084,10 +2084,19 @@ void EmitX64::EmitVectorNarrow16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorNarrow32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho)) {
+        const Xbyak::Xmm a = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+        code.vpmovdw(result, a);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+    
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm zeros = ctx.reg_alloc.ScratchXmm();
-
-    // TODO: AVX512F implementation
 
     code.pxor(zeros, zeros);
     if (code.HasHostFeature(HostFeature::SSE41)) {
@@ -2104,10 +2113,19 @@ void EmitX64::EmitVectorNarrow32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorNarrow64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho)) {
+        const Xbyak::Xmm a = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+        code.vpmovqd(result, a);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm zeros = ctx.reg_alloc.ScratchXmm();
-
-    // TODO: AVX512F implementation
 
     code.pxor(zeros, zeros);
     code.shufps(a, zeros, 0b00001000);
