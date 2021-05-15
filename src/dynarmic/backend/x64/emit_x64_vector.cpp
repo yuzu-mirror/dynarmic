@@ -4333,8 +4333,6 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
     const size_t table_size = std::count_if(table.begin(), table.end(), [](const auto& elem) { return !elem.IsVoid(); });
     const bool is_defaults_zero = !inst->GetArg(0).IsImmediate() && inst->GetArg(0).GetInst()->GetOpcode() == IR::Opcode::ZeroVector;
 
-    // TODO: AVX512VL implementation when available (VPERMB / VPERMI2B / VPERMT2B)
-
     if (code.HasHostFeature(HostFeature::SSSE3) && is_defaults_zero && table_size == 1) {
         const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
         const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
@@ -4384,6 +4382,33 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW)) {
+        const Xbyak::Xmm indicies = ctx.reg_alloc.UseXmm(args[2]);
+        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm masked = ctx.reg_alloc.ScratchXmm();
+
+        code.vpandd(masked, indicies, code.MConst(xword_b, 0xF0F0F0F0F0F0F0F0, 0xF0F0F0F0F0F0F0F0));
+
+        for (size_t i = 0; i < table_size; ++i) {
+            const Xbyak::Xmm xmm_table = ctx.reg_alloc.UseScratchXmm(table[i]);
+            const Xbyak::Opmask table_mask = k1;
+            const u64 table_index = Common::Replicate<u64>(i * 16, 8);
+
+            code.vpcmpeqb(table_mask, masked, code.MConst(xword, table_index, table_index));
+
+            if (table_index == 0 && is_defaults_zero) {
+                code.vpshufb(result | table_mask | T_z, xmm_table, indicies);
+            } else {
+                code.vpshufb(result | table_mask, xmm_table, indicies);
+            }
+
+            ctx.reg_alloc.Release(xmm_table);
+        }
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+    
     if (code.HasHostFeature(HostFeature::SSE41)) {
         const Xbyak::Xmm indicies = ctx.reg_alloc.UseXmm(args[2]);
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
