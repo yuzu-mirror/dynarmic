@@ -110,6 +110,98 @@ TEST_CASE("A64: XTN", "[a64]") {
     REQUIRE(jit.GetVector(5) == Vector{0x1111111100000000, 0x0000000000000000});
 }
 
+TEST_CASE("A64: TBL", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+    
+    env.code_mem.emplace_back(0x0e000100); // TBL v0.8b,  { v8.16b                           }, v0.8b
+    env.code_mem.emplace_back(0x4e010101); // TBL v1.16b, { v8.16b                           }, v1.16b
+    env.code_mem.emplace_back(0x0e022102); // TBL v2.8b,  { v8.16b, v9.16b                   }, v2.8b
+    env.code_mem.emplace_back(0x4e032103); // TBL v3.16b, { v8.16b, v9.16b                   }, v3.16b
+    env.code_mem.emplace_back(0x0e044104); // TBL v4.8b,  { v8.16b, v9.16b, v10.16b          }, v4.8b
+    env.code_mem.emplace_back(0x4e054105); // TBL v5.16b, { v8.16b, v9.16b, v10.16b          }, v5.16b
+    env.code_mem.emplace_back(0x0e066106); // TBL v6.8b,  { v8.16b, v9.16b, v10.16b, v11.16b }, v6.8b
+    env.code_mem.emplace_back(0x4e076107); // TBL v7.16b, { v8.16b, v9.16b, v10.16b, v11.16b }, v7.16b
+    env.code_mem.emplace_back(0x14000000); // B .
+
+    // Indices
+    // 'FF' intended to test out-of-index
+    jit.SetVector( 0, {0x000102030405'FF'07, 0x08090a0b0c0d0e0f});
+    jit.SetVector( 1, {0x000102030405'FF'07, 0x08090a0b0c0d0e0f});
+    jit.SetVector( 2, {0x100011011202'FF'03, 0x1404150516061707});
+    jit.SetVector( 3, {0x100011011202'FF'03, 0x1404150516061707});
+    jit.SetVector( 4, {0x201000211101'FF'12, 0x0233231303241404});
+    jit.SetVector( 5, {0x201000211101'FF'12, 0x0233231303241404});
+    jit.SetVector( 6, {0x403010004131'FF'01, 0x4232120243332303});
+    jit.SetVector( 7, {0x403010004131'FF'01, 0x4232120243332303});
+
+    // Table
+    jit.SetVector( 8, {0x7766554433221100, 0xffeeddccbbaa9988});
+    jit.SetVector( 9, {0xffffffffffffffff, 0xffffffffffffffff});
+    jit.SetVector(10, {0xeeeeeeeeeeeeeeee, 0xeeeeeeeeeeeeeeee});
+    jit.SetVector(11, {0xdddddddddddddddd, 0xdddddddddddddddd});
+
+    jit.SetPC(0);
+
+    env.ticks_left = 9;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(0) == Vector{0x001122334455'00'77, 0x0000000000000000});
+    REQUIRE(jit.GetVector(1) == Vector{0x001122334455'00'77, 0x8899aabbccddeeff});
+    REQUIRE(jit.GetVector(2) == Vector{0xff00ff11ff22'00'33, 0x0000000000000000});
+    REQUIRE(jit.GetVector(3) == Vector{0xff00ff11ff22'00'33, 0xff44ff55ff66ff77});
+    REQUIRE(jit.GetVector(4) == Vector{0xeeff00eeff11'00'ff, 0x0000000000000000});
+    REQUIRE(jit.GetVector(5) == Vector{0xeeff00eeff11'00'ff, 0x2200eeff33eeff44});
+    REQUIRE(jit.GetVector(6) == Vector{0x00ddff0000dd'00'11, 0x0000000000000000});
+    REQUIRE(jit.GetVector(7) == Vector{0x00ddff0000dd'00'11, 0x00ddff2200ddee33});
+}
+
+TEST_CASE("A64: TBX", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x0e001100); // TBX v0.8b,  { v8.16b                           }, v0.8b
+    env.code_mem.emplace_back(0x4e011101); // TBX v1.16b, { v8.16b                           }, v1.16b
+    env.code_mem.emplace_back(0x0e023102); // TBX v2.8b,  { v8.16b, v9.16b                   }, v2.8b
+    env.code_mem.emplace_back(0x4e033103); // TBX v3.16b, { v8.16b, v9.16b                   }, v3.16b
+    env.code_mem.emplace_back(0x0e045104); // TBX v4.8b,  { v8.16b, v9.16b, v10.16b          }, v4.8b
+    env.code_mem.emplace_back(0x4e055105); // TBX v5.16b, { v8.16b, v9.16b, v10.16b          }, v5.16b
+    env.code_mem.emplace_back(0x0e067106); // TBX v6.8b,  { v8.16b, v9.16b, v10.16b, v11.16b }, v6.8b
+    env.code_mem.emplace_back(0x4e077107); // TBX v7.16b, { v8.16b, v9.16b, v10.16b, v11.16b }, v7.16b
+    env.code_mem.emplace_back(0x14000000); // B .
+
+    // Indices
+    // 'FF' intended to test out-of-index
+    jit.SetVector( 0, {0x000102030405'FF'07, 0x08090a0b0c0d0e0f});
+    jit.SetVector( 1, {0x000102030405'FF'07, 0x08090a0b0c0d0e0f});
+    jit.SetVector( 2, {0x100011011202'FF'03, 0x1404150516061707});
+    jit.SetVector( 3, {0x100011011202'FF'03, 0x1404150516061707});
+    jit.SetVector( 4, {0x201000211101'FF'12, 0x0233231303241404});
+    jit.SetVector( 5, {0x201000211101'FF'12, 0x0233231303241404});
+    jit.SetVector( 6, {0x403010004131'FF'01, 0x4232120243332303});
+    jit.SetVector( 7, {0x403010004131'FF'01, 0x4232120243332303});
+
+    // Table
+    jit.SetVector( 8, {0x7766554433221100, 0xffeeddccbbaa9988});
+    jit.SetVector( 9, {0xffffffffffffffff, 0xffffffffffffffff});
+    jit.SetVector(10, {0xeeeeeeeeeeeeeeee, 0xeeeeeeeeeeeeeeee});
+    jit.SetVector(11, {0xdddddddddddddddd, 0xdddddddddddddddd});
+
+    jit.SetPC(0);
+
+    env.ticks_left = 9;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(0) == Vector{0x001122334455'FF'77, 0x0000000000000000});
+    REQUIRE(jit.GetVector(1) == Vector{0x001122334455'FF'77, 0x8899aabbccddeeff});
+    REQUIRE(jit.GetVector(2) == Vector{0xff00ff11ff22'FF'33, 0x0000000000000000});
+    REQUIRE(jit.GetVector(3) == Vector{0xff00ff11ff22'FF'33, 0xff44ff55ff66ff77});
+    REQUIRE(jit.GetVector(4) == Vector{0xeeff00eeff11'FF'ff, 0x0000000000000000});
+    REQUIRE(jit.GetVector(5) == Vector{0xeeff00eeff11'FF'ff, 0x2233eeff33eeff44});
+    REQUIRE(jit.GetVector(6) == Vector{0x40ddff0041dd'FF'11, 0x0000000000000000});
+    REQUIRE(jit.GetVector(7) == Vector{0x40ddff0041dd'FF'11, 0x42ddff2243ddee33});
+}
+
 TEST_CASE("A64: AND", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
