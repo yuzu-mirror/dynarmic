@@ -126,7 +126,7 @@ INST(arm_UDF,               "UNALLOCATED (VRINTA)",     "111100111-11--10----010
 INST(arm_UDF,               "UNALLOCATED (VRINTZ)",     "111100111-11--10----01011--0----")
 INST(arm_UDF,               "UNALLOCATED (VRINTM)",     "111100111-11--10----01101--0----")
 INST(arm_UDF,               "UNALLOCATED (VRINTP)",     "111100111-11--10----01111--0----")
-INST(arm_UDF,               "UNALLOCATED (VCVT half)",  "111100111-11--10----011-00-0----") // ASIMD
+INST(asimd_VCVT_half,       "VCVT (half-precision)",    "111100111D11zz10dddd011o00M0mmmm") // ASIMD
 INST(arm_UDF,               "UNALLOCATED",              "111100111-11--10----011-01-0----") // ASIMD
 INST(arm_UDF,               "UNALLOCATED (VCVTA)",      "111100111-11--11----0000---0----")
 INST(arm_UDF,               "UNALLOCATED (VCVTN)",      "111100111-11--11----0001---0----")

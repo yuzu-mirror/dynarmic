@@ -611,6 +611,40 @@ bool TranslatorVisitor::asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M, si
     return true;
 }
 
+bool TranslatorVisitor::asimd_VCVT_half(bool D, size_t sz, size_t Vd, bool half_to_single, bool M, size_t Vm) {
+    if (sz != 0b01) {
+        return UndefinedInstruction();
+    }
+    if (half_to_single && Common::Bit<0>(Vd)) {
+        return UndefinedInstruction();
+    }
+    if (!half_to_single && Common::Bit<0>(Vm)) {
+        return UndefinedInstruction();
+    }
+
+    const size_t esize = 8U << sz;
+    const size_t num_elements = 4;
+    const auto rounding_mode = FP::RoundingMode::ToNearest_TieEven; // StandardFPSCRValue().RMode
+    const auto d = ToVector(half_to_single, Vd, D);
+    const auto m = ToVector(!half_to_single, Vm, M);
+
+    const auto operand = ir.GetVector(m);
+    IR::U128 result = ir.ZeroVector();
+    for (size_t i = 0; i < num_elements; i++) {
+        if (half_to_single) {
+            const IR::U16 old_element = ir.VectorGetElement(esize, operand, i);
+            const IR::U32 new_element = ir.FPHalfToSingle(old_element, rounding_mode);
+            result = ir.VectorSetElement(esize * 2, result, i, new_element);
+        } else {
+            const IR::U32 old_element = ir.VectorGetElement(esize * 2, operand, i);
+            const IR::U16 new_element = ir.FPSingleToHalf(old_element, rounding_mode);
+            result = ir.VectorSetElement(esize, result, i, new_element);
+        }
+    }
+    ir.SetVector(d, result);
+    return true;
+}
+
 bool TranslatorVisitor::asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vm))) {
         return UndefinedInstruction();
