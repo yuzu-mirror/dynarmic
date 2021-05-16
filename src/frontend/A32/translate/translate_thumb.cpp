@@ -152,8 +152,11 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
 bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descriptor, u32 thumb_instruction) {
     TranslatorVisitor visitor{block, descriptor, {}};
 
-    const bool is_thumb_16 = IsThumb16(static_cast<u16>(thumb_instruction));
     bool should_continue = true;
+
+    const bool is_thumb_16 = IsThumb16(static_cast<u16>(thumb_instruction));
+    visitor.current_instruction_size = is_thumb_16 ? 2 : 4;
+
     if (is_thumb_16) {
         if (const auto decoder = DecodeThumb16<TranslatorVisitor>(static_cast<u16>(thumb_instruction))) {
             should_continue = decoder->get().call(visitor, static_cast<u16>(thumb_instruction));
