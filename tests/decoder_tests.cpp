@@ -17,7 +17,7 @@
 
 using namespace Dynarmic;
 
-TEST_CASE("ASIMD Decoder: Ensure table order correctness", "[decode][a32]") {
+TEST_CASE("ASIMD Decoder: Ensure table order correctness", "[decode][a32][.]") {
     const auto table = A32::GetASIMDDecodeTable<A32::TranslatorVisitor>();
 
     const auto get_ir = [](const A32::ASIMDMatcher<A32::TranslatorVisitor>& matcher, u32 instruction) {
