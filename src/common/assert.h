@@ -24,27 +24,29 @@ template <typename... Ts>
 
 } // namespace Dynarmic::Common
 
-#if defined(NDEBUG)
-    #if defined(__clang) || defined(__GNUC__)
-        #define UNREACHABLE() __builtin_unreachable()
-        #define ASSUME(expr) [&]{ if (!(expr)) __builtin_unreachable(); }()
-    #elif defined(_MSC_VER)
-        #define UNREACHABLE() __assume(0)
-        #define ASSUME(expr) __assume(expr)
-    #else
-        #define UNREACHABLE() ASSERT_FALSE("Unreachable code!")
-        #define ASSUME(expr)
-    #endif
+#if defined(__clang) || defined(__GNUC__)
+    #define ASSUME(expr) [&]{ if (!(expr)) __builtin_unreachable(); }()
+#elif defined(_MSC_VER)
+    #define ASSUME(expr) __assume(expr)
 #else
-    #define UNREACHABLE() ASSERT_FALSE("Unreachable code!")
     #define ASSUME(expr)
 #endif
 
 #ifdef DYNARMIC_IGNORE_ASSERTS
+    #if defined(__clang) || defined(__GNUC__)
+        #define UNREACHABLE() __builtin_unreachable()
+    #elif defined(_MSC_VER)
+        #define UNREACHABLE() __assume(0)
+    #else
+        #define UNREACHABLE()
+    #endif
+
     #define ASSERT(expr) ASSUME(expr)
     #define ASSERT_MSG(expr, ...) ASSUME(expr)
     #define ASSERT_FALSE(...) UNREACHABLE()
 #else
+    #define UNREACHABLE() ASSERT_FALSE("Unreachable code!")
+
     #define ASSERT(expr)                                                                        \
         [&]{                                                                                    \
             if (UNLIKELY(!(expr))) {                                                            \
