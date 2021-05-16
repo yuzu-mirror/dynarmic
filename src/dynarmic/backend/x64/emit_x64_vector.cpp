@@ -4333,6 +4333,64 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
     const size_t table_size = std::count_if(table.begin(), table.end(), [](const auto& elem) { return !elem.IsVoid(); });
     const bool is_defaults_zero = !inst->GetArg(0).IsImmediate() && inst->GetArg(0).GetInst()->GetOpcode() == IR::Opcode::ZeroVector;
 
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW | HostFeature::AVX512VBMI) && table_size == 4) {
+        const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
+        const Xbyak::Xmm defaults = ctx.reg_alloc.UseScratchXmm(args[0]);
+
+        const Xbyak::Opmask write_mask = k1;
+        const Xbyak::Opmask upper_mask = k2;
+
+        // Handle vector-table 0,1
+        const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+        const Xbyak::Xmm xmm_table1 = ctx.reg_alloc.UseScratchXmm(table[1]);
+
+        code.vptestnmb(write_mask, indicies, code.MConst(xword, 0xE0E0E0E0E0E0E0E0, 0xE0E0E0E0E0E0E0E0));
+        code.vpermi2b(indicies | write_mask, xmm_table0, xmm_table1);
+
+        ctx.reg_alloc.Release(xmm_table0);
+        ctx.reg_alloc.Release(xmm_table1);
+
+        if (is_defaults_zero) {
+            code.vmovdqu8(defaults | write_mask | T_z, indicies);
+        } else {
+            code.vmovdqu8(defaults | write_mask, indicies);
+        }
+
+        // Handle vector-table 2,3
+        // vpcmpuble
+        code.vpcmpub(upper_mask, indicies, code.MConst(xword, 0x3F3F3F3F3F3F3F3F, 0x3F3F3F3F3F3F3F3F), 2);
+        code.kandnw(write_mask, write_mask, upper_mask);
+
+        const Xbyak::Xmm xmm_table2 = ctx.reg_alloc.UseScratchXmm(table[2]);
+        const Xbyak::Xmm xmm_table3 = ctx.reg_alloc.UseScratchXmm(table[3]);
+
+        code.vpermi2b(indicies, xmm_table2, xmm_table3);
+        code.vmovdqu8(defaults | write_mask, indicies);
+
+        ctx.reg_alloc.DefineValue(inst, defaults);
+        return;
+    }
+
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW | HostFeature::AVX512VBMI) && table_size == 2) {
+        const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
+        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+        const Xbyak::Xmm xmm_table1 = ctx.reg_alloc.UseScratchXmm(table[1]);
+        const Xbyak::Opmask write_mask = k1;
+
+        code.vptestnmb(write_mask, indicies, code.MConst(xword, 0xE0E0E0E0E0E0E0E0, 0xE0E0E0E0E0E0E0E0));
+        code.vpermi2b(indicies, xmm_table0, xmm_table1);
+
+        if (is_defaults_zero) {
+            code.vmovdqu8(result | write_mask | T_z, indicies);
+        } else {
+            code.vmovdqu8(result | write_mask, indicies);
+        }
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     if (code.HasHostFeature(HostFeature::SSSE3) && is_defaults_zero && table_size == 1) {
         const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
         const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
@@ -4408,7 +4466,7 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
         ctx.reg_alloc.DefineValue(inst, result);
         return;
     }
-    
+
     if (code.HasHostFeature(HostFeature::SSE41)) {
         const Xbyak::Xmm indicies = ctx.reg_alloc.UseXmm(args[2]);
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);

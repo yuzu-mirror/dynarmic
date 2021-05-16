@@ -104,6 +104,8 @@ HostFeature GetHostFeatures() {
         features |= HostFeature::AVX512DQ;
     if (cpu_info.has(Cpu::tAVX512_BITALG))
         features |= HostFeature::AVX512BITALG;
+    if (cpu_info.has(Cpu::tAVX512VBMI))
+        features |= HostFeature::AVX512VBMI;
     if (cpu_info.has(Cpu::tPCLMULQDQ))
         features |= HostFeature::PCLMULQDQ;
     if (cpu_info.has(Cpu::tF16C))
