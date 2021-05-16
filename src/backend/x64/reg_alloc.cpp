@@ -714,7 +714,7 @@ Xbyak::Address RegAlloc::SpillToOpArg(HostLoc loc) {
     ASSERT_MSG(i < SpillCount, "Spill index greater than number of available spill locations");
 
     using namespace Xbyak::util;
-    return xword[rsp + reserved_stack_space + ABI_SHADOW_SPACE + offsetof(StackLayout, spill) + i * sizeof(u64) * 2];
+    return xword[rsp + reserved_stack_space + ABI_SHADOW_SPACE + offsetof(StackLayout, spill) + i * sizeof(StackLayout::spill[0])];
 }
 
 } // namespace Dynarmic::Backend::X64
