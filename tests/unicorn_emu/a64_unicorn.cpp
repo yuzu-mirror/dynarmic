@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "common/assert.h"
-#include "a64_unicorn.h"
+#include "./a64_unicorn.h"
+#include "dynarmic/common/assert.h"
 
 #define CHECKED(expr)                                                                              \
     do {                                                                                           \

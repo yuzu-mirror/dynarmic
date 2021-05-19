@@ -5,10 +5,9 @@
 
 #include <catch.hpp>
 
-#include <dynarmic/exclusive_monitor.h>
-
-#include "common/fp/fpsr.h"
-#include "testenv.h"
+#include "./testenv.h"
+#include "dynarmic/common/fp/fpsr.h"
+#include "dynarmic/interface/exclusive_monitor.h"
 
 using namespace Dynarmic;
 

@@ -7,9 +7,9 @@
 
 #include <catch.hpp>
 
-#include "rand_int.h"
-#include "testenv.h"
-#include "unicorn_emu/a64_unicorn.h"
+#include "../rand_int.h"
+#include "../unicorn_emu/a64_unicorn.h"
+#include "./testenv.h"
 
 using namespace Dynarmic;
 

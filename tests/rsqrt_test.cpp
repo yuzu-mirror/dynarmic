@@ -6,10 +6,10 @@
 #include <catch.hpp>
 #include <fmt/printf.h>
 
-#include "common/common_types.h"
-#include "common/fp/fpcr.h"
-#include "common/fp/fpsr.h"
-#include "common/fp/op/FPRSqrtEstimate.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/fp/fpsr.h"
+#include "dynarmic/common/fp/op/FPRSqrtEstimate.h"
 
 extern "C" u32 rsqrt_inaccurate(u32);
 extern "C" u32 rsqrt_full(u32);

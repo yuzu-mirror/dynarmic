@@ -8,11 +8,11 @@
 
 #include <catch.hpp>
 
-#include "common/common_types.h"
-#include "common/fp/fpcr.h"
-#include "common/fp/fpsr.h"
-#include "common/fp/unpacked.h"
-#include "rand_int.h"
+#include "../rand_int.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/fp/fpsr.h"
+#include "dynarmic/common/fp/unpacked.h"
 
 using namespace Dynarmic;
 using namespace Dynarmic::FP;

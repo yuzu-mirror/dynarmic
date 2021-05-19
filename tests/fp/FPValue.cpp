@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "common/fp/info.h"
+#include "dynarmic/common/fp/info.h"
 
 using namespace Dynarmic::FP;
 

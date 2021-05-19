@@ -140,7 +140,7 @@ endif()
 add_subdirectory(externals)
 
 # Dynarmic project files
-add_subdirectory(src)
+add_subdirectory(src/dynarmic)
 if (DYNARMIC_TESTS)
     add_subdirectory(tests)
 endif()

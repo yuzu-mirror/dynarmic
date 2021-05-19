@@ -4,10 +4,11 @@
  */
 
 #include <type_traits>
-#include "A32/testenv.h"
-#include "a32_unicorn.h"
-#include "common/assert.h"
-#include "common/bit_util.h"
+
+#include "../A32/testenv.h"
+#include "./a32_unicorn.h"
+#include "dynarmic/common/assert.h"
+#include "dynarmic/common/bit_util.h"
 
 #define CHECKED(expr)                                                                              \
     do {                                                                                           \

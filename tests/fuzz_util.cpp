@@ -8,11 +8,11 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include "common/assert.h"
-#include "common/fp/fpcr.h"
-#include "common/fp/rounding_mode.h"
-#include "fuzz_util.h"
-#include "rand_int.h"
+#include "./fuzz_util.h"
+#include "./rand_int.h"
+#include "dynarmic/common/assert.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/fp/rounding_mode.h"
 
 using namespace Dynarmic;
 

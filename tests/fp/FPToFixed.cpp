@@ -8,12 +8,12 @@
 
 #include <catch.hpp>
 
-#include "common/common_types.h"
-#include "common/fp/fpcr.h"
-#include "common/fp/fpsr.h"
-#include "common/fp/op.h"
-#include "common/fp/rounding_mode.h"
-#include "rand_int.h"
+#include "../rand_int.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/fp/fpsr.h"
+#include "dynarmic/common/fp/op.h"
+#include "dynarmic/common/fp/rounding_mode.h"
 
 using namespace Dynarmic;
 using namespace Dynarmic::FP;

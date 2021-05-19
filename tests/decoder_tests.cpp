@@ -9,11 +9,11 @@
 
 #include <catch.hpp>
 
-#include <dynarmic/A32/config.h>
-#include "common/assert.h"
-#include "frontend/A32/decoder/asimd.h"
-#include "frontend/A32/translate/impl/translate.h"
-#include "ir/opcodes.h"
+#include "dynarmic/common/assert.h"
+#include "dynarmic/frontend/A32/decoder/asimd.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
+#include "dynarmic/interface/A32/config.h"
+#include "dynarmic/ir/opcodes.h"
 
 using namespace Dynarmic;
 

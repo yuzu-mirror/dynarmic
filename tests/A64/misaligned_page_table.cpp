@@ -5,9 +5,8 @@
 
 #include <catch.hpp>
 
-#include <dynarmic/A64/a64.h>
-
-#include "testenv.h"
+#include "./testenv.h"
+#include "dynarmic/interface/A64/a64.h"
 
 TEST_CASE("misaligned load/store do not use page_table when detect_misaligned_access_via_page_table is set", "[a64]") {
     A64TestEnv env;

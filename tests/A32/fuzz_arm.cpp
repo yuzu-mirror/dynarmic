@@ -11,24 +11,24 @@
 #include <vector>
 
 #include <catch.hpp>
-#include <dynarmic/A32/a32.h>
 
-#include "common/common_types.h"
-#include "common/fp/fpcr.h"
-#include "common/fp/fpsr.h"
-#include "common/llvm_disassemble.h"
-#include "common/scope_exit.h"
-#include "frontend/A32/ITState.h"
-#include "frontend/A32/location_descriptor.h"
-#include "frontend/A32/translate/translate.h"
-#include "frontend/A32/types.h"
-#include "fuzz_util.h"
-#include "ir/basic_block.h"
-#include "ir/location_descriptor.h"
-#include "ir/opcodes.h"
-#include "rand_int.h"
-#include "testenv.h"
-#include "unicorn_emu/a32_unicorn.h"
+#include "../fuzz_util.h"
+#include "../rand_int.h"
+#include "../unicorn_emu/a32_unicorn.h"
+#include "./testenv.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/fp/fpsr.h"
+#include "dynarmic/common/llvm_disassemble.h"
+#include "dynarmic/common/scope_exit.h"
+#include "dynarmic/frontend/A32/ITState.h"
+#include "dynarmic/frontend/A32/location_descriptor.h"
+#include "dynarmic/frontend/A32/translate/translate.h"
+#include "dynarmic/frontend/A32/types.h"
+#include "dynarmic/interface/A32/a32.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/location_descriptor.h"
+#include "dynarmic/ir/opcodes.h"
 
 // Must be declared last for all necessary operator<< to be declared prior to this.
 #include <fmt/format.h>
@@ -82,9 +82,9 @@ u32 GenRandomArmInst(u32 pc, bool is_last_inst) {
     } instructions = []{
         const std::vector<std::tuple<std::string, const char*>> list {
 #define INST(fn, name, bitstring) {#fn, bitstring},
-#include "frontend/A32/decoder/arm.inc"
-#include "frontend/A32/decoder/asimd.inc"
-#include "frontend/A32/decoder/vfp.inc"
+#include "dynarmic/frontend/A32/decoder/arm.inc"
+#include "dynarmic/frontend/A32/decoder/asimd.inc"
+#include "dynarmic/frontend/A32/decoder/vfp.inc"
 #undef INST
         };
 
@@ -153,20 +153,20 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
     } instructions = []{
         const std::vector<std::tuple<std::string, const char*>> list {
 #define INST(fn, name, bitstring) {#fn, bitstring},
-#include "frontend/A32/decoder/thumb16.inc"
-#include "frontend/A32/decoder/thumb32.inc"
+#include "dynarmic/frontend/A32/decoder/thumb16.inc"
+#include "dynarmic/frontend/A32/decoder/thumb32.inc"
 #undef INST
         };
 
         const std::vector<std::tuple<std::string, const char*>> vfp_list {
 #define INST(fn, name, bitstring) {#fn, bitstring},
-#include "frontend/A32/decoder/vfp.inc"
+#include "dynarmic/frontend/A32/decoder/vfp.inc"
 #undef INST
         };
 
         const std::vector<std::tuple<std::string, const char*>> asimd_list {
 #define INST(fn, name, bitstring) {#fn, bitstring},
-#include "frontend/A32/decoder/asimd.inc"
+#include "dynarmic/frontend/A32/decoder/asimd.inc"
 #undef INST
         };
 

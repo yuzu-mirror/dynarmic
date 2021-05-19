@@ -14,20 +14,19 @@
 
 #include <catch.hpp>
 
-#include <dynarmic/A32/a32.h>
-
-#include "common/bit_util.h"
-#include "common/common_types.h"
-#include "frontend/A32/disassembler/disassembler.h"
-#include "frontend/A32/FPSCR.h"
-#include "frontend/A32/location_descriptor.h"
-#include "frontend/A32/PSR.h"
-#include "frontend/A32/translate/translate.h"
-#include "ir/basic_block.h"
-#include "ir/opt/passes.h"
-#include "rand_int.h"
-#include "testenv.h"
-#include "unicorn_emu/a32_unicorn.h"
+#include "../rand_int.h"
+#include "../unicorn_emu/a32_unicorn.h"
+#include "./testenv.h"
+#include "dynarmic/common/bit_util.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/frontend/A32/disassembler/disassembler.h"
+#include "dynarmic/frontend/A32/FPSCR.h"
+#include "dynarmic/frontend/A32/location_descriptor.h"
+#include "dynarmic/frontend/A32/PSR.h"
+#include "dynarmic/frontend/A32/translate/translate.h"
+#include "dynarmic/interface/A32/a32.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/opt/passes.h"
 
 using namespace Dynarmic;
 

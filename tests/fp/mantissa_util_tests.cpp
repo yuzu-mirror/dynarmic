@@ -8,10 +8,10 @@
 
 #include <catch.hpp>
 
-#include "common/common_types.h"
-#include "common/fp/mantissa_util.h"
-#include "common/safe_ops.h"
-#include "rand_int.h"
+#include "../rand_int.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/mantissa_util.h"
+#include "dynarmic/common/safe_ops.h"
 
 using namespace Dynarmic;
 using namespace Dynarmic::FP;

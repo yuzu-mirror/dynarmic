@@ -4,10 +4,10 @@
  */
 
 #include <catch.hpp>
-#include <dynarmic/A32/a32.h>
 
-#include "A32/testenv.h"
-#include "frontend/A32/location_descriptor.h"
+#include "./testenv.h"
+#include "dynarmic/frontend/A32/location_descriptor.h"
+#include "dynarmic/interface/A32/a32.h"
 
 using namespace Dynarmic;
 

@@ -12,24 +12,23 @@
 #include <optional>
 #include <string>
 
-#include <dynarmic/A32/a32.h>
-#include <dynarmic/A32/disassembler.h>
-
-#include "common/bit_util.h"
-#include "common/common_types.h"
-#include "common/llvm_disassemble.h"
-#include "frontend/A32/decoder/arm.h"
-#include "frontend/A32/decoder/asimd.h"
-#include "frontend/A32/decoder/vfp.h"
-#include "frontend/A32/location_descriptor.h"
-#include "frontend/A32/translate/impl/translate.h"
-#include "frontend/A32/translate/translate.h"
-#include "frontend/A64/decoder/a64.h"
-#include "frontend/A64/location_descriptor.h"
-#include "frontend/A64/translate/impl/impl.h"
-#include "frontend/A64/translate/translate.h"
-#include "ir/basic_block.h"
-#include "ir/opt/passes.h"
+#include "dynarmic/common/bit_util.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/llvm_disassemble.h"
+#include "dynarmic/frontend/A32/decoder/arm.h"
+#include "dynarmic/frontend/A32/decoder/asimd.h"
+#include "dynarmic/frontend/A32/decoder/vfp.h"
+#include "dynarmic/frontend/A32/location_descriptor.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
+#include "dynarmic/frontend/A32/translate/translate.h"
+#include "dynarmic/frontend/A64/decoder/a64.h"
+#include "dynarmic/frontend/A64/location_descriptor.h"
+#include "dynarmic/frontend/A64/translate/impl/impl.h"
+#include "dynarmic/frontend/A64/translate/translate.h"
+#include "dynarmic/interface/A32/a32.h"
+#include "dynarmic/interface/A32/disassembler.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/opt/passes.h"
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>

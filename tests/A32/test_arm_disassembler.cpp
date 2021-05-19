@@ -5,7 +5,7 @@
 
 #include <catch.hpp>
 
-#include "frontend/A32/disassembler/disassembler.h"
+#include "dynarmic/frontend/A32/disassembler/disassembler.h"
 
 using Dynarmic::A32::DisassembleArm;
 

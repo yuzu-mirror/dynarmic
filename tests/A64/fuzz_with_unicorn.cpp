@@ -10,22 +10,22 @@
 
 #include <catch.hpp>
 
-#include "common/common_types.h"
-#include "common/fp/fpcr.h"
-#include "common/fp/fpsr.h"
-#include "common/llvm_disassemble.h"
-#include "common/scope_exit.h"
-#include "frontend/A64/decoder/a64.h"
-#include "frontend/A64/location_descriptor.h"
-#include "frontend/A64/translate/translate.h"
-#include "frontend/A64/types.h"
-#include "fuzz_util.h"
-#include "ir/basic_block.h"
-#include "ir/opcodes.h"
-#include "ir/opt/passes.h"
-#include "rand_int.h"
-#include "testenv.h"
-#include "unicorn_emu/a64_unicorn.h"
+#include "../fuzz_util.h"
+#include "../rand_int.h"
+#include "../unicorn_emu/a64_unicorn.h"
+#include "./testenv.h"
+#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/fp/fpsr.h"
+#include "dynarmic/common/llvm_disassemble.h"
+#include "dynarmic/common/scope_exit.h"
+#include "dynarmic/frontend/A64/decoder/a64.h"
+#include "dynarmic/frontend/A64/location_descriptor.h"
+#include "dynarmic/frontend/A64/translate/translate.h"
+#include "dynarmic/frontend/A64/types.h"
+#include "dynarmic/ir/basic_block.h"
+#include "dynarmic/ir/opcodes.h"
+#include "dynarmic/ir/opt/passes.h"
 
 // Must be declared last for all necessary operator<< to be declared prior to this.
 #include <fmt/format.h>
@@ -62,7 +62,7 @@ static u32 GenRandomInst(u64 pc, bool is_last_inst) {
     } instructions = []{
         const std::vector<std::tuple<std::string, const char*>> list {
 #define INST(fn, name, bitstring) {#fn, bitstring},
-#include "frontend/A64/decoder/a64.inc"
+#include "dynarmic/frontend/A64/decoder/a64.inc"
 #undef INST
         };
 
@@ -111,7 +111,7 @@ static u32 GenFloatInst(u64 pc, bool is_last_inst) {
     static const std::vector<InstructionGenerator> instruction_generators = []{
         const std::vector<std::tuple<std::string, std::string, const char*>> list {
 #define INST(fn, name, bitstring) {#fn, #name, bitstring},
-#include "frontend/A64/decoder/a64.inc"
+#include "dynarmic/frontend/A64/decoder/a64.inc"
 #undef INST
         };
 

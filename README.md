@@ -84,8 +84,8 @@ The below is a minimal example. Bring-your-own memory system.
 #include <cstdio>
 #include <exception>
 
-#include <dynarmic/A32/a32.h>
-#include <dynarmic/A32/config.h>
+#include "dynarmic/interface/A32/a32.h"
+#include "dynarmic/interface/A32/config.h"
 
 using u8 = std::uint8_t;
 using u16 = std::uint16_t;
