@@ -32,6 +32,68 @@ TEST_CASE("A64: ADD", "[a64]") {
     REQUIRE(jit.GetPC() == 4);
 }
 
+TEST_CASE("A64: VQADD", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x6e210c02); // UQADD v2.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x4e210c03); // SQADD v3.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x6e610c04); // UQADD v4.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x4e610c05); // SQADD v5.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x6ea10c06); // UQADD v6.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x4ea10c07); // SQADD v7.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x6ee10c08); // UQADD v8.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x4ee10c09); // SQADD v9.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x14000000); // B .
+
+    jit.SetVector(0, {0x7F7F7F7F7F7F7F7F, 0x7FFFFFFF7FFF7FFF});
+    jit.SetVector(1, {0x8010FF00807F0000, 0x8000000080008000});
+    jit.SetPC(0);
+
+    env.ticks_left = 9;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(2) == Vector{0xff8fff7ffffe7f7f, 0xffffffffffffffff});
+    REQUIRE(jit.GetVector(3) == Vector{0xff7f7e7fff7f7f7f, 0xffffffffffffffff});
+    REQUIRE(jit.GetVector(4) == Vector{0xff8ffffffffe7f7f, 0xffffffffffffffff});
+    REQUIRE(jit.GetVector(5) == Vector{0xff8f7e7ffffe7f7f, 0xffffffffffffffff});
+    REQUIRE(jit.GetVector(6) == Vector{0xff907e7ffffe7f7f, 0xffffffffffffffff});
+    REQUIRE(jit.GetVector(7) == Vector{0xff907e7ffffe7f7f, 0xffffffffffffffff});
+    REQUIRE(jit.GetVector(8) == Vector{0xff907e7ffffe7f7f, 0xffffffffffffffff});
+    REQUIRE(jit.GetVector(9) == Vector{0xff907e7ffffe7f7f, 0xffffffffffffffff});
+}
+
+TEST_CASE("A64: VQSUB", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x6e212c02); // UQSUB v2.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x4e212c03); // SQSUB v3.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x6e612c04); // UQSUB v4.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x4e612c05); // SQSUB v5.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x6ea12c06); // UQSUB v6.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x4ea12c07); // SQSUB v7.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x6ee12c08); // UQSUB v8.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x4ee12c09); // SQSUB v9.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x14000000); // B .
+
+    jit.SetVector(0, {0x8010FF00807F0000, 0x8000000080008000});
+    jit.SetVector(1, {0x7F7F7F7F7F7F7F7F, 0x7FFFFFFF7FFF7FFF});
+    jit.SetPC(0);
+
+    env.ticks_left = 9;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(2) == Vector{0x0100800001000000, 0x0100000001000100});
+    REQUIRE(jit.GetVector(3) == Vector{0x8091808180008181, 0x8001010180018001});
+    REQUIRE(jit.GetVector(4) == Vector{0x00917f8101000000, 0x0001000000010001});
+    REQUIRE(jit.GetVector(5) == Vector{0x8000800080008081, 0x8000000180008000});
+    REQUIRE(jit.GetVector(6) == Vector{0x00917f8100ff8081, 0x0000000100010001});
+    REQUIRE(jit.GetVector(7) == Vector{0x8000000080000000, 0x8000000080000000});
+    REQUIRE(jit.GetVector(8) == Vector{0x00917f8100ff8081, 0x0000000100010001});
+    REQUIRE(jit.GetVector(9) == Vector{0x8000000000000000, 0x8000000000000000});
+}
+
 TEST_CASE("A64: REV", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
