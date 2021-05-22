@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "dynarmic/frontend/A32/translate/translate_callbacks.h"
 #include "dynarmic/interface/A32/arch_version.h"
 #include "dynarmic/interface/optimization_flags.h"
 
@@ -53,12 +54,16 @@ enum class Exception {
 };
 
 /// These function pointers may be inserted into compiled code.
-struct UserCallbacks {
+struct UserCallbacks : public TranslateCallbacks {
     virtual ~UserCallbacks() = default;
 
     // All reads through this callback are 4-byte aligned.
     // Memory must be interpreted as little endian.
-    virtual std::uint32_t MemoryReadCode(VAddr vaddr) { return MemoryRead32(vaddr); }
+    std::uint32_t MemoryReadCode(VAddr vaddr) override { return MemoryRead32(vaddr); }
+
+    // Thus function is called before the instruction at pc is interpreted.
+    // IR code can be emitted by the callee prior to translation of the instruction.
+    void PreCodeTranslationHook(bool /*is_thumb*/, VAddr /*pc*/, A32::IREmitter& /*ir*/) override {}
 
     // Reads through these callbacks may not be aligned.
     // Memory must be interpreted as if ENDIANSTATE == 0, endianness will be corrected by the JIT.
@@ -83,7 +88,7 @@ struct UserCallbacks {
     // return the same value at any point in time for this vaddr. The JIT may use this information
     // in optimizations.
     // A conservative implementation that always returns false is safe.
-    virtual bool IsReadOnlyMemory(VAddr /* vaddr */) { return false; }
+    virtual bool IsReadOnlyMemory(VAddr /*vaddr*/) { return false; }
 
     /// The interpreter must execute exactly num_instructions starting from PC.
     virtual void InterpreterFallback(VAddr pc, size_t num_instructions) = 0;

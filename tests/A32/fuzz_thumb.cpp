@@ -19,10 +19,10 @@
 #include "./testenv.h"
 #include "dynarmic/common/bit_util.h"
 #include "dynarmic/common/common_types.h"
-#include "dynarmic/frontend/A32/disassembler/disassembler.h"
 #include "dynarmic/frontend/A32/FPSCR.h"
-#include "dynarmic/frontend/A32/location_descriptor.h"
 #include "dynarmic/frontend/A32/PSR.h"
+#include "dynarmic/frontend/A32/disassembler/disassembler.h"
+#include "dynarmic/frontend/A32/location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/translate.h"
 #include "dynarmic/interface/A32/a32.h"
 #include "dynarmic/ir/basic_block.h"
@@ -177,7 +177,7 @@ static void RunInstance(size_t run_number, ThumbTestEnv& test_env, A32Unicorn<Th
         size_t num_insts = 0;
         while (num_insts < instructions_to_execute_count) {
             A32::LocationDescriptor descriptor = {u32(num_insts * 4), cpsr, A32::FPSCR{}};
-            IR::Block ir_block = A32::Translate(descriptor, [&test_env](u32 vaddr) { return test_env.MemoryReadCode(vaddr); }, {});
+            IR::Block ir_block = A32::Translate(descriptor, &test_env, {});
             Optimization::A32GetSetElimination(ir_block);
             Optimization::DeadCodeElimination(ir_block);
             Optimization::A32ConstantMemoryReads(ir_block, &test_env);

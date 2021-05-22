@@ -11,13 +11,14 @@
 #include "dynarmic/frontend/A32/translate/conditional_state.h"
 #include "dynarmic/frontend/A32/translate/impl/translate.h"
 #include "dynarmic/frontend/A32/translate/translate.h"
+#include "dynarmic/frontend/A32/translate/translate_callbacks.h"
 #include "dynarmic/frontend/A32/types.h"
 #include "dynarmic/interface/A32/config.h"
 #include "dynarmic/ir/basic_block.h"
 
 namespace Dynarmic::A32 {
 
-IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, const TranslationOptions& options) {
+IR::Block TranslateArm(LocationDescriptor descriptor, TranslateCallbacks* tcb, const TranslationOptions& options) {
     const bool single_step = descriptor.SingleStepping();
 
     IR::Block block{descriptor};
@@ -26,8 +27,10 @@ IR::Block TranslateArm(LocationDescriptor descriptor, MemoryReadCodeFuncType mem
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();
-        const u32 arm_instruction = memory_read_code(arm_pc);
+        const u32 arm_instruction = tcb->MemoryReadCode(arm_pc);
         visitor.current_instruction_size = 4;
+
+        tcb->PreCodeTranslationHook(false, arm_pc, visitor.ir);
 
         if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(arm_instruction)) {
             should_continue = vfp_decoder->get().call(visitor, arm_instruction);

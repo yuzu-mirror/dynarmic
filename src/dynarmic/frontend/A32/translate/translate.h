@@ -14,6 +14,7 @@ class Block;
 namespace Dynarmic::A32 {
 
 class LocationDescriptor;
+struct TranslateCallbacks;
 
 using MemoryReadCodeFuncType = std::function<u32(u32 vaddr)>;
 
@@ -34,11 +35,11 @@ struct TranslationOptions {
 /**
  * This function translates instructions in memory into our intermediate representation.
  * @param descriptor The starting location of the basic block. Includes information like PC, Thumb state, &c.
- * @param memory_read_code The function we should use to read emulated memory.
+ * @param tcb The callbacks we should use to read emulated memory.
  * @param options Configures how certain instructions are translated.
  * @return A translated basic block in the intermediate representation.
  */
-IR::Block Translate(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, const TranslationOptions& options);
+IR::Block Translate(LocationDescriptor descriptor, TranslateCallbacks* tcb, const TranslationOptions& options);
 
 /**
  * This function translates a single provided instruction into our intermediate representation.

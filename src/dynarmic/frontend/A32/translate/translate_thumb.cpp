@@ -16,6 +16,7 @@
 #include "dynarmic/frontend/A32/translate/conditional_state.h"
 #include "dynarmic/frontend/A32/translate/impl/translate.h"
 #include "dynarmic/frontend/A32/translate/translate.h"
+#include "dynarmic/frontend/A32/translate/translate_callbacks.h"
 #include "dynarmic/frontend/imm.h"
 #include "dynarmic/interface/A32/config.h"
 
@@ -40,8 +41,8 @@ bool IsUnconditionalInstruction(bool is_thumb_16, u32 instruction) {
     return false;
 }
 
-std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryReadCodeFuncType memory_read_code) {
-    u32 first_part = memory_read_code(arm_pc & 0xFFFFFFFC);
+std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, TranslateCallbacks* tcb) {
+    u32 first_part = tcb->MemoryReadCode(arm_pc & 0xFFFFFFFC);
     if ((arm_pc & 0x2) != 0) {
         first_part >>= 16;
     }
@@ -55,7 +56,7 @@ std::tuple<u32, ThumbInstSize> ReadThumbInstruction(u32 arm_pc, MemoryReadCodeFu
     // 32-bit thumb instruction
     // These always start with 0b11101, 0b11110 or 0b11111.
 
-    u32 second_part = memory_read_code((arm_pc + 2) & 0xFFFFFFFC);
+    u32 second_part = tcb->MemoryReadCode((arm_pc + 2) & 0xFFFFFFFC);
     if (((arm_pc + 2) & 0x2) != 0) {
         second_part >>= 16;
     }
@@ -84,7 +85,7 @@ bool MaybeVFPOrASIMDInstruction(u32 thumb_instruction) {
 
 } // local namespace
 
-IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType memory_read_code, const TranslationOptions& options) {
+IR::Block TranslateThumb(LocationDescriptor descriptor, TranslateCallbacks* tcb, const TranslationOptions& options) {
     const bool single_step = descriptor.SingleStepping();
 
     IR::Block block{descriptor};
@@ -93,9 +94,11 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, MemoryReadCodeFuncType m
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();
-        const auto [thumb_instruction, inst_size] = ReadThumbInstruction(arm_pc, memory_read_code);
+        const auto [thumb_instruction, inst_size] = ReadThumbInstruction(arm_pc, tcb);
         const bool is_thumb_16 = inst_size == ThumbInstSize::Thumb16;
         visitor.current_instruction_size = is_thumb_16 ? 2 : 4;
+
+        tcb->PreCodeTranslationHook(false, arm_pc, visitor.ir);
 
         if (IsUnconditionalInstruction(is_thumb_16, thumb_instruction) || visitor.ThumbConditionPassed()) {
             if (is_thumb_16) {
