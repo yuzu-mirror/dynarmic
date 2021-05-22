@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
-bool TranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, Imm<1> d, size_t Vd,
-                                          Imm<4> cmode, bool Q, bool op, Imm<1> e, Imm<1> f, Imm<1> g, Imm<1> h) {
+bool TranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, Imm<1> d, size_t Vd, Imm<4> cmode, bool Q, bool op, Imm<1> e, Imm<1> f, Imm<1> g, Imm<1> h) {
     if (Q && Common::Bit<0>(Vd)) {
         return UndefinedInstruction();
     }
@@ -68,31 +66,46 @@ bool TranslatorVisitor::asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, Imm
     };
 
     switch (concatenate(cmode, Imm<1>{op}).ZeroExtend()) {
-    case 0b00000: case 0b00100:
-    case 0b01000: case 0b01100:
-    case 0b10000: case 0b10100:
-    case 0b11000: case 0b11010:
-    case 0b11100: case 0b11101:
+    case 0b00000:
+    case 0b00100:
+    case 0b01000:
+    case 0b01100:
+    case 0b10000:
+    case 0b10100:
+    case 0b11000:
+    case 0b11010:
+    case 0b11100:
+    case 0b11101:
     case 0b11110:
         return mov();
     case 0b11111:
         return UndefinedInstruction();
-    case 0b00001: case 0b00101:
-    case 0b01001: case 0b01101:
-    case 0b10001: case 0b10101:
-    case 0b11001: case 0b11011:
+    case 0b00001:
+    case 0b00101:
+    case 0b01001:
+    case 0b01101:
+    case 0b10001:
+    case 0b10101:
+    case 0b11001:
+    case 0b11011:
         return mvn();
-    case 0b00010: case 0b00110:
-    case 0b01010: case 0b01110:
-    case 0b10010: case 0b10110:
+    case 0b00010:
+    case 0b00110:
+    case 0b01010:
+    case 0b01110:
+    case 0b10010:
+    case 0b10110:
         return orr();
-    case 0b00011: case 0b00111:
-    case 0b01011: case 0b01111:
-    case 0b10011: case 0b10111:
+    case 0b00011:
+    case 0b00111:
+    case 0b01011:
+    case 0b01111:
+    case 0b10011:
+    case 0b10111:
         return bic();
     }
 
     UNREACHABLE();
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

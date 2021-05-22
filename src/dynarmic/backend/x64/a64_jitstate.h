@@ -18,8 +18,8 @@ namespace Dynarmic::Backend::X64 {
 class BlockOfCode;
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4324) // Structure was padded due to alignment specifier
+#    pragma warning(push)
+#    pragma warning(disable : 4324)  // Structure was padded due to alignment specifier
 #endif
 
 struct A64JitState {
@@ -40,7 +40,7 @@ struct A64JitState {
         cpsr_nzcv = NZCV::ToX64(new_pstate);
     }
 
-    alignas(16) std::array<u64, 64> vec{}; // Extension registers.
+    alignas(16) std::array<u64, 64> vec{};  // Extension registers.
 
     // For internal use (See: BlockOfCode::RunCode)
     u32 guest_MXCSR = 0x00001f80;
@@ -51,7 +51,7 @@ struct A64JitState {
     static constexpr u64 RESERVATION_GRANULE_MASK = 0xFFFF'FFFF'FFFF'FFF0ull;
     u8 exclusive_state = 0;
 
-    static constexpr size_t RSBSize = 8; // MUST be a power of 2.
+    static constexpr size_t RSBSize = 8;  // MUST be a power of 2.
     static constexpr size_t RSBPtrMask = RSBSize - 1;
     u32 rsb_ptr = 0;
     std::array<u64, RSBSize> rsb_location_descriptors;
@@ -77,9 +77,9 @@ struct A64JitState {
 };
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
 using CodePtr = const void*;
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

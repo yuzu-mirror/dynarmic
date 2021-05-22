@@ -97,8 +97,8 @@ bool IntegerConvertToFloat(TranslatorVisitor& v, bool Q, bool sz, Vec Vn, Vec Vd
 
     const IR::U128 operand = v.V(datasize, Vn);
     const IR::U128 result = signedness == Signedness::Signed
-                          ? v.ir.FPVectorFromSignedFixed(esize, operand, 0, rounding_mode)
-                          : v.ir.FPVectorFromUnsignedFixed(esize, operand, 0, rounding_mode);
+                              ? v.ir.FPVectorFromSignedFixed(esize, operand, 0, rounding_mode)
+                              : v.ir.FPVectorFromUnsignedFixed(esize, operand, 0, rounding_mode);
 
     v.V(datasize, Vd, result);
     return true;
@@ -114,8 +114,8 @@ bool FloatConvertToInteger(TranslatorVisitor& v, bool Q, bool sz, Vec Vn, Vec Vd
 
     const IR::U128 operand = v.V(datasize, Vn);
     const IR::U128 result = signedness == Signedness::Signed
-                          ? v.ir.FPVectorToSignedFixed(esize, operand, 0, rounding_mode)
-                          : v.ir.FPVectorToUnsignedFixed(esize, operand, 0, rounding_mode);
+                              ? v.ir.FPVectorToSignedFixed(esize, operand, 0, rounding_mode)
+                              : v.ir.FPVectorToUnsignedFixed(esize, operand, 0, rounding_mode);
 
     v.V(datasize, Vd, result);
     return true;
@@ -168,8 +168,7 @@ enum class PairedAddLongExtraBehavior {
     Accumulate,
 };
 
-bool PairedAddLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vn, Vec Vd, Signedness sign,
-                   PairedAddLongExtraBehavior behavior) {
+bool PairedAddLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vn, Vec Vd, Signedness sign, PairedAddLongExtraBehavior behavior) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -198,7 +197,7 @@ bool PairedAddLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vn, Vec Vd, Si
     return true;
 }
 
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::CLS_asimd(bool Q, Imm<2> size, Vec Vn, Vec Vd) {
     if (size == 0b11) {
@@ -524,7 +523,7 @@ bool TranslatorVisitor::FRINTI_1(bool Q, Vec Vn, Vec Vd) {
 }
 
 bool TranslatorVisitor::FRINTI_2(bool Q, bool sz, Vec Vn, Vec Vd) {
-    return FloatRoundToIntegral(*this, Q, sz, Vn, Vd,ir.current_location->FPCR().RMode(), false);
+    return FloatRoundToIntegral(*this, Q, sz, Vn, Vd, ir.current_location->FPCR().RMode(), false);
 }
 
 bool TranslatorVisitor::FRECPE_3(bool Q, Vec Vn, Vec Vd) {
@@ -740,14 +739,14 @@ bool TranslatorVisitor::REV64_asimd(bool Q, Imm<2> size, Vec Vn, Vec Vd) {
                                   ir.VectorLogicalShiftLeft(esize, data, shift));
 
     switch (zext_size) {
-        case 0: // 8-bit elements
-            result = ir.VectorShuffleLowHalfwords(result, 0b00011011);
-            result = ir.VectorShuffleHighHalfwords(result, 0b00011011);
-            break;
-        case 1: // 16-bit elements
-            result = ir.VectorShuffleLowHalfwords(result, 0b01001110);
-            result = ir.VectorShuffleHighHalfwords(result, 0b01001110);
-            break;
+    case 0:  // 8-bit elements
+        result = ir.VectorShuffleLowHalfwords(result, 0b00011011);
+        result = ir.VectorShuffleHighHalfwords(result, 0b00011011);
+        break;
+    case 1:  // 16-bit elements
+        result = ir.VectorShuffleLowHalfwords(result, 0b01001110);
+        result = ir.VectorShuffleHighHalfwords(result, 0b01001110);
+        break;
     }
 
     V(datasize, Vd, result);
@@ -882,4 +881,4 @@ bool TranslatorVisitor::SHLL(bool Q, Imm<2> size, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

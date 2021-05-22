@@ -131,4 +131,4 @@ bool TranslatorVisitor::thumb32_LDRT(Reg n, Reg t, Imm<8> imm8) {
     return thumb32_LDR_imm8(n, t, true, true, false, imm8);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

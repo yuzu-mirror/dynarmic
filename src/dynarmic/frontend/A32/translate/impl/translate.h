@@ -7,12 +7,12 @@
 
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
-#include "dynarmic/frontend/imm.h"
 #include "dynarmic/frontend/A32/ir_emitter.h"
 #include "dynarmic/frontend/A32/location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/conditional_state.h"
 #include "dynarmic/frontend/A32/translate/translate.h"
 #include "dynarmic/frontend/A32/types.h"
+#include "dynarmic/frontend/imm.h"
 
 namespace Dynarmic::A32 {
 
@@ -22,8 +22,7 @@ struct TranslatorVisitor final {
     using instruction_return_type = bool;
 
     explicit TranslatorVisitor(IR::Block& block, LocationDescriptor descriptor, const TranslationOptions& options)
-        : ir(block, descriptor, options.arch_version), options(options)
-    {}
+            : ir(block, descriptor, options.arch_version), options(options) {}
 
     A32::IREmitter ir;
     ConditionalState cond_state = ConditionalState::None;
@@ -63,7 +62,7 @@ struct TranslatorVisitor final {
     ImmAndCarry ThumbExpandImm_C(Imm<1> i, Imm<3> imm3, Imm<8> imm8, IR::U1 carry_in) {
         const Imm<12> imm12 = concatenate(i, imm3, imm8);
         if (imm12.Bits<10, 11>() == 0) {
-            const u32 imm32 = [&]{
+            const u32 imm32 = [&] {
                 const u32 imm8 = imm12.Bits<0, 7>();
                 switch (imm12.Bits<8, 9>()) {
                 case 0b00:
@@ -93,8 +92,10 @@ struct TranslatorVisitor final {
     IR::ResultAndCarry<IR::U32> EmitImmShift(IR::U32 value, ShiftType type, Imm<3> imm3, Imm<2> imm2, IR::U1 carry_in);
     IR::ResultAndCarry<IR::U32> EmitImmShift(IR::U32 value, ShiftType type, Imm<5> imm5, IR::U1 carry_in);
     IR::ResultAndCarry<IR::U32> EmitRegShift(IR::U32 value, ShiftType type, IR::U8 amount, IR::U1 carry_in);
-    template <typename FnT> bool EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtReg m, const FnT& fn);
-    template <typename FnT> bool EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg m, const FnT& fn);
+    template<typename FnT>
+    bool EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtReg m, const FnT& fn);
+    template<typename FnT>
+    bool EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg m, const FnT& fn);
 
     // Barrier instructions
     bool arm_DMB(Imm<4> option);
@@ -821,8 +822,7 @@ struct TranslatorVisitor final {
     bool vfp_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, Reg n, size_t Vd, Imm<8> imm8);
 
     // Advanced SIMD one register, modified immediate
-    bool asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, Imm<1> d, size_t Vd,
-                        Imm<4> cmode, bool Q, bool op, Imm<1> e, Imm<1> f, Imm<1> g, Imm<1> h);
+    bool asimd_VMOV_imm(Imm<1> a, bool D, Imm<1> b, Imm<1> c, Imm<1> d, size_t Vd, Imm<4> cmode, bool Q, bool op, Imm<1> e, Imm<1> f, Imm<1> g, Imm<1> h);
 
     // Advanced SIMD three register with same length
     bool asimd_VHADD(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
@@ -959,4 +959,4 @@ struct TranslatorVisitor final {
     bool v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, size_t nn, size_t index_align, Reg m);
 };
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/backend/x64/exception_handler.h"
-
 #include <mach/mach.h>
 #include <mach/message.h>
 
@@ -18,6 +16,7 @@
 #include <fmt/format.h>
 
 #include "dynarmic/backend/x64/block_of_code.h"
+#include "dynarmic/backend/x64/exception_handler.h"
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/cast_util.h"
 #include "dynarmic/common/common_types.h"
@@ -36,7 +35,7 @@ struct CodeBlockInfo {
 
 struct MachMessage {
     mach_msg_header_t head;
-    char data[2048]; ///< Arbitrary size
+    char data[2048];  ///< Arbitrary size
 };
 
 class MachHandler final {
@@ -64,7 +63,7 @@ private:
 };
 
 MachHandler::MachHandler() {
-    #define KCHECK(x) ASSERT_MSG((x) == KERN_SUCCESS, "dynarmic: macOS MachHandler: init failure at {}", #x)
+#define KCHECK(x) ASSERT_MSG((x) == KERN_SUCCESS, "dynarmic: macOS MachHandler: init failure at {}", #x)
 
     KCHECK(mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &server_port));
     KCHECK(mach_port_insert_right(mach_task_self(), server_port, server_port, MACH_MSG_TYPE_MAKE_SEND));
@@ -74,7 +73,7 @@ MachHandler::MachHandler() {
     mach_port_t prev;
     KCHECK(mach_port_request_notification(mach_task_self(), server_port, MACH_NOTIFY_PORT_DESTROYED, 0, server_port, MACH_MSG_TYPE_MAKE_SEND_ONCE, &prev));
 
-    #undef KCHECK
+#undef KCHECK
 
     thread = std::thread(&MachHandler::MessagePump, this);
 }
@@ -102,7 +101,7 @@ void MachHandler::MessagePump() {
         }
 
         mr = mach_msg(&reply.head, MACH_SEND_MSG, reply.head.msgh_size, 0, MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
-        if (mr != MACH_MSG_SUCCESS){
+        if (mr != MACH_MSG_SUCCESS) {
             fmt::print(stderr, "dynarmic: macOS MachHandler: Failed to send mach message. error: {:#08x} ({})\n", mr, mach_error_string(mr));
             return;
         }
@@ -146,7 +145,7 @@ void MachHandler::RemoveCodeBlock(u64 rip) {
 
 MachHandler mach_handler;
 
-} // anonymous namespace
+}  // anonymous namespace
 
 mig_external kern_return_t catch_mach_exception_raise(mach_port_t, mach_port_t, mach_port_t, exception_type_t, mach_exception_data_t, mach_msg_type_number_t) {
     fmt::print(stderr, "dynarmic: Unexpected mach message: mach_exception_raise\n");
@@ -161,14 +160,13 @@ mig_external kern_return_t catch_mach_exception_raise_state_identity(mach_port_t
 mig_external kern_return_t catch_mach_exception_raise_state(
     mach_port_t /*exception_port*/,
     exception_type_t exception,
-    const mach_exception_data_t /*code*/, // code[0] is as per kern_return.h, code[1] is rip.
+    const mach_exception_data_t /*code*/,  // code[0] is as per kern_return.h, code[1] is rip.
     mach_msg_type_number_t /*codeCnt*/,
     int* flavor,
     const thread_state_t old_state,
     mach_msg_type_number_t old_stateCnt,
     thread_state_t new_state,
-    mach_msg_type_number_t* new_stateCnt
-) {
+    mach_msg_type_number_t* new_stateCnt) {
     if (!flavor || !new_stateCnt) {
         fmt::print(stderr, "dynarmic: catch_mach_exception_raise_state: Invalid arguments.\n");
         return KERN_INVALID_ARGUMENT;
@@ -191,9 +189,8 @@ mig_external kern_return_t catch_mach_exception_raise_state(
 
 struct ExceptionHandler::Impl final {
     Impl(BlockOfCode& code)
-        : code_begin(Common::BitCast<u64>(code.getCode()))
-        , code_end(code_begin + code.GetTotalCodeSize())
-    {}
+            : code_begin(Common::BitCast<u64>(code.getCode()))
+            , code_end(code_begin + code.GetTotalCodeSize()) {}
 
     void SetCallback(std::function<FakeCall(u64)> cb) {
         CodeBlockInfo cbi;
@@ -227,4 +224,4 @@ void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
     impl->SetCallback(cb);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

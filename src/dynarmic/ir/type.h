@@ -50,4 +50,4 @@ bool AreTypesCompatible(Type t1, Type t2);
 
 std::ostream& operator<<(std::ostream& o, Type type);
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

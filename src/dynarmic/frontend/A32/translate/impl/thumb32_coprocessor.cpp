@@ -72,4 +72,4 @@ bool TranslatorVisitor::thumb32_MRC(bool two, size_t opc1, CoprocReg CRn, Reg t,
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

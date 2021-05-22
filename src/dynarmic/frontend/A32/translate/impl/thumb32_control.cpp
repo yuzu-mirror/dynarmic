@@ -123,4 +123,4 @@ bool TranslatorVisitor::thumb32_MRS_reg(bool read_spsr, Reg d) {
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

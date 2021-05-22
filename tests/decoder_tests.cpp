@@ -4,8 +4,8 @@
  */
 
 #include <cstring>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include <catch.hpp>
 
@@ -31,7 +31,7 @@ TEST_CASE("ASIMD Decoder: Ensure table order correctness", "[decode][a32][.]") {
         return block;
     };
 
-    const auto is_decode_error = [&get_ir](const A32::ASIMDMatcher<A32::TranslatorVisitor>& matcher, u32 instruction){
+    const auto is_decode_error = [&get_ir](const A32::ASIMDMatcher<A32::TranslatorVisitor>& matcher, u32 instruction) {
         const auto block = get_ir(matcher, instruction);
 
         for (const auto& ir_inst : block) {

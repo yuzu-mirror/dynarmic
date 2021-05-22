@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include <utility>
 
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 namespace {
@@ -29,8 +28,7 @@ enum class Rounding {
     Round,
 };
 
-bool ScalarMultiply(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm,
-                    MultiplyBehavior multiply) {
+bool ScalarMultiply(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool F, bool N, bool M, size_t Vm, MultiplyBehavior multiply) {
     if (sz == 0b11) {
         return v.DecodeError();
     }
@@ -72,8 +70,7 @@ bool ScalarMultiply(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, 
     return true;
 }
 
-bool ScalarMultiplyLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
-                        MultiplyBehavior multiply) {
+bool ScalarMultiplyLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, MultiplyBehavior multiply) {
     if (sz == 0b11) {
         return v.DecodeError();
     }
@@ -110,8 +107,7 @@ bool ScalarMultiplyLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t 
     return true;
 }
 
-bool ScalarMultiplyReturnHigh(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
-                              Rounding round) {
+bool ScalarMultiplyReturnHigh(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, Rounding round) {
     if (sz == 0b11) {
         return v.DecodeError();
     }
@@ -145,7 +141,7 @@ bool ScalarMultiplyReturnHigh(TranslatorVisitor& v, bool Q, bool D, size_t sz, s
     v.ir.SetVector(d, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::asimd_VMLA_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool op, bool F, bool N, bool M, size_t Vm) {
     const auto behavior = op ? MultiplyBehavior::MultiplySubtract
@@ -198,4 +194,4 @@ bool TranslatorVisitor::asimd_VQRDMULH_scalar(bool Q, bool D, size_t sz, size_t 
     return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::Round);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

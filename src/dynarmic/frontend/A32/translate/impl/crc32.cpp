@@ -80,7 +80,7 @@ bool CRC32Variant(TranslatorVisitor& v, Cond cond, Imm<2> sz, Reg n, Reg d, Reg 
     v.ir.SetRegister(d, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 // CRC32{B,H,W}{<q>} <Rd>, <Rn>, <Rm>
 bool TranslatorVisitor::arm_CRC32(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
@@ -92,4 +92,4 @@ bool TranslatorVisitor::arm_CRC32C(Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
     return CRC32Variant(*this, cond, sz, n, d, m, CRCType::Castagnoli);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

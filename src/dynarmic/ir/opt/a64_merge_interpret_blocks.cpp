@@ -49,4 +49,4 @@ void A64MergeInterpretBlocksPass(IR::Block& block, A64::UserCallbacks* cb) {
     block.CycleCount() += num_instructions - 1;
 }
 
-} // namespace Dynarmic::Optimization
+}  // namespace Dynarmic::Optimization

@@ -98,7 +98,7 @@ void EmitX64::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
             code.movdqa(tmp_b, xmm_b);
             code.paddw(tmp_a, code.MConst(xword, 0x80008000));
             code.paddw(tmp_b, code.MConst(xword, 0x80008000));
-            code.pcmpgtw(tmp_b, tmp_a); // *Signed* comparison!
+            code.pcmpgtw(tmp_b, tmp_a);  // *Signed* comparison!
 
             ctx.reg_alloc.DefineValue(ge_inst, tmp_b);
             ctx.EraseInstruction(ge_inst);
@@ -205,7 +205,7 @@ void EmitX64::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
         const Xbyak::Xmm xmm_ge = ctx.reg_alloc.ScratchXmm();
 
         code.movdqa(xmm_ge, xmm_a);
-        code.pmaxuw(xmm_ge, xmm_b); // Requires SSE 4.1
+        code.pmaxuw(xmm_ge, xmm_b);  // Requires SSE 4.1
         code.pcmpeqw(xmm_ge, xmm_a);
 
         code.psubw(xmm_a, xmm_b);
@@ -226,7 +226,7 @@ void EmitX64::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
     code.paddw(xmm_a, code.MConst(xword, 0x80008000));
     code.paddw(xmm_b, code.MConst(xword, 0x80008000));
     code.movdqa(xmm_ge, xmm_b);
-    code.pcmpgtw(xmm_ge, xmm_a); // *Signed* comparison!
+    code.pcmpgtw(xmm_ge, xmm_a);  // *Signed* comparison!
     code.pxor(xmm_ge, ones);
 
     code.psubw(xmm_a, xmm_b);
@@ -709,4 +709,4 @@ void EmitX64::EmitPackedSelect(EmitContext& ctx, IR::Inst* inst) {
     }
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

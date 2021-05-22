@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/ir/opcodes.h"
+
 #include <array>
 #include <ostream>
 #include <string>
@@ -11,7 +13,6 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include "dynarmic/ir/opcodes.h"
 #include "dynarmic/ir/type.h"
 
 namespace Dynarmic::IR {
@@ -43,7 +44,7 @@ constexpr Type NZCV = Type::NZCVFlags;
 constexpr Type Cond = Type::Cond;
 constexpr Type Table = Type::Table;
 
-static const std::array opcode_info {
+static const std::array opcode_info{
 #define OPCODE(name, type, ...) Meta{#name, type, {__VA_ARGS__}},
 #define A32OPC(name, type, ...) Meta{#name, type, {__VA_ARGS__}},
 #define A64OPC(name, type, ...) Meta{#name, type, {__VA_ARGS__}},
@@ -53,7 +54,7 @@ static const std::array opcode_info {
 #undef A64OPC
 };
 
-} // namespace OpcodeInfo
+}  // namespace OpcodeInfo
 
 Type GetTypeOf(Opcode op) {
     return OpcodeInfo::opcode_info.at(static_cast<size_t>(op)).type;
@@ -75,4 +76,4 @@ std::ostream& operator<<(std::ostream& o, Opcode opcode) {
     return o << GetNameOf(opcode);
 }
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

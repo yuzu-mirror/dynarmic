@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/frontend/A32/translate/conditional_state.h"
+
 #include <algorithm>
 
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/frontend/A32/ir_emitter.h"
-#include "dynarmic/frontend/A32/translate/conditional_state.h"
 #include "dynarmic/frontend/A32/translate/impl/translate.h"
 #include "dynarmic/interface/A32/config.h"
 #include "dynarmic/ir/cond.h"
@@ -76,4 +77,4 @@ bool IsConditionPassed(TranslatorVisitor& v, IR::Cond cond) {
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

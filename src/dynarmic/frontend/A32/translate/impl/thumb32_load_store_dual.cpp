@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 static bool ITBlockCheck(const A32::IREmitter& ir) {
@@ -40,8 +39,7 @@ static bool TableBranch(TranslatorVisitor& v, Reg n, Reg m, bool half) {
     return false;
 }
 
-static bool LoadDualImmediate(TranslatorVisitor& v, bool P, bool U, bool W,
-                              Reg n, Reg t, Reg t2, Imm<8> imm8) {
+static bool LoadDualImmediate(TranslatorVisitor& v, bool P, bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8) {
     if (W && (n == t || n == t2)) {
         return v.UnpredictableInstruction();
     }
@@ -255,4 +253,4 @@ bool TranslatorVisitor::thumb32_TBH(Reg n, Reg m) {
     return TableBranch(*this, n, m, true);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

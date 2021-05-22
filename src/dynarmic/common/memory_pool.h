@@ -42,4 +42,4 @@ private:
     std::vector<char*> slabs;
 };
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

@@ -71,7 +71,8 @@ bool TranslatorVisitor::RBIT_int(bool sf, Reg Rn, Reg Rd) {
 bool TranslatorVisitor::REV(bool sf, bool opc_0, Reg Rn, Reg Rd) {
     const size_t datasize = sf ? 64 : 32;
 
-    if (!sf && opc_0) return UnallocatedEncoding();
+    if (!sf && opc_0)
+        return UnallocatedEncoding();
 
     const IR::U32U64 operand = X(datasize, Rn);
 
@@ -117,7 +118,7 @@ bool TranslatorVisitor::UDIV(bool sf, Reg Rm, Reg Rn, Reg Rd) {
     const IR::U32U64 m = X(datasize, Rm);
     const IR::U32U64 n = X(datasize, Rn);
 
-    const IR::U32U64 result = ir.UnsignedDiv(n,m);
+    const IR::U32U64 result = ir.UnsignedDiv(n, m);
 
     X(datasize, Rd, result);
     return true;
@@ -129,10 +130,10 @@ bool TranslatorVisitor::SDIV(bool sf, Reg Rm, Reg Rn, Reg Rd) {
     const IR::U32U64 m = X(datasize, Rm);
     const IR::U32U64 n = X(datasize, Rn);
 
-    const IR::U32U64 result = ir.SignedDiv(n,m);
+    const IR::U32U64 result = ir.SignedDiv(n, m);
 
     X(datasize, Rd, result);
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

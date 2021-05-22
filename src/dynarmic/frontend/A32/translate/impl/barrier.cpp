@@ -24,4 +24,4 @@ bool TranslatorVisitor::arm_ISB(Imm<4> /*option*/) {
     return false;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

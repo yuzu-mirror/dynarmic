@@ -4,6 +4,7 @@
  */
 
 #include <utility>
+
 #include "dynarmic/common/assert.h"
 #include "dynarmic/frontend/A64/translate/impl/impl.h"
 
@@ -24,8 +25,7 @@ enum class ExtraBehavior {
     Subtract,
 };
 
-bool MultiplyByElement(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd,
-                       ExtraBehavior extra_behavior) {
+bool MultiplyByElement(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
     if (size != 0b01 && size != 0b10) {
         return v.ReservedValue();
     }
@@ -50,8 +50,7 @@ bool MultiplyByElement(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<
     return true;
 }
 
-bool FPMultiplyByElement(TranslatorVisitor& v, bool Q, bool sz, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd,
-                         ExtraBehavior extra_behavior) {
+bool FPMultiplyByElement(TranslatorVisitor& v, bool Q, bool sz, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
     if (sz && L == 1) {
         return v.ReservedValue();
     }
@@ -70,7 +69,7 @@ bool FPMultiplyByElement(TranslatorVisitor& v, bool Q, bool sz, Imm<1> L, Imm<1>
     const IR::U128 operand2 = Q ? v.ir.VectorBroadcast(esize, element2) : v.ir.VectorBroadcastLower(esize, element2);
     const IR::U128 operand3 = v.V(datasize, Vd);
 
-    const IR::U128 result = [&]{
+    const IR::U128 result = [&] {
         switch (extra_behavior) {
         case ExtraBehavior::None:
             return v.ir.FPVectorMul(esize, operand1, operand2);
@@ -87,8 +86,7 @@ bool FPMultiplyByElement(TranslatorVisitor& v, bool Q, bool sz, Imm<1> L, Imm<1>
     return true;
 }
 
-bool FPMultiplyByElementHalfPrecision(TranslatorVisitor& v, bool Q, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H,
-                                      Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
+bool FPMultiplyByElementHalfPrecision(TranslatorVisitor& v, bool Q, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
     const size_t idxdsize = H == 1 ? 128 : 64;
     const size_t index = concatenate(H, L, M).ZeroExtend();
     const Vec Vm = Vmlo.ZeroExtend<Vec>();
@@ -102,7 +100,7 @@ bool FPMultiplyByElementHalfPrecision(TranslatorVisitor& v, bool Q, Imm<1> L, Im
 
     // TODO: We currently don't implement half-precision paths for
     //       regular multiplies and extended multiplies.
-    const IR::U128 result = [&]{
+    const IR::U128 result = [&] {
         switch (extra_behavior) {
         case ExtraBehavior::None:
             break;
@@ -121,8 +119,7 @@ bool FPMultiplyByElementHalfPrecision(TranslatorVisitor& v, bool Q, Imm<1> L, Im
 
 using ExtensionFunction = IR::U32 (IREmitter::*)(const IR::UAny&);
 
-bool DotProduct(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H,
-                Vec Vn, Vec Vd, ExtensionFunction extension) {
+bool DotProduct(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd, ExtensionFunction extension) {
     if (size != 0b10) {
         return v.ReservedValue();
     }
@@ -160,8 +157,7 @@ enum class Signedness {
     Unsigned
 };
 
-bool MultiplyLong(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vmlo,
-                  Imm<1> H, Vec Vn, Vec Vd, ExtraBehavior extra_behavior, Signedness sign) {
+bool MultiplyLong(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd, ExtraBehavior extra_behavior, Signedness sign) {
     if (size == 0b00 || size == 0b11) {
         return v.ReservedValue();
     }
@@ -203,7 +199,7 @@ bool MultiplyLong(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M,
     v.V(2 * datasize, Vd, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::MLA_elt(bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd) {
     return MultiplyByElement(*this, Q, size, L, M, Vmlo, H, Vn, Vd, ExtraBehavior::Accumulate);
@@ -267,30 +263,30 @@ bool TranslatorVisitor::FCMLA_elt(bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4
         const size_t index_second = index_first + 1;
 
         switch (rot.ZeroExtend()) {
-            case 0b00: // 0 degrees
-                element1 = ir.VectorGetElement(esize, operand2, index_first);
-                element2 = ir.VectorGetElement(esize, operand1, first);
-                element3 = ir.VectorGetElement(esize, operand2, index_second);
-                element4 = ir.VectorGetElement(esize, operand1, first);
-                break;
-            case 0b01: // 90 degrees
-                element1 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_second));
-                element2 = ir.VectorGetElement(esize, operand1, second);
-                element3 = ir.VectorGetElement(esize, operand2, index_first);
-                element4 = ir.VectorGetElement(esize, operand1, second);
-                break;
-            case 0b10: // 180 degrees
-                element1 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_first));
-                element2 = ir.VectorGetElement(esize, operand1, first);
-                element3 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_second));
-                element4 = ir.VectorGetElement(esize, operand1, first);
-                break;
-            case 0b11: // 270 degrees
-                element1 = ir.VectorGetElement(esize, operand2, index_second);
-                element2 = ir.VectorGetElement(esize, operand1, second);
-                element3 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_first));
-                element4 = ir.VectorGetElement(esize, operand1, second);
-                break;
+        case 0b00:  // 0 degrees
+            element1 = ir.VectorGetElement(esize, operand2, index_first);
+            element2 = ir.VectorGetElement(esize, operand1, first);
+            element3 = ir.VectorGetElement(esize, operand2, index_second);
+            element4 = ir.VectorGetElement(esize, operand1, first);
+            break;
+        case 0b01:  // 90 degrees
+            element1 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_second));
+            element2 = ir.VectorGetElement(esize, operand1, second);
+            element3 = ir.VectorGetElement(esize, operand2, index_first);
+            element4 = ir.VectorGetElement(esize, operand1, second);
+            break;
+        case 0b10:  // 180 degrees
+            element1 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_first));
+            element2 = ir.VectorGetElement(esize, operand1, first);
+            element3 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_second));
+            element4 = ir.VectorGetElement(esize, operand1, first);
+            break;
+        case 0b11:  // 270 degrees
+            element1 = ir.VectorGetElement(esize, operand2, index_second);
+            element2 = ir.VectorGetElement(esize, operand1, second);
+            element3 = ir.FPNeg(ir.VectorGetElement(esize, operand2, index_first));
+            element4 = ir.VectorGetElement(esize, operand1, second);
+            break;
         }
 
         const IR::U32U64 operand3_elem1 = ir.VectorGetElement(esize, operand3, first);
@@ -419,4 +415,4 @@ bool TranslatorVisitor::UMULL_elt(bool Q, Imm<2> size, Imm<1> L, Imm<1> M, Imm<4
     return MultiplyLong(*this, Q, size, L, M, Vmlo, H, Vn, Vd, ExtraBehavior::None, Signedness::Unsigned);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

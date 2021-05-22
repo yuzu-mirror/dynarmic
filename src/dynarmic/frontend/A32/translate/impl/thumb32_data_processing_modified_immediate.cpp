@@ -280,4 +280,4 @@ bool TranslatorVisitor::thumb32_RSB_imm(Imm<1> i, bool S, Reg n, Imm<3> imm3, Re
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

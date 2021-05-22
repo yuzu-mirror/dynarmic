@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/ir/basic_block.h"
+
 #include <algorithm>
 #include <initializer_list>
 #include <map>
@@ -15,15 +17,13 @@
 #include "dynarmic/common/memory_pool.h"
 #include "dynarmic/frontend/A32/types.h"
 #include "dynarmic/frontend/A64/types.h"
-#include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/cond.h"
 #include "dynarmic/ir/opcodes.h"
 
 namespace Dynarmic::IR {
 
 Block::Block(const LocationDescriptor& location)
-    : location{location}, end_location{location}, cond{Cond::AL},
-      instruction_alloc_pool{std::make_unique<Common::Pool>(sizeof(Inst), 4096)} {}
+        : location{location}, end_location{location}, cond{Cond::AL}, instruction_alloc_pool{std::make_unique<Common::Pool>(sizeof(Inst), 4096)} {}
 
 Block::~Block() = default;
 
@@ -36,7 +36,7 @@ void Block::AppendNewInst(Opcode opcode, std::initializer_list<IR::Value> args) 
 }
 
 Block::iterator Block::PrependNewInst(iterator insertion_point, Opcode opcode, std::initializer_list<Value> args) {
-    IR::Inst* inst = new(instruction_alloc_pool->Alloc()) IR::Inst(opcode);
+    IR::Inst* inst = new (instruction_alloc_pool->Alloc()) IR::Inst(opcode);
     ASSERT(args.size() == inst->NumArgs());
 
     std::for_each(args.begin(), args.end(), [&inst, index = size_t(0)](const auto& arg) mutable {
@@ -212,7 +212,7 @@ std::string DumpBlock(const IR::Block& block) {
         if (GetTypeOf(op) != Type::Void) {
             ret += fmt::format("%{:<5} = ", index);
         } else {
-            ret += "         "; // '%00000 = ' -> 1 + 5 + 3 = 9 spaces
+            ret += "         ";  // '%00000 = ' -> 1 + 5 + 3 = 9 spaces
         }
 
         ret += GetNameOf(op);
@@ -242,4 +242,4 @@ std::string DumpBlock(const IR::Block& block) {
     return ret;
 }
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

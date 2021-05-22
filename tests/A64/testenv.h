@@ -31,7 +31,7 @@ public:
 
     std::uint32_t MemoryReadCode(u64 vaddr) override {
         if (!IsInCodeMem(vaddr)) {
-            return 0x14000000; // B .
+            return 0x14000000;  // B .
         }
 
         const size_t index = (vaddr - code_mem_start_address) / 4;

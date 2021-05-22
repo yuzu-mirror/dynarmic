@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/frontend/A64/translate/translate.h"
+
 #include "dynarmic/frontend/A64/decoder/a64.h"
 #include "dynarmic/frontend/A64/location_descriptor.h"
 #include "dynarmic/frontend/A64/translate/impl/impl.h"
-#include "dynarmic/frontend/A64/translate/translate.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/terminal.h"
 
@@ -62,4 +63,4 @@ bool TranslateSingleInstruction(IR::Block& block, LocationDescriptor descriptor,
     return should_continue;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

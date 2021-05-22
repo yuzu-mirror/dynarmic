@@ -21,7 +21,7 @@ constexpr size_t BitSize() {
     return sizeof(T) * CHAR_BIT;
 }
 
-template <typename T>
+template<typename T>
 constexpr T Ones(size_t count) {
     ASSERT_MSG(count <= BitSize<T>(), "count larger than bitsize of T");
     if (count == BitSize<T>())
@@ -72,8 +72,8 @@ constexpr T ModifyBits(const T value, const T new_bits) {
 }
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4554)
+#    pragma warning(push)
+#    pragma warning(disable : 4554)
 #endif
 /// Extracts a single bit at bit_position from value of type T.
 template<typename T>
@@ -123,7 +123,7 @@ constexpr T ModifyBit(const T value, bool new_bit) {
     return ModifyBit<T>(bit_position, value, new_bit);
 }
 #ifdef _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
 /// Sign-extends a value that has bit_count bits to the full bitwidth of type T.
@@ -152,12 +152,12 @@ inline T SignExtend(const size_t bit_count, const T value) {
     return value;
 }
 
-template <typename Integral>
+template<typename Integral>
 inline size_t BitCount(Integral value) {
     return std::bitset<BitSize<Integral>()>(value).count();
 }
 
-template <typename T>
+template<typename T>
 constexpr size_t CountLeadingZeros(T value) {
     auto x = static_cast<std::make_unsigned_t<T>>(value);
     size_t result = BitSize<T>();
@@ -168,7 +168,7 @@ constexpr size_t CountLeadingZeros(T value) {
     return result;
 }
 
-template <typename T>
+template<typename T>
 constexpr int HighestSetBit(T value) {
     auto x = static_cast<std::make_unsigned_t<T>>(value);
     int result = -1;
@@ -179,7 +179,7 @@ constexpr int HighestSetBit(T value) {
     return result;
 }
 
-template <typename T>
+template<typename T>
 constexpr size_t LowestSetBit(T value) {
     auto x = static_cast<std::make_unsigned_t<T>>(value);
     if (x == 0)
@@ -193,12 +193,12 @@ constexpr size_t LowestSetBit(T value) {
     return result;
 }
 
-template <typename T>
+template<typename T>
 constexpr bool MostSignificantBit(T value) {
     return Bit<BitSize<T>() - 1, T>(value);
 }
 
-template <typename T>
+template<typename T>
 inline T Replicate(T value, size_t element_size) {
     ASSERT_MSG(BitSize<T>() % element_size == 0, "bitsize of T not divisible by element_size");
     if (element_size == BitSize<T>())
@@ -206,7 +206,7 @@ inline T Replicate(T value, size_t element_size) {
     return Replicate(value | (value << element_size), element_size * 2);
 }
 
-template <typename T>
+template<typename T>
 constexpr T RotateRight(T value, size_t amount) {
     amount %= BitSize<T>();
 
@@ -219,8 +219,8 @@ constexpr T RotateRight(T value, size_t amount) {
 }
 
 constexpr u32 SwapHalves32(u32 value) {
-    return ((value & 0xFFFF0000U) >> 16) |
-           ((value & 0x0000FFFFU) << 16);
+    return ((value & 0xFFFF0000U) >> 16)
+         | ((value & 0x0000FFFFU) << 16);
 }
 
 constexpr u16 SwapBytes16(u16 value) {
@@ -228,21 +228,21 @@ constexpr u16 SwapBytes16(u16 value) {
 }
 
 constexpr u32 SwapBytes32(u32 value) {
-    return ((value & 0xFF000000U) >> 24) |
-           ((value & 0x00FF0000U) >>  8) |
-           ((value & 0x0000FF00U) <<  8) |
-           ((value & 0x000000FFU) << 24);
+    return ((value & 0xFF000000U) >> 24)
+         | ((value & 0x00FF0000U) >> 8)
+         | ((value & 0x0000FF00U) << 8)
+         | ((value & 0x000000FFU) << 24);
 }
 
 constexpr u64 SwapBytes64(u64 value) {
-    return  ((value & 0xFF00000000000000ULL) >> 56) |
-            ((value & 0x00FF000000000000ULL) >> 40) |
-            ((value & 0x0000FF0000000000ULL) >> 24) |
-            ((value & 0x000000FF00000000ULL) >>  8) |
-            ((value & 0x00000000FF000000ULL) <<  8) |
-            ((value & 0x0000000000FF0000ULL) << 24) |
-            ((value & 0x000000000000FF00ULL) << 40) |
-            ((value & 0x00000000000000FFULL) << 56);
+    return ((value & 0xFF00000000000000ULL) >> 56)
+         | ((value & 0x00FF000000000000ULL) >> 40)
+         | ((value & 0x0000FF0000000000ULL) >> 24)
+         | ((value & 0x000000FF00000000ULL) >> 8)
+         | ((value & 0x00000000FF000000ULL) << 8)
+         | ((value & 0x0000000000FF0000ULL) << 24)
+         | ((value & 0x000000000000FF00ULL) << 40)
+         | ((value & 0x00000000000000FFULL) << 56);
 }
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

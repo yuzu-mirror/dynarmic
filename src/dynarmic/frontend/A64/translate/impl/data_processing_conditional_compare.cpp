@@ -59,4 +59,4 @@ bool TranslatorVisitor::CCMP_imm(bool sf, Imm<5> imm5, Cond cond, Reg Rn, Imm<4>
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

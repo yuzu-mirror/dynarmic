@@ -125,5 +125,5 @@ private:
     std::unique_ptr<Impl> impl;
 };
 
-} // namespace A64
-} // namespace Dynarmic
+}  // namespace A64
+}  // namespace Dynarmic

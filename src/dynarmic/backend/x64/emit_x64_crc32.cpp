@@ -145,4 +145,4 @@ void EmitX64::EmitCRC32ISO64(EmitContext& ctx, IR::Inst* inst) {
     EmitCRC32ISO(code, ctx, inst, 64);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

@@ -196,4 +196,4 @@ bool TranslatorVisitor::FCVTMU_float(bool sf, Imm<2> type, Vec Vn, Reg Rd) {
     return FloaingPointConvertUnsignedInteger(*this, sf, type, Vn, Rd, FP::RoundingMode::TowardsMinusInfinity);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

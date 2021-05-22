@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <cstdlib>
-
 #include "dynarmic/common/memory_pool.h"
+
+#include <cstdlib>
 
 namespace Dynarmic::Common {
 
-Pool::Pool(size_t object_size, size_t initial_pool_size) : object_size(object_size), slab_size(initial_pool_size) {
+Pool::Pool(size_t object_size, size_t initial_pool_size)
+        : object_size(object_size), slab_size(initial_pool_size) {
     AllocateNewSlab();
 }
 
@@ -40,4 +41,4 @@ void Pool::AllocateNewSlab() {
     remaining = slab_size;
 }
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

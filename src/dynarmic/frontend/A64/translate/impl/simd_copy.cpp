@@ -155,4 +155,4 @@ bool TranslatorVisitor::INS_elt(Imm<5> imm5, Imm<4> imm4, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

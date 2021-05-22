@@ -206,4 +206,4 @@ bool TranslatorVisitor::LDAR(Imm<2> sz, Reg Rn, Reg Rt) {
     return OrderedSharedDecodeAndOperation(*this, size, L, o0, Rn, Rt);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

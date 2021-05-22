@@ -25,4 +25,4 @@ void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)>) {
     // Do nothing
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

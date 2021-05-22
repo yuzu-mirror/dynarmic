@@ -24,7 +24,8 @@ namespace Dynarmic::A32 {
 namespace {
 
 enum class ThumbInstSize {
-    Thumb16, Thumb32
+    Thumb16,
+    Thumb32
 };
 
 bool IsThumb16(u16 first_part) {
@@ -34,9 +35,9 @@ bool IsThumb16(u16 first_part) {
 bool IsUnconditionalInstruction(bool is_thumb_16, u32 instruction) {
     if (!is_thumb_16)
         return false;
-    if ((instruction & 0xFF00) == 0b10111110'00000000) // BKPT
+    if ((instruction & 0xFF00) == 0b10111110'00000000)  // BKPT
         return true;
-    if ((instruction & 0xFFC0) == 0b10111010'10000000) // HLT
+    if ((instruction & 0xFFC0) == 0b10111010'10000000)  // HLT
         return true;
     return false;
 }
@@ -76,14 +77,14 @@ u32 ConvertASIMDInstruction(u32 thumb_instruction) {
         return 0xF4000000 | (thumb_instruction & 0x00FFFFFF);
     }
 
-    return 0xF7F0A000; // UDF
+    return 0xF7F0A000;  // UDF
 }
 
 bool MaybeVFPOrASIMDInstruction(u32 thumb_instruction) {
     return (thumb_instruction & 0xEC000000) == 0xEC000000 || (thumb_instruction & 0xFF100000) == 0xF9000000;
 }
 
-} // local namespace
+}  // namespace
 
 IR::Block TranslateThumb(LocationDescriptor descriptor, TranslateCallbacks* tcb, const TranslationOptions& options) {
     const bool single_step = descriptor.SingleStepping();
@@ -193,4 +194,4 @@ bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descri
     return should_continue;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

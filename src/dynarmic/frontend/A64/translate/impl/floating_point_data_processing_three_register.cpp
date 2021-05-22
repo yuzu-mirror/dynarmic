@@ -63,4 +63,4 @@ bool TranslatorVisitor::FNMSUB_float(Imm<2> type, Vec Vm, Vec Va, Vec Vn, Vec Vd
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

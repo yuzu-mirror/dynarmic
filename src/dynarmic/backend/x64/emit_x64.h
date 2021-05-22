@@ -13,7 +13,6 @@
 
 #include <tsl/robin_map.h>
 #include <tsl/robin_set.h>
-
 #include <xbyak_util.h>
 
 #include "dynarmic/backend/x64/exception_handler.h"
@@ -26,11 +25,11 @@
 namespace Dynarmic::IR {
 class Block;
 class Inst;
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR
 
 namespace Dynarmic {
 enum class OptimizationFlag : u32;
-} // namespace Dynarmic
+}  // namespace Dynarmic
 
 namespace Dynarmic::Backend::X64 {
 
@@ -41,10 +40,10 @@ using A64FullVectorWidth = std::integral_constant<size_t, 128>;
 // Array alias that always sizes itself according to the given type T
 // relative to the size of a vector register. e.g. T = u32 would result
 // in a std::array<u32, 4>.
-template <typename T>
+template<typename T>
 using VectorArray = std::array<T, A64FullVectorWidth::value / Common::BitSize<T>()>;
 
-template <typename T>
+template<typename T>
 using HalfVectorArray = std::array<T, A64FullVectorWidth::value / Common::BitSize<T>() / 2>;
 
 struct EmitContext {
@@ -128,4 +127,4 @@ protected:
     tsl::robin_map<IR::LocationDescriptor, PatchInformation> patch_information;
 };
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

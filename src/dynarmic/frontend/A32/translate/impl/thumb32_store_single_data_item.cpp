@@ -7,7 +7,7 @@
 
 namespace Dynarmic::A32 {
 
-template <typename StoreRegFn>
+template<typename StoreRegFn>
 static bool StoreRegister(TranslatorVisitor& v, Reg n, Reg t, Imm<2> imm2, Reg m, StoreRegFn store_fn) {
     if (n == Reg::PC) {
         return v.UndefinedInstruction();
@@ -43,8 +43,7 @@ static void StoreImmWordFn(TranslatorVisitor& v, const IR::U32& address, const I
     v.ir.WriteMemory32(address, data);
 }
 
-static bool StoreImmediate(TranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W, Imm<12> imm12,
-                           StoreImmFn store_fn) {
+static bool StoreImmediate(TranslatorVisitor& v, Reg n, Reg t, bool P, bool U, bool W, Imm<12> imm12, StoreImmFn store_fn) {
     const auto imm32 = imm12.ZeroExtend();
     const auto reg_n = v.ir.GetRegister(n);
     const auto reg_t = v.ir.GetRegister(t);
@@ -221,4 +220,4 @@ bool TranslatorVisitor::thumb32_STR_reg(Reg n, Reg t, Imm<2> imm2, Reg m) {
     });
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/backend/x64/emit_x64.h"
+
 #include <iterator>
 
 #include <tsl/robin_set.h>
 
 #include "dynarmic/backend/x64/block_of_code.h"
-#include "dynarmic/backend/x64/emit_x64.h"
 #include "dynarmic/backend/x64/nzcv_util.h"
 #include "dynarmic/backend/x64/perf_map.h"
 #include "dynarmic/backend/x64/stack_layout.h"
@@ -29,7 +30,7 @@ namespace Dynarmic::Backend::X64 {
 using namespace Xbyak::util;
 
 EmitContext::EmitContext(RegAlloc& reg_alloc, IR::Block& block)
-    : reg_alloc(reg_alloc), block(block) {}
+        : reg_alloc(reg_alloc), block(block) {}
 
 size_t EmitContext::GetInstOffset(IR::Inst* inst) const {
     return static_cast<size_t>(std::distance(block.begin(), IR::Block::iterator(inst)));
@@ -40,7 +41,8 @@ void EmitContext::EraseInstruction(IR::Inst* inst) {
     inst->ClearArgs();
 }
 
-EmitX64::EmitX64(BlockOfCode& code) : code(code) {
+EmitX64::EmitX64(BlockOfCode& code)
+        : code(code) {
     exception_handler.Register(code);
 }
 
@@ -73,8 +75,8 @@ void EmitX64::PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, I
 
     const auto iter = block_descriptors.find(target);
     CodePtr target_code_ptr = iter != block_descriptors.end()
-                            ? iter->second.entrypoint
-                            : code.GetReturnFromRunCodeAddress();
+                                ? iter->second.entrypoint
+                                : code.GetReturnFromRunCodeAddress();
 
     code.mov(index_reg.cvt32(), dword[r15 + code.GetJitStateInfo().offsetof_rsb_ptr]);
 
@@ -126,7 +128,7 @@ void EmitX64::EmitGetLowerFromOp(EmitContext&, IR::Inst*) {
 void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    const int bitsize = [&]{
+    const int bitsize = [&] {
         switch (args[0].GetType()) {
         case IR::Type::U8:
             return 8;
@@ -195,64 +197,64 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
     // add al, 0x7F restores OF
 
     switch (cond) {
-    case IR::Cond::EQ: //z
+    case IR::Cond::EQ:  //z
         code.sahf();
         code.jz(pass);
         break;
-    case IR::Cond::NE: //!z
+    case IR::Cond::NE:  //!z
         code.sahf();
         code.jnz(pass);
         break;
-    case IR::Cond::CS: //c
+    case IR::Cond::CS:  //c
         code.sahf();
         code.jc(pass);
         break;
-    case IR::Cond::CC: //!c
+    case IR::Cond::CC:  //!c
         code.sahf();
         code.jnc(pass);
         break;
-    case IR::Cond::MI: //n
+    case IR::Cond::MI:  //n
         code.sahf();
         code.js(pass);
         break;
-    case IR::Cond::PL: //!n
+    case IR::Cond::PL:  //!n
         code.sahf();
         code.jns(pass);
         break;
-    case IR::Cond::VS: //v
+    case IR::Cond::VS:  //v
         code.cmp(al, 0x81);
         code.jo(pass);
         break;
-    case IR::Cond::VC: //!v
+    case IR::Cond::VC:  //!v
         code.cmp(al, 0x81);
         code.jno(pass);
         break;
-    case IR::Cond::HI: //c & !z
+    case IR::Cond::HI:  //c & !z
         code.sahf();
         code.cmc();
         code.ja(pass);
         break;
-    case IR::Cond::LS: //!c | z
+    case IR::Cond::LS:  //!c | z
         code.sahf();
         code.cmc();
         code.jna(pass);
         break;
-    case IR::Cond::GE: // n == v
+    case IR::Cond::GE:  // n == v
         code.cmp(al, 0x81);
         code.sahf();
         code.jge(pass);
         break;
-    case IR::Cond::LT: // n != v
+    case IR::Cond::LT:  // n != v
         code.cmp(al, 0x81);
         code.sahf();
         code.jl(pass);
         break;
-    case IR::Cond::GT: // !z & (n == v)
+    case IR::Cond::GT:  // !z & (n == v)
         code.cmp(al, 0x81);
         code.sahf();
         code.jg(pass);
         break;
-    case IR::Cond::LE: // z | (n != v)
+    case IR::Cond::LE:  // z | (n != v)
         code.cmp(al, 0x81);
         code.sahf();
         code.jle(pass);
@@ -325,7 +327,7 @@ void EmitX64::InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
-    for (const auto &descriptor : locations) {
+    for (const auto& descriptor : locations) {
         const auto it = block_descriptors.find(descriptor);
         if (it == block_descriptors.end()) {
             continue;
@@ -338,4 +340,4 @@ void EmitX64::InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>
     }
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

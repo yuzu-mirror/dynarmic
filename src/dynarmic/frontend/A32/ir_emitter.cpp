@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/common/assert.h"
 #include "dynarmic/frontend/A32/ir_emitter.h"
+
+#include "dynarmic/common/assert.h"
 #include "dynarmic/frontend/A32/types.h"
 #include "dynarmic/interface/A32/arch_version.h"
 #include "dynarmic/ir/opcodes.h"
@@ -429,4 +430,4 @@ void IREmitter::CoprocStoreWords(size_t coproc_no, bool two, bool long_transfer,
     Inst(Opcode::A32CoprocStoreWords, IR::Value(coproc_info), address);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

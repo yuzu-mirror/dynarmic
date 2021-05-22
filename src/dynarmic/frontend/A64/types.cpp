@@ -3,20 +3,19 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/frontend/A64/types.h"
+
 #include <array>
 #include <ostream>
 
 #include <fmt/format.h>
-
-#include "dynarmic/frontend/A64/types.h"
 
 namespace Dynarmic::A64 {
 
 const char* CondToString(Cond cond) {
     static constexpr std::array cond_strs = {
         "eq", "ne", "hs", "lo", "mi", "pl", "vs", "vc",
-        "hi", "ls", "ge", "lt", "gt", "le", "al", "nv"
-    };
+        "hi", "ls", "ge", "lt", "gt", "le", "al", "nv"};
     return cond_strs.at(static_cast<size_t>(cond));
 }
 
@@ -41,4 +40,4 @@ std::ostream& operator<<(std::ostream& o, Vec vec) {
     return o;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -24,4 +24,4 @@ bool TranslateSingleInstruction(IR::Block& block, LocationDescriptor descriptor,
     return (descriptor.TFlag() ? TranslateSingleThumbInstruction : TranslateSingleArmInstruction)(block, descriptor, instruction);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

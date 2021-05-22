@@ -59,4 +59,4 @@ bool TranslatorVisitor::RMIF(Imm<6> lsb, Reg Rn, Imm<4> mask) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

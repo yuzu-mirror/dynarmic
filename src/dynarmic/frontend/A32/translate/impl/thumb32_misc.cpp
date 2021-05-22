@@ -154,4 +154,4 @@ bool TranslatorVisitor::thumb32_SEL(Reg n, Reg d, Reg m) {
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

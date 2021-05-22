@@ -11,4 +11,4 @@ namespace Dynarmic::Common::Crypto::SM4 {
 
 u8 AccessSubstitutionBox(u8 index);
 
-} // namespace Dynarmic::Common::Crypto::SM4
+}  // namespace Dynarmic::Common::Crypto::SM4

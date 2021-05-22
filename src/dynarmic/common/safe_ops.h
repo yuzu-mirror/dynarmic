@@ -13,10 +13,14 @@
 
 namespace Dynarmic::Safe {
 
-template<typename T> T LogicalShiftLeft(T value, int shift_amount);
-template<typename T> T LogicalShiftRight(T value, int shift_amount);
-template<typename T> T ArithmeticShiftLeft(T value, int shift_amount);
-template<typename T> T ArithmeticShiftRight(T value, int shift_amount);
+template<typename T>
+T LogicalShiftLeft(T value, int shift_amount);
+template<typename T>
+T LogicalShiftRight(T value, int shift_amount);
+template<typename T>
+T ArithmeticShiftLeft(T value, int shift_amount);
+template<typename T>
+T ArithmeticShiftRight(T value, int shift_amount);
 
 template<typename T>
 T LogicalShiftLeft(T value, int shift_amount) {
@@ -107,4 +111,4 @@ T Negate(T value) {
     return static_cast<T>(~static_cast<std::uintmax_t>(value) + 1);
 }
 
-} // namespace Dynarmic::Safe
+}  // namespace Dynarmic::Safe

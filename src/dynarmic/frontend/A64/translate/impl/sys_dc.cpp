@@ -48,4 +48,4 @@ bool TranslatorVisitor::DC_CIVAC(Reg Rt) {
     return DataCacheInstruction(*this, DataCacheOperation::CleanAndInvalidateByVAToPoC, Rt);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

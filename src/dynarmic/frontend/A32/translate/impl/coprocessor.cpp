@@ -163,4 +163,4 @@ bool TranslatorVisitor::arm_STC(Cond cond, bool p, bool u, bool d, bool w, Reg n
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

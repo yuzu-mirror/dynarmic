@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <cstring>
-#include <vector>
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+
+#include <cstring>
+#include <vector>
 
 #include "dynarmic/backend/x64/block_of_code.h"
 #include "dynarmic/backend/x64/exception_handler.h"
@@ -187,14 +187,13 @@ struct ExceptionHandler::Impl final {
         code.mov(code.ABI_PARAM1, Common::BitCast<u64>(&cb));
         code.mov(code.ABI_PARAM2, code.ABI_PARAM3);
         code.CallLambda(
-            [](const std::function<FakeCall(u64)>& cb_, PCONTEXT ctx){
+            [](const std::function<FakeCall(u64)>& cb_, PCONTEXT ctx) {
                 FakeCall fc = cb_(ctx->Rip);
 
                 ctx->Rsp -= sizeof(u64);
                 *Common::BitCast<u64*>(ctx->Rsp) = fc.ret_rip;
                 ctx->Rip = fc.call_rip;
-            }
-        );
+            });
         code.add(code.rsp, 8);
         code.mov(code.eax, static_cast<u32>(ExceptionContinueExecution));
         code.ret();
@@ -208,8 +207,8 @@ struct ExceptionHandler::Impl final {
         unwind_info->Flags = UNW_FLAG_EHANDLER;
         unwind_info->SizeOfProlog = prolog_info.prolog_size;
         unwind_info->CountOfCodes = static_cast<UBYTE>(prolog_info.number_of_unwind_code_entries);
-        unwind_info->FrameRegister = 0; // No frame register present
-        unwind_info->FrameOffset = 0; // Unused because FrameRegister == 0
+        unwind_info->FrameRegister = 0;  // No frame register present
+        unwind_info->FrameOffset = 0;    // Unused because FrameRegister == 0
         // UNWIND_INFO::UnwindCode field:
         const size_t size_of_unwind_code = sizeof(UNWIND_CODE) * prolog_info.unwind_code.size();
         UNWIND_CODE* unwind_code = static_cast<UNWIND_CODE*>(code.AllocateFromCodeSpace(size_of_unwind_code));
@@ -259,4 +258,4 @@ void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
     impl->SetCallback(cb);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

@@ -3,6 +3,15 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/backend/x64/block_of_code.h"
+
+#ifdef _WIN32
+#    define WIN32_LEAN_AND_MEAN
+#    include <windows.h>
+#else
+#    include <sys/mman.h>
+#endif
+
 #include <array>
 #include <cstring>
 
@@ -10,18 +19,11 @@
 
 #include "dynarmic/backend/x64/a32_jitstate.h"
 #include "dynarmic/backend/x64/abi.h"
-#include "dynarmic/backend/x64/block_of_code.h"
 #include "dynarmic/backend/x64/hostloc.h"
 #include "dynarmic/backend/x64/perf_map.h"
 #include "dynarmic/backend/x64/stack_layout.h"
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
-
-#ifdef _WIN32
-    #include <windows.h>
-#else
-    #include <sys/mman.h>
-#endif
 
 namespace Dynarmic::Backend::X64 {
 
@@ -60,47 +62,66 @@ CustomXbyakAllocator s_allocator;
 
 #ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
 void ProtectMemory(const void* base, size_t size, bool is_executable) {
-#ifdef _WIN32
+#    ifdef _WIN32
     DWORD oldProtect = 0;
     VirtualProtect(const_cast<void*>(base), size, is_executable ? PAGE_EXECUTE_READ : PAGE_READWRITE, &oldProtect);
-#else
+#    else
     static const size_t pageSize = sysconf(_SC_PAGESIZE);
     const size_t iaddr = reinterpret_cast<size_t>(base);
     const size_t roundAddr = iaddr & ~(pageSize - static_cast<size_t>(1));
     const int mode = is_executable ? (PROT_READ | PROT_EXEC) : (PROT_READ | PROT_WRITE);
     mprotect(reinterpret_cast<void*>(roundAddr), size + (iaddr - roundAddr), mode);
-#endif
+#    endif
 }
 #endif
 
-HostFeature GetHostFeatures()
-{
+HostFeature GetHostFeatures() {
     HostFeature features = {};
 
 #ifdef DYNARMIC_ENABLE_CPU_FEATURE_DETECTION
     using Cpu = Xbyak::util::Cpu;
     Xbyak::util::Cpu cpu_info;
 
-    if (cpu_info.has(Cpu::tSSSE3))          features |= HostFeature::SSSE3;
-    if (cpu_info.has(Cpu::tSSE41))          features |= HostFeature::SSE41;
-    if (cpu_info.has(Cpu::tSSE42))          features |= HostFeature::SSE42;
-    if (cpu_info.has(Cpu::tAVX))            features |= HostFeature::AVX;
-    if (cpu_info.has(Cpu::tAVX2))           features |= HostFeature::AVX2;
-    if (cpu_info.has(Cpu::tAVX512F))        features |= HostFeature::AVX512F;
-    if (cpu_info.has(Cpu::tAVX512CD))       features |= HostFeature::AVX512CD;
-    if (cpu_info.has(Cpu::tAVX512VL))       features |= HostFeature::AVX512VL;
-    if (cpu_info.has(Cpu::tAVX512BW))       features |= HostFeature::AVX512BW;
-    if (cpu_info.has(Cpu::tAVX512DQ))       features |= HostFeature::AVX512DQ;
-    if (cpu_info.has(Cpu::tAVX512_BITALG))  features |= HostFeature::AVX512BITALG;
-    if (cpu_info.has(Cpu::tPCLMULQDQ))      features |= HostFeature::PCLMULQDQ;
-    if (cpu_info.has(Cpu::tF16C))           features |= HostFeature::F16C;
-    if (cpu_info.has(Cpu::tFMA))            features |= HostFeature::FMA;
-    if (cpu_info.has(Cpu::tAESNI))          features |= HostFeature::AES;
-    if (cpu_info.has(Cpu::tPOPCNT))         features |= HostFeature::POPCNT;
-    if (cpu_info.has(Cpu::tBMI1))           features |= HostFeature::BMI1;
-    if (cpu_info.has(Cpu::tBMI2))           features |= HostFeature::BMI2;
-    if (cpu_info.has(Cpu::tLZCNT))          features |= HostFeature::LZCNT;
-    if (cpu_info.has(Cpu::tGFNI))           features |= HostFeature::GFNI;
+    if (cpu_info.has(Cpu::tSSSE3))
+        features |= HostFeature::SSSE3;
+    if (cpu_info.has(Cpu::tSSE41))
+        features |= HostFeature::SSE41;
+    if (cpu_info.has(Cpu::tSSE42))
+        features |= HostFeature::SSE42;
+    if (cpu_info.has(Cpu::tAVX))
+        features |= HostFeature::AVX;
+    if (cpu_info.has(Cpu::tAVX2))
+        features |= HostFeature::AVX2;
+    if (cpu_info.has(Cpu::tAVX512F))
+        features |= HostFeature::AVX512F;
+    if (cpu_info.has(Cpu::tAVX512CD))
+        features |= HostFeature::AVX512CD;
+    if (cpu_info.has(Cpu::tAVX512VL))
+        features |= HostFeature::AVX512VL;
+    if (cpu_info.has(Cpu::tAVX512BW))
+        features |= HostFeature::AVX512BW;
+    if (cpu_info.has(Cpu::tAVX512DQ))
+        features |= HostFeature::AVX512DQ;
+    if (cpu_info.has(Cpu::tAVX512_BITALG))
+        features |= HostFeature::AVX512BITALG;
+    if (cpu_info.has(Cpu::tPCLMULQDQ))
+        features |= HostFeature::PCLMULQDQ;
+    if (cpu_info.has(Cpu::tF16C))
+        features |= HostFeature::F16C;
+    if (cpu_info.has(Cpu::tFMA))
+        features |= HostFeature::FMA;
+    if (cpu_info.has(Cpu::tAESNI))
+        features |= HostFeature::AES;
+    if (cpu_info.has(Cpu::tPOPCNT))
+        features |= HostFeature::POPCNT;
+    if (cpu_info.has(Cpu::tBMI1))
+        features |= HostFeature::BMI1;
+    if (cpu_info.has(Cpu::tBMI2))
+        features |= HostFeature::BMI2;
+    if (cpu_info.has(Cpu::tLZCNT))
+        features |= HostFeature::LZCNT;
+    if (cpu_info.has(Cpu::tGFNI))
+        features |= HostFeature::GFNI;
 
     if (cpu_info.has(Cpu::tBMI2)) {
         // BMI2 instructions such as pdep and pext have been very slow up until Zen 3.
@@ -109,7 +130,7 @@ HostFeature GetHostFeatures()
         if (cpu_info.has(Cpu::tAMD)) {
             std::array<u32, 4> data{};
             cpu_info.getCpuid(1, data.data());
-            const u32 family_base     = Common::Bits< 8, 11>(data[0]);
+            const u32 family_base = Common::Bits<8, 11>(data[0]);
             const u32 family_extended = Common::Bits<20, 27>(data[0]);
             const u32 family = family_base + family_extended;
             if (family >= 0x19)
@@ -123,7 +144,7 @@ HostFeature GetHostFeatures()
     return features;
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi, size_t total_code_size, size_t far_code_offset, std::function<void(BlockOfCode&)> rcp)
         : Xbyak::CodeGenerator(total_code_size, nullptr, &s_allocator)
@@ -131,8 +152,7 @@ BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi, size_t total_cod
         , jsi(jsi)
         , far_code_offset(far_code_offset)
         , constant_pool(*this, CONSTANT_POOL_SIZE)
-        , host_features(GetHostFeatures())
-{
+        , host_features(GetHostFeatures()) {
     ASSERT(total_code_size > far_code_offset);
     EnableWriting();
     GenRunCode(rcp);
@@ -210,7 +230,7 @@ void BlockOfCode::GenRunCode(std::function<void(BlockOfCode&)> rcp) {
     ABI_PushCalleeSaveRegistersAndAdjustStack(*this, sizeof(StackLayout));
 
     mov(r15, ABI_PARAM1);
-    mov(rbx, ABI_PARAM2); // save temporarily in non-volatile register
+    mov(rbx, ABI_PARAM2);  // save temporarily in non-volatile register
 
     cb.GetTicksRemaining->EmitCall(*this);
     mov(qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_to_run)], ABI_RETURN);
@@ -368,4 +388,4 @@ void BlockOfCode::EnsurePatchLocationSize(CodePtr begin, size_t size) {
     nop(size - current_size);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

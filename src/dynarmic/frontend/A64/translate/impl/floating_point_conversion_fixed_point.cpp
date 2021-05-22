@@ -111,4 +111,4 @@ bool TranslatorVisitor::FCVTZU_float_fix(bool sf, Imm<2> type, Imm<6> scale, Vec
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

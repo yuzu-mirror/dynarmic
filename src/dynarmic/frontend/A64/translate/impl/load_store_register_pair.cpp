@@ -151,4 +151,4 @@ bool TranslatorVisitor::STP_LDP_fpsimd(Imm<2> opc, bool not_postindex, bool wbac
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

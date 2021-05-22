@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/assert.h"
+
 #include <cstdio>
 #include <exception>
 
 #include <fmt/format.h>
-
-#include "dynarmic/common/assert.h"
 
 namespace Dynarmic::Common {
 
@@ -18,4 +18,4 @@ namespace Dynarmic::Common {
     std::terminate();
 }
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

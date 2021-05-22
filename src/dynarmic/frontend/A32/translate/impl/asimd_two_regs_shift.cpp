@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 namespace {
@@ -57,8 +56,7 @@ std::pair<size_t, size_t> ElementSizeAndShiftAmount(bool right_shift, bool L, si
     }
 }
 
-bool ShiftRight(TranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm,
-                Accumulating accumulate, Rounding rounding) {
+bool ShiftRight(TranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm, Accumulating accumulate, Rounding rounding) {
     if (!L && Common::Bits<3, 5>(imm6) == 0) {
         return v.DecodeError();
     }
@@ -89,8 +87,7 @@ bool ShiftRight(TranslatorVisitor& v, bool U, bool D, size_t imm6, size_t Vd, bo
     return true;
 }
 
-bool ShiftRightNarrowing(TranslatorVisitor& v, bool D, size_t imm6, size_t Vd, bool M, size_t Vm,
-                         Rounding rounding, Narrowing narrowing, Signedness signedness) {
+bool ShiftRightNarrowing(TranslatorVisitor& v, bool D, size_t imm6, size_t Vd, bool M, size_t Vm, Rounding rounding, Narrowing narrowing, Signedness signedness) {
     if (Common::Bits<3, 5>(imm6) == 0) {
         return v.DecodeError();
     }
@@ -138,7 +135,7 @@ bool ShiftRightNarrowing(TranslatorVisitor& v, bool D, size_t imm6, size_t Vd, b
     v.ir.SetVector(d, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::asimd_SHR(bool U, bool D, size_t imm6, size_t Vd, bool L, bool Q, bool M, size_t Vm) {
     return ShiftRight(*this, U, D, imm6, Vd, L, Q, M, Vm,
@@ -347,4 +344,4 @@ bool TranslatorVisitor::asimd_VCVT_fixed(bool U, bool D, size_t imm6, size_t Vd,
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

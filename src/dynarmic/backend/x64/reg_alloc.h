@@ -85,7 +85,8 @@ public:
 
 private:
     friend class RegAlloc;
-    explicit Argument(RegAlloc& reg_alloc) : reg_alloc(reg_alloc) {}
+    explicit Argument(RegAlloc& reg_alloc)
+            : reg_alloc(reg_alloc) {}
 
     bool allocated = false;
     RegAlloc& reg_alloc;
@@ -170,4 +171,4 @@ private:
     Xbyak::Address SpillToOpArg(HostLoc loc);
 };
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

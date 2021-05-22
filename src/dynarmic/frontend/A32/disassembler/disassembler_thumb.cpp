@@ -11,10 +11,10 @@
 
 #include "dynarmic/common/bit_util.h"
 #include "dynarmic/common/string_util.h"
-#include "dynarmic/frontend/imm.h"
 #include "dynarmic/frontend/A32/decoder/thumb16.h"
 #include "dynarmic/frontend/A32/disassembler/disassembler.h"
 #include "dynarmic/frontend/A32/types.h"
+#include "dynarmic/frontend/imm.h"
 
 namespace Dynarmic::A32 {
 
@@ -272,7 +272,7 @@ public:
     std::string thumb16_IT(Imm<8> imm8) {
         const Cond firstcond = imm8.Bits<4, 7, Cond>();
         const bool firstcond0 = imm8.Bit<4>();
-        const auto [x, y, z] = [&]{
+        const auto [x, y, z] = [&] {
             if (imm8.Bits<0, 3>() == 0b1000) {
                 return std::make_tuple("", "", "");
             }
@@ -305,12 +305,14 @@ public:
     }
 
     std::string thumb16_PUSH(bool M, RegList reg_list) {
-        if (M) reg_list |= 1 << 14;
+        if (M)
+            reg_list |= 1 << 14;
         return fmt::format("push {{{}}}", RegListToString(reg_list));
     }
 
     std::string thumb16_POP(bool P, RegList reg_list) {
-        if (P) reg_list |= 1 << 15;
+        if (P)
+            reg_list |= 1 << 15;
         return fmt::format("pop {{{}}}", RegListToString(reg_list));
     }
 
@@ -392,4 +394,4 @@ std::string DisassembleThumb16(u16 instruction) {
     return !decoder ? fmt::format("UNKNOWN: {:x}", instruction) : decoder->get().call(visitor, instruction);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

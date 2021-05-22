@@ -52,4 +52,4 @@ bool TranslatorVisitor::PRFM_lit(Imm<19> /*imm19*/, Imm<5> /*prfop*/) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

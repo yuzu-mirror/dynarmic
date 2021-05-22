@@ -24,4 +24,4 @@ enum class RoundingMode {
     ToOdd,
 };
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

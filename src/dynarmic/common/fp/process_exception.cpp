@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/fp/process_exception.h"
+
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
-#include "dynarmic/common/fp/process_exception.h"
 
 namespace Dynarmic::FP {
 
@@ -54,4 +55,4 @@ void FPProcessException(FPExc exception, FPCR fpcr, FPSR& fpsr) {
     }
 }
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

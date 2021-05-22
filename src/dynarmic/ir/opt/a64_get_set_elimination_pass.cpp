@@ -18,9 +18,14 @@ void A64GetSetElimination(IR::Block& block) {
     using Iterator = IR::Block::iterator;
 
     enum class TrackingType {
-        W, X,
-        S, D, Q,
-        SP, NZCV, NZCVRaw,
+        W,
+        X,
+        S,
+        D,
+        Q,
+        SP,
+        NZCV,
+        NZCVRaw,
     };
     struct RegisterInfo {
         IR::Value register_value;
@@ -152,4 +157,4 @@ void A64GetSetElimination(IR::Block& block) {
     }
 }
 
-} // namespace Dynarmic::Optimization
+}  // namespace Dynarmic::Optimization

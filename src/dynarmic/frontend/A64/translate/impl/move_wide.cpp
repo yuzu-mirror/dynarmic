@@ -56,5 +56,4 @@ bool TranslatorVisitor::MOVK(bool sf, Imm<2> hw, Imm<16> imm16, Reg Rd) {
     return true;
 }
 
-
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

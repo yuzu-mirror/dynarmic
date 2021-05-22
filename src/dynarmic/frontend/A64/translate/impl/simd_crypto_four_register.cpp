@@ -49,4 +49,4 @@ bool TranslatorVisitor::SM3SS1(Vec Vm, Vec Va, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

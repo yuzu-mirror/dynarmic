@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/fp/op/FPRecipEstimate.h"
+
 #include <tuple>
 
 #include "dynarmic/common/assert.h"
@@ -10,7 +12,6 @@
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/fp/info.h"
-#include "dynarmic/common/fp/op/FPRecipEstimate.h"
 #include "dynarmic/common/fp/process_exception.h"
 #include "dynarmic/common/fp/process_nan.h"
 #include "dynarmic/common/fp/unpacked.h"
@@ -39,7 +40,7 @@ FPT FPRecipEstimate(FPT op, FPCR fpcr, FPSR& fpsr) {
     }
 
     if (value.exponent < FPInfo<FPT>::exponent_min - 2) {
-        const bool overflow_to_inf = [&]{
+        const bool overflow_to_inf = [&] {
             switch (fpcr.RMode()) {
             case RoundingMode::ToNearest_TieEven:
                 return true;
@@ -95,4 +96,4 @@ template u16 FPRecipEstimate<u16>(u16 op, FPCR fpcr, FPSR& fpsr);
 template u32 FPRecipEstimate<u32>(u32 op, FPCR fpcr, FPSR& fpsr);
 template u64 FPRecipEstimate<u64>(u64 op, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

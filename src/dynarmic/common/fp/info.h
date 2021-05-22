@@ -135,4 +135,4 @@ constexpr FPT FPValue() {
     return FPT(FPInfo<FPT>::Zero(sign) | mantissa | (biased_exponent << FPInfo<FPT>::explicit_mantissa_width));
 }
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

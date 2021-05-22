@@ -9,14 +9,12 @@
 
 namespace Dynarmic::IR {
 class Block;
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR
 
 namespace Dynarmic::A32 {
 
 class LocationDescriptor;
 struct TranslateCallbacks;
-
-using MemoryReadCodeFuncType = std::function<u32(u32 vaddr)>;
 
 struct TranslationOptions {
     ArchVersion arch_version;
@@ -50,4 +48,4 @@ IR::Block Translate(LocationDescriptor descriptor, TranslateCallbacks* tcb, cons
  */
 bool TranslateSingleInstruction(IR::Block& block, LocationDescriptor descriptor, u32 instruction);
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

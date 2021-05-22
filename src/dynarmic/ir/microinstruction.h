@@ -24,7 +24,8 @@ constexpr size_t max_arg_count = 4;
  */
 class Inst final : public Common::IntrusiveListNode<Inst> {
 public:
-    explicit Inst(Opcode op) : op(op) {}
+    explicit Inst(Opcode op)
+            : op(op) {}
 
     /// Determines whether or not this instruction performs an arithmetic shift.
     bool IsArithmeticShift() const;
@@ -161,4 +162,4 @@ private:
     };
 };
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

@@ -19,4 +19,4 @@ void DeadCodeElimination(IR::Block& block) {
     }
 }
 
-} // namespace Dynarmic
+}  // namespace Dynarmic::Optimization

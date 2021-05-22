@@ -14,12 +14,12 @@
 #include <mp/typelist/list.h>
 
 #ifdef _MSC_VER
-#include <mp/typelist/head.h>
+#    include <mp/typelist/head.h>
 #endif
 
 namespace Dynarmic::Common {
 
-template <typename Function, typename ...Values>
+template<typename Function, typename... Values>
 inline auto GenerateLookupTableFromList(Function f, mp::list<Values...>) {
 #ifdef _MSC_VER
     using PairT = std::invoke_result_t<Function, mp::head<mp::list<Values...>>>;
@@ -34,4 +34,4 @@ inline auto GenerateLookupTableFromList(Function f, mp::list<Values...>) {
     return MapT(pair_array.begin(), pair_array.end());
 }
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/fp/op/FPRecipStepFused.h"
+
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/fp/fused.h"
 #include "dynarmic/common/fp/info.h"
 #include "dynarmic/common/fp/op/FPNeg.h"
-#include "dynarmic/common/fp/op/FPRecipStepFused.h"
 #include "dynarmic/common/fp/process_nan.h"
 #include "dynarmic/common/fp/unpacked.h"
 
@@ -52,4 +53,4 @@ template u16 FPRecipStepFused<u16>(u16 op1, u16 op2, FPCR fpcr, FPSR& fpsr);
 template u32 FPRecipStepFused<u32>(u32 op1, u32 op2, FPCR fpcr, FPSR& fpsr);
 template u64 FPRecipStepFused<u64>(u64 op1, u64 op2, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

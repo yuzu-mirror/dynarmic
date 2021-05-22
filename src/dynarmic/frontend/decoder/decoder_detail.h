@@ -17,7 +17,7 @@
 namespace Dynarmic::Decoder {
 namespace detail {
 
-template <size_t N>
+template<size_t N>
 inline constexpr std::array<char, N> StringToArray(const char (&str)[N + 1]) {
     std::array<char, N> result;
     for (size_t i = 0; i < N; i++) {
@@ -33,7 +33,7 @@ inline constexpr std::array<char, N> StringToArray(const char (&str)[N + 1]) {
  */
 template<class MatcherT>
 struct detail {
-    using opcode_type  = typename MatcherT::opcode_type;
+    using opcode_type = typename MatcherT::opcode_type;
     using visitor_type = typename MatcherT::visitor_type;
 
     static constexpr size_t opcode_bitsize = Common::BitSize<opcode_type>();
@@ -93,7 +93,8 @@ struct detail {
                 if constexpr (N > 0) {
                     const size_t bit_position = opcode_bitsize - i - 1;
 
-                    if (arg_index >= N) throw std::out_of_range("Unexpected field");
+                    if (arg_index >= N)
+                        throw std::out_of_range("Unexpected field");
 
                     masks[arg_index] |= static_cast<opcode_type>(1) << bit_position;
                     shifts[arg_index] = bit_position;
@@ -103,7 +104,7 @@ struct detail {
             }
         }
 
-        ASSERT(std::all_of(masks.begin(), masks.end(), [](auto m){ return m != 0; }));
+        ASSERT(std::all_of(masks.begin(), masks.end(), [](auto m) { return m != 0; }));
 
         return std::make_tuple(masks, shifts);
     }
@@ -117,14 +118,14 @@ struct detail {
     struct VisitorCaller;
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4800) // forcing value to bool 'true' or 'false' (performance warning)
+#    pragma warning(push)
+#    pragma warning(disable : 4800)  // forcing value to bool 'true' or 'false' (performance warning)
 #endif
-    template<typename Visitor, typename ...Args, typename CallRetT>
-    struct VisitorCaller<CallRetT(Visitor::*)(Args...)> {
-        template<size_t ...iota>
+    template<typename Visitor, typename... Args, typename CallRetT>
+    struct VisitorCaller<CallRetT (Visitor::*)(Args...)> {
+        template<size_t... iota>
         static auto Make(std::integer_sequence<size_t, iota...>,
-                         CallRetT (Visitor::* const fn)(Args...),
+                         CallRetT (Visitor::*const fn)(Args...),
                          const std::array<opcode_type, sizeof...(iota)> arg_masks,
                          const std::array<size_t, sizeof...(iota)> arg_shifts) {
             static_assert(std::is_same_v<visitor_type, Visitor>, "Member function is not from Matcher's Visitor");
@@ -137,11 +138,11 @@ struct detail {
         }
     };
 
-    template<typename Visitor, typename ...Args, typename CallRetT>
-    struct VisitorCaller<CallRetT(Visitor::*)(Args...) const> {
-        template<size_t ...iota>
+    template<typename Visitor, typename... Args, typename CallRetT>
+    struct VisitorCaller<CallRetT (Visitor::*)(Args...) const> {
+        template<size_t... iota>
         static auto Make(std::integer_sequence<size_t, iota...>,
-                         CallRetT (Visitor::* const fn)(Args...) const,
+                         CallRetT (Visitor::*const fn)(Args...) const,
                          const std::array<opcode_type, sizeof...(iota)> arg_masks,
                          const std::array<size_t, sizeof...(iota)> arg_shifts) {
             static_assert(std::is_same_v<visitor_type, const Visitor>, "Member function is not from Matcher's Visitor");
@@ -154,7 +155,7 @@ struct detail {
         }
     };
 #ifdef _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
     /**
@@ -175,5 +176,5 @@ struct detail {
 
 #define DYNARMIC_DECODER_GET_MATCHER(MatcherT, fn, name, bitstring) Decoder::detail::detail<MatcherT<V>>::GetMatcher(&V::fn, name, Decoder::detail::detail<MatcherT<V>>::GetMaskAndExpect(bitstring), Decoder::detail::detail<MatcherT<V>>::template GetArgInfo<mp::parameter_count_v<decltype(&V::fn)>>(bitstring))
 
-} // namespace detail
-} // namespace Dynarmic::Decoder
+}  // namespace detail
+}  // namespace Dynarmic::Decoder

@@ -43,4 +43,4 @@ inline ResidualError ResidualErrorOnRightShift(u64 mantissa, int shift_amount) {
     return ResidualError::GreaterThanHalf;
 }
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

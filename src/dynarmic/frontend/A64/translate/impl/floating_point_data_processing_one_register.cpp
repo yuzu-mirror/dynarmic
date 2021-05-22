@@ -127,7 +127,7 @@ bool TranslatorVisitor::FCVT_float(Imm<2> type, Imm<2> opc, Vec Vn, Vec Vd) {
         }
         break;
     case 64:
-    switch (*dstsize) {
+        switch (*dstsize) {
         case 16:
             result = ir.FPDoubleToHalf(operand, rounding_mode);
             break;
@@ -143,8 +143,7 @@ bool TranslatorVisitor::FCVT_float(Imm<2> type, Imm<2> opc, Vec Vn, Vec Vd) {
     return true;
 }
 
-static bool FloatingPointRoundToIntegral(TranslatorVisitor& v, Imm<2> type, Vec Vn, Vec Vd,
-                                         FP::RoundingMode rounding_mode, bool exact) {
+static bool FloatingPointRoundToIntegral(TranslatorVisitor& v, Imm<2> type, Vec Vn, Vec Vd, FP::RoundingMode rounding_mode, bool exact) {
     const auto datasize = FPGetDataSize(type);
     if (!datasize) {
         return v.UnallocatedEncoding();
@@ -184,4 +183,4 @@ bool TranslatorVisitor::FRINTI_float(Imm<2> type, Vec Vn, Vec Vd) {
     return FloatingPointRoundToIntegral(*this, type, Vn, Vd, ir.current_location->FPCR().RMode(), false);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

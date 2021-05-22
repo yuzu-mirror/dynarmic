@@ -55,8 +55,7 @@ struct Jit::Impl {
             : block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, conf.code_cache_size, conf.far_code_offset, GenRCP(conf))
             , emitter(block_of_code, conf, jit)
             , conf(std::move(conf))
-            , jit_interface(jit)
-    {}
+            , jit_interface(jit) {}
 
     A32JitState jit_state;
     BlockOfCode block_of_code;
@@ -70,7 +69,7 @@ struct Jit::Impl {
     bool invalidate_entire_cache = false;
 
     void Execute() {
-        const CodePtr current_codeptr = [this]{
+        const CodePtr current_codeptr = [this] {
             // RSB optimization
             const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A32JitState::RSBPtrMask;
             if (jit_state.GetUniqueHash() == jit_state.rsb_location_descriptors[new_rsb_ptr]) {
@@ -176,7 +175,8 @@ private:
     }
 };
 
-Jit::Jit(UserConfig conf) : impl(std::make_unique<Impl>(this, std::move(conf))) {}
+Jit::Jit(UserConfig conf)
+        : impl(std::make_unique<Impl>(this, std::move(conf))) {}
 
 Jit::~Jit() = default;
 
@@ -269,10 +269,15 @@ struct Context::Impl {
     size_t invalid_cache_generation;
 };
 
-Context::Context() : impl(std::make_unique<Context::Impl>()) { impl->jit_state.ResetRSB(); }
+Context::Context()
+        : impl(std::make_unique<Context::Impl>()) {
+    impl->jit_state.ResetRSB();
+}
 Context::~Context() = default;
-Context::Context(const Context& ctx) : impl(std::make_unique<Context::Impl>(*ctx.impl)) {}
-Context::Context(Context&& ctx) noexcept : impl(std::move(ctx.impl)) {}
+Context::Context(const Context& ctx)
+        : impl(std::make_unique<Context::Impl>(*ctx.impl)) {}
+Context::Context(Context&& ctx) noexcept
+        : impl(std::move(ctx.impl)) {}
 Context& Context::operator=(const Context& ctx) {
     *impl = *ctx.impl;
     return *this;
@@ -323,4 +328,4 @@ std::string Jit::Disassemble() const {
     return Common::DisassembleX64(impl->block_of_code.GetCodeBegin(), impl->block_of_code.getCurr());
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

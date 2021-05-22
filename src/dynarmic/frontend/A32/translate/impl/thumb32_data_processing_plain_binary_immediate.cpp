@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 static IR::U32 Pack2x16To1x32(A32::IREmitter& ir, IR::U32 lo, IR::U32 hi) {
@@ -229,4 +228,4 @@ bool TranslatorVisitor::thumb32_USAT16(Reg n, Reg d, Imm<4> sat_imm) {
     return Saturation16(*this, n, d, sat_imm.ZeroExtend(), &IREmitter::UnsignedSaturation);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

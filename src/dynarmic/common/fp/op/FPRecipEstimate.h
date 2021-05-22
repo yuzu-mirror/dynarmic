@@ -13,4 +13,4 @@ class FPSR;
 template<typename FPT>
 FPT FPRecipEstimate(FPT op, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

@@ -22,4 +22,4 @@ struct TranslateCallbacks {
     virtual void PreCodeTranslationHook(bool is_thumb, VAddr pc, A32::IREmitter& ir) = 0;
 };
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

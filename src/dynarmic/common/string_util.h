@@ -7,9 +7,9 @@
 
 namespace Dynarmic::Common {
 
-template <typename T>
+template<typename T>
 constexpr char SignToChar(T value) {
     return value >= 0 ? '+' : '-';
 }
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

@@ -1233,4 +1233,4 @@ bool TranslatorVisitor::arm_TST_rsr(Cond cond, Reg n, Reg s, ShiftType shift, Re
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

@@ -4,6 +4,7 @@
  */
 
 #include "dynarmic/backend/x64/a32_jitstate.h"
+
 #include "dynarmic/backend/x64/block_of_code.h"
 #include "dynarmic/backend/x64/nzcv_util.h"
 #include "dynarmic/common/assert.h"
@@ -89,7 +90,7 @@ void A32JitState::SetCpsr(u32 cpsr) {
     upper_location_descriptor |= Common::Bit<9>(cpsr) ? 2 : 0;
     upper_location_descriptor |= Common::Bit<5>(cpsr) ? 1 : 0;
     // IT state
-    upper_location_descriptor |= (cpsr >>  0) & 0b11111100'00000000;
+    upper_location_descriptor |= (cpsr >> 0) & 0b11111100'00000000;
     upper_location_descriptor |= (cpsr >> 17) & 0b00000011'00000000;
 
     // Other flags
@@ -188,7 +189,7 @@ void A32JitState::SetFpscr(u32 FPSCR) {
     asimd_MXCSR = 0x00009fc0;
 
     // RMode
-    const std::array<u32, 4> MXCSR_RMode {0x0, 0x4000, 0x2000, 0x6000};
+    const std::array<u32, 4> MXCSR_RMode{0x0, 0x4000, 0x2000, 0x6000};
     guest_MXCSR |= MXCSR_RMode[(FPSCR >> 22) & 0x3];
 
     // Cumulative flags IDC, IOC, IXC, UFC, OFC, DZC
@@ -196,9 +197,9 @@ void A32JitState::SetFpscr(u32 FPSCR) {
 
     if (Common::Bit<24>(FPSCR)) {
         // VFP Flush to Zero
-        guest_MXCSR |= (1 << 15); // SSE Flush to Zero
-        guest_MXCSR |= (1 << 6);  // SSE Denormals are Zero
+        guest_MXCSR |= (1 << 15);  // SSE Flush to Zero
+        guest_MXCSR |= (1 << 6);   // SSE Denormals are Zero
     }
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

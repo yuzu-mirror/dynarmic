@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include <optional>
 #include <tuple>
+
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
@@ -15,54 +15,54 @@ namespace {
 
 std::optional<std::tuple<size_t, size_t, size_t>> DecodeType(Imm<4> type, size_t size, size_t align) {
     switch (type.ZeroExtend()) {
-    case 0b0111: // VST1 A1 / VLD1 A1
+    case 0b0111:  // VST1 A1 / VLD1 A1
         if (Common::Bit<1>(align)) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{1, 1, 0};
-    case 0b1010: // VST1 A2 / VLD1 A2
+    case 0b1010:  // VST1 A2 / VLD1 A2
         if (align == 0b11) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{1, 2, 0};
-    case 0b0110: // VST1 A3 / VLD1 A3
+    case 0b0110:  // VST1 A3 / VLD1 A3
         if (Common::Bit<1>(align)) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{1, 3, 0};
-    case 0b0010: // VST1 A4 / VLD1 A4
+    case 0b0010:  // VST1 A4 / VLD1 A4
         return std::tuple<size_t, size_t, size_t>{1, 4, 0};
-    case 0b1000: // VST2 A1 / VLD2 A1
+    case 0b1000:  // VST2 A1 / VLD2 A1
         if (size == 0b11 || align == 0b11) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{2, 1, 1};
-    case 0b1001: // VST2 A1 / VLD2 A1
+    case 0b1001:  // VST2 A1 / VLD2 A1
         if (size == 0b11 || align == 0b11) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{2, 1, 2};
-    case 0b0011: // VST2 A2 / VLD2 A2
+    case 0b0011:  // VST2 A2 / VLD2 A2
         if (size == 0b11) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{2, 2, 2};
-    case 0b0100: // VST3 / VLD3
+    case 0b0100:  // VST3 / VLD3
         if (size == 0b11 || Common::Bit<1>(align)) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{3, 1, 1};
-    case 0b0101: // VST3 / VLD3
+    case 0b0101:  // VST3 / VLD3
         if (size == 0b11 || Common::Bit<1>(align)) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{3, 1, 2};
-    case 0b0000: // VST4 / VLD4
+    case 0b0000:  // VST4 / VLD4
         if (size == 0b11) {
             return std::nullopt;
         }
         return std::tuple<size_t, size_t, size_t>{4, 1, 1};
-    case 0b0001: // VST4 / VLD4
+    case 0b0001:  // VST4 / VLD4
         if (size == 0b11) {
             return std::nullopt;
         }
@@ -70,7 +70,7 @@ std::optional<std::tuple<size_t, size_t, size_t>> DecodeType(Imm<4> type, size_t
     }
     ASSERT_FALSE("Decode error");
 }
-} // anoynmous namespace
+}  // namespace
 
 bool TranslatorVisitor::v8_VST_multiple(bool D, Reg n, size_t Vd, Imm<4> type, size_t size, size_t align, Reg m) {
     if (type == 0b1011 || type.Bits<2, 3>() == 0b11) {
@@ -371,4 +371,4 @@ bool TranslatorVisitor::v8_VLD_single(bool D, Reg n, size_t Vd, size_t sz, size_
 
     return true;
 }
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

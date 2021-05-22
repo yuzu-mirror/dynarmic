@@ -55,4 +55,4 @@ bool TranslatorVisitor::CSNEG(bool sf, Reg Rm, Cond cond, Reg Rn, Reg Rd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -327,4 +327,4 @@ bool TranslatorVisitor::SBCS(bool sf, Reg Rm, Reg Rn, Reg Rd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

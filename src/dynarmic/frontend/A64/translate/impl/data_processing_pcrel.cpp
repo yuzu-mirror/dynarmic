@@ -21,4 +21,4 @@ bool TranslatorVisitor::ADRP(Imm<2> immlo, Imm<19> immhi, Reg Rd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -73,7 +73,7 @@ void EmitX64::EmitAESEncryptSingleRound(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitAESInverseMixColumns(EmitContext& ctx, IR::Inst* inst) {
-     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (code.HasHostFeature(HostFeature::AES)) {
         const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
@@ -105,4 +105,4 @@ void EmitX64::EmitAESMixColumns(EmitContext& ctx, IR::Inst* inst) {
     EmitAESFunction(args, ctx, code, inst, AES::MixColumns);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

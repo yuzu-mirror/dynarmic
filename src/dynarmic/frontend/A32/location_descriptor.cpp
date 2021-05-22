@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <ostream>
-#include <fmt/format.h>
 #include "dynarmic/frontend/A32/location_descriptor.h"
+
+#include <ostream>
+
+#include <fmt/format.h>
 
 namespace Dynarmic::A32 {
 
@@ -19,4 +21,4 @@ std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor) 
     return o;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

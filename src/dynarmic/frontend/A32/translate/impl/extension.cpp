@@ -226,4 +226,4 @@ bool TranslatorVisitor::arm_UXTH(Cond cond, Reg d, SignExtendRotation rotate, Re
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

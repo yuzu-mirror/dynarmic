@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/fp/op/FPRoundInt.h"
+
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
 #include "dynarmic/common/common_types.h"
@@ -10,7 +12,6 @@
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/fp/info.h"
 #include "dynarmic/common/fp/mantissa_util.h"
-#include "dynarmic/common/fp/op/FPRoundInt.h"
 #include "dynarmic/common/fp/process_exception.h"
 #include "dynarmic/common/fp/process_nan.h"
 #include "dynarmic/common/fp/rounding_mode.h"
@@ -78,8 +79,8 @@ u64 FPRoundInt(FPT op, FPCR fpcr, RoundingMode rounding, bool exact, FPSR& fpsr)
     const u64 abs_int_result = new_sign ? Safe::Negate<u64>(int_result) : static_cast<u64>(int_result);
 
     const FPT result = int_result == 0
-                     ? FPInfo<FPT>::Zero(sign)
-                     : FPRound<FPT>(FPUnpacked{new_sign, normalized_point_position, abs_int_result}, fpcr, RoundingMode::TowardsZero, fpsr);
+                         ? FPInfo<FPT>::Zero(sign)
+                         : FPRound<FPT>(FPUnpacked{new_sign, normalized_point_position, abs_int_result}, fpcr, RoundingMode::TowardsZero, fpsr);
 
     if (error != ResidualError::Zero && exact) {
         FPProcessException(FPExc::Inexact, fpcr, fpsr);
@@ -92,4 +93,4 @@ template u64 FPRoundInt<u16>(u16 op, FPCR fpcr, RoundingMode rounding, bool exac
 template u64 FPRoundInt<u32>(u32 op, FPCR fpcr, RoundingMode rounding, bool exact, FPSR& fpsr);
 template u64 FPRoundInt<u64>(u64 op, FPCR fpcr, RoundingMode rounding, bool exact, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

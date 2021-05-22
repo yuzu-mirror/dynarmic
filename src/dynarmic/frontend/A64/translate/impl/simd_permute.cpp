@@ -4,6 +4,7 @@
  */
 
 #include <tuple>
+
 #include "dynarmic/frontend/A64/translate/impl/impl.h"
 
 namespace Dynarmic::A64 {
@@ -45,13 +46,13 @@ bool VectorUnzip(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec 
     const IR::U128 n = v.V(datasize, Vn);
     const IR::U128 m = v.V(datasize, Vm);
     const IR::U128 result = type == UnzipType::Even
-                          ? (Q ? v.ir.VectorDeinterleaveEven(esize, n, m) : v.ir.VectorDeinterleaveEvenLower(esize, n, m))
-                          : (Q ? v.ir.VectorDeinterleaveOdd(esize, n, m) : v.ir.VectorDeinterleaveOddLower(esize, n, m));
+                              ? (Q ? v.ir.VectorDeinterleaveEven(esize, n, m) : v.ir.VectorDeinterleaveEvenLower(esize, n, m))
+                              : (Q ? v.ir.VectorDeinterleaveOdd(esize, n, m) : v.ir.VectorDeinterleaveOddLower(esize, n, m));
 
     v.V(datasize, Vd, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::TRN1(bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     return VectorTranspose(*this, Q, size, Vm, Vn, Vd, Transposition::TRN1);
@@ -95,7 +96,7 @@ bool TranslatorVisitor::ZIP2(bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
 
     const IR::U128 operand1 = V(datasize, Vn);
     const IR::U128 operand2 = V(datasize, Vm);
-    const IR::U128 result = [&]{
+    const IR::U128 result = [&] {
         if (Q) {
             return ir.VectorInterleaveUpper(esize, operand1, operand2);
         }
@@ -109,4 +110,4 @@ bool TranslatorVisitor::ZIP2(bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

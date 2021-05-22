@@ -246,4 +246,4 @@ bool TranslatorVisitor::LDUR_fpsimd(Imm<2> size, Imm<1> opc_1, Imm<9> imm9, Reg 
     return LoadStoreSIMD(*this, wback, postindex, scale, offset, IR::MemOp::LOAD, Rn, Vt);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

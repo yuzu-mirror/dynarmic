@@ -19,4 +19,4 @@ bool TranslatorVisitor::STNP_LDNP_fpsimd(Imm<2> opc, Imm<1> L, Imm<7> imm7, Vec 
     return STP_LDP_fpsimd(opc, true, false, L, imm7, Vt2, Rn, Vt);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "dynarmic/common/common_types.h"
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/common/common_types.h"
 #include "dynarmic/ir/cond.h"
 
 namespace Dynarmic::A32 {
@@ -14,7 +14,8 @@ namespace Dynarmic::A32 {
 class ITState final {
 public:
     ITState() = default;
-    explicit ITState(u8 data) : value(data) {}
+    explicit ITState(u8 data)
+            : value(data) {}
 
     ITState& operator=(u8 data) {
         value = data;
@@ -59,4 +60,4 @@ inline bool operator!=(ITState lhs, ITState rhs) {
     return !operator==(lhs, rhs);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

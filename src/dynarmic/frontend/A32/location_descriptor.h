@@ -8,10 +8,11 @@
 #include <functional>
 #include <iosfwd>
 #include <tuple>
+
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/frontend/A32/FPSCR.h"
-#include "dynarmic/frontend/A32/PSR.h"
 #include "dynarmic/frontend/A32/ITState.h"
+#include "dynarmic/frontend/A32/PSR.h"
 #include "dynarmic/ir/location_descriptor.h"
 
 namespace Dynarmic::A32 {
@@ -25,15 +26,14 @@ namespace Dynarmic::A32 {
 class LocationDescriptor {
 public:
     // Indicates bits that should be preserved within descriptors.
-    static constexpr u32 CPSR_MODE_MASK  = 0x0600FE20;
+    static constexpr u32 CPSR_MODE_MASK = 0x0600FE20;
     static constexpr u32 FPSCR_MODE_MASK = 0x07F70000;
 
     LocationDescriptor(u32 arm_pc, PSR cpsr, FPSCR fpscr, bool single_stepping = false)
-        : arm_pc(arm_pc)
-        , cpsr(cpsr.Value() & CPSR_MODE_MASK)
-        , fpscr(fpscr.Value() & FPSCR_MODE_MASK)
-        , single_stepping(single_stepping)
-    {}
+            : arm_pc(arm_pc)
+            , cpsr(cpsr.Value() & CPSR_MODE_MASK)
+            , fpscr(fpscr.Value() & FPSCR_MODE_MASK)
+            , single_stepping(single_stepping) {}
 
     explicit LocationDescriptor(const IR::LocationDescriptor& o) {
         arm_pc = static_cast<u32>(o.Value());
@@ -54,11 +54,11 @@ public:
 
     bool SingleStepping() const { return single_stepping; }
 
-    bool operator == (const LocationDescriptor& o) const {
+    bool operator==(const LocationDescriptor& o) const {
         return std::tie(arm_pc, cpsr, fpscr, single_stepping) == std::tie(o.arm_pc, o.cpsr, o.fpscr, o.single_stepping);
     }
 
-    bool operator != (const LocationDescriptor& o) const {
+    bool operator!=(const LocationDescriptor& o) const {
         return !operator==(o);
     }
 
@@ -121,9 +121,9 @@ public:
     }
 
 private:
-    u32 arm_pc;       ///< Current program counter value.
-    PSR cpsr;         ///< Current program status register.
-    A32::FPSCR fpscr; ///< Floating point status control register.
+    u32 arm_pc;        ///< Current program counter value.
+    PSR cpsr;          ///< Current program status register.
+    A32::FPSCR fpscr;  ///< Floating point status control register.
     bool single_stepping;
 };
 
@@ -135,19 +135,19 @@ private:
  */
 std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor);
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32
 
 namespace std {
-template <>
+template<>
 struct less<Dynarmic::A32::LocationDescriptor> {
     bool operator()(const Dynarmic::A32::LocationDescriptor& x, const Dynarmic::A32::LocationDescriptor& y) const noexcept {
         return x.UniqueHash() < y.UniqueHash();
     }
 };
-template <>
+template<>
 struct hash<Dynarmic::A32::LocationDescriptor> {
     size_t operator()(const Dynarmic::A32::LocationDescriptor& x) const noexcept {
         return std::hash<u64>()(x.UniqueHash());
     }
 };
-} // namespace std
+}  // namespace std

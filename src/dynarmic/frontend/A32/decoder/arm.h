@@ -19,10 +19,10 @@
 
 namespace Dynarmic::A32 {
 
-template <typename Visitor>
+template<typename Visitor>
 using ArmMatcher = Decoder::Matcher<Visitor, u32>;
 
-template <typename V>
+template<typename V>
 std::vector<ArmMatcher<V>> GetArmDecodeTable() {
     std::vector<ArmMatcher<V>> table = {
 
@@ -50,4 +50,4 @@ std::optional<std::reference_wrapper<const ArmMatcher<V>>> DecodeArm(u32 instruc
     return iter != table.end() ? std::optional<std::reference_wrapper<const ArmMatcher<V>>>(*iter) : std::nullopt;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/fp/process_nan.h"
+
 #include <optional>
 
 #include "dynarmic/common/assert.h"
@@ -11,7 +13,6 @@
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/fp/info.h"
 #include "dynarmic/common/fp/process_exception.h"
-#include "dynarmic/common/fp/process_nan.h"
 #include "dynarmic/common/fp/unpacked.h"
 
 namespace Dynarmic::FP {
@@ -88,4 +89,4 @@ template std::optional<u16> FPProcessNaNs3<u16>(FPType type1, FPType type2, FPTy
 template std::optional<u32> FPProcessNaNs3<u32>(FPType type1, FPType type2, FPType type3, u32 op1, u32 op2, u32 op3, FPCR fpcr, FPSR& fpsr);
 template std::optional<u64> FPProcessNaNs3<u64>(FPType type1, FPType type2, FPType type3, u64 op1, u64 op2, u64 op3, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

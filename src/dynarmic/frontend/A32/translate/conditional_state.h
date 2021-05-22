@@ -9,7 +9,7 @@
 
 namespace Dynarmic::IR {
 enum class Cond;
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR
 
 namespace Dynarmic::A32 {
 
@@ -30,4 +30,4 @@ enum class ConditionalState {
 bool CondCanContinue(ConditionalState cond_state, const A32::IREmitter& ir);
 bool IsConditionPassed(TranslatorVisitor& v, IR::Cond cond);
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

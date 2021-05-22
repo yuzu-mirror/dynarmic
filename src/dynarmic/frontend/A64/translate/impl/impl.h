@@ -7,18 +7,19 @@
 
 #include <optional>
 
-#include "dynarmic/frontend/imm.h"
 #include "dynarmic/frontend/A64/ir_emitter.h"
 #include "dynarmic/frontend/A64/location_descriptor.h"
 #include "dynarmic/frontend/A64/translate/translate.h"
 #include "dynarmic/frontend/A64/types.h"
+#include "dynarmic/frontend/imm.h"
 
 namespace Dynarmic::A64 {
 
 struct TranslatorVisitor final {
     using instruction_return_type = bool;
 
-    explicit TranslatorVisitor(IR::Block& block, LocationDescriptor descriptor, TranslationOptions options) : ir(block, descriptor), options(std::move(options)) {}
+    explicit TranslatorVisitor(IR::Block& block, LocationDescriptor descriptor, TranslationOptions options)
+            : ir(block, descriptor), options(std::move(options)) {}
 
     A64::IREmitter ir;
     TranslationOptions options;
@@ -1080,4 +1081,4 @@ inline std::optional<size_t> FPGetDataSize(Imm<2> type) {
     return std::nullopt;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

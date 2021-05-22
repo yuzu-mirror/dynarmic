@@ -38,7 +38,7 @@ bool FPPairwiseMinMax(TranslatorVisitor& v, bool sz, Vec Vn, Vec Vd, MinMaxOpera
     v.V(128, Vd, v.ir.ZeroExtendToQuad(result));
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::ADDP_pair(Imm<2> size, Vec Vn, Vec Vd) {
     if (size != 0b11) {
@@ -77,4 +77,4 @@ bool TranslatorVisitor::FMINNMP_pair_2(bool sz, Vec Vn, Vec Vd) {
 bool TranslatorVisitor::FMINP_pair_2(bool sz, Vec Vn, Vec Vd) {
     return FPPairwiseMinMax(*this, sz, Vn, Vd, MinMaxOperation::Min);
 }
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

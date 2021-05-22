@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/common/bit_util.h"
 #include "dynarmic/frontend/A64/translate/impl/impl.h"
+
+#include "dynarmic/common/bit_util.h"
 #include "dynarmic/ir/terminal.h"
 
 namespace Dynarmic::A64 {
@@ -335,19 +336,19 @@ IR::U32U64 TranslatorVisitor::ExtendReg(size_t bitsize, Reg reg, Imm<3> option, 
     bool signed_extend;
 
     switch (option.ZeroExtend()) {
-    case 0b000: { // UXTB
+    case 0b000: {  // UXTB
         val = ir.LeastSignificantByte(val);
         len = 8;
         signed_extend = false;
         break;
     }
-    case 0b001: { // UXTH
+    case 0b001: {  // UXTH
         val = ir.LeastSignificantHalf(val);
         len = 16;
         signed_extend = false;
         break;
     }
-    case 0b010: { // UXTW
+    case 0b010: {  // UXTW
         if (bitsize != 32) {
             val = ir.LeastSignificantWord(val);
         }
@@ -355,24 +356,24 @@ IR::U32U64 TranslatorVisitor::ExtendReg(size_t bitsize, Reg reg, Imm<3> option, 
         signed_extend = false;
         break;
     }
-    case 0b011: { // UXTX
+    case 0b011: {  // UXTX
         len = 64;
         signed_extend = false;
         break;
     }
-    case 0b100: { // SXTB
+    case 0b100: {  // SXTB
         val = ir.LeastSignificantByte(val);
         len = 8;
         signed_extend = true;
         break;
     }
-    case 0b101: { // SXTH
+    case 0b101: {  // SXTH
         val = ir.LeastSignificantHalf(val);
         len = 16;
         signed_extend = true;
         break;
     }
-    case 0b110: { // SXTW
+    case 0b110: {  // SXTW
         if (bitsize != 32) {
             val = ir.LeastSignificantWord(val);
         }
@@ -380,7 +381,7 @@ IR::U32U64 TranslatorVisitor::ExtendReg(size_t bitsize, Reg reg, Imm<3> option, 
         signed_extend = true;
         break;
     }
-    case 0b111: { // SXTX
+    case 0b111: {  // SXTX
         len = 64;
         signed_extend = true;
         break;
@@ -402,4 +403,4 @@ IR::U32U64 TranslatorVisitor::ExtendReg(size_t bitsize, Reg reg, Imm<3> option, 
     return ir.LogicalShiftLeft(extended, ir.Imm8(shift));
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

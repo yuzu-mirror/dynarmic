@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <array>
 #include <type_traits>
 
 #include "dynarmic/common/assert.h"
@@ -14,12 +15,12 @@
 namespace Dynarmic::A32 {
 enum class ExtReg;
 enum class Reg;
-}
+}  // namespace Dynarmic::A32
 
 namespace Dynarmic::A64 {
 enum class Reg;
 enum class Vec;
-}
+}  // namespace Dynarmic::A64
 
 namespace Dynarmic::IR {
 
@@ -34,7 +35,8 @@ class Value {
 public:
     using CoprocessorInfo = std::array<u8, 8>;
 
-    Value() : type(Type::Void) {}
+    Value()
+            : type(Type::Void) {}
     explicit Value(Inst* value);
     explicit Value(A32::Reg value);
     explicit Value(A32::ExtReg value);
@@ -126,7 +128,7 @@ private:
     Type type;
 
     union {
-        Inst* inst; // type == Type::Opaque
+        Inst* inst;  // type == Type::Opaque
         A32::Reg imm_a32regref;
         A32::ExtReg imm_a32extregref;
         A64::Reg imm_a64regref;
@@ -142,21 +144,24 @@ private:
 };
 static_assert(sizeof(Value) <= 2 * sizeof(u64), "IR::Value should be kept small in size");
 
-template <Type type_>
+template<Type type_>
 class TypedValue final : public Value {
 public:
     TypedValue() = default;
 
-    template <Type other_type, typename = std::enable_if_t<(other_type & type_) != Type::Void>>
-    /* implicit */ TypedValue(const TypedValue<other_type>& value) : Value(value) {
+    template<Type other_type, typename = std::enable_if_t<(other_type & type_) != Type::Void>>
+    /* implicit */ TypedValue(const TypedValue<other_type>& value)
+            : Value(value) {
         ASSERT((value.GetType() & type_) != Type::Void);
     }
 
-    explicit TypedValue(const Value& value) : Value(value) {
+    explicit TypedValue(const Value& value)
+            : Value(value) {
         ASSERT((value.GetType() & type_) != Type::Void);
     }
 
-    explicit TypedValue(Inst* inst) : TypedValue(Value(inst)) {}
+    explicit TypedValue(Inst* inst)
+            : TypedValue(Value(inst)) {}
 };
 
 using U1 = TypedValue<Type::U1>;
@@ -172,4 +177,4 @@ using UAnyU128 = TypedValue<Type::U8 | Type::U16 | Type::U32 | Type::U64 | Type:
 using NZCV = TypedValue<Type::NZCVFlags>;
 using Table = TypedValue<Type::Table>;
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

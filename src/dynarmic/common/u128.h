@@ -20,10 +20,12 @@ struct u128 {
     u128& operator=(const u128&) = default;
     u128& operator=(u128&&) = default;
 
-    u128(u64 lower_, u64 upper_) : lower(lower_), upper(upper_) {}
+    u128(u64 lower_, u64 upper_)
+            : lower(lower_), upper(upper_) {}
 
     template<typename T>
-    /* implicit */ u128(T value) : lower(value), upper(0) {
+    /* implicit */ u128(T value)
+            : lower(value), upper(0) {
         static_assert(std::is_integral_v<T>);
         static_assert(Common::BitSize<T>() <= Common::BitSize<u64>());
     }
@@ -93,4 +95,4 @@ u128 operator>>(u128 operand, int amount);
 /// If a 1 is shifted off, the LSB would be set.
 u128 StickyLogicalShiftRight(u128 operand, int amount);
 
-} // namespace Dynarmic
+}  // namespace Dynarmic

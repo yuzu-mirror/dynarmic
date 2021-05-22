@@ -106,4 +106,4 @@ IR::ResultAndCarry<IR::U32> TranslatorVisitor::EmitRegShift(IR::U32 value, Shift
     UNREACHABLE();
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

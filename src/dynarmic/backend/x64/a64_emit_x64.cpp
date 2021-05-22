@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/backend/x64/a64_emit_x64.h"
+
 #include <initializer_list>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 #include <mp/traits/integer_of_size.h>
 
-#include "dynarmic/backend/x64/a64_emit_x64.h"
 #include "dynarmic/backend/x64/a64_jitstate.h"
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
@@ -38,7 +39,7 @@ namespace Dynarmic::Backend::X64 {
 using namespace Xbyak::util;
 
 A64EmitContext::A64EmitContext(const A64::UserConfig& conf, RegAlloc& reg_alloc, IR::Block& block)
-    : EmitContext(reg_alloc, block), conf(conf) {}
+        : EmitContext(reg_alloc, block), conf(conf) {}
 
 A64::LocationDescriptor A64EmitContext::Location() const {
     return A64::LocationDescriptor{block.Location()};
@@ -67,7 +68,7 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
-    static const std::vector<HostLoc> gpr_order = [this]{
+    static const std::vector<HostLoc> gpr_order = [this] {
         std::vector<HostLoc> gprs{any_gpr};
         if (conf.page_table) {
             gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R14));
@@ -92,16 +93,15 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
 
         // Call the relevant Emit* member function.
         switch (inst->GetOpcode()) {
-
-#define OPCODE(name, type, ...)                 \
-        case IR::Opcode::name:                  \
-            A64EmitX64::Emit##name(ctx, inst);  \
-            break;
+#define OPCODE(name, type, ...)            \
+    case IR::Opcode::name:                 \
+        A64EmitX64::Emit##name(ctx, inst); \
+        break;
 #define A32OPC(...)
-#define A64OPC(name, type, ...)                    \
-        case IR::Opcode::A64##name:                \
-            A64EmitX64::EmitA64##name(ctx, inst);  \
-            break;
+#define A64OPC(name, type, ...)               \
+    case IR::Opcode::A64##name:               \
+        A64EmitX64::EmitA64##name(ctx, inst); \
+        break;
 #include "dynarmic/ir/opcodes.inc"
 #undef OPCODE
 #undef A32OPC
@@ -150,14 +150,13 @@ void A64EmitX64::ClearFastDispatchTable() {
 
 void A64EmitX64::GenMemory128Accessors() {
     code.align();
-    memory_read_128 = code.getCurr<void(*)()>();
+    memory_read_128 = code.getCurr<void (*)()>();
 #ifdef _WIN32
-    Devirtualize<&A64::UserCallbacks::MemoryRead128>(conf.callbacks).EmitCallWithReturnPointer(code,
-        [&](Xbyak::Reg64 return_value_ptr, [[maybe_unused]] RegList args) {
-            code.mov(code.ABI_PARAM3, code.ABI_PARAM2);
-            code.sub(rsp, 8 + 16 + ABI_SHADOW_SPACE);
-            code.lea(return_value_ptr, ptr[rsp + ABI_SHADOW_SPACE]);
-        });
+    Devirtualize<&A64::UserCallbacks::MemoryRead128>(conf.callbacks).EmitCallWithReturnPointer(code, [&](Xbyak::Reg64 return_value_ptr, [[maybe_unused]] RegList args) {
+        code.mov(code.ABI_PARAM3, code.ABI_PARAM2);
+        code.sub(rsp, 8 + 16 + ABI_SHADOW_SPACE);
+        code.lea(return_value_ptr, ptr[rsp + ABI_SHADOW_SPACE]);
+    });
     code.movups(xmm1, xword[code.ABI_RETURN]);
     code.add(rsp, 8 + 16 + ABI_SHADOW_SPACE);
 #else
@@ -177,7 +176,7 @@ void A64EmitX64::GenMemory128Accessors() {
     PerfMapRegister(memory_read_128, code.getCurr(), "a64_memory_read_128");
 
     code.align();
-    memory_write_128 = code.getCurr<void(*)()>();
+    memory_write_128 = code.getCurr<void (*)()>();
 #ifdef _WIN32
     code.sub(rsp, 8 + 16 + ABI_SHADOW_SPACE);
     code.lea(code.ABI_PARAM3, ptr[rsp + ABI_SHADOW_SPACE]);
@@ -223,7 +222,7 @@ void A64EmitX64::GenFastmemFallbacks() {
 
         for (int value_idx : idxes) {
             code.align();
-            read_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+            read_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
             ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(value_idx));
             if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
                 code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
@@ -237,7 +236,7 @@ void A64EmitX64::GenFastmemFallbacks() {
             PerfMapRegister(read_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)], code.getCurr(), "a64_read_fallback_128");
 
             code.align();
-            write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+            write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
             ABI_PushCallerSaveRegistersAndAdjustStack(code);
             if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
                 code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
@@ -256,7 +255,7 @@ void A64EmitX64::GenFastmemFallbacks() {
 
             for (const auto& [bitsize, callback] : read_callbacks) {
                 code.align();
-                read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+                read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
                 ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
                 if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
                     code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
@@ -272,7 +271,7 @@ void A64EmitX64::GenFastmemFallbacks() {
 
             for (const auto& [bitsize, callback] : write_callbacks) {
                 code.align();
-                write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+                write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
                 ABI_PushCallerSaveRegistersAndAdjustStack(code);
                 if (vaddr_idx == code.ABI_PARAM3.getIdx() && value_idx == code.ABI_PARAM2.getIdx()) {
                     code.xchg(code.ABI_PARAM2, code.ABI_PARAM3);
@@ -353,7 +352,7 @@ void A64EmitX64::GenTerminalHandlers() {
         PerfMapRegister(terminal_handler_fast_dispatch_hint, code.getCurr(), "a64_terminal_handler_fast_dispatch_hint");
 
         code.align();
-        fast_dispatch_table_lookup = code.getCurr<FastDispatchEntry&(*)(u64)>();
+        fast_dispatch_table_lookup = code.getCurr<FastDispatchEntry& (*)(u64)>();
         code.mov(code.ABI_PARAM2, reinterpret_cast<u64>(fast_dispatch_table.data()));
         if (code.HasHostFeature(HostFeature::SSE42)) {
             code.crc32(code.ABI_PARAM1, code.ABI_PARAM2);
@@ -542,7 +541,7 @@ void A64EmitX64::EmitA64SetD(A64EmitContext& ctx, IR::Inst* inst) {
     const auto addr = xword[r15 + offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec)];
 
     const Xbyak::Xmm to_store = ctx.reg_alloc.UseScratchXmm(args[1]);
-    code.movq(to_store, to_store); // TODO: Remove when able
+    code.movq(to_store, to_store);  // TODO: Remove when able
     code.movaps(addr, to_store);
 }
 
@@ -628,10 +627,9 @@ void A64EmitX64::EmitA64CallSupervisor(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(args[0].IsImmediate());
     const u32 imm = args[0].GetImmediateU32();
-    Devirtualize<&A64::UserCallbacks::CallSVC>(conf.callbacks).EmitCall(code,
-        [&](RegList param) {
-            code.mov(param[0], imm);
-        });
+    Devirtualize<&A64::UserCallbacks::CallSVC>(conf.callbacks).EmitCall(code, [&](RegList param) {
+        code.mov(param[0], imm);
+    });
     // The kernel would have to execute ERET to get here, which would clear exclusive state.
     code.mov(code.byte[r15 + offsetof(A64JitState, exclusive_state)], u8(0));
 }
@@ -642,11 +640,10 @@ void A64EmitX64::EmitA64ExceptionRaised(A64EmitContext& ctx, IR::Inst* inst) {
     ASSERT(args[0].IsImmediate() && args[1].IsImmediate());
     const u64 pc = args[0].GetImmediateU64();
     const u64 exception = args[1].GetImmediateU64();
-    Devirtualize<&A64::UserCallbacks::ExceptionRaised>(conf.callbacks).EmitCall(code,
-        [&](RegList param) {
-            code.mov(param[0], pc);
-            code.mov(param[1], exception);
-        });
+    Devirtualize<&A64::UserCallbacks::ExceptionRaised>(conf.callbacks).EmitCall(code, [&](RegList param) {
+        code.mov(param[0], pc);
+        code.mov(param[1], exception);
+    });
 }
 
 void A64EmitX64::EmitA64DataCacheOperationRaised(A64EmitContext& ctx, IR::Inst* inst) {
@@ -881,7 +878,7 @@ void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbya
     }
 }
 
-} // anonymous namepsace
+}  // namespace
 
 template<std::size_t bitsize>
 void A64EmitX64::EmitDirectPageTableMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
@@ -1090,8 +1087,7 @@ void A64EmitX64::EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst) {
                 return conf.global_monitor->ReadAndMark<T>(conf.processor_id, vaddr, [&]() -> T {
                     return (conf.callbacks->*callback)(vaddr);
                 });
-            }
-        );
+            });
     } else {
         const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
         ctx.reg_alloc.Use(args[0], ABI_PARAM2);
@@ -1107,8 +1103,7 @@ void A64EmitX64::EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst) {
                 ret = conf.global_monitor->ReadAndMark<A64::Vector>(conf.processor_id, vaddr, [&]() -> A64::Vector {
                     return (conf.callbacks->*callback)(vaddr);
                 });
-            }
-        );
+            });
         code.movups(result, xword[rsp + ABI_SHADOW_SPACE]);
         ctx.reg_alloc.ReleaseStackSpace(16 + ABI_SHADOW_SPACE);
 
@@ -1163,11 +1158,12 @@ void A64EmitX64::EmitExclusiveWriteMemory(A64EmitContext& ctx, IR::Inst* inst) {
         code.CallLambda(
             [](A64::UserConfig& conf, u64 vaddr, T value) -> u32 {
                 return conf.global_monitor->DoExclusiveOperation<T>(conf.processor_id, vaddr,
-                    [&](T expected) -> bool {
-                        return (conf.callbacks->*callback)(vaddr, value, expected);
-                    }) ? 0 : 1;
-            }
-        );
+                                                                    [&](T expected) -> bool {
+                                                                        return (conf.callbacks->*callback)(vaddr, value, expected);
+                                                                    })
+                         ? 0
+                         : 1;
+            });
     } else {
         ctx.reg_alloc.AllocStackSpace(16 + ABI_SHADOW_SPACE);
         code.lea(code.ABI_PARAM3, ptr[rsp + ABI_SHADOW_SPACE]);
@@ -1175,11 +1171,12 @@ void A64EmitX64::EmitExclusiveWriteMemory(A64EmitContext& ctx, IR::Inst* inst) {
         code.CallLambda(
             [](A64::UserConfig& conf, u64 vaddr, A64::Vector& value) -> u32 {
                 return conf.global_monitor->DoExclusiveOperation<A64::Vector>(conf.processor_id, vaddr,
-                    [&](A64::Vector expected) -> bool {
-                        return (conf.callbacks->*callback)(vaddr, value, expected);
-                    }) ? 0 : 1;
-            }
-        );
+                                                                              [&](A64::Vector expected) -> bool {
+                                                                                  return (conf.callbacks->*callback)(vaddr, value, expected);
+                                                                              })
+                         ? 0
+                         : 1;
+            });
         ctx.reg_alloc.ReleaseStackSpace(16 + ABI_SHADOW_SPACE);
     }
     code.L(end);
@@ -1214,13 +1211,12 @@ std::string A64EmitX64::LocationDescriptorToFriendlyName(const IR::LocationDescr
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::Interpret terminal, IR::LocationDescriptor, bool) {
     code.SwitchMxcsrOnExit();
-    Devirtualize<&A64::UserCallbacks::InterpreterFallback>(conf.callbacks).EmitCall(code,
-        [&](RegList param) {
-            code.mov(param[0], A64::LocationDescriptor{terminal.next}.PC());
-            code.mov(qword[r15 + offsetof(A64JitState, pc)], param[0]);
-            code.mov(param[1].cvt32(), terminal.num_instructions);
-        });
-    code.ReturnFromRunCode(true); // TODO: Check cycles
+    Devirtualize<&A64::UserCallbacks::InterpreterFallback>(conf.callbacks).EmitCall(code, [&](RegList param) {
+        code.mov(param[0], A64::LocationDescriptor{terminal.next}.PC());
+        code.mov(qword[r15 + offsetof(A64JitState, pc)], param[0]);
+        code.mov(param[1].cvt32(), terminal.num_instructions);
+    });
+    code.ReturnFromRunCode(true);  // TODO: Check cycles
 }
 
 void A64EmitX64::EmitTerminalImpl(IR::Term::ReturnToDispatch, IR::LocationDescriptor, bool) {
@@ -1352,4 +1348,4 @@ void A64EmitX64::Unpatch(const IR::LocationDescriptor& location) {
     }
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

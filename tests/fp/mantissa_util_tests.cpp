@@ -17,7 +17,7 @@ using namespace Dynarmic;
 using namespace Dynarmic::FP;
 
 TEST_CASE("ResidualErrorOnRightShift", "[fp]") {
-    const std::vector<std::tuple<u32, int, ResidualError>> test_cases {
+    const std::vector<std::tuple<u32, int, ResidualError>> test_cases{
         {0x00000001, 1, ResidualError::Half},
         {0x00000002, 1, ResidualError::Zero},
         {0x00000001, 2, ResidualError::LessThanHalf},
@@ -43,7 +43,7 @@ TEST_CASE("ResidualErrorOnRightShift Randomized", "[fp]") {
         const ResidualError result = ResidualErrorOnRightShift(mantissa, shift);
 
         const u64 calculated_error = Safe::ArithmeticShiftRightDouble(mantissa, u64(0), shift);
-        const ResidualError expected_result = [&]{
+        const ResidualError expected_result = [&] {
             constexpr u64 half_error = 0x8000'0000'0000'0000ull;
             if (calculated_error == 0) {
                 return ResidualError::Zero;

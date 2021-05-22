@@ -44,10 +44,9 @@ static std::function<void(BlockOfCode&)> GenRCP(const A64::UserConfig& conf) {
 struct Jit::Impl final {
 public:
     Impl(Jit* jit, UserConfig conf)
-        : conf(conf)
-        , block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, conf.code_cache_size, conf.far_code_offset, GenRCP(conf))
-        , emitter(block_of_code, conf, jit)
-    {
+            : conf(conf)
+            , block_of_code(GenRunCodeCallbacks(conf.callbacks, &GetCurrentBlockThunk, this), JitStateInfo{jit_state}, conf.code_cache_size, conf.far_code_offset, GenRCP(conf))
+            , emitter(block_of_code, conf, jit) {
         ASSERT(conf.page_table_address_space_bits >= 12 && conf.page_table_address_space_bits <= 64);
     }
 
@@ -61,7 +60,7 @@ public:
 
         // TODO: Check code alignment
 
-        const CodePtr current_code_ptr = [this]{
+        const CodePtr current_code_ptr = [this] {
             // RSB optimization
             const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A64JitState::RSBPtrMask;
             if (jit_state.GetUniqueHash() == jit_state.rsb_location_descriptors[new_rsb_ptr]) {
@@ -233,7 +232,7 @@ private:
         // JIT Compile
         const auto get_code = [this](u64 vaddr) { return conf.callbacks->MemoryReadCode(vaddr); };
         IR::Block ir_block = A64::Translate(A64::LocationDescriptor{current_location}, get_code,
-                                                {conf.define_unpredictable_behaviour, conf.wall_clock_cntpct});
+                                            {conf.define_unpredictable_behaviour, conf.wall_clock_cntpct});
         Optimization::A64CallbackConfigPass(ir_block, conf);
         if (conf.HasOptimization(OptimizationFlag::GetSetElimination)) {
             Optimization::A64GetSetElimination(ir_block);
@@ -287,7 +286,7 @@ private:
 };
 
 Jit::Jit(UserConfig conf)
-    : impl(std::make_unique<Jit::Impl>(this, conf)) {}
+        : impl(std::make_unique<Jit::Impl>(this, conf)) {}
 
 Jit::~Jit() = default;
 
@@ -399,4 +398,4 @@ std::string Jit::Disassemble() const {
     return impl->Disassemble();
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

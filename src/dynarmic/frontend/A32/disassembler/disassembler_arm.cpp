@@ -11,11 +11,11 @@
 
 #include "dynarmic/common/bit_util.h"
 #include "dynarmic/common/string_util.h"
-#include "dynarmic/frontend/imm.h"
 #include "dynarmic/frontend/A32/decoder/arm.h"
 #include "dynarmic/frontend/A32/decoder/vfp.h"
 #include "dynarmic/frontend/A32/disassembler/disassembler.h"
 #include "dynarmic/frontend/A32/types.h"
+#include "dynarmic/frontend/imm.h"
 
 namespace Dynarmic::A32 {
 
@@ -24,22 +24,26 @@ public:
     using instruction_return_type = std::string;
 
     static u32 ArmExpandImm(int rotate, Imm<8> imm8) {
-        return Common::RotateRight(static_cast<u32>(imm8.ZeroExtend()), rotate*2);
+        return Common::RotateRight(static_cast<u32>(imm8.ZeroExtend()), rotate * 2);
     }
 
     static std::string ShiftStr(ShiftType shift, Imm<5> imm5) {
         switch (shift) {
         case ShiftType::LSL:
-            if (imm5 == 0) return "";
+            if (imm5 == 0)
+                return "";
             return fmt::format(", lsl #{}", imm5.ZeroExtend());
         case ShiftType::LSR:
-            if (imm5 == 0) return ", lsr #32";
+            if (imm5 == 0)
+                return ", lsr #32";
             return fmt::format(", lsr #{}", imm5.ZeroExtend());
         case ShiftType::ASR:
-            if (imm5 == 0) return ", asr #32";
+            if (imm5 == 0)
+                return ", asr #32";
             return fmt::format(", asr #{}", imm5.ZeroExtend());
         case ShiftType::ROR:
-            if (imm5 == 0) return ", rrx";
+            if (imm5 == 0)
+                return ", rrx";
             return fmt::format(", ror #{}", imm5.ZeroExtend());
         }
         ASSERT(false);
@@ -47,7 +51,7 @@ public:
     }
 
     static std::string RsrStr(Reg s, ShiftType shift, Reg m) {
-        switch (shift){
+        switch (shift) {
         case ShiftType::LSL:
             return fmt::format("{}, lsl {}", m, s);
         case ShiftType::LSR:
@@ -92,7 +96,7 @@ public:
             return " ish";
         case 0b1110:
             return " st";
-        case 0b1111: // SY can be omitted.
+        case 0b1111:  // SY can be omitted.
             return "";
         default:
             return " unknown";
@@ -234,14 +238,20 @@ public:
     // CRC32 instructions
     std::string arm_CRC32([[maybe_unused]] Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
         static constexpr std::array data_type{
-            "b", "h", "w", "invalid",
+            "b",
+            "h",
+            "w",
+            "invalid",
         };
 
         return fmt::format("crc32{} {}, {}, {}", data_type[sz.ZeroExtend()], d, n, m);
     }
     std::string arm_CRC32C([[maybe_unused]] Cond cond, Imm<2> sz, Reg n, Reg d, Reg m) {
         static constexpr std::array data_type{
-            "b", "h", "w", "invalid",
+            "b",
+            "h",
+            "w",
+            "invalid",
         };
 
         return fmt::format("crc32c{} {}, {}, {}", data_type[sz.ZeroExtend()], d, n, m);
@@ -548,11 +558,11 @@ public:
 
         if (P) {
             return fmt::format("ldrd{} {}, {}, [{}, #{}{}]{}",
-                               CondToString(cond), t, t+1, n, sign, imm32,
+                               CondToString(cond), t, t + 1, n, sign, imm32,
                                W ? "!" : "");
         } else {
             return fmt::format("ldrd{} {}, {}, [{}], #{}{}{}",
-                               CondToString(cond), t, t+1, n, sign, imm32,
+                               CondToString(cond), t, t + 1, n, sign, imm32,
                                W ? " (err: W == 1!!!)" : "");
         }
     }
@@ -561,11 +571,11 @@ public:
 
         if (P) {
             return fmt::format("ldrd{} {}, {}, [{}, {}{}]{}",
-                               CondToString(cond), t, t+1, n, sign, m,
+                               CondToString(cond), t, t + 1, n, sign, m,
                                W ? "!" : "");
         } else {
             return fmt::format("ldrd{} {}, {}, [{}], {}{}{}",
-                               CondToString(cond), t, t+1, n, sign, m,
+                               CondToString(cond), t, t + 1, n, sign, m,
                                W ? " (err: W == 1!!!)" : "");
         }
     }
@@ -728,11 +738,11 @@ public:
 
         if (P) {
             return fmt::format("strd{} {}, {}, [{}, #{}{}]{}",
-                               CondToString(cond), t, t+1, n, sign, imm32,
+                               CondToString(cond), t, t + 1, n, sign, imm32,
                                W ? "!" : "");
         } else {
             return fmt::format("strd{} {}, {}, [{}], #{}{}{}",
-                               CondToString(cond), t, t+1, n, sign, imm32,
+                               CondToString(cond), t, t + 1, n, sign, imm32,
                                W ? " (err: W == 1!!!)" : "");
         }
     }
@@ -741,11 +751,11 @@ public:
 
         if (P) {
             return fmt::format("strd{} {}, {}, [{}, {}{}]{}",
-                               CondToString(cond), t, t+1, n, sign, m,
+                               CondToString(cond), t, t + 1, n, sign, m,
                                W ? "!" : "");
         } else {
             return fmt::format("strd{} {}, {}, [{}], {}{}{}",
-                               CondToString(cond), t, t+1, n, sign, m,
+                               CondToString(cond), t, t + 1, n, sign, m,
                                W ? " (err: W == 1!!!)" : "");
         }
     }
@@ -1143,7 +1153,7 @@ public:
         return fmt::format("ldaexb{} {}, [{}]", CondToString(cond), t, n);
     }
     std::string arm_LDAEXD(Cond cond, Reg n, Reg t) {
-        return fmt::format("ldaexd{} {}, {}, [{}]", CondToString(cond), t, t+1, n);
+        return fmt::format("ldaexd{} {}, {}, [{}]", CondToString(cond), t, t + 1, n);
     }
     std::string arm_LDAEXH(Cond cond, Reg n, Reg t) {
         return fmt::format("ldaexh{} {}, [{}]", CondToString(cond), t, n);
@@ -1164,7 +1174,7 @@ public:
         return fmt::format("stlexb{} {}, {}, [{}]", CondToString(cond), d, m, n);
     }
     std::string arm_STLEXD(Cond cond, Reg n, Reg d, Reg m) {
-        return fmt::format("stlexd{} {}, {}, {}, [{}]", CondToString(cond), d, m, m+1, n);
+        return fmt::format("stlexd{} {}, {}, {}, [{}]", CondToString(cond), d, m, m + 1, n);
     }
     std::string arm_STLEXH(Cond cond, Reg n, Reg d, Reg m) {
         return fmt::format("stlexh{} {}, {}, [{}]", CondToString(cond), d, m, n);
@@ -1176,7 +1186,7 @@ public:
         return fmt::format("ldrexb{} {}, [{}]", CondToString(cond), d, n);
     }
     std::string arm_LDREXD(Cond cond, Reg n, Reg d) {
-        return fmt::format("ldrexd{} {}, {}, [{}]", CondToString(cond), d, d+1, n);
+        return fmt::format("ldrexd{} {}, {}, [{}]", CondToString(cond), d, d + 1, n);
     }
     std::string arm_LDREXH(Cond cond, Reg n, Reg d) {
         return fmt::format("ldrexh{} {}, [{}]", CondToString(cond), d, n);
@@ -1188,7 +1198,7 @@ public:
         return fmt::format("strexb{} {}, {}, [{}]", CondToString(cond), d, m, n);
     }
     std::string arm_STREXD(Cond cond, Reg n, Reg d, Reg m) {
-        return fmt::format("strexd{} {}, {}, {}, [{}]", CondToString(cond), d, m, m+1, n);
+        return fmt::format("strexd{} {}, {}, {}, [{}]", CondToString(cond), d, m, m + 1, n);
     }
     std::string arm_STREXH(Cond cond, Reg n, Reg d, Reg m) {
         return fmt::format("strexh{} {}, {}, [{}]", CondToString(cond), d, m, n);
@@ -1315,35 +1325,35 @@ public:
         }
     }
 
-    std::string vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D){
+    std::string vfp_VMOV_u32_f64(Cond cond, size_t Vd, Reg t, bool D) {
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), FPRegStr(true, Vd, D), t);
     }
 
-    std::string vfp_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N){
+    std::string vfp_VMOV_f64_u32(Cond cond, size_t Vn, Reg t, bool N) {
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), t, FPRegStr(true, Vn, N));
     }
 
-    std::string vfp_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N){
+    std::string vfp_VMOV_u32_f32(Cond cond, size_t Vn, Reg t, bool N) {
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), FPRegStr(false, Vn, N), t);
     }
 
-    std::string vfp_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N){
+    std::string vfp_VMOV_f32_u32(Cond cond, size_t Vn, Reg t, bool N) {
         return fmt::format("vmov{}.32 {}, {}", CondToString(cond), t, FPRegStr(false, Vn, N));
     }
 
-    std::string vfp_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, size_t Vm) {
         return fmt::format("vmov{} {}, {}, {}, {}", CondToString(cond), FPRegStr(false, Vm, M), FPNextRegStr(false, Vm, M), t, t2);
     }
 
-    std::string vfp_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm) {
         return fmt::format("vmov{} {}, {}, {}, {}", CondToString(cond), t, t2, FPRegStr(false, Vm, M), FPNextRegStr(false, Vm, M));
     }
 
-    std::string vfp_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_2u32_f64(Cond cond, Reg t2, Reg t, bool M, size_t Vm) {
         return fmt::format("vmov{} {}, {}, {}", CondToString(cond), FPRegStr(true, Vm, M), t, t2);
     }
 
-    std::string vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm){
+    std::string vfp_VMOV_f64_2u32(Cond cond, Reg t2, Reg t, bool M, size_t Vm) {
         return fmt::format("vmov{} {}, {}, {}", CondToString(cond), t, t2, FPRegStr(true, Vm, M));
     }
 
@@ -1382,7 +1392,7 @@ public:
         return fmt::format("vdup{}.{} {}, {}", CondToString(cond), esize, VectorStr(Q, Vd, D), t);
     }
 
-    std::string vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm){
+    std::string vfp_VMOV_reg(Cond cond, bool D, size_t Vd, bool sz, bool M, size_t Vm) {
         return fmt::format("vmov{}.{} {}, {}", CondToString(cond), sz ? "f64" : "f32", FPRegStr(sz, Vd, D), FPRegStr(sz, Vm, M));
     }
 
@@ -1570,4 +1580,4 @@ std::string DisassembleArm(u32 instruction) {
     }
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

@@ -289,4 +289,4 @@ bool TranslatorVisitor::thumb32_RSB_reg(bool S, Reg n, Imm<3> imm3, Reg d, Imm<2
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

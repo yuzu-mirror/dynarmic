@@ -12,7 +12,7 @@ namespace Dynarmic {
 
 namespace IR {
 class Block;
-} // namespace IR
+}  // namespace IR
 
 namespace A64 {
 
@@ -54,5 +54,5 @@ IR::Block Translate(LocationDescriptor descriptor, MemoryReadCodeFuncType memory
  */
 bool TranslateSingleInstruction(IR::Block& block, LocationDescriptor descriptor, u32 instruction);
 
-} // namespace A64
-} // namespace Dynarmic
+}  // namespace A64
+}  // namespace Dynarmic

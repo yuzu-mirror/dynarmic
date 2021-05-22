@@ -19,17 +19,17 @@ namespace Backend::X64 {
 
 namespace impl {
 
-template <typename FunctionType, FunctionType mfp>
+template<typename FunctionType, FunctionType mfp>
 struct ThunkBuilder;
 
-template <typename C, typename R, typename... Args, R(C::*mfp)(Args...)>
-struct ThunkBuilder<R(C::*)(Args...), mfp> {
+template<typename C, typename R, typename... Args, R (C::*mfp)(Args...)>
+struct ThunkBuilder<R (C::*)(Args...), mfp> {
     static R Thunk(C* this_, Args... args) {
         return (this_->*mfp)(std::forward<Args>(args)...);
     }
 };
 
-} // namespace impl
+}  // namespace impl
 
 template<auto mfp>
 ArgCallback DevirtualizeGeneric(mp::class_type<decltype(mfp)>* this_) {
@@ -77,5 +77,5 @@ ArgCallback Devirtualize(mp::class_type<decltype(mfp)>* this_) {
 #endif
 }
 
-} // namespace Backend::X64
-} // namespace Dynarmic
+}  // namespace Backend::X64
+}  // namespace Dynarmic

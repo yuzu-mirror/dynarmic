@@ -37,4 +37,4 @@ u32 ComputeCRC32Castagnoli(u32 crc, u64 value, int length);
  */
 u32 ComputeCRC32ISO(u32 crc, u64 value, int length);
 
-} // namespace Dynarmic::Common::Crypto::CRC32
+}  // namespace Dynarmic::Common::Crypto::CRC32

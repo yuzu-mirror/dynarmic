@@ -25,11 +25,11 @@ struct ReverseAdapter {
     }
 };
 
-} // namespace detail
+}  // namespace detail
 
 template<typename T>
 constexpr detail::ReverseAdapter<T> Reverse(T&& iterable) {
     return detail::ReverseAdapter<T>{iterable};
 }
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

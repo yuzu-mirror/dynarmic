@@ -12,7 +12,7 @@ struct UserCallbacks;
 namespace Dynarmic::A64 {
 struct UserCallbacks;
 struct UserConfig;
-}
+}  // namespace Dynarmic::A64
 
 namespace Dynarmic::IR {
 class Block;
@@ -30,4 +30,4 @@ void DeadCodeElimination(IR::Block& block);
 void IdentityRemovalPass(IR::Block& block);
 void VerificationPass(const IR::Block& block);
 
-} // namespace Dynarmic::Optimization
+}  // namespace Dynarmic::Optimization

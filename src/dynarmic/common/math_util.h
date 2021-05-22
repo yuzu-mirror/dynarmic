@@ -44,4 +44,4 @@ u8 RecipEstimate(u64 a);
  */
 u8 RecipSqrtEstimate(u64 a);
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

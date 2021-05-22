@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/common/assert.h"
 #include "dynarmic/frontend/A64/ir_emitter.h"
+
+#include "dynarmic/common/assert.h"
 #include "dynarmic/ir/opcodes.h"
 
 namespace Dynarmic::A64 {
@@ -260,4 +261,4 @@ void IREmitter::SetPC(const IR::U64& value) {
     Inst(Opcode::A64SetPC, value);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

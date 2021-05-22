@@ -56,7 +56,7 @@ struct CaptureSImm {
     }
 };
 
-template <u64 Value>
+template<u64 Value>
 struct UImm {
     using ReturnType = std::tuple<>;
 
@@ -67,7 +67,7 @@ struct UImm {
     }
 };
 
-template <s64 Value>
+template<s64 Value>
 struct SImm {
     using ReturnType = std::tuple<>;
 
@@ -78,7 +78,7 @@ struct SImm {
     }
 };
 
-template <IR::Opcode Opcode, typename... Args>
+template<IR::Opcode Opcode, typename... Args>
 struct Inst {
 public:
     using ReturnType = mp::concat<std::tuple<>, typename Args::ReturnType...>;
@@ -98,7 +98,7 @@ public:
     }
 
 private:
-    template <size_t I>
+    template<size_t I>
     static auto MatchArgs(const IR::Inst& inst) -> std::optional<mp::apply<mp::concat, mp::prepend<mp::drop<I, mp::list<typename Args::ReturnType...>>, std::tuple<>>>> {
         if constexpr (I >= sizeof...(Args)) {
             return std::tuple();
@@ -124,4 +124,4 @@ inline bool IsSameInst(std::tuple<IR::Inst*, IR::Inst*, IR::Inst*> t) {
     return std::get<0>(t) == std::get<1>(t) && std::get<0>(t) == std::get<2>(t);
 }
 
-} // namespace Dynarmic::Optimization::IRMatcher
+}  // namespace Dynarmic::Optimization::IRMatcher

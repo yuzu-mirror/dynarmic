@@ -152,4 +152,4 @@ bool TranslatorVisitor::EXTR(bool sf, bool N, Reg Rm, Imm<6> imms, Reg Rn, Reg R
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -19,4 +19,4 @@ bool TranslatorVisitor::SVC(Imm<16> imm16) {
     return false;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

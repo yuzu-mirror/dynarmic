@@ -13,7 +13,7 @@
 
 namespace Dynarmic::FP {
 enum class RoundingMode;
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP
 
 // ARM JIT Microinstruction Intermediate Representation
 //
@@ -26,26 +26,26 @@ namespace Dynarmic::IR {
 
 enum class Opcode;
 
-template <typename T>
+template<typename T>
 struct ResultAndCarry {
     T result;
     U1 carry;
 };
 
-template <typename T>
+template<typename T>
 struct ResultAndOverflow {
     T result;
     U1 overflow;
 };
 
-template <typename T>
+template<typename T>
 struct ResultAndCarryAndOverflow {
     T result;
     U1 carry;
     U1 overflow;
 };
 
-template <typename T>
+template<typename T>
 struct ResultAndGE {
     T result;
     U32 ge;
@@ -57,13 +57,27 @@ struct UpperAndLower {
 };
 
 enum class AccType {
-    NORMAL, VEC, STREAM, VECSTREAM,
-    ATOMIC, ORDERED, ORDEREDRW, LIMITEDORDERED,
-    UNPRIV, IFETCH, PTW, DC, IC, DCZVA, AT,
+    NORMAL,
+    VEC,
+    STREAM,
+    VECSTREAM,
+    ATOMIC,
+    ORDERED,
+    ORDEREDRW,
+    LIMITEDORDERED,
+    UNPRIV,
+    IFETCH,
+    PTW,
+    DC,
+    IC,
+    DCZVA,
+    AT,
 };
 
 enum class MemOp {
-    LOAD, STORE, PREFETCH,
+    LOAD,
+    STORE,
+    PREFETCH,
 };
 
 /**
@@ -73,7 +87,8 @@ enum class MemOp {
  */
 class IREmitter {
 public:
-    explicit IREmitter(Block& block) : block(block), insertion_point(block.end()) {}
+    explicit IREmitter(Block& block)
+            : block(block), insertion_point(block.end()) {}
 
     Block& block;
 
@@ -392,11 +407,11 @@ public:
 protected:
     IR::Block::iterator insertion_point;
 
-    template<typename T = Value, typename ...Args>
-    T Inst(Opcode op, Args ...args) {
+    template<typename T = Value, typename... Args>
+    T Inst(Opcode op, Args... args) {
         auto iter = block.PrependNewInst(insertion_point, op, {Value(args)...});
         return T(Value(&*iter));
     }
 };
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

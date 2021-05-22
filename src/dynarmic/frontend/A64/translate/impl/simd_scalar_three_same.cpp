@@ -49,8 +49,7 @@ bool RoundingShiftLeft(TranslatorVisitor& v, Imm<2> size, Vec Vm, Vec Vn, Vec Vd
     return true;
 }
 
-bool ScalarCompare(TranslatorVisitor& v, Imm<2> size, std::optional<Vec> Vm, Vec Vn, Vec Vd,
-                   ComparisonType type, ComparisonVariant variant) {
+bool ScalarCompare(TranslatorVisitor& v, Imm<2> size, std::optional<Vec> Vm, Vec Vn, Vec Vd, ComparisonType type, ComparisonVariant variant) {
     if (size != 0b11) {
         return v.ReservedValue();
     }
@@ -123,7 +122,7 @@ bool ScalarFPCompareRegister(TranslatorVisitor& v, bool sz, Vec Vm, Vec Vn, Vec 
     v.V_scalar(datasize, Vd, v.ir.VectorGetElement(esize, result, 0));
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::SQADD_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     const size_t esize = 8 << size.ZeroExtend<size_t>();
@@ -435,4 +434,4 @@ bool TranslatorVisitor::USHL_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

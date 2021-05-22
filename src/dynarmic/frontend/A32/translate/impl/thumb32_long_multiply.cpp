@@ -21,7 +21,7 @@ bool DivideOperation(TranslatorVisitor& v, Reg d, Reg m, Reg n, DivideFunction f
     v.ir.SetRegister(d, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::thumb32_SDIV(Reg n, Reg d, Reg m) {
     return DivideOperation(*this, d, m, n, &IREmitter::SignedDiv);
@@ -219,4 +219,4 @@ bool TranslatorVisitor::thumb32_UMAAL(Reg n, Reg dLo, Reg dHi, Reg m) {
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

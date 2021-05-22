@@ -34,4 +34,4 @@ private:
     std::unique_ptr<Impl> impl;
 };
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

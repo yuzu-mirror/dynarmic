@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include <array>
+
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
-template <typename FnT>
+template<typename FnT>
 bool TranslatorVisitor::EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtReg m, const FnT& fn) {
     if (!ir.current_location.FPSCR().Stride()) {
         return UnpredictableInstruction();
@@ -76,9 +76,9 @@ bool TranslatorVisitor::EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg n, ExtR
     return true;
 }
 
-template <typename FnT>
+template<typename FnT>
 bool TranslatorVisitor::EmitVfpVectorOperation(bool sz, ExtReg d, ExtReg m, const FnT& fn) {
-    return EmitVfpVectorOperation(sz, d, ExtReg::S0, m, [fn](ExtReg d, ExtReg, ExtReg m){
+    return EmitVfpVectorOperation(sz, d, ExtReg::S0, m, [fn](ExtReg d, ExtReg, ExtReg m) {
         fn(d, m);
     });
 }
@@ -462,7 +462,7 @@ bool TranslatorVisitor::vfp_VMOV_2u32_2f32(Cond cond, Reg t2, Reg t, bool M, siz
     }
 
     ir.SetExtendedRegister(m, ir.GetRegister(t));
-    ir.SetExtendedRegister(m+1, ir.GetRegister(t2));
+    ir.SetExtendedRegister(m + 1, ir.GetRegister(t2));
     return true;
 }
 
@@ -482,7 +482,7 @@ bool TranslatorVisitor::vfp_VMOV_2f32_2u32(Cond cond, Reg t2, Reg t, bool M, siz
     }
 
     ir.SetRegister(t, ir.GetExtendedRegister(m));
-    ir.SetRegister(t2, ir.GetExtendedRegister(m+1));
+    ir.SetRegister(t2, ir.GetExtendedRegister(m + 1));
     return true;
 }
 
@@ -940,7 +940,7 @@ bool TranslatorVisitor::vfp_VCVT_f_to_f(Cond cond, bool D, size_t Vd, bool sz, b
         return true;
     }
 
-    const auto d = ToExtReg(!sz, Vd, D); // Destination is of opposite size to source
+    const auto d = ToExtReg(!sz, Vd, D);  // Destination is of opposite size to source
     const auto m = ToExtReg(sz, Vm, M);
     const auto reg_m = ir.GetExtendedRegister(m);
     const auto rounding_mode = ir.current_location.FPSCR().RMode();
@@ -970,13 +970,13 @@ bool TranslatorVisitor::vfp_VCVT_from_int(Cond cond, bool D, size_t Vd, bool sz,
 
     if (sz) {
         const auto result = is_signed
-                          ? ir.FPSignedFixedToDouble(reg_m, 0, rounding_mode)
-                          : ir.FPUnsignedFixedToDouble(reg_m, 0, rounding_mode);
+                              ? ir.FPSignedFixedToDouble(reg_m, 0, rounding_mode)
+                              : ir.FPUnsignedFixedToDouble(reg_m, 0, rounding_mode);
         ir.SetExtendedRegister(d, result);
     } else {
         const auto result = is_signed
-                          ? ir.FPSignedFixedToSingle(reg_m, 0, rounding_mode)
-                          : ir.FPUnsignedFixedToSingle(reg_m, 0, rounding_mode);
+                              ? ir.FPSignedFixedToSingle(reg_m, 0, rounding_mode)
+                              : ir.FPUnsignedFixedToSingle(reg_m, 0, rounding_mode);
         ir.SetExtendedRegister(d, result);
     }
 
@@ -1168,7 +1168,7 @@ bool TranslatorVisitor::vfp_VPOP(Cond cond, bool D, size_t Vd, bool sz, Imm<8> i
     const ExtReg d = ToExtReg(sz, Vd, D);
     const size_t regs = sz ? imm8.ZeroExtend() >> 1 : imm8.ZeroExtend();
 
-    if (regs == 0 || RegNumber(d)+regs > 32) {
+    if (regs == 0 || RegNumber(d) + regs > 32) {
         return UnpredictableInstruction();
     }
 
@@ -1209,7 +1209,7 @@ bool TranslatorVisitor::vfp_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm<8> 
     const ExtReg d = ToExtReg(sz, Vd, D);
     const size_t regs = sz ? imm8.ZeroExtend() >> 1 : imm8.ZeroExtend();
 
-    if (regs == 0 || RegNumber(d)+regs > 32) {
+    if (regs == 0 || RegNumber(d) + regs > 32) {
         return UnpredictableInstruction();
     }
 
@@ -1230,7 +1230,8 @@ bool TranslatorVisitor::vfp_VPUSH(Cond cond, bool D, size_t Vd, bool sz, Imm<8> 
             const auto reg_d = ir.GetExtendedRegister(d + i);
             auto lo = ir.LeastSignificantWord(reg_d);
             auto hi = ir.MostSignificantWord(reg_d).result;
-            if (ir.current_location.EFlag()) std::swap(lo, hi);
+            if (ir.current_location.EFlag())
+                std::swap(lo, hi);
             ir.WriteMemory32(address, lo);
             address = ir.Add(address, ir.Imm32(4));
             ir.WriteMemory32(address, hi);
@@ -1318,7 +1319,7 @@ bool TranslatorVisitor::vfp_VSTM_a1(Cond cond, bool p, bool u, bool D, bool w, R
     const auto d = ToExtReg(true, Vd, D);
     const size_t regs = imm8.ZeroExtend() / 2;
 
-    if (regs == 0 || regs > 16 || A32::RegNumber(d)+regs > 32) {
+    if (regs == 0 || regs > 16 || A32::RegNumber(d) + regs > 32) {
         return UnpredictableInstruction();
     }
 
@@ -1370,7 +1371,7 @@ bool TranslatorVisitor::vfp_VSTM_a2(Cond cond, bool p, bool u, bool D, bool w, R
     const auto d = ToExtReg(false, Vd, D);
     const size_t regs = imm8.ZeroExtend();
 
-    if (regs == 0 || A32::RegNumber(d)+regs > 32) {
+    if (regs == 0 || A32::RegNumber(d) + regs > 32) {
         return UnpredictableInstruction();
     }
 
@@ -1413,7 +1414,7 @@ bool TranslatorVisitor::vfp_VLDM_a1(Cond cond, bool p, bool u, bool D, bool w, R
     const auto d = ToExtReg(true, Vd, D);
     const size_t regs = imm8.ZeroExtend() / 2;
 
-    if (regs == 0 || regs > 16 || A32::RegNumber(d)+regs > 32) {
+    if (regs == 0 || regs > 16 || A32::RegNumber(d) + regs > 32) {
         return UnpredictableInstruction();
     }
 
@@ -1463,7 +1464,7 @@ bool TranslatorVisitor::vfp_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, R
     const auto d = ToExtReg(false, Vd, D);
     const size_t regs = imm8.ZeroExtend();
 
-    if (regs == 0 || A32::RegNumber(d)+regs > 32) {
+    if (regs == 0 || A32::RegNumber(d) + regs > 32) {
         return UnpredictableInstruction();
     }
 
@@ -1485,4 +1486,4 @@ bool TranslatorVisitor::vfp_VLDM_a2(Cond cond, bool p, bool u, bool D, bool w, R
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

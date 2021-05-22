@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 namespace {
@@ -27,7 +26,7 @@ enum class WidenBehaviour {
     Both,
 };
 
-template <bool WithDst, typename Callable>
+template<bool WithDst, typename Callable>
 bool BitwiseInstruction(TranslatorVisitor& v, bool D, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return v.UndefinedInstruction();
@@ -53,7 +52,7 @@ bool BitwiseInstruction(TranslatorVisitor& v, bool D, size_t Vn, size_t Vd, bool
     return true;
 }
 
-template <typename Callable>
+template<typename Callable>
 bool FloatingPointInstruction(TranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Callable fn) {
     if (Q && (Common::Bit<0>(Vd) || Common::Bit<0>(Vn) || Common::Bit<0>(Vm))) {
         return v.UndefinedInstruction();
@@ -76,8 +75,7 @@ bool FloatingPointInstruction(TranslatorVisitor& v, bool D, bool sz, size_t Vn, 
     return true;
 }
 
-bool IntegerComparison(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm,
-                       Comparison comparison) {
+bool IntegerComparison(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Comparison comparison) {
     if (sz == 0b11) {
         return v.UndefinedInstruction();
     }
@@ -112,8 +110,7 @@ bool IntegerComparison(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t V
     return true;
 }
 
-bool FloatComparison(TranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm,
-                     Comparison comparison) {
+bool FloatComparison(TranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, Comparison comparison) {
     if (sz) {
         return v.UndefinedInstruction();
     }
@@ -149,8 +146,7 @@ bool FloatComparison(TranslatorVisitor& v, bool D, bool sz, size_t Vn, size_t Vd
     return true;
 }
 
-bool AbsoluteDifference(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm,
-                        AccumulateBehavior accumulate) {
+bool AbsoluteDifference(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm, AccumulateBehavior accumulate) {
     if (sz == 0b11) {
         return v.UndefinedInstruction();
     }
@@ -182,8 +178,7 @@ bool AbsoluteDifference(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t 
     return true;
 }
 
-bool AbsoluteDifferenceLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm,
-                            AccumulateBehavior accumulate) {
+bool AbsoluteDifferenceLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, AccumulateBehavior accumulate) {
     if (sz == 0b11) {
         return v.DecodeError();
     }
@@ -217,7 +212,7 @@ bool AbsoluteDifferenceLong(TranslatorVisitor& v, bool U, bool D, size_t sz, siz
     return true;
 }
 
-template <typename Callable>
+template<typename Callable>
 bool WideInstruction(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, WidenBehaviour widen_behaviour, Callable fn) {
     const size_t esize = 8U << sz;
     const bool widen_first = widen_behaviour == WidenBehaviour::Both;
@@ -245,7 +240,7 @@ bool WideInstruction(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t Vn,
     return true;
 }
 
-} // Anonymous namespace
+}  // Anonymous namespace
 
 // ASIMD Three registers of the same length
 
@@ -893,4 +888,4 @@ bool TranslatorVisitor::asimd_VMULL(bool U, bool D, size_t sz, size_t Vn, size_t
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

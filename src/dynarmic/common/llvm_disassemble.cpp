@@ -8,8 +8,8 @@
 #include <fmt/format.h>
 
 #ifdef DYNARMIC_USE_LLVM
-#include <llvm-c/Disassembler.h>
-#include <llvm-c/Target.h>
+#    include <llvm-c/Disassembler.h>
+#    include <llvm-c/Target.h>
 #endif
 
 #include "dynarmic/common/assert.h"
@@ -79,8 +79,10 @@ std::string DisassembleAArch32([[maybe_unused]] bool is_thumb, [[maybe_unused]] 
         result += inst_size > 0 ? buffer : "<invalid instruction>";
         result += '\n';
 
-        if (inst_size == 0) inst_size = is_thumb ? 2 : 4;
-        if (length <= inst_size) break;
+        if (inst_size == 0)
+            inst_size = is_thumb ? 2 : 4;
+        if (length <= inst_size)
+            break;
 
         pc += inst_size;
         instructions += inst_size;
@@ -118,4 +120,4 @@ std::string DisassembleAArch64([[maybe_unused]] u32 instruction, [[maybe_unused]
     return result;
 }
 
-} // namespace Dynarmic::Common
+}  // namespace Dynarmic::Common

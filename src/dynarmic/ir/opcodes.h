@@ -45,4 +45,4 @@ std::string GetNameOf(Opcode op);
 
 std::ostream& operator<<(std::ostream& o, Opcode opcode);
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

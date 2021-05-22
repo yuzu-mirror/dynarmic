@@ -21,8 +21,8 @@ bool TranslatorVisitor::thumb32_BL_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j
 
     const s32 imm32 = static_cast<s32>((concatenate(S, i1, i2, hi, lo).SignExtend<u32>() << 1) + 4);
     const auto new_location = ir.current_location
-                                .AdvancePC(imm32)
-                                .AdvanceIT();
+                                  .AdvancePC(imm32)
+                                  .AdvanceIT();
     ir.SetTerm(IR::Term::LinkBlock{new_location});
     return false;
 }
@@ -45,9 +45,9 @@ bool TranslatorVisitor::thumb32_BLX_imm(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> 
 
     const s32 imm32 = static_cast<s32>(concatenate(S, i1, i2, hi, lo).SignExtend<u32>() << 1);
     const auto new_location = ir.current_location
-                                .SetPC(ir.AlignPC(4) + imm32)
-                                .SetTFlag(false)
-                                .AdvanceIT();
+                                  .SetPC(ir.AlignPC(4) + imm32)
+                                  .SetTFlag(false)
+                                  .AdvanceIT();
     ir.SetTerm(IR::Term::LinkBlock{new_location});
     return false;
 }
@@ -62,8 +62,8 @@ bool TranslatorVisitor::thumb32_B(Imm<1> S, Imm<10> hi, Imm<1> j1, Imm<1> j2, Im
 
     const s32 imm32 = static_cast<s32>((concatenate(S, i1, i2, hi, lo).SignExtend<u32>() << 1) + 4);
     const auto new_location = ir.current_location
-                                .AdvancePC(imm32)
-                                .AdvanceIT();
+                                  .AdvancePC(imm32)
+                                  .AdvanceIT();
     ir.SetTerm(IR::Term::LinkBlock{new_location});
     return false;
 }
@@ -76,13 +76,13 @@ bool TranslatorVisitor::thumb32_B_cond(Imm<1> S, Cond cond, Imm<6> hi, Imm<1> i1
     // Note: i1 and i2 were not inverted from encoding and are opposite compared to the other B instructions.
     const s32 imm32 = static_cast<s32>((concatenate(S, i2, i1, hi, lo).SignExtend<u32>() << 1) + 4);
     const auto then_location = ir.current_location
-                                 .AdvancePC(imm32)
-                                 .AdvanceIT();
+                                   .AdvancePC(imm32)
+                                   .AdvanceIT();
     const auto else_location = ir.current_location
-                                 .AdvancePC(4)
-                                 .AdvanceIT();
+                                   .AdvancePC(4)
+                                   .AdvanceIT();
     ir.SetTerm(IR::Term::If{cond, IR::Term::LinkBlock{then_location}, IR::Term::LinkBlock{else_location}});
     return false;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

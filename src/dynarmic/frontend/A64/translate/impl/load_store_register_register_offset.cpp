@@ -157,4 +157,4 @@ bool TranslatorVisitor::LDR_reg_fpsimd(Imm<2> size, Imm<1> opc_1, Reg Rm, Imm<3>
     return VecSharedDecodeAndOperation(*this, scale, shift, opc_0, Rm, option, Rn, Vt);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

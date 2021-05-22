@@ -131,4 +131,4 @@ bool TranslatorVisitor::LDx_mult_2(bool Q, Reg Rm, Imm<4> opcode, Imm<2> size, R
     return SharedDecodeAndOperation(*this, wback, memop, Q, Rm, opcode, size, Rn, Vt);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -4,7 +4,6 @@
  */
 
 #include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/interface/A32/config.h"
 
 namespace Dynarmic::A32 {
@@ -1052,4 +1051,4 @@ bool TranslatorVisitor::thumb16_B_t2(Imm<11> imm11) {
     return false;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

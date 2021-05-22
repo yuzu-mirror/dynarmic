@@ -20,7 +20,7 @@ IR::U64 MakeMNSig(IREmitter& ir, IR::U64 data, u8 first_rot_amount, u8 second_ro
     const IR::U64 tmp2 = ir.RotateRight(data, ir.Imm8(second_rot_amount));
     const IR::U64 tmp3 = ir.RotateRight(data, ir.Imm8(third_rot_amount));
 
-     return ir.Eor(tmp1, ir.Eor(tmp2, tmp3));
+    return ir.Eor(tmp1, ir.Eor(tmp2, tmp3));
 }
 
 enum class SHA512HashPart {
@@ -59,7 +59,7 @@ IR::U128 SHA512Hash(IREmitter& ir, Vec Vm, Vec Vn, Vec Vd, SHA512HashPart part) 
         return ir.Eor(tmp1, ir.Eor(tmp2, tmp3));
     };
 
-    const IR::U64 Vtmp = [&]  {
+    const IR::U64 Vtmp = [&] {
         const IR::U64 partial = [&] {
             if (part == SHA512HashPart::Part1) {
                 return make_partial_half(upper_y, lower_x, upper_x);
@@ -147,7 +147,7 @@ IR::U128 SM4Hash(IREmitter& ir, Vec Vn, Vec Vd, SM4RotationType type) {
 
     return roundresult;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::SHA512SU0(Vec Vn, Vec Vd) {
     const IR::U128 x = ir.GetQ(Vn);
@@ -297,4 +297,4 @@ bool TranslatorVisitor::SM4EKEY(Vec Vm, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

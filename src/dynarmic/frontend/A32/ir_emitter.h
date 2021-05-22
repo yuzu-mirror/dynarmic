@@ -27,7 +27,8 @@ enum class Reg;
  */
 class IREmitter : public IR::IREmitter {
 public:
-    IREmitter(IR::Block& block, LocationDescriptor descriptor, ArchVersion arch_version) : IR::IREmitter(block), current_location(descriptor), arch_version(arch_version) {}
+    IREmitter(IR::Block& block, LocationDescriptor descriptor, ArchVersion arch_version)
+            : IR::IREmitter(block), current_location(descriptor), arch_version(arch_version) {}
 
     LocationDescriptor current_location;
 
@@ -108,4 +109,4 @@ private:
     enum ArchVersion arch_version;
 };
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

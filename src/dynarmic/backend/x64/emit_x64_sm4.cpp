@@ -17,4 +17,4 @@ void EmitX64::EmitSM4AccessSubstitutionBox(EmitContext& ctx, IR::Inst* inst) {
     code.CallFunction(&Common::Crypto::SM4::AccessSubstitutionBox);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

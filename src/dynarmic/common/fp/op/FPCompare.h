@@ -10,7 +10,7 @@ namespace Dynarmic::FP {
 class FPCR;
 class FPSR;
 
-template <typename FPT>
+template<typename FPT>
 bool FPCompareEQ(FPT lhs, FPT rhs, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

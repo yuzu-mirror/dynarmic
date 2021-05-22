@@ -106,7 +106,7 @@ void EmitUnsignedSaturatedOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst
     ctx.reg_alloc.DefineValue(inst, addend);
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 void EmitX64::EmitSignedSaturatedAdd8(EmitContext& ctx, IR::Inst* inst) {
     EmitSignedSaturatedOp<Op::Add, 8>(code, ctx, inst);
@@ -312,4 +312,4 @@ void EmitX64::EmitUnsignedSaturation(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

@@ -3,17 +3,15 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 static bool ITBlockCheck(const A32::IREmitter& ir) {
     return ir.current_location.IT().IsInITBlock() && !ir.current_location.IT().IsLastInITBlock();
 }
 
-static bool LDMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list,
-                      const IR::U32& start_address, const IR::U32& writeback_address) {
+static bool LDMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list, const IR::U32& start_address, const IR::U32& writeback_address) {
     auto address = start_address;
     for (size_t i = 0; i <= 14; i++) {
         if (Common::Bit(i, list)) {
@@ -37,8 +35,7 @@ static bool LDMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list,
     return true;
 }
 
-static bool STMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list,
-                      const IR::U32& start_address, const IR::U32& writeback_address) {
+static bool STMHelper(A32::IREmitter& ir, bool W, Reg n, u32 list, const IR::U32& start_address, const IR::U32& writeback_address) {
     auto address = start_address;
     for (size_t i = 0; i <= 14; i++) {
         if (Common::Bit(i, list)) {
@@ -148,4 +145,4 @@ bool TranslatorVisitor::thumb32_STMDB(bool W, Reg n, Imm<15> reg_list) {
     return STMHelper(ir, W, n, regs_imm, start_address, start_address);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

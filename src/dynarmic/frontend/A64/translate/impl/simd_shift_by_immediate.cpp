@@ -47,8 +47,7 @@ IR::U128 PerformRoundingCorrection(TranslatorVisitor& v, size_t esize, u64 round
     return v.ir.VectorSub(esize, shifted, round_correction);
 }
 
-bool ShiftRight(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, Vec Vd,
-                Rounding rounding, Accumulating accumulating, Signedness signedness) {
+bool ShiftRight(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, Vec Vd, Rounding rounding, Accumulating accumulating, Signedness signedness) {
     if (immh == 0b0000) {
         return v.DecodeError();
     }
@@ -85,8 +84,7 @@ bool ShiftRight(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, 
     return true;
 }
 
-bool ShiftRightNarrowing(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, Vec Vd,
-                         Rounding rounding, Narrowing narrowing, Signedness signedness) {
+bool ShiftRightNarrowing(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, Vec Vd, Rounding rounding, Narrowing narrowing, Signedness signedness) {
     if (immh == 0b0000) {
         return v.DecodeError();
     }
@@ -135,8 +133,7 @@ bool ShiftRightNarrowing(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb,
     return true;
 }
 
-bool ShiftLeftLong(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, Vec Vd,
-                   Signedness signedness) {
+bool ShiftLeftLong(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, Vec Vd, Signedness signedness) {
     if (immh == 0b0000) {
         return v.DecodeError();
     }
@@ -214,12 +211,12 @@ bool ConvertFloat(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn
         switch (direction) {
         case FloatConversionDirection::FixedToFloat:
             return signedness == Signedness::Signed
-                 ? v.ir.FPVectorFromSignedFixed(esize, operand, fbits, rounding_mode)
-                 : v.ir.FPVectorFromUnsignedFixed(esize, operand, fbits, rounding_mode);
+                     ? v.ir.FPVectorFromSignedFixed(esize, operand, fbits, rounding_mode)
+                     : v.ir.FPVectorFromUnsignedFixed(esize, operand, fbits, rounding_mode);
         case FloatConversionDirection::FloatToFixed:
             return signedness == Signedness::Signed
-                 ? v.ir.FPVectorToSignedFixed(esize, operand, fbits, rounding_mode)
-                 : v.ir.FPVectorToUnsignedFixed(esize, operand, fbits, rounding_mode);
+                     ? v.ir.FPVectorToSignedFixed(esize, operand, fbits, rounding_mode)
+                     : v.ir.FPVectorToUnsignedFixed(esize, operand, fbits, rounding_mode);
         }
         UNREACHABLE();
     }();
@@ -228,7 +225,7 @@ bool ConvertFloat(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb, Vec Vn
     return true;
 }
 
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::SSHR_2(bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, Vec Vd) {
     return ShiftRight(*this, Q, immh, immb, Vn, Vd, Rounding::None, Accumulating::None, Signedness::Signed);
@@ -401,4 +398,4 @@ bool TranslatorVisitor::FCVTZU_fix_2(bool Q, Imm<4> immh, Imm<3> immb, Vec Vn, V
     return ConvertFloat(*this, Q, immh, immb, Vn, Vd, Signedness::Unsigned, FloatConversionDirection::FloatToFixed, FP::RoundingMode::TowardsZero);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

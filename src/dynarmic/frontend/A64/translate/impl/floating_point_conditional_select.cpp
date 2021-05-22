@@ -21,4 +21,4 @@ bool TranslatorVisitor::FCSEL_float(Imm<2> type, Vec Vm, Cond cond, Vec Vn, Vec 
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

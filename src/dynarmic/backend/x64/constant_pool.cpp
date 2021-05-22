@@ -3,15 +3,17 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/backend/x64/constant_pool.h"
+
 #include <cstring>
 
 #include "dynarmic/backend/x64/block_of_code.h"
-#include "dynarmic/backend/x64/constant_pool.h"
 #include "dynarmic/common/assert.h"
 
 namespace Dynarmic::Backend::X64 {
 
-ConstantPool::ConstantPool(BlockOfCode& code, size_t size) : code(code), pool_size(size) {
+ConstantPool::ConstantPool(BlockOfCode& code, size_t size)
+        : code(code), pool_size(size) {
     code.int3();
     code.align(align_size);
     pool_begin = reinterpret_cast<u8*>(code.AllocateFromCodeSpace(size));
@@ -31,4 +33,4 @@ Xbyak::Address ConstantPool::GetConstant(const Xbyak::AddressFrame& frame, u64 l
     return frame[code.rip + iter->second];
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

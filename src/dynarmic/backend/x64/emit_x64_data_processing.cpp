@@ -24,7 +24,7 @@ void EmitX64::EmitPack2x32To1x64(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg64 hi = ctx.reg_alloc.UseScratchGpr(args[1]);
 
     code.shl(hi, 32);
-    code.mov(lo.cvt32(), lo.cvt32()); // Zero extend to 64-bits
+    code.mov(lo.cvt32(), lo.cvt32());  // Zero extend to 64-bits
     code.or_(lo, hi);
 
     ctx.reg_alloc.DefineValue(inst, lo);
@@ -146,64 +146,64 @@ static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst*
     // add al, 0x7F restores OF
 
     switch (args[0].GetImmediateCond()) {
-    case IR::Cond::EQ: //z
+    case IR::Cond::EQ:  //z
         code.sahf();
         code.cmovz(else_, then_);
         break;
-    case IR::Cond::NE: //!z
+    case IR::Cond::NE:  //!z
         code.sahf();
         code.cmovnz(else_, then_);
         break;
-    case IR::Cond::CS: //c
+    case IR::Cond::CS:  //c
         code.sahf();
         code.cmovc(else_, then_);
         break;
-    case IR::Cond::CC: //!c
+    case IR::Cond::CC:  //!c
         code.sahf();
         code.cmovnc(else_, then_);
         break;
-    case IR::Cond::MI: //n
+    case IR::Cond::MI:  //n
         code.sahf();
         code.cmovs(else_, then_);
         break;
-    case IR::Cond::PL: //!n
+    case IR::Cond::PL:  //!n
         code.sahf();
         code.cmovns(else_, then_);
         break;
-    case IR::Cond::VS: //v
+    case IR::Cond::VS:  //v
         code.cmp(nzcv.cvt8(), 0x81);
         code.cmovo(else_, then_);
         break;
-    case IR::Cond::VC: //!v
+    case IR::Cond::VC:  //!v
         code.cmp(nzcv.cvt8(), 0x81);
         code.cmovno(else_, then_);
         break;
-    case IR::Cond::HI: //c & !z
+    case IR::Cond::HI:  //c & !z
         code.sahf();
         code.cmc();
         code.cmova(else_, then_);
         break;
-    case IR::Cond::LS: //!c | z
+    case IR::Cond::LS:  //!c | z
         code.sahf();
         code.cmc();
         code.cmovna(else_, then_);
         break;
-    case IR::Cond::GE: // n == v
+    case IR::Cond::GE:  // n == v
         code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovge(else_, then_);
         break;
-    case IR::Cond::LT: // n != v
+    case IR::Cond::LT:  // n != v
         code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovl(else_, then_);
         break;
-    case IR::Cond::GT: // !z & (n == v)
+    case IR::Cond::GT:  // !z & (n == v)
         code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovg(else_, then_);
         break;
-    case IR::Cond::LE: // z | (n != v)
+    case IR::Cond::LE:  // z | (n != v)
         code.cmp(nzcv.cvt8(), 0x81);
         code.sahf();
         code.cmovle(else_, then_);
@@ -814,7 +814,7 @@ void EmitX64::EmitRotateRightExtended(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-template <typename ShfitFT, typename BMI2FT>
+template<typename ShfitFT, typename BMI2FT>
 static void EmitMaskedShift32(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, ShfitFT shift_fn, [[maybe_unused]] BMI2FT bmi2_shift) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& operand_arg = args[0];
@@ -851,7 +851,7 @@ static void EmitMaskedShift32(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-template <typename ShfitFT, typename BMI2FT>
+template<typename ShfitFT, typename BMI2FT>
 static void EmitMaskedShift64(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, ShfitFT shift_fn, [[maybe_unused]] BMI2FT bmi2_shift) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto& operand_arg = args[0];
@@ -889,35 +889,43 @@ static void EmitMaskedShift64(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
 }
 
 void EmitX64::EmitLogicalShiftLeftMasked32(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.shl(result, shift); }, &Xbyak::CodeGenerator::shlx);
+    EmitMaskedShift32(
+        code, ctx, inst, [&](auto result, auto shift) { code.shl(result, shift); }, &Xbyak::CodeGenerator::shlx);
 }
 
 void EmitX64::EmitLogicalShiftLeftMasked64(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.shl(result, shift); }, &Xbyak::CodeGenerator::shlx);
+    EmitMaskedShift64(
+        code, ctx, inst, [&](auto result, auto shift) { code.shl(result, shift); }, &Xbyak::CodeGenerator::shlx);
 }
 
 void EmitX64::EmitLogicalShiftRightMasked32(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.shr(result, shift); }, &Xbyak::CodeGenerator::shrx);
+    EmitMaskedShift32(
+        code, ctx, inst, [&](auto result, auto shift) { code.shr(result, shift); }, &Xbyak::CodeGenerator::shrx);
 }
 
 void EmitX64::EmitLogicalShiftRightMasked64(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.shr(result, shift); }, &Xbyak::CodeGenerator::shrx);
+    EmitMaskedShift64(
+        code, ctx, inst, [&](auto result, auto shift) { code.shr(result, shift); }, &Xbyak::CodeGenerator::shrx);
 }
 
 void EmitX64::EmitArithmeticShiftRightMasked32(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.sar(result, shift); }, &Xbyak::CodeGenerator::sarx);
+    EmitMaskedShift32(
+        code, ctx, inst, [&](auto result, auto shift) { code.sar(result, shift); }, &Xbyak::CodeGenerator::sarx);
 }
 
 void EmitX64::EmitArithmeticShiftRightMasked64(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.sar(result, shift); }, &Xbyak::CodeGenerator::sarx);
+    EmitMaskedShift64(
+        code, ctx, inst, [&](auto result, auto shift) { code.sar(result, shift); }, &Xbyak::CodeGenerator::sarx);
 }
 
 void EmitX64::EmitRotateRightMasked32(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift32(code, ctx, inst, [&](auto result, auto shift) { code.ror(result, shift); }, nullptr);
+    EmitMaskedShift32(
+        code, ctx, inst, [&](auto result, auto shift) { code.ror(result, shift); }, nullptr);
 }
 
 void EmitX64::EmitRotateRightMasked64(EmitContext& ctx, IR::Inst* inst) {
-    EmitMaskedShift64(code, ctx, inst, [&](auto result, auto shift) { code.ror(result, shift); }, nullptr);
+    EmitMaskedShift64(
+        code, ctx, inst, [&](auto result, auto shift) { code.ror(result, shift); }, nullptr);
 }
 
 static Xbyak::Reg8 DoCarry(RegAlloc& reg_alloc, Argument& carry_in, IR::Inst* carry_out) {
@@ -1132,25 +1140,25 @@ void EmitX64::EmitMul64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitUnsignedMultiplyHigh64(EmitContext& ctx, IR::Inst* inst) {
-   auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-   ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
-   ctx.reg_alloc.UseScratch(args[0], HostLoc::RAX);
-   OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
-   code.mul(*op_arg);
+    ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
+    ctx.reg_alloc.UseScratch(args[0], HostLoc::RAX);
+    OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
+    code.mul(*op_arg);
 
-   ctx.reg_alloc.DefineValue(inst, rdx);
+    ctx.reg_alloc.DefineValue(inst, rdx);
 }
 
 void EmitX64::EmitSignedMultiplyHigh64(EmitContext& ctx, IR::Inst* inst) {
-   auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-   ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
-   ctx.reg_alloc.UseScratch(args[0], HostLoc::RAX);
-   OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
-   code.imul(*op_arg);
+    ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
+    ctx.reg_alloc.UseScratch(args[0], HostLoc::RAX);
+    OpArg op_arg = ctx.reg_alloc.UseOpArg(args[1]);
+    code.imul(*op_arg);
 
-   ctx.reg_alloc.DefineValue(inst, rdx);
+    ctx.reg_alloc.DefineValue(inst, rdx);
 }
 
 void EmitX64::EmitUnsignedDiv32(EmitContext& ctx, IR::Inst* inst) {
@@ -1441,7 +1449,7 @@ void EmitX64::EmitZeroExtendHalfToLong(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitZeroExtendWordToLong(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Reg64 result = ctx.reg_alloc.UseScratchGpr(args[0]);
-    code.mov(result.cvt32(), result.cvt32()); // x64 zeros upper 32 bits on a 32-bit move
+    code.mov(result.cvt32(), result.cvt32());  // x64 zeros upper 32 bits on a 32-bit move
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
@@ -1505,27 +1513,27 @@ void EmitX64::EmitCountLeadingZeros32(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitCountLeadingZeros64(EmitContext& ctx, IR::Inst* inst) {
-   auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-   if (code.HasHostFeature(HostFeature::LZCNT)) {
-       const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]).cvt64();
-       const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    if (code.HasHostFeature(HostFeature::LZCNT)) {
+        const Xbyak::Reg64 source = ctx.reg_alloc.UseGpr(args[0]).cvt64();
+        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
 
-       code.lzcnt(result, source);
+        code.lzcnt(result, source);
 
-       ctx.reg_alloc.DefineValue(inst, result);
-   } else {
-       const Xbyak::Reg64 source = ctx.reg_alloc.UseScratchGpr(args[0]).cvt64();
-       const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
+        ctx.reg_alloc.DefineValue(inst, result);
+    } else {
+        const Xbyak::Reg64 source = ctx.reg_alloc.UseScratchGpr(args[0]).cvt64();
+        const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
 
-       // The result of a bsr of zero is undefined, but zf is set after it.
-       code.bsr(result, source);
-       code.mov(source.cvt32(), 0xFFFFFFFF);
-       code.cmovz(result.cvt32(), source.cvt32());
-       code.neg(result.cvt32());
-       code.add(result.cvt32(), 63);
+        // The result of a bsr of zero is undefined, but zf is set after it.
+        code.bsr(result, source);
+        code.mov(source.cvt32(), 0xFFFFFFFF);
+        code.cmovz(result.cvt32(), source.cvt32());
+        code.neg(result.cvt32());
+        code.add(result.cvt32(), 63);
 
-       ctx.reg_alloc.DefineValue(inst, result);
-   }
+        ctx.reg_alloc.DefineValue(inst, result);
+    }
 }
 
 void EmitX64::EmitMaxSigned32(EmitContext& ctx, IR::Inst* inst) {
@@ -1624,4 +1632,4 @@ void EmitX64::EmitMinUnsigned64(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, y);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "./fuzz_util.h"
+
 #include <cstring>
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#include "./fuzz_util.h"
 #include "./rand_int.h"
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/fp/fpcr.h"
@@ -34,7 +35,7 @@ u32 RandomFpcr() {
     return fpcr.Value();
 }
 
-InstructionGenerator::InstructionGenerator(const char* format){
+InstructionGenerator::InstructionGenerator(const char* format) {
     const size_t format_len = std::strlen(format);
     ASSERT(format_len == 16 || format_len == 32);
 

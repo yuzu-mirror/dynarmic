@@ -6,7 +6,7 @@
 #pragma once
 
 #if defined(__clang__) || defined(__GNUC__)
-    #define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#    define UNLIKELY(x) __builtin_expect(!!(x), 0)
 #else
-    #define UNLIKELY(x) !!(x)
+#    define UNLIKELY(x) !!(x)
 #endif

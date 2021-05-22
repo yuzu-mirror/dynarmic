@@ -17,8 +17,7 @@ enum class ExtraBehavior {
     Round
 };
 
-bool HighNarrowingOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                            Operation op, ExtraBehavior behavior) {
+bool HighNarrowingOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, Operation op, ExtraBehavior behavior) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -171,8 +170,7 @@ enum class MinMaxOperation {
     Max,
 };
 
-bool VectorMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                           MinMaxOperation operation, Signedness sign) {
+bool VectorMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, MinMaxOperation operation, Signedness sign) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -227,8 +225,7 @@ bool FPMinMaxOperation(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Ve
     return true;
 }
 
-bool FPMinMaxNumericOperation(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd,
-                              IR::U32U64 (IREmitter::* fn)(const IR::U32U64&, const IR::U32U64&)) {
+bool FPMinMaxNumericOperation(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd, IR::U32U64 (IREmitter::*fn)(const IR::U32U64&, const IR::U32U64&)) {
     if (sz && !Q) {
         return v.ReservedValue();
     }
@@ -253,8 +250,7 @@ bool FPMinMaxNumericOperation(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec
     return true;
 }
 
-bool PairedMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                           MinMaxOperation operation, Signedness sign) {
+bool PairedMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, MinMaxOperation operation, Signedness sign) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -291,8 +287,7 @@ bool PairedMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Ve
     return true;
 }
 
-bool FPPairedMinMax(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd,
-                    IR::U32U64 (IREmitter::* fn)(const IR::U32U64&, const IR::U32U64&)) {
+bool FPPairedMinMax(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec Vd, IR::U32U64 (IREmitter::*fn)(const IR::U32U64&, const IR::U32U64&)) {
     if (sz && !Q) {
         return v.ReservedValue();
     }
@@ -323,8 +318,7 @@ bool FPPairedMinMax(TranslatorVisitor& v, bool Q, bool sz, Vec Vm, Vec Vn, Vec V
     return true;
 }
 
-bool SaturatingArithmeticOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                                   Operation op, Signedness sign) {
+bool SaturatingArithmeticOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, Operation op, Signedness sign) {
     if (size == 0b11 && !Q) {
         return v.ReservedValue();
     }
@@ -377,7 +371,7 @@ bool SaturatingShiftLeft(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec 
     return true;
 }
 
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::CMGT_reg_2(bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     if (size == 0b11 && !Q) {
@@ -1251,4 +1245,4 @@ bool TranslatorVisitor::BSL(bool Q, Vec Vm, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

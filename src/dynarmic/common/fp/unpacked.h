@@ -85,4 +85,4 @@ FPT FPRound(FPUnpacked op, FPCR fpcr, FPSR& fpsr) {
     return FPRound<FPT>(op, fpcr, fpcr.RMode(), fpsr);
 }
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

@@ -3,17 +3,18 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/fp/op/FPConvert.h"
+
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/fp/info.h"
-#include "dynarmic/common/fp/op/FPConvert.h"
 #include "dynarmic/common/fp/process_exception.h"
 #include "dynarmic/common/fp/unpacked.h"
 
 namespace Dynarmic::FP {
 namespace {
-template <typename FPT_TO, typename FPT_FROM>
+template<typename FPT_TO, typename FPT_FROM>
 FPT_TO FPConvertNaN(FPT_FROM op) {
     const bool sign = Common::Bit<Common::BitSize<FPT_FROM>() - 1>(op);
     const u64 frac = [op] {
@@ -38,9 +39,9 @@ FPT_TO FPConvertNaN(FPT_FROM op) {
         return FPT_TO(shifted_sign | exponent << 9 | Common::Bits<42, 50>(frac));
     }
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
-template <typename FPT_TO, typename FPT_FROM>
+template<typename FPT_TO, typename FPT_FROM>
 FPT_TO FPConvert(FPT_FROM op, FPCR fpcr, RoundingMode rounding_mode, FPSR& fpsr) {
     const auto [type, sign, value] = FPUnpackCV<FPT_FROM>(op, fpcr, fpsr);
     const bool is_althp = Common::BitSize<FPT_TO>() == 16 && fpcr.AHP();
@@ -86,4 +87,4 @@ template u32 FPConvert<u32, u64>(u64 op, FPCR fpcr, RoundingMode rounding_mode, 
 template u64 FPConvert<u64, u16>(u16 op, FPCR fpcr, RoundingMode rounding_mode, FPSR& fpsr);
 template u64 FPConvert<u64, u32>(u32 op, FPCR fpcr, RoundingMode rounding_mode, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

@@ -22,4 +22,4 @@ bool TranslatorVisitor::IC_IVAU(Reg Rt) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

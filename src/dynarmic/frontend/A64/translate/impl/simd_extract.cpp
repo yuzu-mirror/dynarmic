@@ -24,4 +24,4 @@ bool TranslatorVisitor::EXT(bool Q, Vec Vm, Imm<4> imm4, Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

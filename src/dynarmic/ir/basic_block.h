@@ -34,11 +34,11 @@ enum class Opcode;
  */
 class Block final {
 public:
-    using InstructionList        = Common::IntrusiveList<Inst>;
-    using size_type              = InstructionList::size_type;
-    using iterator               = InstructionList::iterator;
-    using const_iterator         = InstructionList::const_iterator;
-    using reverse_iterator       = InstructionList::reverse_iterator;
+    using InstructionList = Common::IntrusiveList<Inst>;
+    using size_type = InstructionList::size_type;
+    using iterator = InstructionList::iterator;
+    using const_iterator = InstructionList::const_iterator;
+    using reverse_iterator = InstructionList::reverse_iterator;
     using const_reverse_iterator = InstructionList::const_reverse_iterator;
 
     explicit Block(const LocationDescriptor& location);
@@ -50,30 +50,30 @@ public:
     Block(Block&&);
     Block& operator=(Block&&);
 
-    bool                   empty()   const { return instructions.empty();   }
-    size_type              size()    const { return instructions.size();    }
+    bool empty() const { return instructions.empty(); }
+    size_type size() const { return instructions.size(); }
 
-    Inst&                  front()         { return instructions.front();   }
-    const Inst&            front()   const { return instructions.front();   }
+    Inst& front() { return instructions.front(); }
+    const Inst& front() const { return instructions.front(); }
 
-    Inst&                  back()          { return instructions.back();    }
-    const Inst&            back()    const { return instructions.back();    }
+    Inst& back() { return instructions.back(); }
+    const Inst& back() const { return instructions.back(); }
 
-    iterator               begin()         { return instructions.begin();   }
-    const_iterator         begin()   const { return instructions.begin();   }
-    iterator               end()           { return instructions.end();     }
-    const_iterator         end()     const { return instructions.end();     }
+    iterator begin() { return instructions.begin(); }
+    const_iterator begin() const { return instructions.begin(); }
+    iterator end() { return instructions.end(); }
+    const_iterator end() const { return instructions.end(); }
 
-    reverse_iterator       rbegin()        { return instructions.rbegin();  }
-    const_reverse_iterator rbegin()  const { return instructions.rbegin();  }
-    reverse_iterator       rend()          { return instructions.rend();    }
-    const_reverse_iterator rend()    const { return instructions.rend();    }
+    reverse_iterator rbegin() { return instructions.rbegin(); }
+    const_reverse_iterator rbegin() const { return instructions.rbegin(); }
+    reverse_iterator rend() { return instructions.rend(); }
+    const_reverse_iterator rend() const { return instructions.rend(); }
 
-    const_iterator         cbegin()  const { return instructions.cbegin();  }
-    const_iterator         cend()    const { return instructions.cend();    }
+    const_iterator cbegin() const { return instructions.cbegin(); }
+    const_iterator cend() const { return instructions.cend(); }
 
     const_reverse_iterator crbegin() const { return instructions.crbegin(); }
-    const_reverse_iterator crend()   const { return instructions.crend();   }
+    const_reverse_iterator crend() const { return instructions.crend(); }
 
     /**
      * Appends a new instruction to the end of this basic block,
@@ -164,4 +164,4 @@ private:
 /// Returns a string representation of the contents of block. Intended for debugging.
 std::string DumpBlock(const IR::Block& block);
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

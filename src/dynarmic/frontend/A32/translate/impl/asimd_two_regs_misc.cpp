@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include <array>
 
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 namespace {
@@ -19,8 +18,7 @@ enum class Comparison {
     LT,
 };
 
-bool CompareWithZero(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm,
-                     Comparison type) {
+bool CompareWithZero(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm, Comparison type) {
     if (sz == 0b11 || (F && sz != 0b10)) {
         return v.UndefinedInstruction();
     }
@@ -73,8 +71,7 @@ enum class AccumulateBehavior {
     Accumulate,
 };
 
-bool PairedAddOperation(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm,
-                        AccumulateBehavior accumulate) {
+bool PairedAddOperation(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm, AccumulateBehavior accumulate) {
     if (sz == 0b11) {
         return v.UndefinedInstruction();
     }
@@ -104,7 +101,7 @@ bool PairedAddOperation(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool
     return true;
 }
 
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool Q, bool M, size_t Vm) {
     if (op + sz >= 3) {
@@ -128,11 +125,11 @@ bool TranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool
                                           ir.VectorLogicalShiftLeft(esize, reg_m, shift));
 
             switch (sz) {
-            case 0: // 8-bit elements
+            case 0:  // 8-bit elements
                 result = ir.VectorShuffleLowHalfwords(result, 0b00011011);
                 result = ir.VectorShuffleHighHalfwords(result, 0b00011011);
                 break;
-            case 1: // 16-bit elements
+            case 1:  // 16-bit elements
                 result = ir.VectorShuffleLowHalfwords(result, 0b01001110);
                 result = ir.VectorShuffleHighHalfwords(result, 0b01001110);
                 break;
@@ -535,7 +532,7 @@ bool TranslatorVisitor::asimd_VZIP(bool D, size_t sz, size_t Vd, bool Q, bool M,
     const auto reg_d = ir.GetVector(d);
     const auto reg_m = ir.GetVector(m);
 
-    if (Q){
+    if (Q) {
         const auto result_d = ir.VectorInterleaveLower(esize, reg_d, reg_m);
         const auto result_m = ir.VectorInterleaveUpper(esize, reg_d, reg_m);
 
@@ -624,7 +621,7 @@ bool TranslatorVisitor::asimd_VCVT_half(bool D, size_t sz, size_t Vd, bool half_
 
     const size_t esize = 8U << sz;
     const size_t num_elements = 4;
-    const auto rounding_mode = FP::RoundingMode::ToNearest_TieEven; // StandardFPSCRValue().RMode
+    const auto rounding_mode = FP::RoundingMode::ToNearest_TieEven;  // StandardFPSCRValue().RMode
     const auto d = ToVector(half_to_single, Vd, D);
     const auto m = ToVector(!half_to_single, Vm, M);
 
@@ -719,4 +716,4 @@ bool TranslatorVisitor::asimd_VCVT_integer(bool D, size_t sz, size_t Vd, bool op
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

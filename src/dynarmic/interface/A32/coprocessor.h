@@ -106,5 +106,5 @@ public:
     virtual std::optional<Callback> CompileStoreWords(bool two, bool long_transfer, CoprocReg CRd, std::optional<std::uint8_t> option) = 0;
 };
 
-} // namespace A32
-} // namespace Dynarmic
+}  // namespace A32
+}  // namespace Dynarmic

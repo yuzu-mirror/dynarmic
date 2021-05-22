@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/op/FPRecipExponent.h"
+
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/common/common_types.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/fp/info.h"
-#include "dynarmic/common/fp/op/FPRecipExponent.h"
 #include "dynarmic/common/fp/process_nan.h"
 #include "dynarmic/common/fp/unpacked.h"
 
 namespace Dynarmic::FP {
 namespace {
-template <typename FPT>
+template<typename FPT>
 FPT DetermineExponentValue(size_t value) {
     if constexpr (sizeof(FPT) == sizeof(u32)) {
         return static_cast<FPT>(Common::Bits<23, 30>(value));
@@ -24,9 +25,9 @@ FPT DetermineExponentValue(size_t value) {
         return static_cast<FPT>(Common::Bits<10, 14>(value));
     }
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
-template <typename FPT>
+template<typename FPT>
 FPT FPRecipExponent(FPT op, FPCR fpcr, FPSR& fpsr) {
     const auto [type, sign, value] = FPUnpack<FPT>(op, fpcr, fpsr);
     (void)value;
@@ -54,4 +55,4 @@ template u16 FPRecipExponent<u16>(u16 op, FPCR fpcr, FPSR& fpsr);
 template u32 FPRecipExponent<u32>(u32 op, FPCR fpcr, FPSR& fpsr);
 template u64 FPRecipExponent<u64>(u64 op, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

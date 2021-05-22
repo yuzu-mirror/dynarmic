@@ -43,4 +43,4 @@ bool TranslatorVisitor::AESMC(Vec Vn, Vec Vd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

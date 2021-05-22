@@ -16,8 +16,8 @@ TEST_CASE("misaligned load/store do not use page_table when detect_misaligned_ac
     conf.only_detect_misalignment_via_page_table_on_page_boundary = true;
     Dynarmic::A64::Jit jit{conf};
 
-    env.code_mem.emplace_back(0x3c800400); // STR Q0, [X0], #0
-    env.code_mem.emplace_back(0x14000000); // B .
+    env.code_mem.emplace_back(0x3c800400);  // STR Q0, [X0], #0
+    env.code_mem.emplace_back(0x14000000);  // B .
 
     jit.SetPC(0);
     jit.SetRegister(0, 0x000000000b0afff8);

@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/backend/x64/abi.h"
+
 #include <algorithm>
 #include <vector>
 
 #include <xbyak.h>
 
-#include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/common/iterator_util.h"
@@ -131,4 +132,4 @@ void ABI_PopCallerSaveRegistersAndAdjustStackExcept(BlockOfCode& code, HostLoc e
     ABI_PopRegistersAndAdjustStack(code, 0, regs);
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

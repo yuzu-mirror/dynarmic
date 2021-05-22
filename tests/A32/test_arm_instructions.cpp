@@ -27,15 +27,15 @@ TEST_CASE("arm: Opt Failure: Const folding in MostSignificantWord", "[arm][A32]"
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe30ad071, // movw, sp, #41073
-        0xe75efd3d, // smmulr lr, sp, sp
-        0xa637af1e, // shadd16ge r10, r7, lr
-        0xf57ff01f, // clrex
-        0x86b98879, // sxtahhi r8, r9, r9, ror #16
-        0xeafffffe, // b +#0
+        0xe30ad071,  // movw, sp, #41073
+        0xe75efd3d,  // smmulr lr, sp, sp
+        0xa637af1e,  // shadd16ge r10, r7, lr
+        0xf57ff01f,  // clrex
+        0x86b98879,  // sxtahhi r8, r9, r9, ror #16
+        0xeafffffe,  // b +#0
     };
 
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 6;
     jit.Run();
@@ -69,19 +69,18 @@ TEST_CASE("arm: Unintended modification in SetCFlag", "[arm][A32]") {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe35f0cd9, // cmp pc, #55552
-        0xe11c0474, // tst r12, r4, ror r4
-        0xe1a006a7, // mov r0, r7, lsr #13
-        0xe35107fa, // cmp r1, #0x3E80000
-        0xe2a54c8a, // adc r4, r5, #35328
-        0xeafffffe, // b +#0
+        0xe35f0cd9,  // cmp pc, #55552
+        0xe11c0474,  // tst r12, r4, ror r4
+        0xe1a006a7,  // mov r0, r7, lsr #13
+        0xe35107fa,  // cmp r1, #0x3E80000
+        0xe2a54c8a,  // adc r4, r5, #35328
+        0xeafffffe,  // b +#0
     };
 
     jit.Regs() = {
-            0x6973b6bb, 0x267ea626, 0x69debf49, 0x8f976895, 0x4ecd2d0d, 0xcf89b8c7, 0xb6713f85, 0x15e2aa5,
-            0xcd14336a, 0xafca0f3e, 0xace2efd9, 0x68fb82cd, 0x775447c0, 0xc9e1f8cd, 0xebe0e626, 0x0
-    };
-    jit.SetCpsr(0x000001d0); // User-mode
+        0x6973b6bb, 0x267ea626, 0x69debf49, 0x8f976895, 0x4ecd2d0d, 0xcf89b8c7, 0xb6713f85, 0x15e2aa5,
+        0xcd14336a, 0xafca0f3e, 0xace2efd9, 0x68fb82cd, 0x775447c0, 0xc9e1f8cd, 0xebe0e626, 0x0};
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 6;
     jit.Run();
@@ -105,7 +104,7 @@ TEST_CASE("arm: Unintended modification in SetCFlag", "[arm][A32]") {
     REQUIRE(jit.Cpsr() == 0x200001d0);
 }
 
-TEST_CASE( "arm: shsax (Edge-case)", "[arm][A32]" ) {
+TEST_CASE("arm: shsax (Edge-case)", "[arm][A32]") {
     // This was a randomized test-case that was failing.
     //
     // The issue here was one of the words to be subtracted was 0x8000.
@@ -114,15 +113,14 @@ TEST_CASE( "arm: shsax (Edge-case)", "[arm][A32]" ) {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe63dbf59, // shsax r11, sp, r9
-        0xeafffffe, // b +#0
+        0xe63dbf59,  // shsax r11, sp, r9
+        0xeafffffe,  // b +#0
     };
 
     jit.Regs() = {
-            0x3a3b8b18, 0x96156555, 0xffef039f, 0xafb946f2, 0x2030a69a, 0xafe09b2a, 0x896823c8, 0xabde0ded,
-            0x9825d6a6, 0x17498000, 0x999d2c95, 0x8b812a59, 0x209bdb58, 0x2f7fb1d4, 0x0f378107, 0x00000000
-    };
-    jit.SetCpsr(0x000001d0); // User-mode
+        0x3a3b8b18, 0x96156555, 0xffef039f, 0xafb946f2, 0x2030a69a, 0xafe09b2a, 0x896823c8, 0xabde0ded,
+        0x9825d6a6, 0x17498000, 0x999d2c95, 0x8b812a59, 0x209bdb58, 0x2f7fb1d4, 0x0f378107, 0x00000000};
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 2;
     jit.Run();
@@ -146,7 +144,7 @@ TEST_CASE( "arm: shsax (Edge-case)", "[arm][A32]" ) {
     REQUIRE(jit.Cpsr() == 0x000001d0);
 }
 
-TEST_CASE( "arm: uasx (Edge-case)", "[arm][A32]" ) {
+TEST_CASE("arm: uasx (Edge-case)", "[arm][A32]") {
     // UASX's Rm<31:16> == 0x0000.
     // An implementation that depends on addition overflow to detect
     // if diff >= 0 will fail this testcase.
@@ -154,14 +152,14 @@ TEST_CASE( "arm: uasx (Edge-case)", "[arm][A32]" ) {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe6549f35, // uasx r9, r4, r5
-        0xeafffffe, // b +#0
+        0xe6549f35,  // uasx r9, r4, r5
+        0xeafffffe,  // b +#0
     };
 
     jit.Regs()[4] = 0x8ed38f4c;
     jit.Regs()[5] = 0x0000261d;
     jit.Regs()[15] = 0x00000000;
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 2;
     jit.Run();
@@ -177,20 +175,29 @@ TEST_CASE("arm: smuad (Edge-case)", "[arm][A32]") {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xE700F211, // smuad r0, r1, r2
-        0xeafffffe, // b +#0
+        0xE700F211,  // smuad r0, r1, r2
+        0xeafffffe,  // b +#0
     };
 
     jit.Regs() = {
-            0, // Rd
-            0x80008000, // Rn
-            0x80008000, // Rm
-            0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
+        0,           // Rd
+        0x80008000,  // Rn
+        0x80008000,  // Rm
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
     };
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 2;
     jit.Run();
@@ -205,14 +212,14 @@ TEST_CASE("arm: Test InvalidateCacheRange", "[arm][A32]") {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe3a00005, // mov r0, #5
-        0xe3a0100D, // mov r1, #13
-        0xe0812000, // add r2, r1, r0
-        0xeafffffe, // b +#0 (infinite loop)
+        0xe3a00005,  // mov r0, #5
+        0xe3a0100D,  // mov r1, #13
+        0xe0812000,  // add r2, r1, r0
+        0xeafffffe,  // b +#0 (infinite loop)
     };
 
     jit.Regs() = {};
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 4;
     jit.Run();
@@ -224,7 +231,7 @@ TEST_CASE("arm: Test InvalidateCacheRange", "[arm][A32]") {
     REQUIRE(jit.Cpsr() == 0x000001d0);
 
     // Change the code
-    test_env.code_mem[1] = 0xe3a01007; // mov r1, #7
+    test_env.code_mem[1] = 0xe3a01007;  // mov r1, #7
     jit.InvalidateCacheRange(/*start_memory_location = */ 4, /* length_in_bytes = */ 4);
 
     // Reset position of PC
@@ -246,18 +253,18 @@ TEST_CASE("arm: Step blx", "[arm]") {
     config.optimizations |= OptimizationFlag::FastDispatch;
     Dynarmic::A32::Jit jit{config};
     test_env.code_mem = {
-        0xe12fff30, // blx r0
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xeafffffe, // b +#0 (infinite loop)
+        0xe12fff30,  // blx r0
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xeafffffe,  // b +#0 (infinite loop)
     };
 
     jit.Regs()[0] = 8;
-    jit.Regs()[15] = 0; // PC = 0
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.Regs()[15] = 0;       // PC = 0
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 10;
     jit.Step();
@@ -274,18 +281,18 @@ TEST_CASE("arm: Step bx", "[arm]") {
     config.optimizations |= OptimizationFlag::FastDispatch;
     Dynarmic::A32::Jit jit{config};
     test_env.code_mem = {
-        0xe12fff10, // bx r0
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xeafffffe, // b +#0 (infinite loop)
+        0xe12fff10,  // bx r0
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xeafffffe,  // b +#0 (infinite loop)
     };
 
     jit.Regs()[0] = 8;
-    jit.Regs()[15] = 0; // PC = 0
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.Regs()[15] = 0;       // PC = 0
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 10;
     jit.Step();
@@ -295,41 +302,40 @@ TEST_CASE("arm: Step bx", "[arm]") {
     REQUIRE(jit.Cpsr() == 0x000001d0);
 }
 
-
 TEST_CASE("arm: Test stepping", "[arm]") {
     ArmTestEnv test_env;
     Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xeafffffe, // b +#0 (infinite loop)
+        0xeafffffe,  // b +#0 (infinite loop)
     };
 
     jit.Regs()[0] = 8;
-    jit.Regs()[15] = 0; // PC = 0
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.Regs()[15] = 0;       // PC = 0
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     for (size_t i = 0; i < 5; ++i) {
         test_env.ticks_left = 10;
@@ -350,36 +356,36 @@ TEST_CASE("arm: Test stepping 2", "[arm]") {
     ArmTestEnv test_env;
     Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe12fff10, // bx r0
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe12fff10,  // bx r0
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xeafffffe, // b +#0 (infinite loop)
+        0xeafffffe,  // b +#0 (infinite loop)
     };
 
     jit.Regs()[0] = 4;
-    jit.Regs()[15] = 0; // PC = 0
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.Regs()[15] = 0;       // PC = 0
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     for (size_t i = 0; i < 5; ++i) {
         test_env.ticks_left = 10;
@@ -400,18 +406,18 @@ TEST_CASE("arm: Test stepping 3", "[arm]") {
     ArmTestEnv test_env;
     Dynarmic::A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xe12fff10, // bx r0
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
-        0xe320f000, // nop
+        0xe12fff10,  // bx r0
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
+        0xe320f000,  // nop
 
-        0xeafffffe, // b +#0 (infinite loop)
+        0xeafffffe,  // b +#0 (infinite loop)
     };
 
     jit.Regs()[0] = 4;
-    jit.Regs()[15] = 0; // PC = 0
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.Regs()[15] = 0;       // PC = 0
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 10;
     jit.Step();
@@ -433,14 +439,28 @@ TEST_CASE("arm: PackedAbsDiffSumS8", "[arm][A32]") {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0x87414354, // smlsldhi r4, r1, r4, r3
-        0xe7886412, // usad8a r8, r2, r4, r6
-        0xeafffffe, // b +#0
+        0x87414354,  // smlsldhi r4, r1, r4, r3
+        0xe7886412,  // usad8a r8, r2, r4, r6
+        0xeafffffe,  // b +#0
     };
 
     jit.Regs() = {
-        0xea85297c, 0x417ad918, 0x64f8b70b, 0xcca0373e, 0xbc722361, 0xc528c69e, 0xca926de8, 0xd665d210,
-        0xb5650555, 0x4a24b25b, 0xaed44144, 0xe87230b2, 0x98e391de, 0x126efc0c, 0xe591fd11, 0x00000000,
+        0xea85297c,
+        0x417ad918,
+        0x64f8b70b,
+        0xcca0373e,
+        0xbc722361,
+        0xc528c69e,
+        0xca926de8,
+        0xd665d210,
+        0xb5650555,
+        0x4a24b25b,
+        0xaed44144,
+        0xe87230b2,
+        0x98e391de,
+        0x126efc0c,
+        0xe591fd11,
+        0x00000000,
     };
     jit.SetCpsr(0xb0000010);
 
@@ -470,14 +490,14 @@ TEST_CASE("arm: vclt.f32 with zero", "[arm][A32]") {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xf3b93628, // vclt.f32 d3, d24, #0
-        0xeafffffe, // b +#0
+        0xf3b93628,  // vclt.f32 d3, d24, #0
+        0xeafffffe,  // b +#0
     };
 
     jit.ExtRegs()[48] = 0x3a87d9f1;
     jit.ExtRegs()[49] = 0x80796dc0;
 
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 2;
     jit.Run();
@@ -490,14 +510,14 @@ TEST_CASE("arm: vcvt.s16.f64", "[arm][A32]") {
     ArmTestEnv test_env;
     A32::Jit jit{GetUserConfig(&test_env)};
     test_env.code_mem = {
-        0xeebe8b45, // vcvt.s16.f64 d8, d8, #6
-        0xeafffffe, // b +#0
+        0xeebe8b45,  // vcvt.s16.f64 d8, d8, #6
+        0xeafffffe,  // b +#0
     };
 
     jit.ExtRegs()[16] = 0x9a7110b0;
     jit.ExtRegs()[17] = 0xcd78f4e7;
 
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.SetCpsr(0x000001d0);  // User-mode
 
     test_env.ticks_left = 2;
     jit.Run();

@@ -3,26 +3,27 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/ir/microinstruction.h"
+
 #include <algorithm>
 
 #include <fmt/ostream.h>
 
 #include "dynarmic/common/assert.h"
-#include "dynarmic/ir/microinstruction.h"
 #include "dynarmic/ir/opcodes.h"
 #include "dynarmic/ir/type.h"
 
 namespace Dynarmic::IR {
 
 bool Inst::IsArithmeticShift() const {
-    return op == Opcode::ArithmeticShiftRight32 ||
-           op == Opcode::ArithmeticShiftRight64;
+    return op == Opcode::ArithmeticShiftRight32
+        || op == Opcode::ArithmeticShiftRight64;
 }
 
 bool Inst::IsCircularShift() const {
-    return op == Opcode::RotateRight32 ||
-           op == Opcode::RotateRight64 ||
-           op == Opcode::RotateRightExtended;
+    return op == Opcode::RotateRight32
+        || op == Opcode::RotateRight64
+        || op == Opcode::RotateRightExtended;
 }
 
 bool Inst::IsLogicalShift() const {
@@ -39,9 +40,9 @@ bool Inst::IsLogicalShift() const {
 }
 
 bool Inst::IsShift() const {
-    return IsArithmeticShift() ||
-           IsCircularShift()   ||
-           IsLogicalShift();
+    return IsArithmeticShift()
+        || IsCircularShift()
+        || IsLogicalShift();
 }
 
 bool Inst::IsBarrier() const {
@@ -96,7 +97,8 @@ bool Inst::IsSharedMemoryWrite() const {
 }
 
 bool Inst::IsSharedMemoryReadOrWrite() const {
-    return IsSharedMemoryRead() || IsSharedMemoryWrite();
+    return IsSharedMemoryRead()
+        || IsSharedMemoryWrite();
 }
 
 bool Inst::IsExclusiveMemoryRead() const {
@@ -136,15 +138,18 @@ bool Inst::IsExclusiveMemoryWrite() const {
 }
 
 bool Inst::IsMemoryRead() const {
-    return IsSharedMemoryRead() || IsExclusiveMemoryRead();
+    return IsSharedMemoryRead()
+        || IsExclusiveMemoryRead();
 }
 
 bool Inst::IsMemoryWrite() const {
-    return IsSharedMemoryWrite() || IsExclusiveMemoryWrite();
+    return IsSharedMemoryWrite()
+        || IsExclusiveMemoryWrite();
 }
 
 bool Inst::IsMemoryReadOrWrite() const {
-    return IsMemoryRead() || IsMemoryWrite();
+    return IsMemoryRead()
+        || IsMemoryWrite();
 }
 
 bool Inst::ReadsFromCPSR() const {
@@ -264,19 +269,19 @@ bool Inst::WritesToFPCR() const {
 }
 
 bool Inst::ReadsFromFPSR() const {
-    return op == Opcode::A32GetFpscr                ||
-           op == Opcode::A32GetFpscrNZCV            ||
-           op == Opcode::A64GetFPSR                 ||
-           ReadsFromFPSRCumulativeExceptionBits()   ||
-           ReadsFromFPSRCumulativeSaturationBit();
+    return op == Opcode::A32GetFpscr
+        || op == Opcode::A32GetFpscrNZCV
+        || op == Opcode::A64GetFPSR
+        || ReadsFromFPSRCumulativeExceptionBits()
+        || ReadsFromFPSRCumulativeSaturationBit();
 }
 
 bool Inst::WritesToFPSR() const {
-    return op == Opcode::A32SetFpscr                ||
-           op == Opcode::A32SetFpscrNZCV            ||
-           op == Opcode::A64SetFPSR                 ||
-           WritesToFPSRCumulativeExceptionBits()    ||
-           WritesToFPSRCumulativeSaturationBit();
+    return op == Opcode::A32SetFpscr
+        || op == Opcode::A32SetFpscrNZCV
+        || op == Opcode::A64SetFPSR
+        || WritesToFPSRCumulativeExceptionBits()
+        || WritesToFPSRCumulativeSaturationBit();
 }
 
 bool Inst::ReadsFromFPSRCumulativeExceptionBits() const {
@@ -484,18 +489,18 @@ bool Inst::WritesToFPSRCumulativeSaturationBit() const {
 }
 
 bool Inst::CausesCPUException() const {
-    return op == Opcode::Breakpoint         ||
-           op == Opcode::A32CallSupervisor  ||
-           op == Opcode::A32ExceptionRaised ||
-           op == Opcode::A64CallSupervisor  ||
-           op == Opcode::A64ExceptionRaised;
+    return op == Opcode::Breakpoint
+        || op == Opcode::A32CallSupervisor
+        || op == Opcode::A32ExceptionRaised
+        || op == Opcode::A64CallSupervisor
+        || op == Opcode::A64ExceptionRaised;
 }
 
 bool Inst::AltersExclusiveState() const {
-    return op == Opcode::A32ClearExclusive ||
-           op == Opcode::A64ClearExclusive ||
-           IsExclusiveMemoryRead()         ||
-           IsExclusiveMemoryWrite();
+    return op == Opcode::A32ClearExclusive
+        || op == Opcode::A64ClearExclusive
+        || IsExclusiveMemoryRead()
+        || IsExclusiveMemoryWrite();
 }
 
 bool Inst::IsCoprocessorInstruction() const {
@@ -515,25 +520,25 @@ bool Inst::IsCoprocessorInstruction() const {
 }
 
 bool Inst::IsSetCheckBitOperation() const {
-    return op == Opcode::A32SetCheckBit ||
-           op == Opcode::A64SetCheckBit;
+    return op == Opcode::A32SetCheckBit
+        || op == Opcode::A64SetCheckBit;
 }
 
 bool Inst::MayHaveSideEffects() const {
-    return op == Opcode::PushRSB                            ||
-           op == Opcode::A64DataCacheOperationRaised        ||
-           op == Opcode::A64InstructionCacheOperationRaised ||
-           IsSetCheckBitOperation()                         ||
-           IsBarrier()                                      ||
-           CausesCPUException()                             ||
-           WritesToCoreRegister()                           ||
-           WritesToSystemRegister()                         ||
-           WritesToCPSR()                                   ||
-           WritesToFPCR()                                   ||
-           WritesToFPSR()                                   ||
-           AltersExclusiveState()                           ||
-           IsMemoryWrite()                                  ||
-           IsCoprocessorInstruction();
+    return op == Opcode::PushRSB
+        || op == Opcode::A64DataCacheOperationRaised
+        || op == Opcode::A64InstructionCacheOperationRaised
+        || IsSetCheckBitOperation()
+        || IsBarrier()
+        || CausesCPUException()
+        || WritesToCoreRegister()
+        || WritesToSystemRegister()
+        || WritesToCPSR()
+        || WritesToFPCR()
+        || WritesToFPSR()
+        || AltersExclusiveState()
+        || IsMemoryWrite()
+        || IsCoprocessorInstruction();
 }
 
 bool Inst::IsAPseudoOperation() const {
@@ -573,11 +578,16 @@ bool Inst::MayGetNZCVFromOp() const {
 }
 
 bool Inst::AreAllArgsImmediates() const {
-    return std::all_of(args.begin(), args.begin() + NumArgs(), [](const auto& value){ return value.IsImmediate(); });
+    return std::all_of(args.begin(), args.begin() + NumArgs(), [](const auto& value) { return value.IsImmediate(); });
 }
 
 bool Inst::HasAssociatedPseudoOperation() const {
-    return carry_inst || overflow_inst || ge_inst || nzcv_inst || upper_inst || lower_inst;
+    return carry_inst
+        || overflow_inst
+        || ge_inst
+        || nzcv_inst
+        || upper_inst
+        || lower_inst;
 }
 
 Inst* Inst::GetAssociatedPseudoOperation(Opcode opcode) {
@@ -668,7 +678,7 @@ void Inst::ReplaceUsesWith(Value replacement) {
 void Inst::Use(const Value& value) {
     value.GetInst()->use_count++;
 
-    switch (op){
+    switch (op) {
     case Opcode::GetCarryFromOp:
         ASSERT_MSG(!value.GetInst()->carry_inst, "Only one of each type of pseudo-op allowed");
         value.GetInst()->carry_inst = this;
@@ -702,7 +712,7 @@ void Inst::Use(const Value& value) {
 void Inst::UndoUse(const Value& value) {
     value.GetInst()->use_count--;
 
-    switch (op){
+    switch (op) {
     case Opcode::GetCarryFromOp:
         ASSERT(value.GetInst()->carry_inst->GetOpcode() == Opcode::GetCarryFromOp);
         value.GetInst()->carry_inst = nullptr;
@@ -732,4 +742,4 @@ void Inst::UndoUse(const Value& value) {
     }
 }
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

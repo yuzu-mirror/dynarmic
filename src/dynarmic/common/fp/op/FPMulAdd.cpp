@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/common/fp/op/FPMulAdd.h"
+
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
-#include "dynarmic/common/fp/info.h"
 #include "dynarmic/common/fp/fused.h"
-#include "dynarmic/common/fp/op/FPMulAdd.h"
+#include "dynarmic/common/fp/info.h"
 #include "dynarmic/common/fp/process_exception.h"
 #include "dynarmic/common/fp/process_nan.h"
 #include "dynarmic/common/fp/unpacked.h"
@@ -76,4 +77,4 @@ template u16 FPMulAdd<u16>(u16 addend, u16 op1, u16 op2, FPCR fpcr, FPSR& fpsr);
 template u32 FPMulAdd<u32>(u32 addend, u32 op1, u32 op2, FPCR fpcr, FPSR& fpsr);
 template u64 FPMulAdd<u64>(u64 addend, u64 op1, u64 op2, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

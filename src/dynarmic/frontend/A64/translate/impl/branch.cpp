@@ -125,4 +125,4 @@ bool TranslatorVisitor::TBNZ(Imm<1> b5, Imm<5> b40, Imm<14> imm14, Reg Rt) {
     return false;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -216,4 +216,4 @@ void A32GetSetElimination(IR::Block& block) {
     }
 }
 
-} // namespace Dynarmic::Optimization
+}  // namespace Dynarmic::Optimization

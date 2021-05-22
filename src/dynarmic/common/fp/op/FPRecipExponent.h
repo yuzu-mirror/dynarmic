@@ -10,7 +10,7 @@ namespace Dynarmic::FP {
 class FPCR;
 class FPSR;
 
-template <typename FPT>
+template<typename FPT>
 FPT FPRecipExponent(FPT op, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

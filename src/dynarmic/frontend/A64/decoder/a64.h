@@ -19,19 +19,19 @@
 
 namespace Dynarmic::A64 {
 
-template <typename Visitor>
+template<typename Visitor>
 using Matcher = Decoder::Matcher<Visitor, u32>;
 
-template <typename Visitor>
+template<typename Visitor>
 using DecodeTable = std::array<std::vector<Matcher<Visitor>>, 0x1000>;
 
 namespace detail {
 inline size_t ToFastLookupIndex(u32 instruction) {
     return ((instruction >> 10) & 0x00F) | ((instruction >> 18) & 0xFF0);
 }
-} // namespace detail
+}  // namespace detail
 
-template <typename V>
+template<typename V>
 DecodeTable<V> GetDecodeTable() {
     std::vector<Matcher<V>> list = {
 #define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(Matcher, fn, name, Decoder::detail::StringToArray<32>(bitstring)),
@@ -45,7 +45,7 @@ DecodeTable<V> GetDecodeTable() {
     });
 
     // Exceptions to the above rule of thumb.
-    const std::set<std::string> comes_first {
+    const std::set<std::string> comes_first{
         "MOVI, MVNI, ORR, BIC (vector, immediate)",
         "FMOV (vector, immediate)",
         "Unallocated SIMD modified immediate",
@@ -79,4 +79,4 @@ std::optional<std::reference_wrapper<const Matcher<V>>> Decode(u32 instruction) 
     return iter != subtable.end() ? std::optional<std::reference_wrapper<const Matcher<V>>>(*iter) : std::nullopt;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

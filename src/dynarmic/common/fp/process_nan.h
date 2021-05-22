@@ -22,4 +22,4 @@ std::optional<FPT> FPProcessNaNs(FPType type1, FPType type2, FPT op1, FPT op2, F
 template<typename FPT>
 std::optional<FPT> FPProcessNaNs3(FPType type1, FPType type2, FPType type3, FPT op1, FPT op2, FPT op3, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

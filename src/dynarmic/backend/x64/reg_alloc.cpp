@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/backend/x64/reg_alloc.h"
+
 #include <algorithm>
 #include <numeric>
 #include <utility>
@@ -11,19 +13,18 @@
 #include <xbyak.h>
 
 #include "dynarmic/backend/x64/abi.h"
-#include "dynarmic/backend/x64/reg_alloc.h"
 #include "dynarmic/backend/x64/stack_layout.h"
 #include "dynarmic/common/assert.h"
 
 namespace Dynarmic::Backend::X64 {
 
-#define MAYBE_AVX(OPCODE, ...)                                          \
-    [&] {                                                               \
-        if (code.HasHostFeature(HostFeature::AVX)) {                    \
-            code.v##OPCODE(__VA_ARGS__);                                \
-        } else {                                                        \
-            code.OPCODE(__VA_ARGS__);                                   \
-        }                                                               \
+#define MAYBE_AVX(OPCODE, ...)                       \
+    [&] {                                            \
+        if (code.HasHostFeature(HostFeature::AVX)) { \
+            code.v##OPCODE(__VA_ARGS__);             \
+        } else {                                     \
+            code.OPCODE(__VA_ARGS__);                \
+        }                                            \
     }()
 
 static bool CanExchange(HostLoc a, HostLoc b) {
@@ -57,7 +58,7 @@ static size_t GetBitWidth(IR::Type type) {
     case IR::Type::U128:
         return 128;
     case IR::Type::NZCVFlags:
-        return 32; // TODO: Update to 16 when flags optimization is done
+        return 32;  // TODO: Update to 16 when flags optimization is done
     }
     UNREACHABLE();
 }
@@ -225,11 +226,10 @@ bool Argument::IsInMemory() const {
 }
 
 RegAlloc::RegAlloc(BlockOfCode& code, std::vector<HostLoc> gpr_order, std::vector<HostLoc> xmm_order)
-    : gpr_order(gpr_order)
-    , xmm_order(xmm_order)
-    , hostloc_info(NonSpillHostLocCount + SpillCount)
-    , code(code)
-{}
+        : gpr_order(gpr_order)
+        , xmm_order(xmm_order)
+        , hostloc_info(NonSpillHostLocCount + SpillCount)
+        , code(code) {}
 
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     ArgumentInfo ret = {Argument{*this}, Argument{*this}, Argument{*this}, Argument{*this}};
@@ -382,13 +382,14 @@ HostLoc RegAlloc::ScratchImpl(const std::vector<HostLoc>& desired_locations) {
     return location;
 }
 
-void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_reference> arg0,
+void RegAlloc::HostCall(IR::Inst* result_def,
+                        std::optional<Argument::copyable_reference> arg0,
                         std::optional<Argument::copyable_reference> arg1,
                         std::optional<Argument::copyable_reference> arg2,
                         std::optional<Argument::copyable_reference> arg3) {
     constexpr size_t args_count = 4;
-    constexpr std::array<HostLoc, args_count> args_hostloc = { ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4 };
-    const std::array<std::optional<Argument::copyable_reference>, args_count> args = { arg0, arg1, arg2, arg3 };
+    constexpr std::array<HostLoc, args_count> args_hostloc = {ABI_PARAM1, ABI_PARAM2, ABI_PARAM3, ABI_PARAM4};
+    const std::array<std::optional<Argument::copyable_reference>, args_count> args = {arg0, arg1, arg2, arg3};
 
     static const std::vector<HostLoc> other_caller_save = [args_hostloc]() {
         std::vector<HostLoc> ret(ABI_ALL_CALLER_SAVE.begin(), ABI_ALL_CALLER_SAVE.end());
@@ -420,7 +421,7 @@ void RegAlloc::HostCall(IR::Inst* result_def, std::optional<Argument::copyable_r
                 code.movzx(reg.cvt32(), reg.cvt16());
                 break;
             default:
-                break; // Nothing needs to be done
+                break;  // Nothing needs to be done
             }
 #endif
         }
@@ -717,4 +718,4 @@ Xbyak::Address RegAlloc::SpillToOpArg(HostLoc loc) {
     return xword[rsp + reserved_stack_space + ABI_SHADOW_SPACE + offsetof(StackLayout, spill) + i * sizeof(StackLayout::spill[0])];
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/common/assert.h"
 #include "dynarmic/ir/ir_emitter.h"
+
+#include "dynarmic/common/assert.h"
 #include "dynarmic/ir/opcodes.h"
 
 namespace Dynarmic::IR {
@@ -2655,4 +2656,4 @@ void IREmitter::SetTerm(const Terminal& terminal) {
     block.SetTerminal(terminal);
 }
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

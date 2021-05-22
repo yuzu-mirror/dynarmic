@@ -9,9 +9,7 @@
 
 namespace Dynarmic::A64 {
 
-static bool SharedDecodeAndOperation(TranslatorVisitor& v, bool wback, IR::MemOp memop,
-                                     bool Q, bool S, bool R, bool replicate, std::optional<Reg> Rm,
-                                     Imm<3> opcode, Imm<2> size, Reg Rn, Vec Vt) {
+static bool SharedDecodeAndOperation(TranslatorVisitor& v, bool wback, IR::MemOp memop, bool Q, bool S, bool R, bool replicate, std::optional<Reg> Rm, Imm<3> opcode, Imm<2> size, Reg Rn, Vec Vt) {
     const size_t selem = (opcode.Bit<0>() << 1 | u32{R}) + 1;
     size_t scale = opcode.Bits<1, 2>();
     size_t index = 0;
@@ -24,7 +22,7 @@ static bool SharedDecodeAndOperation(TranslatorVisitor& v, bool wback, IR::MemOp
         if (size.Bit<0>()) {
             return v.UnallocatedEncoding();
         }
-        index  = Q << 2 | S << 1 | u32{size.Bit<1>()};
+        index = Q << 2 | S << 1 | u32{size.Bit<1>()};
         break;
     case 2:
         if (size.Bit<1>()) {
@@ -223,4 +221,4 @@ bool TranslatorVisitor::ST4_sngl_2(bool Q, Reg Rm, Imm<2> upper_opcode, bool S, 
                                     Imm<3>{(upper_opcode.ZeroExtend() << 1) | 1}, size, Rn, Vt);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -69,8 +69,8 @@ protected:
     void (*memory_write_128)();
     void GenMemory128Accessors();
 
-    std::map<std::tuple<size_t, int, int>, void(*)()> read_fallbacks;
-    std::map<std::tuple<size_t, int, int>, void(*)()> write_fallbacks;
+    std::map<std::tuple<size_t, int, int>, void (*)()> read_fallbacks;
+    std::map<std::tuple<size_t, int, int>, void (*)()> write_fallbacks;
     void GenFastmemFallbacks();
 
     const void* terminal_handler_pop_rsb_hint;
@@ -118,4 +118,4 @@ protected:
     void EmitPatchMovRcx(CodePtr target_code_ptr = nullptr) override;
 };
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

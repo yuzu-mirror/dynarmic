@@ -81,7 +81,7 @@ bool SM3TT2(TranslatorVisitor& v, Vec Vm, Imm<2> imm2, Vec Vn, Vec Vd, SM3TTVari
     v.ir.SetQ(Vd, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::SM3TT1A(Vec Vm, Imm<2> imm2, Vec Vn, Vec Vd) {
     return SM3TT1(*this, Vm, imm2, Vn, Vd, SM3TTVariant::A);
@@ -99,4 +99,4 @@ bool TranslatorVisitor::SM3TT2B(Vec Vm, Imm<2> imm2, Vec Vn, Vec Vd) {
     return SM3TT2(*this, Vm, imm2, Vn, Vd, SM3TTVariant::B);
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/impl/translate.h"
-
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
+#include "dynarmic/frontend/A32/translate/impl/translate.h"
 
 namespace Dynarmic::A32 {
 
@@ -20,7 +19,7 @@ static bool TableLookup(TranslatorVisitor& v, bool is_vtbl, bool D, size_t Vn, s
         return v.UnpredictableInstruction();
     }
 
-    const IR::Table table = v.ir.VectorTable([&]{
+    const IR::Table table = v.ir.VectorTable([&] {
         std::vector<IR::U64> result;
         for (size_t i = 0; i < length; ++i) {
             result.emplace_back(v.ir.GetExtendedRegister(n + i));
@@ -88,4 +87,4 @@ bool TranslatorVisitor::asimd_VDUP_scalar(bool D, Imm<4> imm4, size_t Vd, bool Q
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

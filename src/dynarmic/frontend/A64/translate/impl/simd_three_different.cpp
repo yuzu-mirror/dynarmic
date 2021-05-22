@@ -17,8 +17,7 @@ enum class Signedness {
     Unsigned
 };
 
-bool AbsoluteDifferenceLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                            AbsoluteDifferenceBehavior behavior, Signedness sign) {
+bool AbsoluteDifferenceLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, AbsoluteDifferenceBehavior behavior, Signedness sign) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -46,8 +45,7 @@ enum class MultiplyLongBehavior {
     Subtract
 };
 
-bool MultiplyLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                  MultiplyLongBehavior behavior, Signedness sign) {
+bool MultiplyLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, MultiplyLongBehavior behavior, Signedness sign) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -90,8 +88,7 @@ enum class LongOperationBehavior {
     Subtraction
 };
 
-bool LongOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                   LongOperationBehavior behavior, Signedness sign) {
+bool LongOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, LongOperationBehavior behavior, Signedness sign) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -128,8 +125,7 @@ enum class WideOperationBehavior {
     Subtraction
 };
 
-bool WideOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd,
-                   WideOperationBehavior behavior, Signedness sign) {
+bool WideOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd, WideOperationBehavior behavior, Signedness sign) {
     if (size == 0b11) {
         return v.ReservedValue();
     }
@@ -158,7 +154,7 @@ bool WideOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Ve
     v.V(128, Vd, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::PMULL(bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     if (size == 0b01 || size == 0b10) {
@@ -264,4 +260,4 @@ bool TranslatorVisitor::SQDMULL_vec_2(bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec V
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -21,8 +21,9 @@ struct Invalid {};
  * The interpreter must interpret exactly `num_instructions` instructions.
  */
 struct Interpret {
-    explicit Interpret(const LocationDescriptor& next_) : next(next_) {}
-    LocationDescriptor next; ///< Location at which interpretation starts.
+    explicit Interpret(const LocationDescriptor& next_)
+            : next(next_) {}
+    LocationDescriptor next;  ///< Location at which interpretation starts.
     size_t num_instructions = 1;
 };
 
@@ -38,8 +39,9 @@ struct ReturnToDispatch {};
  * dispatcher, which will return control to the host.
  */
 struct LinkBlock {
-    explicit LinkBlock(const LocationDescriptor& next_) : next(next_) {}
-    LocationDescriptor next; ///< Location descriptor for next block.
+    explicit LinkBlock(const LocationDescriptor& next_)
+            : next(next_) {}
+    LocationDescriptor next;  ///< Location descriptor for next block.
 };
 
 /**
@@ -51,8 +53,9 @@ struct LinkBlock {
  * as LinkBlock.
  */
 struct LinkBlockFast {
-    explicit LinkBlockFast(const LocationDescriptor& next_) : next(next_) {}
-    LocationDescriptor next; ///< Location descriptor for next block.
+    explicit LinkBlockFast(const LocationDescriptor& next_)
+            : next(next_) {}
+    LocationDescriptor next;  ///< Location descriptor for next block.
 };
 
 /**
@@ -76,24 +79,24 @@ struct CheckBit;
 struct CheckHalt;
 /// A Terminal is the terminal instruction in a MicroBlock.
 using Terminal = boost::variant<
-        Invalid,
-        Interpret,
-        ReturnToDispatch,
-        LinkBlock,
-        LinkBlockFast,
-        PopRSBHint,
-        FastDispatchHint,
-        boost::recursive_wrapper<If>,
-        boost::recursive_wrapper<CheckBit>,
-        boost::recursive_wrapper<CheckHalt>
->;
+    Invalid,
+    Interpret,
+    ReturnToDispatch,
+    LinkBlock,
+    LinkBlockFast,
+    PopRSBHint,
+    FastDispatchHint,
+    boost::recursive_wrapper<If>,
+    boost::recursive_wrapper<CheckBit>,
+    boost::recursive_wrapper<CheckHalt>>;
 
 /**
  * This terminal instruction conditionally executes one terminal or another depending
  * on the run-time state of the ARM flags.
  */
 struct If {
-    If(Cond if_, Terminal then_, Terminal else_) : if_(if_), then_(std::move(then_)), else_(std::move(else_)) {}
+    If(Cond if_, Terminal then_, Terminal else_)
+            : if_(if_), then_(std::move(then_)), else_(std::move(else_)) {}
     Cond if_;
     Terminal then_;
     Terminal else_;
@@ -105,7 +108,8 @@ struct If {
  * then_ is executed if the check bit is non-zero, otherwise else_ is executed.
  */
 struct CheckBit {
-    CheckBit(Terminal then_, Terminal else_) : then_(std::move(then_)), else_(std::move(else_)) {}
+    CheckBit(Terminal then_, Terminal else_)
+            : then_(std::move(then_)), else_(std::move(else_)) {}
     Terminal then_;
     Terminal else_;
 };
@@ -115,12 +119,13 @@ struct CheckBit {
  * executed.
  */
 struct CheckHalt {
-    explicit CheckHalt(Terminal else_) : else_(std::move(else_)) {}
+    explicit CheckHalt(Terminal else_)
+            : else_(std::move(else_)) {}
     Terminal else_;
 };
 
-} // namespace Term
+}  // namespace Term
 
 using Term::Terminal;
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

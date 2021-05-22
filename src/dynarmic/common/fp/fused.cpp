@@ -4,6 +4,7 @@
  */
 
 #include "dynarmic/common/fp/fused.h"
+
 #include "dynarmic/common/fp/mantissa_util.h"
 #include "dynarmic/common/fp/unpacked.h"
 #include "dynarmic/common/u128.h"
@@ -20,7 +21,7 @@ static FPUnpacked ReduceMantissa(bool sign, int exponent, const u128& mantissa) 
 
 FPUnpacked FusedMulAdd(FPUnpacked addend, FPUnpacked op1, FPUnpacked op2) {
     const bool product_sign = op1.sign != op2.sign;
-    const auto [product_exponent, product_value] = [op1, op2]{
+    const auto [product_exponent, product_value] = [op1, op2] {
         int exponent = op1.exponent + op2.exponent;
         u128 value = Multiply64To128(op1.mantissa, op2.mantissa);
         if (value.Bit<product_point_position + 1>()) {
@@ -86,4 +87,4 @@ FPUnpacked FusedMulAdd(FPUnpacked addend, FPUnpacked op1, FPUnpacked op2) {
     return ReduceMantissa(result_sign, result_exponent, result);
 }
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

@@ -32,7 +32,7 @@ bool ShiftInstruction(TranslatorVisitor& v, Reg m, Reg d, Reg s, bool S, ShiftFu
     v.ir.SetRegister(d, result_carry.result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::thumb32_ASR_reg(bool S, Reg m, Reg d, Reg s) {
     return ShiftInstruction(*this, m, d, s, S, &IREmitter::ArithmeticShiftRight);
@@ -205,4 +205,4 @@ bool TranslatorVisitor::thumb32_UXTAH(Reg n, Reg d, SignExtendRotation rotate, R
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

@@ -233,4 +233,4 @@ bool TranslatorVisitor::BICS(bool sf, Imm<2> shift, Reg Rm, Imm<6> imm6, Reg Rn,
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -122,7 +122,7 @@ bool TranslatorVisitor::arm_UADD8(Cond cond, Reg n, Reg d, Reg m) {
 // UADD16<c> <Rd>, <Rn>, <Rm>
 bool TranslatorVisitor::arm_UADD16(Cond cond, Reg n, Reg d, Reg m) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
-       return UnpredictableInstruction();
+        return UnpredictableInstruction();
     }
 
     if (!ArmConditionPassed(cond)) {
@@ -183,7 +183,7 @@ bool TranslatorVisitor::arm_USAD8(Cond cond, Reg d, Reg m, Reg n) {
 }
 
 // USADA8<c> <Rd>, <Rn>, <Rm>, <Ra>
-bool TranslatorVisitor::arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n){
+bool TranslatorVisitor::arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) {
     if (d == Reg::PC || n == Reg::PC || m == Reg::PC) {
         return UnpredictableInstruction();
     }
@@ -534,4 +534,4 @@ bool TranslatorVisitor::arm_UHSUB16(Cond cond, Reg n, Reg d, Reg m) {
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

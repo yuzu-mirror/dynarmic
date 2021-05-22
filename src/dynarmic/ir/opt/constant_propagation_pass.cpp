@@ -34,7 +34,7 @@ IR::Value Value(bool is_32_bit, u64 value) {
     return is_32_bit ? IR::Value{static_cast<u32>(value)} : IR::Value{value};
 }
 
-template <typename ImmFn>
+template<typename ImmFn>
 bool FoldCommutative(IR::Inst& inst, bool is_32_bit, ImmFn imm_fn) {
     const auto lhs = inst.GetArg(0);
     const auto rhs = inst.GetArg(1);
@@ -361,7 +361,7 @@ void FoldZeroExtendXToLong(IR::Inst& inst) {
     const u64 value = inst.GetArg(0).GetImmediateAsU64();
     inst.ReplaceUsesWith(IR::Value{value});
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 void ConstantPropagation(IR::Block& block) {
     for (auto& inst : block) {
@@ -538,4 +538,4 @@ void ConstantPropagation(IR::Block& block) {
     }
 }
 
-} // namespace Dynarmic::Optimization
+}  // namespace Dynarmic::Optimization

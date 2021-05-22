@@ -282,4 +282,4 @@ bool TranslatorVisitor::arm_UQSAX(Cond cond, Reg n, Reg d, Reg m) {
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

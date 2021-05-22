@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/ir/type.h"
+
 #include <array>
 #include <ostream>
 #include <string>
-
-#include "dynarmic/ir/type.h"
 
 namespace Dynarmic::IR {
 
@@ -20,8 +20,7 @@ std::string GetNameOf(Type type) {
         "CoprocInfo",
         "NZCVFlags",
         "Cond",
-        "Table"
-    };
+        "Table"};
 
     const size_t bits = static_cast<size_t>(type);
     if (bits == 0) {
@@ -48,4 +47,4 @@ std::ostream& operator<<(std::ostream& o, Type type) {
     return o << GetNameOf(type);
 }
 
-} // namespace Dynarmic::IR
+}  // namespace Dynarmic::IR

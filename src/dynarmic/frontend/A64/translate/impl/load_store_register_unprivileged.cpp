@@ -7,8 +7,7 @@
 
 namespace Dynarmic::A64 {
 
-static bool StoreRegister(TranslatorVisitor& v, const size_t datasize,
-                          const Imm<9> imm9, const Reg Rn, const Reg Rt) {
+static bool StoreRegister(TranslatorVisitor& v, const size_t datasize, const Imm<9> imm9, const Reg Rn, const Reg Rt) {
     const u64 offset = imm9.SignExtend<u64>();
     const auto acctype = IR::AccType::UNPRIV;
 
@@ -26,8 +25,7 @@ static bool StoreRegister(TranslatorVisitor& v, const size_t datasize,
     return true;
 }
 
-static bool LoadRegister(TranslatorVisitor& v, const size_t datasize,
-                         const Imm<9> imm9, const Reg Rn, const Reg Rt) {
+static bool LoadRegister(TranslatorVisitor& v, const size_t datasize, const Imm<9> imm9, const Reg Rn, const Reg Rt) {
     const u64 offset = imm9.SignExtend<u64>();
     const auto acctype = IR::AccType::UNPRIV;
 
@@ -47,8 +45,7 @@ static bool LoadRegister(TranslatorVisitor& v, const size_t datasize,
     return true;
 }
 
-static bool LoadRegisterSigned(TranslatorVisitor& v, const size_t datasize,
-                               const Imm<2> opc, const Imm<9> imm9, const Reg Rn, const Reg Rt) {
+static bool LoadRegisterSigned(TranslatorVisitor& v, const size_t datasize, const Imm<2> opc, const Imm<9> imm9, const Reg Rn, const Reg Rt) {
     const u64 offset = imm9.SignExtend<u64>();
     const auto acctype = IR::AccType::UNPRIV;
 
@@ -149,4 +146,4 @@ bool TranslatorVisitor::LDTRSW(Imm<9> imm9, Reg Rn, Reg Rt) {
     X(64, Rt, SignExtend(data, 64));
     return true;
 }
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

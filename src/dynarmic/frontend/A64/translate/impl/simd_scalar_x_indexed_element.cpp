@@ -4,6 +4,7 @@
  */
 
 #include <utility>
+
 #include "dynarmic/frontend/A64/translate/impl/impl.h"
 
 namespace Dynarmic::A64 {
@@ -23,8 +24,7 @@ enum class ExtraBehavior {
     MultiplyExtended,
 };
 
-bool MultiplyByElement(TranslatorVisitor& v, bool sz, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H,
-                       Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
+bool MultiplyByElement(TranslatorVisitor& v, bool sz, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
     if (sz && L == 1) {
         return v.ReservedValue();
     }
@@ -58,8 +58,7 @@ bool MultiplyByElement(TranslatorVisitor& v, bool sz, Imm<1> L, Imm<1> M, Imm<4>
     return true;
 }
 
-bool MultiplyByElementHalfPrecision(TranslatorVisitor& v, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H,
-                                    Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
+bool MultiplyByElementHalfPrecision(TranslatorVisitor& v, Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd, ExtraBehavior extra_behavior) {
     const size_t esize = 16;
     const size_t idxsize = H == 1 ? 128 : 64;
     const size_t index = concatenate(H, L, M).ZeroExtend();
@@ -91,7 +90,7 @@ bool MultiplyByElementHalfPrecision(TranslatorVisitor& v, Imm<1> L, Imm<1> M, Im
     v.V_scalar(esize, Vd, result);
     return true;
 }
-} // Anonymous namespace
+}  // Anonymous namespace
 
 bool TranslatorVisitor::FMLA_elt_1(Imm<1> L, Imm<1> M, Imm<4> Vmlo, Imm<1> H, Vec Vn, Vec Vd) {
     return MultiplyByElementHalfPrecision(*this, L, M, Vmlo, H, Vn, Vd, ExtraBehavior::Accumulate);
@@ -170,4 +169,4 @@ bool TranslatorVisitor::SQDMULL_elt_1(Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vm
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -24,15 +24,15 @@ bool TranslatorVisitor::CRC32(bool sf, Reg Rm, Imm<2> sz, Reg Rn, Reg Rd) {
         const IR::U32U64 data = X(datasize, Rm);
 
         switch (integral_size) {
-            case 0b00:
-                return ir.CRC32ISO8(accumulator, data);
-            case 0b01:
-                return ir.CRC32ISO16(accumulator, data);
-            case 0b10:
-                return ir.CRC32ISO32(accumulator, data);
-            case 0b11:
-            default:
-                return ir.CRC32ISO64(accumulator, data);
+        case 0b00:
+            return ir.CRC32ISO8(accumulator, data);
+        case 0b01:
+            return ir.CRC32ISO16(accumulator, data);
+        case 0b10:
+            return ir.CRC32ISO32(accumulator, data);
+        case 0b11:
+        default:
+            return ir.CRC32ISO64(accumulator, data);
         }
     }();
 
@@ -73,4 +73,4 @@ bool TranslatorVisitor::CRC32C(bool sf, Reg Rm, Imm<2> sz, Reg Rn, Reg Rd) {
     return true;
 }
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64

@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/backend/x64/a32_emit_x64.h"
+
 #include <algorithm>
 #include <optional>
 #include <utility>
@@ -11,7 +13,6 @@
 #include <fmt/ostream.h>
 #include <mp/traits/integer_of_size.h>
 
-#include "dynarmic/backend/x64/a32_emit_x64.h"
 #include "dynarmic/backend/x64/a32_jitstate.h"
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
@@ -61,7 +62,7 @@ static Xbyak::Address MJitStateExtReg(A32::ExtReg reg) {
 }
 
 A32EmitContext::A32EmitContext(const A32::UserConfig& conf, RegAlloc& reg_alloc, IR::Block& block)
-    : EmitContext(reg_alloc, block), conf(conf) {}
+        : EmitContext(reg_alloc, block), conf(conf) {}
 
 A32::LocationDescriptor A32EmitContext::Location() const {
     return A32::LocationDescriptor{block.Location()};
@@ -87,7 +88,7 @@ A32EmitX64::A32EmitX64(BlockOfCode& code, A32::UserConfig conf, A32::Jit* jit_in
     code.PreludeComplete();
     ClearFastDispatchTable();
 
-    exception_handler.SetFastmemCallback([this](u64 rip_){
+    exception_handler.SetFastmemCallback([this](u64 rip_) {
         return FastmemCallback(rip_);
     });
 }
@@ -98,7 +99,7 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
-    static const std::vector<HostLoc> gpr_order = [this]{
+    static const std::vector<HostLoc> gpr_order = [this] {
         std::vector<HostLoc> gprs{any_gpr};
         if (conf.page_table) {
             gprs.erase(std::find(gprs.begin(), gprs.end(), HostLoc::R14));
@@ -126,15 +127,14 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
 
         // Call the relevant Emit* member function.
         switch (inst->GetOpcode()) {
-
-#define OPCODE(name, type, ...)                 \
-        case IR::Opcode::name:                  \
-            A32EmitX64::Emit##name(ctx, inst);  \
-            break;
-#define A32OPC(name, type, ...)                    \
-        case IR::Opcode::A32##name:                \
-            A32EmitX64::EmitA32##name(ctx, inst);  \
-            break;
+#define OPCODE(name, type, ...)            \
+    case IR::Opcode::name:                 \
+        A32EmitX64::Emit##name(ctx, inst); \
+        break;
+#define A32OPC(name, type, ...)               \
+    case IR::Opcode::A32##name:               \
+        A32EmitX64::EmitA32##name(ctx, inst); \
+        break;
 #define A64OPC(...)
 #include "dynarmic/ir/opcodes.inc"
 #undef OPCODE
@@ -216,7 +216,7 @@ void A32EmitX64::GenFastmemFallbacks() {
         for (int value_idx : idxes) {
             for (const auto& [bitsize, callback] : read_callbacks) {
                 code.align();
-                read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+                read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
                 ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
                 if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
                     code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
@@ -232,7 +232,7 @@ void A32EmitX64::GenFastmemFallbacks() {
 
             for (const auto& [bitsize, callback] : write_callbacks) {
                 code.align();
-                write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void(*)()>();
+                write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
                 ABI_PushCallerSaveRegistersAndAdjustStack(code);
                 if (vaddr_idx == code.ABI_PARAM3.getIdx() && value_idx == code.ABI_PARAM2.getIdx()) {
                     code.xchg(code.ABI_PARAM2, code.ABI_PARAM3);
@@ -310,7 +310,7 @@ void A32EmitX64::GenTerminalHandlers() {
         PerfMapRegister(terminal_handler_fast_dispatch_hint, code.getCurr(), "a32_terminal_handler_fast_dispatch_hint");
 
         code.align();
-        fast_dispatch_table_lookup = code.getCurr<FastDispatchEntry&(*)(u64)>();
+        fast_dispatch_table_lookup = code.getCurr<FastDispatchEntry& (*)(u64)>();
         code.mov(code.ABI_PARAM2, reinterpret_cast<u64>(fast_dispatch_table.data()));
         if (code.HasHostFeature(HostFeature::SSE42)) {
             code.crc32(code.ABI_PARAM1.cvt32(), code.ABI_PARAM2.cvt32());
@@ -728,7 +728,7 @@ void A32EmitX64::EmitA32DataMemoryBarrier(A32EmitContext&, IR::Inst*) {
 
 void A32EmitX64::EmitA32InstructionSynchronizationBarrier(A32EmitContext& ctx, IR::Inst*) {
     if (!conf.hook_isb) {
-       return;
+        return;
     }
 
     ctx.reg_alloc.HostCall(nullptr);
@@ -766,7 +766,7 @@ void A32EmitX64::EmitA32BXWritePC(A32EmitContext& ctx, IR::Inst* inst) {
         code.mov(mask, new_pc);
         code.and_(mask, 1);
         code.lea(new_upper, ptr[mask.cvt64() + upper_without_t]);
-        code.lea(mask, ptr[mask.cvt64() + mask.cvt64() * 1 - 4]); // mask = pc & 1 ? 0xFFFFFFFE : 0xFFFFFFFC
+        code.lea(mask, ptr[mask.cvt64() + mask.cvt64() * 1 - 4]);  // mask = pc & 1 ? 0xFFFFFFFE : 0xFFFFFFFC
         code.and_(new_pc, mask);
         code.mov(MJitStateReg(A32::Reg::PC), new_pc);
         code.mov(dword[r15 + offsetof(A32JitState, upper_location_descriptor)], new_upper);
@@ -1021,7 +1021,7 @@ void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbya
     }
 }
 
-} // anonymous namespace
+}  // anonymous namespace
 
 template<std::size_t bitsize, auto callback>
 void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
@@ -1048,8 +1048,7 @@ void A32EmitX64::ReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
                 *marker,
-            }
-        );
+            });
 
         ctx.reg_alloc.DefineValue(inst, value);
         return;
@@ -1095,8 +1094,7 @@ void A32EmitX64::WriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
                 *marker,
-            }
-        );
+            });
 
         return;
     }
@@ -1146,7 +1144,7 @@ void A32EmitX64::EmitA32WriteMemory64(A32EmitContext& ctx, IR::Inst* inst) {
     WriteMemory<64, &A32::UserCallbacks::MemoryWrite64>(ctx, inst);
 }
 
-template <size_t bitsize, auto callback>
+template<size_t bitsize, auto callback>
 void A32EmitX64::ExclusiveReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
     using T = mp::unsigned_integer_of_size<bitsize>;
 
@@ -1162,11 +1160,10 @@ void A32EmitX64::ExclusiveReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
             return conf.global_monitor->ReadAndMark<T>(conf.processor_id, vaddr, [&]() -> T {
                 return (conf.callbacks->*callback)(vaddr);
             });
-        }
-    );
+        });
 }
 
-template <size_t bitsize, auto callback>
+template<size_t bitsize, auto callback>
 void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
     using T = mp::unsigned_integer_of_size<bitsize>;
 
@@ -1185,11 +1182,12 @@ void A32EmitX64::ExclusiveWriteMemory(A32EmitContext& ctx, IR::Inst* inst) {
     code.CallLambda(
         [](A32::UserConfig& conf, u32 vaddr, T value) -> u32 {
             return conf.global_monitor->DoExclusiveOperation<T>(conf.processor_id, vaddr,
-                [&](T expected) -> bool {
-                    return (conf.callbacks->*callback)(vaddr, value, expected);
-                }) ? 0 : 1;
-        }
-    );
+                                                                [&](T expected) -> bool {
+                                                                    return (conf.callbacks->*callback)(vaddr, value, expected);
+                                                                })
+                     ? 0
+                     : 1;
+        });
     code.L(end);
 }
 
@@ -1229,10 +1227,7 @@ static void EmitCoprocessorException() {
     ASSERT_FALSE("Should raise coproc exception here");
 }
 
-static void CallCoprocCallback(BlockOfCode& code, RegAlloc& reg_alloc, A32::Jit* jit_interface,
-                              A32::Coprocessor::Callback callback, IR::Inst* inst = nullptr,
-                              std::optional<Argument::copyable_reference> arg0 = {},
-                              std::optional<Argument::copyable_reference> arg1 = {}) {
+static void CallCoprocCallback(BlockOfCode& code, RegAlloc& reg_alloc, A32::Jit* jit_interface, A32::Coprocessor::Callback callback, IR::Inst* inst = nullptr, std::optional<Argument::copyable_reference> arg0 = {}, std::optional<Argument::copyable_reference> arg1 = {}) {
     reg_alloc.HostCall(inst, {}, {}, arg0, arg1);
 
     code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(jit_interface));
@@ -1519,7 +1514,7 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::Interpret terminal, IR::LocationDesc
     code.mov(MJitStateReg(A32::Reg::PC), code.ABI_PARAM2.cvt32());
     code.SwitchMxcsrOnExit();
     Devirtualize<&A32::UserCallbacks::InterpreterFallback>(conf.callbacks).EmitCall(code);
-    code.ReturnFromRunCode(true); // TODO: Check cycles
+    code.ReturnFromRunCode(true);  // TODO: Check cycles
 }
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::ReturnToDispatch, IR::LocationDescriptor, bool) {
@@ -1532,7 +1527,7 @@ void A32EmitX64::EmitSetUpperLocationDescriptor(IR::LocationDescriptor new_locat
     };
 
     const u32 old_upper = get_upper(old_location);
-    const u32 new_upper = [&]{
+    const u32 new_upper = [&] {
         const u32 mask = ~u32(conf.always_little_endian ? 0x2 : 0);
         return get_upper(new_location) & mask;
     }();
@@ -1666,4 +1661,4 @@ void A32EmitX64::Unpatch(const IR::LocationDescriptor& location) {
     }
 }
 
-} // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend::X64

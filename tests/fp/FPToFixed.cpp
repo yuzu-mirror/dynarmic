@@ -19,7 +19,7 @@ using namespace Dynarmic;
 using namespace Dynarmic::FP;
 
 TEST_CASE("FPToFixed", "[fp]") {
-    const std::vector<std::tuple<u32, size_t, u64, u32>> test_cases {
+    const std::vector<std::tuple<u32, size_t, u64, u32>> test_cases{
         {0x447A0000, 64, 0x000003E8, 0x00},
         {0xC47A0000, 32, 0xFFFFFC18, 0x00},
         {0x4479E000, 64, 0x000003E8, 0x10},

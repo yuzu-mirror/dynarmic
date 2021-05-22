@@ -13,4 +13,4 @@ class FPSR;
 template<typename FPT>
 FPT FPRecipStepFused(FPT op1, FPT op2, FPCR fpcr, FPSR& fpsr);
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

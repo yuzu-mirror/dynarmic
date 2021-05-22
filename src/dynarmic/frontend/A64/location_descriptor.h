@@ -31,24 +31,22 @@ public:
     static_assert((pc_mask & (u64(fpcr_mask) << fpcr_shift) & (u64(1) << single_stepping_bit)) == 0);
 
     LocationDescriptor(u64 pc, FP::FPCR fpcr, bool single_stepping = false)
-        : pc(pc & pc_mask), fpcr(fpcr.Value() & fpcr_mask), single_stepping(single_stepping)
-    {}
+            : pc(pc & pc_mask), fpcr(fpcr.Value() & fpcr_mask), single_stepping(single_stepping) {}
 
     explicit LocationDescriptor(const IR::LocationDescriptor& o)
-        : pc(o.Value() & pc_mask)
-        , fpcr((o.Value() >> fpcr_shift) & fpcr_mask)
-        , single_stepping(Common::Bit<single_stepping_bit>(o.Value()))
-    {}
+            : pc(o.Value() & pc_mask)
+            , fpcr((o.Value() >> fpcr_shift) & fpcr_mask)
+            , single_stepping(Common::Bit<single_stepping_bit>(o.Value())) {}
 
     u64 PC() const { return Common::SignExtend<pc_bit_count>(pc); }
     FP::FPCR FPCR() const { return fpcr; }
     bool SingleStepping() const { return single_stepping; }
 
-    bool operator == (const LocationDescriptor& o) const {
+    bool operator==(const LocationDescriptor& o) const {
         return std::tie(pc, fpcr, single_stepping) == std::tie(o.pc, o.fpcr, o.single_stepping);
     }
 
-    bool operator != (const LocationDescriptor& o) const {
+    bool operator!=(const LocationDescriptor& o) const {
         return !operator==(o);
     }
 
@@ -77,8 +75,8 @@ public:
     }
 
 private:
-    u64 pc;        ///< Current program counter value.
-    FP::FPCR fpcr; ///< Floating point control register.
+    u64 pc;         ///< Current program counter value.
+    FP::FPCR fpcr;  ///< Floating point control register.
     bool single_stepping;
 };
 
@@ -90,19 +88,19 @@ private:
  */
 std::ostream& operator<<(std::ostream& o, const LocationDescriptor& descriptor);
 
-} // namespace Dynarmic::A64
+}  // namespace Dynarmic::A64
 
 namespace std {
-template <>
+template<>
 struct less<Dynarmic::A64::LocationDescriptor> {
     bool operator()(const Dynarmic::A64::LocationDescriptor& x, const Dynarmic::A64::LocationDescriptor& y) const noexcept {
         return x.UniqueHash() < y.UniqueHash();
     }
 };
-template <>
+template<>
 struct hash<Dynarmic::A64::LocationDescriptor> {
     size_t operator()(const Dynarmic::A64::LocationDescriptor& x) const noexcept {
         return std::hash<u64>()(x.UniqueHash());
     }
 };
-} // namespace std
+}  // namespace std

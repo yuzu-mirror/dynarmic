@@ -15,7 +15,7 @@
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/interface/A32/a32.h"
 
-template <typename InstructionType_, u32 infinite_loop_u32>
+template<typename InstructionType_, u32 infinite_loop_u32>
 class A32TestEnv final : public Dynarmic::A32::UserCallbacks {
 public:
     using InstructionType = InstructionType_;
@@ -23,12 +23,12 @@ public:
     using ExtRegsArray = std::array<u32, 64>;
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4309) // C4309: 'static_cast': truncation of constant value
+#    pragma warning(push)
+#    pragma warning(disable : 4309)  // C4309: 'static_cast': truncation of constant value
 #endif
     static constexpr InstructionType infinite_loop = static_cast<InstructionType>(infinite_loop_u32);
 #ifdef _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
     u64 ticks_left = 0;
@@ -53,7 +53,7 @@ public:
             std::memcpy(&value, &code_mem[vaddr / sizeof(InstructionType)], sizeof(u32));
             return value;
         }
-        return infinite_loop_u32; // B .
+        return infinite_loop_u32;  // B .
     }
 
     std::uint8_t MemoryRead8(u32 vaddr) override {

@@ -96,4 +96,4 @@ constexpr std::optional<FPT> ProcessNaNs(FPT a, FPT b, FPT c) {
     return std::nullopt;
 }
 
-} // namespace Dynarmic::FP
+}  // namespace Dynarmic::FP

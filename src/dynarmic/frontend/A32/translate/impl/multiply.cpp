@@ -66,7 +66,6 @@ bool TranslatorVisitor::arm_MUL(Cond cond, bool S, Reg d, Reg m, Reg n) {
     return true;
 }
 
-
 // SMLAL{S}<c> <RdLo>, <RdHi>, <Rn>, <Rm>
 bool TranslatorVisitor::arm_SMLAL(Cond cond, bool S, Reg dHi, Reg dLo, Reg m, Reg n) {
     if (dLo == Reg::PC || dHi == Reg::PC || n == Reg::PC || m == Reg::PC) {
@@ -608,4 +607,4 @@ bool TranslatorVisitor::arm_SMUSD(Cond cond, Reg d, Reg m, bool M, Reg n) {
     return true;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

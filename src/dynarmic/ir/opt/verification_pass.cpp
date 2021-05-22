@@ -43,4 +43,4 @@ void VerificationPass(const IR::Block& block) {
     }
 }
 
-} // namespace Dynarmic::Optimization
+}  // namespace Dynarmic::Optimization

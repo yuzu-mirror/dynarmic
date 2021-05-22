@@ -93,4 +93,4 @@ bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descript
     return should_continue;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

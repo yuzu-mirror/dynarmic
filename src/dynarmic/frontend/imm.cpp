@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include "dynarmic/frontend/imm.h"
+
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
 #include "dynarmic/common/common_types.h"
-#include "dynarmic/frontend/imm.h"
 
 namespace Dynarmic {
 
@@ -63,4 +64,4 @@ u64 AdvSIMDExpandImm(bool op, Imm<4> cmode, Imm<8> imm8) {
     UNREACHABLE();
 }
 
-} // namespace Dynarmic
+}  // namespace Dynarmic

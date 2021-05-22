@@ -18,10 +18,10 @@
 
 namespace Dynarmic::A32 {
 
-template <typename Visitor>
+template<typename Visitor>
 using ASIMDMatcher = Decoder::Matcher<Visitor, u32>;
 
-template <typename V>
+template<typename V>
 std::vector<ASIMDMatcher<V>> GetASIMDDecodeTable() {
     std::vector<ASIMDMatcher<V>> table = {
 
@@ -74,4 +74,4 @@ std::optional<std::reference_wrapper<const ASIMDMatcher<V>>> DecodeASIMD(u32 ins
     return iter != table.end() ? std::optional<std::reference_wrapper<const ASIMDMatcher<V>>>(*iter) : std::nullopt;
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32

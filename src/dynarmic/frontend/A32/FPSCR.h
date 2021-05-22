@@ -16,13 +16,13 @@ namespace Dynarmic::A32 {
 /**
  * Representation of the Floating-Point Status and Control Register.
  */
-class FPSCR final
-{
+class FPSCR final {
 public:
     FPSCR() = default;
     FPSCR(const FPSCR&) = default;
     FPSCR(FPSCR&&) = default;
-    explicit FPSCR(u32 data) : value{data & mask} {}
+    explicit FPSCR(u32 data)
+            : value{data & mask} {}
 
     FPSCR& operator=(const FPSCR&) = default;
     FPSCR& operator=(FPSCR&&) = default;
@@ -163,7 +163,7 @@ public:
      */
     bool InRunFastMode() const {
         constexpr u32 runfast_mask = 0x03001F00;
-        constexpr u32 expected     = 0x03000000;
+        constexpr u32 expected = 0x03000000;
 
         return (value & runfast_mask) == expected;
     }
@@ -187,4 +187,4 @@ inline bool operator!=(FPSCR lhs, FPSCR rhs) {
     return !operator==(lhs, rhs);
 }
 
-} // namespace Dynarmic::A32
+}  // namespace Dynarmic::A32
