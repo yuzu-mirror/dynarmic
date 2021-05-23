@@ -408,7 +408,7 @@ void RegAlloc::HostCall(IR::Inst* result_def,
     }
 
     for (size_t i = 0; i < args_count; i++) {
-        if (args[i]) {
+        if (args[i] && !args[i]->get().IsVoid()) {
             UseScratch(*args[i], args_hostloc[i]);
 #if defined(__llvm__) && !defined(_WIN32)
             // LLVM puts the burden of zero-extension of 8 and 16 bit values on the caller instead of the callee

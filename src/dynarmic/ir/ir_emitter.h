@@ -393,6 +393,10 @@ public:
     U128 FPVectorToUnsignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding, bool fpcr_controlled = true);
 
     void Breakpoint();
+    void CallHostFunction(void (*fn)(void));
+    void CallHostFunction(void (*fn)(u64), const U64& arg1);
+    void CallHostFunction(void (*fn)(u64, u64), const U64& arg1, const U64& arg2);
+    void CallHostFunction(void (*fn)(u64, u64, u64), const U64& arg1, const U64& arg2, const U64& arg3);
 
     void SetTerm(const Terminal& terminal);
 

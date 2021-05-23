@@ -59,15 +59,22 @@ std::optional<EmitX64::BlockDescriptor> EmitX64::GetBasicBlock(IR::LocationDescr
 void EmitX64::EmitVoid(EmitContext&, IR::Inst*) {
 }
 
-void EmitX64::EmitBreakpoint(EmitContext&, IR::Inst*) {
-    code.int3();
-}
-
 void EmitX64::EmitIdentity(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     if (!args[0].IsImmediate()) {
         ctx.reg_alloc.DefineValue(inst, args[0]);
     }
+}
+
+void EmitX64::EmitBreakpoint(EmitContext&, IR::Inst*) {
+    code.int3();
+}
+
+void EmitX64::EmitCallHostFunction(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.HostCall(nullptr, args[1], args[2], args[3]);
+    code.mov(rax, args[0].GetImmediateU64());
+    code.call(rax);
 }
 
 void EmitX64::PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, IR::LocationDescriptor target) {

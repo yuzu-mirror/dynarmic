@@ -3,6 +3,7 @@
 OPCODE(Void,                                                Void,                                                                           )
 OPCODE(Identity,                                            Opaque,         Opaque                                                          )
 OPCODE(Breakpoint,                                          Void,                                                                           )
+OPCODE(CallHostFunction,                                    Void,           U64,            Opaque,         Opaque,         Opaque          )
 
 // A32 Context getters/setters
 A32OPC(SetCheckBit,                                         Void,           U1                                                              )
