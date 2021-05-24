@@ -12,6 +12,7 @@
 
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
+#include "dynarmic/backend/x64/constants.h"
 #include "dynarmic/backend/x64/emit_x64.h"
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
@@ -4358,7 +4359,7 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
 
         // Handle vector-table 2,3
         // vpcmpuble
-        code.vpcmpub(upper_mask, indicies, code.MConst(xword, 0x3F3F3F3F3F3F3F3F, 0x3F3F3F3F3F3F3F3F), 2);
+        code.vpcmpub(upper_mask, indicies, code.MConst(xword, 0x3F3F3F3F3F3F3F3F, 0x3F3F3F3F3F3F3F3F), CmpInt::LessEqual);
         code.kandnw(write_mask, write_mask, upper_mask);
 
         const Xbyak::Xmm xmm_table2 = ctx.reg_alloc.UseScratchXmm(table[2]);

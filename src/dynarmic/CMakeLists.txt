@@ -273,6 +273,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         backend/x64/callback.h
         backend/x64/constant_pool.cpp
         backend/x64/constant_pool.h
+        backend/x64/constants.h
         backend/x64/devirtualize.h
         backend/x64/emit_x64.cpp
         backend/x64/emit_x64.h

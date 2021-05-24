@@ -4,6 +4,7 @@
  */
 
 #include "dynarmic/backend/x64/block_of_code.h"
+#include "dynarmic/backend/x64/constants.h"
 #include "dynarmic/backend/x64/emit_x64.h"
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/ir/microinstruction.h"
