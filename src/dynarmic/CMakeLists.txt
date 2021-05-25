@@ -62,6 +62,8 @@ add_library(dynarmic
     common/u128.cpp
     common/u128.h
     common/variant_util.h
+    common/x64_disassemble.cpp
+    common/x64_disassemble.h
     frontend/A32/types.cpp
     frontend/A32/types.h
     frontend/A64/types.cpp
@@ -99,12 +101,6 @@ add_library(dynarmic
 
 if ("A32" IN_LIST DYNARMIC_FRONTENDS)
     target_sources(dynarmic PRIVATE
-        interface/A32/a32.h
-        interface/A32/arch_version.h
-        interface/A32/config.h
-        interface/A32/coprocessor.h
-        interface/A32/coprocessor_util.h
-        interface/A32/disassembler.h
         frontend/A32/decoder/arm.h
         frontend/A32/decoder/arm.inc
         frontend/A32/decoder/asimd.h
@@ -177,6 +173,12 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/translate/translate.h
         frontend/A32/translate/translate_arm.cpp
         frontend/A32/translate/translate_thumb.cpp
+        interface/A32/a32.h
+        interface/A32/arch_version.h
+        interface/A32/config.h
+        interface/A32/coprocessor.h
+        interface/A32/coprocessor_util.h
+        interface/A32/disassembler.h
         ir/opt/a32_constant_memory_reads_pass.cpp
         ir/opt/a32_get_set_elimination_pass.cpp
     )
@@ -286,9 +288,9 @@ if (ARCHITECTURE STREQUAL "x86_64")
         backend/x64/emit_x64_vector_saturation.cpp
         backend/x64/exception_handler.h
         backend/x64/exclusive_monitor.cpp
+        backend/x64/host_feature.h
         backend/x64/hostloc.cpp
         backend/x64/hostloc.h
-        backend/x64/host_feature.h
         backend/x64/jitstate_info.h
         backend/x64/oparg.h
         backend/x64/perf_map.cpp
@@ -363,12 +365,13 @@ create_target_directory_groups(dynarmic)
 target_include_directories(dynarmic PUBLIC ..)
 target_compile_options(dynarmic PRIVATE ${DYNARMIC_CXX_FLAGS})
 target_link_libraries(dynarmic
-    PRIVATE
+    PUBLIC
         boost
         fmt::fmt
         mp
         tsl::robin_map
         xbyak
+        Zydis
         $<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>
 )
 if (DYNARMIC_ENABLE_CPU_FEATURE_DETECTION)
