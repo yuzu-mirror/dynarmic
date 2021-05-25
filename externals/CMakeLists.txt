@@ -40,3 +40,10 @@ if (NOT TARGET xbyak)
         target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
     endif()
 endif()
+
+# zydis
+
+option(ZYDIS_BUILD_TOOLS "" OFF)
+option(ZYDIS_BUILD_EXAMPLES "" OFF)
+set(ZYDIS_ZYCORE_PATH "${CMAKE_CURRENT_LIST_DIR}/zycore" CACHE PATH "")
+add_subdirectory(zydis)
