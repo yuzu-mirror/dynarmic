@@ -26,6 +26,7 @@
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/common/scope_exit.h"
 #include "dynarmic/common/variant_util.h"
+#include "dynarmic/common/x64_disassemble.h"
 #include "dynarmic/frontend/A32/location_descriptor.h"
 #include "dynarmic/frontend/A32/types.h"
 #include "dynarmic/interface/A32/coprocessor.h"
@@ -897,7 +898,15 @@ std::optional<A32EmitX64::DoNotFastmemMarker> A32EmitX64::ShouldFastmem(A32EmitC
 
 FakeCall A32EmitX64::FastmemCallback(u64 rip_) {
     const auto iter = fastmem_patch_info.find(rip_);
-    ASSERT(iter != fastmem_patch_info.end());
+
+    if (iter == fastmem_patch_info.end()) {
+        fmt::print("dynarmic: Segfault happened within JITted code at rip = {:016x}\n", rip_);
+        fmt::print("Segfault wasn't at a fastmem patch location!\n");
+        fmt::print("Now dumping code.......\n\n");
+        Common::DumpDisassembledX64((void*)(rip_ & ~u64(0xFFF)), 0x1000);
+        ASSERT_FALSE("iter != fastmem_patch_info.end()");
+    }
+
     if (conf.recompile_on_fastmem_failure) {
         const auto marker = iter->second.marker;
         do_not_fastmem.emplace(marker);
