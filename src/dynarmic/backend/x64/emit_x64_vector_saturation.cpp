@@ -62,11 +62,56 @@ void EmitVectorSignedSaturated(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
     const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
-    // TODO AVX-512: vpternlog, vpsraq
+    code.movaps(tmp, result);
+
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512DQ)) {
+        // Do a regular unsigned operation
+        if constexpr (op == Op::Add) {
+            if constexpr (esize == 32) {
+                code.vpaddd(result, result, arg);
+            } else {
+                code.vpaddq(result, result, arg);
+            }
+        } else {
+            if constexpr (esize == 32) {
+                code.vpsubd(result, result, arg);
+            } else {
+                code.vpsubq(result, result, arg);
+            }
+        }
+
+        // Determine if an overflow/underflow happened
+        if constexpr (op == Op::Add) {
+            code.vpternlogd(tmp, result, arg, 0b00100100);
+        } else {
+            code.vpternlogd(tmp, result, arg, 0b00011000);
+        }
+
+        // Masked write
+        if constexpr (esize == 32) {
+            code.vpmovd2m(k1, tmp);
+            code.vpsrad(result | k1, result, 31);
+            code.vpxord(result | k1, result, code.MConst(xword_b, msb_mask, msb_mask));
+        } else {
+            code.vpmovq2m(k1, tmp);
+            code.vpsraq(result | k1, result, 63);
+            code.vpxorq(result | k1, result, code.MConst(xword_b, msb_mask, msb_mask));
+        }
+
+        // Set ZF if an overflow happened
+        code.ktestb(k1, k1);
+
+        // Write Q if overflow/underflow occured
+        code.setnz(overflow);
+        code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     // TODO AVX2 implementation
 
     code.movaps(xmm0, result);
-    code.movaps(tmp, result);
 
     if constexpr (op == Op::Add) {
         if constexpr (esize == 32) {
