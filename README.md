@@ -7,7 +7,8 @@ A dynamic recompiler for ARM.
 
 ### Supported guest architectures
 
-* ARMv6K
+* ARMv6K, ARMv7A
+* 32-bit ARMv8
 * 64-bit ARMv8
 
 ### Supported host architectures
@@ -15,6 +16,15 @@ A dynamic recompiler for ARM.
 * x86-64
 
 There are no plans to support x86-32.
+
+Projects using Dynarmic
+-----------------------
+
+* [Citra - Nintendo 3DS emulator](https://citra-emu.org)
+* [yuzu - Nintendo Switch emulator](https://yuzu-emu.org)
+* [EKA2L1 - An Experimental Symbian OS emulator](https://github.com/EKA2L1/EKA2L1)
+* [Vita3K - An Experimental PSVita emulator](https://vita3k.org)
+* [unidbg - Android native library emulation, with experimental iOS emulation](https://github.com/zhkl0228/unidbg)
 
 Alternatives to Dynarmic
 ------------------------
