@@ -1082,31 +1082,57 @@ void A64EmitX64::EmitA64ReadMemory64(A64EmitContext& ctx, IR::Inst* inst) {
 }
 
 void A64EmitX64::EmitA64ReadMemory128(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        Xbyak::Label abort, end;
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const auto fastmem_marker = ShouldFastmem(ctx, inst);
 
-        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-        const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
-        const Xbyak::Xmm value = ctx.reg_alloc.ScratchXmm();
-
-        const auto src_ptr = EmitVAddrLookup(code, ctx, 128, abort, vaddr);
-        code.movups(value, xword[src_ptr]);
-        code.L(end);
-
-        code.SwitchToFarCode();
-        code.L(abort);
-        code.call(read_fallbacks[std::make_tuple(128, vaddr.getIdx(), value.getIdx())]);
-        code.jmp(end, code.T_NEAR);
-        code.SwitchToNearCode();
-
-        ctx.reg_alloc.DefineValue(inst, value);
+    if (!conf.page_table && !fastmem_marker) {
+        // Neither fastmem nor page table: Use callbacks
+        ctx.reg_alloc.HostCall(nullptr, {}, args[0]);
+        code.CallFunction(memory_read_128);
+        ctx.reg_alloc.DefineValue(inst, xmm1);
         return;
     }
 
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(nullptr, {}, args[0]);
-    code.CallFunction(memory_read_128);
-    ctx.reg_alloc.DefineValue(inst, xmm1);
+    const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
+    const Xbyak::Xmm value = ctx.reg_alloc.ScratchXmm();
+
+    const auto wrapped_fn = read_fallbacks[std::make_tuple(128, vaddr.getIdx(), value.getIdx())];
+
+    Xbyak::Label abort, end;
+    bool require_abort_handling = false;
+
+    if (fastmem_marker) {
+        // Use fastmem
+        const auto src_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr, require_abort_handling);
+
+        const auto location = code.getCurr();
+        code.movups(value, xword[src_ptr]);
+
+        fastmem_patch_info.emplace(
+            Common::BitCast<u64>(location),
+            FastmemPatchInfo{
+                Common::BitCast<u64>(code.getCurr()),
+                Common::BitCast<u64>(wrapped_fn),
+                *fastmem_marker,
+            }
+        );
+    } else {
+        // Use page table
+        ASSERT(conf.page_table);
+        const auto src_ptr = EmitVAddrLookup(code, ctx, 128, abort, vaddr);
+        code.movups(value, xword[src_ptr]);
+    }
+    code.L(end);
+
+    if (require_abort_handling) {
+        code.SwitchToFarCode();
+        code.L(abort);
+        code.call(wrapped_fn);
+        code.jmp(end, code.T_NEAR);
+        code.SwitchToNearCode();
+    }
+
+    ctx.reg_alloc.DefineValue(inst, value);
 }
 
 void A64EmitX64::EmitA64WriteMemory8(A64EmitContext& ctx, IR::Inst* inst) {
@@ -1126,31 +1152,58 @@ void A64EmitX64::EmitA64WriteMemory64(A64EmitContext& ctx, IR::Inst* inst) {
 }
 
 void A64EmitX64::EmitA64WriteMemory128(A64EmitContext& ctx, IR::Inst* inst) {
-    if (conf.page_table) {
-        Xbyak::Label abort, end;
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const auto fastmem_marker = ShouldFastmem(ctx, inst);
 
-        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-        const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
-        const Xbyak::Xmm value = ctx.reg_alloc.UseXmm(args[1]);
-
-        const auto dest_ptr = EmitVAddrLookup(code, ctx, 128, abort, vaddr);
-        code.movups(xword[dest_ptr], value);
-        code.L(end);
-
-        code.SwitchToFarCode();
-        code.L(abort);
-        code.call(write_fallbacks[std::make_tuple(128, vaddr.getIdx(), value.getIdx())]);
-        code.jmp(end, code.T_NEAR);
-        code.SwitchToNearCode();
+    if (!conf.page_table && !fastmem_marker) {
+        // Neither fastmem nor page table: Use callbacks
+        ctx.reg_alloc.Use(args[0], ABI_PARAM2);
+        ctx.reg_alloc.Use(args[1], HostLoc::XMM1);
+        ctx.reg_alloc.EndOfAllocScope();
+        ctx.reg_alloc.HostCall(nullptr);
+        code.CallFunction(memory_write_128);
         return;
     }
 
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.Use(args[0], ABI_PARAM2);
-    ctx.reg_alloc.Use(args[1], HostLoc::XMM1);
-    ctx.reg_alloc.EndOfAllocScope();
-    ctx.reg_alloc.HostCall(nullptr);
-    code.CallFunction(memory_write_128);
+    const Xbyak::Reg64 vaddr = ctx.reg_alloc.UseGpr(args[0]);
+    const Xbyak::Xmm value = ctx.reg_alloc.UseXmm(args[1]);
+
+    const auto wrapped_fn = write_fallbacks[std::make_tuple(128, vaddr.getIdx(), value.getIdx())];
+
+    Xbyak::Label abort, end;
+    bool require_abort_handling = false;
+
+    if (fastmem_marker) {
+        // Use fastmem
+        const auto dest_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr, require_abort_handling);
+
+        const auto location = code.getCurr();
+        code.movups(xword[dest_ptr], value);
+
+        fastmem_patch_info.emplace(
+            Common::BitCast<u64>(location),
+            FastmemPatchInfo{
+                Common::BitCast<u64>(code.getCurr()),
+                Common::BitCast<u64>(wrapped_fn),
+                *fastmem_marker,
+            }
+        );
+    } else {
+        // Use page table
+        ASSERT(conf.page_table);
+        const auto dest_ptr = EmitVAddrLookup(code, ctx, 128, abort, vaddr);
+        require_abort_handling = true;
+        code.movups(xword[dest_ptr], value);
+    }
+    code.L(end);
+
+    if (require_abort_handling) {
+        code.SwitchToFarCode();
+        code.L(abort);
+        code.call(wrapped_fn);
+        code.jmp(end, code.T_NEAR);
+        code.SwitchToNearCode();
+    }
 }
 
 template<std::size_t bitsize, auto callback>
