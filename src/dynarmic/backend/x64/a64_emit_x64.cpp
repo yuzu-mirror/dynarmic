@@ -880,7 +880,7 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bit
     return page + tmp;
 }
 
-Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, A64EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
+Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, A64EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr, bool& require_abort_handling) {
     const size_t unused_top_bits = 64 - ctx.conf.page_table_address_space_bits;
 
     if (unused_top_bits == 0) {
@@ -902,12 +902,14 @@ Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, A64EmitContext& ctx, Xbyak::La
         if (ctx.conf.page_table_address_space_bits < 32) {
             code.test(vaddr, u32(-(1 << ctx.conf.page_table_address_space_bits)));
             code.jnz(abort, code.T_NEAR);
+            require_abort_handling = true;
         } else {
             // TODO: Consider having TEST as above but coalesce 64-bit constant in register allocator
             Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
             code.mov(tmp, vaddr);
             code.shr(tmp, int(ctx.conf.page_table_address_space_bits));
             code.jnz(abort, code.T_NEAR);
+            require_abort_handling = true;
         }
         return r13 + vaddr;
     }
@@ -973,10 +975,11 @@ void A64EmitX64::EmitMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
     const auto wrapped_fn = read_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
 
     Xbyak::Label abort, end;
+    bool require_abort_handling = false;
 
     if (fastmem_marker) {
         // Use fastmem
-        const auto src_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr);
+        const auto src_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr, require_abort_handling);
 
         const auto location = code.getCurr();
         EmitReadMemoryMov<bitsize>(code, value, src_ptr);
@@ -993,15 +996,18 @@ void A64EmitX64::EmitMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
         // Use page table
         ASSERT(conf.page_table);
         const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
+        require_abort_handling = true;
         EmitReadMemoryMov<bitsize>(code, value, src_ptr);
     }
     code.L(end);
 
-    code.SwitchToFarCode();
-    code.L(abort);
-    code.call(wrapped_fn);
-    code.jmp(end, code.T_NEAR);
-    code.SwitchToNearCode();
+    if (require_abort_handling) {
+        code.SwitchToFarCode();
+        code.L(abort);
+        code.call(wrapped_fn);
+        code.jmp(end, code.T_NEAR);
+        code.SwitchToNearCode();
+    }
 
     ctx.reg_alloc.DefineValue(inst, value);
 }
@@ -1024,10 +1030,11 @@ void A64EmitX64::EmitMemoryWrite(A64EmitContext& ctx, IR::Inst* inst) {
     const auto wrapped_fn = write_fallbacks[std::make_tuple(bitsize, vaddr.getIdx(), value.getIdx())];
 
     Xbyak::Label abort, end;
+    bool require_abort_handling = false;
 
     if (fastmem_marker) {
         // Use fastmem
-        const auto dest_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr);
+        const auto dest_ptr = EmitFastmemVAddr(code, ctx, abort, vaddr, require_abort_handling);
 
         const auto location = code.getCurr();
         EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
@@ -1044,15 +1051,18 @@ void A64EmitX64::EmitMemoryWrite(A64EmitContext& ctx, IR::Inst* inst) {
         // Use page table
         ASSERT(conf.page_table);
         const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
+        require_abort_handling = true;
         EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
     }
     code.L(end);
 
-    code.SwitchToFarCode();
-    code.L(abort);
-    code.call(wrapped_fn);
-    code.jmp(end, code.T_NEAR);
-    code.SwitchToNearCode();
+    if (require_abort_handling) {
+        code.SwitchToFarCode();
+        code.L(abort);
+        code.call(wrapped_fn);
+        code.jmp(end, code.T_NEAR);
+        code.SwitchToNearCode();
+    }
 }
 
 void A64EmitX64::EmitA64ReadMemory8(A64EmitContext& ctx, IR::Inst* inst) {
