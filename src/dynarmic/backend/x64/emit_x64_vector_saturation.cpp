@@ -75,26 +75,25 @@ void EmitVectorSignedSaturated(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm arg = ctx.reg_alloc.UseXmm(args[1]);
-    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-    code.movaps(tmp, result);
-
     if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512DQ)) {
-        if constexpr (op == Op::Add) {
-            ICODE(vpadd)(result, result, arg);
-            code.vpternlogd(tmp, result, arg, 0b00100100);
-        } else {
-            ICODE(vpsub)(result, result, arg);
-            code.vpternlogd(tmp, result, arg, 0b00011000);
-        }
+        const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
-        if constexpr (esize == 32) {
-            code.vpmovd2m(k1, tmp);
+        code.movaps(xmm0, operand1);
+
+        if constexpr (op == Op::Add) {
+            ICODE(vpadd)(result, operand1, operand2);
+            code.vpternlogd(xmm0, result, operand2, 0b00100100);
         } else {
-            code.vpmovq2m(k1, tmp);
+            ICODE(vpsub)(result, operand1, operand2);
+            code.vpternlogd(xmm0, result, operand2, 0b00011000);
+        }
+        if constexpr (esize == 32) {
+            code.vpmovd2m(k1, xmm0);
+        } else {
+            code.vpmovq2m(k1, xmm0);
         }
         ICODE(vpsra)(result | k1, result, u8(esize - 1));
         ICODE(vpxor)(result | k1, result, code.MConst(xword_b, msb_mask, msb_mask));
@@ -107,24 +106,44 @@ void EmitVectorSignedSaturated(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
         return;
     }
 
-    code.movaps(xmm0, result);
+    const Xbyak::Xmm operand1 = code.HasHostFeature(HostFeature::AVX) ? ctx.reg_alloc.UseXmm(args[0]) : ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm result = code.HasHostFeature(HostFeature::AVX) ? ctx.reg_alloc.ScratchXmm() : operand1;
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
-    if constexpr (op == Op::Add) {
-        ICODE(padd)(result, arg);
+    if (code.HasHostFeature(HostFeature::AVX)) {
+        if constexpr (op == Op::Add) {
+            ICODE(vpadd)(result, operand1, operand2);
+        } else {
+            ICODE(vpsub)(result, operand1, operand2);
+        }
+        code.vpxor(xmm0, operand1, operand2);
+        code.vpxor(tmp, operand1, result);
     } else {
-        ICODE(psub)(result, arg);
+        code.movaps(xmm0, operand1);
+        code.movaps(tmp, operand1);
+        if constexpr (op == Op::Add) {
+            ICODE(padd)(result, operand2);
+        } else {
+            ICODE(psub)(result, operand2);
+        }
+        code.pxor(xmm0, operand2);
+        code.pxor(tmp, result);
     }
 
-    code.pxor(tmp, result);
-    code.pxor(xmm0, arg);
     if constexpr (op == Op::Add) {
         code.pandn(xmm0, tmp);
     } else {
         code.pand(xmm0, tmp);
     }
 
-    code.movaps(tmp, result);
-    code.psrad(tmp, 31);
+    if (code.HasHostFeature(HostFeature::AVX)) {
+        code.vpsrad(tmp, result, 31);
+    } else {
+        code.movaps(tmp, result);
+        code.psrad(tmp, 31);
+    }
     if constexpr (esize == 64) {
         code.pshufd(tmp, tmp, 0b11110101);
     }
