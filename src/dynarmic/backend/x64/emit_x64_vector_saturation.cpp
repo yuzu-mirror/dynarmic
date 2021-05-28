@@ -272,46 +272,56 @@ void EmitX64::EmitVectorUnsignedSaturatedAdd32(EmitContext& ctx, IR::Inst* inst)
 void EmitX64::EmitVectorUnsignedSaturatedAdd64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm addend = ctx.reg_alloc.UseXmm(args[1]);
-    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-    // TODO AVX2
     if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512DQ)) {
-        // Do a regular unsigned addition
-        code.vpaddq(result, result, addend);
+        const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
-        // Test if an overflow happened
-        code.vpcmpuq(k1, result, addend, CmpInt::LessThan);
-
-        // Write 0b1111... where overflows have happened
-        // This is just a quick way to do this without touching memory
+        code.vpaddq(result, operand1, operand2);
+        code.vpcmpuq(k1, result, operand1, CmpInt::LessThan);
         code.vpternlogq(result | k1, result, result, 0xFF);
-
-        // Set ZF if an overflow happened
         code.ktestb(k1, k1);
+
+        code.setnz(overflow);
+        code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+
+        return;
+    }
+
+    const Xbyak::Xmm operand1 = code.HasHostFeature(HostFeature::AVX) ? ctx.reg_alloc.UseXmm(args[0]) : ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm result = code.HasHostFeature(HostFeature::AVX) ? ctx.reg_alloc.ScratchXmm() : operand1;
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+
+    if (code.HasHostFeature(HostFeature::AVX)) {
+        code.vpxor(xmm0, operand1, operand2);
+        code.vpand(tmp, operand1, operand2);
+        code.vpaddq(result, operand1, operand2);
     } else {
-        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
-        code.movaps(tmp, result);
-        code.movaps(xmm0, result);
+        code.movaps(xmm0, operand1);
+        code.movaps(tmp, operand1);
 
-        code.pxor(xmm0, addend);
-        code.pand(tmp, addend);
-        code.paddq(result, addend);
+        code.pxor(xmm0, operand2);
+        code.pand(tmp, operand2);
+        code.paddq(result, operand2);
+    }
 
-        code.psrlq(xmm0, 1);
-        code.paddq(tmp, xmm0);
-        code.psrad(tmp, 31);
-        code.pshufd(tmp, tmp, 0b11110101);
+    code.psrlq(xmm0, 1);
+    code.paddq(tmp, xmm0);
+    code.psrad(tmp, 31);
+    code.pshufd(tmp, tmp, 0b11110101);
 
-        code.por(result, tmp);
+    code.por(result, tmp);
 
-        if (code.HasHostFeature(HostFeature::SSE41)) {
-            code.ptest(tmp, tmp);
-        } else {
-            code.movmskpd(overflow.cvt32(), tmp);
-            code.test(overflow.cvt32(), overflow.cvt32());
-        }
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        code.ptest(tmp, tmp);
+    } else {
+        code.movmskpd(overflow.cvt32(), tmp);
+        code.test(overflow.cvt32(), overflow.cvt32());
     }
 
     code.setnz(overflow);
