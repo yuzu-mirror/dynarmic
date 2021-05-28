@@ -407,38 +407,42 @@ void EmitX64::EmitVectorUnsignedSaturatedSub32(EmitContext& ctx, IR::Inst* inst)
 void EmitX64::EmitVectorUnsignedSaturatedSub64(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm subtrahend = ctx.reg_alloc.UseXmm(args[1]);
-    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
-
-    code.movaps(tmp, result);
-
-    // TODO AVX2
     if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512DQ)) {
-        // Do a regular unsigned subtraction
-        code.vpsubq(result, result, subtrahend);
+        const Xbyak::Xmm operand1 = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
-        // Test if an underflow happened
-        code.vpcmpuq(k1, result, tmp, CmpInt::GreaterThan);
-
-        // Write 0 where underflows have happened
+        code.vpsubq(result, operand1, operand2);
+        code.vpcmpuq(k1, result, operand1, CmpInt::GreaterThan);
         code.vpxorq(result | k1, result, result);
-
-        // Set ZF if an underflow happened
         code.ktestb(k1, k1);
 
         code.setnz(overflow);
         code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow);
+
         ctx.reg_alloc.DefineValue(inst, result);
         return;
     }
 
-    code.movaps(xmm0, subtrahend);
+    const Xbyak::Xmm operand1 = code.HasHostFeature(HostFeature::AVX) ? ctx.reg_alloc.UseXmm(args[0]) : ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm result = code.HasHostFeature(HostFeature::AVX) ? ctx.reg_alloc.ScratchXmm() : operand1;
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Reg8 overflow = ctx.reg_alloc.ScratchGpr().cvt8();
 
-    code.pxor(tmp, subtrahend);
-    code.psubq(result, subtrahend);
-    code.pand(xmm0, tmp);
+    if (code.HasHostFeature(HostFeature::AVX)) {
+        code.vpxor(tmp, operand1, operand2);
+        code.vpsubq(result, operand1, operand2);
+        code.vpand(xmm0, operand2, tmp);
+    } else {
+        code.movaps(tmp, operand1);
+        code.movaps(xmm0, operand2);
+
+        code.pxor(tmp, operand2);
+        code.psubq(result, operand2);
+        code.pand(xmm0, tmp);
+    }
 
     code.psrlq(tmp, 1);
     code.psubq(tmp, xmm0);
