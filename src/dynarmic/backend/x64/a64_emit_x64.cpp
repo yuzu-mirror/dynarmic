@@ -1120,6 +1120,7 @@ void A64EmitX64::EmitA64ReadMemory128(A64EmitContext& ctx, IR::Inst* inst) {
         // Use page table
         ASSERT(conf.page_table);
         const auto src_ptr = EmitVAddrLookup(code, ctx, 128, abort, vaddr);
+        require_abort_handling = true;
         code.movups(value, xword[src_ptr]);
     }
     code.L(end);
