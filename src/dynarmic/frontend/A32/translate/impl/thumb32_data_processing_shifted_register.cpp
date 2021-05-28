@@ -219,12 +219,9 @@ bool TranslatorVisitor::thumb32_SBC_reg(bool S, Reg n, Imm<3> imm3, Reg d, Imm<2
 
     const auto shifted = EmitImmShift(ir.GetRegister(m), type, imm3, imm2, ir.GetCFlag());
     const auto result = ir.SubWithCarry(ir.GetRegister(n), shifted.result, ir.GetCFlag());
-    ir.SetRegister(d, result.result);
+    ir.SetRegister(d, result);
     if (S) {
-        ir.SetNFlag(ir.MostSignificantBit(result.result));
-        ir.SetZFlag(ir.IsZero(result.result));
-        ir.SetCFlag(result.carry);
-        ir.SetVFlag(result.overflow);
+        ir.SetCpsrNZCV(ir.NZCVFrom(result));
     }
     return true;
 }
@@ -237,10 +234,7 @@ bool TranslatorVisitor::thumb32_CMP_reg(Reg n, Imm<3> imm3, Imm<2> imm2, ShiftTy
     const auto shifted = EmitImmShift(ir.GetRegister(m), type, imm3, imm2, ir.GetCFlag());
     const auto result = ir.SubWithCarry(ir.GetRegister(n), shifted.result, ir.Imm1(1));
 
-    ir.SetNFlag(ir.MostSignificantBit(result.result));
-    ir.SetZFlag(ir.IsZero(result.result));
-    ir.SetCFlag(result.carry);
-    ir.SetVFlag(result.overflow);
+    ir.SetCpsrNZCV(ir.NZCVFrom(result));
     return true;
 }
 
@@ -253,12 +247,9 @@ bool TranslatorVisitor::thumb32_SUB_reg(bool S, Reg n, Imm<3> imm3, Reg d, Imm<2
 
     const auto shifted = EmitImmShift(ir.GetRegister(m), type, imm3, imm2, ir.GetCFlag());
     const auto result = ir.SubWithCarry(ir.GetRegister(n), shifted.result, ir.Imm1(1));
-    ir.SetRegister(d, result.result);
+    ir.SetRegister(d, result);
     if (S) {
-        ir.SetNFlag(ir.MostSignificantBit(result.result));
-        ir.SetZFlag(ir.IsZero(result.result));
-        ir.SetCFlag(result.carry);
-        ir.SetVFlag(result.overflow);
+        ir.SetCpsrNZCV(ir.NZCVFrom(result));
     }
     return true;
 }
@@ -270,12 +261,9 @@ bool TranslatorVisitor::thumb32_RSB_reg(bool S, Reg n, Imm<3> imm3, Reg d, Imm<2
 
     const auto shifted = EmitImmShift(ir.GetRegister(m), type, imm3, imm2, ir.GetCFlag());
     const auto result = ir.SubWithCarry(shifted.result, ir.GetRegister(n), ir.Imm1(1));
-    ir.SetRegister(d, result.result);
+    ir.SetRegister(d, result);
     if (S) {
-        ir.SetNFlag(ir.MostSignificantBit(result.result));
-        ir.SetZFlag(ir.IsZero(result.result));
-        ir.SetCFlag(result.carry);
-        ir.SetVFlag(result.overflow);
+        ir.SetCpsrNZCV(ir.NZCVFrom(result));
     }
     return true;
 }
