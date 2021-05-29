@@ -16,6 +16,7 @@
 
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
+#include "dynarmic/backend/x64/constants.h"
 #include "dynarmic/backend/x64/emit_x64.h"
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/cast_util.h"
@@ -116,6 +117,12 @@ void DenormalsAreZero(BlockOfCode& code, EmitContext& ctx, std::initializer_list
 
 template<size_t fsize>
 void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm xmm_value, Xbyak::Xmm xmm_scratch) {
+    if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
+        constexpr u32 nan_to_zero = FixupLUT(FpFixup::PosZero,
+                                             FpFixup::PosZero);
+        FCODE(vfixupimms)(xmm_value, xmm_value, code.MConst(ptr, u64(nan_to_zero)), u8(0));
+        return;
+    }
     code.xorps(xmm_scratch, xmm_scratch);
     FCODE(cmpords)(xmm_scratch, xmm_value);  // true mask when ordered (i.e.: when not an NaN)
     code.pand(xmm_value, xmm_scratch);

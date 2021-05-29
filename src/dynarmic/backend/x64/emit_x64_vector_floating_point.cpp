@@ -19,6 +19,7 @@
 
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
+#include "dynarmic/backend/x64/constants.h"
 #include "dynarmic/backend/x64/emit_x64.h"
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/fp/fpcr.h"
@@ -203,7 +204,11 @@ void ForceToDefaultNaN(BlockOfCode& code, FP::FPCR fpcr, Xbyak::Xmm result) {
 template<size_t fsize>
 void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm result) {
     const Xbyak::Xmm nan_mask = xmm0;
-    if (code.HasHostFeature(HostFeature::AVX)) {
+    if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
+        constexpr u32 nan_to_zero = FixupLUT(FpFixup::PosZero,
+                                             FpFixup::PosZero);
+        FCODE(vfixupimmp)(result, result, code.MConst(ptr_b, u64(nan_to_zero)), u8(0));
+    } else if (code.HasHostFeature(HostFeature::AVX)) {
         FCODE(vcmpordp)(nan_mask, result, result);
         FCODE(vandp)(result, result, nan_mask);
     } else {
