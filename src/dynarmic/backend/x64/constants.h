@@ -64,15 +64,14 @@ enum class FpFixup : u8 {
 };
 
 // Generates 32-bit LUT for vfixupimm instruction
-constexpr u32 FixupLUT(
-    FpFixup src_qnan = FpFixup::A,
-    FpFixup src_snan = FpFixup::A,
-    FpFixup src_zero = FpFixup::A,
-    FpFixup src_posone = FpFixup::A,
-    FpFixup src_neginf = FpFixup::A,
-    FpFixup src_posinf = FpFixup::A,
-    FpFixup src_pos = FpFixup::A,
-    FpFixup src_neg = FpFixup::A) {
+constexpr u32 FixupLUT(FpFixup src_qnan = FpFixup::A,
+                       FpFixup src_snan = FpFixup::A,
+                       FpFixup src_zero = FpFixup::A,
+                       FpFixup src_posone = FpFixup::A,
+                       FpFixup src_neginf = FpFixup::A,
+                       FpFixup src_posinf = FpFixup::A,
+                       FpFixup src_pos = FpFixup::A,
+                       FpFixup src_neg = FpFixup::A) {
     u32 fixup_lut = 0;
     fixup_lut = Common::ModifyBits<0, 3, u32>(fixup_lut, static_cast<u32>(src_qnan));
     fixup_lut = Common::ModifyBits<4, 7, u32>(fixup_lut, static_cast<u32>(src_snan));

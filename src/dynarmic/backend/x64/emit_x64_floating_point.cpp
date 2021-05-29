@@ -121,11 +121,14 @@ void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm xmm_value, Xbyak::Xmm xmm_scratch) 
         constexpr u32 nan_to_zero = FixupLUT(FpFixup::PosZero,
                                              FpFixup::PosZero);
         FCODE(vfixupimms)(xmm_value, xmm_value, code.MConst(ptr, u64(nan_to_zero)), u8(0));
-        return;
+    } else if (code.HasHostFeature(HostFeature::AVX)) {
+        FCODE(vcmpords)(xmm_scratch, xmm_value, xmm_value);
+        FCODE(vandp)(xmm_value, xmm_value, xmm_scratch);
+    } else {
+        code.xorps(xmm_scratch, xmm_scratch);
+        FCODE(cmpords)(xmm_scratch, xmm_value);  // true mask when ordered (i.e.: when not an NaN)
+        code.pand(xmm_value, xmm_scratch);
     }
-    code.xorps(xmm_scratch, xmm_scratch);
-    FCODE(cmpords)(xmm_scratch, xmm_value);  // true mask when ordered (i.e.: when not an NaN)
-    code.pand(xmm_value, xmm_scratch);
 }
 
 template<size_t fsize>
