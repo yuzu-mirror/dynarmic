@@ -87,6 +87,29 @@ constexpr u32 FixupLUT(FpFixup src_qnan = FpFixup::A,
     return fixup_lut;
 }
 
+// Opcodes for use with vrange* instructions
+enum class FpRangeSelect : u8 {
+    Min = 0b00,
+    Max = 0b01,
+    AbsMin = 0b10,  // Smaller absolute value
+    AbsMax = 0b11,  // Larger absolute value
+};
+
+enum class FpRangeSign : u8 {
+    A = 0b00,         // Copy sign of operand A
+    Preserve = 0b01,  // Leave sign as is
+    Positive = 0b10,  // Set Positive
+    Negative = 0b11,  // Set Negative
+};
+
+// Generates 8-bit immediate LUT for vrange instruction
+constexpr u8 FpRangeLUT(FpRangeSelect range_select, FpRangeSign range_sign) {
+    u8 range_lut = 0;
+    range_lut = Common::ModifyBits<0, 1, u8>(range_lut, static_cast<u8>(range_select));
+    range_lut = Common::ModifyBits<2, 3, u8>(range_lut, static_cast<u8>(range_sign));
+    return range_lut;
+}
+
 constexpr std::optional<int> ConvertRoundingModeToX64Immediate(FP::RoundingMode rounding_mode) {
     switch (rounding_mode) {
     case FP::RoundingMode::ToNearest_TieEven:
