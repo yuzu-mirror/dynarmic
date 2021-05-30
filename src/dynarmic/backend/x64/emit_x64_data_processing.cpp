@@ -235,7 +235,7 @@ static void EmitExtractRegister(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Reg result = ctx.reg_alloc.UseScratchGpr(args[0]).changeBit(bit_size);
-    const Xbyak::Reg operand = ctx.reg_alloc.UseScratchGpr(args[1]).changeBit(bit_size);
+    const Xbyak::Reg operand = ctx.reg_alloc.UseGpr(args[1]).changeBit(bit_size);
     const u8 lsb = args[2].GetImmediateU8();
 
     code.shrd(result, operand, lsb);
