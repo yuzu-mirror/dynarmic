@@ -62,7 +62,7 @@ A64EmitX64::A64EmitX64(BlockOfCode& code, A64::UserConfig conf, A64::Jit* jit_in
     code.PreludeComplete();
     ClearFastDispatchTable();
 
-    exception_handler.SetFastmemCallback([this](u64 rip_){
+    exception_handler.SetFastmemCallback([this](u64 rip_) {
         return FastmemCallback(rip_);
     });
 }
@@ -990,8 +990,7 @@ void A64EmitX64::EmitMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
                 *fastmem_marker,
-            }
-        );
+            });
     } else {
         // Use page table
         ASSERT(conf.page_table);
@@ -1045,8 +1044,7 @@ void A64EmitX64::EmitMemoryWrite(A64EmitContext& ctx, IR::Inst* inst) {
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
                 *fastmem_marker,
-            }
-        );
+            });
     } else {
         // Use page table
         ASSERT(conf.page_table);
@@ -1114,8 +1112,7 @@ void A64EmitX64::EmitA64ReadMemory128(A64EmitContext& ctx, IR::Inst* inst) {
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
                 *fastmem_marker,
-            }
-        );
+            });
     } else {
         // Use page table
         ASSERT(conf.page_table);
@@ -1187,8 +1184,7 @@ void A64EmitX64::EmitA64WriteMemory128(A64EmitContext& ctx, IR::Inst* inst) {
                 Common::BitCast<u64>(code.getCurr()),
                 Common::BitCast<u64>(wrapped_fn),
                 *fastmem_marker,
-            }
-        );
+            });
     } else {
         // Use page table
         ASSERT(conf.page_table);
@@ -1481,7 +1477,9 @@ void A64EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
 void A64EmitX64::Unpatch(const IR::LocationDescriptor& location) {
     EmitX64::Unpatch(location);
     if (conf.HasOptimization(OptimizationFlag::FastDispatch)) {
+        code.DisableWriting();
         (*fast_dispatch_table_lookup)(location.Value()) = {};
+        code.EnableWriting();
     }
 }
 

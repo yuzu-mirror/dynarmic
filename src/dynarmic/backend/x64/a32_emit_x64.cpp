@@ -1680,7 +1680,9 @@ void A32EmitX64::EmitPatchMovRcx(CodePtr target_code_ptr) {
 void A32EmitX64::Unpatch(const IR::LocationDescriptor& location) {
     EmitX64::Unpatch(location);
     if (conf.HasOptimization(OptimizationFlag::FastDispatch)) {
+        code.DisableWriting();
         (*fast_dispatch_table_lookup)(location.Value()) = {};
+        code.EnableWriting();
     }
 }
 
