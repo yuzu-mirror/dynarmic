@@ -113,7 +113,7 @@ kern_return_t MachHandler::HandleRequest(x86_thread_state64_t* ts) {
 
     const auto iter = FindCodeBlockInfo(ts->__rip);
     if (iter == code_block_infos.end()) {
-        fmt::print(stderr, "dynarmic: macOS MachHandler: Exception was not in registered code blocks (rip {:#016x})\n", ts->__rip);
+        fmt::print(stderr, "Unhandled EXC_BAD_ACCESS at rip {:#016x}\n", ts->__rip);
         return KERN_FAILURE;
     }
 
