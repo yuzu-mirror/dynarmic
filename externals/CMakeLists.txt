@@ -28,7 +28,7 @@ target_include_directories(robin_map SYSTEM INTERFACE "$<BUILD_INTERFACE:${CMAKE
 # vixl
 
 if (ARCHITECTURE STREQUAL "arm64")
-    add_subdirectory(vixl)
+    add_subdirectory(vixl EXCLUDE_FROM_ALL)
 endif()
 
 # xbyak
@@ -46,4 +46,4 @@ endif()
 option(ZYDIS_BUILD_TOOLS "" OFF)
 option(ZYDIS_BUILD_EXAMPLES "" OFF)
 set(ZYDIS_ZYCORE_PATH "${CMAKE_CURRENT_LIST_DIR}/zycore" CACHE PATH "")
-add_subdirectory(zydis)
+add_subdirectory(zydis EXCLUDE_FROM_ALL)
