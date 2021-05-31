@@ -130,7 +130,8 @@ public:
     u64 ticks_left = 0;
     char* backing_memory = nullptr;
 
-    explicit A64FastmemTestEnv(char* addr) : backing_memory(addr) {}
+    explicit A64FastmemTestEnv(char* addr)
+            : backing_memory(addr) {}
 
     template<typename T>
     T read(u64 vaddr) {

@@ -36,15 +36,15 @@ TEST_CASE("A64: VQADD", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x6e210c02); // UQADD v2.16b, v0.16b, v1.16b
-    env.code_mem.emplace_back(0x4e210c03); // SQADD v3.16b, v0.16b, v1.16b
-    env.code_mem.emplace_back(0x6e610c04); // UQADD v4.8h,  v0.8h,  v1.8h
-    env.code_mem.emplace_back(0x4e610c05); // SQADD v5.8h,  v0.8h,  v1.8h
-    env.code_mem.emplace_back(0x6ea10c06); // UQADD v6.4s,  v0.4s,  v1.4s
-    env.code_mem.emplace_back(0x4ea10c07); // SQADD v7.4s,  v0.4s,  v1.4s
-    env.code_mem.emplace_back(0x6ee10c08); // UQADD v8.2d,  v0.2d,  v1.2d
-    env.code_mem.emplace_back(0x4ee10c09); // SQADD v9.2d,  v0.2d,  v1.2d
-    env.code_mem.emplace_back(0x14000000); // B .
+    env.code_mem.emplace_back(0x6e210c02);  // UQADD v2.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x4e210c03);  // SQADD v3.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x6e610c04);  // UQADD v4.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x4e610c05);  // SQADD v5.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x6ea10c06);  // UQADD v6.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x4ea10c07);  // SQADD v7.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x6ee10c08);  // UQADD v8.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x4ee10c09);  // SQADD v9.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x14000000);  // B .
 
     jit.SetVector(0, {0x7F7F7F7F7F7F7F7F, 0x7FFFFFFF7FFF7FFF});
     jit.SetVector(1, {0x8010FF00807F0000, 0x8000000080008000});
@@ -67,15 +67,15 @@ TEST_CASE("A64: VQSUB", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x6e212c02); // UQSUB v2.16b, v0.16b, v1.16b
-    env.code_mem.emplace_back(0x4e212c03); // SQSUB v3.16b, v0.16b, v1.16b
-    env.code_mem.emplace_back(0x6e612c04); // UQSUB v4.8h,  v0.8h,  v1.8h
-    env.code_mem.emplace_back(0x4e612c05); // SQSUB v5.8h,  v0.8h,  v1.8h
-    env.code_mem.emplace_back(0x6ea12c06); // UQSUB v6.4s,  v0.4s,  v1.4s
-    env.code_mem.emplace_back(0x4ea12c07); // SQSUB v7.4s,  v0.4s,  v1.4s
-    env.code_mem.emplace_back(0x6ee12c08); // UQSUB v8.2d,  v0.2d,  v1.2d
-    env.code_mem.emplace_back(0x4ee12c09); // SQSUB v9.2d,  v0.2d,  v1.2d
-    env.code_mem.emplace_back(0x14000000); // B .
+    env.code_mem.emplace_back(0x6e212c02);  // UQSUB v2.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x4e212c03);  // SQSUB v3.16b, v0.16b, v1.16b
+    env.code_mem.emplace_back(0x6e612c04);  // UQSUB v4.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x4e612c05);  // SQSUB v5.8h,  v0.8h,  v1.8h
+    env.code_mem.emplace_back(0x6ea12c06);  // UQSUB v6.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x4ea12c07);  // SQSUB v7.4s,  v0.4s,  v1.4s
+    env.code_mem.emplace_back(0x6ee12c08);  // UQSUB v8.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x4ee12c09);  // SQSUB v9.2d,  v0.2d,  v1.2d
+    env.code_mem.emplace_back(0x14000000);  // B .
 
     jit.SetVector(0, {0x8010FF00807F0000, 0x8000000080008000});
     jit.SetVector(1, {0x7F7F7F7F7F7F7F7F, 0x7FFFFFFF7FFF7FFF});
@@ -840,7 +840,7 @@ TEST_CASE("A64: Cache Maintenance Instructions", "[a64]") {
 
 TEST_CASE("A64: Memory access (fastmem)", "[a64]") {
     constexpr size_t address_width = 12;
-    constexpr size_t memory_size = 1ull << address_width; // 4K
+    constexpr size_t memory_size = 1ull << address_width;  // 4K
     constexpr size_t page_size = 4 * 1024;
     constexpr size_t buffer_size = 2 * page_size;
     char buffer[buffer_size];
@@ -861,11 +861,11 @@ TEST_CASE("A64: Memory access (fastmem)", "[a64]") {
     memset(backing_memory, 0, memory_size);
     memcpy(backing_memory + 0x100, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 57);
 
-    env.MemoryWrite32(0, 0xA9401404); // LDP X4, X5, [X0]
-    env.MemoryWrite32(4, 0xF9400046); // LDR X6, [X2]
-    env.MemoryWrite32(8, 0xA9001424); // STP X4, X5, [X1]
-    env.MemoryWrite32(12, 0xF9000066); // STR X6, [X3]
-    env.MemoryWrite32(16, 0x14000000); // B .
+    env.MemoryWrite32(0, 0xA9401404);   // LDP X4, X5, [X0]
+    env.MemoryWrite32(4, 0xF9400046);   // LDR X6, [X2]
+    env.MemoryWrite32(8, 0xA9001424);   // STP X4, X5, [X1]
+    env.MemoryWrite32(12, 0xF9000066);  // STR X6, [X3]
+    env.MemoryWrite32(16, 0x14000000);  // B .
     jit.SetRegister(0, 0x100);
     jit.SetRegister(1, 0x1F0);
     jit.SetRegister(2, 0x10F);

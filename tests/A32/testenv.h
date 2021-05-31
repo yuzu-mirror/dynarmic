@@ -120,7 +120,8 @@ public:
     u64 ticks_left = 0;
     char* backing_memory = nullptr;
 
-    explicit A32FastmemTestEnv(char* addr) : backing_memory(addr) {}
+    explicit A32FastmemTestEnv(char* addr)
+            : backing_memory(addr) {}
 
     template<typename T>
     T read(std::uint32_t vaddr) {

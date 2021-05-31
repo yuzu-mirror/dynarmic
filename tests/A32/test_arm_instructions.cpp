@@ -528,7 +528,7 @@ TEST_CASE("arm: vcvt.s16.f64", "[arm][A32]") {
 
 TEST_CASE("arm: Memory access (fastmem)", "[arm][A32]") {
     constexpr size_t address_width = 12;
-    constexpr size_t memory_size = 1ull << address_width; // 4K
+    constexpr size_t memory_size = 1ull << address_width;  // 4K
     constexpr size_t page_size = 4 * 1024;
     constexpr size_t buffer_size = 2 * page_size;
     char buffer[buffer_size];
@@ -547,13 +547,13 @@ TEST_CASE("arm: Memory access (fastmem)", "[arm][A32]") {
     memset(backing_memory, 0, memory_size);
     memcpy(backing_memory + 0x100, "Lorem ipsum dolor sit amet, consectetur adipiscing elit.", 57);
 
-    env.MemoryWrite32(0, 0xE5904000); // LDR R4, [R0]
-    env.MemoryWrite32(4, 0xE5814000); // STR R4, [R1]
-    env.MemoryWrite32(8, 0xEAFFFFFE); // B .
+    env.MemoryWrite32(0, 0xE5904000);  // LDR R4, [R0]
+    env.MemoryWrite32(4, 0xE5814000);  // STR R4, [R1]
+    env.MemoryWrite32(8, 0xEAFFFFFE);  // B .
     jit.Regs()[0] = 0x100;
     jit.Regs()[1] = 0x1F0;
-    jit.Regs()[15] = 0; // PC = 0
-    jit.SetCpsr(0x000001d0); // User-mode
+    jit.Regs()[15] = 0;       // PC = 0
+    jit.SetCpsr(0x000001d0);  // User-mode
     env.ticks_left = 3;
 
     jit.Run();
