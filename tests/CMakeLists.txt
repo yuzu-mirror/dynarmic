@@ -61,4 +61,4 @@ target_include_directories(dynarmic_print_info PRIVATE . ../src)
 target_compile_options(dynarmic_print_info PRIVATE ${DYNARMIC_CXX_FLAGS})
 target_compile_definitions(dynarmic_print_info PRIVATE FMT_USE_USER_DEFINED_LITERALS=0)
 
-add_test(dynarmic_tests dynarmic_tests)
+add_test(dynarmic_tests dynarmic_tests --durations yes)
