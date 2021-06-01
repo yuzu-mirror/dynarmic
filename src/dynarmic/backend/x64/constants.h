@@ -46,6 +46,18 @@ constexpr u8 b = 0b11001100;
 constexpr u8 c = 0b10101010;
 }  // namespace Tern
 
+// For use as a bitmask with vfpclass instruction
+namespace FpClass {
+constexpr u8 QNaN = 0b00000001;
+constexpr u8 ZeroPos = 0b00000010;
+constexpr u8 ZeroNeg = 0b00000100;
+constexpr u8 InfPos = 0b00001000;
+constexpr u8 InfNeg = 0b00010000;
+constexpr u8 Denormal = 0b00100000;
+constexpr u8 Negative = 0b01000000;  // Negative finite value
+constexpr u8 SNaN = 0b10000000;
+}  // namespace FpClass
+
 // Opcodes for use with vfixupimm
 enum class FpFixup : u8 {
     A = 0b0000,         // A
