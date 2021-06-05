@@ -2404,6 +2404,11 @@ U128 IREmitter::FPVectorEqual(size_t esize, const U128& a, const U128& b, bool f
     UNREACHABLE();
 }
 
+U128 IREmitter::FPVectorFromHalf(size_t esize, const U128& a, FP::RoundingMode rounding, bool fpcr_controlled) {
+    ASSERT(esize == 32);
+    return Inst<U128>(Opcode::FPVectorFromHalf32, a, Imm8(static_cast<u8>(rounding)), Imm1(fpcr_controlled));
+}
+
 U128 IREmitter::FPVectorFromSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding, bool fpcr_controlled) {
     ASSERT(fbits <= esize);
     switch (esize) {
@@ -2611,6 +2616,11 @@ U128 IREmitter::FPVectorSub(size_t esize, const U128& a, const U128& b, bool fpc
         return Inst<U128>(Opcode::FPVectorSub64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
+}
+
+U128 IREmitter::FPVectorToHalf(size_t esize, const U128& a, FP::RoundingMode rounding, bool fpcr_controlled) {
+    ASSERT(esize == 32);
+    return Inst<U128>(Opcode::FPVectorToHalf32, a, Imm8(static_cast<u8>(rounding)), Imm1(fpcr_controlled));
 }
 
 U128 IREmitter::FPVectorToSignedFixed(size_t esize, const U128& a, size_t fbits, FP::RoundingMode rounding, bool fpcr_controlled) {

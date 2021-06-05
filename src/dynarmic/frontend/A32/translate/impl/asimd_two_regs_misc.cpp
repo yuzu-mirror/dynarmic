@@ -620,24 +620,13 @@ bool TranslatorVisitor::asimd_VCVT_half(bool D, size_t sz, size_t Vd, bool half_
     }
 
     const size_t esize = 8U << sz;
-    const size_t num_elements = 4;
     const auto rounding_mode = FP::RoundingMode::ToNearest_TieEven;  // StandardFPSCRValue().RMode
     const auto d = ToVector(half_to_single, Vd, D);
     const auto m = ToVector(!half_to_single, Vm, M);
 
     const auto operand = ir.GetVector(m);
-    IR::U128 result = ir.ZeroVector();
-    for (size_t i = 0; i < num_elements; i++) {
-        if (half_to_single) {
-            const IR::U16 old_element = ir.VectorGetElement(esize, operand, i);
-            const IR::U32 new_element = ir.FPHalfToSingle(old_element, rounding_mode);
-            result = ir.VectorSetElement(esize * 2, result, i, new_element);
-        } else {
-            const IR::U32 old_element = ir.VectorGetElement(esize * 2, operand, i);
-            const IR::U16 new_element = ir.FPSingleToHalf(old_element, rounding_mode);
-            result = ir.VectorSetElement(esize, result, i, new_element);
-        }
-    }
+    const IR::U128 result = half_to_single ? ir.FPVectorFromHalf(esize * 2, operand, rounding_mode, false)
+                                           : ir.FPVectorToHalf(esize * 2, operand, rounding_mode, false);
     ir.SetVector(d, result);
     return true;
 }

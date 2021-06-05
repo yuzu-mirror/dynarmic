@@ -5,8 +5,11 @@
 
 #pragma once
 
+#include <optional>
+
 #include "dynarmic/common/bit_util.h"
 #include "dynarmic/common/common_types.h"
+#include "dynarmic/common/fp/rounding_mode.h"
 
 namespace Dynarmic::Backend::X64 {
 
@@ -82,6 +85,21 @@ constexpr u32 FixupLUT(FpFixup src_qnan = FpFixup::A,
     fixup_lut = Common::ModifyBits<24, 27, u32>(fixup_lut, static_cast<u32>(src_pos));
     fixup_lut = Common::ModifyBits<28, 31, u32>(fixup_lut, static_cast<u32>(src_neg));
     return fixup_lut;
+}
+
+constexpr std::optional<int> ConvertRoundingModeToX64Immediate(FP::RoundingMode rounding_mode) {
+    switch (rounding_mode) {
+    case FP::RoundingMode::ToNearest_TieEven:
+        return 0b00;
+    case FP::RoundingMode::TowardsPlusInfinity:
+        return 0b10;
+    case FP::RoundingMode::TowardsMinusInfinity:
+        return 0b01;
+    case FP::RoundingMode::TowardsZero:
+        return 0b11;
+    default:
+        return std::nullopt;
+    }
 }
 
 }  // namespace Dynarmic::Backend::X64

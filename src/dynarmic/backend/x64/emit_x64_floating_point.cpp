@@ -80,21 +80,6 @@ constexpr u64 f64_max_u64_lim = 0x43f0000000000000u;  // 2^64 as a double (actua
         }                            \
     }
 
-std::optional<int> ConvertRoundingModeToX64Immediate(FP::RoundingMode rounding_mode) {
-    switch (rounding_mode) {
-    case FP::RoundingMode::ToNearest_TieEven:
-        return 0b00;
-    case FP::RoundingMode::TowardsPlusInfinity:
-        return 0b10;
-    case FP::RoundingMode::TowardsMinusInfinity:
-        return 0b01;
-    case FP::RoundingMode::TowardsZero:
-        return 0b11;
-    default:
-        return std::nullopt;
-    }
-}
-
 template<size_t fsize>
 void DenormalsAreZero(BlockOfCode& code, EmitContext& ctx, std::initializer_list<Xbyak::Xmm> to_daz) {
     if (ctx.FPCR().FZ()) {
