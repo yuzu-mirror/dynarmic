@@ -881,11 +881,11 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bit
 }
 
 Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, A64EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr, bool& require_abort_handling) {
-    const size_t unused_top_bits = 64 - ctx.conf.page_table_address_space_bits;
+    const size_t unused_top_bits = 64 - ctx.conf.fastmem_address_space_bits;
 
     if (unused_top_bits == 0) {
         return r13 + vaddr;
-    } else if (ctx.conf.silently_mirror_page_table) {
+    } else if (ctx.conf.silently_mirror_fastmem) {
         Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
         if (unused_top_bits < 32) {
             code.mov(tmp, vaddr);
@@ -895,19 +895,19 @@ Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, A64EmitContext& ctx, Xbyak::La
             code.mov(tmp.cvt32(), vaddr.cvt32());
         } else {
             code.mov(tmp.cvt32(), vaddr.cvt32());
-            code.and_(tmp, u32((1 << ctx.conf.page_table_address_space_bits) - 1));
+            code.and_(tmp, u32((1 << ctx.conf.fastmem_address_space_bits) - 1));
         }
         return r13 + tmp;
     } else {
-        if (ctx.conf.page_table_address_space_bits < 32) {
-            code.test(vaddr, u32(-(1 << ctx.conf.page_table_address_space_bits)));
+        if (ctx.conf.fastmem_address_space_bits < 32) {
+            code.test(vaddr, u32(-(1 << ctx.conf.fastmem_address_space_bits)));
             code.jnz(abort, code.T_NEAR);
             require_abort_handling = true;
         } else {
             // TODO: Consider having TEST as above but coalesce 64-bit constant in register allocator
             Xbyak::Reg64 tmp = ctx.reg_alloc.ScratchGpr();
             code.mov(tmp, vaddr);
-            code.shr(tmp, int(ctx.conf.page_table_address_space_bits));
+            code.shr(tmp, int(ctx.conf.fastmem_address_space_bits));
             code.jnz(abort, code.T_NEAR);
             require_abort_handling = true;
         }

@@ -202,7 +202,7 @@ struct UserConfig {
     void** page_table = nullptr;
     /// Declares how many valid address bits are there in virtual addresses.
     /// Determines the size of page_table. Valid values are between 12 and 64 inclusive.
-    /// This is only used if page_table or fastmem_pointer is not nullptr.
+    /// This is only used if page_table is not nullptr.
     size_t page_table_address_space_bits = 36;
     /// Masks out the first N bits in host pointers from the page table.
     /// The intention behind this is to allow users of Dynarmic to pack attributes in the
@@ -213,7 +213,7 @@ struct UserConfig {
     /// page table. If true, Dynarmic will silently mirror page_table's address space. If
     /// false, accessing memory outside of page_table bounds will result in a call to the
     /// relevant memory callback.
-    /// This is only used if page_table or fastmem_pointer is not nullptr.
+    /// This is only used if page_table is not nullptr.
     bool silently_mirror_page_table = true;
     /// Determines if the pointer in the page_table shall be offseted locally or globally.
     /// 'false' will access page_table[addr >> bits][addr & mask]
@@ -243,6 +243,16 @@ struct UserConfig {
     /// Recompiled code will use the page_table if this is available, otherwise memory
     /// accesses will hit the memory callbacks.
     bool recompile_on_fastmem_failure = true;
+    /// Declares how many valid address bits are there in virtual addresses.
+    /// Determines the size of fastmem arena. Valid values are between 12 and 64 inclusive.
+    /// This is only used if fastmem_pointer is not nullptr.
+    size_t fastmem_address_space_bits = 36;
+    /// Determines what happens if the guest accesses an entry that is off the end of the
+    /// fastmem arena. If true, Dynarmic will silently mirror fastmem's address space. If
+    /// false, accessing memory outside of fastmem bounds will result in a call to the
+    /// relevant memory callback.
+    /// This is only used if fastmem_pointer is not nullptr.
+    bool silently_mirror_fastmem = true;
 
     /// This option relates to translation. Generally when we run into an unpredictable
     /// instruction the ExceptionRaised callback is called. If this is true, we define

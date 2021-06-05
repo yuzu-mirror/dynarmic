@@ -852,9 +852,9 @@ TEST_CASE("A64: Memory access (fastmem)", "[a64]") {
     A64FastmemTestEnv env{backing_memory};
     Dynarmic::A64::UserConfig config{&env};
     config.fastmem_pointer = backing_memory;
-    config.page_table_address_space_bits = address_width;
+    config.fastmem_address_space_bits = address_width;
     config.recompile_on_fastmem_failure = false;
-    config.silently_mirror_page_table = true;
+    config.silently_mirror_fastmem = true;
     config.processor_id = 0;
 
     Dynarmic::A64::Jit jit{config};
