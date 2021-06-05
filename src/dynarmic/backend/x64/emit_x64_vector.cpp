@@ -2137,12 +2137,18 @@ void EmitX64::EmitVectorNarrow64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorNot(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho)) {
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+        code.vpternlogq(result, operand, operand, u8(~Tern::c));
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm xmm_b = ctx.reg_alloc.ScratchXmm();
-
     code.pcmpeqw(xmm_b, xmm_b);
     code.pxor(xmm_a, xmm_b);
-
     ctx.reg_alloc.DefineValue(inst, xmm_a);
 }
 
