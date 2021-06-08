@@ -58,7 +58,7 @@ template<typename Lambda>
 void MaybeStandardFPSCRValue(BlockOfCode& code, EmitContext& ctx, bool fpcr_controlled, Lambda lambda) {
     const bool switch_mxcsr = ctx.FPCR(fpcr_controlled) != ctx.FPCR();
 
-    if (switch_mxcsr) {
+    if (switch_mxcsr && !ctx.HasOptimization(OptimizationFlag::Unsafe_IgnoreStandardFPCRValue)) {
         code.EnterStandardASIMD();
         lambda();
         code.LeaveStandardASIMD();

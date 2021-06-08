@@ -1681,7 +1681,7 @@ void EmitX64::EmitFPFixedS32ToSingle(EmitContext& ctx, IR::Inst* inst) {
     const size_t fbits = args[1].GetImmediateU8();
     const FP::RoundingMode rounding_mode = static_cast<FP::RoundingMode>(args[2].GetImmediateU8());
 
-    if (rounding_mode == ctx.FPCR().RMode()) {
+    if (rounding_mode == ctx.FPCR().RMode() || ctx.HasOptimization(OptimizationFlag::Unsafe_IgnoreStandardFPCRValue)) {
         code.cvtsi2ss(result, from);
     } else {
         ASSERT(rounding_mode == FP::RoundingMode::ToNearest_TieEven);
@@ -1717,7 +1717,7 @@ void EmitX64::EmitFPFixedU32ToSingle(EmitContext& ctx, IR::Inst* inst) {
         }
     };
 
-    if (rounding_mode == ctx.FPCR().RMode()) {
+    if (rounding_mode == ctx.FPCR().RMode() || ctx.HasOptimization(OptimizationFlag::Unsafe_IgnoreStandardFPCRValue)) {
         op();
     } else {
         ASSERT(rounding_mode == FP::RoundingMode::ToNearest_TieEven);
