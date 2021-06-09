@@ -454,6 +454,28 @@ TEST_CASE("A64: FABD", "[a64]") {
     REQUIRE(jit.GetVector(22) == Vector{0x56d3f0857fc90e2b, 0x6e4b0a4144873176});
 }
 
+TEST_CASE("A64: FABS", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x4ef8f804);  // FABS v4.8h, v0.8h
+    env.code_mem.emplace_back(0x4ea0f825);  // FABS v5.4s, v1.4s
+    env.code_mem.emplace_back(0x4ee0f846);  // FABS v6.2d, v2.2d
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetVector(0, {0xffffffffffffffff, 0xffffffffffff8000});
+    jit.SetVector(1, {0xffbfffffffc00000, 0xff80000080000000});
+    jit.SetVector(2, {0xffffffffffffffff, 0x8000000000000000});
+
+    env.ticks_left = 4;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(4) == Vector{0x7fff7fff7fff7fff, 0x7fff7fff7fff0000});
+    REQUIRE(jit.GetVector(5) == Vector{0x7fbfffff7fc00000, 0x7f80000000000000});
+    REQUIRE(jit.GetVector(6) == Vector{0x7fffffffffffffff, 0x0000000000000000});
+}
+
 TEST_CASE("A64: FMIN", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
