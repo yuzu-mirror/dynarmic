@@ -557,37 +557,32 @@ void EmitFourOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lam
 
 }  // anonymous namespace
 
-void EmitX64::EmitFPVectorAbs16(EmitContext& ctx, IR::Inst* inst) {
+template<size_t fsize>
+void FPVectorAbs(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    using FPT = mp::unsigned_integer_of_size<fsize>;
+    constexpr FPT non_sign_mask = FP::FPInfo<FPT>::sign_mask - FPT(1u);
+    constexpr u64 non_sign_mask64 = Common::Replicate<u64>(non_sign_mask, fsize);
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.MConst(xword, 0x7FFF7FFF7FFF7FFF, 0x7FFF7FFF7FFF7FFF);
-
-    code.pand(a, mask);
-
-    ctx.reg_alloc.DefineValue(inst, a);
-}
-
-void EmitX64::EmitFPVectorAbs32(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.MConst(xword, 0x7FFFFFFF7FFFFFFF, 0x7FFFFFFF7FFFFFFF);
+    const Xbyak::Address mask = code.MConst(xword, non_sign_mask64, non_sign_mask64);
 
     code.andps(a, mask);
 
     ctx.reg_alloc.DefineValue(inst, a);
 }
 
+void EmitX64::EmitFPVectorAbs16(EmitContext& ctx, IR::Inst* inst) {
+    FPVectorAbs<16>(code, ctx, inst);
+}
+
+void EmitX64::EmitFPVectorAbs32(EmitContext& ctx, IR::Inst* inst) {
+    FPVectorAbs<32>(code, ctx, inst);
+}
+
 void EmitX64::EmitFPVectorAbs64(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.MConst(xword, 0x7FFFFFFFFFFFFFFF, 0x7FFFFFFFFFFFFFFF);
-
-    code.andpd(a, mask);
-
-    ctx.reg_alloc.DefineValue(inst, a);
+    FPVectorAbs<64>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorAdd32(EmitContext& ctx, IR::Inst* inst) {
@@ -1229,37 +1224,32 @@ void EmitX64::EmitFPVectorMulX64(EmitContext& ctx, IR::Inst* inst) {
     EmitFPVectorMulX<64>(code, ctx, inst);
 }
 
-void EmitX64::EmitFPVectorNeg16(EmitContext& ctx, IR::Inst* inst) {
+template<size_t fsize>
+void FPVectorNeg(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    using FPT = mp::unsigned_integer_of_size<fsize>;
+    constexpr FPT sign_mask = FP::FPInfo<FPT>::sign_mask;
+    constexpr u64 sign_mask64 = Common::Replicate<u64>(sign_mask, fsize);
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.MConst(xword, 0x8000800080008000, 0x8000800080008000);
+    const Xbyak::Address mask = code.MConst(xword, sign_mask64, sign_mask64);
 
-    code.pxor(a, mask);
+    code.xorps(a, mask);
 
     ctx.reg_alloc.DefineValue(inst, a);
+}
+
+void EmitX64::EmitFPVectorNeg16(EmitContext& ctx, IR::Inst* inst) {
+    FPVectorNeg<16>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorNeg32(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.MConst(xword, 0x8000000080000000, 0x8000000080000000);
-
-    code.pxor(a, mask);
-
-    ctx.reg_alloc.DefineValue(inst, a);
+    FPVectorNeg<32>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorNeg64(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.MConst(xword, 0x8000000000000000, 0x8000000000000000);
-
-    code.pxor(a, mask);
-
-    ctx.reg_alloc.DefineValue(inst, a);
+    FPVectorNeg<64>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorPairedAdd32(EmitContext& ctx, IR::Inst* inst) {
