@@ -1288,12 +1288,16 @@ static void EmitRecipEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
             const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            if constexpr (fsize == 32) {
-                code.rcpps(result, operand);
+            if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
+                FCODE(vrcp14p)(result, operand);
             } else {
-                code.cvtpd2ps(result, operand);
-                code.rcpps(result, result);
-                code.cvtps2pd(result, result);
+                if constexpr (fsize == 32) {
+                    code.rcpps(result, operand);
+                } else {
+                    code.cvtpd2ps(result, operand);
+                    code.rcpps(result, result);
+                    code.cvtps2pd(result, result);
+                }
             }
 
             ctx.reg_alloc.DefineValue(inst, result);
@@ -1502,12 +1506,16 @@ static void EmitRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
             const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            if constexpr (fsize == 32) {
-                code.rsqrtps(result, operand);
+            if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
+                FCODE(vrsqrt14p)(result, operand);
             } else {
-                code.cvtpd2ps(result, operand);
-                code.rsqrtps(result, result);
-                code.cvtps2pd(result, result);
+                if constexpr (fsize == 32) {
+                    code.rsqrtps(result, operand);
+                } else {
+                    code.cvtpd2ps(result, operand);
+                    code.rsqrtps(result, result);
+                    code.cvtps2pd(result, result);
+                }
             }
 
             ctx.reg_alloc.DefineValue(inst, result);
