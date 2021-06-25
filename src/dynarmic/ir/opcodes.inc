@@ -291,6 +291,7 @@ OPCODE(VectorAdd16,                                         U128,           U128
 OPCODE(VectorAdd32,                                         U128,           U128,           U128                                            )
 OPCODE(VectorAdd64,                                         U128,           U128,           U128                                            )
 OPCODE(VectorAnd,                                           U128,           U128,           U128                                            )
+OPCODE(VectorAndNot,                                        U128,           U128,           U128                                            )
 OPCODE(VectorArithmeticShiftRight8,                         U128,           U128,           U8                                              )
 OPCODE(VectorArithmeticShiftRight16,                        U128,           U128,           U8                                              )
 OPCODE(VectorArithmeticShiftRight32,                        U128,           U128,           U8                                              )

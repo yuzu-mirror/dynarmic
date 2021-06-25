@@ -240,6 +240,7 @@ public:
     U128 VectorAbs(size_t esize, const U128& a);
     U128 VectorAdd(size_t esize, const U128& a, const U128& b);
     U128 VectorAnd(const U128& a, const U128& b);
+    U128 VectorAndNot(const U128& a, const U128& b);
     U128 VectorArithmeticShiftRight(size_t esize, const U128& a, u8 shift_amount);
     U128 VectorArithmeticVShift(size_t esize, const U128& a, const U128& b);
     U128 VectorBroadcast(size_t esize, const UAny& a);

@@ -439,6 +439,17 @@ void EmitX64::EmitVectorAnd(EmitContext& ctx, IR::Inst* inst) {
     EmitVectorOperation(code, ctx, inst, &Xbyak::CodeGenerator::pand);
 }
 
+void EmitX64::EmitVectorAndNot(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseScratchXmm(args[1]);
+
+    code.pandn(xmm_b, xmm_a);
+
+    ctx.reg_alloc.DefineValue(inst, xmm_b);
+}
+
 static void ArithmeticShiftRightByte(EmitContext& ctx, BlockOfCode& code, const Xbyak::Xmm& result, u8 shift_amount) {
     if (code.HasHostFeature(HostFeature::GFNI)) {
         const u64 shift_matrix = shift_amount < 8
