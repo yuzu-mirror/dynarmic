@@ -143,6 +143,8 @@ OPCODE(SignedDiv32,                                         U32,            U32,
 OPCODE(SignedDiv64,                                         U64,            U64,            U64                                             )
 OPCODE(And32,                                               U32,            U32,            U32                                             )
 OPCODE(And64,                                               U64,            U64,            U64                                             )
+OPCODE(AndNot32,                                            U32,            U32,            U32                                             )
+OPCODE(AndNot64,                                            U64,            U64,            U64                                             )
 OPCODE(Eor32,                                               U32,            U32,            U32                                             )
 OPCODE(Eor64,                                               U64,            U64,            U64                                             )
 OPCODE(Or32,                                                U32,            U32,            U32                                             )

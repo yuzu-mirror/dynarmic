@@ -566,6 +566,8 @@ bool Inst::MayGetNZCVFromOp() const {
     case Opcode::Sub64:
     case Opcode::And32:
     case Opcode::And64:
+    case Opcode::AndNot32:
+    case Opcode::AndNot64:
     case Opcode::Eor32:
     case Opcode::Eor64:
     case Opcode::Or32:

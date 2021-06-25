@@ -144,6 +144,7 @@ public:
     U32U64 UnsignedDiv(const U32U64& a, const U32U64& b);
     U32U64 SignedDiv(const U32U64& a, const U32U64& b);
     U32U64 And(const U32U64& a, const U32U64& b);
+    U32U64 AndNot(const U32U64& a, const U32U64& b);
     U32U64 Eor(const U32U64& a, const U32U64& b);
     U32U64 Or(const U32U64& a, const U32U64& b);
     U32U64 Not(const U32U64& a);
