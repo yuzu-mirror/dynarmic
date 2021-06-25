@@ -1,3 +1,5 @@
+// clang-format off
+
 //     opcode name,                                         return type,    arg1 type,      arg2 type,      arg3 type,      arg4 type,      ...
 
 OPCODE(Void,                                                Void,                                                                           )
@@ -718,3 +720,5 @@ A32OPC(CoprocGetOneWord,                                    U32,            Copr
 A32OPC(CoprocGetTwoWords,                                   U64,            CoprocInfo                                                      )
 A32OPC(CoprocLoadWords,                                     Void,           CoprocInfo,     U32                                             )
 A32OPC(CoprocStoreWords,                                    Void,           CoprocInfo,     U32                                             )
+
+// clang-format on
