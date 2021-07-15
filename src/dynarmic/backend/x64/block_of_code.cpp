@@ -258,8 +258,6 @@ void BlockOfCode::GenRunCode(std::function<void(BlockOfCode&)> rcp) {
     SwitchMxcsrOnEntry();
     jmp(ABI_PARAM2);
 
-    align();
-
     // Dispatcher loop
 
     Xbyak::Label return_to_caller, return_to_caller_mxcsr_already_exited;
