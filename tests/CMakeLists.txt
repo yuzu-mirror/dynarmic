@@ -9,7 +9,6 @@ add_executable(dynarmic_tests
     A32/testenv.h
     A64/a64.cpp
     A64/testenv.h
-    cpu_info.cpp
     decoder_tests.cpp
     fp/FPToFixed.cpp
     fp/FPValue.cpp
@@ -18,13 +17,6 @@ add_executable(dynarmic_tests
     main.cpp
     rand_int.h
 )
-
-if (NOT MSVC)
-    target_sources(dynarmic_tests PRIVATE
-        rsqrt_test.cpp
-        rsqrt_test_fn.s
-    )
-endif()
 
 if (DYNARMIC_TESTS_USE_UNICORN)
     target_sources(dynarmic_tests PRIVATE
@@ -43,6 +35,21 @@ if (DYNARMIC_TESTS_USE_UNICORN)
     target_link_libraries(dynarmic_tests PRIVATE Unicorn::Unicorn)
 endif()
 
+if (ARCHITECTURE STREQUAL "x86_64")
+    target_link_libraries(dynarmic_tests PRIVATE xbyak)
+
+    target_sources(dynarmic_tests PRIVATE
+        x64_cpu_info.cpp
+    )
+
+    if (NOT MSVC)
+        target_sources(dynarmic_tests PRIVATE
+            rsqrt_test.cpp
+            rsqrt_test_fn.s
+        )
+    endif()
+endif()
+
 add_executable(dynarmic_print_info
     print_info.cpp
 )
@@ -51,7 +58,7 @@ include(CreateDirectoryGroups)
 create_target_directory_groups(dynarmic_tests)
 create_target_directory_groups(dynarmic_print_info)
 
-target_link_libraries(dynarmic_tests PRIVATE dynarmic boost catch fmt xbyak)
+target_link_libraries(dynarmic_tests PRIVATE dynarmic boost catch fmt)
 target_include_directories(dynarmic_tests PRIVATE . ../src)
 target_compile_options(dynarmic_tests PRIVATE ${DYNARMIC_CXX_FLAGS})
 target_compile_definitions(dynarmic_tests PRIVATE FMT_USE_USER_DEFINED_LITERALS=1 CATCH_CONFIG_ENABLE_BENCHMARKING=1)
