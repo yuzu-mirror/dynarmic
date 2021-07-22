@@ -1025,6 +1025,34 @@ U128 IREmitter::VectorBroadcast(size_t esize, const UAny& a) {
     UNREACHABLE();
 }
 
+U128 IREmitter::VectorBroadcastElementLower(size_t esize, const U128& a, size_t index) {
+    ASSERT_MSG(esize * index < 128, "Invalid index");
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorBroadcastElementLower8, a, u8(index));
+    case 16:
+        return Inst<U128>(Opcode::VectorBroadcastElementLower16, a, u8(index));
+    case 32:
+        return Inst<U128>(Opcode::VectorBroadcastElementLower32, a, u8(index));
+    }
+    UNREACHABLE();
+}
+
+U128 IREmitter::VectorBroadcastElement(size_t esize, const U128& a, size_t index) {
+    ASSERT_MSG(esize * index < 128, "Invalid index");
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorBroadcastElement8, a, u8(index));
+    case 16:
+        return Inst<U128>(Opcode::VectorBroadcastElement16, a, u8(index));
+    case 32:
+        return Inst<U128>(Opcode::VectorBroadcastElement32, a, u8(index));
+    case 64:
+        return Inst<U128>(Opcode::VectorBroadcastElement64, a, u8(index));
+    }
+    UNREACHABLE();
+}
+
 U128 IREmitter::VectorCountLeadingZeros(size_t esize, const U128& a) {
     switch (esize) {
     case 8:
