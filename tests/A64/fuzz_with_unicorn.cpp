@@ -232,7 +232,7 @@ static void RunTestInstance(Dynarmic::A64::Jit& jit, A64Unicorn& uni, A64TestEnv
         }
         const auto uni_vecs = uni.GetVectors();
         for (size_t i = 0; i < vecs.size(); ++i) {
-            fmt::print("{:3s}: {}{} {}{} {}\n", A64::VecToString(static_cast<A64::Vec>(i)),
+            fmt::print("{:3s}: {:016x}{:016x} {:016x}{:016x} {}\n", A64::VecToString(static_cast<A64::Vec>(i)),
                        uni_vecs[i][1], uni_vecs[i][0],
                        jit.GetVectors()[i][1], jit.GetVectors()[i][0],
                        uni_vecs[i] != jit.GetVectors()[i] ? "*" : "");
