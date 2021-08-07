@@ -7,7 +7,7 @@
 #include <utility>
 
 #include <catch.hpp>
-#include <xbyak_util.h>
+#include <xbyak/xbyak_util.h>
 
 TEST_CASE("Host CPU supports", "[a64]") {
     Xbyak::util::Cpu cpu_info;

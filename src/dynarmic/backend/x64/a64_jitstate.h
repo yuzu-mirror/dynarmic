@@ -7,7 +7,7 @@
 
 #include <array>
 
-#include <xbyak.h>
+#include <xbyak/xbyak.h>
 
 #include "dynarmic/backend/x64/nzcv_util.h"
 #include "dynarmic/common/common_types.h"

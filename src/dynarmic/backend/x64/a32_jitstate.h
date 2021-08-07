@@ -7,7 +7,7 @@
 
 #include <array>
 
-#include <xbyak.h>
+#include <xbyak/xbyak.h>
 
 #include "dynarmic/common/common_types.h"
 
