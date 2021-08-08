@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include "../fuzz_util.h"
 #include "../rand_int.h"

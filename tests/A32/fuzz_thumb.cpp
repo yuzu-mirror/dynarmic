@@ -12,7 +12,7 @@
 #include <string_view>
 #include <tuple>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include "../rand_int.h"
 #include "../unicorn_emu/a32_unicorn.h"

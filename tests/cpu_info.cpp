@@ -6,7 +6,7 @@
 #include <array>
 #include <utility>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <xbyak/xbyak_util.h>
 
 TEST_CASE("Host CPU supports", "[a64]") {
