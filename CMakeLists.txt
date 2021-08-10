@@ -121,6 +121,22 @@ if (NOT TARGET boost)
     target_include_directories(boost SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
 endif()
 
+if (DYNARMIC_NO_BUNDLED_FMT)
+    find_package(fmt REQUIRED)
+    add_library(fmt ALIAS fmt::fmt)
+endif()
+
+if (DYNARMIC_NO_BUNDLED_ROBIN_MAP)
+    find_package(tsl-robin-map REQUIRED)
+endif()
+
+if (DYNARMIC_NO_BUNDLED_XBYAK)
+    if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
+        find_package(xbyak REQUIRED)
+        add_library(xbyak ALIAS xbyak::xbyak)
+    endif()
+endif()
+
 # Enable unit-testing.
 enable_testing(true)
 
@@ -134,6 +150,11 @@ endif()
 
 if (DYNARMIC_TESTS_USE_UNICORN)
     find_package(Unicorn REQUIRED)
+endif()
+
+if (DYNARMIC_TESTS AND DYNARMIC_NO_BUNDLED_CATCH)
+    find_package(Catch2 REQUIRED)
+    add_library(catch ALIAS Catch2::Catch2)
 endif()
 
 # Pull in externals CMakeLists for libs where available

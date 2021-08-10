@@ -4,12 +4,14 @@
 
 # catch
 
-add_library(catch INTERFACE)
-target_include_directories(catch INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/catch/include>)
+if (DYNARMIC_TESTS AND NOT TARGET catch)
+    add_library(catch INTERFACE)
+    target_include_directories(catch INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/catch/include>)
+endif()
 
 # fmt
 
-if (NOT DYNARMIC_NO_BUNDLED_FMT)
+if (NOT TARGET fmt)
     # fmtlib formatting library
     add_subdirectory(fmt)
 endif()
@@ -21,9 +23,11 @@ target_include_directories(mp INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE
 
 # robin-map
 
-add_library(robin_map INTERFACE)
-add_library(tsl::robin_map ALIAS robin_map)
-target_include_directories(robin_map SYSTEM INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/robin-map/include>")
+if (NOT TARGET tsl::robin_map)
+    add_library(robin_map INTERFACE)
+    add_library(tsl::robin_map ALIAS robin_map)
+    target_include_directories(robin_map SYSTEM INTERFACE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/robin-map/include>")
+endif()
 
 # vixl
 
