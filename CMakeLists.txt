@@ -137,6 +137,11 @@ if (DYNARMIC_NO_BUNDLED_XBYAK AND NOT TARGET xbyak)
     endif()
 endif()
 
+if (DYNARMIC_NO_BUNDLED_ZYDIS AND NOT TARGET Zydis)
+    find_package(Zydis REQUIRED)
+    add_library(Zydis ALIAS Zydis::Zydis)
+endif()
+
 # Enable unit-testing.
 enable_testing(true)
 

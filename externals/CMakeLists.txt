@@ -49,7 +49,9 @@ endif()
 
 # zydis
 
-option(ZYDIS_BUILD_TOOLS "" OFF)
-option(ZYDIS_BUILD_EXAMPLES "" OFF)
-set(ZYDIS_ZYCORE_PATH "${CMAKE_CURRENT_LIST_DIR}/zycore" CACHE PATH "")
-add_subdirectory(zydis EXCLUDE_FROM_ALL)
+if (NOT TARGET Zydis)
+    option(ZYDIS_BUILD_TOOLS "" OFF)
+    option(ZYDIS_BUILD_EXAMPLES "" OFF)
+    set(ZYDIS_ZYCORE_PATH "${CMAKE_CURRENT_LIST_DIR}/zycore" CACHE PATH "")
+    add_subdirectory(zydis EXCLUDE_FROM_ALL)
+endif()
