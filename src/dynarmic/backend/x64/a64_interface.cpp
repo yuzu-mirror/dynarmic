@@ -5,6 +5,7 @@
 
 #include <cstring>
 #include <memory>
+#include <mutex>
 
 #include <boost/icl/interval_set.hpp>
 
@@ -57,6 +58,8 @@ public:
 
     void Run() {
         ASSERT(!is_executing);
+        PerformRequestedCacheInvalidation();
+
         is_executing = true;
         SCOPE_EXIT { this->is_executing = false; };
         jit_state.halt_requested = false;
@@ -80,6 +83,8 @@ public:
 
     void Step() {
         ASSERT(!is_executing);
+        PerformRequestedCacheInvalidation();
+
         is_executing = true;
         SCOPE_EXIT { this->is_executing = false; };
         jit_state.halt_requested = true;
@@ -90,15 +95,21 @@ public:
     }
 
     void ClearCache() {
+        std::unique_lock lock{invalidation_mutex};
         invalidate_entire_cache = true;
-        RequestCacheInvalidation();
+        if (is_executing) {
+            jit_state.halt_requested = true;
+        }
     }
 
     void InvalidateCacheRange(u64 start_address, size_t length) {
+        std::unique_lock lock{invalidation_mutex};
         const auto end_address = static_cast<u64>(start_address + length - 1);
         const auto range = boost::icl::discrete_interval<u64>::closed(start_address, end_address);
         invalid_cache_ranges.add(range);
-        RequestCacheInvalidation();
+        if (is_executing) {
+            jit_state.halt_requested = true;
+        }
     }
 
     void Reset() {
@@ -268,6 +279,7 @@ private:
     }
 
     void PerformRequestedCacheInvalidation() {
+        std::unique_lock lock{invalidation_mutex};
         if (!invalidate_entire_cache && invalid_cache_ranges.empty()) {
             return;
         }
@@ -292,6 +304,7 @@ private:
 
     bool invalidate_entire_cache = false;
     boost::icl::interval_set<u64> invalid_cache_ranges;
+    std::mutex invalidation_mutex;
 };
 
 Jit::Jit(UserConfig conf)
