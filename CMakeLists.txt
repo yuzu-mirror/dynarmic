@@ -122,7 +122,7 @@ if (NOT TARGET boost)
     target_include_directories(boost SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
 endif()
 
-if (DYNARMIC_NO_BUNDLED_FMT AND NOT TARGET fmt)
+if (DYNARMIC_NO_BUNDLED_FMT AND NOT TARGET fmt AND NOT TARGET fmt::fmt)
     find_package(fmt REQUIRED)
     add_library(fmt ALIAS fmt::fmt)
 endif()
