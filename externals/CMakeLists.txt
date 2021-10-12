@@ -11,7 +11,7 @@ endif()
 
 # fmt
 
-if (NOT TARGET fmt)
+if (NOT TARGET fmt AND NOT TARGET fmt::fmt)
     # fmtlib formatting library
     add_subdirectory(fmt)
 endif()
