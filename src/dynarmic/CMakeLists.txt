@@ -350,7 +350,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         endif()
     elseif (UNIX)
         if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-            target_link_libraries(dynarmic PUBLIC rt)
+            target_link_libraries(dynarmic PRIVATE rt)
         endif()
         target_sources(dynarmic PRIVATE backend/x64/exception_handler_posix.cpp)
     else()
@@ -363,20 +363,24 @@ endif()
 include(CreateDirectoryGroups)
 create_target_directory_groups(dynarmic)
 
-target_include_directories(dynarmic PUBLIC ..)
+target_include_directories(dynarmic PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 set_target_properties(dynarmic PROPERTIES
     VERSION ${dynarmic_VERSION}
     SOVERSION ${dynarmic_VERSION_MAJOR}
 )
 target_compile_options(dynarmic PRIVATE ${DYNARMIC_CXX_FLAGS})
+# $<BUILD_INTERFACE:> required because of https://gitlab.kitware.com/cmake/cmake/-/issues/15415
 target_link_libraries(dynarmic
-    PUBLIC
-        boost
-        fmt::fmt
-        mp
+    PRIVATE
+        $<BUILD_INTERFACE:boost>
+        $<BUILD_INTERFACE:fmt::fmt>
+        $<BUILD_INTERFACE:mp>
         tsl::robin_map
-        xbyak
-        Zydis
+        $<BUILD_INTERFACE:xbyak>
+        $<BUILD_INTERFACE:Zydis>
         $<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>
 )
 if (DYNARMIC_ENABLE_CPU_FEATURE_DETECTION)
