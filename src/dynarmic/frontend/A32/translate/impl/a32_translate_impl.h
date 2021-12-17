@@ -7,11 +7,11 @@
 
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
-#include "dynarmic/frontend/A32/ir_emitter.h"
-#include "dynarmic/frontend/A32/location_descriptor.h"
+#include "dynarmic/frontend/A32/a32_ir_emitter.h"
+#include "dynarmic/frontend/A32/a32_location_descriptor.h"
+#include "dynarmic/frontend/A32/a32_types.h"
+#include "dynarmic/frontend/A32/translate/a32_translate.h"
 #include "dynarmic/frontend/A32/translate/conditional_state.h"
-#include "dynarmic/frontend/A32/translate/translate.h"
-#include "dynarmic/frontend/A32/types.h"
 #include "dynarmic/frontend/imm.h"
 
 namespace Dynarmic::A32 {

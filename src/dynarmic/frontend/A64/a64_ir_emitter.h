@@ -8,8 +8,8 @@
 #include <optional>
 
 #include "dynarmic/common/common_types.h"
-#include "dynarmic/frontend/A64/location_descriptor.h"
-#include "dynarmic/frontend/A64/types.h"
+#include "dynarmic/frontend/A64/a64_location_descriptor.h"
+#include "dynarmic/frontend/A64/a64_types.h"
 #include "dynarmic/interface/A64/config.h"
 #include "dynarmic/ir/ir_emitter.h"
 #include "dynarmic/ir/value.h"

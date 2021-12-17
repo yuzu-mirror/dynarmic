@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A32/translate/translate.h"
+#include "dynarmic/frontend/A32/translate/a32_translate.h"
 
-#include "dynarmic/frontend/A32/location_descriptor.h"
+#include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/ir/basic_block.h"
 
 namespace Dynarmic::A32 {

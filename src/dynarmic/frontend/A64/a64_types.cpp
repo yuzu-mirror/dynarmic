@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A64/types.h"
+#include "dynarmic/frontend/A64/a64_types.h"
 
 #include <array>
 #include <ostream>

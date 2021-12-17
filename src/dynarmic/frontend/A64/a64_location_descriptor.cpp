@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A64/location_descriptor.h"
+#include "dynarmic/frontend/A64/a64_location_descriptor.h"
 
 #include <ostream>
 

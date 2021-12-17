@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/frontend/A64/translate/translate.h"
+#include "dynarmic/frontend/A64/translate/a64_translate.h"
 
+#include "dynarmic/frontend/A64/a64_location_descriptor.h"
 #include "dynarmic/frontend/A64/decoder/a64.h"
-#include "dynarmic/frontend/A64/location_descriptor.h"
 #include "dynarmic/frontend/A64/translate/impl/impl.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/terminal.h"
