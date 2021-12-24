@@ -6,8 +6,8 @@
 #pragma once
 
 #include <bit>
-#include <tuple>
 #include <unordered_map>
+#include <utility>
 
 #include <xbyak/xbyak.h>
 
@@ -31,12 +31,12 @@ private:
     static constexpr size_t align_size = 16;  // bytes
 
     struct ConstantHash {
-        std::size_t operator()(const std::tuple<u64, u64>& constant) const {
-            return std::get<0>(constant) ^ std::rotl<u64>(std::get<1>(constant), 1);
+        std::size_t operator()(const std::pair<u64, u64>& constant) const noexcept {
+            return constant.first ^ std::rotl<u64>(constant.second, 1);
         }
     };
 
-    std::unordered_map<std::tuple<u64, u64>, void*, ConstantHash> constant_info;
+    std::unordered_map<std::pair<u64, u64>, void*, ConstantHash> constant_info;
 
     BlockOfCode& code;
     size_t pool_size;
