@@ -6,9 +6,9 @@
 #pragma once
 
 #include <bit>
-#include <unordered_map>
 #include <utility>
 
+#include <tsl/robin_map.h>
 #include <xbyak/xbyak.h>
 
 #include "dynarmic/common/common_types.h"
@@ -36,7 +36,7 @@ private:
         }
     };
 
-    std::unordered_map<std::pair<u64, u64>, void*, ConstantHash> constant_info;
+    tsl::robin_map<std::pair<u64, u64>, void*, ConstantHash> constant_info;
 
     BlockOfCode& code;
     size_t pool_size;
