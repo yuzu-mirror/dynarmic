@@ -1136,14 +1136,13 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
         code.SwitchToNearCode();
 
         ctx.reg_alloc.DefineValue(inst, result);
-        return;
+    } else {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        ctx.reg_alloc.HostCall(inst, args[0]);
+        code.mov(code.ABI_PARAM2.cvt32(), ctx.FPCR().Value());
+        code.lea(code.ABI_PARAM3, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
+        code.CallFunction(&FP::FPRSqrtEstimate<FPT>);
     }
-
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.HostCall(inst, args[0]);
-    code.mov(code.ABI_PARAM2.cvt32(), ctx.FPCR().Value());
-    code.lea(code.ABI_PARAM3, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
-    code.CallFunction(&FP::FPRSqrtEstimate<FPT>);
 }
 
 void EmitX64::EmitFPRSqrtEstimate16(EmitContext& ctx, IR::Inst* inst) {
