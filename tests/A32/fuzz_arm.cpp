@@ -396,7 +396,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
     REQUIRE(uni.GetRegisters() == jit.Regs());
     REQUIRE(uni.GetExtRegs() == jit.ExtRegs());
     REQUIRE((uni.GetCpsr() & 0xFFFFFDDF) == (jit.Cpsr() & 0xFFFFFDDF));
-    REQUIRE((uni.GetFpscr() & 0xF0000000) == (jit.Fpscr() & 0xF0000000));
+    REQUIRE((uni.GetFpscr() & 0xF8000000) == (jit.Fpscr() & 0xF8000000));
     REQUIRE(uni_env.modified_memory == jit_env.modified_memory);
     REQUIRE(uni_env.interrupts.empty());
 }
