@@ -285,6 +285,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
     const u32 initial_pc = regs[15];
     const u32 num_words = initial_pc / sizeof(typename TestEnv::InstructionType);
     const u32 code_mem_size = num_words + static_cast<u32>(instructions.size());
+    const u32 expected_end_pc = code_mem_size * sizeof(typename TestEnv::InstructionType);
 
     jit_env.code_mem.resize(code_mem_size);
     uni_env.code_mem.resize(code_mem_size);
@@ -391,6 +392,14 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
         const bool is_thumb = (jit.Cpsr() & (1 << 5)) != 0;
         const u32 new_uni_pc = uni_pc & (is_thumb ? 0xFFFFFFFE : 0xFFFFFFFC);
         uni.SetPC(new_uni_pc);
+    }
+
+    if (uni.GetRegisters()[15] > jit.Regs()[15]) {
+        const u32 final_pc = jit.Regs()[15];
+        if (final_pc >= initial_pc && final_pc < expected_end_pc) {
+            fmt::print("Warning: Possible unicorn overrrun, attempt recovery\n");
+            jit.Step();
+        }
     }
 
     REQUIRE(uni.GetRegisters() == jit.Regs());
