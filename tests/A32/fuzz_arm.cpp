@@ -194,6 +194,7 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
 
             // Unicorn is incorrect?
             "thumb32_MRS_reg",
+            "thumb32_MSR_reg",
 
             // Unicorn has incorrect implementation (incorrect rounding and unsets CPSR.T??)
             "vfp_VCVT_to_fixed",
