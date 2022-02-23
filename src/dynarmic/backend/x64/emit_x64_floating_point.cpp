@@ -1500,32 +1500,45 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             if constexpr (isize == 64) {
                 Xbyak::Label saturate_max, end;
 
-                if (unsigned_) {
-                    code.maxsd(src, code.MConst(xword, f64_min_u64));
-                }
-                code.movsd(scratch, code.MConst(xword, unsigned_ ? f64_max_u64_lim : f64_max_s64_lim));
-                code.comisd(scratch, src);
-                code.jna(saturate_max, code.T_NEAR);
-                if (unsigned_) {
+                if (!unsigned_) {
+                    code.movsd(scratch, code.MConst(xword, f64_max_s64_lim));
+                    code.comisd(scratch, src);
+                    code.jna(saturate_max, code.T_NEAR);
+                    code.cvttsd2si(result, src);  // 64 bit gpr
+                    code.L(end);
+
+                    code.SwitchToFarCode();
+                    code.L(saturate_max);
+                    code.mov(result, 0x7FFF'FFFF'FFFF'FFFF);
+                    code.jmp(end, code.T_NEAR);
+                    code.SwitchToNearCode();
+                } else {
                     Xbyak::Label below_max;
+
+                    code.maxsd(src, code.MConst(xword, f64_min_u64));
+                    code.movsd(scratch, code.MConst(xword, f64_max_u64_lim));
+                    code.comisd(scratch, src);
+                    code.jna(saturate_max, code.T_NEAR);
 
                     code.movsd(scratch, code.MConst(xword, f64_max_s64_lim));
                     code.comisd(src, scratch);
                     code.jb(below_max);
+
                     code.subsd(src, scratch);
                     code.cvttsd2si(result, src);
                     code.btc(result, 63);
                     code.jmp(end);
-                    code.L(below_max);
-                }
-                code.cvttsd2si(result, src);  // 64 bit gpr
-                code.L(end);
 
-                code.SwitchToFarCode();
-                code.L(saturate_max);
-                code.mov(result, unsigned_ ? 0xFFFF'FFFF'FFFF'FFFF : 0x7FFF'FFFF'FFFF'FFFF);
-                code.jmp(end, code.T_NEAR);
-                code.SwitchToNearCode();
+                    code.L(below_max);
+                    code.cvttsd2si(result, src);  // 64 bit gpr
+                    code.L(end);
+
+                    code.SwitchToFarCode();
+                    code.L(saturate_max);
+                    code.mov(result, 0xFFFF'FFFF'FFFF'FFFF);
+                    code.jmp(end, code.T_NEAR);
+                    code.SwitchToNearCode();
+                }
             } else if constexpr (isize == 32) {
                 code.minsd(src, code.MConst(xword, unsigned_ ? f64_max_u32 : f64_max_s32));
                 if (unsigned_) {
