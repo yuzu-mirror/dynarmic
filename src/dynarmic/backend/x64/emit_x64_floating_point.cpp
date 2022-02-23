@@ -1470,7 +1470,10 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     if constexpr (fsize != 16) {
         const auto round_imm = ConvertRoundingModeToX64Immediate(rounding_mode);
 
-        if (code.HasHostFeature(HostFeature::SSE41) && round_imm) {
+        // cvttsd2si truncates during operation so rounding (and thus SSE4.1) not required
+        const bool truncating = rounding_mode == FP::RoundingMode::TowardsZero;
+
+        if (round_imm && (truncating || code.HasHostFeature(HostFeature::SSE41))) {
             const Xbyak::Xmm src = ctx.reg_alloc.UseScratchXmm(args[0]);
             const Xbyak::Reg64 result = ctx.reg_alloc.ScratchGpr().cvt64();
 
@@ -1480,14 +1483,19 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                     code.mulsd(src, code.MConst(xword, scale_factor));
                 }
 
-                code.roundsd(src, src, *round_imm);
+                if (!truncating) {
+                    code.roundsd(src, src, *round_imm);
+                }
             } else {
                 if (fbits != 0) {
                     const u32 scale_factor = static_cast<u32>((fbits + 127) << 23);
                     code.mulss(src, code.MConst(xword, scale_factor));
                 }
 
-                code.roundss(src, src, *round_imm);
+                if (!truncating) {
+                    code.roundss(src, src, *round_imm);
+                }
+
                 code.cvtss2sd(src, src);
             }
 
