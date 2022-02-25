@@ -305,6 +305,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         target_sources(dynarmic PRIVATE
             backend/x64/a32_emit_x64.cpp
             backend/x64/a32_emit_x64.h
+            backend/x64/a32_emit_x64_memory.cpp
             backend/x64/a32_interface.cpp
             backend/x64/a32_jitstate.cpp
             backend/x64/a32_jitstate.h
@@ -315,6 +316,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         target_sources(dynarmic PRIVATE
             backend/x64/a64_emit_x64.cpp
             backend/x64/a64_emit_x64.h
+            backend/x64/a64_emit_x64_memory.cpp
             backend/x64/a64_interface.cpp
             backend/x64/a64_jitstate.cpp
             backend/x64/a64_jitstate.h
