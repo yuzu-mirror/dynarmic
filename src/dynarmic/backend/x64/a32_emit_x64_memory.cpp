@@ -53,6 +53,7 @@ void A32EmitX64::GenFastmemFallbacks() {
                     code.mov(Xbyak::Reg64{value_idx}, code.ABI_RETURN);
                 }
                 ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
+                code.ZeroExtendFrom(bitsize, Xbyak::Reg64{value_idx});
                 code.ret();
                 PerfMapRegister(read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a32_read_fallback_{}", bitsize));
             }
