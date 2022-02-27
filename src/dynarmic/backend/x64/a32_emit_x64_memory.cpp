@@ -243,6 +243,7 @@ void A32EmitX64::EmitMemoryRead(A32EmitContext& ctx, IR::Inst* inst) {
         // Neither fastmem nor page table: Use callbacks
         ctx.reg_alloc.HostCall(inst, {}, args[0]);
         Devirtualize<callback>(conf.callbacks).EmitCall(code);
+        code.ZeroExtendFrom(bitsize, code.ABI_RETURN);
         return;
     }
 
@@ -386,6 +387,7 @@ void A32EmitX64::ExclusiveReadMemory(A32EmitContext& ctx, IR::Inst* inst) {
                 return (conf.callbacks->*callback)(vaddr);
             });
         });
+    code.ZeroExtendFrom(bitsize, code.ABI_RETURN);
 }
 
 template<size_t bitsize, auto callback>

@@ -406,6 +406,7 @@ void A64EmitX64::EmitMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
         } else {
             ctx.reg_alloc.HostCall(inst, {}, args[0]);
             Devirtualize<callback>(conf.callbacks).EmitCall(code);
+            code.ZeroExtendFrom(bitsize, code.ABI_RETURN);
         }
         return;
     }
@@ -574,6 +575,7 @@ void A64EmitX64::EmitExclusiveReadMemory(A64EmitContext& ctx, IR::Inst* inst) {
                     return (conf.callbacks->*callback)(vaddr);
                 });
             });
+        code.ZeroExtendFrom(bitsize, code.ABI_RETURN);
     } else {
         const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
         ctx.reg_alloc.Use(args[0], ABI_PARAM2);
