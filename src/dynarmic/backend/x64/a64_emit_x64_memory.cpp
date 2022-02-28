@@ -167,7 +167,7 @@ void A64EmitX64::GenFastmemFallbacks() {
 
             code.align();
             exclusive_write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
-            ABI_PushCallerSaveRegistersAndAdjustStack(code);
+            ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
             if (value_idx != 1) {
                 code.movaps(xmm1, Xbyak::Xmm{value_idx});
             }
@@ -183,7 +183,7 @@ void A64EmitX64::GenFastmemFallbacks() {
                 code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
             }
             code.call(memory_exclusive_write_128);
-            ABI_PopCallerSaveRegistersAndAdjustStack(code);
+            ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
             code.ret();
             PerfMapRegister(exclusive_write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)], code.getCurr(), "a64_write_fallback_128");
 
