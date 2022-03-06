@@ -227,6 +227,7 @@ void A64EmitX64::GenFastmemFallbacks() {
                         code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
                     }
                 }
+                code.ZeroExtendFrom(bitsize, code.ABI_PARAM3);
                 callback.EmitCall(code);
                 ABI_PopCallerSaveRegistersAndAdjustStack(code);
                 code.ret();
@@ -252,7 +253,9 @@ void A64EmitX64::GenFastmemFallbacks() {
                         code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
                     }
                 }
+                code.ZeroExtendFrom(bitsize, code.ABI_PARAM3);
                 code.mov(code.ABI_PARAM4, rax);
+                code.ZeroExtendFrom(bitsize, code.ABI_PARAM4);
                 callback.EmitCall(code);
                 ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
                 code.ret();
