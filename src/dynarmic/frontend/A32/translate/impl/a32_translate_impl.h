@@ -493,6 +493,7 @@ struct TranslatorVisitor final {
     bool thumb32_STMDB(bool W, Reg n, Imm<15> reg_list);
 
     // thumb32 load/store dual, load/store exclusive, table branch instructions
+    bool thumb32_LDA(Reg n, Reg t);
     bool thumb32_LDRD_imm_1(bool U, Reg n, Reg t, Reg t2, Imm<8> imm8);
     bool thumb32_LDRD_imm_2(bool U, bool W, Reg n, Reg t, Reg t2, Imm<8> imm8);
     bool thumb32_LDRD_lit_1(bool U, Reg t, Reg t2, Imm<8> imm8);
@@ -503,6 +504,7 @@ struct TranslatorVisitor final {
     bool thumb32_LDREXD(Reg n, Reg t, Reg t2);
     bool thumb32_LDREXB(Reg n, Reg t);
     bool thumb32_LDREXH(Reg n, Reg t);
+    bool thumb32_STL(Reg n, Reg t);
     bool thumb32_STREX(Reg n, Reg t, Reg d, Imm<8> imm8);
     bool thumb32_STREXB(Reg n, Reg t, Reg d);
     bool thumb32_STREXD(Reg n, Reg t, Reg t2, Reg d);
