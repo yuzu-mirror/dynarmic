@@ -50,6 +50,8 @@ INST(asimd_VPMAX_float,     "VPMAX (floating-point)",   "111100110D0znnnndddd111
 INST(asimd_VPMIN_float,     "VPMIN (floating-point)",   "111100110D1znnnndddd1111NQM0mmmm") // ASIMD
 INST(asimd_VRECPS,          "VRECPS",                   "111100100D0znnnndddd1111NQM1mmmm") // ASIMD
 INST(asimd_VRSQRTS,         "VRSQRTS",                  "111100100D1znnnndddd1111NQM1mmmm") // ASIMD
+INST(v8_SHA256H,            "SHA256H",                  "111100110D00nnnndddd1100NQM0mmmm") // v8
+INST(v8_SHA256H2,           "SHA256H2",                 "111100110D01nnnndddd1100NQM0mmmm") // v8
 
 // Three registers of different lengths
 INST(asimd_VADDL,           "VADDL/VADDW",              "1111001U1Dzznnnndddd000oN0M0mmmm") // ASIMD
