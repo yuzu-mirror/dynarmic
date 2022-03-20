@@ -146,7 +146,7 @@ INST(v8_AESIMC,             "AESIMC",                   "111100111D11zz00dddd001
 INST(arm_UDF,               "UNALLOCATED",              "111100111-11--01----001010-0----") // v8
 INST(arm_UDF,               "UNALLOCATED (SHA1H)",      "111100111-11--01----001011-0----") // v8
 INST(arm_UDF,               "UNALLOCATED (SHA1SU1)",    "111100111-11--10----001110-0----") // v8
-INST(arm_UDF,               "UNALLOCATED (SHA256SU0)",  "111100111-11--10----001111-0----") // v8
+INST(v8_SHA256SU0,          "SHA256SU0",                "111100111D11zz10dddd001111M0mmmm") // v8
 
 // One register and modified immediate
 INST(asimd_VMOV_imm,        "VBIC, VMOV, VMVN, VORR (immediate)",  "1111001a1D000bcdVVVVmmmm0Qo1efgh") // ASIMD
