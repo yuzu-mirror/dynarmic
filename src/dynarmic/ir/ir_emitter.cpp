@@ -907,6 +907,14 @@ U128 IREmitter::SHA256Hash(const U128& x, const U128& y, const U128& w, bool par
     return Inst<U128>(Opcode::SHA256Hash, x, y, w, Imm1(part1));
 }
 
+U128 IREmitter::SHA256MessageSchedule0(const U128& x, const U128& y) {
+    return Inst<U128>(Opcode::SHA256MessageSchedule0, x, y);
+}
+
+U128 IREmitter::SHA256MessageSchedule1(const U128& x, const U128& y, const U128& z) {
+    return Inst<U128>(Opcode::SHA256MessageSchedule1, x, y, z);
+}
+
 UAny IREmitter::VectorGetElement(size_t esize, const U128& a, size_t index) {
     ASSERT_MSG(esize * index < 128, "Invalid index");
     switch (esize) {

@@ -114,72 +114,21 @@ bool TranslatorVisitor::SHA1H(Vec Vn, Vec Vd) {
 }
 
 bool TranslatorVisitor::SHA256SU0(Vec Vn, Vec Vd) {
-    const IR::U128 d = ir.GetQ(Vd);
-    const IR::U128 n = ir.GetQ(Vn);
+    const IR::U128 x = ir.GetQ(Vd);
+    const IR::U128 y = ir.GetQ(Vn);
 
-    const IR::U128 t = [&] {
-        // Shuffle the upper three elements down: [3, 2, 1, 0] -> [0, 3, 2, 1]
-        const IR::U128 shuffled = ir.VectorShuffleWords(d, 0b00111001);
-
-        return ir.VectorSetElement(32, shuffled, 3, ir.VectorGetElement(32, n, 0));
-    }();
-
-    IR::U128 result = ir.ZeroVector();
-    for (size_t i = 0; i < 4; i++) {
-        const IR::U32 modified_element = [&] {
-            const IR::U32 element = ir.VectorGetElement(32, t, i);
-            const IR::U32 tmp1 = ir.RotateRight(element, ir.Imm8(7));
-            const IR::U32 tmp2 = ir.RotateRight(element, ir.Imm8(18));
-            const IR::U32 tmp3 = ir.LogicalShiftRight(element, ir.Imm8(3));
-
-            return ir.Eor(tmp1, ir.Eor(tmp2, tmp3));
-        }();
-
-        const IR::U32 d_element = ir.VectorGetElement(32, d, i);
-        result = ir.VectorSetElement(32, result, i, ir.Add(modified_element, d_element));
-    }
+    const IR::U128 result = ir.SHA256MessageSchedule0(x, y);
 
     ir.SetQ(Vd, result);
     return true;
 }
 
 bool TranslatorVisitor::SHA256SU1(Vec Vm, Vec Vn, Vec Vd) {
-    const IR::U128 d = ir.GetQ(Vd);
-    const IR::U128 m = ir.GetQ(Vm);
-    const IR::U128 n = ir.GetQ(Vn);
+    const IR::U128 x = ir.GetQ(Vd);
+    const IR::U128 y = ir.GetQ(Vn);
+    const IR::U128 z = ir.GetQ(Vm);
 
-    const IR::U128 T0 = [&] {
-        const IR::U32 low_m = ir.VectorGetElement(32, m, 0);
-        const IR::U128 shuffled_n = ir.VectorShuffleWords(n, 0b00111001);
-
-        return ir.VectorSetElement(32, shuffled_n, 3, low_m);
-    }();
-
-    const IR::U128 lower_half = [&] {
-        const IR::U128 T = ir.VectorShuffleWords(m, 0b01001110);
-        const IR::U128 tmp1 = ir.VectorRotateRight(32, T, 17);
-        const IR::U128 tmp2 = ir.VectorRotateRight(32, T, 19);
-        const IR::U128 tmp3 = ir.VectorLogicalShiftRight(32, T, 10);
-        const IR::U128 tmp4 = ir.VectorEor(tmp1, ir.VectorEor(tmp2, tmp3));
-        const IR::U128 tmp5 = ir.VectorAdd(32, tmp4, ir.VectorAdd(32, d, T0));
-        return ir.VectorZeroUpper(tmp5);
-    }();
-
-    const IR::U64 upper_half = [&] {
-        const IR::U128 tmp1 = ir.VectorRotateRight(32, lower_half, 17);
-        const IR::U128 tmp2 = ir.VectorRotateRight(32, lower_half, 19);
-        const IR::U128 tmp3 = ir.VectorLogicalShiftRight(32, lower_half, 10);
-        const IR::U128 tmp4 = ir.VectorEor(tmp1, ir.VectorEor(tmp2, tmp3));
-
-        // Shuffle the top two 32-bit elements downwards [3, 2, 1, 0] -> [1, 0, 3, 2]
-        const IR::U128 shuffled_d = ir.VectorShuffleWords(d, 0b01001110);
-        const IR::U128 shuffled_T0 = ir.VectorShuffleWords(T0, 0b01001110);
-
-        const IR::U128 tmp5 = ir.VectorAdd(32, tmp4, ir.VectorAdd(32, shuffled_d, shuffled_T0));
-        return ir.VectorGetElement(64, tmp5, 0);
-    }();
-
-    const IR::U128 result = ir.VectorSetElement(64, lower_half, 1, upper_half);
+    const IR::U128 result = ir.SHA256MessageSchedule1(x, y, z);
 
     ir.SetQ(Vd, result);
     return true;

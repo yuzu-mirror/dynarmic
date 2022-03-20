@@ -48,4 +48,34 @@ void EmitX64::EmitSHA256Hash(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, y);
 }
 
+void EmitX64::EmitSHA256MessageSchedule0(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ASSERT(code.HasHostFeature(HostFeature::SHA));
+
+    const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm y = ctx.reg_alloc.UseXmm(args[1]);
+
+    code.sha256msg1(x, y);
+
+    ctx.reg_alloc.DefineValue(inst, x);
+}
+
+void EmitX64::EmitSHA256MessageSchedule1(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ASSERT(code.HasHostFeature(HostFeature::SHA));
+
+    const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm y = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm z = ctx.reg_alloc.UseXmm(args[2]);
+
+    code.movaps(xmm0, z);
+    code.palignr(xmm0, y, 4);
+    code.paddd(x, xmm0);
+    code.sha256msg2(x, z);
+
+    ctx.reg_alloc.DefineValue(inst, x);
+}
+
 }  // namespace Dynarmic::Backend::X64

@@ -274,6 +274,8 @@ OPCODE(SM4AccessSubstitutionBox,                            U8,             U8  
 
 // SHA instructions
 OPCODE(SHA256Hash,                                          U128,           U128,           U128,           U128,           U1              )
+OPCODE(SHA256MessageSchedule0,                              U128,           U128,           U128                                            )
+OPCODE(SHA256MessageSchedule1,                              U128,           U128,           U128,           U128                            )
 
 // Vector instructions
 OPCODE(VectorGetElement8,                                   U8,             U128,           U8                                              )
