@@ -390,7 +390,7 @@ target_link_libraries(dynarmic
         tsl::robin_map
         $<BUILD_INTERFACE:xbyak>
         $<BUILD_INTERFACE:Zydis>
-        $<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>
+        "$<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>"
 )
 if (DYNARMIC_ENABLE_CPU_FEATURE_DETECTION)
     target_compile_definitions(dynarmic PRIVATE DYNARMIC_ENABLE_CPU_FEATURE_DETECTION=1)
