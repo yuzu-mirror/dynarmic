@@ -302,49 +302,6 @@ FakeCall A64EmitX64::FastmemCallback(u64 rip_) {
 
 namespace {
 
-void EmitDetectMisaignedVAddr(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr, Xbyak::Reg64 tmp) {
-    if (bitsize == 8 || (ctx.conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
-        return;
-    }
-
-    const u32 align_mask = [bitsize]() -> u32 {
-        switch (bitsize) {
-        case 16:
-            return 0b1;
-        case 32:
-            return 0b11;
-        case 64:
-            return 0b111;
-        case 128:
-            return 0b1111;
-        }
-        UNREACHABLE();
-    }();
-
-    code.test(vaddr, align_mask);
-
-    if (!ctx.conf.only_detect_misalignment_via_page_table_on_page_boundary) {
-        code.jnz(abort, code.T_NEAR);
-        return;
-    }
-
-    const u32 page_align_mask = static_cast<u32>(page_size - 1) & ~align_mask;
-
-    Xbyak::Label detect_boundary, resume;
-
-    code.jnz(detect_boundary, code.T_NEAR);
-    code.L(resume);
-
-    code.SwitchToFarCode();
-    code.L(detect_boundary);
-    code.mov(tmp, vaddr);
-    code.and_(tmp, page_align_mask);
-    code.cmp(tmp, page_align_mask);
-    code.jne(resume, code.T_NEAR);
-    // NOTE: We expect to fallthrough into abort code here.
-    code.SwitchToNearCode();
-}
-
 Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
     const size_t valid_page_index_bits = ctx.conf.page_table_address_space_bits - page_bits;
     const size_t unused_top_bits = 64 - ctx.conf.page_table_address_space_bits;
@@ -352,7 +309,7 @@ Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A64EmitContext& ctx, size_t bit
     const Xbyak::Reg64 page = ctx.reg_alloc.ScratchGpr();
     const Xbyak::Reg64 tmp = ctx.conf.absolute_offset_page_table ? page : ctx.reg_alloc.ScratchGpr();
 
-    EmitDetectMisaignedVAddr(code, ctx, bitsize, abort, vaddr, tmp);
+    EmitDetectMisalignedVAddr(code, ctx, bitsize, abort, vaddr, tmp);
 
     if (unused_top_bits == 0) {
         code.mov(tmp, vaddr);
