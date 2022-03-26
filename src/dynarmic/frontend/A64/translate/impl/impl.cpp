@@ -217,74 +217,74 @@ void TranslatorVisitor::Vpart_scalar(size_t bitsize, Vec vec, size_t part, IR::U
     }
 }
 
-IR::UAnyU128 TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType /*acc_type*/) {
+IR::UAnyU128 TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType acc_type) {
     switch (bytesize) {
     case 1:
-        return ir.ReadMemory8(address);
+        return ir.ReadMemory8(address, acc_type);
     case 2:
-        return ir.ReadMemory16(address);
+        return ir.ReadMemory16(address, acc_type);
     case 4:
-        return ir.ReadMemory32(address);
+        return ir.ReadMemory32(address, acc_type);
     case 8:
-        return ir.ReadMemory64(address);
+        return ir.ReadMemory64(address, acc_type);
     case 16:
-        return ir.ReadMemory128(address);
+        return ir.ReadMemory128(address, acc_type);
     default:
         ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
     }
 }
 
-void TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType /*acc_type*/, IR::UAnyU128 value) {
+void TranslatorVisitor::Mem(IR::U64 address, size_t bytesize, IR::AccType acc_type, IR::UAnyU128 value) {
     switch (bytesize) {
     case 1:
-        ir.WriteMemory8(address, value);
+        ir.WriteMemory8(address, value, acc_type);
         return;
     case 2:
-        ir.WriteMemory16(address, value);
+        ir.WriteMemory16(address, value, acc_type);
         return;
     case 4:
-        ir.WriteMemory32(address, value);
+        ir.WriteMemory32(address, value, acc_type);
         return;
     case 8:
-        ir.WriteMemory64(address, value);
+        ir.WriteMemory64(address, value, acc_type);
         return;
     case 16:
-        ir.WriteMemory128(address, value);
+        ir.WriteMemory128(address, value, acc_type);
         return;
     default:
         ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
     }
 }
 
-IR::UAnyU128 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType /*acctype*/) {
+IR::UAnyU128 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType acc_type) {
     switch (bytesize) {
     case 1:
-        return ir.ExclusiveReadMemory8(address);
+        return ir.ExclusiveReadMemory8(address, acc_type);
     case 2:
-        return ir.ExclusiveReadMemory16(address);
+        return ir.ExclusiveReadMemory16(address, acc_type);
     case 4:
-        return ir.ExclusiveReadMemory32(address);
+        return ir.ExclusiveReadMemory32(address, acc_type);
     case 8:
-        return ir.ExclusiveReadMemory64(address);
+        return ir.ExclusiveReadMemory64(address, acc_type);
     case 16:
-        return ir.ExclusiveReadMemory128(address);
+        return ir.ExclusiveReadMemory128(address, acc_type);
     default:
         ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
     }
 }
 
-IR::U32 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType /*acctype*/, IR::UAnyU128 value) {
+IR::U32 TranslatorVisitor::ExclusiveMem(IR::U64 address, size_t bytesize, IR::AccType acc_type, IR::UAnyU128 value) {
     switch (bytesize) {
     case 1:
-        return ir.ExclusiveWriteMemory8(address, value);
+        return ir.ExclusiveWriteMemory8(address, value, acc_type);
     case 2:
-        return ir.ExclusiveWriteMemory16(address, value);
+        return ir.ExclusiveWriteMemory16(address, value, acc_type);
     case 4:
-        return ir.ExclusiveWriteMemory32(address, value);
+        return ir.ExclusiveWriteMemory32(address, value, acc_type);
     case 8:
-        return ir.ExclusiveWriteMemory64(address, value);
+        return ir.ExclusiveWriteMemory64(address, value, acc_type);
     case 16:
-        return ir.ExclusiveWriteMemory128(address, value);
+        return ir.ExclusiveWriteMemory128(address, value, acc_type);
     default:
         ASSERT_FALSE("Invalid bytesize parameter {}", bytesize);
     }
