@@ -149,6 +149,54 @@ template<>
     return page + tmp;
 }
 
+template<typename EmitContext>
+Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr, bool& require_abort_handling, std::optional<Xbyak::Reg64> tmp = std::nullopt);
+
+template<>
+[[maybe_unused]] Xbyak::RegExp EmitFastmemVAddr<A32EmitContext>(BlockOfCode&, A32EmitContext&, Xbyak::Label&, Xbyak::Reg64 vaddr, bool&, std::optional<Xbyak::Reg64>) {
+    return r13 + vaddr;
+}
+
+template<>
+[[maybe_unused]] Xbyak::RegExp EmitFastmemVAddr<A64EmitContext>(BlockOfCode& code, A64EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr, bool& require_abort_handling, std::optional<Xbyak::Reg64> tmp) {
+    const size_t unused_top_bits = 64 - ctx.conf.fastmem_address_space_bits;
+
+    if (unused_top_bits == 0) {
+        return r13 + vaddr;
+    } else if (ctx.conf.silently_mirror_fastmem) {
+        if (!tmp) {
+            tmp = ctx.reg_alloc.ScratchGpr();
+        }
+        if (unused_top_bits < 32) {
+            code.mov(*tmp, vaddr);
+            code.shl(*tmp, int(unused_top_bits));
+            code.shr(*tmp, int(unused_top_bits));
+        } else if (unused_top_bits == 32) {
+            code.mov(tmp->cvt32(), vaddr.cvt32());
+        } else {
+            code.mov(tmp->cvt32(), vaddr.cvt32());
+            code.and_(*tmp, u32((1 << ctx.conf.fastmem_address_space_bits) - 1));
+        }
+        return r13 + *tmp;
+    } else {
+        if (ctx.conf.fastmem_address_space_bits < 32) {
+            code.test(vaddr, u32(-(1 << ctx.conf.fastmem_address_space_bits)));
+            code.jnz(abort, code.T_NEAR);
+            require_abort_handling = true;
+        } else {
+            // TODO: Consider having TEST as above but coalesce 64-bit constant in register allocator
+            if (!tmp) {
+                tmp = ctx.reg_alloc.ScratchGpr();
+            }
+            code.mov(*tmp, vaddr);
+            code.shr(*tmp, int(ctx.conf.fastmem_address_space_bits));
+            code.jnz(abort, code.T_NEAR);
+            require_abort_handling = true;
+        }
+        return r13 + vaddr;
+    }
+}
+
 template<typename UserConfig>
 void EmitExclusiveLock(BlockOfCode& code, const UserConfig& conf, Xbyak::Reg64 pointer, Xbyak::Reg32 tmp) {
     if (conf.HasOptimization(OptimizationFlag::Unsafe_IgnoreGlobalMonitor)) {

@@ -302,45 +302,6 @@ FakeCall A64EmitX64::FastmemCallback(u64 rip_) {
 
 namespace {
 
-Xbyak::RegExp EmitFastmemVAddr(BlockOfCode& code, A64EmitContext& ctx, Xbyak::Label& abort, Xbyak::Reg64 vaddr, bool& require_abort_handling, std::optional<Xbyak::Reg64> tmp = std::nullopt) {
-    const size_t unused_top_bits = 64 - ctx.conf.fastmem_address_space_bits;
-
-    if (unused_top_bits == 0) {
-        return r13 + vaddr;
-    } else if (ctx.conf.silently_mirror_fastmem) {
-        if (!tmp) {
-            tmp = ctx.reg_alloc.ScratchGpr();
-        }
-        if (unused_top_bits < 32) {
-            code.mov(*tmp, vaddr);
-            code.shl(*tmp, int(unused_top_bits));
-            code.shr(*tmp, int(unused_top_bits));
-        } else if (unused_top_bits == 32) {
-            code.mov(tmp->cvt32(), vaddr.cvt32());
-        } else {
-            code.mov(tmp->cvt32(), vaddr.cvt32());
-            code.and_(*tmp, u32((1 << ctx.conf.fastmem_address_space_bits) - 1));
-        }
-        return r13 + *tmp;
-    } else {
-        if (ctx.conf.fastmem_address_space_bits < 32) {
-            code.test(vaddr, u32(-(1 << ctx.conf.fastmem_address_space_bits)));
-            code.jnz(abort, code.T_NEAR);
-            require_abort_handling = true;
-        } else {
-            // TODO: Consider having TEST as above but coalesce 64-bit constant in register allocator
-            if (!tmp) {
-                tmp = ctx.reg_alloc.ScratchGpr();
-            }
-            code.mov(*tmp, vaddr);
-            code.shr(*tmp, int(ctx.conf.fastmem_address_space_bits));
-            code.jnz(abort, code.T_NEAR);
-            require_abort_handling = true;
-        }
-        return r13 + vaddr;
-    }
-}
-
 template<std::size_t bitsize>
 void EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::RegExp& addr) {
     switch (bitsize) {
