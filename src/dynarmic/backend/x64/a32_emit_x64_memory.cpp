@@ -160,31 +160,6 @@ FakeCall A32EmitX64::FastmemCallback(u64 rip_) {
 
 namespace {
 
-Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, A32EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
-    const Xbyak::Reg64 page = ctx.reg_alloc.ScratchGpr();
-    const Xbyak::Reg32 tmp = ctx.conf.absolute_offset_page_table ? page.cvt32() : ctx.reg_alloc.ScratchGpr().cvt32();
-
-    EmitDetectMisalignedVAddr(code, ctx, bitsize, abort, vaddr, tmp.cvt64());
-
-    // TODO: This code assumes vaddr has been zext from 32-bits to 64-bits.
-
-    code.mov(tmp, vaddr.cvt32());
-    code.shr(tmp, static_cast<int>(page_bits));
-    code.mov(page, qword[r14 + tmp.cvt64() * sizeof(void*)]);
-    if (ctx.conf.page_table_pointer_mask_bits == 0) {
-        code.test(page, page);
-    } else {
-        code.and_(page, ~u32(0) << ctx.conf.page_table_pointer_mask_bits);
-    }
-    code.jz(abort, code.T_NEAR);
-    if (ctx.conf.absolute_offset_page_table) {
-        return page + vaddr;
-    }
-    code.mov(tmp, vaddr.cvt32());
-    code.and_(tmp, static_cast<u32>(page_mask));
-    return page + tmp.cvt64();
-}
-
 template<std::size_t bitsize>
 void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, const Xbyak::RegExp& addr) {
     switch (bitsize) {

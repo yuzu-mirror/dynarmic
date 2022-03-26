@@ -5,6 +5,7 @@
 
 #include <xbyak/xbyak.h>
 
+#include "dynarmic/backend/x64/a32_emit_x64.h"
 #include "dynarmic/backend/x64/a64_emit_x64.h"
 #include "dynarmic/backend/x64/exclusive_monitor_friend.h"
 #include "dynarmic/common/spin_lock_x64.h"
@@ -63,6 +64,89 @@ void EmitDetectMisalignedVAddr(BlockOfCode& code, EmitContext& ctx, size_t bitsi
     code.jne(resume, code.T_NEAR);
     // NOTE: We expect to fallthrough into abort code here.
     code.SwitchToNearCode();
+}
+
+template<typename EmitContext>
+Xbyak::RegExp EmitVAddrLookup(BlockOfCode& code, EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr);
+
+template<>
+[[maybe_unused]] Xbyak::RegExp EmitVAddrLookup<A32EmitContext>(BlockOfCode& code, A32EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
+    const Xbyak::Reg64 page = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg32 tmp = ctx.conf.absolute_offset_page_table ? page.cvt32() : ctx.reg_alloc.ScratchGpr().cvt32();
+
+    EmitDetectMisalignedVAddr(code, ctx, bitsize, abort, vaddr, tmp.cvt64());
+
+    // TODO: This code assumes vaddr has been zext from 32-bits to 64-bits.
+
+    code.mov(tmp, vaddr.cvt32());
+    code.shr(tmp, static_cast<int>(page_bits));
+
+    code.mov(page, qword[r14 + tmp.cvt64() * sizeof(void*)]);
+    if (ctx.conf.page_table_pointer_mask_bits == 0) {
+        code.test(page, page);
+    } else {
+        code.and_(page, ~u32(0) << ctx.conf.page_table_pointer_mask_bits);
+    }
+    code.jz(abort, code.T_NEAR);
+    if (ctx.conf.absolute_offset_page_table) {
+        return page + vaddr;
+    }
+    code.mov(tmp, vaddr.cvt32());
+    code.and_(tmp, static_cast<u32>(page_mask));
+    return page + tmp.cvt64();
+}
+
+template<>
+[[maybe_unused]] Xbyak::RegExp EmitVAddrLookup<A64EmitContext>(BlockOfCode& code, A64EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg64 vaddr) {
+    const size_t valid_page_index_bits = ctx.conf.page_table_address_space_bits - page_bits;
+    const size_t unused_top_bits = 64 - ctx.conf.page_table_address_space_bits;
+
+    const Xbyak::Reg64 page = ctx.reg_alloc.ScratchGpr();
+    const Xbyak::Reg64 tmp = ctx.conf.absolute_offset_page_table ? page : ctx.reg_alloc.ScratchGpr();
+
+    EmitDetectMisalignedVAddr(code, ctx, bitsize, abort, vaddr, tmp);
+
+    if (unused_top_bits == 0) {
+        code.mov(tmp, vaddr);
+        code.shr(tmp, int(page_bits));
+    } else if (ctx.conf.silently_mirror_page_table) {
+        if (valid_page_index_bits >= 32) {
+            if (code.HasHostFeature(HostFeature::BMI2)) {
+                const Xbyak::Reg64 bit_count = ctx.reg_alloc.ScratchGpr();
+                code.mov(bit_count, unused_top_bits);
+                code.bzhi(tmp, vaddr, bit_count);
+                code.shr(tmp, int(page_bits));
+                ctx.reg_alloc.Release(bit_count);
+            } else {
+                code.mov(tmp, vaddr);
+                code.shl(tmp, int(unused_top_bits));
+                code.shr(tmp, int(unused_top_bits + page_bits));
+            }
+        } else {
+            code.mov(tmp, vaddr);
+            code.shr(tmp, int(page_bits));
+            code.and_(tmp, u32((1 << valid_page_index_bits) - 1));
+        }
+    } else {
+        ASSERT(valid_page_index_bits < 32);
+        code.mov(tmp, vaddr);
+        code.shr(tmp, int(page_bits));
+        code.test(tmp, u32(-(1 << valid_page_index_bits)));
+        code.jnz(abort, code.T_NEAR);
+    }
+    code.mov(page, qword[r14 + tmp * sizeof(void*)]);
+    if (ctx.conf.page_table_pointer_mask_bits == 0) {
+        code.test(page, page);
+    } else {
+        code.and_(page, ~u32(0) << ctx.conf.page_table_pointer_mask_bits);
+    }
+    code.jz(abort, code.T_NEAR);
+    if (ctx.conf.absolute_offset_page_table) {
+        return page + vaddr;
+    }
+    code.mov(tmp, vaddr);
+    code.and_(tmp, static_cast<u32>(page_mask));
+    return page + tmp;
 }
 
 template<typename UserConfig>
