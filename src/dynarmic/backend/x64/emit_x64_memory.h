@@ -16,6 +16,10 @@ namespace {
 
 using namespace Xbyak::util;
 
+constexpr size_t page_bits = 12;
+constexpr size_t page_size = 1 << page_bits;
+constexpr size_t page_mask = (1 << page_bits) - 1;
+
 template<typename UserConfig>
 void EmitExclusiveLock(BlockOfCode& code, const UserConfig& conf, Xbyak::Reg64 pointer, Xbyak::Reg32 tmp) {
     if (conf.HasOptimization(OptimizationFlag::Unsafe_IgnoreGlobalMonitor)) {

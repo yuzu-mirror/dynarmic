@@ -160,10 +160,6 @@ FakeCall A32EmitX64::FastmemCallback(u64 rip_) {
 
 namespace {
 
-constexpr size_t page_bits = 12;
-constexpr size_t page_size = 1 << page_bits;
-constexpr size_t page_mask = (1 << page_bits) - 1;
-
 void EmitDetectMisaignedVAddr(BlockOfCode& code, A32EmitContext& ctx, size_t bitsize, Xbyak::Label& abort, Xbyak::Reg32 vaddr, Xbyak::Reg32 tmp) {
     if (bitsize == 8 || (ctx.conf.detect_misaligned_access_via_page_table & bitsize) == 0) {
         return;
