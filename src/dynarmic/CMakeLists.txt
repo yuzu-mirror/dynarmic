@@ -75,6 +75,7 @@ add_library(dynarmic
     frontend/imm.h
     interface/exclusive_monitor.h
     interface/optimization_flags.h
+    ir/acc_type.h
     ir/basic_block.cpp
     ir/basic_block.h
     ir/cond.h
