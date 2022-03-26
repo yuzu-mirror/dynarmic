@@ -23,6 +23,7 @@ enum class AccType {
     IC,
     DCZVA,
     AT,
+    SWAP,  // TODO: Remove
 };
 
 }  // namespace Dynarmic::IR
