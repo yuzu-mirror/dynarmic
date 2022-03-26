@@ -300,56 +300,6 @@ FakeCall A64EmitX64::FastmemCallback(u64 rip_) {
     };
 }
 
-namespace {
-
-template<std::size_t bitsize>
-void EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::RegExp& addr) {
-    switch (bitsize) {
-    case 8:
-        code.movzx(Xbyak::Reg32{value_idx}, code.byte[addr]);
-        return;
-    case 16:
-        code.movzx(Xbyak::Reg32{value_idx}, word[addr]);
-        return;
-    case 32:
-        code.mov(Xbyak::Reg32{value_idx}, dword[addr]);
-        return;
-    case 64:
-        code.mov(Xbyak::Reg64{value_idx}, qword[addr]);
-        return;
-    case 128:
-        code.movups(Xbyak::Xmm{value_idx}, xword[addr]);
-        return;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-    }
-}
-
-template<std::size_t bitsize>
-void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, int value_idx) {
-    switch (bitsize) {
-    case 8:
-        code.mov(code.byte[addr], Xbyak::Reg64{value_idx}.cvt8());
-        return;
-    case 16:
-        code.mov(word[addr], Xbyak::Reg16{value_idx});
-        return;
-    case 32:
-        code.mov(dword[addr], Xbyak::Reg32{value_idx});
-        return;
-    case 64:
-        code.mov(qword[addr], Xbyak::Reg64{value_idx});
-        return;
-    case 128:
-        code.movups(xword[addr], Xbyak::Xmm{value_idx});
-        return;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-    }
-}
-
-}  // namespace
-
 template<std::size_t bitsize, auto callback>
 void A64EmitX64::EmitMemoryRead(A64EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);

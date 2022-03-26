@@ -158,50 +158,6 @@ FakeCall A32EmitX64::FastmemCallback(u64 rip_) {
     };
 }
 
-namespace {
-
-template<std::size_t bitsize>
-void EmitReadMemoryMov(BlockOfCode& code, const Xbyak::Reg64& value, const Xbyak::RegExp& addr) {
-    switch (bitsize) {
-    case 8:
-        code.movzx(value.cvt32(), code.byte[addr]);
-        return;
-    case 16:
-        code.movzx(value.cvt32(), word[addr]);
-        return;
-    case 32:
-        code.mov(value.cvt32(), dword[addr]);
-        return;
-    case 64:
-        code.mov(value, qword[addr]);
-        return;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-    }
-}
-
-template<std::size_t bitsize>
-void EmitWriteMemoryMov(BlockOfCode& code, const Xbyak::RegExp& addr, const Xbyak::Reg64& value) {
-    switch (bitsize) {
-    case 8:
-        code.mov(code.byte[addr], value.cvt8());
-        return;
-    case 16:
-        code.mov(word[addr], value.cvt16());
-        return;
-    case 32:
-        code.mov(dword[addr], value.cvt32());
-        return;
-    case 64:
-        code.mov(qword[addr], value);
-        return;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-    }
-}
-
-}  // anonymous namespace
-
 template<std::size_t bitsize, auto callback>
 void A32EmitX64::EmitMemoryRead(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -225,7 +181,7 @@ void A32EmitX64::EmitMemoryRead(A32EmitContext& ctx, IR::Inst* inst) {
         const auto src_ptr = r13 + vaddr;
 
         const auto location = code.getCurr();
-        EmitReadMemoryMov<bitsize>(code, value, src_ptr);
+        EmitReadMemoryMov<bitsize>(code, value.getIdx(), src_ptr);
 
         fastmem_patch_info.emplace(
             Common::BitCast<u64>(location),
@@ -245,7 +201,7 @@ void A32EmitX64::EmitMemoryRead(A32EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Label abort, end;
 
     const auto src_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
-    EmitReadMemoryMov<bitsize>(code, value, src_ptr);
+    EmitReadMemoryMov<bitsize>(code, value.getIdx(), src_ptr);
     code.L(end);
 
     code.SwitchToFarCode();
@@ -279,7 +235,7 @@ void A32EmitX64::EmitMemoryWrite(A32EmitContext& ctx, IR::Inst* inst) {
         const auto dest_ptr = r13 + vaddr;
 
         const auto location = code.getCurr();
-        EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
+        EmitWriteMemoryMov<bitsize>(code, dest_ptr, value.getIdx());
 
         fastmem_patch_info.emplace(
             Common::BitCast<u64>(location),
@@ -298,7 +254,7 @@ void A32EmitX64::EmitMemoryWrite(A32EmitContext& ctx, IR::Inst* inst) {
     Xbyak::Label abort, end;
 
     const auto dest_ptr = EmitVAddrLookup(code, ctx, bitsize, abort, vaddr);
-    EmitWriteMemoryMov<bitsize>(code, dest_ptr, value);
+    EmitWriteMemoryMov<bitsize>(code, dest_ptr, value.getIdx());
     code.L(end);
 
     code.SwitchToFarCode();
@@ -418,7 +374,7 @@ void A32EmitX64::ExclusiveReadMemoryInline(A32EmitContext& ctx, IR::Inst* inst) 
         const auto src_ptr = r13 + vaddr;
 
         const auto location = code.getCurr();
-        EmitReadMemoryMov<bitsize>(code, value, src_ptr);
+        EmitReadMemoryMov<bitsize>(code, value.getIdx(), src_ptr);
 
         fastmem_patch_info.emplace(
             Common::BitCast<u64>(location),
@@ -435,7 +391,7 @@ void A32EmitX64::ExclusiveReadMemoryInline(A32EmitContext& ctx, IR::Inst* inst) 
     }
 
     code.mov(tmp, Common::BitCast<u64>(GetExclusiveMonitorValuePointer(conf.global_monitor, conf.processor_id)));
-    EmitWriteMemoryMov<bitsize>(code, tmp, value);
+    EmitWriteMemoryMov<bitsize>(code, tmp, value.getIdx());
 
     EmitExclusiveUnlock(code, conf, tmp, tmp2.cvt32());
 
@@ -476,7 +432,7 @@ void A32EmitX64::ExclusiveWriteMemoryInline(A32EmitContext& ctx, IR::Inst* inst)
     code.mov(code.byte[r15 + offsetof(A32JitState, exclusive_state)], u8(0));
     code.mov(tmp, Common::BitCast<u64>(GetExclusiveMonitorValuePointer(conf.global_monitor, conf.processor_id)));
 
-    EmitReadMemoryMov<bitsize>(code, rax, tmp);
+    EmitReadMemoryMov<bitsize>(code, rax.getIdx(), tmp);
 
     const auto fastmem_marker = ShouldFastmem(ctx, inst);
     if (fastmem_marker) {
