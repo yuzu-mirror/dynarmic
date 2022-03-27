@@ -9,6 +9,7 @@
 #include <type_traits>
 
 #include <mp/traits/function_info.h>
+#include <xbyak/xbyak.h>
 
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
@@ -565,22 +566,25 @@ void EmitX64::EmitVectorArithmeticVShift16(EmitContext& ctx, IR::Inst* inst) {
 
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm left_shift = ctx.reg_alloc.UseScratchXmm(args[1]);
-        const Xbyak::Xmm right_shift = ctx.reg_alloc.ScratchXmm();
-        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm right_shift = xmm16;
+        const Xbyak::Xmm tmp = xmm17;
 
-        code.vmovdqa(tmp, code.MConst(xword, 0x00FF00FF00FF00FF, 0x00FF00FF00FF00FF));
-        code.vpxor(right_shift, right_shift, right_shift);
+        code.vmovdqa32(tmp, code.MConst(xword, 0x00FF00FF00FF00FF, 0x00FF00FF00FF00FF));
+        code.vpxord(right_shift, right_shift, right_shift);
         code.vpsubw(right_shift, right_shift, left_shift);
 
         code.vpsllw(xmm0, left_shift, 8);
         code.vpsraw(xmm0, xmm0, 15);
 
-        code.vpand(right_shift, right_shift, tmp);
-        code.vpand(left_shift, left_shift, tmp);
+        const Xbyak::Opmask mask = k1;
+        code.vpmovb2m(mask, xmm0);
+
+        code.vpandd(right_shift, right_shift, tmp);
+        code.vpandd(left_shift, left_shift, tmp);
 
         code.vpsravw(tmp, result, right_shift);
         code.vpsllvw(result, result, left_shift);
-        code.pblendvb(result, tmp);
+        code.vpblendmb(result | mask, result, tmp);
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -628,21 +632,23 @@ void EmitX64::EmitVectorArithmeticVShift64(EmitContext& ctx, IR::Inst* inst) {
 
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm left_shift = ctx.reg_alloc.UseScratchXmm(args[1]);
-        const Xbyak::Xmm right_shift = ctx.reg_alloc.ScratchXmm();
-        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm right_shift = xmm16;
+        const Xbyak::Xmm tmp = xmm17;
 
-        code.vmovdqa(tmp, code.MConst(xword, 0x00000000000000FF, 0x00000000000000FF));
-        code.vpxor(right_shift, right_shift, right_shift);
+        code.vmovdqa32(tmp, code.MConst(xword, 0x00000000000000FF, 0x00000000000000FF));
+        code.vpxorq(right_shift, right_shift, right_shift);
         code.vpsubq(right_shift, right_shift, left_shift);
 
         code.vpsllq(xmm0, left_shift, 56);
+        const Xbyak::Opmask mask = k1;
+        code.vpmovq2m(mask, xmm0);
 
-        code.vpand(right_shift, right_shift, tmp);
-        code.vpand(left_shift, left_shift, tmp);
+        code.vpandq(right_shift, right_shift, tmp);
+        code.vpandq(left_shift, left_shift, tmp);
 
         code.vpsravq(tmp, result, right_shift);
         code.vpsllvq(result, result, left_shift);
-        code.blendvpd(result, tmp);
+        code.vpblendmq(result | mask, result, tmp);
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -1741,18 +1747,18 @@ void EmitX64::EmitVectorLogicalVShift16(EmitContext& ctx, IR::Inst* inst) {
 
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
         const Xbyak::Xmm left_shift = ctx.reg_alloc.UseScratchXmm(args[1]);
-        const Xbyak::Xmm right_shift = ctx.reg_alloc.ScratchXmm();
-        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm right_shift = xmm16;
+        const Xbyak::Xmm tmp = xmm17;
 
-        code.vmovdqa(tmp, code.MConst(xword, 0x00FF00FF00FF00FF, 0x00FF00FF00FF00FF));
-        code.vpxor(right_shift, right_shift, right_shift);
+        code.vmovdqa32(tmp, code.MConst(xword, 0x00FF00FF00FF00FF, 0x00FF00FF00FF00FF));
+        code.vpxord(right_shift, right_shift, right_shift);
         code.vpsubw(right_shift, right_shift, left_shift);
-        code.vpand(left_shift, left_shift, tmp);
-        code.vpand(right_shift, right_shift, tmp);
+        code.vpandd(left_shift, left_shift, tmp);
+        code.vpandd(right_shift, right_shift, tmp);
 
         code.vpsllvw(tmp, result, left_shift);
         code.vpsrlvw(result, result, right_shift);
-        code.vpor(result, result, tmp);
+        code.vpord(result, result, tmp);
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -2500,9 +2506,9 @@ void EmitX64::EmitVectorPairedAddSignedWiden32(EmitContext& ctx, IR::Inst* inst)
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
 
     if (code.HasHostFeature(HostFeature::AVX512_Ortho)) {
+        const Xbyak::Xmm c = xmm16;
         code.vpsraq(c, a, 32);
         code.vpsllq(a, a, 32);
         code.vpsraq(a, a, 32);
@@ -2510,6 +2516,7 @@ void EmitX64::EmitVectorPairedAddSignedWiden32(EmitContext& ctx, IR::Inst* inst)
     } else {
         const Xbyak::Xmm tmp1 = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
 
         code.movdqa(c, a);
         code.psllq(a, 32);
@@ -4695,7 +4702,7 @@ void EmitX64::EmitVectorTableLookup128(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW)) {
         const Xbyak::Xmm indicies = ctx.reg_alloc.UseXmm(args[2]);
         const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-        const Xbyak::Xmm masked = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm masked = xmm16;
 
         code.vpandd(masked, indicies, code.MConst(xword_b, 0xF0F0F0F0F0F0F0F0, 0xF0F0F0F0F0F0F0F0));
 
