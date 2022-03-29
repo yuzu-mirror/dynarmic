@@ -131,135 +131,149 @@ void A64EmitX64::GenFastmemFallbacks() {
         {64, Devirtualize<&A64::UserCallbacks::MemoryWriteExclusive64>(conf.callbacks)},
     }};
 
-    for (int vaddr_idx : idxes) {
-        if (vaddr_idx == 4 || vaddr_idx == 15) {
-            continue;
-        }
-
-        for (int value_idx : idxes) {
-            code.align();
-            read_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
-            ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(value_idx));
-            if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
-                code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
-            }
-            code.call(memory_read_128);
-            if (value_idx != 1) {
-                code.movaps(Xbyak::Xmm{value_idx}, xmm1);
-            }
-            ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(value_idx));
-            code.ret();
-            PerfMapRegister(read_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)], code.getCurr(), "a64_read_fallback_128");
-
-            code.align();
-            write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
-            ABI_PushCallerSaveRegistersAndAdjustStack(code);
-            if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
-                code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
-            }
-            if (value_idx != 1) {
-                code.movaps(xmm1, Xbyak::Xmm{value_idx});
-            }
-            code.call(memory_write_128);
-            ABI_PopCallerSaveRegistersAndAdjustStack(code);
-            code.ret();
-            PerfMapRegister(write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)], code.getCurr(), "a64_write_fallback_128");
-
-            code.align();
-            exclusive_write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
-            ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
-            if (value_idx != 1) {
-                code.movaps(xmm1, Xbyak::Xmm{value_idx});
-            }
-            if (code.HasHostFeature(HostFeature::SSE41)) {
-                code.movq(xmm2, rax);
-                code.pinsrq(xmm2, rdx, 1);
-            } else {
-                code.movq(xmm2, rax);
-                code.movq(xmm0, rdx);
-                code.punpcklqdq(xmm2, xmm0);
-            }
-            if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
-                code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
-            }
-            code.call(memory_exclusive_write_128);
-            ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
-            code.ret();
-            PerfMapRegister(exclusive_write_fallbacks[std::make_tuple(128, vaddr_idx, value_idx)], code.getCurr(), "a64_write_fallback_128");
-
-            if (value_idx == 4 || value_idx == 15) {
+    for (bool ordered : {false, true}) {
+        for (int vaddr_idx : idxes) {
+            if (vaddr_idx == 4 || vaddr_idx == 15) {
                 continue;
             }
 
-            for (const auto& [bitsize, callback] : read_callbacks) {
+            for (int value_idx : idxes) {
                 code.align();
-                read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
-                ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
+                read_fallbacks[std::make_tuple(ordered, 128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
+                ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(value_idx));
                 if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
                     code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
                 }
-                callback.EmitCall(code);
-                if (value_idx != code.ABI_RETURN.getIdx()) {
-                    code.mov(Xbyak::Reg64{value_idx}, code.ABI_RETURN);
+                if (ordered) {
+                    code.mfence();
                 }
-                ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
-                code.ZeroExtendFrom(bitsize, Xbyak::Reg64{value_idx});
+                code.call(memory_read_128);
+                if (value_idx != 1) {
+                    code.movaps(Xbyak::Xmm{value_idx}, xmm1);
+                }
+                ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(value_idx));
                 code.ret();
-                PerfMapRegister(read_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a64_read_fallback_{}", bitsize));
-            }
+                PerfMapRegister(read_fallbacks[std::make_tuple(ordered, 128, vaddr_idx, value_idx)], code.getCurr(), "a64_read_fallback_128");
 
-            for (const auto& [bitsize, callback] : write_callbacks) {
                 code.align();
-                write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
+                write_fallbacks[std::make_tuple(ordered, 128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
                 ABI_PushCallerSaveRegistersAndAdjustStack(code);
-                if (vaddr_idx == code.ABI_PARAM3.getIdx() && value_idx == code.ABI_PARAM2.getIdx()) {
-                    code.xchg(code.ABI_PARAM2, code.ABI_PARAM3);
-                } else if (vaddr_idx == code.ABI_PARAM3.getIdx()) {
+                if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
                     code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
-                    if (value_idx != code.ABI_PARAM3.getIdx()) {
-                        code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
-                    }
-                } else {
-                    if (value_idx != code.ABI_PARAM3.getIdx()) {
-                        code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
-                    }
-                    if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
-                        code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
-                    }
                 }
-                code.ZeroExtendFrom(bitsize, code.ABI_PARAM3);
-                callback.EmitCall(code);
+                if (value_idx != 1) {
+                    code.movaps(xmm1, Xbyak::Xmm{value_idx});
+                }
+                code.call(memory_write_128);
+                if (ordered) {
+                    code.mfence();
+                }
                 ABI_PopCallerSaveRegistersAndAdjustStack(code);
                 code.ret();
-                PerfMapRegister(write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a64_write_fallback_{}", bitsize));
-            }
+                PerfMapRegister(write_fallbacks[std::make_tuple(ordered, 128, vaddr_idx, value_idx)], code.getCurr(), "a64_write_fallback_128");
 
-            for (const auto& [bitsize, callback] : exclusive_write_callbacks) {
                 code.align();
-                exclusive_write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
+                exclusive_write_fallbacks[std::make_tuple(ordered, 128, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
                 ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
-                if (vaddr_idx == code.ABI_PARAM3.getIdx() && value_idx == code.ABI_PARAM2.getIdx()) {
-                    code.xchg(code.ABI_PARAM2, code.ABI_PARAM3);
-                } else if (vaddr_idx == code.ABI_PARAM3.getIdx()) {
-                    code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
-                    if (value_idx != code.ABI_PARAM3.getIdx()) {
-                        code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
-                    }
+                if (value_idx != 1) {
+                    code.movaps(xmm1, Xbyak::Xmm{value_idx});
+                }
+                if (code.HasHostFeature(HostFeature::SSE41)) {
+                    code.movq(xmm2, rax);
+                    code.pinsrq(xmm2, rdx, 1);
                 } else {
-                    if (value_idx != code.ABI_PARAM3.getIdx()) {
-                        code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
-                    }
+                    code.movq(xmm2, rax);
+                    code.movq(xmm0, rdx);
+                    code.punpcklqdq(xmm2, xmm0);
+                }
+                if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
+                    code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                }
+                code.call(memory_exclusive_write_128);
+                ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
+                code.ret();
+                PerfMapRegister(exclusive_write_fallbacks[std::make_tuple(ordered, 128, vaddr_idx, value_idx)], code.getCurr(), "a64_exclusive_write_fallback_128");
+
+                if (value_idx == 4 || value_idx == 15) {
+                    continue;
+                }
+
+                for (const auto& [bitsize, callback] : read_callbacks) {
+                    code.align();
+                    read_fallbacks[std::make_tuple(ordered, bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
+                    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
                     if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
                         code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
                     }
+                    if (ordered) {
+                        code.mfence();
+                    }
+                    callback.EmitCall(code);
+                    if (value_idx != code.ABI_RETURN.getIdx()) {
+                        code.mov(Xbyak::Reg64{value_idx}, code.ABI_RETURN);
+                    }
+                    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocRegIdx(value_idx));
+                    code.ZeroExtendFrom(bitsize, Xbyak::Reg64{value_idx});
+                    code.ret();
+                    PerfMapRegister(read_fallbacks[std::make_tuple(ordered, bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a64_read_fallback_{}", bitsize));
                 }
-                code.ZeroExtendFrom(bitsize, code.ABI_PARAM3);
-                code.mov(code.ABI_PARAM4, rax);
-                code.ZeroExtendFrom(bitsize, code.ABI_PARAM4);
-                callback.EmitCall(code);
-                ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
-                code.ret();
-                PerfMapRegister(exclusive_write_fallbacks[std::make_tuple(bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a64_exclusive_write_fallback_{}", bitsize));
+
+                for (const auto& [bitsize, callback] : write_callbacks) {
+                    code.align();
+                    write_fallbacks[std::make_tuple(ordered, bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
+                    ABI_PushCallerSaveRegistersAndAdjustStack(code);
+                    if (vaddr_idx == code.ABI_PARAM3.getIdx() && value_idx == code.ABI_PARAM2.getIdx()) {
+                        code.xchg(code.ABI_PARAM2, code.ABI_PARAM3);
+                    } else if (vaddr_idx == code.ABI_PARAM3.getIdx()) {
+                        code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                        if (value_idx != code.ABI_PARAM3.getIdx()) {
+                            code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
+                        }
+                    } else {
+                        if (value_idx != code.ABI_PARAM3.getIdx()) {
+                            code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
+                        }
+                        if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
+                            code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                        }
+                    }
+                    code.ZeroExtendFrom(bitsize, code.ABI_PARAM3);
+                    callback.EmitCall(code);
+                    if (ordered) {
+                        code.mfence();
+                    }
+                    ABI_PopCallerSaveRegistersAndAdjustStack(code);
+                    code.ret();
+                    PerfMapRegister(write_fallbacks[std::make_tuple(ordered, bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a64_write_fallback_{}", bitsize));
+                }
+
+                for (const auto& [bitsize, callback] : exclusive_write_callbacks) {
+                    code.align();
+                    exclusive_write_fallbacks[std::make_tuple(ordered, bitsize, vaddr_idx, value_idx)] = code.getCurr<void (*)()>();
+                    ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
+                    if (vaddr_idx == code.ABI_PARAM3.getIdx() && value_idx == code.ABI_PARAM2.getIdx()) {
+                        code.xchg(code.ABI_PARAM2, code.ABI_PARAM3);
+                    } else if (vaddr_idx == code.ABI_PARAM3.getIdx()) {
+                        code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                        if (value_idx != code.ABI_PARAM3.getIdx()) {
+                            code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
+                        }
+                    } else {
+                        if (value_idx != code.ABI_PARAM3.getIdx()) {
+                            code.mov(code.ABI_PARAM3, Xbyak::Reg64{value_idx});
+                        }
+                        if (vaddr_idx != code.ABI_PARAM2.getIdx()) {
+                            code.mov(code.ABI_PARAM2, Xbyak::Reg64{vaddr_idx});
+                        }
+                    }
+                    code.ZeroExtendFrom(bitsize, code.ABI_PARAM3);
+                    code.mov(code.ABI_PARAM4, rax);
+                    code.ZeroExtendFrom(bitsize, code.ABI_PARAM4);
+                    callback.EmitCall(code);
+                    ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLoc::RAX);
+                    code.ret();
+                    PerfMapRegister(exclusive_write_fallbacks[std::make_tuple(ordered, bitsize, vaddr_idx, value_idx)], code.getCurr(), fmt::format("a64_exclusive_write_fallback_{}", bitsize));
+                }
             }
         }
     }

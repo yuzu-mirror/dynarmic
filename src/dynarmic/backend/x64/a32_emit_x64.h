@@ -71,12 +71,12 @@ protected:
     std::array<FastDispatchEntry, fast_dispatch_table_size> fast_dispatch_table;
     void ClearFastDispatchTable();
 
-    void (*memory_read_128)() = nullptr; // Dummy
-    void (*memory_write_128)() = nullptr; // Dummy
+    void (*memory_read_128)() = nullptr;   // Dummy
+    void (*memory_write_128)() = nullptr;  // Dummy
 
-    std::map<std::tuple<size_t, int, int>, void (*)()> read_fallbacks;
-    std::map<std::tuple<size_t, int, int>, void (*)()> write_fallbacks;
-    std::map<std::tuple<size_t, int, int>, void (*)()> exclusive_write_fallbacks;
+    std::map<std::tuple<bool, size_t, int, int>, void (*)()> read_fallbacks;
+    std::map<std::tuple<bool, size_t, int, int>, void (*)()> write_fallbacks;
+    std::map<std::tuple<bool, size_t, int, int>, void (*)()> exclusive_write_fallbacks;
     void GenFastmemFallbacks();
 
     const void* terminal_handler_pop_rsb_hint;
