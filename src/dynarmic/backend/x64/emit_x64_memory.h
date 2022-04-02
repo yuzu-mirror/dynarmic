@@ -215,7 +215,7 @@ const void* EmitReadMemoryMov(BlockOfCode& code, int value_idx, const Xbyak::Reg
             break;
         case 16:
             code.lock();
-            code.xadd(word[addr], Xbyak::Reg32{value_idx});
+            code.xadd(word[addr], Xbyak::Reg16{value_idx});
             break;
         case 32:
             code.lock();
