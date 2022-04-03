@@ -30,6 +30,7 @@ struct RunCodeCallbacks {
     std::unique_ptr<Callback> LookupBlock;
     std::unique_ptr<Callback> AddTicks;
     std::unique_ptr<Callback> GetTicksRemaining;
+    bool enable_cycle_counting;
 };
 
 class BlockOfCode final : public Xbyak::CodeGenerator {
