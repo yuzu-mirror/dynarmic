@@ -16,6 +16,7 @@
 #include "dynarmic/backend/x64/devirtualize.h"
 #include "dynarmic/backend/x64/jitstate_info.h"
 #include "dynarmic/common/assert.h"
+#include "dynarmic/common/atomic.h"
 #include "dynarmic/common/cast_util.h"
 #include "dynarmic/common/common_types.h"
 #include "dynarmic/common/scope_exit.h"
@@ -76,7 +77,7 @@ struct Jit::Impl {
     boost::icl::interval_set<u32> invalid_cache_ranges;
     bool invalidate_entire_cache = false;
 
-    void Execute() {
+    HaltReason Execute() {
         const CodePtr current_codeptr = [this] {
             // RSB optimization
             const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A32JitState::RSBPtrMask;
@@ -88,11 +89,15 @@ struct Jit::Impl {
             return GetCurrentBlock();
         }();
 
-        block_of_code.RunCode(&jit_state, current_codeptr);
+        return block_of_code.RunCode(&jit_state, current_codeptr);
     }
 
-    void Step() {
-        block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+    HaltReason Step() {
+        return block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+    }
+
+    void HaltExecution(HaltReason hr) {
+        Atomic::Or(&jit_state.halt_reason, static_cast<u32>(hr));
     }
 
     void ClearExclusiveState() {
@@ -123,7 +128,7 @@ struct Jit::Impl {
 
     void RequestCacheInvalidation() {
         if (jit_interface->is_executing) {
-            jit_state.halt_requested = true;
+            HaltExecution(HaltReason::CacheInvalidation);
             return;
         }
 
@@ -182,28 +187,28 @@ Jit::Jit(UserConfig conf)
 
 Jit::~Jit() = default;
 
-void Jit::Run() {
+HaltReason Jit::Run() {
     ASSERT(!is_executing);
     is_executing = true;
     SCOPE_EXIT { this->is_executing = false; };
 
-    impl->jit_state.halt_requested = false;
-
-    impl->Execute();
+    const HaltReason hr = impl->Execute();
 
     impl->PerformCacheInvalidation();
+
+    return hr;
 }
 
-void Jit::Step() {
+HaltReason Jit::Step() {
     ASSERT(!is_executing);
     is_executing = true;
     SCOPE_EXIT { this->is_executing = false; };
 
-    impl->jit_state.halt_requested = true;
-
-    impl->Step();
+    const HaltReason hr = impl->Step();
 
     impl->PerformCacheInvalidation();
+
+    return hr;
 }
 
 void Jit::ClearCache() {
@@ -221,8 +226,8 @@ void Jit::Reset() {
     impl->jit_state = {};
 }
 
-void Jit::HaltExecution() {
-    impl->jit_state.halt_requested = true;
+void Jit::HaltExecution(HaltReason hr) {
+    impl->HaltExecution(hr);
 }
 
 void Jit::ClearExclusiveState() {

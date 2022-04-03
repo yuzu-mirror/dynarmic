@@ -15,6 +15,7 @@
 #include "dynarmic/backend/x64/devirtualize.h"
 #include "dynarmic/backend/x64/jitstate_info.h"
 #include "dynarmic/common/assert.h"
+#include "dynarmic/common/atomic.h"
 #include "dynarmic/common/scope_exit.h"
 #include "dynarmic/common/x64_disassemble.h"
 #include "dynarmic/frontend/A64/translate/a64_translate.h"
@@ -63,13 +64,12 @@ public:
 
     ~Impl() = default;
 
-    void Run() {
+    HaltReason Run() {
         ASSERT(!is_executing);
         PerformRequestedCacheInvalidation();
 
         is_executing = true;
         SCOPE_EXIT { this->is_executing = false; };
-        jit_state.halt_requested = false;
 
         // TODO: Check code alignment
 
@@ -83,29 +83,33 @@ public:
 
             return GetCurrentBlock();
         }();
-        block_of_code.RunCode(&jit_state, current_code_ptr);
+
+        const HaltReason hr = block_of_code.RunCode(&jit_state, current_code_ptr);
 
         PerformRequestedCacheInvalidation();
+
+        return hr;
     }
 
-    void Step() {
+    HaltReason Step() {
         ASSERT(!is_executing);
         PerformRequestedCacheInvalidation();
 
         is_executing = true;
         SCOPE_EXIT { this->is_executing = false; };
-        jit_state.halt_requested = true;
 
-        block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+        const HaltReason hr = block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
 
         PerformRequestedCacheInvalidation();
+
+        return hr;
     }
 
     void ClearCache() {
         std::unique_lock lock{invalidation_mutex};
         invalidate_entire_cache = true;
         if (is_executing) {
-            jit_state.halt_requested = true;
+            HaltExecution(HaltReason::CacheInvalidation);
         }
     }
 
@@ -115,7 +119,7 @@ public:
         const auto range = boost::icl::discrete_interval<u64>::closed(start_address, end_address);
         invalid_cache_ranges.add(range);
         if (is_executing) {
-            jit_state.halt_requested = true;
+            HaltExecution(HaltReason::CacheInvalidation);
         }
     }
 
@@ -124,8 +128,8 @@ public:
         jit_state = {};
     }
 
-    void HaltExecution() {
-        jit_state.halt_requested = true;
+    void HaltExecution(HaltReason hr) {
+        Atomic::Or(&jit_state.halt_reason, static_cast<u32>(hr));
     }
 
     u64 GetSP() const {
@@ -279,7 +283,7 @@ private:
 
     void RequestCacheInvalidation() {
         if (is_executing) {
-            jit_state.halt_requested = true;
+            HaltExecution(HaltReason::CacheInvalidation);
             return;
         }
 
@@ -321,12 +325,12 @@ Jit::Jit(UserConfig conf)
 
 Jit::~Jit() = default;
 
-void Jit::Run() {
-    impl->Run();
+HaltReason Jit::Run() {
+    return impl->Run();
 }
 
-void Jit::Step() {
-    impl->Step();
+HaltReason Jit::Step() {
+    return impl->Step();
 }
 
 void Jit::ClearCache() {
@@ -341,8 +345,8 @@ void Jit::Reset() {
     impl->Reset();
 }
 
-void Jit::HaltExecution() {
-    impl->HaltExecution();
+void Jit::HaltExecution(HaltReason hr) {
+    impl->HaltExecution(hr);
 }
 
 u64 Jit::GetSP() const {
