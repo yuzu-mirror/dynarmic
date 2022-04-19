@@ -192,7 +192,7 @@ constexpr T replicate_element(size_t element_size, T value) {
     if (element_size == bitsizeof<T>) {
         return value;
     }
-    return replicate_element<T>(static_cast<T>(value | (value << element_size)), element_size * 2);
+    return replicate_element<T>(element_size * 2, static_cast<T>(value | (value << element_size)));
 }
 
 template<BitIntegral T>
