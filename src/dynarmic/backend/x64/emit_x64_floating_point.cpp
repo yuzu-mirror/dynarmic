@@ -7,20 +7,20 @@
 #include <type_traits>
 #include <utility>
 
+#include <mcl/assert.hpp>
 #include <mcl/mp/metavalue/lift_value.hpp>
 #include <mcl/mp/typelist/cartesian_product.hpp>
 #include <mcl/mp/typelist/lift_sequence.hpp>
 #include <mcl/mp/typelist/list.hpp>
 #include <mcl/mp/typelist/lower_to_tuple.hpp>
+#include <mcl/stdint.hpp>
 #include <mcl/type_traits/integer_of_size.hpp>
 
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
 #include "dynarmic/backend/x64/constants.h"
 #include "dynarmic/backend/x64/emit_x64.h"
-#include "dynarmic/common/assert.h"
 #include "dynarmic/common/cast_util.h"
-#include "dynarmic/common/common_types.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/fp/info.h"

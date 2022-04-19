@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/common/macro_util.h"
+#include <mcl/macro/concatenate_tokens.hpp>
 
 #define AxxEmitX64 CONCATENATE_TOKENS(Axx, EmitX64)
 #define AxxEmitContext CONCATENATE_TOKENS(Axx, EmitContext)
@@ -98,10 +98,10 @@ void AxxEmitX64::EmitMemoryRead(AxxEmitContext& ctx, IR::Inst* inst) {
         const auto location = EmitReadMemoryMov<bitsize>(code, value_idx, src_ptr, ordered);
 
         fastmem_patch_info.emplace(
-            Common::BitCast<u64>(location),
+            mcl::bit_cast<u64>(location),
             FastmemPatchInfo{
-                Common::BitCast<u64>(code.getCurr()),
-                Common::BitCast<u64>(wrapped_fn),
+                mcl::bit_cast<u64>(code.getCurr()),
+                mcl::bit_cast<u64>(wrapped_fn),
                 *fastmem_marker,
                 conf.recompile_on_fastmem_failure,
             });
@@ -178,10 +178,10 @@ void AxxEmitX64::EmitMemoryWrite(AxxEmitContext& ctx, IR::Inst* inst) {
         const auto location = EmitWriteMemoryMov<bitsize>(code, dest_ptr, value_idx, ordered);
 
         fastmem_patch_info.emplace(
-            Common::BitCast<u64>(location),
+            mcl::bit_cast<u64>(location),
             FastmemPatchInfo{
-                Common::BitCast<u64>(code.getCurr()),
-                Common::BitCast<u64>(wrapped_fn),
+                mcl::bit_cast<u64>(code.getCurr()),
+                mcl::bit_cast<u64>(wrapped_fn),
                 *fastmem_marker,
                 conf.recompile_on_fastmem_failure,
             });
@@ -339,7 +339,7 @@ void AxxEmitX64::EmitExclusiveReadMemoryInline(AxxEmitContext& ctx, IR::Inst* in
     EmitExclusiveLock(code, conf, tmp, tmp2.cvt32());
 
     code.mov(code.byte[r15 + offsetof(AxxJitState, exclusive_state)], u8(1));
-    code.mov(tmp, Common::BitCast<u64>(GetExclusiveMonitorAddressPointer(conf.global_monitor, conf.processor_id)));
+    code.mov(tmp, mcl::bit_cast<u64>(GetExclusiveMonitorAddressPointer(conf.global_monitor, conf.processor_id)));
     code.mov(qword[tmp], vaddr);
 
     const auto fastmem_marker = ShouldFastmem(ctx, inst);
@@ -352,10 +352,10 @@ void AxxEmitX64::EmitExclusiveReadMemoryInline(AxxEmitContext& ctx, IR::Inst* in
         const auto location = EmitReadMemoryMov<bitsize>(code, value_idx, src_ptr, ordered);
 
         fastmem_patch_info.emplace(
-            Common::BitCast<u64>(location),
+            mcl::bit_cast<u64>(location),
             FastmemPatchInfo{
-                Common::BitCast<u64>(code.getCurr()),
-                Common::BitCast<u64>(wrapped_fn),
+                mcl::bit_cast<u64>(code.getCurr()),
+                mcl::bit_cast<u64>(wrapped_fn),
                 *fastmem_marker,
                 conf.recompile_on_exclusive_fastmem_failure,
             });
@@ -373,7 +373,7 @@ void AxxEmitX64::EmitExclusiveReadMemoryInline(AxxEmitContext& ctx, IR::Inst* in
         code.call(wrapped_fn);
     }
 
-    code.mov(tmp, Common::BitCast<u64>(GetExclusiveMonitorValuePointer(conf.global_monitor, conf.processor_id)));
+    code.mov(tmp, mcl::bit_cast<u64>(GetExclusiveMonitorValuePointer(conf.global_monitor, conf.processor_id)));
     EmitWriteMemoryMov<bitsize>(code, tmp, value_idx, false);
 
     EmitExclusiveUnlock(code, conf, tmp, tmp2.cvt32());
@@ -418,7 +418,7 @@ void AxxEmitX64::EmitExclusiveWriteMemoryInline(AxxEmitContext& ctx, IR::Inst* i
 
     Xbyak::Label end;
 
-    code.mov(tmp, Common::BitCast<u64>(GetExclusiveMonitorAddressPointer(conf.global_monitor, conf.processor_id)));
+    code.mov(tmp, mcl::bit_cast<u64>(GetExclusiveMonitorAddressPointer(conf.global_monitor, conf.processor_id)));
     code.mov(status, u32(1));
     code.cmp(code.byte[r15 + offsetof(AxxJitState, exclusive_state)], u8(0));
     code.je(end, code.T_NEAR);
@@ -428,7 +428,7 @@ void AxxEmitX64::EmitExclusiveWriteMemoryInline(AxxEmitContext& ctx, IR::Inst* i
     EmitExclusiveTestAndClear(code, conf, vaddr, tmp, rax);
 
     code.mov(code.byte[r15 + offsetof(AxxJitState, exclusive_state)], u8(0));
-    code.mov(tmp, Common::BitCast<u64>(GetExclusiveMonitorValuePointer(conf.global_monitor, conf.processor_id)));
+    code.mov(tmp, mcl::bit_cast<u64>(GetExclusiveMonitorValuePointer(conf.global_monitor, conf.processor_id)));
 
     if constexpr (bitsize == 128) {
         code.mov(rax, qword[tmp + 0]);
@@ -488,10 +488,10 @@ void AxxEmitX64::EmitExclusiveWriteMemoryInline(AxxEmitContext& ctx, IR::Inst* i
         code.call(wrapped_fn);
 
         fastmem_patch_info.emplace(
-            Common::BitCast<u64>(location),
+            mcl::bit_cast<u64>(location),
             FastmemPatchInfo{
-                Common::BitCast<u64>(code.getCurr()),
-                Common::BitCast<u64>(wrapped_fn),
+                mcl::bit_cast<u64>(code.getCurr()),
+                mcl::bit_cast<u64>(wrapped_fn),
                 *fastmem_marker,
                 conf.recompile_on_exclusive_fastmem_failure,
             });

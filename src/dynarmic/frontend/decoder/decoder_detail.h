@@ -9,10 +9,9 @@
 #include <array>
 #include <tuple>
 
+#include <mcl/assert.hpp>
+#include <mcl/bitsizeof.hpp>
 #include <mcl/type_traits/function_info.hpp>
-
-#include "dynarmic/common/assert.h"
-#include "dynarmic/common/bit_util.h"
 
 namespace Dynarmic::Decoder {
 namespace detail {
@@ -36,7 +35,7 @@ struct detail {
     using opcode_type = typename MatcherT::opcode_type;
     using visitor_type = typename MatcherT::visitor_type;
 
-    static constexpr size_t opcode_bitsize = Common::BitSize<opcode_type>();
+    static constexpr size_t opcode_bitsize = mcl::bitsizeof<opcode_type>;
 
     /**
      * Generates the mask and the expected value after masking from a given bitstring.

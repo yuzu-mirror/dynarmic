@@ -1,9 +1,5 @@
 add_library(dynarmic
-    common/assert.cpp
-    common/assert.h
-    common/bit_util.h
     common/cast_util.h
-    common/common_types.h
     common/crypto/aes.cpp
     common/crypto/aes.h
     common/crypto/crc32.cpp
@@ -46,18 +42,14 @@ add_library(dynarmic
     common/fp/unpacked.cpp
     common/fp/unpacked.h
     common/fp/util.h
-    common/intrusive_list.h
-    common/iterator_util.h
     common/llvm_disassemble.cpp
     common/llvm_disassemble.h
     common/lut_from_list.h
-    common/macro_util.h
     common/math_util.cpp
     common/math_util.h
     common/memory_pool.cpp
     common/memory_pool.h
     common/safe_ops.h
-    common/scope_exit.h
     common/spin_lock.h
     common/string_util.h
     common/u128.cpp

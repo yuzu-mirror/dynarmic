@@ -5,13 +5,13 @@
 
 #include <limits>
 
+#include <mcl/assert.hpp>
+#include <mcl/bit/bit_field.hpp>
+#include <mcl/stdint.hpp>
 #include <mcl/type_traits/integer_of_size.hpp>
 
 #include "dynarmic/backend/x64/block_of_code.h"
 #include "dynarmic/backend/x64/emit_x64.h"
-#include "dynarmic/common/assert.h"
-#include "dynarmic/common/bit_util.h"
-#include "dynarmic/common/common_types.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
 #include "dynarmic/ir/opcodes.h"

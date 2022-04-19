@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <utility>
 
+#include <mcl/assert.hpp>
 #include <mcl/mp/metavalue/lift_value.hpp>
 #include <mcl/mp/typelist/cartesian_product.hpp>
 #include <mcl/mp/typelist/lift_sequence.hpp>
@@ -21,7 +22,6 @@
 #include "dynarmic/backend/x64/block_of_code.h"
 #include "dynarmic/backend/x64/constants.h"
 #include "dynarmic/backend/x64/emit_x64.h"
-#include "dynarmic/common/assert.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/info.h"
 #include "dynarmic/common/fp/op.h"
@@ -562,7 +562,7 @@ template<size_t fsize>
 void FPVectorAbs(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mcl::unsigned_integer_of_size<fsize>;
     constexpr FPT non_sign_mask = FP::FPInfo<FPT>::sign_mask - FPT(1u);
-    constexpr u64 non_sign_mask64 = Common::Replicate<u64>(non_sign_mask, fsize);
+    constexpr u64 non_sign_mask64 = mcl::bit::replicate_element<fsize, u64>(non_sign_mask);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
@@ -1229,7 +1229,7 @@ template<size_t fsize>
 void FPVectorNeg(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mcl::unsigned_integer_of_size<fsize>;
     constexpr FPT sign_mask = FP::FPInfo<FPT>::sign_mask;
-    constexpr u64 sign_mask64 = Common::Replicate<u64>(sign_mask, fsize);
+    constexpr u64 sign_mask64 = mcl::bit::replicate_element<fsize, u64>(sign_mask);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
