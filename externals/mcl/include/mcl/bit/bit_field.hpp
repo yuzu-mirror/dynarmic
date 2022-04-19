@@ -31,7 +31,7 @@ constexpr T ones(size_t count) {
     if (count == 0) {
         return 0;
     }
-    return ~static_cast<T>(0) >> (bitsizeof<T> - count);
+    return static_cast<T>(~static_cast<T>(0)) >> (bitsizeof<T> - count);
 }
 
 /// Create a mask of type T for bits [begin_bit, end_bit] inclusive.
