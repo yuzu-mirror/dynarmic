@@ -8,7 +8,7 @@
 #include <cstring>
 #include <type_traits>
 
-#include <mp/traits/function_info.h>
+#include <mcl/type_traits/function_info.hpp>
 
 namespace Dynarmic::Common {
 
@@ -39,7 +39,7 @@ inline Dest BitCastPointee(const SourcePtr source) noexcept {
 /// Cast a lambda into an equivalent function pointer.
 template<class Function>
 inline auto FptrCast(Function f) noexcept {
-    return static_cast<mp::equivalent_function_type<Function>*>(f);
+    return static_cast<mcl::equivalent_function_type<Function>*>(f);
 }
 
 }  // namespace Dynarmic::Common

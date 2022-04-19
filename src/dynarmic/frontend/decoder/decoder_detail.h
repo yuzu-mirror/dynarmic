@@ -9,7 +9,7 @@
 #include <array>
 #include <tuple>
 
-#include <mp/traits/function_info.h>
+#include <mcl/type_traits/function_info.hpp>
 
 #include "dynarmic/common/assert.h"
 #include "dynarmic/common/bit_util.h"
@@ -165,7 +165,7 @@ struct detail {
      * Creates a matcher that can match and parse instructions based on bitstring.
      * See also: GetMaskAndExpect and GetArgInfo for format of bitstring.
      */
-    template<typename FnT, size_t args_count = mp::parameter_count_v<FnT>>
+    template<typename FnT, size_t args_count = mcl::parameter_count_v<FnT>>
     static auto GetMatcher(FnT fn, const char* const name, std::tuple<opcode_type, opcode_type> mask_and_expect, std::tuple<std::array<opcode_type, args_count>, std::array<size_t, args_count>> masks_and_shifts) {
         using Iota = std::make_index_sequence<args_count>;
 
@@ -177,7 +177,7 @@ struct detail {
     }
 };
 
-#define DYNARMIC_DECODER_GET_MATCHER(MatcherT, fn, name, bitstring) Decoder::detail::detail<MatcherT<V>>::GetMatcher(&V::fn, name, Decoder::detail::detail<MatcherT<V>>::GetMaskAndExpect(bitstring), Decoder::detail::detail<MatcherT<V>>::template GetArgInfo<mp::parameter_count_v<decltype(&V::fn)>>(bitstring))
+#define DYNARMIC_DECODER_GET_MATCHER(MatcherT, fn, name, bitstring) Decoder::detail::detail<MatcherT<V>>::GetMatcher(&V::fn, name, Decoder::detail::detail<MatcherT<V>>::GetMaskAndExpect(bitstring), Decoder::detail::detail<MatcherT<V>>::template GetArgInfo<mcl::parameter_count_v<decltype(&V::fn)>>(bitstring))
 
 }  // namespace detail
 }  // namespace Dynarmic::Decoder

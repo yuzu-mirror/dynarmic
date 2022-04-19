@@ -8,7 +8,7 @@
 #include <cstring>
 #include <utility>
 
-#include <mp/traits/function_info.h>
+#include <mcl/type_traits/function_info.hpp>
 
 #include "dynarmic/backend/x64/callback.h"
 #include "dynarmic/common/cast_util.h"
@@ -32,18 +32,18 @@ struct ThunkBuilder<R (C::*)(Args...), mfp> {
 }  // namespace impl
 
 template<auto mfp>
-ArgCallback DevirtualizeGeneric(mp::class_type<decltype(mfp)>* this_) {
+ArgCallback DevirtualizeGeneric(mcl::class_type<decltype(mfp)>* this_) {
     return ArgCallback{&impl::ThunkBuilder<decltype(mfp), mfp>::Thunk, reinterpret_cast<u64>(this_)};
 }
 
 template<auto mfp>
-ArgCallback DevirtualizeWindows(mp::class_type<decltype(mfp)>* this_) {
+ArgCallback DevirtualizeWindows(mcl::class_type<decltype(mfp)>* this_) {
     static_assert(sizeof(mfp) == 8);
     return ArgCallback{Common::BitCast<u64>(mfp), reinterpret_cast<u64>(this_)};
 }
 
 template<auto mfp>
-ArgCallback DevirtualizeItanium(mp::class_type<decltype(mfp)>* this_) {
+ArgCallback DevirtualizeItanium(mcl::class_type<decltype(mfp)>* this_) {
     struct MemberFunctionPointer {
         /// For a non-virtual function, this is a simple function pointer.
         /// For a virtual function, it is (1 + virtual table offset in bytes).
@@ -65,7 +65,7 @@ ArgCallback DevirtualizeItanium(mp::class_type<decltype(mfp)>* this_) {
 }
 
 template<auto mfp>
-ArgCallback Devirtualize(mp::class_type<decltype(mfp)>* this_) {
+ArgCallback Devirtualize(mcl::class_type<decltype(mfp)>* this_) {
 #if defined(__APPLE__) || defined(linux) || defined(__linux) || defined(__linux__)
     return DevirtualizeItanium<mfp>(this_);
 #elif defined(__MINGW64__)

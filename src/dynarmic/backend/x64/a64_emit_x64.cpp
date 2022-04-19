@@ -7,7 +7,7 @@
 
 #include <fmt/format.h>
 #include <fmt/ostream.h>
-#include <mp/traits/integer_of_size.h>
+#include <mcl/type_traits/integer_of_size.hpp>
 
 #include "dynarmic/backend/x64/a64_jitstate.h"
 #include "dynarmic/backend/x64/abi.h"

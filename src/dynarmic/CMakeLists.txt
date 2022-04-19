@@ -388,7 +388,7 @@ target_link_libraries(dynarmic
     PRIVATE
         $<BUILD_INTERFACE:boost>
         $<BUILD_INTERFACE:fmt::fmt>
-        $<BUILD_INTERFACE:mp>
+        $<BUILD_INTERFACE:merry::mcl>
         tsl::robin_map
         $<BUILD_INTERFACE:xbyak>
         $<BUILD_INTERFACE:Zydis>
@@ -401,7 +401,7 @@ if (DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT)
     target_compile_definitions(dynarmic PRIVATE DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT=1)
 endif()
 if (DYNARMIC_IGNORE_ASSERTS)
-    target_compile_definitions(dynarmic PRIVATE DYNARMIC_IGNORE_ASSERTS=1)
+    target_compile_definitions(dynarmic PRIVATE MCL_IGNORE_ASSERTS=1)
 endif()
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_compile_definitions(dynarmic PRIVATE FMT_USE_WINDOWS_H=0)

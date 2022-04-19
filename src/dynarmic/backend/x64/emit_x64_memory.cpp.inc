@@ -210,7 +210,7 @@ void AxxEmitX64::EmitExclusiveReadMemory(AxxEmitContext& ctx, IR::Inst* inst) {
     const bool ordered = IsOrdered(args[1].GetImmediateAccType());
 
     if constexpr (bitsize != 128) {
-        using T = mp::unsigned_integer_of_size<bitsize>;
+        using T = mcl::unsigned_integer_of_size<bitsize>;
 
         ctx.reg_alloc.HostCall(inst, {}, args[0]);
 
@@ -275,7 +275,7 @@ void AxxEmitX64::EmitExclusiveWriteMemory(AxxEmitContext& ctx, IR::Inst* inst) {
     code.mov(code.byte[r15 + offsetof(AxxJitState, exclusive_state)], u8(0));
     code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(&conf));
     if constexpr (bitsize != 128) {
-        using T = mp::unsigned_integer_of_size<bitsize>;
+        using T = mcl::unsigned_integer_of_size<bitsize>;
 
         code.CallLambda(
             [](AxxUserConfig& conf, Axx::VAddr vaddr, T value) -> u32 {
