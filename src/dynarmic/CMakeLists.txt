@@ -377,10 +377,11 @@ set_target_properties(dynarmic PROPERTIES
 target_compile_options(dynarmic PRIVATE ${DYNARMIC_CXX_FLAGS})
 # $<BUILD_INTERFACE:> required because of https://gitlab.kitware.com/cmake/cmake/-/issues/15415
 target_link_libraries(dynarmic
+    PUBLIC
+        $<BUILD_INTERFACE:merry::mcl>
     PRIVATE
         $<BUILD_INTERFACE:boost>
         $<BUILD_INTERFACE:fmt::fmt>
-        $<BUILD_INTERFACE:merry::mcl>
         tsl::robin_map
         $<BUILD_INTERFACE:xbyak>
         $<BUILD_INTERFACE:Zydis>
