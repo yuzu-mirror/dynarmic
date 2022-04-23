@@ -1,4 +1,5 @@
 add_executable(mcl-tests
+    bit/bit_field_tests.cpp
     main.cpp
     mp/metavalue_tests.cpp
     mp/typelist_tests.cpp
