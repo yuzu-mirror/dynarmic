@@ -12,6 +12,7 @@
 #include <mcl/assert.hpp>
 #include <mcl/mp/metavalue/lift_value.hpp>
 #include <mcl/mp/typelist/cartesian_product.hpp>
+#include <mcl/mp/typelist/get.hpp>
 #include <mcl/mp/typelist/lift_sequence.hpp>
 #include <mcl/mp/typelist/list.hpp>
 #include <mcl/mp/typelist/lower_to_tuple.hpp>
@@ -663,13 +664,12 @@ void EmitX64::EmitFPVectorFromHalf32(EmitContext& ctx, IR::Inst* inst) {
         mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>>;
 
     static const auto lut = Common::GenerateLookupTableFromList(
-        [](auto arg) {
+        []<typename I>(I) {
             return std::pair{
-                mp::lower_to_tuple_v<decltype(arg)>,
+                mp::lower_to_tuple_v<I>,
                 Common::FptrCast(
                     [](VectorArray<u32>& output, const VectorArray<u16>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
-                        constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
-                        constexpr FP::RoundingMode rounding_mode = std::get<0>(t);
+                        constexpr FP::RoundingMode rounding_mode = mp::get<0, I>::value;
 
                         for (size_t i = 0; i < output.size(); ++i) {
                             output[i] = FP::FPConvert<u32, u16>(input[i], fpcr, rounding_mode, fpsr);
@@ -1460,14 +1460,13 @@ void EmitFPVectorRoundInt(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using exact_list = mp::list<std::true_type, std::false_type>;
 
     static const auto lut = Common::GenerateLookupTableFromList(
-        [](auto arg) {
+        []<typename I>(I) {
             return std::pair{
-                mp::lower_to_tuple_v<decltype(arg)>,
+                mp::lower_to_tuple_v<I>,
                 Common::FptrCast(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
-                        constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
-                        constexpr FP::RoundingMode rounding_mode = std::get<0>(t);
-                        constexpr bool exact = std::get<1>(t);
+                        constexpr FP::RoundingMode rounding_mode = mp::get<0, I>::value;
+                        constexpr bool exact = mp::get<1, I>::value;
 
                         for (size_t i = 0; i < output.size(); ++i) {
                             output[i] = static_cast<FPT>(FP::FPRoundInt<FPT>(input[i], fpcr, rounding_mode, exact, fpsr));
@@ -1686,13 +1685,12 @@ void EmitX64::EmitFPVectorToHalf32(EmitContext& ctx, IR::Inst* inst) {
         mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>>;
 
     static const auto lut = Common::GenerateLookupTableFromList(
-        [](auto arg) {
+        []<typename I>(I) {
             return std::pair{
-                mp::lower_to_tuple_v<decltype(arg)>,
+                mp::lower_to_tuple_v<I>,
                 Common::FptrCast(
                     [](VectorArray<u16>& output, const VectorArray<u32>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
-                        constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
-                        constexpr FP::RoundingMode rounding_mode = std::get<0>(t);
+                        constexpr FP::RoundingMode rounding_mode = mp::get<0, I>::value;
 
                         for (size_t i = 0; i < output.size(); ++i) {
                             if (i < input.size()) {
@@ -1837,14 +1835,13 @@ void EmitFPVectorToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
         mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>>;
 
     static const auto lut = Common::GenerateLookupTableFromList(
-        [](auto arg) {
+        []<typename I>(I) {
             return std::pair{
-                mp::lower_to_tuple_v<decltype(arg)>,
+                mp::lower_to_tuple_v<I>,
                 Common::FptrCast(
                     [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
-                        constexpr auto t = mp::lower_to_tuple_v<decltype(arg)>;
-                        constexpr size_t fbits = std::get<0>(t);
-                        constexpr FP::RoundingMode rounding_mode = std::get<1>(t);
+                        constexpr size_t fbits = mp::get<0, I>::value;
+                        constexpr FP::RoundingMode rounding_mode = mp::get<1, I>::value;
 
                         for (size_t i = 0; i < output.size(); ++i) {
                             output[i] = static_cast<FPT>(FP::FPToFixed<FPT>(fsize, input[i], fbits, unsigned_, fpcr, rounding_mode, fpsr));
