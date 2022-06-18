@@ -136,7 +136,11 @@ void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm xmm_value, Xbyak::Xmm xmm_scratch) 
 
 template<size_t fsize>
 void ForceToDefaultNaN(BlockOfCode& code, Xbyak::Xmm result) {
-    if (code.HasHostFeature(HostFeature::AVX)) {
+    if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
+        const Xbyak::Opmask nan_mask = k1;
+        FCODE(vfpclasss)(nan_mask, result, u8(FpClass::QNaN | FpClass::SNaN));
+        FCODE(vblendmp)(result | nan_mask, result, code.MConst(ptr_b, fsize == 32 ? f32_nan : f64_nan));
+    } else if (code.HasHostFeature(HostFeature::AVX)) {
         FCODE(vcmpunords)(xmm0, result, result);
         FCODE(blendvp)(result, code.MConst(xword, fsize == 32 ? f32_nan : f64_nan));
     } else {

@@ -190,11 +190,16 @@ Xbyak::Address GetVectorOf(BlockOfCode& code) {
 template<size_t fsize>
 void ForceToDefaultNaN(BlockOfCode& code, FP::FPCR fpcr, Xbyak::Xmm result) {
     if (fpcr.DN()) {
-        const Xbyak::Xmm nan_mask = xmm0;
-        if (code.HasHostFeature(HostFeature::AVX)) {
+        if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
+            const Xbyak::Opmask nan_mask = k1;
+            FCODE(vfpclassp)(nan_mask, result, u8(FpClass::QNaN | FpClass::SNaN));
+            FCODE(vblendmp)(result | nan_mask, result, GetNaNVector<fsize>(code));
+        } else if (code.HasHostFeature(HostFeature::AVX)) {
+            const Xbyak::Xmm nan_mask = xmm0;
             FCODE(vcmpunordp)(nan_mask, result, result);
             FCODE(blendvp)(result, GetNaNVector<fsize>(code));
         } else {
+            const Xbyak::Xmm nan_mask = xmm0;
             code.movaps(nan_mask, result);
             FCODE(cmpordp)(nan_mask, nan_mask);
             code.andps(result, nan_mask);
