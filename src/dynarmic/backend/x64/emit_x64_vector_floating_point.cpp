@@ -18,6 +18,7 @@
 #include <mcl/mp/typelist/lower_to_tuple.hpp>
 #include <mcl/type_traits/function_info.hpp>
 #include <mcl/type_traits/integer_of_size.hpp>
+#include <xbyak/xbyak.h>
 
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/block_of_code.h"
@@ -223,6 +224,26 @@ void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm result) {
 template<size_t fsize>
 void DenormalsAreZero(BlockOfCode& code, FP::FPCR fpcr, std::initializer_list<Xbyak::Xmm> to_daz, Xbyak::Xmm tmp) {
     if (fpcr.FZ()) {
+        if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
+            constexpr u32 denormal_to_zero = FixupLUT(
+                FpFixup::Norm_Src,
+                FpFixup::Norm_Src,
+                FpFixup::Norm_Src,
+                FpFixup::Norm_Src,
+                FpFixup::Norm_Src,
+                FpFixup::Norm_Src,
+                FpFixup::Norm_Src,
+                FpFixup::Norm_Src);
+            constexpr u64 denormal_to_zero64 = mcl::bit::replicate_element<fsize, u64>(denormal_to_zero);
+
+            FCODE(vmovap)(tmp, code.MConst(xword, u64(denormal_to_zero64), u64(denormal_to_zero64)));
+
+            for (const Xbyak::Xmm& xmm : to_daz) {
+                FCODE(vfixupimmp)(xmm, xmm, tmp, u8(0));
+            }
+            return;
+        }
+
         if (fpcr.RMode() != FP::RoundingMode::TowardsMinusInfinity) {
             code.movaps(tmp, GetNegativeZeroVector<fsize>(code));
         } else {
