@@ -34,12 +34,6 @@ if (NOT TARGET tsl::robin_map)
     add_subdirectory(robin-map)
 endif()
 
-# vixl
-
-if (ARCHITECTURE STREQUAL "arm64" AND NOT TARGET vixl)
-    add_subdirectory(vixl EXCLUDE_FROM_ALL)
-endif()
-
 # xbyak
 
 if (NOT TARGET xbyak)
