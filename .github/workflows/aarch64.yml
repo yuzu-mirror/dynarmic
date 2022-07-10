@@ -1,0 +1,56 @@
+name: AArch64
+
+on: [ push, pull_request ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+      fail-fast: false
+
+    runs-on: ${{matrix.os}}
+
+    steps:
+
+      - name: Install build dependencies
+        if: ${{matrix.os == 'ubuntu-latest'}}
+        run: >
+          sudo apt-get install
+          gcc-10-aarch64-linux-gnu
+          g++-10-aarch64-linux-gnu
+          ninja-build
+          qemu-user
+
+      - name: Checkout dynarmic repo
+        uses: actions/checkout@v2
+
+      - name: Checkout ext-boost repo
+        uses: actions/checkout@v2
+        with:
+          repository: MerryMage/ext-boost
+          path: externals/ext-boost
+
+      - name: Configure CMake
+        env:
+          CC: aarch64-linux-gnu-gcc-10
+          CXX: aarch64-linux-gnu-g++-10
+        run: >
+          cmake
+          -B ${{github.workspace}}/build
+          -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DDYNARMIC_TESTS_USE_UNICORN=0
+          -DDYNARMIC_USE_LLVM=0
+          -G Ninja
+
+      - name: Build
+        working-directory: ${{github.workspace}}/build
+        run: cmake --build . --config Release
+
+      #- name: Test
+      #  working-directory: ${{github.workspace}}/build
+      #  run: qemu-aarch64 -L /usr/aarch64-linux-gnu ./tests/dynarmic_tests -d yes
