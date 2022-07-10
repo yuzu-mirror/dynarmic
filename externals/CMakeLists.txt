@@ -28,6 +28,14 @@ if (NOT TARGET merry::mcl)
     add_subdirectory(mcl)
 endif()
 
+# oaknut
+
+if (NOT TARGET merry::oaknut)
+    if (ARCHITECTURE STREQUAL "arm64")
+        add_subdirectory(oaknut)
+    endif()
+endif()
+
 # robin-map
 
 if (NOT TARGET tsl::robin_map)
