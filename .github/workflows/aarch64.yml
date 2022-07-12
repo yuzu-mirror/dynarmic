@@ -45,6 +45,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           -DDYNARMIC_TESTS_USE_UNICORN=0
           -DDYNARMIC_USE_LLVM=0
+          -DDYNARMIC_FRONTENDS=A32
           -G Ninja
 
       - name: Build

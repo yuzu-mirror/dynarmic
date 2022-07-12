@@ -365,6 +365,23 @@ if (ARCHITECTURE STREQUAL "x86_64")
     else()
         target_sources(dynarmic PRIVATE backend/x64/exception_handler_generic.cpp)
     endif()
+elseif(ARCHITECTURE STREQUAL "arm64")
+    target_link_libraries(dynarmic PRIVATE $<BUILD_INTERFACE:merry::oaknut>)
+
+    if ("A32" IN_LIST DYNARMIC_FRONTENDS)
+        target_sources(dynarmic PRIVATE
+            backend/arm64/a32_address_space.cpp
+            backend/arm64/a32_address_space.h
+            backend/arm64/a32_core.h
+            backend/arm64/a32_interface.cpp
+            backend/arm64/a32_jitstate.cpp
+            backend/arm64/a32_jitstate.h
+        )
+    endif()
+
+    if ("A64" IN_LIST DYNARMIC_FRONTENDS)
+        message(FATAL_ERROR "TODO: Unimplemented frontend for this host architecture")
+    endif()
 else()
     message(FATAL_ERROR "Unsupported architecture")
 endif()
