@@ -126,6 +126,11 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     EmitX64::EmitTerminal(block.GetTerminal(), ctx.Location().SetSingleStepping(false), ctx.IsSingleStep());
     code.int3();
 
+    for (auto& deferred_emit : ctx.deferred_emits) {
+        deferred_emit();
+    }
+    code.int3();
+
     const size_t size = static_cast<size_t>(code.getCurr() - entrypoint);
 
     const A64::LocationDescriptor descriptor{block.Location()};

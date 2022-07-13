@@ -6,6 +6,8 @@
 #pragma once
 
 #include <array>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
@@ -14,6 +16,7 @@
 #include <mcl/bitsizeof.hpp>
 #include <tsl/robin_map.h>
 #include <tsl/robin_set.h>
+#include <xbyak/xbyak.h>
 #include <xbyak/xbyak_util.h>
 
 #include "dynarmic/backend/x64/exception_handler.h"
@@ -58,7 +61,15 @@ struct EmitContext {
 
     RegAlloc& reg_alloc;
     IR::Block& block;
+
+    std::vector<std::function<void()>> deferred_emits;
 };
+
+using SharedLabel = std::shared_ptr<Xbyak::Label>;
+
+inline SharedLabel GenSharedLabel() {
+    return std::make_shared<Xbyak::Label>();
+}
 
 class EmitX64 {
 public:
