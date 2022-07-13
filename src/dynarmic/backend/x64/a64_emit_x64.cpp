@@ -85,9 +85,6 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     // Start emitting.
     code.align();
     const u8* const entrypoint = code.getCurr();
-    code.SwitchToFarCode();
-    const u8* const entrypoint_far = code.getCurr();
-    code.SwitchToNearCode();
 
     ASSERT(block.GetCondition() == IR::Cond::AL);
 
@@ -139,7 +136,7 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     const auto range = boost::icl::discrete_interval<u64>::closed(descriptor.PC(), end_location.PC() - 1);
     block_ranges.AddRange(range, descriptor);
 
-    return RegisterBlock(descriptor, entrypoint, entrypoint_far, size);
+    return RegisterBlock(descriptor, entrypoint, size);
 }
 
 void A64EmitX64::ClearCache() {
