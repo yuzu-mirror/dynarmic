@@ -32,6 +32,8 @@ using namespace Xbyak::util;
 EmitContext::EmitContext(RegAlloc& reg_alloc, IR::Block& block)
         : reg_alloc(reg_alloc), block(block) {}
 
+EmitContext::~EmitContext() = default;
+
 size_t EmitContext::GetInstOffset(IR::Inst* inst) const {
     return static_cast<size_t>(std::distance(block.begin(), IR::Block::iterator(inst)));
 }

@@ -51,6 +51,7 @@ using HalfVectorArray = std::array<T, A64FullVectorWidth::value / mcl::bitsizeof
 
 struct EmitContext {
     EmitContext(RegAlloc& reg_alloc, IR::Block& block);
+    virtual ~EmitContext();
 
     size_t GetInstOffset(IR::Inst* inst) const;
     void EraseInstruction(IR::Inst* inst);
