@@ -1173,16 +1173,9 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
         }
     }
 
-    Xbyak::Label dest;
-    code.jmp(dest, Xbyak::CodeGenerator::T_NEAR);
-
-    code.SwitchToFarCode();
-    code.align(16);
-    code.L(dest);
     code.mov(MJitStateReg(A32::Reg::PC), A32::LocationDescriptor{terminal.next}.PC());
     PushRSBHelper(rax, rbx, terminal.next);
     code.ForceReturnFromRunCode();
-    code.SwitchToNearCode();
 }
 
 void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
