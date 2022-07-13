@@ -412,27 +412,20 @@ void A64EmitX64::EmitCheckMemoryAbort(A64EmitContext&, IR::Inst* inst, Xbyak::La
         return;
     }
 
+    Xbyak::Label skip;
+
     const A64::LocationDescriptor current_location{IR::LocationDescriptor{inst->GetArg(0).GetU64()}};
 
     code.test(dword[r15 + offsetof(A64JitState, halt_reason)], static_cast<u32>(HaltReason::MemoryAbort));
-
-    Xbyak::Label memory_abort;
-
-    if (!end) {
-        code.jnz(memory_abort, code.T_NEAR);
-        code.SwitchToFarCode();
-    } else {
+    if (end) {
         code.jz(*end, code.T_NEAR);
+    } else {
+        code.jz(skip, code.T_NEAR);
     }
-
-    code.L(memory_abort);
     code.mov(rax, current_location.PC());
     code.mov(qword[r15 + offsetof(A64JitState, pc)], rax);
     code.ForceReturnFromRunCode();
-
-    if (!end) {
-        code.SwitchToNearCode();
-    }
+    code.L(skip);
 }
 
 }  // namespace Dynarmic::Backend::X64

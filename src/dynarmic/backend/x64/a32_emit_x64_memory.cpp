@@ -240,27 +240,20 @@ void A32EmitX64::EmitCheckMemoryAbort(A32EmitContext& ctx, IR::Inst* inst, Xbyak
         return;
     }
 
+    Xbyak::Label skip;
+
     const A32::LocationDescriptor current_location{IR::LocationDescriptor{inst->GetArg(0).GetU64()}};
 
     code.test(dword[r15 + offsetof(A32JitState, halt_reason)], static_cast<u32>(HaltReason::MemoryAbort));
-
-    Xbyak::Label memory_abort;
-
-    if (!end) {
-        code.jnz(memory_abort, code.T_NEAR);
-        code.SwitchToFarCode();
-    } else {
+    if (end) {
         code.jz(*end, code.T_NEAR);
+    } else {
+        code.jz(skip, code.T_NEAR);
     }
-
-    code.L(memory_abort);
     EmitSetUpperLocationDescriptor(current_location, ctx.Location());
     code.mov(dword[r15 + offsetof(A32JitState, Reg) + sizeof(u32) * 15], current_location.PC());
     code.ForceReturnFromRunCode();
-
-    if (!end) {
-        code.SwitchToNearCode();
-    }
+    code.L(skip);
 }
 
 }  // namespace Dynarmic::Backend::X64
