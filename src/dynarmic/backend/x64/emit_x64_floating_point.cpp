@@ -471,7 +471,6 @@ template<size_t fsize, bool is_max>
 static void EmitFPMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mcl::unsigned_integer_of_size<fsize>;
     constexpr FPT default_nan = FP::FPInfo<FPT>::DefaultNaN();
-    constexpr u8 mantissa_msb_bit = static_cast<u8>(FP::FPInfo<FPT>::explicit_mantissa_width - 1);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
@@ -515,6 +514,8 @@ static void EmitFPMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 
         ctx.deferred_emits.emplace_back([=, &code, &ctx] {
             Xbyak::Label nan, op2_is_nan, snan, maybe_both_nan;
+
+            constexpr u8 mantissa_msb_bit = static_cast<u8>(FP::FPInfo<FPT>::explicit_mantissa_width - 1);
 
             code.L(*z);
             code.jp(nan);
