@@ -5,10 +5,12 @@
 
 #pragma once
 
+#include <mcl/stdint.hpp>
 #include <oaknut/code_block.hpp>
 #include <oaknut/oaknut.hpp>
 #include <tsl/robin_map.h>
 
+#include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/interface/A32/config.h"
 #include "dynarmic/interface/halt_reason.h"
 #include "dynarmic/ir/basic_block.h"
@@ -28,12 +30,16 @@ public:
 
     void* GetOrEmit(IR::LocationDescriptor descriptor);
 
+    void ClearCache();
+
 private:
     friend class A32Core;
 
     void EmitPrelude();
 
-    void* Emit(IR::Block ir_block);
+    size_t GetRemainingSize();
+    EmittedBlockInfo Emit(IR::Block ir_block);
+    void Link(EmittedBlockInfo& block);
 
     const A32::UserConfig conf;
 
@@ -41,12 +47,14 @@ private:
     oaknut::CodeGenerator code;
 
     tsl::robin_map<u64, void*> block_entries;
+    tsl::robin_map<u64, EmittedBlockInfo> block_infos;
 
     struct PreludeInfo {
         u32* end_of_prelude;
 
         using RunCodeFuncType = HaltReason (*)(void* entry_point, A32JitState* context, volatile u32* halt_reason);
         RunCodeFuncType run_code;
+        void* return_from_run_code;
     } prelude_info;
 };
 
