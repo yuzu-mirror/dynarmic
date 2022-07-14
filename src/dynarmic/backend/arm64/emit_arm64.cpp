@@ -18,7 +18,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block) {
     (void)block;
 
     EmittedBlockInfo ebi;
-    ebi.entry_point = code.ptr<void*>();
+    ebi.entry_point = code.ptr<CodePtr>();
 
     code.MOV(W0, 8);
     code.STR(W0, X1, offsetof(A32JitState, regs) + 0 * sizeof(u32));
@@ -26,10 +26,10 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block) {
     code.STR(W0, X1, offsetof(A32JitState, regs) + 1 * sizeof(u32));
     code.STR(W0, X1, offsetof(A32JitState, regs) + 15 * sizeof(u32));
 
-    ebi.relocations[code.ptr<char*>() - reinterpret_cast<char*>(ebi.entry_point)] = LinkTarget::ReturnFromRunCode;
+    ebi.relocations[code.ptr<CodePtr>() - ebi.entry_point] = LinkTarget::ReturnFromRunCode;
     code.NOP();
 
-    ebi.size = reinterpret_cast<size_t>(code.ptr<void*>()) - reinterpret_cast<size_t>(ebi.entry_point);
+    ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
     return ebi;
 }
 

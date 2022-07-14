@@ -37,15 +37,15 @@ IR::Block A32AddressSpace::GenerateIR(IR::LocationDescriptor descriptor) const {
     return ir_block;
 }
 
-void* A32AddressSpace::Get(IR::LocationDescriptor descriptor) {
+CodePtr A32AddressSpace::Get(IR::LocationDescriptor descriptor) {
     if (const auto iter = block_entries.find(descriptor.Value()); iter != block_entries.end()) {
         return iter->second;
     }
     return nullptr;
 }
 
-void* A32AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
-    if (void* block_entry = Get(descriptor)) {
+CodePtr A32AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
+    if (CodePtr block_entry = Get(descriptor)) {
         return block_entry;
     }
 
@@ -96,7 +96,7 @@ void A32AddressSpace::EmitPrelude() {
 }
 
 size_t A32AddressSpace::GetRemainingSize() {
-    return conf.code_cache_size - (reinterpret_cast<uintptr_t>(code.ptr<void*>()) - reinterpret_cast<uintptr_t>(mem.ptr()));
+    return conf.code_cache_size - (code.ptr<CodePtr>() - reinterpret_cast<CodePtr>(mem.ptr()));
 }
 
 EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
@@ -119,7 +119,7 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
     using namespace oaknut::util;
 
     for (auto [ptr_offset, target] : block_info.relocations) {
-        CodeGenerator c{reinterpret_cast<u32*>(reinterpret_cast<char*>(block_info.entry_point) + ptr_offset)};
+        CodeGenerator c{reinterpret_cast<u32*>(block_info.entry_point + ptr_offset)};
 
         switch (target) {
         case LinkTarget::ReturnFromRunCode:
