@@ -6,9 +6,9 @@
 #pragma once
 
 #include <cstddef>
+#include <vector>
 
 #include <mcl/stdint.hpp>
-#include <tsl/robin_map.h>
 
 namespace oaknut {
 struct PointerCodeGeneratorPolicy;
@@ -29,10 +29,15 @@ enum class LinkTarget {
     ReturnFromRunCode,
 };
 
+struct Relocation {
+    std::ptrdiff_t code_offset;
+    LinkTarget target;
+};
+
 struct EmittedBlockInfo {
     CodePtr entry_point;
     size_t size;
-    tsl::robin_map<std::ptrdiff_t, LinkTarget> relocations;
+    std::vector<Relocation> relocations;
 };
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block);
