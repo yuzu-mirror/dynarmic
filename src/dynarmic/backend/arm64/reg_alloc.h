@@ -67,17 +67,16 @@ public:
 
     operator T() const { return *reg; }
 
-    template<typename U = T, typename = std::enable_if_t<std::is_same_v<U, oaknut::WReg> && std::is_same_v<T, U>>>
-    operator oaknut::WRegWsp() const {
+    operator oaknut::WRegWsp() const requires(std::is_same_v<T, oaknut::WReg>) {
         return *reg;
     }
 
-    template<typename U = T, typename = std::enable_if_t<std::is_same_v<U, oaknut::XReg> && std::is_same_v<T, U>>>
-    operator oaknut::XRegSp() const {
+    operator oaknut::XRegSp() const requires(std::is_same_v<T, oaknut::XReg>) {
         return *reg;
     }
 
     T operator*() const { return *reg; }
+    const T* operator->() const { return &*reg; }
 
     ~RAReg();
 

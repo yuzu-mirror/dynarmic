@@ -372,6 +372,8 @@ elseif(ARCHITECTURE STREQUAL "arm64")
         backend/arm64/abi.h
         backend/arm64/emit_arm64.cpp
         backend/arm64/emit_arm64.h
+        backend/arm64/emit_arm64_data_processing.cpp
+        backend/arm64/emit_context.h
         backend/arm64/reg_alloc.cpp
         backend/arm64/reg_alloc.h
         backend/arm64/stack_layout.h
@@ -385,6 +387,7 @@ elseif(ARCHITECTURE STREQUAL "arm64")
             backend/arm64/a32_interface.cpp
             backend/arm64/a32_jitstate.cpp
             backend/arm64/a32_jitstate.h
+            backend/arm64/emit_arm64_a32.cpp
         )
     endif()
 
