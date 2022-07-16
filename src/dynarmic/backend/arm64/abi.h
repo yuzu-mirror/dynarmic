@@ -5,12 +5,14 @@
 
 #pragma once
 
-#include <array>
-
-#include <mcl/stdint.hpp>
+#include <oaknut/oaknut.hpp>
 
 namespace Dynarmic::Backend::Arm64 {
 
-constexpr u32 ABI_ALL_
+constexpr oaknut::XReg Xstate{28};
+constexpr oaknut::XReg Xhalt{27};
+
+constexpr oaknut::XReg Xscratch0{16}, Xscratch1{17};
+constexpr oaknut::WReg Wscratch0{16}, Wscratch1{17};
 
 }  // namespace Dynarmic::Backend::Arm64

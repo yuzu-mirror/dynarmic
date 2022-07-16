@@ -5,6 +5,7 @@
 
 #include "dynarmic/backend/arm64/a32_address_space.h"
 
+#include "dynarmic/backend/arm64/abi.h"
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
@@ -78,6 +79,8 @@ void A32AddressSpace::EmitPrelude() {
     for (int i = 0; i < 32; i += 2) {
         code.STP(QReg{i}, QReg{i + 1}, SP, PRE_INDEXED, -32);
     }
+    code.MOV(Xstate, X1);
+    code.MOV(Xhalt, X2);
     code.BR(X0);
 
     prelude_info.return_from_run_code = code.ptr<void*>();
@@ -106,7 +109,7 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
 
     mem.unprotect();
 
-    EmittedBlockInfo block_info = EmitArm64(code, std::move(block));
+    EmittedBlockInfo block_info = EmitArm64(code, std::move(block), {});
     Link(block_info);
 
     mem.protect();

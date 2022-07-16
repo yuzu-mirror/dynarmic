@@ -19,6 +19,8 @@ using CodeGenerator = BasicCodeGenerator<PointerCodeGeneratorPolicy>;
 
 namespace Dynarmic::IR {
 class Block;
+enum class Opcode;
+class Inst;
 }  // namespace Dynarmic::IR
 
 namespace Dynarmic::Backend::Arm64 {
@@ -40,6 +42,14 @@ struct EmittedBlockInfo {
     std::vector<Relocation> relocations;
 };
 
-EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block);
+struct EmitConfig {
+};
+
+struct EmitContext;
+
+template<IR::Opcode op>
+void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
+
+EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf);
 
 }  // namespace Dynarmic::Backend::Arm64

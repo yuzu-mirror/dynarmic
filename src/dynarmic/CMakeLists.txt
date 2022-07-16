@@ -368,6 +368,15 @@ if (ARCHITECTURE STREQUAL "x86_64")
 elseif(ARCHITECTURE STREQUAL "arm64")
     target_link_libraries(dynarmic PRIVATE $<BUILD_INTERFACE:merry::oaknut>)
 
+    target_sources(dynarmic PRIVATE
+        backend/arm64/abi.h
+        backend/arm64/emit_arm64.cpp
+        backend/arm64/emit_arm64.h
+        backend/arm64/reg_alloc.cpp
+        backend/arm64/reg_alloc.h
+        backend/arm64/stack_layout.h
+    )
+
     if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         target_sources(dynarmic PRIVATE
             backend/arm64/a32_address_space.cpp
@@ -376,8 +385,6 @@ elseif(ARCHITECTURE STREQUAL "arm64")
             backend/arm64/a32_interface.cpp
             backend/arm64/a32_jitstate.cpp
             backend/arm64/a32_jitstate.h
-            backend/arm64/emit_arm64.cpp
-            backend/arm64/emit_arm64.h
         )
     endif()
 
