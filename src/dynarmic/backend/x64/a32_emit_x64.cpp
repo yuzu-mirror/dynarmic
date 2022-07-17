@@ -541,6 +541,37 @@ void A32EmitX64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
     }
 }
 
+void A32EmitX64::EmitA32SetCpsrNZ(A32EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.Use(args[0], HostLoc::RAX);
+
+    code.mov(al, code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1]);
+    code.and_(al, 1);
+    code.or_(al, ah);
+    code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+}
+
+void A32EmitX64::EmitA32SetCpsrNZC(A32EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.Use(args[0], HostLoc::RAX);
+
+    if (args[1].IsImmediate()) {
+        const bool c = args[1].GetImmediateU1();
+
+        code.mov(al, ah);
+        code.or_(al, c);
+        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+    } else {
+        const Xbyak::Reg8 c = ctx.reg_alloc.UseGpr(args[1]).cvt8();
+
+        code.mov(al, ah);
+        code.or_(al, c);
+        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+    }
+}
+
 static void EmitGetFlag(BlockOfCode& code, A32EmitContext& ctx, IR::Inst* inst, size_t flag_bit) {
     const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
     code.mov(result, dword[r15 + offsetof(A32JitState, cpsr_nzcv)]);
@@ -551,46 +582,8 @@ static void EmitGetFlag(BlockOfCode& code, A32EmitContext& ctx, IR::Inst* inst, 
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
-static void EmitSetFlag(BlockOfCode& code, A32EmitContext& ctx, IR::Inst* inst, size_t flag_bit) {
-    const u32 flag_mask = 1u << flag_bit;
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    if (args[0].IsImmediate()) {
-        if (args[0].GetImmediateU1()) {
-            code.or_(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], flag_mask);
-        } else {
-            code.and_(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], ~flag_mask);
-        }
-    } else {
-        const Xbyak::Reg32 to_store = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
-
-        if (flag_bit != 0) {
-            code.shl(to_store, static_cast<int>(flag_bit));
-            code.and_(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], ~flag_mask);
-            code.or_(dword[r15 + offsetof(A32JitState, cpsr_nzcv)], to_store);
-        } else {
-            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv)], to_store.cvt8());
-        }
-    }
-}
-
-void A32EmitX64::EmitA32SetNFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    EmitSetFlag(code, ctx, inst, NZCV::x64_n_flag_bit);
-}
-
-void A32EmitX64::EmitA32SetZFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    EmitSetFlag(code, ctx, inst, NZCV::x64_z_flag_bit);
-}
-
 void A32EmitX64::EmitA32GetCFlag(A32EmitContext& ctx, IR::Inst* inst) {
     EmitGetFlag(code, ctx, inst, NZCV::x64_c_flag_bit);
-}
-
-void A32EmitX64::EmitA32SetCFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    EmitSetFlag(code, ctx, inst, NZCV::x64_c_flag_bit);
-}
-
-void A32EmitX64::EmitA32SetVFlag(A32EmitContext& ctx, IR::Inst* inst) {
-    EmitSetFlag(code, ctx, inst, NZCV::x64_v_flag_bit);
 }
 
 void A32EmitX64::EmitA32OrQFlag(A32EmitContext& ctx, IR::Inst* inst) {

@@ -176,10 +176,8 @@ bool Inst::WritesToCPSR() const {
     case Opcode::A32SetCpsrNZCVRaw:
     case Opcode::A32SetCpsrNZCV:
     case Opcode::A32SetCpsrNZCVQ:
-    case Opcode::A32SetNFlag:
-    case Opcode::A32SetZFlag:
-    case Opcode::A32SetCFlag:
-    case Opcode::A32SetVFlag:
+    case Opcode::A32SetCpsrNZ:
+    case Opcode::A32SetCpsrNZC:
     case Opcode::A32OrQFlag:
     case Opcode::A32SetGEFlags:
     case Opcode::A32SetGEFlagsCompressed:
@@ -546,6 +544,7 @@ bool Inst::IsAPseudoOperation() const {
     case Opcode::GetOverflowFromOp:
     case Opcode::GetGEFromOp:
     case Opcode::GetNZCVFromOp:
+    case Opcode::GetNZFromOp:
     case Opcode::GetUpperFromOp:
     case Opcode::GetLowerFromOp:
     case Opcode::MostSignificantBit:
@@ -669,7 +668,7 @@ void Inst::Use(const Value& value) {
         Inst* insert_point = value.GetInst();
         while (insert_point->next_pseudoop) {
             insert_point = insert_point->next_pseudoop;
-            DEBUG_ASSERT(insert_point->GetArg(0).GetInst() == this);
+            DEBUG_ASSERT(insert_point->GetArg(0).GetInst() == value.GetInst());
         }
         insert_point->next_pseudoop = this;
     }
@@ -682,7 +681,7 @@ void Inst::UndoUse(const Value& value) {
         Inst* insert_point = value.GetInst();
         while (insert_point->next_pseudoop != this) {
             insert_point = insert_point->next_pseudoop;
-            DEBUG_ASSERT(insert_point->GetArg(0).GetInst() == this);
+            DEBUG_ASSERT(insert_point->GetArg(0).GetInst() == value.GetInst());
         }
         insert_point->next_pseudoop = next_pseudoop;
         next_pseudoop = nullptr;

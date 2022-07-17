@@ -134,6 +134,31 @@ void EmitX64::EmitGetLowerFromOp(EmitContext&, IR::Inst*) {
     ASSERT_MSG(false, "should never happen");
 }
 
+void EmitX64::EmitGetNZFromOp(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const int bitsize = [&] {
+        switch (args[0].GetType()) {
+        case IR::Type::U8:
+            return 8;
+        case IR::Type::U16:
+            return 16;
+        case IR::Type::U32:
+            return 32;
+        case IR::Type::U64:
+            return 64;
+        default:
+            UNREACHABLE();
+        }
+    }();
+
+    const Xbyak::Reg64 nz = ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
+    const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
+    code.cmp(value, 0);
+    code.lahf();
+    ctx.reg_alloc.DefineValue(inst, nz);
+}
+
 void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
