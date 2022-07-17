@@ -548,6 +548,9 @@ bool Inst::IsAPseudoOperation() const {
     case Opcode::GetNZCVFromOp:
     case Opcode::GetUpperFromOp:
     case Opcode::GetLowerFromOp:
+    case Opcode::MostSignificantBit:
+    case Opcode::IsZero32:
+    case Opcode::IsZero64:
         return true;
 
     default:
