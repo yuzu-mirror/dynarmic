@@ -48,11 +48,10 @@ void EmitIR<IR::Opcode::GetNZFromOp>(oaknut::CodeGenerator& code, EmitContext& c
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     auto Wvalue = ctx.reg_alloc.ReadW(args[0]);
-    auto Wnz = ctx.reg_alloc.WriteW(inst);
-    RegAlloc::Realize(Wvalue, Wnz);
+    auto flags = ctx.reg_alloc.WriteFlags(inst);
+    RegAlloc::Realize(Wvalue, flags);
 
-    code.CMP(*Wnz, WZR);
-    code.MRS(Wnz->toX(), static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000));
+    code.CMP(*Wvalue, WZR);
 }
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf) {

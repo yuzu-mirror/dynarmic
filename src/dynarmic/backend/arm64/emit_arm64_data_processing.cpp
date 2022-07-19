@@ -47,6 +47,7 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
             auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
             auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
             RegAlloc::Realize(Wresult, Woperand, Wshift);
+            ctx.reg_alloc.SpillFlags();
 
             code.AND(Wscratch0, Wshift, 0xff);
             code.LSL(Wresult, Woperand, Wscratch0);
@@ -83,6 +84,7 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
             auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
             auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
             RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            ctx.reg_alloc.SpillFlags();
 
             // TODO: Use RMIF
 

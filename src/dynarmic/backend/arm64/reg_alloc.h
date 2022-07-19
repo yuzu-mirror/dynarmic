@@ -30,6 +30,7 @@ struct HostLoc {
     enum class Kind {
         Gpr,
         Fpr,
+        Flags,
         Spill,
     } kind;
     int index;
@@ -60,10 +61,23 @@ private:
     IR::Value value;
 };
 
+struct FlagsTag {
+private:
+    template<typename>
+    friend struct RAReg;
+
+    explicit FlagsTag(int) {}
+    int index() const { return 0; }
+};
+
 template<typename T>
 struct RAReg {
 public:
-    static constexpr bool is_vector = std::is_base_of_v<oaknut::VReg, T>;
+    static constexpr HostLoc::Kind kind = !std::is_same_v<FlagsTag, T>
+                                            ? std::is_base_of_v<oaknut::VReg, T>
+                                                ? HostLoc::Kind::Fpr
+                                                : HostLoc::Kind::Gpr
+                                            : HostLoc::Kind::Flags;
 
     operator T() const { return *reg; }
 
@@ -120,6 +134,8 @@ public:
     auto ReadH(Argument& arg) { return RAReg<oaknut::HReg>{*this, false, PreReadImpl(arg.value)}; }
     auto ReadB(Argument& arg) { return RAReg<oaknut::BReg>{*this, false, PreReadImpl(arg.value)}; }
 
+    auto ReadFlags(Argument& arg) { return RAReg<FlagsTag>{*this, false, PreReadImpl(arg.value)}; }
+
     template<size_t size>
     auto ReadReg(Argument& arg) {
         if constexpr (size == 64) {
@@ -157,6 +173,8 @@ public:
     auto WriteH(IR::Inst* inst) { return RAReg<oaknut::HReg>{*this, true, inst}; }
     auto WriteB(IR::Inst* inst) { return RAReg<oaknut::BReg>{*this, true, inst}; }
 
+    auto WriteFlags(IR::Inst* inst) { return RAReg<FlagsTag>{*this, true, inst}; }
+
     template<size_t size>
     auto WriteReg(IR::Inst* inst) {
         if constexpr (size == 64) {
@@ -185,6 +203,7 @@ public:
         }
     }
 
+    void SpillFlags();
     void SpillAll();
 
     template<typename... Ts>
@@ -198,13 +217,14 @@ private:
     friend struct RAReg;
 
     const IR::Inst* PreReadImpl(const IR::Value& value) {
-        ValueInfo(value.GetInst()).locked = true;
-        return value.GetInst();
+        const IR::Inst* inst = value.GetInst();
+        ValueInfo(inst).locked = true;
+        return inst;
     }
 
-    template<bool is_vector>
+    template<HostLoc::Kind kind>
     int RealizeReadImpl(const IR::Inst* value);
-    template<bool is_vector>
+    template<HostLoc::Kind kind>
     int RealizeWriteImpl(const IR::Inst* value);
     void Unlock(HostLoc host_loc);
 
@@ -223,6 +243,7 @@ private:
 
     std::array<HostLocInfo, 32> gprs;
     std::array<HostLocInfo, 32> fprs;
+    HostLocInfo flags;
     std::array<HostLocInfo, SpillCount> spills;
 
     mutable std::mt19937 rand_gen;
@@ -231,13 +252,13 @@ private:
 template<typename T>
 RAReg<T>::~RAReg() {
     if (reg) {
-        reg_alloc.Unlock(HostLoc{is_vector ? HostLoc::Kind::Fpr : HostLoc::Kind::Gpr, reg->index()});
+        reg_alloc.Unlock(HostLoc{kind, reg->index()});
     }
 }
 
 template<typename T>
 void RAReg<T>::Realize() {
-    reg = T{write ? reg_alloc.RealizeWriteImpl<is_vector>(value) : reg_alloc.RealizeReadImpl<is_vector>(value)};
+    reg = T{write ? reg_alloc.RealizeWriteImpl<kind>(value) : reg_alloc.RealizeReadImpl<kind>(value)};
 }
 
 }  // namespace Dynarmic::Backend::Arm64

@@ -88,10 +88,8 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
-template<bool is_vector>
+template<HostLoc::Kind required_kind>
 int RegAlloc::RealizeReadImpl(const IR::Inst* value) {
-    constexpr HostLoc::Kind required_kind = is_vector ? HostLoc::Kind::Fpr : HostLoc::Kind::Gpr;
-
     const auto current_location = ValueLocation(value);
     ASSERT(current_location);
 
@@ -103,26 +101,7 @@ int RegAlloc::RealizeReadImpl(const IR::Inst* value) {
     ASSERT(!ValueInfo(*current_location).realized);
     ASSERT(ValueInfo(*current_location).locked);
 
-    if constexpr (is_vector) {
-        const int new_location_index = AllocateRegister(fprs, fpr_order);
-        SpillFpr(new_location_index);
-
-        switch (current_location->kind) {
-        case HostLoc::Kind::Gpr:
-            code.FMOV(oaknut::DReg{new_location_index}, oaknut::XReg{current_location->index});
-            break;
-        case HostLoc::Kind::Fpr:
-            ASSERT_FALSE("Logic error");
-            break;
-        case HostLoc::Kind::Spill:
-            code.LDR(oaknut::QReg{new_location_index}, SP, spill_offset + new_location_index * spill_slot_size);
-            break;
-        }
-
-        fprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
-        fprs[new_location_index].realized = true;
-        return new_location_index;
-    } else {
+    if constexpr (required_kind == HostLoc::Kind::Gpr) {
         const int new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
 
@@ -137,15 +116,44 @@ int RegAlloc::RealizeReadImpl(const IR::Inst* value) {
         case HostLoc::Kind::Spill:
             code.LDR(oaknut::XReg{new_location_index}, SP, spill_offset + new_location_index * spill_slot_size);
             break;
+        case HostLoc::Kind::Flags:
+            code.MRS(oaknut::XReg{new_location_index}, static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000));
+            break;
         }
 
         gprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
         gprs[new_location_index].realized = true;
         return new_location_index;
+    } else if constexpr (required_kind == HostLoc::Kind::Fpr) {
+        const int new_location_index = AllocateRegister(fprs, fpr_order);
+        SpillFpr(new_location_index);
+
+        switch (current_location->kind) {
+        case HostLoc::Kind::Gpr:
+            code.FMOV(oaknut::DReg{new_location_index}, oaknut::XReg{current_location->index});
+            break;
+        case HostLoc::Kind::Fpr:
+            ASSERT_FALSE("Logic error");
+            break;
+        case HostLoc::Kind::Spill:
+            code.LDR(oaknut::QReg{new_location_index}, SP, spill_offset + new_location_index * spill_slot_size);
+            break;
+        case HostLoc::Kind::Flags:
+            ASSERT_FALSE("Moving from flags into fprs is not currently supported");
+            break;
+        }
+
+        fprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
+        fprs[new_location_index].realized = true;
+        return new_location_index;
+    } else if constexpr (required_kind == HostLoc::Kind::Flags) {
+        ASSERT_FALSE("Loading flags back into NZCV is not currently supported");
+    } else {
+        static_assert(required_kind == HostLoc::Kind::Fpr || required_kind == HostLoc::Kind::Gpr || required_kind == HostLoc::Kind::Flags);
     }
 }
 
-template<bool is_vector>
+template<HostLoc::Kind kind>
 int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
     ASSERT(!ValueLocation(value));
 
@@ -157,23 +165,31 @@ int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
         info.expected_uses += value->UseCount();
     };
 
-    if constexpr (is_vector) {
-        const int new_location_index = AllocateRegister(fprs, fpr_order);
-        SpillFpr(new_location_index);
-        setup_location(fprs[new_location_index]);
-        return new_location_index;
-    } else {
+    if constexpr (kind == HostLoc::Kind::Gpr) {
         const int new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
         setup_location(gprs[new_location_index]);
         return new_location_index;
+    } else if constexpr (kind == HostLoc::Kind::Fpr) {
+        const int new_location_index = AllocateRegister(fprs, fpr_order);
+        SpillFpr(new_location_index);
+        setup_location(fprs[new_location_index]);
+        return new_location_index;
+    } else if constexpr (kind == HostLoc::Kind::Flags) {
+        ASSERT(flags.values.empty());
+        setup_location(flags);
+        return 0;
+    } else {
+        static_assert(kind == HostLoc::Kind::Fpr || kind == HostLoc::Kind::Gpr || kind == HostLoc::Kind::Flags);
     }
 }
 
-template int RegAlloc::RealizeReadImpl<true>(const IR::Inst* value);
-template int RegAlloc::RealizeReadImpl<false>(const IR::Inst* value);
-template int RegAlloc::RealizeWriteImpl<true>(const IR::Inst* value);
-template int RegAlloc::RealizeWriteImpl<false>(const IR::Inst* value);
+template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Gpr>(const IR::Inst* value);
+template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
+template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Flags>(const IR::Inst* value);
+template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Gpr>(const IR::Inst* value);
+template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
+template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Flags>(const IR::Inst* value);
 
 void RegAlloc::Unlock(HostLoc host_loc) {
     HostLocInfo& info = ValueInfo(host_loc);
@@ -223,6 +239,17 @@ void RegAlloc::SpillFpr(int index) {
     spills[new_location_index] = std::exchange(fprs[index], {});
 }
 
+void RegAlloc::SpillFlags() {
+    ASSERT(!flags.locked && !flags.realized);
+    if (flags.values.empty()) {
+        return;
+    }
+    const int new_location_index = AllocateRegister(gprs, gpr_order);
+    SpillGpr(new_location_index);
+    code.MRS(oaknut::XReg{new_location_index}, static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000));
+    gprs[new_location_index] = std::exchange(flags, {});
+}
+
 int RegAlloc::FindFreeSpill() const {
     const auto iter = std::find_if(spills.begin(), spills.end(), [](const HostLocInfo& info) { return info.values.empty(); });
     ASSERT_MSG(iter != spills.end(), "All spill locations are full");
@@ -240,6 +267,9 @@ std::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {
     if (const auto iter = std::find_if(fprs.begin(), fprs.end(), contains_value); iter != fprs.end()) {
         return HostLoc{HostLoc::Kind::Fpr, static_cast<int>(iter - fprs.begin())};
     }
+    if (contains_value(flags)) {
+        return HostLoc{HostLoc::Kind::Flags, 0};
+    }
     if (const auto iter = std::find_if(spills.begin(), spills.end(), contains_value); iter != spills.end()) {
         return HostLoc{HostLoc::Kind::Spill, static_cast<int>(iter - spills.begin())};
     }
@@ -252,6 +282,8 @@ HostLocInfo& RegAlloc::ValueInfo(HostLoc host_loc) {
         return gprs[static_cast<size_t>(host_loc.index)];
     case HostLoc::Kind::Fpr:
         return fprs[static_cast<size_t>(host_loc.index)];
+    case HostLoc::Kind::Flags:
+        return flags;
     case HostLoc::Kind::Spill:
         return spills[static_cast<size_t>(host_loc.index)];
     }
@@ -263,13 +295,16 @@ HostLocInfo& RegAlloc::ValueInfo(const IR::Inst* value) {
         return info.values.contains(value);
     };
 
-    if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value)) {
+    if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value); iter != gprs.end()) {
         return *iter;
     }
-    if (const auto iter = std::find_if(fprs.begin(), fprs.end(), contains_value)) {
+    if (const auto iter = std::find_if(fprs.begin(), fprs.end(), contains_value); iter != gprs.end()) {
         return *iter;
     }
-    if (const auto iter = std::find_if(spills.begin(), spills.end(), contains_value)) {
+    if (contains_value(flags)) {
+        return flags;
+    }
+    if (const auto iter = std::find_if(spills.begin(), spills.end(), contains_value); iter != gprs.end()) {
         return *iter;
     }
     ASSERT_FALSE("RegAlloc::ValueInfo: Value not found");
