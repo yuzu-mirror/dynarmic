@@ -208,6 +208,13 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
                 cpsr_info.nzc.last_set_instruction->SetArg(0, IR::Value::EmptyNZCVImmediateMarker());
             }
 
+            if (opt.convert_nz_to_nzc && !cpsr_info.c.register_value.IsEmpty()) {
+                ir.SetInsertionPoint(inst);
+                ir.SetCpsrNZC(IR::NZCV{inst->GetArg(0)}, ir.GetCFlag());
+                inst->Invalidate();
+                break;
+            }
+
             // cpsr_info.c remains valid
             cpsr_info.nzc = {};
             cpsr_info.nzcv = {};
