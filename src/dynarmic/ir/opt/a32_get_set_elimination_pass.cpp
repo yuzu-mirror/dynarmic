@@ -209,7 +209,7 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
             }
 
             if (opt.convert_nz_to_nzc && !cpsr_info.c.register_value.IsEmpty()) {
-                ir.SetInsertionPoint(inst);
+                ir.SetInsertionPointAfter(inst);
                 ir.SetCpsrNZC(IR::NZCV{inst->GetArg(0)}, ir.GetCFlag());
                 inst->Invalidate();
                 break;
@@ -223,7 +223,7 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
         }
         case IR::Opcode::A32SetCpsrNZC: {
             if (opt.convert_nzc_to_nz && !inst->GetArg(1).IsImmediate() && inst->GetArg(1).GetInstRecursive()->GetOpcode() == IR::Opcode::A32GetCFlag) {
-                ir.SetInsertionPoint(inst);
+                ir.SetInsertionPointAfter(inst);
                 ir.SetCpsrNZ(IR::NZCV{inst->GetArg(0)});
                 inst->Invalidate();
                 break;
