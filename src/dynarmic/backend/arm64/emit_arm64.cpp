@@ -93,19 +93,27 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 
     reg_alloc.AssertNoMoreUses();
 
-    // TODO: Add Cycles
+    if (emit_conf.enable_cycle_counting) {
+        const size_t cycles_to_add = block.CycleCount();
+        code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
+        if (oaknut::AddSubImm::is_valid(cycles_to_add)) {
+            code.SUBS(Xscratch0, Xscratch0, cycles_to_add);
+        } else {
+            code.MOV(Xscratch1, cycles_to_add);
+            code.SUBS(Xscratch0, Xscratch0, Xscratch1);
+        }
+        code.STR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
+    }
 
-    // TODO: Emit Terminal
-    const auto term = block.GetTerminal();
-    const IR::Term::LinkBlock* link_block_term = boost::get<IR::Term::LinkBlock>(&term);
-    ASSERT(link_block_term);
-    code.MOV(Xscratch0, link_block_term->next.Value());
-    code.STUR(Xscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
-    ebi.relocations.emplace_back(Relocation{code.ptr<CodePtr>() - ebi.entry_point, LinkTarget::ReturnFromRunCode});
-    code.NOP();
+    EmitA32Terminal(code, ctx);
 
     ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
     return ebi;
+}
+
+void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target) {
+    ctx.ebi.relocations.emplace_back(Relocation{code.ptr<CodePtr>() - ctx.ebi.entry_point, link_target});
+    code.NOP();
 }
 
 }  // namespace Dynarmic::Backend::Arm64

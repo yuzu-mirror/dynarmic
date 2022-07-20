@@ -15,12 +15,14 @@ struct PointerCodeGeneratorPolicy;
 template<typename>
 class BasicCodeGenerator;
 using CodeGenerator = BasicCodeGenerator<PointerCodeGeneratorPolicy>;
+struct Label;
 }  // namespace oaknut
 
 namespace Dynarmic::IR {
 class Block;
-enum class Opcode;
 class Inst;
+enum class Cond;
+enum class Opcode;
 }  // namespace Dynarmic::IR
 
 namespace Dynarmic::Backend::Arm64 {
@@ -43,13 +45,18 @@ struct EmittedBlockInfo {
 };
 
 struct EmitConfig {
+    bool enable_cycle_counting;
+    bool always_little_endian;
 };
 
 struct EmitContext;
 
+EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf);
+
 template<IR::Opcode op>
 void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
-
-EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf);
+void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target);
+oaknut::Label EmitA32Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
+void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 
 }  // namespace Dynarmic::Backend::Arm64

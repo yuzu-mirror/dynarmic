@@ -112,7 +112,10 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
 
     mem.unprotect();
 
-    EmittedBlockInfo block_info = EmitArm64(code, std::move(block), {});
+    EmittedBlockInfo block_info = EmitArm64(code, std::move(block), {
+                                                                        .enable_cycle_counting = conf.enable_cycle_counting,
+                                                                        .always_little_endian = conf.always_little_endian,
+                                                                    });
     Link(block_info);
 
     mem.protect();
