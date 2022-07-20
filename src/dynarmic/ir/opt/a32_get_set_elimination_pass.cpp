@@ -17,7 +17,7 @@
 
 namespace Dynarmic::Optimization {
 
-void A32GetSetElimination(IR::Block& block) {
+void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
     using Iterator = IR::Block::iterator;
     struct RegisterInfo {
         IR::Value register_value;
@@ -215,7 +215,7 @@ void A32GetSetElimination(IR::Block& block) {
             break;
         }
         case IR::Opcode::A32SetCpsrNZC: {
-            if (!inst->GetArg(1).IsImmediate() && inst->GetArg(1).GetInstRecursive()->GetOpcode() == IR::Opcode::A32GetCFlag) {
+            if (opt.convert_nzc_to_nz && !inst->GetArg(1).IsImmediate() && inst->GetArg(1).GetInstRecursive()->GetOpcode() == IR::Opcode::A32GetCFlag) {
                 ir.SetInsertionPoint(inst);
                 ir.SetCpsrNZ(IR::NZCV{inst->GetArg(0)});
                 inst->Invalidate();
