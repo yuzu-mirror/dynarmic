@@ -555,20 +555,32 @@ void A32EmitX64::EmitA32SetCpsrNZ(A32EmitContext& ctx, IR::Inst* inst) {
 void A32EmitX64::EmitA32SetCpsrNZC(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    ctx.reg_alloc.Use(args[0], HostLoc::RAX);
+    if (args[0].IsImmediate()) {
+        if (args[1].IsImmediate()) {
+            const bool c = args[1].GetImmediateU1();
 
-    if (args[1].IsImmediate()) {
-        const bool c = args[1].GetImmediateU1();
+            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], c);
+        } else {
+            const Xbyak::Reg8 c = ctx.reg_alloc.UseGpr(args[1]).cvt8();
 
-        code.mov(al, ah);
-        code.or_(al, c);
-        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], c);
+        }
     } else {
-        const Xbyak::Reg8 c = ctx.reg_alloc.UseGpr(args[1]).cvt8();
+        ctx.reg_alloc.Use(args[0], HostLoc::RAX);
 
-        code.mov(al, ah);
-        code.or_(al, c);
-        code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+        if (args[1].IsImmediate()) {
+            const bool c = args[1].GetImmediateU1();
+
+            code.mov(al, ah);
+            code.or_(al, c);
+            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+        } else {
+            const Xbyak::Reg8 c = ctx.reg_alloc.UseGpr(args[1]).cvt8();
+
+            code.mov(al, ah);
+            code.or_(al, c);
+            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+        }
     }
 }
 

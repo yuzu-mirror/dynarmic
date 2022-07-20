@@ -204,8 +204,12 @@ void A32GetSetElimination(IR::Block& block) {
             break;
         }
         case IR::Opcode::A32SetCpsrNZ: {
+            if (cpsr_info.nzc.set_instruction_present) {
+                cpsr_info.nzc.last_set_instruction->SetArg(0, IR::Value::EmptyNZCVImmediateMarker());
+            }
+
             // cpsr_info.c remains valid
-            cpsr_info.nzc = {};  // TODO: Consider reduction of previous to a SetCFlag operation
+            cpsr_info.nzc = {};
             cpsr_info.nzcv = {};
             do_set(cpsr_info.nz, inst->GetArg(0), inst);
             break;
