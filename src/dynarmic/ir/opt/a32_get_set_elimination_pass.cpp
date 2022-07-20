@@ -8,6 +8,7 @@
 #include <mcl/assert.hpp>
 #include <mcl/stdint.hpp>
 
+#include "dynarmic/frontend/A32/a32_ir_emitter.h"
 #include "dynarmic/frontend/A32/a32_types.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/opcodes.h"
@@ -64,6 +65,9 @@ void A32GetSetElimination(IR::Block& block) {
         }
         get_inst->ReplaceUsesWith(info.register_value);
     };
+
+    // Location and version don't matter here.
+    A32::IREmitter ir{block, A32::LocationDescriptor{block.Location()}, {}};
 
     for (auto inst = block.begin(); inst != block.end(); ++inst) {
         switch (inst->GetOpcode()) {
@@ -207,6 +211,13 @@ void A32GetSetElimination(IR::Block& block) {
             break;
         }
         case IR::Opcode::A32SetCpsrNZC: {
+            if (!inst->GetArg(1).IsImmediate() && inst->GetArg(1).GetInstRecursive()->GetOpcode() == IR::Opcode::A32GetCFlag) {
+                ir.SetInsertionPoint(inst);
+                ir.SetCpsrNZ(IR::NZCV{inst->GetArg(0)});
+                inst->Invalidate();
+                break;
+            }
+
             cpsr_info.nzcv = {};
             do_set(cpsr_info.nzc, {}, inst);
             do_set_without_inst(cpsr_info.nz, inst->GetArg(0));
