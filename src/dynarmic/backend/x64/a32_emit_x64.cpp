@@ -544,12 +544,13 @@ void A32EmitX64::EmitA32SetCpsrNZCVQ(A32EmitContext& ctx, IR::Inst* inst) {
 void A32EmitX64::EmitA32SetCpsrNZ(A32EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    ctx.reg_alloc.Use(args[0], HostLoc::RAX);
+    const Xbyak::Reg32 nz = ctx.reg_alloc.UseGpr(args[0]).cvt32();
+    const Xbyak::Reg32 tmp = ctx.reg_alloc.ScratchGpr().cvt32();
 
-    code.mov(al, code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1]);
-    code.and_(al, 1);
-    code.or_(al, ah);
-    code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+    code.movzx(tmp, code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1]);
+    code.and_(tmp, 1);
+    code.or_(tmp, nz);
+    code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], tmp.cvt8());
 }
 
 void A32EmitX64::EmitA32SetCpsrNZC(A32EmitContext& ctx, IR::Inst* inst) {
@@ -566,20 +567,18 @@ void A32EmitX64::EmitA32SetCpsrNZC(A32EmitContext& ctx, IR::Inst* inst) {
             code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], c);
         }
     } else {
-        ctx.reg_alloc.Use(args[0], HostLoc::RAX);
+        const Xbyak::Reg32 nz = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
 
         if (args[1].IsImmediate()) {
             const bool c = args[1].GetImmediateU1();
 
-            code.mov(al, ah);
-            code.or_(al, c);
-            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+            code.or_(nz, c);
+            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], nz.cvt8());
         } else {
-            const Xbyak::Reg8 c = ctx.reg_alloc.UseGpr(args[1]).cvt8();
+            const Xbyak::Reg32 c = ctx.reg_alloc.UseGpr(args[1]).cvt32();
 
-            code.mov(al, ah);
-            code.or_(al, c);
-            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], al);
+            code.or_(nz, c);
+            code.mov(code.byte[r15 + offsetof(A32JitState, cpsr_nzcv) + 1], nz.cvt8());
         }
     }
 }

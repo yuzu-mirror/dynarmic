@@ -156,6 +156,9 @@ void EmitX64::EmitGetNZFromOp(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
     code.cmp(value, 0);
     code.lahf();
+    code.db(0x0f);
+    code.db(0xb6);
+    code.db(0xc4);
     ctx.reg_alloc.DefineValue(inst, nz);
 }
 
