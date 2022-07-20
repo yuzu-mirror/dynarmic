@@ -15,7 +15,6 @@
 #include <mcl/stdint.hpp>
 #include <mcl/type_traits/is_instance_of_template.hpp>
 #include <oaknut/oaknut.hpp>
-#include <tsl/robin_set.h>
 
 #include "dynarmic/backend/arm64/stack_layout.h"
 #include "dynarmic/ir/cond.h"
@@ -108,11 +107,13 @@ private:
 };
 
 struct HostLocInfo {
-    tsl::robin_set<const IR::Inst*> values;
+    std::vector<const IR::Inst*> values;
     bool locked = false;
     bool realized = false;
     size_t accumulated_uses = 0;
     size_t expected_uses = 0;
+
+    bool Contains(const IR::Inst*) const;
 };
 
 class RegAlloc {
@@ -211,6 +212,8 @@ public:
         static_assert((mcl::is_instance_of_template<RAReg, Ts>() && ...));
         (rs.Realize(), ...);
     }
+
+    void AssertNoMoreUses() const;
 
 private:
     template<typename>

@@ -40,6 +40,7 @@ void EmitIR<IR::Opcode::MostSignificantBit>(oaknut::CodeGenerator& code, EmitCon
 
 template<>
 void EmitIR<IR::Opcode::GetCarryFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(ctx.reg_alloc.IsValueLive(inst));
 }
 
@@ -89,6 +90,8 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
             break;
         }
     }
+
+    reg_alloc.AssertNoMoreUses();
 
     // TODO: Add Cycles
 

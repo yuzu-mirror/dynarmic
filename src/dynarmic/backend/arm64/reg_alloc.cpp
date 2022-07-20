@@ -71,6 +71,10 @@ IR::AccType Argument::GetImmediateAccType() const {
     return value.GetAccType();
 }
 
+bool HostLocInfo::Contains(const IR::Inst* value) const {
+    return std::find(values.begin(), values.end(), value) != values.end();
+}
+
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     ArgumentInfo ret = {Argument{*this}, Argument{*this}, Argument{*this}, Argument{*this}};
     for (size_t i = 0; i < inst->NumArgs(); i++) {
@@ -86,6 +90,14 @@ RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
 
 bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
+}
+
+void RegAlloc::AssertNoMoreUses() const {
+    const auto is_empty = [](const auto& i) { return i.values.empty() && !i.locked && !i.realized && !i.accumulated_uses && !i.expected_uses; };
+    ASSERT(std::all_of(gprs.begin(), gprs.end(), is_empty));
+    ASSERT(std::all_of(fprs.begin(), fprs.end(), is_empty));
+    ASSERT(is_empty(flags));
+    ASSERT(std::all_of(spills.begin(), spills.end(), is_empty));
 }
 
 template<HostLoc::Kind required_kind>
@@ -159,10 +171,10 @@ int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
 
     const auto setup_location = [&](HostLocInfo& info) {
         info = {};
-        info.values.emplace(value);
+        info.values.emplace_back(value);
         info.locked = true;
         info.realized = true;
-        info.expected_uses += value->UseCount();
+        info.expected_uses = value->UseCount();
     };
 
     if constexpr (kind == HostLoc::Kind::Gpr) {
@@ -258,7 +270,7 @@ int RegAlloc::FindFreeSpill() const {
 
 std::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {
     const auto contains_value = [value](const HostLocInfo& info) {
-        return info.values.contains(value);
+        return info.Contains(value);
     };
 
     if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value); iter != gprs.end()) {
@@ -292,7 +304,7 @@ HostLocInfo& RegAlloc::ValueInfo(HostLoc host_loc) {
 
 HostLocInfo& RegAlloc::ValueInfo(const IR::Inst* value) {
     const auto contains_value = [value](const HostLocInfo& info) {
-        return info.values.contains(value);
+        return info.Contains(value);
     };
 
     if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value); iter != gprs.end()) {
