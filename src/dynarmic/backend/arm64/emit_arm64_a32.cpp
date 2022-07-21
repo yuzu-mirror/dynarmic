@@ -50,8 +50,8 @@ void EmitSetUpperLocationDescriptor(oaknut::CodeGenerator& code, EmitContext& ct
     }();
 
     if (old_upper != new_upper) {
-        code.MOV(Xscratch0, new_upper);
-        code.STR(Xscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+        code.MOV(Wscratch0, new_upper);
+        code.STR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
     }
 }
 
@@ -173,6 +173,16 @@ void EmitIR<IR::Opcode::A32SetCpsrNZC>(oaknut::CodeGenerator& code, EmitContext&
     code.ORR(Wscratch0, Wscratch0, Wnz);
     code.SBFX(Wscratch0, Wc, 29, 1);
     code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+}
+
+template<>
+void EmitIR<IR::Opcode::A32UpdateUpperLocationDescriptor>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst*) {
+    for (auto& inst : ctx.block) {
+        if (inst.GetOpcode() == IR::Opcode::A32BXWritePC) {
+            return;
+        }
+    }
+    EmitSetUpperLocationDescriptor(code, ctx, ctx.block.EndLocation(), ctx.block.Location());
 }
 
 }  // namespace Dynarmic::Backend::Arm64
