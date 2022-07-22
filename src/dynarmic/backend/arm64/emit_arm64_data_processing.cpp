@@ -142,10 +142,15 @@ void EmitIR<IR::Opcode::IsZero32>(oaknut::CodeGenerator& code, EmitContext& ctx,
 
 template<>
 void EmitIR<IR::Opcode::IsZero64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    // TODO: Use host flags
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
+    RegAlloc::Realize(Wresult, Xoperand);
+
+    code.CMP(Xoperand, 0);
+    code.CSET(Wresult, EQ);
 }
 
 template<>
