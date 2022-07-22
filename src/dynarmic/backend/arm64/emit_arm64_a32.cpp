@@ -4,6 +4,7 @@
  */
 
 #include <fmt/ostream.h>
+#include <mcl/bit/bit_field.hpp>
 #include <oaknut/oaknut.hpp>
 
 #include "dynarmic/backend/arm64/a32_jitstate.h"
@@ -173,6 +174,36 @@ void EmitIR<IR::Opcode::A32SetCpsrNZC>(oaknut::CodeGenerator& code, EmitContext&
     code.ORR(Wscratch0, Wscratch0, Wnz);
     code.SBFX(Wscratch0, Wc, 29, 1);
     code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+}
+
+template<>
+void EmitIR<IR::Opcode::A32BXWritePC>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const u32 upper_without_t = (A32::LocationDescriptor{ctx.block.EndLocation()}.SetSingleStepping(false).UniqueHash() >> 32) & 0xFFFFFFFE;
+
+    static_assert(offsetof(A32JitState, regs) + 16 * sizeof(u32) == offsetof(A32JitState, upper_location_descriptor));
+
+    if (args[0].IsImmediate()) {
+        const u32 new_pc = args[0].GetImmediateU32();
+        const u32 mask = mcl::bit::get_bit<0>(new_pc) ? 0xFFFFFFFE : 0xFFFFFFFC;
+        const u32 new_upper = upper_without_t | (mcl::bit::get_bit<0>(new_pc) ? 1 : 0);
+
+        code.MOV(Xscratch0, (u64{new_upper} << 32) | (new_pc & mask));
+        code.STUR(Xscratch0, Xstate, offsetof(A32JitState, regs) + 15 * sizeof(u32));
+    } else {
+        auto Wpc = ctx.reg_alloc.ReadW(args[0]);
+        RegAlloc::Realize(Wpc);
+        ctx.reg_alloc.SpillFlags();
+
+        code.ANDS(Wscratch0, Wpc, 1);
+        code.MOV(Wscratch1, 3);
+        code.CSEL(Wscratch1, Wscratch0, Wscratch1, NE);
+        code.BIC(Wscratch1, Wpc, Wscratch1);
+        code.MOV(Wscratch0, upper_without_t);
+        code.CINC(Wscratch0, Wscratch0, NE);
+        code.STP(Wscratch1, Wscratch0, Xstate, offsetof(A32JitState, regs) + 15 * sizeof(u32));
+    }
 }
 
 template<>
