@@ -71,6 +71,10 @@ IR::AccType Argument::GetImmediateAccType() const {
     return value.GetAccType();
 }
 
+HostLoc::Kind Argument::CurrentLocationKind() const {
+    return reg_alloc.ValueLocation(value.GetInst())->kind;
+}
+
 bool HostLocInfo::Contains(const IR::Inst* value) const {
     return std::find(values.begin(), values.end(), value) != values.end();
 }

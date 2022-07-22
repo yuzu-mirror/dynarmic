@@ -50,6 +50,11 @@ public:
     IR::Cond GetImmediateCond() const;
     IR::AccType GetImmediateAccType() const;
 
+    // Only valid if not immediate
+    HostLoc::Kind CurrentLocationKind() const;
+    bool IsInGpr() const { return !IsImmediate() && CurrentLocationKind() == HostLoc::Kind::Gpr; }
+    bool IsInFpr() const { return !IsImmediate() && CurrentLocationKind() == HostLoc::Kind::Fpr; }
+
 private:
     friend class RegAlloc;
     explicit Argument(RegAlloc& reg_alloc)
@@ -218,6 +223,7 @@ public:
     void AssertNoMoreUses() const;
 
 private:
+    friend struct Argument;
     template<typename>
     friend struct RAReg;
 
