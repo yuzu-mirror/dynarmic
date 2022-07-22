@@ -37,11 +37,8 @@ void EmitIR<IR::Opcode::Identity>(oaknut::CodeGenerator& code, EmitContext& ctx,
 }
 
 template<>
-void EmitIR<IR::Opcode::Breakpoint>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::Breakpoint>(oaknut::CodeGenerator& code, EmitContext&, IR::Inst*) {
+    code.BRK(0);
 }
 
 template<>
