@@ -92,6 +92,12 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
+void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
+    auto& info = ValueInfo(arg.value.GetInst());
+    info.values.emplace_back(inst);
+    info.expected_uses += inst->UseCount();
+}
+
 void RegAlloc::AssertNoMoreUses() const {
     const auto is_empty = [](const auto& i) { return i.values.empty() && !i.locked && !i.realized && !i.accumulated_uses && !i.expected_uses; };
     ASSERT(std::all_of(gprs.begin(), gprs.end(), is_empty));

@@ -204,6 +204,8 @@ public:
         }
     }
 
+    void DefineAsExisting(IR::Inst* inst, Argument& arg);
+
     void SpillFlags();
     void SpillAll();
 
