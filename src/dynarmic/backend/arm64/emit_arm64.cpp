@@ -21,12 +21,7 @@ namespace Dynarmic::Backend::Arm64 {
 using namespace oaknut::util;
 
 template<>
-void EmitIR<IR::Opcode::Void>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
-}
+void EmitIR<IR::Opcode::Void>(oaknut::CodeGenerator&, EmitContext&, IR::Inst*) {}
 
 template<>
 void EmitIR<IR::Opcode::Identity>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
