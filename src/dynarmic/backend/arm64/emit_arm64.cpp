@@ -64,11 +64,9 @@ void EmitIR<IR::Opcode::GetOverflowFromOp>(oaknut::CodeGenerator&, EmitContext& 
 }
 
 template<>
-void EmitIR<IR::Opcode::GetGEFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::GetGEFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(ctx.reg_alloc.IsValueLive(inst));
 }
 
 template<>
