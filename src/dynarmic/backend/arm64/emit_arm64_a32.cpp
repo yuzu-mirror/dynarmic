@@ -145,6 +145,34 @@ void EmitIR<IR::Opcode::A32GetRegister>(oaknut::CodeGenerator& code, EmitContext
 }
 
 template<>
+void EmitIR<IR::Opcode::A32GetExtendedRegister32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
+    ASSERT(A32::IsSingleExtReg(reg));
+    const size_t index = static_cast<size_t>(reg) - static_cast<size_t>(A32::ExtReg::S0);
+
+    auto Sresult = ctx.reg_alloc.WriteS(inst);
+    RegAlloc::Realize(Sresult);
+
+    // TODO: Detect if Gpr vs Fpr is more appropriate
+
+    code.LDR(Sresult, Xstate, offsetof(A32JitState, ext_regs) + sizeof(u32) * index);
+}
+
+template<>
+void EmitIR<IR::Opcode::A32GetExtendedRegister64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
+    ASSERT(A32::IsDoubleExtReg(reg));
+    const size_t index = static_cast<size_t>(reg) - static_cast<size_t>(A32::ExtReg::D0);
+
+    auto Dresult = ctx.reg_alloc.WriteD(inst);
+    RegAlloc::Realize(Dresult);
+
+    // TODO: Detect if Gpr vs Fpr is more appropriate
+
+    code.LDR(Dresult, Xstate, offsetof(A32JitState, ext_regs) + 2 * sizeof(u32) * index);
+}
+
+template<>
 void EmitIR<IR::Opcode::A32SetRegister>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
 
