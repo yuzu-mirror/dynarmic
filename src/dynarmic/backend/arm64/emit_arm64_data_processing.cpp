@@ -106,10 +106,13 @@ void EmitIR<IR::Opcode::LeastSignificantByte>(oaknut::CodeGenerator& code, EmitC
 
 template<>
 void EmitIR<IR::Opcode::MostSignificantWord>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
+    RegAlloc::Realize(Wresult, Xoperand);
+
+    code.LSL(Wresult->toX(), Xoperand, 32);
 }
 
 template<>
