@@ -21,10 +21,15 @@ using namespace oaknut::util;
 
 template<>
 void EmitIR<IR::Opcode::Pack2x32To1x64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wlo = ctx.reg_alloc.ReadW(args[0]);
+    auto Whi = ctx.reg_alloc.ReadW(args[1]);
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    RegAlloc::Realize(Wlo, Whi, Xresult);
+
+    code.MOV(Xresult->toW(), Wlo);  // TODO: Move eliminiation
+    code.BFI(Xresult, Whi->toX(), 32, 32);
 }
 
 template<>
