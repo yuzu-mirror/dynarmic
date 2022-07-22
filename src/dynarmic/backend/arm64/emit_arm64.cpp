@@ -20,38 +20,74 @@ namespace Dynarmic::Backend::Arm64 {
 
 using namespace oaknut::util;
 
-template<IR::Opcode op>
-void EmitIR(oaknut::CodeGenerator&, EmitContext&, IR::Inst*) {
-    ASSERT_FALSE("Unimplemented opcode {}", op);
+template<>
+void EmitIR<IR::Opcode::Void>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
 }
 
 template<>
-void EmitIR<IR::Opcode::A32SetCheckBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
+void EmitIR<IR::Opcode::Identity>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
 template<>
-void EmitIR<IR::Opcode::A32GetRegister>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
+void EmitIR<IR::Opcode::Breakpoint>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
 template<>
-void EmitIR<IR::Opcode::A32GetExtendedRegister32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
+void EmitIR<IR::Opcode::CallHostFunction>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
 template<>
-void EmitIR<IR::Opcode::A32GetExtendedRegister64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
-template<>
-void EmitIR<IR::Opcode::A32SetRegister>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
-template<>
-void EmitIR<IR::Opcode::A32GetCFlag>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
-template<>
-void EmitIR<IR::Opcode::A32SetCpsrNZC>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
-template<>
-void EmitIR<IR::Opcode::A32BXWritePC>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
-template<>
-void EmitIR<IR::Opcode::A32UpdateUpperLocationDescriptor>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst*);
-template<>
-void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
-template<>
-void EmitIR<IR::Opcode::MostSignificantBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
+void EmitIR<IR::Opcode::PushRSB>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
 
 template<>
 void EmitIR<IR::Opcode::GetCarryFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
     [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(ctx.reg_alloc.IsValueLive(inst));
+}
+
+template<>
+void EmitIR<IR::Opcode::GetOverflowFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::GetGEFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
 }
 
 template<>
@@ -63,6 +99,30 @@ void EmitIR<IR::Opcode::GetNZFromOp>(oaknut::CodeGenerator& code, EmitContext& c
     RegAlloc::Realize(Wvalue, flags);
 
     code.CMP(*Wvalue, WZR);
+}
+
+template<>
+void EmitIR<IR::Opcode::GetUpperFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::GetLowerFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::NZCVFromPackedFlags>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
 }
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf) {

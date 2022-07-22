@@ -369,10 +369,24 @@ elseif(ARCHITECTURE STREQUAL "arm64")
     target_link_libraries(dynarmic PRIVATE $<BUILD_INTERFACE:merry::oaknut>)
 
     target_sources(dynarmic PRIVATE
+        backend/arm64/a32_jitstate.cpp
+        backend/arm64/a32_jitstate.h
         backend/arm64/abi.h
         backend/arm64/emit_arm64.cpp
         backend/arm64/emit_arm64.h
+        backend/arm64/emit_arm64_a32.cpp
+        backend/arm64/emit_arm64_a32_coprocessor.cpp
+        backend/arm64/emit_arm64_a32_memory.cpp
+        backend/arm64/emit_arm64_a64.cpp
+        backend/arm64/emit_arm64_a64_memory.cpp
+        backend/arm64/emit_arm64_cryptography.cpp
         backend/arm64/emit_arm64_data_processing.cpp
+        backend/arm64/emit_arm64_floating_point.cpp
+        backend/arm64/emit_arm64_packed.cpp
+        backend/arm64/emit_arm64_saturation.cpp
+        backend/arm64/emit_arm64_vector.cpp
+        backend/arm64/emit_arm64_vector_floating_point.cpp
+        backend/arm64/emit_arm64_vector_saturation.cpp
         backend/arm64/emit_context.h
         backend/arm64/reg_alloc.cpp
         backend/arm64/reg_alloc.h
@@ -385,9 +399,6 @@ elseif(ARCHITECTURE STREQUAL "arm64")
             backend/arm64/a32_address_space.h
             backend/arm64/a32_core.h
             backend/arm64/a32_interface.cpp
-            backend/arm64/a32_jitstate.cpp
-            backend/arm64/a32_jitstate.h
-            backend/arm64/emit_arm64_a32.cpp
         )
     endif()
 
