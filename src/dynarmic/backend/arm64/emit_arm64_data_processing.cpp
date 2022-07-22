@@ -84,10 +84,13 @@ void EmitIR<IR::Opcode::LeastSignificantWord>(oaknut::CodeGenerator& code, EmitC
 
 template<>
 void EmitIR<IR::Opcode::LeastSignificantHalf>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Woperand = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wresult, Woperand);
+
+    code.UXTH(Wresult, Woperand);  // TODO: Zext elimination
 }
 
 template<>
