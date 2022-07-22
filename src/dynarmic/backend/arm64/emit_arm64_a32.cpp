@@ -123,6 +123,16 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx) {
 }
 
 template<>
+void EmitIR<IR::Opcode::A32SetCheckBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wbit = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wbit);
+
+    code.STRB(Wbit, SP, offsetof(StackLayout, check_bit));
+}
+
+template<>
 void EmitIR<IR::Opcode::A32GetRegister>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
 

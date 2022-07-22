@@ -26,6 +26,8 @@ void EmitIR(oaknut::CodeGenerator&, EmitContext&, IR::Inst*) {
 }
 
 template<>
+void EmitIR<IR::Opcode::A32SetCheckBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
+template<>
 void EmitIR<IR::Opcode::A32GetRegister>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
 template<>
 void EmitIR<IR::Opcode::A32SetRegister>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
