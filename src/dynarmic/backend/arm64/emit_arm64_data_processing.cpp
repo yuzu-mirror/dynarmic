@@ -34,10 +34,41 @@ void EmitIR<IR::Opcode::Pack2x32To1x64>(oaknut::CodeGenerator& code, EmitContext
 
 template<>
 void EmitIR<IR::Opcode::Pack2x64To1x128>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (args[0].IsInGpr() && args[1].IsInGpr()) {
+        auto Xlo = ctx.reg_alloc.ReadX(args[0]);
+        auto Xhi = ctx.reg_alloc.ReadX(args[1]);
+        auto Qresult = ctx.reg_alloc.WriteQ(inst);
+        RegAlloc::Realize(Xlo, Xhi, Qresult);
+
+        code.FMOV(Qresult->toD(), Xlo);
+        code.MOV(oaknut::VRegSelector{Qresult->index()}.D()[1], Xhi);
+    } else if (args[0].IsInGpr()) {
+        auto Xlo = ctx.reg_alloc.ReadX(args[0]);
+        auto Dhi = ctx.reg_alloc.ReadD(args[1]);
+        auto Qresult = ctx.reg_alloc.WriteQ(inst);
+        RegAlloc::Realize(Xlo, Dhi, Qresult);
+
+        code.FMOV(Qresult->toD(), Xlo);
+        code.MOV(oaknut::VRegSelector{Qresult->index()}.D()[1], oaknut::VRegSelector{Dhi->index()}.D()[0]);
+    } else if (args[1].IsInGpr()) {
+        auto Dlo = ctx.reg_alloc.ReadD(args[0]);
+        auto Xhi = ctx.reg_alloc.ReadX(args[1]);
+        auto Qresult = ctx.reg_alloc.WriteQ(inst);
+        RegAlloc::Realize(Dlo, Xhi, Qresult);
+
+        code.FMOV(Qresult->toD(), Dlo);  // TODO: Move eliminiation
+        code.MOV(oaknut::VRegSelector{Qresult->index()}.D()[1], Xhi);
+    } else {
+        auto Dlo = ctx.reg_alloc.ReadD(args[0]);
+        auto Dhi = ctx.reg_alloc.ReadD(args[1]);
+        auto Qresult = ctx.reg_alloc.WriteQ(inst);
+        RegAlloc::Realize(Dlo, Dhi, Qresult);
+
+        code.FMOV(Qresult->toD(), Dlo);  // TODO: Move eliminiation
+        code.MOV(oaknut::VRegSelector{Qresult->index()}.D()[1], oaknut::VRegSelector{Dhi->index()}.D()[0]);
+    }
 }
 
 template<>
