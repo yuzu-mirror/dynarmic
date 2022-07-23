@@ -41,13 +41,6 @@ struct ResultAndOverflow {
 };
 
 template<typename T>
-struct ResultAndCarryAndOverflow {
-    T result;
-    U1 carry;
-    U1 overflow;
-};
-
-template<typename T>
 struct ResultAndGE {
     T result;
     U32 ge;
