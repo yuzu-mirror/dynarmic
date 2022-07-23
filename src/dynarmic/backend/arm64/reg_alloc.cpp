@@ -27,6 +27,14 @@ static bool IsValuelessType(IR::Type type) {
     }
 }
 
+Argument::~Argument() {
+    if (!IsImmediate()) {
+        if (auto host_loc = reg_alloc.ValueLocation(value.GetInst())) {
+            reg_alloc.ValueInfo(*host_loc).UpdateUses();
+        }
+    }
+}
+
 IR::Type Argument::GetType() const {
     return value.GetType();
 }
@@ -99,6 +107,18 @@ bool HostLocInfo::IsImmediatelyAllocatable() const {
 
 bool HostLocInfo::IsOneRemainingUse() const {
     return accumulated_uses + 1 == expected_uses && uses_this_inst == 1;
+}
+
+void HostLocInfo::UpdateUses() {
+    accumulated_uses += uses_this_inst;
+    uses_this_inst = 0;
+
+    if (accumulated_uses == expected_uses) {
+        *this = {};
+    } else {
+        realized = false;
+        locked = false;
+    }
 }
 
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
@@ -229,19 +249,8 @@ template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Flags>(const IR::Inst* va
 
 void RegAlloc::Unlock(HostLoc host_loc) {
     HostLocInfo& info = ValueInfo(host_loc);
-    if (!info.realized) {
-        return;
-    }
-
-    info.accumulated_uses += info.uses_this_inst;
-    info.uses_this_inst = 0;
-
-    if (info.accumulated_uses == info.expected_uses) {
-        info = {};
-    } else {
-        info.realized = false;
-        info.locked = false;
-    }
+    ASSERT(info.locked && info.realized);
+    info.UpdateUses();
 }
 
 int RegAlloc::AllocateRegister(const std::array<HostLocInfo, 32>& regs, const std::vector<int>& order) const {

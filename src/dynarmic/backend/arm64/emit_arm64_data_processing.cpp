@@ -117,7 +117,6 @@ void EmitIR<IR::Opcode::MostSignificantWord>(oaknut::CodeGenerator& code, EmitCo
 
 template<>
 void EmitIR<IR::Opcode::MostSignificantBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    // TODO: Use host flags
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     auto Wresult = ctx.reg_alloc.WriteW(inst);
@@ -129,12 +128,12 @@ void EmitIR<IR::Opcode::MostSignificantBit>(oaknut::CodeGenerator& code, EmitCon
 
 template<>
 void EmitIR<IR::Opcode::IsZero32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    // TODO: Use host flags
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     auto Wresult = ctx.reg_alloc.WriteW(inst);
     auto Woperand = ctx.reg_alloc.ReadW(args[0]);
     RegAlloc::Realize(Wresult, Woperand);
+    ctx.reg_alloc.SpillFlags();
 
     code.CMP(Woperand, 0);
     code.CSET(Wresult, EQ);
@@ -142,12 +141,12 @@ void EmitIR<IR::Opcode::IsZero32>(oaknut::CodeGenerator& code, EmitContext& ctx,
 
 template<>
 void EmitIR<IR::Opcode::IsZero64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    // TODO: Use host flags
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     auto Wresult = ctx.reg_alloc.WriteW(inst);
     auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
     RegAlloc::Realize(Wresult, Xoperand);
+    ctx.reg_alloc.SpillFlags();
 
     code.CMP(Xoperand, 0);
     code.CSET(Wresult, EQ);
@@ -221,26 +220,37 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
             code.CSEL(Wresult, Wresult, WZR, LT);
         }
     } else {
-        if (shift_arg.IsImmediate()) {
-            auto Wresult = ctx.reg_alloc.WriteW(inst);
-            auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
-            auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
-            auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
-            RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wcarry_in);
+        if (shift_arg.IsImmediate() && shift_arg.GetImmediateU8() == 0) {
+            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
+            ctx.reg_alloc.DefineAsExisting(carry_inst, carry_arg);
+        } else if (shift_arg.IsImmediate()) {
+            // TODO: Use RMIF
 
             const u8 shift = shift_arg.GetImmediateU8();
 
-            if (shift == 0) {
-                code.MOV(*Wresult, Woperand);
-                code.MOV(*Wcarry_out, Wcarry_in);
-            } else if (shift < 32) {
+            if (shift < 32) {
+                auto Wresult = ctx.reg_alloc.WriteW(inst);
+                auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+                auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand);
+
                 code.UBFX(Wcarry_out, Woperand, 32 - shift, 1);
+                code.LSL(Wcarry_out, Wcarry_out, 29);
                 code.LSL(Wresult, Woperand, shift);
             } else if (shift > 32) {
+                auto Wresult = ctx.reg_alloc.WriteW(inst);
+                auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+                RegAlloc::Realize(Wresult, Wcarry_out);
+
                 code.MOV(Wresult, WZR);
                 code.MOV(Wcarry_out, WZR);
             } else {
-                code.AND(Wcarry_out, Wresult, 1);
+                auto Wresult = ctx.reg_alloc.WriteW(inst);
+                auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+                auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand);
+
+                code.UBFIZ(Wcarry_out, Woperand, 29, 1);
                 code.MOV(Wresult, WZR);
             }
         } else {
@@ -262,7 +272,7 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
             code.NEG(Wscratch0, Wshift);
             code.LSR(Wcarry_out, Woperand, Wscratch0);
             code.LSL(Wresult, Woperand, Wshift);
-            code.AND(Wcarry_out, Wcarry_out, 1);
+            code.UBFIZ(Wcarry_out, Wcarry_out, 29, 1);
             code.CMP(Wscratch1, 32);
             code.CSEL(Wresult, Wresult, WZR, LT);
             code.CSEL(Wcarry_out, Wcarry_out, WZR, LE);

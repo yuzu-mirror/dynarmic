@@ -83,7 +83,7 @@ void EmitIR<IR::Opcode::GetNZFromOp>(oaknut::CodeGenerator& code, EmitContext& c
     auto flags = ctx.reg_alloc.WriteFlags(inst);
     RegAlloc::Realize(Wvalue, flags);
 
-    code.CMP(*Wvalue, WZR);
+    code.TST(*Wvalue, *Wvalue);
 }
 
 template<>
@@ -96,6 +96,17 @@ template<>
 void EmitIR<IR::Opcode::GetLowerFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
     [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(ctx.reg_alloc.IsValueLive(inst));
+}
+
+template<>
+void EmitIR<IR::Opcode::GetCFlagFromNZCV>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wc = ctx.reg_alloc.WriteW(inst);
+    auto Wnzcv = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wc, Wnzcv);
+
+    code.AND(Wc, Wnzcv, 1 << 29);
 }
 
 template<>

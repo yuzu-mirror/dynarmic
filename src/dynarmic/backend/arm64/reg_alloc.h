@@ -39,6 +39,8 @@ struct Argument {
 public:
     using copyable_reference = std::reference_wrapper<Argument>;
 
+    ~Argument();
+
     IR::Type GetType() const;
     bool IsImmediate() const;
 
@@ -124,6 +126,7 @@ struct HostLocInfo {
     bool IsCompletelyEmpty() const;
     bool IsImmediatelyAllocatable() const;
     bool IsOneRemainingUse() const;
+    void UpdateUses();
 };
 
 class RegAlloc {

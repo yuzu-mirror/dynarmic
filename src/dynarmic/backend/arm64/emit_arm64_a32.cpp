@@ -275,11 +275,12 @@ void EmitIR<IR::Opcode::A32SetCpsrNZC>(oaknut::CodeGenerator& code, EmitContext&
     auto Wc = ctx.reg_alloc.ReadW(args[1]);
     RegAlloc::Realize(Wnz, Wc);
 
-    // TODO: Store in Flags
+    // TODO: Track latent value
+
     code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
     code.AND(Wscratch0, Wscratch0, 0x10000000);
     code.ORR(Wscratch0, Wscratch0, Wnz);
-    code.SBFX(Wscratch0, Wc, 29, 1);
+    code.ORR(Wscratch0, Wscratch0, Wc);
     code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
 }
 
@@ -288,11 +289,8 @@ void EmitIR<IR::Opcode::A32GetCFlag>(oaknut::CodeGenerator& code, EmitContext& c
     auto Wflag = ctx.reg_alloc.WriteW(inst);
     RegAlloc::Realize(Wflag);
 
-    // TODO: Store in Flags
-
-    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
-    code.LSR(Wflag, Wscratch0, 29);
-    code.AND(Wflag, Wflag, 1);
+    code.LDR(Wflag, Xstate, offsetof(A32JitState, cpsr_nzcv));
+    code.AND(Wflag, Wflag, 1 << 29);
 }
 
 template<>
