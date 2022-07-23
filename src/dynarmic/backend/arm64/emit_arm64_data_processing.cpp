@@ -415,20 +415,112 @@ void EmitIR<IR::Opcode::RotateRightMasked64>(oaknut::CodeGenerator& code, EmitCo
     ASSERT_FALSE("Unimplemented");
 }
 
+template<size_t bitsize, typename EmitFn>
+static void MaybeAddSubImm(oaknut::CodeGenerator& code, u64 imm, EmitFn emit_fn) {
+    static_assert(bitsize == 32 || bitsize == 64);
+    if constexpr (bitsize == 32) {
+        imm = static_cast<u32>(imm);
+    }
+    if (oaknut::AddSubImm::is_valid(imm)) {
+        emit_fn(imm);
+    } else {
+        code.MOV(Rscratch0<bitsize>(), imm);
+        emit_fn(Rscratch0<bitsize>());
+    }
+}
+
+template<size_t bitsize>
+static void EmitAdd(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Rresult = ctx.reg_alloc.WriteReg<bitsize>(inst);
+    auto Ra = ctx.reg_alloc.ReadReg<bitsize>(args[0]);
+
+    if (nzcv_inst) {
+        if (args[1].IsImmediate()) {
+            const u64 imm = args[1].GetImmediateU64();
+
+            if (args[2].IsImmediate()) {
+                auto flags = ctx.reg_alloc.WriteFlags(nzcv_inst);
+                RegAlloc::Realize(Rresult, Ra, flags);
+
+                if (args[2].GetImmediateU1()) {
+                    MaybeAddSubImm<bitsize>(code, ~imm, [&](const auto b) { code.SUBS(Rresult, *Ra, b); });
+                } else {
+                    MaybeAddSubImm<bitsize>(code, imm, [&](const auto b) { code.ADDS(Rresult, *Ra, b); });
+                }
+            } else {
+                RegAlloc::Realize(Rresult, Ra);
+                ctx.reg_alloc.ReadWriteFlags(args[2], nzcv_inst);
+
+                code.MOV(Rscratch0<bitsize>(), imm);
+                code.ADCS(Rresult, Ra, Rscratch0<bitsize>());
+            }
+        } else {
+            auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+
+            if (args[2].IsImmediate()) {
+                auto flags = ctx.reg_alloc.WriteFlags(nzcv_inst);
+                RegAlloc::Realize(Rresult, Ra, Rb, flags);
+
+                if (args[2].GetImmediateU1()) {
+                    code.MVN(Rscratch0<bitsize>(), Rb);
+                    code.SUBS(Rresult, *Ra, Rscratch0<bitsize>());
+                } else {
+                    code.ADDS(Rresult, *Ra, Rb);
+                }
+            } else {
+                RegAlloc::Realize(Rresult, Ra, Rb);
+                ctx.reg_alloc.ReadWriteFlags(args[2], nzcv_inst);
+
+                code.ADCS(Rresult, Ra, Rb);
+            }
+        }
+    } else {
+        if (args[1].IsImmediate()) {
+            const u64 imm = args[1].GetImmediateU64();
+
+            RegAlloc::Realize(Rresult, Ra);
+
+            if (args[2].IsImmediate()) {
+                if (args[2].GetImmediateU1()) {
+                    MaybeAddSubImm<bitsize>(code, ~imm, [&](const auto b) { code.SUB(Rresult, *Ra, b); });
+                } else {
+                    MaybeAddSubImm<bitsize>(code, imm, [&](const auto b) { code.ADD(Rresult, *Ra, b); });
+                }
+            } else {
+                code.MOV(Rscratch0<bitsize>(), imm);
+                code.ADC(Rresult, Ra, Rscratch0<bitsize>());
+            }
+        } else {
+            auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+
+            RegAlloc::Realize(Rresult, Ra, Rb);
+
+            if (args[2].IsImmediate()) {
+                if (args[2].GetImmediateU1()) {
+                    code.MVN(Rscratch0<bitsize>(), Rb);
+                    code.SUB(Rresult, *Ra, Rscratch0<bitsize>());
+                } else {
+                    code.ADD(Rresult, *Ra, Rb);
+                }
+            } else {
+                code.ADC(Rresult, Ra, Rb);
+            }
+        }
+    }
+}
+
 template<>
 void EmitIR<IR::Opcode::Add32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitAdd<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::Add64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitAdd<64>(code, ctx, inst);
 }
 
 template<>
