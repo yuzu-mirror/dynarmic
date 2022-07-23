@@ -188,6 +188,22 @@ void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, nzcv);
 }
 
+void EmitX64::EmitGetCFlagFromNZCV(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (args[0].IsImmediate()) {
+        const Xbyak::Reg32 result = ctx.reg_alloc.ScratchGpr().cvt32();
+        const u32 value = (args[0].GetImmediateU32() >> 8) & 1;
+        code.mov(result, value);
+        ctx.reg_alloc.DefineValue(inst, result);
+    } else {
+        const Xbyak::Reg32 result = ctx.reg_alloc.UseScratchGpr(args[0]).cvt32();
+        code.shr(result, 8);
+        code.and_(result, 1);
+        ctx.reg_alloc.DefineValue(inst, result);
+    }
+}
+
 void EmitX64::EmitNZCVFromPackedFlags(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 

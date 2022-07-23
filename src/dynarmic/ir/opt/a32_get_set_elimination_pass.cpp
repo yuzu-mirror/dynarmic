@@ -182,6 +182,14 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
             break;
         }
         case IR::Opcode::A32GetCFlag: {
+            if (cpsr_info.c.register_value.IsEmpty() && cpsr_info.nzcv.register_value.GetType() == IR::Type::NZCVFlags) {
+                ir.SetInsertionPointBefore(inst);
+                IR::U1 c = ir.GetCFlagFromNZCV(IR::NZCV{cpsr_info.nzcv.register_value});
+                inst->ReplaceUsesWith(c);
+                cpsr_info.c.register_value = c;
+                break;
+            }
+
             do_get(cpsr_info.c, inst);
             // ensure source is not deleted
             cpsr_info.nzc = {};

@@ -92,6 +92,7 @@ OPCODE(GetNZFromOp,                                         NZCV,           Opaq
 OPCODE(GetUpperFromOp,                                      U128,           Opaque                                                          )
 OPCODE(GetLowerFromOp,                                      U128,           Opaque                                                          )
 
+OPCODE(GetCFlagFromNZCV,                                    U1,             NZCV                                                            )
 OPCODE(NZCVFromPackedFlags,                                 NZCV,           U32                                                             )
 
 // Calculations
