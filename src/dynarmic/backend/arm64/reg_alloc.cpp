@@ -183,7 +183,7 @@ int RegAlloc::RealizeReadImpl(const IR::Inst* value) {
             code.LDR(oaknut::XReg{new_location_index}, SP, spill_offset + new_location_index * spill_slot_size);
             break;
         case HostLoc::Kind::Flags:
-            code.MRS(oaknut::XReg{new_location_index}, static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000));
+            code.MRS(oaknut::XReg{new_location_index}, oaknut::SystemReg::NZCV);
             break;
         }
 
@@ -301,13 +301,13 @@ void RegAlloc::ReadWriteFlags(Argument& read, IR::Inst* write) {
         if (!flags.values.empty()) {
             SpillFlags();
         }
-        code.MSR(static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000), oaknut::XReg{current_location->index});
+        code.MSR(oaknut::SystemReg::NZCV, oaknut::XReg{current_location->index});
     } else if (current_location->kind == HostLoc::Kind::Spill) {
         if (!flags.values.empty()) {
             SpillFlags();
         }
         code.LDR(Wscratch0, SP, spill_offset + current_location->index * spill_slot_size);
-        code.MSR(static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000), Xscratch0);
+        code.MSR(oaknut::SystemReg::NZCV, Xscratch0);
     } else {
         ASSERT_FALSE("Invalid current location for flags");
     }
@@ -321,7 +321,7 @@ void RegAlloc::SpillFlags() {
     }
     const int new_location_index = AllocateRegister(gprs, gpr_order);
     SpillGpr(new_location_index);
-    code.MRS(oaknut::XReg{new_location_index}, static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000));
+    code.MRS(oaknut::XReg{new_location_index}, oaknut::SystemReg::NZCV);
     gprs[new_location_index] = std::exchange(flags, {});
 }
 

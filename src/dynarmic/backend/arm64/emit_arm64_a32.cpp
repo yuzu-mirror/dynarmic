@@ -25,7 +25,7 @@ oaknut::Label EmitA32Cond(oaknut::CodeGenerator& code, EmitContext&, IR::Cond co
     oaknut::Label pass;
     // TODO: Flags in host flags
     code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
-    code.MSR(static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000), Xscratch0);
+    code.MSR(oaknut::SystemReg::NZCV, Xscratch0);
     code.B(static_cast<oaknut::Cond>(cond), pass);
     return pass;
 }
