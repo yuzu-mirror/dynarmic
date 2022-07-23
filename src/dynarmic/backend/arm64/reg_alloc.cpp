@@ -141,9 +141,17 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
 }
 
 void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
+    ASSERT(!ValueLocation(inst));
     auto& info = ValueInfo(arg.value.GetInst());
     info.values.emplace_back(inst);
     info.expected_uses += inst->UseCount();
+}
+
+void RegAlloc::DefineAsRegister(IR::Inst* inst, oaknut::Reg reg) {
+    ASSERT(!ValueLocation(inst));
+    auto& info = reg.is_vector() ? fprs[reg.index()] : gprs[reg.index()];
+    ASSERT(info.IsCompletelyEmpty());
+    info.SetupLocation(inst);
 }
 
 void RegAlloc::AssertNoMoreUses() const {

@@ -218,6 +218,7 @@ public:
     }
 
     void DefineAsExisting(IR::Inst* inst, Argument& arg);
+    void DefineAsRegister(IR::Inst* inst, oaknut::Reg reg);
 
     void ReadWriteFlags(Argument& read, IR::Inst* write);
     void SpillFlags();
