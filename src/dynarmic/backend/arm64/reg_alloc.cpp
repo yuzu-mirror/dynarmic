@@ -11,6 +11,8 @@
 #include <mcl/assert.hpp>
 #include <mcl/stdint.hpp>
 
+#include "dynarmic/backend/arm64/abi.h"
+
 namespace Dynarmic::Backend::Arm64 {
 
 using namespace oaknut::util;
@@ -232,7 +234,7 @@ int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
         fprs[new_location_index].SetupLocation(value);
         return new_location_index;
     } else if constexpr (kind == HostLoc::Kind::Flags) {
-        ASSERT(flags.values.empty());
+        SpillFlags();
         flags.SetupLocation(value);
         return 0;
     } else {
@@ -285,6 +287,31 @@ void RegAlloc::SpillFpr(int index) {
     const int new_location_index = FindFreeSpill();
     code.STR(oaknut::QReg{index}, SP, spill_offset + new_location_index * spill_slot_size);
     spills[new_location_index] = std::exchange(fprs[index], {});
+}
+
+void RegAlloc::ReadWriteFlags(Argument& read, IR::Inst* write) {
+    const auto current_location = ValueLocation(read.value.GetInst());
+    ASSERT(current_location);
+
+    if (current_location->kind == HostLoc::Kind::Flags) {
+        if (!flags.IsOneRemainingUse()) {
+            SpillFlags();
+        }
+    } else if (current_location->kind == HostLoc::Kind::Gpr) {
+        if (!flags.values.empty()) {
+            SpillFlags();
+        }
+        code.MSR(static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000), oaknut::XReg{current_location->index});
+    } else if (current_location->kind == HostLoc::Kind::Spill) {
+        if (!flags.values.empty()) {
+            SpillFlags();
+        }
+        code.LDR(Wscratch0, SP, spill_offset + current_location->index * spill_slot_size);
+        code.MSR(static_cast<oaknut::SystemReg>(0b11'011'0100'0010'000), Xscratch0);
+    } else {
+        ASSERT_FALSE("Invalid current location for flags");
+    }
+    flags.SetupLocation(write);
 }
 
 void RegAlloc::SpillFlags() {

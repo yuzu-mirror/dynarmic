@@ -219,6 +219,7 @@ public:
 
     void DefineAsExisting(IR::Inst* inst, Argument& arg);
 
+    void ReadWriteFlags(Argument& read, IR::Inst* write);
     void SpillFlags();
     void SpillAll();
 
