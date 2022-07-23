@@ -85,18 +85,18 @@ public:
                                                 : HostLoc::Kind::Gpr
                                             : HostLoc::Kind::Flags;
 
-    operator T() const { return *reg; }
+    operator T() const { return reg.value(); }
 
     operator oaknut::WRegWsp() const requires(std::is_same_v<T, oaknut::WReg>) {
-        return *reg;
+        return reg.value();
     }
 
     operator oaknut::XRegSp() const requires(std::is_same_v<T, oaknut::XReg>) {
-        return *reg;
+        return reg.value();
     }
 
-    T operator*() const { return *reg; }
-    const T* operator->() const { return &*reg; }
+    T operator*() const { return reg.value(); }
+    const T* operator->() const { return &reg.value(); }
 
     ~RAReg();
 
