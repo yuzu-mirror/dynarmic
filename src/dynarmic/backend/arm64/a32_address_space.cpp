@@ -72,28 +72,13 @@ void A32AddressSpace::EmitPrelude() {
     mem.unprotect();
 
     prelude_info.run_code = code.ptr<PreludeInfo::RunCodeFuncType>();
-    // TODO: Minimize this.
-    code.STR(X30, SP, PRE_INDEXED, -16);
-    for (int i = 0; i < 30; i += 2) {
-        code.STP(XReg{i}, XReg{i + 1}, SP, PRE_INDEXED, -16);
-    }
-    for (int i = 0; i < 32; i += 2) {
-        code.STP(QReg{i}, QReg{i + 1}, SP, PRE_INDEXED, -32);
-    }
-    code.SUB(SP, SP, sizeof(StackLayout));
+    ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
     code.MOV(Xstate, X1);
     code.MOV(Xhalt, X2);
     code.BR(X0);
 
     prelude_info.return_from_run_code = code.ptr<void*>();
-    code.ADD(SP, SP, sizeof(StackLayout));
-    for (int i = 30; i >= 0; i -= 2) {
-        code.LDP(QReg{i}, QReg{i + 1}, SP, POST_INDEXED, 32);
-    }
-    for (int i = 28; i >= 0; i -= 2) {
-        code.LDP(XReg{i}, XReg{i + 1}, SP, POST_INDEXED, 16);
-    }
-    code.LDR(X30, SP, POST_INDEXED, 16);
+    ABI_PopRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
     code.RET();
 
     mem.protect();

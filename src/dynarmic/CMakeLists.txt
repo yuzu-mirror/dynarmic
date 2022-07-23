@@ -371,6 +371,7 @@ elseif(ARCHITECTURE STREQUAL "arm64")
     target_sources(dynarmic PRIVATE
         backend/arm64/a32_jitstate.cpp
         backend/arm64/a32_jitstate.h
+        backend/arm64/abi.cpp
         backend/arm64/abi.h
         backend/arm64/emit_arm64.cpp
         backend/arm64/emit_arm64.h

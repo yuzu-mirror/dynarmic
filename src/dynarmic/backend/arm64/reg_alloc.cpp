@@ -9,6 +9,7 @@
 #include <array>
 
 #include <mcl/assert.hpp>
+#include <mcl/bit/bit_field.hpp>
 #include <mcl/stdint.hpp>
 
 #include "dynarmic/backend/arm64/abi.h"
@@ -140,6 +141,35 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
+void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
+    SpillFlags();
+
+    // TODO: Spill into callee-save registers
+
+    for (int i = 0; i < 32; i++) {
+        if (mcl::bit::get_bit(i, static_cast<u32>(ABI_CALLER_SAVE))) {
+            SpillGpr(i);
+        }
+    }
+
+    for (int i = 0; i < 32; i++) {
+        if (mcl::bit::get_bit(i, static_cast<u32>(ABI_CALLER_SAVE >> 32))) {
+            SpillFpr(i);
+        }
+    }
+
+    const std::array<std::optional<Argument::copyable_reference>, 4> args{arg0, arg1, arg2, arg3};
+    for (int i = 0; i < 4; i++) {
+        if (args[i]) {
+            LoadCopyInto(args[i]->get().value.GetInst(), oaknut::XReg{i});
+        }
+    }
+
+    if (result) {
+        DefineAsRegister(result, X0);
+    }
+}
+
 void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
     ASSERT(!ValueLocation(inst));
     auto& info = ValueInfo(arg.value.GetInst());
@@ -184,7 +214,7 @@ int RegAlloc::RealizeReadImpl(const IR::Inst* value) {
             ASSERT_FALSE("Logic error");
             break;
         case HostLoc::Kind::Fpr:
-            code.FMOV(oaknut::XReg{current_location->index}, oaknut::DReg{new_location_index});
+            code.FMOV(oaknut::XReg{new_location_index}, oaknut::DReg{current_location->index});
             // ASSERT size fits
             break;
         case HostLoc::Kind::Spill:
@@ -337,6 +367,27 @@ int RegAlloc::FindFreeSpill() const {
     const auto iter = std::find_if(spills.begin(), spills.end(), [](const HostLocInfo& info) { return info.values.empty(); });
     ASSERT_MSG(iter != spills.end(), "All spill locations are full");
     return static_cast<int>(iter - spills.begin());
+}
+
+void RegAlloc::LoadCopyInto(IR::Inst* inst, oaknut::XReg reg) {
+    const auto current_location = ValueLocation(inst);
+    ASSERT(current_location);
+    ASSERT(gprs[reg.index()].IsCompletelyEmpty());
+    switch (current_location->kind) {
+    case HostLoc::Kind::Gpr:
+        code.MOV(reg, oaknut::XReg{current_location->index});
+        break;
+    case HostLoc::Kind::Fpr:
+        code.FMOV(reg, oaknut::DReg{current_location->index});
+        // ASSERT size fits
+        break;
+    case HostLoc::Kind::Spill:
+        code.LDR(reg, SP, spill_offset + current_location->index * spill_slot_size);
+        break;
+    case HostLoc::Kind::Flags:
+        code.MRS(reg, oaknut::SystemReg::NZCV);
+        break;
+    }
 }
 
 std::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {

@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <initializer_list>
+
+#include <mcl/stdint.hpp>
 #include <oaknut/oaknut.hpp>
 
 namespace Dynarmic::Backend::Arm64 {
@@ -36,5 +39,16 @@ constexpr auto Rscratch1() {
         static_assert(bitsize == 32 || bitsize == 64);
     }
 }
+
+constexpr std::initializer_list<int> GPR_ORDER{19, 20, 21, 22, 23, 24, 25, 26, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+constexpr std::initializer_list<int> FPR_ORDER{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
+
+using RegisterList = u64;
+
+constexpr RegisterList ABI_CALLEE_SAVE = 0x0000ff00'3ff80000;
+constexpr RegisterList ABI_CALLER_SAVE = 0xffffffff'4000ffff;
+
+void ABI_PushRegisters(oaknut::CodeGenerator& code, RegisterList rl, size_t stack_space);
+void ABI_PopRegisters(oaknut::CodeGenerator& code, RegisterList rl, size_t stack_space);
 
 }  // namespace Dynarmic::Backend::Arm64

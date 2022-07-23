@@ -222,6 +222,12 @@ public:
         }
     }
 
+    void PrepareForCall(IR::Inst* result = nullptr,
+                        std::optional<Argument::copyable_reference> arg0 = {},
+                        std::optional<Argument::copyable_reference> arg1 = {},
+                        std::optional<Argument::copyable_reference> arg2 = {},
+                        std::optional<Argument::copyable_reference> arg3 = {});
+
     void DefineAsExisting(IR::Inst* inst, Argument& arg);
     void DefineAsRegister(IR::Inst* inst, oaknut::Reg reg);
 
@@ -258,6 +264,8 @@ private:
     void SpillGpr(int index);
     void SpillFpr(int index);
     int FindFreeSpill() const;
+
+    void LoadCopyInto(IR::Inst* inst, oaknut::XReg reg);
 
     std::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
     HostLocInfo& ValueInfo(HostLoc host_loc);

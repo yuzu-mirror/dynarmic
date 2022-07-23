@@ -119,9 +119,7 @@ void EmitIR<IR::Opcode::NZCVFromPackedFlags>(oaknut::CodeGenerator&, EmitContext
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf) {
     EmittedBlockInfo ebi;
 
-    const std::vector<int> gpr_order{19, 20, 21, 22, 23, 24, 25, 26, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8};
-    const std::vector<int> fpr_order{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
-    RegAlloc reg_alloc{code, gpr_order, fpr_order};
+    RegAlloc reg_alloc{code, GPR_ORDER, FPR_ORDER};
     EmitContext ctx{block, reg_alloc, emit_conf, ebi};
 
     ebi.entry_point = code.ptr<CodePtr>();
