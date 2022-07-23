@@ -19,11 +19,8 @@ namespace Dynarmic::Backend::Arm64 {
 using namespace oaknut::util;
 
 template<>
-void EmitIR<IR::Opcode::A32ClearExclusive>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::A32ClearExclusive>(oaknut::CodeGenerator& code, EmitContext&, IR::Inst*) {
+    code.STR(WZR, Xstate, offsetof(A32JitState, exclusive_state));
 }
 
 template<>
