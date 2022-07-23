@@ -300,12 +300,17 @@ bool FoldShifts(IR::Inst& inst) {
     }
 
     const auto shift_amount = inst.GetArg(1);
+
     if (shift_amount.IsZero()) {
         if (carry_inst) {
             carry_inst->ReplaceUsesWith(inst.GetArg(2));
         }
         inst.ReplaceUsesWith(inst.GetArg(0));
         return false;
+    }
+
+    if (inst.NumArgs() == 3 && shift_amount.IsImmediate() && !shift_amount.IsZero()) {
+        inst.SetArg(2, IR::Value(false));
     }
 
     if (!inst.AreAllArgsImmediates() || carry_inst) {
