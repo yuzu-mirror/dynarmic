@@ -105,6 +105,11 @@ private:
     explicit RAReg(RegAlloc& reg_alloc, bool write, const IR::Inst* value)
             : reg_alloc{reg_alloc}, write{write}, value{value} {}
 
+    RAReg(const RAReg&) = delete;
+    RAReg& operator=(const RAReg&) = delete;
+    RAReg(RAReg&&) = delete;
+    RAReg& operator=(RAReg&&) = delete;
+
     void Realize();
 
     RegAlloc& reg_alloc;
