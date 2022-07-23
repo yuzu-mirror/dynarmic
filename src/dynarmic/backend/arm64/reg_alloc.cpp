@@ -79,6 +79,28 @@ bool HostLocInfo::Contains(const IR::Inst* value) const {
     return std::find(values.begin(), values.end(), value) != values.end();
 }
 
+void HostLocInfo::SetupLocation(const IR::Inst* value) {
+    values.clear();
+    values.emplace_back(value);
+    locked = true;
+    realized = true;
+    uses_this_inst = 0;
+    accumulated_uses = 0;
+    expected_uses = value->UseCount();
+}
+
+bool HostLocInfo::IsCompletelyEmpty() const {
+    return values.empty() && !locked && !realized && !accumulated_uses && !expected_uses && !uses_this_inst;
+}
+
+bool HostLocInfo::IsImmediatelyAllocatable() const {
+    return values.empty() && !locked;
+}
+
+bool HostLocInfo::IsOneRemainingUse() const {
+    return accumulated_uses + 1 == expected_uses && uses_this_inst == 1;
+}
+
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     ArgumentInfo ret = {Argument{*this}, Argument{*this}, Argument{*this}, Argument{*this}};
     for (size_t i = 0; i < inst->NumArgs(); i++) {
@@ -86,7 +108,7 @@ RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
         ret[i].value = arg;
         if (!arg.IsImmediate() && !IsValuelessType(arg.GetType())) {
             ASSERT_MSG(ValueLocation(arg.GetInst()), "argument must already been defined");
-            ValueInfo(arg.GetInst()).accumulated_uses++;
+            ValueInfo(arg.GetInst()).uses_this_inst++;
         }
     }
     return ret;
@@ -103,7 +125,7 @@ void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
 }
 
 void RegAlloc::AssertNoMoreUses() const {
-    const auto is_empty = [](const auto& i) { return i.values.empty() && !i.locked && !i.realized && !i.accumulated_uses && !i.expected_uses; };
+    const auto is_empty = [](const auto& i) { return i.IsCompletelyEmpty(); };
     ASSERT(std::all_of(gprs.begin(), gprs.end(), is_empty));
     ASSERT(std::all_of(fprs.begin(), fprs.end(), is_empty));
     ASSERT(is_empty(flags));
@@ -179,27 +201,19 @@ template<HostLoc::Kind kind>
 int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
     ASSERT(!ValueLocation(value));
 
-    const auto setup_location = [&](HostLocInfo& info) {
-        info = {};
-        info.values.emplace_back(value);
-        info.locked = true;
-        info.realized = true;
-        info.expected_uses = value->UseCount();
-    };
-
     if constexpr (kind == HostLoc::Kind::Gpr) {
         const int new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
-        setup_location(gprs[new_location_index]);
+        gprs[new_location_index].SetupLocation(value);
         return new_location_index;
     } else if constexpr (kind == HostLoc::Kind::Fpr) {
         const int new_location_index = AllocateRegister(fprs, fpr_order);
         SpillFpr(new_location_index);
-        setup_location(fprs[new_location_index]);
+        fprs[new_location_index].SetupLocation(value);
         return new_location_index;
     } else if constexpr (kind == HostLoc::Kind::Flags) {
         ASSERT(flags.values.empty());
-        setup_location(flags);
+        flags.SetupLocation(value);
         return 0;
     } else {
         static_assert(kind == HostLoc::Kind::Fpr || kind == HostLoc::Kind::Gpr || kind == HostLoc::Kind::Flags);
@@ -219,6 +233,9 @@ void RegAlloc::Unlock(HostLoc host_loc) {
         return;
     }
 
+    info.accumulated_uses += info.uses_this_inst;
+    info.uses_this_inst = 0;
+
     if (info.accumulated_uses == info.expected_uses) {
         info = {};
     } else {
@@ -228,7 +245,7 @@ void RegAlloc::Unlock(HostLoc host_loc) {
 }
 
 int RegAlloc::AllocateRegister(const std::array<HostLocInfo, 32>& regs, const std::vector<int>& order) const {
-    const auto empty = std::find_if(order.begin(), order.end(), [&](int i) { return regs[i].values.empty() && !regs[i].locked; });
+    const auto empty = std::find_if(order.begin(), order.end(), [&](int i) { return regs[i].IsImmediatelyAllocatable(); });
     if (empty != order.end()) {
         return *empty;
     }
@@ -279,9 +296,7 @@ int RegAlloc::FindFreeSpill() const {
 }
 
 std::optional<HostLoc> RegAlloc::ValueLocation(const IR::Inst* value) const {
-    const auto contains_value = [value](const HostLocInfo& info) {
-        return info.Contains(value);
-    };
+    const auto contains_value = [value](const HostLocInfo& info) { return info.Contains(value); };
 
     if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value); iter != gprs.end()) {
         return HostLoc{HostLoc::Kind::Gpr, static_cast<int>(iter - gprs.begin())};
@@ -313,9 +328,7 @@ HostLocInfo& RegAlloc::ValueInfo(HostLoc host_loc) {
 }
 
 HostLocInfo& RegAlloc::ValueInfo(const IR::Inst* value) {
-    const auto contains_value = [value](const HostLocInfo& info) {
-        return info.Contains(value);
-    };
+    const auto contains_value = [value](const HostLocInfo& info) { return info.Contains(value); };
 
     if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value); iter != gprs.end()) {
         return *iter;

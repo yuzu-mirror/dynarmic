@@ -115,10 +115,15 @@ struct HostLocInfo {
     std::vector<const IR::Inst*> values;
     bool locked = false;
     bool realized = false;
+    size_t uses_this_inst = 0;
     size_t accumulated_uses = 0;
     size_t expected_uses = 0;
 
     bool Contains(const IR::Inst*) const;
+    void SetupLocation(const IR::Inst*);
+    bool IsCompletelyEmpty() const;
+    bool IsImmediatelyAllocatable() const;
+    bool IsOneRemainingUse() const;
 };
 
 class RegAlloc {
