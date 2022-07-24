@@ -167,7 +167,7 @@ void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable
     const std::array<std::optional<Argument::copyable_reference>, 4> args{arg0, arg1, arg2, arg3};
     for (int i = 0; i < 4; i++) {
         if (args[i]) {
-            LoadCopyInto(args[i]->get().value.GetInst(), oaknut::XReg{i});
+            LoadCopyInto(args[i]->get().value, oaknut::XReg{i});
         }
     }
 
@@ -416,8 +416,13 @@ int RegAlloc::FindFreeSpill() const {
     return static_cast<int>(iter - spills.begin());
 }
 
-void RegAlloc::LoadCopyInto(IR::Inst* inst, oaknut::XReg reg) {
-    const auto current_location = ValueLocation(inst);
+void RegAlloc::LoadCopyInto(const IR::Value& value, oaknut::XReg reg) {
+    if (value.IsImmediate()) {
+        code.MOV(reg, value.GetImmediateAsU64());
+        return;
+    }
+
+    const auto current_location = ValueLocation(value.GetInst());
     ASSERT(current_location);
     ASSERT(gprs[reg.index()].IsCompletelyEmpty());
     switch (current_location->kind) {

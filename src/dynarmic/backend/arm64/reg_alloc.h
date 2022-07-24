@@ -261,7 +261,7 @@ private:
     void SpillFpr(int index);
     int FindFreeSpill() const;
 
-    void LoadCopyInto(IR::Inst* inst, oaknut::XReg reg);
+    void LoadCopyInto(const IR::Value& value, oaknut::XReg reg);
 
     std::optional<HostLoc> ValueLocation(const IR::Inst* value) const;
     HostLocInfo& ValueInfo(HostLoc host_loc);
