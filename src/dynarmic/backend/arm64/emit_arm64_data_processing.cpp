@@ -307,10 +307,103 @@ void EmitIR<IR::Opcode::LogicalShiftLeft64>(oaknut::CodeGenerator& code, EmitCon
 
 template<>
 void EmitIR<IR::Opcode::LogicalShiftRight32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+    auto& carry_arg = args[2];
+
+    if (!carry_inst) {
+        if (shift_arg.IsImmediate()) {
+            const u8 shift = shift_arg.GetImmediateU8();
+            auto Wresult = ctx.reg_alloc.WriteW(inst);
+            auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+            RegAlloc::Realize(Wresult, Woperand);
+
+            if (shift <= 31) {
+                code.LSR(Wresult, Woperand, shift);
+            } else {
+                code.MOV(Wresult, WZR);
+            }
+        } else {
+            auto Wresult = ctx.reg_alloc.WriteW(inst);
+            auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+            auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
+            RegAlloc::Realize(Wresult, Woperand, Wshift);
+            ctx.reg_alloc.SpillFlags();
+
+            code.AND(Wscratch0, Wshift, 0xff);
+            code.LSR(Wresult, Woperand, Wscratch0);
+            code.CMP(Wscratch0, 32);
+            code.CSEL(Wresult, Wresult, WZR, LT);
+        }
+    } else {
+        if (shift_arg.IsImmediate() && shift_arg.GetImmediateU8() == 0) {
+            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
+            ctx.reg_alloc.DefineAsExisting(carry_inst, carry_arg);
+        } else if (shift_arg.IsImmediate()) {
+            // TODO: Use RMIF
+            const u8 shift = shift_arg.GetImmediateU8();
+
+            if (shift < 32) {
+                auto Wresult = ctx.reg_alloc.WriteW(inst);
+                auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+                auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand);
+
+                code.UBFX(Wcarry_out, Woperand, shift - 1, 1);
+                code.LSL(Wcarry_out, Wcarry_out, 29);
+                code.LSR(Wresult, Woperand, shift);
+            } else if (shift > 32) {
+                auto Wresult = ctx.reg_alloc.WriteW(inst);
+                auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+                RegAlloc::Realize(Wresult, Wcarry_out);
+
+                code.MOV(Wresult, WZR);
+                code.MOV(Wcarry_out, WZR);
+            } else {
+                auto Wresult = ctx.reg_alloc.WriteW(inst);
+                auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+                auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand);
+
+                code.LSL(Wcarry_out, Woperand, 31 - 29);
+                code.AND(Wcarry_out, Wcarry_out, 1 << 29);
+                code.MOV(Wresult, WZR);
+            }
+        } else {
+            auto Wresult = ctx.reg_alloc.WriteW(inst);
+            auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+            auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+            auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
+            auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
+            RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            ctx.reg_alloc.SpillFlags();
+
+            // TODO: Use RMIF
+
+            oaknut::Label zero, end;
+
+            code.ANDS(Wscratch1, Wshift, 0xff);
+            code.B(EQ, zero);
+
+            code.SUB(Wscratch0, Wshift, 1);
+            code.LSR(Wcarry_out, Woperand, Wscratch0);
+            code.LSR(Wresult, Woperand, Wshift);
+            code.UBFIZ(Wcarry_out, Wcarry_out, 29, 1);
+            code.CMP(Wscratch1, 32);
+            code.CSEL(Wresult, Wresult, WZR, LT);
+            code.CSEL(Wcarry_out, Wcarry_out, WZR, LE);
+            code.B(end);
+
+            code.l(zero);
+            code.MOV(*Wresult, Woperand);
+            code.MOV(*Wcarry_out, Wcarry_in);
+
+            code.l(end);
+        }
+    }
 }
 
 template<>
