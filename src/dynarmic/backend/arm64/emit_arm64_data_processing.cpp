@@ -699,6 +699,60 @@ static void EmitBitOp(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* i
     }
 }
 
+template<size_t bitsize>
+static void EmitAndNot(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    const auto nz_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZFromOp);
+    const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
+    ASSERT(!(nz_inst && nzcv_inst));
+    const auto flag_inst = nz_inst ? nz_inst : nzcv_inst;
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Rresult = ctx.reg_alloc.WriteReg<bitsize>(inst);
+    auto Ra = ctx.reg_alloc.ReadReg<bitsize>(args[0]);
+
+    if (flag_inst) {
+        auto Wflags = ctx.reg_alloc.WriteFlags(flag_inst);
+
+        if (args[1].IsImmediate()) {
+            RegAlloc::Realize(Rresult, Ra, Wflags);
+
+            const u64 not_imm = bitsize == 32 ? static_cast<u32>(~args[1].GetImmediateU64()) : ~args[1].GetImmediateU64();
+
+            if (oaknut::detail::encode_bit_imm(not_imm)) {
+                code.ANDS(Rresult, Ra, not_imm);
+            } else {
+                code.MOV(Rscratch0<bitsize>(), args[1].GetImmediateU64());
+                code.BICS(Rresult, Ra, Rscratch0<bitsize>());
+            }
+        } else {
+            auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+            RegAlloc::Realize(Rresult, Ra, Rb, Wflags);
+
+            code.BICS(Rresult, Ra, Rb);
+        }
+
+        return;
+    }
+
+    if (args[1].IsImmediate()) {
+        RegAlloc::Realize(Rresult, Ra);
+
+        const u64 not_imm = bitsize == 32 ? static_cast<u32>(~args[1].GetImmediateU64()) : ~args[1].GetImmediateU64();
+
+        if (oaknut::detail::encode_bit_imm(not_imm)) {
+            code.AND(Rresult, Ra, not_imm);
+        } else {
+            code.MOV(Rscratch0<bitsize>(), args[1].GetImmediateU64());
+            code.BIC(Rresult, Ra, Rscratch0<bitsize>());
+        }
+    } else {
+        auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+        RegAlloc::Realize(Rresult, Ra, Rb);
+
+        code.BIC(Rresult, Ra, Rb);
+    }
+}
+
 template<>
 void EmitIR<IR::Opcode::And32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitBitOp<32>(
@@ -717,18 +771,12 @@ void EmitIR<IR::Opcode::And64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR
 
 template<>
 void EmitIR<IR::Opcode::AndNot32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitAndNot<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::AndNot64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitAndNot<32>(code, ctx, inst);
 }
 
 template<>
