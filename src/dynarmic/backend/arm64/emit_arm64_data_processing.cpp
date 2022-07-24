@@ -768,16 +768,16 @@ static void MaybeBitImm(oaknut::CodeGenerator& code, u64 imm, EmitFn emit_fn) {
 
 template<size_t bitsize, typename EmitFn1, typename EmitFn2 = std::nullptr_t>
 static void EmitBitOp(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, EmitFn1 emit_without_flags, EmitFn2 emit_with_flags = nullptr) {
-    const auto nz_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZFromOp);
-    const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
-    ASSERT(!(nz_inst && nzcv_inst));
-    const auto flag_inst = nz_inst ? nz_inst : nzcv_inst;
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Rresult = ctx.reg_alloc.WriteReg<bitsize>(inst);
     auto Ra = ctx.reg_alloc.ReadReg<bitsize>(args[0]);
 
     if constexpr (!std::is_same_v<EmitFn2, std::nullptr_t>) {
+        const auto nz_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZFromOp);
+        const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
+        ASSERT(!(nz_inst && nzcv_inst));
+        const auto flag_inst = nz_inst ? nz_inst : nzcv_inst;
+
         if (flag_inst) {
             auto Wflags = ctx.reg_alloc.WriteFlags(flag_inst);
 
@@ -804,7 +804,7 @@ static void EmitBitOp(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* i
         auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
         RegAlloc::Realize(Rresult, Ra, Rb);
 
-        emit_without_flags(Rresult, Rb, Rb);
+        emit_without_flags(Rresult, Ra, Rb);
     }
 }
 
