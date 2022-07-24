@@ -493,9 +493,9 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
                 RegAlloc::Realize(Rresult, Ra, flags);
 
                 if (args[2].GetImmediateU1()) {
-                    MaybeAddSubImm<bitsize>(code, ~imm, [&](const auto b) { sub ? code.ADDS(Rresult, *Ra, b) : code.SUBS(Rresult, *Ra, b); });
+                    MaybeAddSubImm<bitsize>(code, sub ? imm : ~imm, [&](const auto b) { code.SUBS(Rresult, *Ra, b); });
                 } else {
-                    MaybeAddSubImm<bitsize>(code, imm, [&](const auto b) { sub ? code.SUBS(Rresult, *Ra, b) : code.ADDS(Rresult, *Ra, b); });
+                    MaybeAddSubImm<bitsize>(code, sub ? ~imm : imm, [&](const auto b) { code.ADDS(Rresult, *Ra, b); });
                 }
             } else {
                 RegAlloc::Realize(Rresult, Ra);
@@ -512,10 +512,19 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
                 RegAlloc::Realize(Rresult, Ra, Rb, flags);
 
                 if (args[2].GetImmediateU1()) {
-                    code.MVN(Rscratch0<bitsize>(), Rb);
-                    sub ? code.ADDS(Rresult, *Ra, Rscratch0<bitsize>()) : code.SUBS(Rresult, *Ra, Rscratch0<bitsize>());
+                    if (sub) {
+                        code.SUBS(Rresult, *Ra, Rb);
+                    } else {
+                        code.MVN(Rscratch0<bitsize>(), Rb);
+                        code.SUBS(Rresult, *Ra, Rscratch0<bitsize>());
+                    }
                 } else {
-                    sub ? code.SUBS(Rresult, *Ra, Rb) : code.ADDS(Rresult, *Ra, Rb);
+                    if (sub) {
+                        code.MVN(Rscratch0<bitsize>(), Rb);
+                        code.ADDS(Rresult, *Ra, Rscratch0<bitsize>());
+                    } else {
+                        code.ADDS(Rresult, *Ra, Rb);
+                    }
                 }
             } else {
                 RegAlloc::Realize(Rresult, Ra, Rb);
@@ -532,9 +541,9 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
 
             if (args[2].IsImmediate()) {
                 if (args[2].GetImmediateU1()) {
-                    MaybeAddSubImm<bitsize>(code, ~imm, [&](const auto b) { sub ? code.ADD(Rresult, *Ra, b) : code.SUB(Rresult, *Ra, b); });
+                    MaybeAddSubImm<bitsize>(code, sub ? imm : ~imm, [&](const auto b) { code.SUB(Rresult, *Ra, b); });
                 } else {
-                    MaybeAddSubImm<bitsize>(code, imm, [&](const auto b) { sub ? code.SUB(Rresult, *Ra, b) : code.ADD(Rresult, *Ra, b); });
+                    MaybeAddSubImm<bitsize>(code, sub ? ~imm : imm, [&](const auto b) { code.ADD(Rresult, *Ra, b); });
                 }
             } else {
                 code.MOV(Rscratch0<bitsize>(), imm);
@@ -547,10 +556,19 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
 
             if (args[2].IsImmediate()) {
                 if (args[2].GetImmediateU1()) {
-                    code.MVN(Rscratch0<bitsize>(), Rb);
-                    sub ? code.ADD(Rresult, *Ra, Rscratch0<bitsize>()) : code.SUB(Rresult, *Ra, Rscratch0<bitsize>());
+                    if (sub) {
+                        code.SUB(Rresult, *Ra, Rb);
+                    } else {
+                        code.MVN(Rscratch0<bitsize>(), Rb);
+                        code.SUB(Rresult, *Ra, Rscratch0<bitsize>());
+                    }
                 } else {
-                    sub ? code.SUB(Rresult, *Ra, Rb) : code.ADD(Rresult, *Ra, Rb);
+                    if (sub) {
+                        code.MVN(Rscratch0<bitsize>(), Rb);
+                        code.ADD(Rresult, *Ra, Rscratch0<bitsize>());
+                    } else {
+                        code.ADD(Rresult, *Ra, Rb);
+                    }
                 }
             } else {
                 sub ? code.SBC(Rresult, Ra, Rb) : code.ADC(Rresult, Ra, Rb);
