@@ -28,19 +28,22 @@ jobs:
       - name: Checkout dynarmic repo
         uses: actions/checkout@v2
 
+      - name: Ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+
       - name: Checkout ext-boost repo
         uses: actions/checkout@v2
         with:
           repository: MerryMage/ext-boost
           path: externals/ext-boost
 
-      - name: Configure CMake
+      - name: Configure CMake for AArch64
         env:
           CC: aarch64-linux-gnu-gcc-10
           CXX: aarch64-linux-gnu-g++-10
         run: >
           cmake
-          -B ${{github.workspace}}/build
+          -B ${{github.workspace}}/build-arm64
           -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           -DDYNARMIC_TESTS_USE_UNICORN=0
@@ -48,10 +51,30 @@ jobs:
           -DDYNARMIC_FRONTENDS=A32
           -G Ninja
 
-      - name: Build
-        working-directory: ${{github.workspace}}/build
+      - name: Build AArch64
+        working-directory: ${{github.workspace}}/build-arm64
         run: cmake --build . --config Release
 
-      #- name: Test
-      #  working-directory: ${{github.workspace}}/build
-      #  run: qemu-aarch64 -L /usr/aarch64-linux-gnu ./tests/dynarmic_tests -d yes
+      - name: Configure CMake for x86_64
+        env:
+          CC: gcc-10
+          CXX: g++-10
+        run: >
+          cmake
+          -B ${{github.workspace}}/build-x64
+          -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DDYNARMIC_FRONTENDS=A32
+          -DDYNARMIC_TESTS_USE_UNICORN=0
+          -DDYNARMIC_USE_LLVM=0
+          -G Ninja
+
+      - name: Build x86_64
+        working-directory: ${{github.workspace}}/build-x64
+        run: cmake --build . --config Release
+
+      - name: Test
+        working-directory: ${{github.workspace}}
+        run: diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator) <(./build-x64/tests/dynarmic_test_generator)
