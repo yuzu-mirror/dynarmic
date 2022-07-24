@@ -32,6 +32,18 @@ static void EmitTwoOp(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, 
     emit(Rresult, Roperand);
 }
 
+template<size_t bitsize, typename EmitFn>
+static void EmitThreeOp(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Rresult = ctx.reg_alloc.WriteReg<bitsize>(inst);
+    auto Ra = ctx.reg_alloc.ReadReg<bitsize>(args[0]);
+    auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+    RegAlloc::Realize(Rresult, Ra, Rb);
+
+    emit(Rresult, Ra, Rb);
+}
+
 template<>
 void EmitIR<IR::Opcode::Pack2x32To1x64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -783,18 +795,16 @@ void EmitIR<IR::Opcode::Sub64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR
 
 template<>
 void EmitIR<IR::Opcode::Mul32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOp<32>(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Wa, auto& Wb) { code.MUL(Wresult, Wa, Wb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::Mul64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOp<64>(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xa, auto& Xb) { code.MUL(Xresult, Xa, Xb); });
 }
 
 template<>
