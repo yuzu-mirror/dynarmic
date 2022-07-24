@@ -21,6 +21,17 @@ namespace Dynarmic::Backend::Arm64 {
 
 using namespace oaknut::util;
 
+template<size_t bitsize, typename EmitFn>
+static void EmitTwoOp(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Rresult = ctx.reg_alloc.WriteReg<bitsize>(inst);
+    auto Roperand = ctx.reg_alloc.ReadReg<bitsize>(args[0]);
+    RegAlloc::Realize(Rresult, Roperand);
+
+    emit(Rresult, Roperand);
+}
+
 template<>
 void EmitIR<IR::Opcode::Pack2x32To1x64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -907,24 +918,16 @@ void EmitIR<IR::Opcode::Or64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR:
 
 template<>
 void EmitIR<IR::Opcode::Not32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    auto Wresult = ctx.reg_alloc.WriteW(inst);
-    auto Wa = ctx.reg_alloc.ReadW(args[0]);
-    RegAlloc::Realize(Wresult, Wa);
-
-    code.MVN(Wresult, Wa);
+    EmitTwoOp<32>(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand) { code.MVN(Wresult, Woperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::Not64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    auto Xresult = ctx.reg_alloc.WriteX(inst);
-    auto Xa = ctx.reg_alloc.ReadX(args[0]);
-    RegAlloc::Realize(Xresult, Xa);
-
-    code.MVN(Xresult, Xa);
+    EmitTwoOp<64>(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xoperand) { code.MVN(Xresult, Xoperand); });
 }
 
 template<>
@@ -1017,26 +1020,23 @@ void EmitIR<IR::Opcode::ZeroExtendLongToQuad>(oaknut::CodeGenerator& code, EmitC
 
 template<>
 void EmitIR<IR::Opcode::ByteReverseWord>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOp<32>(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand) { code.REV(Wresult, Woperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::ByteReverseHalf>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOp<32>(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand) { code.REV16(Wresult, Woperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::ByteReverseDual>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOp<64>(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xoperand) { code.REV(Xresult, Xoperand); });
 }
 
 template<>
