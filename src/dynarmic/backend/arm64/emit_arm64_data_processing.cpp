@@ -747,18 +747,16 @@ void EmitIR<IR::Opcode::Eor64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR
 
 template<>
 void EmitIR<IR::Opcode::Or32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBitOp<32>(
+        code, ctx, inst,
+        [&](auto& result, auto& a, auto& b) { code.ORR(result, a, b); });
 }
 
 template<>
 void EmitIR<IR::Opcode::Or64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBitOp<64>(
+        code, ctx, inst,
+        [&](auto& result, auto& a, auto& b) { code.ORR(result, a, b); });
 }
 
 template<>
