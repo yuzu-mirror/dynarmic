@@ -44,11 +44,8 @@ void EmitIR<IR::Opcode::CallHostFunction>(oaknut::CodeGenerator& code, EmitConte
 }
 
 template<>
-void EmitIR<IR::Opcode::PushRSB>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::PushRSB>(oaknut::CodeGenerator&, EmitContext&, IR::Inst*) {
+    // TODO
 }
 
 template<>
