@@ -809,18 +809,24 @@ void EmitIR<IR::Opcode::Or64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR:
 
 template<>
 void EmitIR<IR::Opcode::Not32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Wa = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wresult, Wa);
+
+    code.MVN(Wresult, Wa);
 }
 
 template<>
 void EmitIR<IR::Opcode::Not64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xa = ctx.reg_alloc.ReadX(args[0]);
+    RegAlloc::Realize(Xresult, Xa);
+
+    code.MVN(Xresult, Xa);
 }
 
 template<>
