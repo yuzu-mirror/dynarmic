@@ -966,51 +966,39 @@ void EmitIR<IR::Opcode::SignExtendWordToLong>(oaknut::CodeGenerator& code, EmitC
 }
 
 template<>
-void EmitIR<IR::Opcode::ZeroExtendByteToWord>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::ZeroExtendByteToWord>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
 template<>
-void EmitIR<IR::Opcode::ZeroExtendHalfToWord>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::ZeroExtendHalfToWord>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
 template<>
-void EmitIR<IR::Opcode::ZeroExtendByteToLong>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::ZeroExtendByteToLong>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
 template<>
-void EmitIR<IR::Opcode::ZeroExtendHalfToLong>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::ZeroExtendHalfToLong>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
 template<>
-void EmitIR<IR::Opcode::ZeroExtendWordToLong>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::ZeroExtendWordToLong>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
 template<>
-void EmitIR<IR::Opcode::ZeroExtendLongToQuad>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::ZeroExtendLongToQuad>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
 template<>
