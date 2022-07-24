@@ -90,6 +90,12 @@ bool HostLocInfo::Contains(const IR::Inst* value) const {
     return std::find(values.begin(), values.end(), value) != values.end();
 }
 
+void HostLocInfo::SetupScratchLocation() {
+    ASSERT(values.empty());
+    locked = true;
+    realized = true;
+}
+
 void HostLocInfo::SetupLocation(const IR::Inst* value) {
     values.clear();
     values.emplace_back(value);
@@ -192,9 +198,45 @@ void RegAlloc::AssertNoMoreUses() const {
     ASSERT(std::all_of(spills.begin(), spills.end(), is_empty));
 }
 
+template<HostLoc::Kind kind>
+int RegAlloc::GenerateImmediate(const IR::Value& value) {
+    if constexpr (kind == HostLoc::Kind::Gpr) {
+        const int new_location_index = AllocateRegister(gprs, gpr_order);
+        SpillGpr(new_location_index);
+        gprs[new_location_index].SetupScratchLocation();
+
+        code.MOV(oaknut::XReg{new_location_index}, value.GetImmediateAsU64());
+
+        return new_location_index;
+    } else if constexpr (kind == HostLoc::Kind::Fpr) {
+        const int new_location_index = AllocateRegister(fprs, fpr_order);
+        SpillFpr(new_location_index);
+        fprs[new_location_index].SetupScratchLocation();
+
+        code.MOV(Xscratch0, value.GetImmediateAsU64());
+        code.FMOV(oaknut::DReg{new_location_index}, Xscratch0);
+
+        return new_location_index;
+    } else if constexpr (kind == HostLoc::Kind::Flags) {
+        SpillFlags();
+        flags.SetupScratchLocation();
+
+        code.MOV(Xscratch0, value.GetImmediateAsU64());
+        code.MSR(oaknut::SystemReg::NZCV, Xscratch0);
+
+        return 0;
+    } else {
+        static_assert(kind == HostLoc::Kind::Fpr || kind == HostLoc::Kind::Gpr || kind == HostLoc::Kind::Flags);
+    }
+}
+
 template<HostLoc::Kind required_kind>
-int RegAlloc::RealizeReadImpl(const IR::Inst* value) {
-    const auto current_location = ValueLocation(value);
+int RegAlloc::RealizeReadImpl(const IR::Value& value) {
+    if (value.IsImmediate()) {
+        return GenerateImmediate<required_kind>(value);
+    }
+
+    const auto current_location = ValueLocation(value.GetInst());
     ASSERT(current_location);
 
     if (current_location->kind == required_kind) {
@@ -280,9 +322,9 @@ int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
     }
 }
 
-template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Gpr>(const IR::Inst* value);
-template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
-template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Flags>(const IR::Inst* value);
+template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Gpr>(const IR::Value& value);
+template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Fpr>(const IR::Value& value);
+template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Flags>(const IR::Value& value);
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Gpr>(const IR::Inst* value);
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Flags>(const IR::Inst* value);

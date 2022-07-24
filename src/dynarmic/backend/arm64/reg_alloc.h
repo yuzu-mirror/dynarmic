@@ -102,7 +102,7 @@ public:
 
 private:
     friend class RegAlloc;
-    explicit RAReg(RegAlloc& reg_alloc, bool write, const IR::Inst* value)
+    explicit RAReg(RegAlloc& reg_alloc, bool write, const IR::Value& value)
             : reg_alloc{reg_alloc}, write{write}, value{value} {}
 
     RAReg(const RAReg&) = delete;
@@ -114,7 +114,7 @@ private:
 
     RegAlloc& reg_alloc;
     bool write;
-    const IR::Inst* value;
+    const IR::Value value;
     std::optional<T> reg;
 };
 
@@ -127,6 +127,7 @@ struct HostLocInfo {
     size_t expected_uses = 0;
 
     bool Contains(const IR::Inst*) const;
+    void SetupScratchLocation();
     void SetupLocation(const IR::Inst*);
     bool IsCompletelyEmpty() const;
     bool IsImmediatelyAllocatable() const;
@@ -183,16 +184,16 @@ public:
         }
     }
 
-    auto WriteX(IR::Inst* inst) { return RAReg<oaknut::XReg>{*this, true, inst}; }
-    auto WriteW(IR::Inst* inst) { return RAReg<oaknut::WReg>{*this, true, inst}; }
+    auto WriteX(IR::Inst* inst) { return RAReg<oaknut::XReg>{*this, true, IR::Value{inst}}; }
+    auto WriteW(IR::Inst* inst) { return RAReg<oaknut::WReg>{*this, true, IR::Value{inst}}; }
 
-    auto WriteQ(IR::Inst* inst) { return RAReg<oaknut::QReg>{*this, true, inst}; }
-    auto WriteD(IR::Inst* inst) { return RAReg<oaknut::DReg>{*this, true, inst}; }
-    auto WriteS(IR::Inst* inst) { return RAReg<oaknut::SReg>{*this, true, inst}; }
-    auto WriteH(IR::Inst* inst) { return RAReg<oaknut::HReg>{*this, true, inst}; }
-    auto WriteB(IR::Inst* inst) { return RAReg<oaknut::BReg>{*this, true, inst}; }
+    auto WriteQ(IR::Inst* inst) { return RAReg<oaknut::QReg>{*this, true, IR::Value{inst}}; }
+    auto WriteD(IR::Inst* inst) { return RAReg<oaknut::DReg>{*this, true, IR::Value{inst}}; }
+    auto WriteS(IR::Inst* inst) { return RAReg<oaknut::SReg>{*this, true, IR::Value{inst}}; }
+    auto WriteH(IR::Inst* inst) { return RAReg<oaknut::HReg>{*this, true, IR::Value{inst}}; }
+    auto WriteB(IR::Inst* inst) { return RAReg<oaknut::BReg>{*this, true, IR::Value{inst}}; }
 
-    auto WriteFlags(IR::Inst* inst) { return RAReg<FlagsTag>{*this, true, inst}; }
+    auto WriteFlags(IR::Inst* inst) { return RAReg<FlagsTag>{*this, true, IR::Value{inst}}; }
 
     template<size_t size>
     auto WriteReg(IR::Inst* inst) {
@@ -248,14 +249,17 @@ private:
     template<typename>
     friend struct RAReg;
 
-    const IR::Inst* PreReadImpl(const IR::Value& value) {
-        const IR::Inst* inst = value.GetInst();
-        ValueInfo(inst).locked = true;
-        return inst;
+    const IR::Value& PreReadImpl(const IR::Value& value) {
+        if (!value.IsImmediate()) {
+            ValueInfo(value.GetInst()).locked = true;
+        }
+        return value;
     }
 
     template<HostLoc::Kind kind>
-    int RealizeReadImpl(const IR::Inst* value);
+    int GenerateImmediate(const IR::Value& value);
+    template<HostLoc::Kind kind>
+    int RealizeReadImpl(const IR::Value& value);
     template<HostLoc::Kind kind>
     int RealizeWriteImpl(const IR::Inst* value);
     void Unlock(HostLoc host_loc);
@@ -292,7 +296,7 @@ RAReg<T>::~RAReg() {
 
 template<typename T>
 void RAReg<T>::Realize() {
-    reg = T{write ? reg_alloc.RealizeWriteImpl<kind>(value) : reg_alloc.RealizeReadImpl<kind>(value)};
+    reg = T{write ? reg_alloc.RealizeWriteImpl<kind>(value.GetInst()) : reg_alloc.RealizeReadImpl<kind>(value)};
 }
 
 }  // namespace Dynarmic::Backend::Arm64
