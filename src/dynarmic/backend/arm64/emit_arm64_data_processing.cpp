@@ -329,10 +329,54 @@ void EmitIR<IR::Opcode::ArithmeticShiftRight64>(oaknut::CodeGenerator& code, Emi
 
 template<>
 void EmitIR<IR::Opcode::RotateRight32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+    auto& carry_arg = args[2];
+
+    if (shift_arg.IsImmediate() && shift_arg.GetImmediateU8() == 0) {
+        ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
+
+        if (carry_inst) {
+            ctx.reg_alloc.DefineAsExisting(carry_inst, carry_arg);
+        }
+    } else if (shift_arg.IsImmediate()) {
+        const u8 shift = shift_arg.GetImmediateU8() % 32;
+        auto Wresult = ctx.reg_alloc.WriteW(inst);
+        auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+        RegAlloc::Realize(Wresult, Woperand);
+
+        code.ROR(Wresult, Woperand, shift);
+
+        if (carry_inst) {
+            auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+            RegAlloc::Realize(Wcarry_out);
+
+            code.ROR(Wcarry_out, Woperand, ((shift + 31) - 29) % 32);
+            code.AND(Wcarry_out, Wcarry_out, 1 << 29);
+        }
+    } else {
+        auto Wresult = ctx.reg_alloc.WriteW(inst);
+        auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+        auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
+        RegAlloc::Realize(Wresult, Woperand, Wshift);
+
+        code.ROR(Wresult, Woperand, Wshift);
+
+        if (carry_inst) {
+            auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
+            auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+            RegAlloc::Realize(Wcarry_out, Wcarry_in);
+            ctx.reg_alloc.SpillFlags();
+
+            code.TST(Wshift, 0xff);
+            code.LSR(Wcarry_out, Wresult, 31 - 29);
+            code.AND(Wcarry_out, Wcarry_out, 1 << 29);
+            code.CSEL(Wcarry_out, Wcarry_in, Wcarry_out, EQ);
+        }
+    }
 }
 
 template<>
