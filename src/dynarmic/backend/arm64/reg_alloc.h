@@ -102,8 +102,7 @@ public:
 
 private:
     friend class RegAlloc;
-    explicit RAReg(RegAlloc& reg_alloc, bool write, const IR::Value& value)
-            : reg_alloc{reg_alloc}, write{write}, value{value} {}
+    explicit RAReg(RegAlloc& reg_alloc, bool write, const IR::Value& value);
 
     RAReg(const RAReg&) = delete;
     RAReg& operator=(const RAReg&) = delete;
@@ -120,7 +119,7 @@ private:
 
 struct HostLocInfo {
     std::vector<const IR::Inst*> values;
-    bool locked = false;
+    size_t locked = 0;
     bool realized = false;
     size_t uses_this_inst = 0;
     size_t accumulated_uses = 0;
@@ -145,16 +144,16 @@ public:
     ArgumentInfo GetArgumentInfo(IR::Inst* inst);
     bool IsValueLive(IR::Inst* inst) const;
 
-    auto ReadX(Argument& arg) { return RAReg<oaknut::XReg>{*this, false, PreReadImpl(arg.value)}; }
-    auto ReadW(Argument& arg) { return RAReg<oaknut::WReg>{*this, false, PreReadImpl(arg.value)}; }
+    auto ReadX(Argument& arg) { return RAReg<oaknut::XReg>{*this, false, arg.value}; }
+    auto ReadW(Argument& arg) { return RAReg<oaknut::WReg>{*this, false, arg.value}; }
 
-    auto ReadQ(Argument& arg) { return RAReg<oaknut::QReg>{*this, false, PreReadImpl(arg.value)}; }
-    auto ReadD(Argument& arg) { return RAReg<oaknut::DReg>{*this, false, PreReadImpl(arg.value)}; }
-    auto ReadS(Argument& arg) { return RAReg<oaknut::SReg>{*this, false, PreReadImpl(arg.value)}; }
-    auto ReadH(Argument& arg) { return RAReg<oaknut::HReg>{*this, false, PreReadImpl(arg.value)}; }
-    auto ReadB(Argument& arg) { return RAReg<oaknut::BReg>{*this, false, PreReadImpl(arg.value)}; }
+    auto ReadQ(Argument& arg) { return RAReg<oaknut::QReg>{*this, false, arg.value}; }
+    auto ReadD(Argument& arg) { return RAReg<oaknut::DReg>{*this, false, arg.value}; }
+    auto ReadS(Argument& arg) { return RAReg<oaknut::SReg>{*this, false, arg.value}; }
+    auto ReadH(Argument& arg) { return RAReg<oaknut::HReg>{*this, false, arg.value}; }
+    auto ReadB(Argument& arg) { return RAReg<oaknut::BReg>{*this, false, arg.value}; }
 
-    auto ReadFlags(Argument& arg) { return RAReg<FlagsTag>{*this, false, PreReadImpl(arg.value)}; }
+    auto ReadFlags(Argument& arg) { return RAReg<FlagsTag>{*this, false, arg.value}; }
 
     template<size_t size>
     auto ReadReg(Argument& arg) {
@@ -242,6 +241,7 @@ public:
         (rs.Realize(), ...);
     }
 
+    void AssertAllUnlocked() const;
     void AssertNoMoreUses() const;
 
 private:
@@ -249,20 +249,12 @@ private:
     template<typename>
     friend struct RAReg;
 
-    const IR::Value& PreReadImpl(const IR::Value& value) {
-        if (!value.IsImmediate()) {
-            ValueInfo(value.GetInst()).locked = true;
-        }
-        return value;
-    }
-
     template<HostLoc::Kind kind>
     int GenerateImmediate(const IR::Value& value);
     template<HostLoc::Kind kind>
     int RealizeReadImpl(const IR::Value& value);
     template<HostLoc::Kind kind>
     int RealizeWriteImpl(const IR::Inst* value);
-    void Unlock(HostLoc host_loc);
 
     int AllocateRegister(const std::array<HostLocInfo, 32>& regs, const std::vector<int>& order) const;
     void SpillGpr(int index);
@@ -288,9 +280,28 @@ private:
 };
 
 template<typename T>
+RAReg<T>::RAReg(RegAlloc& reg_alloc, bool write, const IR::Value& value)
+        : reg_alloc{reg_alloc}, write{write}, value{value} {
+    if (!write && !value.IsImmediate()) {
+        reg_alloc.ValueInfo(value.GetInst()).locked++;
+    }
+}
+
+template<typename T>
 RAReg<T>::~RAReg() {
-    if (reg) {
-        reg_alloc.Unlock(HostLoc{kind, reg->index()});
+    if (value.IsImmediate()) {
+        if (reg) {
+            // Immediate in scratch register
+            HostLocInfo& info = reg_alloc.ValueInfo(HostLoc{kind, reg->index()});
+            info.locked--;
+            info.realized = false;
+        }
+    } else {
+        HostLocInfo& info = reg_alloc.ValueInfo(value.GetInst());
+        info.locked--;
+        if (reg) {
+            info.realized = false;
+        }
     }
 }
 

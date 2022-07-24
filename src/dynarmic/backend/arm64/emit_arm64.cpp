@@ -152,6 +152,8 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
             ASSERT_FALSE("Invalid opcode: {}", inst->GetOpcode());
             break;
         }
+
+        reg_alloc.AssertAllUnlocked();
     }
 
     reg_alloc.AssertNoMoreUses();

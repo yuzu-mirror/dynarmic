@@ -91,15 +91,16 @@ bool HostLocInfo::Contains(const IR::Inst* value) const {
 }
 
 void HostLocInfo::SetupScratchLocation() {
-    ASSERT(values.empty());
-    locked = true;
+    ASSERT(IsCompletelyEmpty());
+    locked++;
     realized = true;
 }
 
 void HostLocInfo::SetupLocation(const IR::Inst* value) {
+    ASSERT(IsCompletelyEmpty());
     values.clear();
     values.emplace_back(value);
-    locked = true;
+    locked++;
     realized = true;
     uses_this_inst = 0;
     accumulated_uses = 0;
@@ -123,10 +124,9 @@ void HostLocInfo::UpdateUses() {
     uses_this_inst = 0;
 
     if (accumulated_uses == expected_uses) {
-        *this = {};
-    } else {
-        realized = false;
-        locked = false;
+        values.clear();
+        accumulated_uses = 0;
+        expected_uses = 0;
     }
 }
 
@@ -187,7 +187,16 @@ void RegAlloc::DefineAsRegister(IR::Inst* inst, oaknut::Reg reg) {
     ASSERT(!ValueLocation(inst));
     auto& info = reg.is_vector() ? fprs[reg.index()] : gprs[reg.index()];
     ASSERT(info.IsCompletelyEmpty());
-    info.SetupLocation(inst);
+    info.values.emplace_back(inst);
+    info.expected_uses += inst->UseCount();
+}
+
+void RegAlloc::AssertAllUnlocked() const {
+    const auto is_unlocked = [](const auto& i) { return !i.locked && !i.realized; };
+    ASSERT(std::all_of(gprs.begin(), gprs.end(), is_unlocked));
+    ASSERT(std::all_of(fprs.begin(), fprs.end(), is_unlocked));
+    ASSERT(is_unlocked(flags));
+    ASSERT(std::all_of(spills.begin(), spills.end(), is_unlocked));
 }
 
 void RegAlloc::AssertNoMoreUses() const {
@@ -329,12 +338,6 @@ template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Gpr>(const IR::Inst* valu
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Flags>(const IR::Inst* value);
 
-void RegAlloc::Unlock(HostLoc host_loc) {
-    HostLocInfo& info = ValueInfo(host_loc);
-    ASSERT(info.locked && info.realized);
-    info.UpdateUses();
-}
-
 int RegAlloc::AllocateRegister(const std::array<HostLocInfo, 32>& regs, const std::vector<int>& order) const {
     const auto empty = std::find_if(order.begin(), order.end(), [&](int i) { return regs[i].IsImmediatelyAllocatable(); });
     if (empty != order.end()) {
@@ -392,6 +395,8 @@ void RegAlloc::ReadWriteFlags(Argument& read, IR::Inst* write) {
         ASSERT_FALSE("Invalid current location for flags");
     }
     flags.SetupLocation(write);
+    flags.locked--;
+    flags.realized = false;
 }
 
 void RegAlloc::SpillFlags() {
