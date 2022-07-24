@@ -269,7 +269,7 @@ int main(int, char*[]) {
     std::array<u32, 64> ext_reg;
     std::vector<u16> instructions;
 
-    for (size_t iteration = 0; iteration < 5; ++iteration) {
+    for (size_t iteration = 0; iteration < 1000000; ++iteration) {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
 
