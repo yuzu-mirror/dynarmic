@@ -641,12 +641,56 @@ void EmitIR<IR::Opcode::SignedDiv64>(oaknut::CodeGenerator& code, EmitContext& c
     ASSERT_FALSE("Unimplemented");
 }
 
+template<size_t bitsize, typename EmitFn>
+static void MaybeBitImm(oaknut::CodeGenerator& code, u64 imm, EmitFn emit_fn) {
+    static_assert(bitsize == 32 || bitsize == 64);
+    if constexpr (bitsize == 32) {
+        imm = static_cast<u32>(imm);
+    }
+    if (oaknut::detail::encode_bit_imm(imm)) {
+        emit_fn(imm);
+    } else {
+        code.MOV(Rscratch0<bitsize>(), imm);
+        emit_fn(Rscratch0<bitsize>());
+    }
+}
+
 template<>
 void EmitIR<IR::Opcode::And32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto nz_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZFromOp);
+    const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
+    ASSERT(!(nz_inst && nzcv_inst));
+    const auto flag_inst = nz_inst ? nz_inst : nzcv_inst;
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Wa = ctx.reg_alloc.ReadW(args[0]);
+
+    if (flag_inst) {
+        auto Wflags = ctx.reg_alloc.WriteFlags(flag_inst);
+
+        if (args[1].IsImmediate()) {
+            RegAlloc::Realize(Wresult, Wa, Wflags);
+
+            MaybeBitImm<32>(code, args[1].GetImmediateU64(), [&](const auto& b) { code.ANDS(Wresult, Wa, b); });
+        } else {
+            auto Wb = ctx.reg_alloc.ReadW(args[1]);
+            RegAlloc::Realize(Wresult, Wa, Wb, Wflags);
+
+            code.ANDS(Wresult, Wb, Wb);
+        }
+    } else {
+        if (args[1].IsImmediate()) {
+            RegAlloc::Realize(Wresult, Wa);
+
+            MaybeBitImm<32>(code, args[1].GetImmediateU64(), [&](const auto& b) { code.AND(Wresult, Wa, b); });
+        } else {
+            auto Wb = ctx.reg_alloc.ReadW(args[1]);
+            RegAlloc::Realize(Wresult, Wa, Wb);
+
+            code.AND(Wresult, Wb, Wb);
+        }
+    }
 }
 
 template<>

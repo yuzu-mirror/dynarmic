@@ -79,6 +79,10 @@ template<>
 void EmitIR<IR::Opcode::GetNZFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
+    if (ctx.reg_alloc.IsValueLive(inst)) {
+        return;
+    }
+
     auto Wvalue = ctx.reg_alloc.ReadW(args[0]);
     auto flags = ctx.reg_alloc.WriteFlags(inst);
     RegAlloc::Realize(Wvalue, flags);
