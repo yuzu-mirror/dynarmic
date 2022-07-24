@@ -113,6 +113,8 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.write_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite64>(code, conf.callbacks);
 
     prelude_info.end_of_prelude = code.ptr<u32*>();
+
+    mem.invalidate_all();
 }
 
 size_t A32AddressSpace::GetRemainingSize() {
@@ -131,6 +133,8 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
                                                                         .always_little_endian = conf.always_little_endian,
                                                                     });
     Link(block_info);
+
+    mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
 
     mem.protect();
 

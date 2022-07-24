@@ -56,6 +56,8 @@ struct Jit::Impl final {
 
     HaltReason Run() {
         ASSERT(!jit_interface->is_executing);
+        PerformRequestedCacheInvalidation();
+
         jit_interface->is_executing = true;
         SCOPE_EXIT {
             jit_interface->is_executing = false;
@@ -63,13 +65,15 @@ struct Jit::Impl final {
 
         HaltReason hr = core.Run(current_address_space, current_state, &halt_reason);
 
-        RequestCacheInvalidation();
+        PerformRequestedCacheInvalidation();
 
         return hr;
     }
 
     HaltReason Step() {
         ASSERT(!jit_interface->is_executing);
+        PerformRequestedCacheInvalidation();
+
         jit_interface->is_executing = true;
         SCOPE_EXIT {
             jit_interface->is_executing = false;
@@ -77,7 +81,7 @@ struct Jit::Impl final {
 
         ASSERT_FALSE("Unimplemented");
 
-        RequestCacheInvalidation();
+        PerformRequestedCacheInvalidation();
 
         return HaltReason{};
     }
@@ -161,11 +165,18 @@ struct Jit::Impl final {
     }
 
 private:
-    void RequestCacheInvalidation() {
-        // ASSERT_FALSE("Unimplemented");
+    void PerformRequestedCacheInvalidation() {
+        if (invalidate_entire_cache) {
+            current_address_space.ClearCache();
 
-        invalidate_entire_cache = false;
-        invalid_cache_ranges.clear();
+            invalidate_entire_cache = false;
+            invalid_cache_ranges.clear();
+            return;
+        }
+
+        if (!invalid_cache_ranges.empty()) {
+            ASSERT_FALSE("Unimplemented");
+        }
     }
 
     Jit* jit_interface;
