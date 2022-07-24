@@ -31,6 +31,14 @@ using CodePtr = std::byte*;
 
 enum class LinkTarget {
     ReturnFromRunCode,
+    ReadMemory8,
+    ReadMemory16,
+    ReadMemory32,
+    ReadMemory64,
+    WriteMemory8,
+    WriteMemory16,
+    WriteMemory32,
+    WriteMemory64,
 };
 
 struct Relocation {

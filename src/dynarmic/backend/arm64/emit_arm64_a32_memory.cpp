@@ -25,34 +25,38 @@ void EmitIR<IR::Opcode::A32ClearExclusive>(oaknut::CodeGenerator& code, EmitCont
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(inst, {}, args[1]);
+
+    EmitRelocation(code, ctx, LinkTarget::ReadMemory8);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(inst, {}, args[1]);
+
+    EmitRelocation(code, ctx, LinkTarget::ReadMemory16);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(inst, {}, args[1]);
+
+    EmitRelocation(code, ctx, LinkTarget::ReadMemory32);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(inst, {}, args[1]);
+
+    EmitRelocation(code, ctx, LinkTarget::ReadMemory64);
 }
 
 template<>
@@ -89,34 +93,38 @@ void EmitIR<IR::Opcode::A32ExclusiveReadMemory64>(oaknut::CodeGenerator& code, E
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[1], args[2]);
+
+    EmitRelocation(code, ctx, LinkTarget::WriteMemory8);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[1], args[2]);
+
+    EmitRelocation(code, ctx, LinkTarget::WriteMemory16);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[1], args[2]);
+
+    EmitRelocation(code, ctx, LinkTarget::WriteMemory32);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[1], args[2]);
+
+    EmitRelocation(code, ctx, LinkTarget::WriteMemory64);
 }
 
 template<>

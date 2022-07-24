@@ -6,6 +6,7 @@
 #include "dynarmic/backend/arm64/a32_address_space.h"
 
 #include "dynarmic/backend/arm64/abi.h"
+#include "dynarmic/backend/arm64/devirtualize.h"
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/stack_layout.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
@@ -13,6 +14,28 @@
 #include "dynarmic/ir/opt/passes.h"
 
 namespace Dynarmic::Backend::Arm64 {
+
+template<auto mfp, typename T>
+static void* EmitCallTrampoline(oaknut::CodeGenerator& code, T* this_) {
+    using namespace oaknut::util;
+
+    const auto info = Devirtualize<mfp>(this_);
+
+    oaknut::Label l_addr, l_this;
+
+    void* target = code.ptr<void*>();
+    code.LDR(X0, l_this);
+    code.LDR(Xscratch0, l_addr);
+    code.BR(Xscratch0);
+
+    code.align(8);
+    code.l(l_this);
+    code.dx(info.this_ptr);
+    code.l(l_addr);
+    code.dx(info.fn_ptr);
+
+    return target;
+}
 
 A32AddressSpace::A32AddressSpace(const A32::UserConfig& conf)
         : conf(conf)
@@ -66,7 +89,6 @@ void A32AddressSpace::ClearCache() {
 }
 
 void A32AddressSpace::EmitPrelude() {
-    using namespace oaknut;
     using namespace oaknut::util;
 
     mem.unprotect();
@@ -81,7 +103,14 @@ void A32AddressSpace::EmitPrelude() {
     ABI_PopRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
     code.RET();
 
-    mem.protect();
+    prelude_info.read_memory_8 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead8>(code, conf.callbacks);
+    prelude_info.read_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead16>(code, conf.callbacks);
+    prelude_info.read_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead32>(code, conf.callbacks);
+    prelude_info.read_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead64>(code, conf.callbacks);
+    prelude_info.write_memory_8 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite8>(code, conf.callbacks);
+    prelude_info.write_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite16>(code, conf.callbacks);
+    prelude_info.write_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite32>(code, conf.callbacks);
+    prelude_info.write_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite64>(code, conf.callbacks);
 
     prelude_info.end_of_prelude = code.ptr<u32*>();
 }
@@ -118,6 +147,30 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
         switch (target) {
         case LinkTarget::ReturnFromRunCode:
             c.B(prelude_info.return_from_run_code);
+            break;
+        case LinkTarget::ReadMemory8:
+            c.BL(prelude_info.read_memory_8);
+            break;
+        case LinkTarget::ReadMemory16:
+            c.BL(prelude_info.read_memory_16);
+            break;
+        case LinkTarget::ReadMemory32:
+            c.BL(prelude_info.read_memory_32);
+            break;
+        case LinkTarget::ReadMemory64:
+            c.BL(prelude_info.read_memory_64);
+            break;
+        case LinkTarget::WriteMemory8:
+            c.BL(prelude_info.write_memory_8);
+            break;
+        case LinkTarget::WriteMemory16:
+            c.BL(prelude_info.write_memory_16);
+            break;
+        case LinkTarget::WriteMemory32:
+            c.BL(prelude_info.write_memory_32);
+            break;
+        case LinkTarget::WriteMemory64:
+            c.BL(prelude_info.write_memory_64);
             break;
         default:
             ASSERT_FALSE("Invalid relocation target");

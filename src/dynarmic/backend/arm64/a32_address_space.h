@@ -55,6 +55,15 @@ private:
         using RunCodeFuncType = HaltReason (*)(CodePtr entry_point, A32JitState* context, volatile u32* halt_reason);
         RunCodeFuncType run_code;
         void* return_from_run_code;
+
+        void* read_memory_8;
+        void* read_memory_16;
+        void* read_memory_32;
+        void* read_memory_64;
+        void* write_memory_8;
+        void* write_memory_16;
+        void* write_memory_32;
+        void* write_memory_64;
     } prelude_info;
 };
 
