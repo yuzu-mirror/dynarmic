@@ -98,7 +98,7 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::If
 
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::CheckBit terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
     oaknut::Label fail;
-    code.LDRB(Wscratch0, Xstate, offsetof(StackLayout, check_bit));
+    code.LDRB(Wscratch0, SP, offsetof(StackLayout, check_bit));
     code.CBZ(Wscratch0, fail);
     EmitA32Terminal(code, ctx, terminal.then_, initial_location, is_single_step);
     code.l(fail);
