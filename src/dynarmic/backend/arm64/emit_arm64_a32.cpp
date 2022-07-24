@@ -263,10 +263,17 @@ void EmitIR<IR::Opcode::A32SetCpsrNZCVQ>(oaknut::CodeGenerator& code, EmitContex
 
 template<>
 void EmitIR<IR::Opcode::A32SetCpsrNZ>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wnz = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wnz);
+
+    // TODO: Track latent value
+
+    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+    code.AND(Wscratch0, Wscratch0, 0x30000000);
+    code.ORR(Wscratch0, Wscratch0, Wnz);
+    code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
 }
 
 template<>
