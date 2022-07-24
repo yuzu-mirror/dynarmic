@@ -380,7 +380,7 @@ void EmitIR<IR::Opcode::LogicalShiftRight32>(oaknut::CodeGenerator& code, EmitCo
                 auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
                 RegAlloc::Realize(Wresult, Wcarry_out, Woperand);
 
-                code.LSL(Wcarry_out, Woperand, 31 - 29);
+                code.LSR(Wcarry_out, Woperand, 31 - 29);
                 code.AND(Wcarry_out, Wcarry_out, 1 << 29);
                 code.MOV(Wresult, WZR);
             }
