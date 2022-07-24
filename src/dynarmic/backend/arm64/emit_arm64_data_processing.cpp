@@ -655,50 +655,58 @@ static void MaybeBitImm(oaknut::CodeGenerator& code, u64 imm, EmitFn emit_fn) {
     }
 }
 
-template<>
-void EmitIR<IR::Opcode::And32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+template<size_t bitsize, typename EmitFn1, typename EmitFn2>
+static void EmitBitOp(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, EmitFn1 emit_without_flags, EmitFn2 emit_with_flags) {
     const auto nz_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZFromOp);
     const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
     ASSERT(!(nz_inst && nzcv_inst));
     const auto flag_inst = nz_inst ? nz_inst : nzcv_inst;
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto Wresult = ctx.reg_alloc.WriteW(inst);
-    auto Wa = ctx.reg_alloc.ReadW(args[0]);
+    auto Rresult = ctx.reg_alloc.WriteReg<bitsize>(inst);
+    auto Ra = ctx.reg_alloc.ReadReg<bitsize>(args[0]);
 
     if (flag_inst) {
         auto Wflags = ctx.reg_alloc.WriteFlags(flag_inst);
 
         if (args[1].IsImmediate()) {
-            RegAlloc::Realize(Wresult, Wa, Wflags);
+            RegAlloc::Realize(Rresult, Ra, Wflags);
 
-            MaybeBitImm<32>(code, args[1].GetImmediateU64(), [&](const auto& b) { code.ANDS(Wresult, Wa, b); });
+            MaybeBitImm<bitsize>(code, args[1].GetImmediateU64(), [&](const auto& b) { emit_with_flags(Rresult, Ra, b); });
         } else {
-            auto Wb = ctx.reg_alloc.ReadW(args[1]);
-            RegAlloc::Realize(Wresult, Wa, Wb, Wflags);
+            auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+            RegAlloc::Realize(Rresult, Ra, Rb, Wflags);
 
-            code.ANDS(Wresult, Wb, Wb);
+            emit_with_flags(Rresult, Ra, Rb);
         }
     } else {
         if (args[1].IsImmediate()) {
-            RegAlloc::Realize(Wresult, Wa);
+            RegAlloc::Realize(Rresult, Ra);
 
-            MaybeBitImm<32>(code, args[1].GetImmediateU64(), [&](const auto& b) { code.AND(Wresult, Wa, b); });
+            MaybeBitImm<bitsize>(code, args[1].GetImmediateU64(), [&](const auto& b) { emit_without_flags(Rresult, Ra, b); });
         } else {
-            auto Wb = ctx.reg_alloc.ReadW(args[1]);
-            RegAlloc::Realize(Wresult, Wa, Wb);
+            auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+            RegAlloc::Realize(Rresult, Ra, Rb);
 
-            code.AND(Wresult, Wb, Wb);
+            emit_without_flags(Rresult, Rb, Rb);
         }
     }
 }
 
 template<>
+void EmitIR<IR::Opcode::And32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitBitOp<32>(
+        code, ctx, inst,
+        [&](auto& result, auto& a, auto& b) { code.AND(result, a, b); },
+        [&](auto& result, auto& a, auto& b) { code.ANDS(result, a, b); });
+}
+
+template<>
 void EmitIR<IR::Opcode::And64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBitOp<64>(
+        code, ctx, inst,
+        [&](auto& result, auto& a, auto& b) { code.AND(result, a, b); },
+        [&](auto& result, auto& a, auto& b) { code.ANDS(result, a, b); });
 }
 
 template<>
