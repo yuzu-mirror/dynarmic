@@ -499,13 +499,19 @@ void EmitIR<IR::Opcode::ArithmeticShiftRight32>(oaknut::CodeGenerator& code, Emi
             code.ANDS(Wscratch0, Wshift, 0xff);
             code.B(EQ, zero);
 
-            code.MOV(Wscratch1, 31);
-            code.CMP(Wscratch0, 31);
-            code.CSEL(Wscratch0, Wscratch0, Wscratch1, LO);
+            code.MOV(Wscratch1, 63);
+            code.CMP(Wscratch0, 63);
+            code.CSEL(Wscratch0, Wscratch0, Wscratch1, LS);
+
+            code.SXTW(Wresult->toX(), Woperand);
             code.SUB(Wscratch1, Wscratch0, 1);
-            code.ASR(Wresult, Woperand, Wscratch0);
-            code.LSR(Wcarry_out, Woperand, Wscratch1);
+
+            code.ASR(Wcarry_out->toX(), Wresult->toX(), Xscratch1);
+            code.ASR(Wresult->toX(), Wresult->toX(), Xscratch0);
+
             code.UBFIZ(Wcarry_out, Wcarry_out, 29, 1);
+            code.MOV(*Wresult, Wresult);
+
             code.B(end);
 
             code.l(zero);
