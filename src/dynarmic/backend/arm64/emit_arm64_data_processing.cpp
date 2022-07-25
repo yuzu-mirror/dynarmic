@@ -137,7 +137,7 @@ void EmitIR<IR::Opcode::MostSignificantWord>(oaknut::CodeGenerator& code, EmitCo
     auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
     RegAlloc::Realize(Wresult, Xoperand);
 
-    code.LSL(Wresult->toX(), Xoperand, 32);
+    code.LSR(Wresult->toX(), Xoperand, 32);
 }
 
 template<>
