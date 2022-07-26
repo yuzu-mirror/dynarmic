@@ -197,36 +197,61 @@ void EmitIR<IR::Opcode::PackedSubS16>(oaknut::CodeGenerator& code, EmitContext& 
     }
 }
 
+template<bool add_is_hi, bool is_signed>
+static void EmitPackedAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Vresult = ctx.reg_alloc.WriteD(inst);
+    auto Va = ctx.reg_alloc.ReadD(args[0]);
+    auto Vb = ctx.reg_alloc.ReadD(args[1]);
+    RegAlloc::Realize(Vresult, Va, Vb);
+
+    if (is_signed) {
+        code.SXTL(V0.S4(), Va->H4());
+        code.SXTL(V1.S4(), Vb->H4());
+    } else {
+        code.UXTL(V0.S4(), Va->H4());
+        code.UXTL(V1.S4(), Vb->H4());
+    }
+    code.EXT(V1.B8(), V1.B8(), V1.B8(), 4);
+
+    code.MOVI(D2, oaknut::RepImm{add_is_hi ? 0b11110000 : 0b00001111});
+
+    code.EOR(V1.B8(), V1.B8(), V2.B8());
+    code.SUB(V1.S2(), V1.S2(), V2.S2());
+    code.SUB(Vresult->S2(), V0.S2(), V1.S2());
+
+    if (ge_inst) {
+        auto Vge = ctx.reg_alloc.WriteD(ge_inst);
+        RegAlloc::Realize(Vge);
+
+        code.CMEQ(Vge->H4(), Vresult->H4(), 0);
+        code.EOR(Vge->B8(), Vge->B8(), V2.B8());
+        code.SHRN(Vge->H4(), Vge->toQ().S4(), 16);
+    }
+
+    code.XTN(Vresult->H4(), Vresult->toQ().S4());
+}
+
 template<>
 void EmitIR<IR::Opcode::PackedAddSubU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<true, false>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedAddSubS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<true, true>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedSubAddU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<false, false>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedSubAddS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<false, true>(code, ctx, inst);
 }
 
 template<>
