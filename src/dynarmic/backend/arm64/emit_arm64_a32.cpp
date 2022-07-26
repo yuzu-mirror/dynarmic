@@ -312,18 +312,20 @@ void EmitIR<IR::Opcode::A32OrQFlag>(oaknut::CodeGenerator& code, EmitContext& ct
 
 template<>
 void EmitIR<IR::Opcode::A32GetGEFlags>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto Snzcv = ctx.reg_alloc.WriteS(inst);
+    RegAlloc::Realize(Snzcv);
+
+    code.LDR(Snzcv, Xstate, offsetof(A32JitState, cpsr_ge));
 }
 
 template<>
 void EmitIR<IR::Opcode::A32SetGEFlags>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Snzcv = ctx.reg_alloc.ReadS(args[0]);
+    RegAlloc::Realize(Snzcv);
+
+    code.STR(Snzcv, Xstate, offsetof(A32JitState, cpsr_ge));
 }
 
 template<>
