@@ -39,6 +39,7 @@ enum class LinkTarget {
     WriteMemory16,
     WriteMemory32,
     WriteMemory64,
+    InstructionSynchronizationBarrierRaised,
 };
 
 struct Relocation {
@@ -53,6 +54,7 @@ struct EmittedBlockInfo {
 };
 
 struct EmitConfig {
+    bool hook_isb;
     bool enable_cycle_counting;
     bool always_little_endian;
 };

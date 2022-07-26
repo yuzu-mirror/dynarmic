@@ -64,6 +64,7 @@ private:
         void* write_memory_16;
         void* write_memory_32;
         void* write_memory_64;
+        void* isb_raised;
     } prelude_info;
 };
 

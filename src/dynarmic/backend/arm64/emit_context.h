@@ -24,7 +24,7 @@ struct FpsrManager {
 struct EmitContext {
     IR::Block& block;
     RegAlloc& reg_alloc;
-    const EmitConfig& emit_conf;
+    const EmitConfig& conf;
     EmittedBlockInfo& ebi;
     FpsrManager fpsr;
 };

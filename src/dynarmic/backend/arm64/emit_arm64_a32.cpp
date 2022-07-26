@@ -47,7 +47,7 @@ void EmitSetUpperLocationDescriptor(oaknut::CodeGenerator& code, EmitContext& ct
 
     const u32 old_upper = get_upper(old_location);
     const u32 new_upper = [&] {
-        const u32 mask = ~u32(ctx.emit_conf.always_little_endian ? 0x2 : 0);
+        const u32 mask = ~u32(ctx.conf.always_little_endian ? 0x2 : 0);
         return get_upper(new_location) & mask;
     }();
 
@@ -396,27 +396,23 @@ void EmitIR<IR::Opcode::A32ExceptionRaised>(oaknut::CodeGenerator& code, EmitCon
 }
 
 template<>
-void EmitIR<IR::Opcode::A32DataSynchronizationBarrier>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::A32DataSynchronizationBarrier>(oaknut::CodeGenerator& code, EmitContext&, IR::Inst*) {
+    code.DSB(oaknut::BarrierOp::SY);
 }
 
 template<>
-void EmitIR<IR::Opcode::A32DataMemoryBarrier>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::A32DataMemoryBarrier>(oaknut::CodeGenerator& code, EmitContext&, IR::Inst*) {
+    code.DMB(oaknut::BarrierOp::SY);
 }
 
 template<>
-void EmitIR<IR::Opcode::A32InstructionSynchronizationBarrier>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+void EmitIR<IR::Opcode::A32InstructionSynchronizationBarrier>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst*) {
+    if (!ctx.conf.hook_isb) {
+        return;
+    }
+
+    ctx.reg_alloc.PrepareForCall(nullptr);
+    EmitRelocation(code, ctx, LinkTarget::InstructionSynchronizationBarrierRaised);
 }
 
 template<>

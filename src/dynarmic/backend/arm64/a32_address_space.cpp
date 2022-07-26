@@ -111,6 +111,7 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.write_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite16>(code, conf.callbacks);
     prelude_info.write_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite32>(code, conf.callbacks);
     prelude_info.write_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite64>(code, conf.callbacks);
+    prelude_info.isb_raised = EmitCallTrampoline<&A32::UserCallbacks::InstructionSynchronizationBarrierRaised>(code, conf.callbacks);
 
     prelude_info.end_of_prelude = code.ptr<u32*>();
 
@@ -129,6 +130,7 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
     mem.unprotect();
 
     EmittedBlockInfo block_info = EmitArm64(code, std::move(block), {
+                                                                        .hook_isb = conf.hook_isb,
                                                                         .enable_cycle_counting = conf.enable_cycle_counting,
                                                                         .always_little_endian = conf.always_little_endian,
                                                                     });
@@ -175,6 +177,9 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
             break;
         case LinkTarget::WriteMemory64:
             c.BL(prelude_info.write_memory_64);
+            break;
+        case LinkTarget::InstructionSynchronizationBarrierRaised:
+            c.BL(prelude_info.isb_raised);
             break;
         default:
             ASSERT_FALSE("Invalid relocation target");

@@ -117,11 +117,11 @@ void EmitIR<IR::Opcode::NZCVFromPackedFlags>(oaknut::CodeGenerator&, EmitContext
     ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
-EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf) {
+EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& conf) {
     EmittedBlockInfo ebi;
 
     RegAlloc reg_alloc{code, GPR_ORDER, FPR_ORDER};
-    EmitContext ctx{block, reg_alloc, emit_conf, ebi, {}};
+    EmitContext ctx{block, reg_alloc, conf, ebi, {}};
 
     ebi.entry_point = code.ptr<CodePtr>();
 
@@ -155,7 +155,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 
     reg_alloc.AssertNoMoreUses();
 
-    if (emit_conf.enable_cycle_counting) {
+    if (ctx.conf.enable_cycle_counting) {
         const size_t cycles_to_add = block.CycleCount();
         code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
         if (oaknut::AddSubImm::is_valid(cycles_to_add)) {
