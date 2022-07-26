@@ -77,10 +77,22 @@ void EmitIR<IR::Opcode::PackedSubS8>(oaknut::CodeGenerator& code, EmitContext& c
 
 template<>
 void EmitIR<IR::Opcode::PackedAddU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Vresult = ctx.reg_alloc.WriteD(inst);
+    auto Va = ctx.reg_alloc.ReadD(args[0]);
+    auto Vb = ctx.reg_alloc.ReadD(args[1]);
+    RegAlloc::Realize(Vresult, Va, Vb);
+
+    code.ADD(Vresult->H4(), Va->H4(), Vb->H4());
+
+    if (ge_inst) {
+        auto Vge = ctx.reg_alloc.WriteD(ge_inst);
+        RegAlloc::Realize(Vge);
+
+        code.CMHI(Vge->H4(), Va->H4(), Vresult->H4());
+    }
 }
 
 template<>
