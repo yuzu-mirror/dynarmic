@@ -153,8 +153,6 @@ public:
     auto ReadH(Argument& arg) { return RAReg<oaknut::HReg>{*this, false, arg.value}; }
     auto ReadB(Argument& arg) { return RAReg<oaknut::BReg>{*this, false, arg.value}; }
 
-    auto ReadFlags(Argument& arg) { return RAReg<FlagsTag>{*this, false, arg.value}; }
-
     template<size_t size>
     auto ReadReg(Argument& arg) {
         if constexpr (size == 64) {
@@ -300,7 +298,7 @@ RAReg<T>::~RAReg() {
         HostLocInfo& info = reg_alloc.ValueInfo(value.GetInst());
         info.locked--;
         if (reg) {
-            info.realized = false;
+            reg_alloc.ValueInfo(HostLoc{kind, reg->index()}).realized = false;
         }
     }
 }

@@ -274,7 +274,7 @@ int RegAlloc::RealizeReadImpl(const IR::Value& value) {
             // ASSERT size fits
             break;
         case HostLoc::Kind::Spill:
-            code.LDR(oaknut::XReg{new_location_index}, SP, spill_offset + new_location_index * spill_slot_size);
+            code.LDR(oaknut::XReg{new_location_index}, SP, spill_offset + current_location->index * spill_slot_size);
             break;
         case HostLoc::Kind::Flags:
             code.MRS(oaknut::XReg{new_location_index}, oaknut::SystemReg::NZCV);
@@ -296,7 +296,7 @@ int RegAlloc::RealizeReadImpl(const IR::Value& value) {
             ASSERT_FALSE("Logic error");
             break;
         case HostLoc::Kind::Spill:
-            code.LDR(oaknut::QReg{new_location_index}, SP, spill_offset + new_location_index * spill_slot_size);
+            code.LDR(oaknut::QReg{new_location_index}, SP, spill_offset + current_location->index * spill_slot_size);
             break;
         case HostLoc::Kind::Flags:
             ASSERT_FALSE("Moving from flags into fprs is not currently supported");
@@ -307,7 +307,7 @@ int RegAlloc::RealizeReadImpl(const IR::Value& value) {
         fprs[new_location_index].realized = true;
         return new_location_index;
     } else if constexpr (required_kind == HostLoc::Kind::Flags) {
-        ASSERT_FALSE("Loading flags back into NZCV is not currently supported");
+        ASSERT_FALSE("A simple read from flags is likely a logic error.");
     } else {
         static_assert(required_kind == HostLoc::Kind::Fpr || required_kind == HostLoc::Kind::Gpr || required_kind == HostLoc::Kind::Flags);
     }
@@ -399,9 +399,12 @@ void RegAlloc::ReadWriteFlags(Argument& read, IR::Inst* write) {
     } else {
         ASSERT_FALSE("Invalid current location for flags");
     }
-    flags.SetupLocation(write);
-    flags.locked--;
-    flags.realized = false;
+
+    if (write) {
+        flags.SetupLocation(write);
+        flags.locked--;
+        flags.realized = false;
+    }
 }
 
 void RegAlloc::SpillFlags() {

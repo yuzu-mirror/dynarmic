@@ -758,8 +758,18 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
                     MaybeAddSubImm<bitsize>(code, sub ? ~imm : imm, [&](const auto b) { code.ADD(Rresult, *Ra, b); });
                 }
             } else {
-                code.MOV(Rscratch0<bitsize>(), imm);
-                sub ? code.SBC(Rresult, Ra, Rscratch0<bitsize>()) : code.ADC(Rresult, Ra, Rscratch0<bitsize>());
+                ctx.reg_alloc.ReadWriteFlags(args[2], nullptr);
+
+                if (imm == 0) {
+                    if constexpr (bitsize == 32) {
+                        sub ? code.SBC(Rresult, Ra, WZR) : code.ADC(Rresult, Ra, WZR);
+                    } else {
+                        sub ? code.SBC(Rresult, Ra, XZR) : code.ADC(Rresult, Ra, XZR);
+                    }
+                } else {
+                    code.MOV(Rscratch0<bitsize>(), imm);
+                    sub ? code.SBC(Rresult, Ra, Rscratch0<bitsize>()) : code.ADC(Rresult, Ra, Rscratch0<bitsize>());
+                }
             }
         } else {
             auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
@@ -783,6 +793,8 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
                     }
                 }
             } else {
+                ctx.reg_alloc.ReadWriteFlags(args[2], nullptr);
+
                 sub ? code.SBC(Rresult, Ra, Rb) : code.ADC(Rresult, Ra, Rb);
             }
         }
