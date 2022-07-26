@@ -121,7 +121,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     EmittedBlockInfo ebi;
 
     RegAlloc reg_alloc{code, GPR_ORDER, FPR_ORDER};
-    EmitContext ctx{block, reg_alloc, emit_conf, ebi};
+    EmitContext ctx{block, reg_alloc, emit_conf, ebi, {}};
 
     ebi.entry_point = code.ptr<CodePtr>();
 

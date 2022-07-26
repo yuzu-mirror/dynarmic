@@ -16,11 +16,17 @@ namespace Dynarmic::Backend::Arm64 {
 
 struct EmitConfig;
 
+struct FpsrManager {
+    void Spill() {}  // TODO
+    void Load() {}   // TODO
+};
+
 struct EmitContext {
     IR::Block& block;
     RegAlloc& reg_alloc;
     const EmitConfig& emit_conf;
     EmittedBlockInfo& ebi;
+    FpsrManager fpsr;
 };
 
 }  // namespace Dynarmic::Backend::Arm64
