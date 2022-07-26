@@ -384,7 +384,7 @@ void A32EmitX64::EmitA32GetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
         code.pdep(result, result, tmp);
     } else {
         code.mov(result, dword[r15 + offsetof(A32JitState, upper_location_descriptor)]);
-        code.imul(result, result, 0x12);
+        code.imul(result, result, 0x120);
         code.and_(result, 0x00000220);
 
         code.mov(tmp, dword[r15 + offsetof(A32JitState, cpsr_ge)]);
