@@ -131,6 +131,8 @@ void EmitIR<IR::Opcode::LeastSignificantByte>(oaknut::CodeGenerator& code, EmitC
 
 template<>
 void EmitIR<IR::Opcode::MostSignificantWord>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     auto Wresult = ctx.reg_alloc.WriteW(inst);
@@ -138,6 +140,14 @@ void EmitIR<IR::Opcode::MostSignificantWord>(oaknut::CodeGenerator& code, EmitCo
     RegAlloc::Realize(Wresult, Xoperand);
 
     code.LSR(Wresult->toX(), Xoperand, 32);
+
+    if (carry_inst) {
+        auto Wcarry = ctx.reg_alloc.WriteW(carry_inst);
+        RegAlloc::Realize(Wcarry);
+
+        code.LSR(Wcarry, Xoperand->toW(), 31 - 29);
+        code.AND(Wcarry, Wcarry, 1 << 29);
+    }
 }
 
 template<>
