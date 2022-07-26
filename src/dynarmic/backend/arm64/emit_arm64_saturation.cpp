@@ -172,10 +172,27 @@ void EmitIR<IR::Opcode::UnsignedSaturatedSub64>(oaknut::CodeGenerator& code, Emi
 
 template<>
 void EmitIR<IR::Opcode::UnsignedSaturation>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Woperand = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wresult, Woperand);
+    ctx.reg_alloc.SpillFlags();
+
+    const size_t N = args[1].GetImmediateU8();
+    ASSERT(N <= 31);
+    const u32 saturated_value = (1u << N) - 1;
+
+    code.MOV(Wscratch0, saturated_value);
+    code.CMP(*Woperand, Wscratch0);
+    code.CSEL(Wresult, Woperand, Wscratch0, LS);
+
+    if (overflow_inst) {
+        auto Woverflow = ctx.reg_alloc.WriteW(overflow_inst);
+        RegAlloc::Realize(Woverflow);
+        code.CSET(Woverflow, HI);
+    }
 }
 
 }  // namespace Dynarmic::Backend::Arm64
