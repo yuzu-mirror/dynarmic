@@ -7,7 +7,6 @@
 
 #include <algorithm>
 
-#include <fmt/ostream.h>
 #include <mcl/assert.hpp>
 
 #include "dynarmic/ir/opcodes.h"
