@@ -221,10 +221,30 @@ void EmitIR<IR::Opcode::A32SetVector>(oaknut::CodeGenerator& code, EmitContext& 
 
 template<>
 void EmitIR<IR::Opcode::A32GetCpsr>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto Wcpsr = ctx.reg_alloc.WriteW(inst);
+    RegAlloc::Realize(Wcpsr);
+
+    static_assert(offsetof(A32JitState, cpsr_jaifm) + sizeof(u32) == offsetof(A32JitState, cpsr_q));
+
+    code.LDR(Wcpsr, Xstate, offsetof(A32JitState, cpsr_nzcv));
+    code.LDP(Wscratch0, Wscratch1, Xstate, offsetof(A32JitState, cpsr_jaifm));
+    code.ORR(Wcpsr, Wcpsr, Wscratch0);
+    code.ORR(Wcpsr, Wcpsr, Wscratch1);
+
+    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_ge));
+    code.AND(Wscratch0, Wscratch0, 0x80808080);
+    code.MOV(Wscratch1, 0x00204081);
+    code.MUL(Wscratch0, Wscratch0, Wscratch1);
+    code.AND(Wscratch0, Wscratch0, 0xf0000000);
+    code.ORR(Wcpsr, Wcpsr, Wscratch0, LSR, 12);
+
+    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+    code.AND(Wscratch0, Wscratch0, 0b11);
+    // 9 8 7 6 5
+    //       E T
+    code.ORR(Wscratch0, Wscratch0, Wscratch0, LSL, 3);
+    code.AND(Wscratch0, Wscratch0, 0x11111111);
+    code.ORR(Wcpsr, Wcpsr, Wscratch0, LSL, 5);
 }
 
 template<>
