@@ -197,7 +197,7 @@ void EmitIR<IR::Opcode::PackedSubS16>(oaknut::CodeGenerator& code, EmitContext& 
     }
 }
 
-template<bool add_is_hi, bool is_signed>
+template<bool add_is_hi, bool is_signed, bool is_halving>
 static void EmitPackedAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     const auto ge_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetGEFromOp);
 
@@ -222,7 +222,17 @@ static void EmitPackedAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::
     code.SUB(V1.S2(), V1.S2(), V2.S2());
     code.SUB(Vresult->S2(), V0.S2(), V1.S2());
 
+    if (is_halving) {
+        if (is_signed) {
+            code.SSHR(Vresult->S2(), Vresult->S2(), 1);
+        } else {
+            code.USHR(Vresult->S2(), Vresult->S2(), 1);
+        }
+    }
+
     if (ge_inst) {
+        ASSERT(!is_halving);
+
         auto Vge = ctx.reg_alloc.WriteD(ge_inst);
         RegAlloc::Realize(Vge);
 
@@ -236,22 +246,22 @@ static void EmitPackedAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::
 
 template<>
 void EmitIR<IR::Opcode::PackedAddSubU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitPackedAddSub<true, false>(code, ctx, inst);
+    EmitPackedAddSub<true, false, false>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedAddSubS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitPackedAddSub<true, true>(code, ctx, inst);
+    EmitPackedAddSub<true, true, false>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedSubAddU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitPackedAddSub<false, false>(code, ctx, inst);
+    EmitPackedAddSub<false, false, false>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedSubAddS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitPackedAddSub<false, true>(code, ctx, inst);
+    EmitPackedAddSub<false, true, false>(code, ctx, inst);
 }
 
 template<>
@@ -320,34 +330,22 @@ void EmitIR<IR::Opcode::PackedHalvingSubS16>(oaknut::CodeGenerator& code, EmitCo
 
 template<>
 void EmitIR<IR::Opcode::PackedHalvingAddSubU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<true, false, true>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedHalvingAddSubS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<true, true, true>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedHalvingSubAddU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<false, false, true>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::PackedHalvingSubAddS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedAddSub<false, true, true>(code, ctx, inst);
 }
 
 template<>
