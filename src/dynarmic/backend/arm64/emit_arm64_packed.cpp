@@ -386,10 +386,16 @@ void EmitIR<IR::Opcode::PackedAbsDiffSumS8>(oaknut::CodeGenerator& code, EmitCon
 
 template<>
 void EmitIR<IR::Opcode::PackedSelect>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Vresult = ctx.reg_alloc.WriteD(inst);
+    auto Vge = ctx.reg_alloc.ReadD(args[0]);
+    auto Va = ctx.reg_alloc.ReadD(args[1]);
+    auto Vb = ctx.reg_alloc.ReadD(args[2]);
+    RegAlloc::Realize(Vresult, Vge, Va, Vb);
+
+    code.FMOV(Vresult, Vge);  // TODO: Move elimination
+    code.BSL(Vresult->B8(), Vb->B8(), Va->B8());
 }
 
 }  // namespace Dynarmic::Backend::Arm64
