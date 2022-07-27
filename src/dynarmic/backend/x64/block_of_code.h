@@ -21,7 +21,6 @@
 #include "dynarmic/backend/x64/jitstate_info.h"
 #include "dynarmic/common/cast_util.h"
 #include "dynarmic/interface/halt_reason.h"
-#include "mcl/bit/bit_field.hpp"
 
 namespace Dynarmic::Backend::X64 {
 
@@ -117,13 +116,7 @@ public:
         }
     }
 
-    Xbyak::Address XmmConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper);
-
-    template<size_t esize>
-    Xbyak::Address XmmBConst(const Xbyak::AddressFrame& frame, u64 value) {
-        return XmmConst(frame, mcl::bit::replicate_element<u64>(esize, value),
-                        mcl::bit::replicate_element<u64>(esize, value));
-    }
+    Xbyak::Address MConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper = 0);
 
     CodePtr GetCodeBegin() const;
     size_t GetTotalCodeSize() const;

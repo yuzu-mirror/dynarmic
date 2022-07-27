@@ -393,7 +393,7 @@ void BlockOfCode::LookupBlock() {
     cb.LookupBlock->EmitCall(*this);
 }
 
-Xbyak::Address BlockOfCode::XmmConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper) {
+Xbyak::Address BlockOfCode::MConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper) {
     return constant_pool.GetConstant(frame, lower, upper);
 }
 

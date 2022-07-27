@@ -90,9 +90,10 @@ void DenormalsAreZero(BlockOfCode& code, EmitContext& ctx, std::initializer_list
                 FpFixup::Norm_Src,
                 FpFixup::Norm_Src,
                 FpFixup::Norm_Src);
+            constexpr u64 denormal_to_zero64 = mcl::bit::replicate_element<fsize, u64>(denormal_to_zero);
 
             const Xbyak::Xmm tmp = xmm16;
-            FCODE(vmovap)(tmp, code.XmmBConst<fsize>(xword, denormal_to_zero));
+            FCODE(vmovap)(tmp, code.MConst(xword, u64(denormal_to_zero64), u64(denormal_to_zero64)));
 
             for (const Xbyak::Xmm& xmm : to_daz) {
                 FCODE(vfixupimms)(xmm, xmm, tmp, u8(0));
@@ -101,17 +102,17 @@ void DenormalsAreZero(BlockOfCode& code, EmitContext& ctx, std::initializer_list
         }
 
         for (const Xbyak::Xmm& xmm : to_daz) {
-            code.movaps(xmm0, code.XmmBConst<fsize>(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
+            code.movaps(xmm0, code.MConst(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
             code.andps(xmm0, xmm);
             if constexpr (fsize == 32) {
-                code.pcmpgtd(xmm0, code.XmmBConst<32>(xword, f32_smallest_normal - 1));
+                code.pcmpgtd(xmm0, code.MConst(xword, f32_smallest_normal - 1));
             } else if (code.HasHostFeature(HostFeature::SSE42)) {
-                code.pcmpgtq(xmm0, code.XmmBConst<64>(xword, f64_smallest_normal - 1));
+                code.pcmpgtq(xmm0, code.MConst(xword, f64_smallest_normal - 1));
             } else {
-                code.pcmpgtd(xmm0, code.XmmBConst<64>(xword, f64_smallest_normal - 1));
+                code.pcmpgtd(xmm0, code.MConst(xword, f64_smallest_normal - 1));
                 code.pshufd(xmm0, xmm0, 0b11100101);
             }
-            code.orps(xmm0, code.XmmBConst<fsize>(xword, fsize == 32 ? f32_negative_zero : f64_negative_zero));
+            code.orps(xmm0, code.MConst(xword, fsize == 32 ? f32_negative_zero : f64_negative_zero));
             code.andps(xmm, xmm0);
         }
     }
@@ -122,7 +123,7 @@ void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm xmm_value, Xbyak::Xmm xmm_scratch) 
     if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
         constexpr u32 nan_to_zero = FixupLUT(FpFixup::PosZero,
                                              FpFixup::PosZero);
-        FCODE(vfixupimms)(xmm_value, xmm_value, code.XmmBConst<32>(ptr, nan_to_zero), u8(0));
+        FCODE(vfixupimms)(xmm_value, xmm_value, code.MConst(ptr, u64(nan_to_zero)), u8(0));
     } else if (code.HasHostFeature(HostFeature::AVX)) {
         FCODE(vcmpords)(xmm_scratch, xmm_value, xmm_value);
         FCODE(vandp)(xmm_value, xmm_value, xmm_scratch);
@@ -138,15 +139,15 @@ void ForceToDefaultNaN(BlockOfCode& code, Xbyak::Xmm result) {
     if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
         const Xbyak::Opmask nan_mask = k1;
         FCODE(vfpclasss)(nan_mask, result, u8(FpClass::QNaN | FpClass::SNaN));
-        FCODE(vblendmp)(result | nan_mask, result, code.XmmBConst<fsize>(ptr_b, fsize == 32 ? f32_nan : f64_nan));
+        FCODE(vblendmp)(result | nan_mask, result, code.MConst(ptr_b, fsize == 32 ? f32_nan : f64_nan));
     } else if (code.HasHostFeature(HostFeature::AVX)) {
         FCODE(vcmpunords)(xmm0, result, result);
-        FCODE(blendvp)(result, code.XmmBConst<fsize>(xword, fsize == 32 ? f32_nan : f64_nan));
+        FCODE(blendvp)(result, code.MConst(xword, fsize == 32 ? f32_nan : f64_nan));
     } else {
         Xbyak::Label end;
         FCODE(ucomis)(result, result);
         code.jnp(end);
-        code.movaps(result, code.XmmBConst<fsize>(xword, fsize == 32 ? f32_nan : f64_nan));
+        code.movaps(result, code.MConst(xword, fsize == 32 ? f32_nan : f64_nan));
         code.L(end);
     }
 }
@@ -160,7 +161,7 @@ SharedLabel ProcessNaN(BlockOfCode& code, EmitContext& ctx, Xbyak::Xmm a) {
 
     ctx.deferred_emits.emplace_back([=, &code] {
         code.L(*nan);
-        code.orps(a, code.XmmBConst<fsize>(xword, fsize == 32 ? 0x00400000 : 0x0008'0000'0000'0000));
+        code.orps(a, code.MConst(xword, fsize == 32 ? 0x00400000 : 0x0008'0000'0000'0000));
         code.jmp(*end, code.T_NEAR);
     });
 
@@ -256,10 +257,10 @@ void EmitPostProcessNaNs(BlockOfCode& code, Xbyak::Xmm result, Xbyak::Xmm op1, X
 
     // Silence the SNaN as required by spec.
     if (code.HasHostFeature(HostFeature::AVX)) {
-        code.vorps(result, op2, code.XmmBConst<fsize>(xword, mantissa_msb));
+        code.vorps(result, op2, code.MConst(xword, mantissa_msb));
     } else {
         code.movaps(result, op2);
-        code.orps(result, code.XmmBConst<fsize>(xword, mantissa_msb));
+        code.orps(result, code.MConst(xword, mantissa_msb));
     }
     code.jmp(end, code.T_NEAR);
 }
@@ -340,7 +341,7 @@ void FPThreeOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn)
         FCODE(ucomis)(op1, op2);
         code.jp(op_are_nans);
         // Here we must return a positive NaN, because the indefinite value on x86 is a negative NaN!
-        code.movaps(result, code.XmmBConst<fsize>(xword, FP::FPInfo<FPT>::DefaultNaN()));
+        code.movaps(result, code.MConst(xword, FP::FPInfo<FPT>::DefaultNaN()));
         code.jmp(*end, code.T_NEAR);
         code.L(op_are_nans);
         EmitPostProcessNaNs<fsize>(code, result, op1, op2, tmp, *end);
@@ -358,7 +359,7 @@ void FPAbs(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.XmmBConst<fsize>(xword, non_sign_mask);
+    const Xbyak::Address mask = code.MConst(xword, non_sign_mask);
 
     code.andps(result, mask);
 
@@ -384,7 +385,7 @@ void FPNeg(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.XmmBConst<fsize>(xword, u64(sign_mask));
+    const Xbyak::Address mask = code.MConst(xword, u64(sign_mask));
 
     code.xorps(result, mask);
 
@@ -455,7 +456,7 @@ static void EmitFPMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
 
         code.L(nan);
         if (ctx.FPCR().DN()) {
-            code.movaps(result, code.XmmBConst<fsize>(xword, fsize == 32 ? f32_nan : f64_nan));
+            code.movaps(result, code.MConst(xword, fsize == 32 ? f32_nan : f64_nan));
             code.jmp(*end);
         } else {
             code.movaps(tmp, result);
@@ -487,7 +488,7 @@ static void EmitFPMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 
         if (ctx.FPCR().DN()) {
             FCODE(vcmps)(k1, op2, op2, Cmp::Unordered_Q);
-            FCODE(vmovs)(op2 | k1, code.XmmBConst<fsize>(xword, default_nan));
+            FCODE(vmovs)(op2 | k1, code.MConst(xword, default_nan));
         }
     } else {
         Xbyak::Reg tmp = ctx.reg_alloc.ScratchGpr();
@@ -544,12 +545,12 @@ static void EmitFPMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
             code.jc(maybe_both_nan);
             if (ctx.FPCR().DN()) {
                 code.L(snan);
-                code.movaps(op2, code.XmmBConst<fsize>(xword, default_nan));
+                code.movaps(op2, code.MConst(xword, default_nan));
                 code.jmp(*end);
             } else {
                 code.movaps(op2, op1);
                 code.L(snan);
-                code.orps(op2, code.XmmBConst<fsize>(xword, FP::FPInfo<FPT>::mantissa_msb));
+                code.orps(op2, code.MConst(xword, FP::FPInfo<FPT>::mantissa_msb));
                 code.jmp(*end);
             }
 
@@ -649,9 +650,9 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             code.movaps(result, operand1);
             FCODE(vfmadd231s)(result, operand2, operand3);
 
-            code.movaps(tmp, code.XmmBConst<fsize>(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
+            code.movaps(tmp, code.MConst(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
             code.andps(tmp, result);
-            FCODE(ucomis)(tmp, code.XmmBConst<fsize>(xword, fsize == 32 ? f32_smallest_normal : f64_smallest_normal));
+            FCODE(ucomis)(tmp, code.MConst(xword, fsize == 32 ? f32_smallest_normal : f64_smallest_normal));
             code.jz(*fallback, code.T_NEAR);
             code.L(*end);
 
@@ -761,12 +762,12 @@ static void EmitFPMulX(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             code.movaps(result, op1);
             code.xorps(result, op2);
         }
-        code.andps(result, code.XmmBConst<fsize>(xword, FP::FPInfo<FPT>::sign_mask));
-        code.orps(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 2>()));
+        code.andps(result, code.MConst(xword, FP::FPInfo<FPT>::sign_mask));
+        code.orps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 2>()));
         code.jmp(*end, code.T_NEAR);
         code.L(op_are_nans);
         if (do_default_nan) {
-            code.movaps(result, code.XmmBConst<fsize>(xword, FP::FPInfo<FPT>::DefaultNaN()));
+            code.movaps(result, code.MConst(xword, FP::FPInfo<FPT>::DefaultNaN()));
             code.jmp(*end, code.T_NEAR);
         } else {
             EmitPostProcessNaNs<fsize>(code, result, op1, op2, tmp, *end);
@@ -867,7 +868,7 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            code.movaps(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 2>()));
+            code.movaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 2>()));
             FCODE(vfnmadd231s)(result, operand1, operand2);
 
             ctx.reg_alloc.DefineValue(inst, result);
@@ -881,7 +882,7 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            code.movaps(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 2>()));
+            code.movaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 2>()));
             FCODE(vfnmadd231s)(result, operand1, operand2);
             FCODE(ucomis)(result, result);
             code.jp(*fallback, code.T_NEAR);
@@ -913,7 +914,7 @@ static void EmitFPRecipStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            code.movaps(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 2>()));
+            code.movaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 2>()));
             FCODE(muls)(operand1, operand2);
             FCODE(subs)(result, operand1);
 
@@ -1042,19 +1043,19 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 
         code.movaps(value, operand);
 
-        code.movaps(xmm0, code.XmmBConst<fsize>(xword, fsize == 32 ? 0xFFFF8000 : 0xFFFF'F000'0000'0000));
+        code.movaps(xmm0, code.MConst(xword, fsize == 32 ? 0xFFFF8000 : 0xFFFF'F000'0000'0000));
         code.pand(value, xmm0);
-        code.por(value, code.XmmBConst<fsize>(xword, fsize == 32 ? 0x00008000 : 0x0000'1000'0000'0000));
+        code.por(value, code.MConst(xword, fsize == 32 ? 0x00008000 : 0x0000'1000'0000'0000));
 
         // Detect NaNs, negatives, zeros, denormals and infinities
-        FCODE(ucomis)(value, code.XmmBConst<fsize>(xword, FPT(1) << FP::FPInfo<FPT>::explicit_mantissa_width));
+        FCODE(ucomis)(value, code.MConst(xword, FPT(1) << FP::FPInfo<FPT>::explicit_mantissa_width));
         code.jna(*bad_values, code.T_NEAR);
 
         FCODE(sqrts)(value, value);
-        ICODE(mov)(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 1>()));
+        ICODE(mov)(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 1>()));
         FCODE(divs)(result, value);
 
-        ICODE(padd)(result, code.XmmBConst<fsize>(xword, fsize == 32 ? 0x00004000 : 0x0000'0800'0000'0000));
+        ICODE(padd)(result, code.MConst(xword, fsize == 32 ? 0x00004000 : 0x0000'0800'0000'0000));
         code.pand(result, xmm0);
 
         code.L(*end);
@@ -1095,7 +1096,7 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
                 }
 
                 code.L(default_nan);
-                code.movd(result, code.XmmBConst<32>(xword, 0x7FC00000));
+                code.movd(result, code.MConst(xword, 0x7FC00000));
                 code.jmp(*end, code.T_NEAR);
             } else {
                 Xbyak::Label nan, zero;
@@ -1124,26 +1125,26 @@ static void EmitFPRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* i
 
                 code.L(zero);
                 if (code.HasHostFeature(HostFeature::AVX)) {
-                    code.vpor(result, value, code.XmmBConst<64>(xword, 0x7FF0'0000'0000'0000));
+                    code.vpor(result, value, code.MConst(xword, 0x7FF0'0000'0000'0000));
                 } else {
                     code.movaps(result, value);
-                    code.por(result, code.XmmBConst<64>(xword, 0x7FF0'0000'0000'0000));
+                    code.por(result, code.MConst(xword, 0x7FF0'0000'0000'0000));
                 }
                 code.jmp(*end, code.T_NEAR);
 
                 code.L(nan);
                 if (!ctx.FPCR().DN()) {
                     if (code.HasHostFeature(HostFeature::AVX)) {
-                        code.vpor(result, operand, code.XmmBConst<64>(xword, 0x0008'0000'0000'0000));
+                        code.vpor(result, operand, code.MConst(xword, 0x0008'0000'0000'0000));
                     } else {
                         code.movaps(result, operand);
-                        code.por(result, code.XmmBConst<64>(xword, 0x0008'0000'0000'0000));
+                        code.por(result, code.MConst(xword, 0x0008'0000'0000'0000));
                     }
                     code.jmp(*end, code.T_NEAR);
                 }
 
                 code.L(default_nan);
-                code.movq(result, code.XmmBConst<64>(xword, 0x7FF8'0000'0000'0000));
+                code.movq(result, code.MConst(xword, 0x7FF8'0000'0000'0000));
                 code.jmp(*end, code.T_NEAR);
             }
 
@@ -1196,9 +1197,9 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            code.vmovaps(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 3>()));
+            code.vmovaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 3>()));
             FCODE(vfnmadd231s)(result, operand1, operand2);
-            FCODE(vmuls)(result, result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, -1, 1>()));
+            FCODE(vmuls)(result, result, code.MConst(xword, FP::FPValue<FPT, false, -1, 1>()));
 
             ctx.reg_alloc.DefineValue(inst, result);
             return;
@@ -1211,7 +1212,7 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            code.vmovaps(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 3>()));
+            code.vmovaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 3>()));
             FCODE(vfnmadd231s)(result, operand1, operand2);
 
             // Detect if the intermediate result is infinity or NaN or nearly an infinity.
@@ -1226,7 +1227,7 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
 
             code.jae(*fallback, code.T_NEAR);
 
-            FCODE(vmuls)(result, result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, -1, 1>()));
+            FCODE(vmuls)(result, result, code.MConst(xword, FP::FPValue<FPT, false, -1, 1>()));
             code.L(*end);
 
             ctx.deferred_emits.emplace_back([=, &code, &ctx] {
@@ -1255,10 +1256,10 @@ static void EmitFPRSqrtStepFused(BlockOfCode& code, EmitContext& ctx, IR::Inst* 
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-            code.movaps(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, 0, 3>()));
+            code.movaps(result, code.MConst(xword, FP::FPValue<FPT, false, 0, 3>()));
             FCODE(muls)(operand1, operand2);
             FCODE(subs)(result, operand1);
-            FCODE(muls)(result, code.XmmBConst<fsize>(xword, FP::FPValue<FPT, false, -1, 1>()));
+            FCODE(muls)(result, code.MConst(xword, FP::FPValue<FPT, false, -1, 1>()));
 
             ctx.reg_alloc.DefineValue(inst, operand1);
             return;
@@ -1510,7 +1511,7 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             if constexpr (fsize == 64) {
                 if (fbits != 0) {
                     const u64 scale_factor = static_cast<u64>((fbits + 1023) << 52);
-                    code.mulsd(src, code.XmmBConst<64>(xword, scale_factor));
+                    code.mulsd(src, code.MConst(xword, scale_factor));
                 }
 
                 if (!truncating) {
@@ -1519,7 +1520,7 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             } else {
                 if (fbits != 0) {
                     const u32 scale_factor = static_cast<u32>((fbits + 127) << 23);
-                    code.mulss(src, code.XmmBConst<32>(xword, scale_factor));
+                    code.mulss(src, code.MConst(xword, scale_factor));
                 }
 
                 if (!truncating) {
@@ -1537,7 +1538,7 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
 
                     ZeroIfNaN<64>(code, src, scratch);
 
-                    code.movsd(scratch, code.XmmBConst<64>(xword, f64_max_s64_lim));
+                    code.movsd(scratch, code.MConst(xword, f64_max_s64_lim));
                     code.comisd(scratch, src);
                     code.jna(*saturate_max, code.T_NEAR);
                     code.cvttsd2si(result, src);  // 64 bit gpr
@@ -1556,7 +1557,7 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                     code.pxor(xmm0, xmm0);
 
                     code.movaps(scratch, src);
-                    code.subsd(scratch, code.XmmBConst<64>(xword, f64_max_s64_lim));
+                    code.subsd(scratch, code.MConst(xword, f64_max_s64_lim));
 
                     // these both result in zero if src/scratch are NaN
                     code.maxsd(src, xmm0);
@@ -1578,21 +1579,21 @@ static void EmitFPToFixed(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                     const Xbyak::Xmm scratch = ctx.reg_alloc.ScratchXmm();
 
                     ZeroIfNaN<64>(code, src, scratch);
-                    code.minsd(src, code.XmmBConst<64>(xword, f64_max_s32));
+                    code.minsd(src, code.MConst(xword, f64_max_s32));
                     // maxsd not required as cvttsd2si results in 0x8000'0000 when out of range
                     code.cvttsd2si(result.cvt32(), src);  // 32 bit gpr
                 } else {
                     code.pxor(xmm0, xmm0);
                     code.maxsd(src, xmm0);  // results in a zero if src is NaN
-                    code.minsd(src, code.XmmBConst<64>(xword, f64_max_u32));
+                    code.minsd(src, code.MConst(xword, f64_max_u32));
                     code.cvttsd2si(result, src);  // 64 bit gpr
                 }
             } else {
                 const Xbyak::Xmm scratch = ctx.reg_alloc.ScratchXmm();
 
                 ZeroIfNaN<64>(code, src, scratch);
-                code.maxsd(src, code.XmmBConst<64>(xword, unsigned_ ? f64_min_u16 : f64_min_s16));
-                code.minsd(src, code.XmmBConst<64>(xword, unsigned_ ? f64_max_u16 : f64_max_s16));
+                code.maxsd(src, code.MConst(xword, unsigned_ ? f64_min_u16 : f64_min_s16));
+                code.minsd(src, code.MConst(xword, unsigned_ ? f64_max_u16 : f64_max_s16));
                 code.cvttsd2si(result, src);  // 64 bit gpr
             }
 
@@ -1717,7 +1718,7 @@ void EmitX64::EmitFPFixedS16ToSingle(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u32 scale_factor = static_cast<u32>((127 - fbits) << 23);
-        code.mulss(result, code.XmmBConst<32>(xword, scale_factor));
+        code.mulss(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1737,7 +1738,7 @@ void EmitX64::EmitFPFixedU16ToSingle(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u32 scale_factor = static_cast<u32>((127 - fbits) << 23);
-        code.mulss(result, code.XmmBConst<32>(xword, scale_factor));
+        code.mulss(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1762,7 +1763,7 @@ void EmitX64::EmitFPFixedS32ToSingle(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u32 scale_factor = static_cast<u32>((127 - fbits) << 23);
-        code.mulss(result, code.XmmBConst<32>(xword, scale_factor));
+        code.mulss(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1798,7 +1799,7 @@ void EmitX64::EmitFPFixedU32ToSingle(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u32 scale_factor = static_cast<u32>((127 - fbits) << 23);
-        code.mulss(result, code.XmmBConst<32>(xword, scale_factor));
+        code.mulss(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1818,7 +1819,7 @@ void EmitX64::EmitFPFixedS16ToDouble(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u64 scale_factor = static_cast<u64>((1023 - fbits) << 52);
-        code.mulsd(result, code.XmmBConst<64>(xword, scale_factor));
+        code.mulsd(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1838,7 +1839,7 @@ void EmitX64::EmitFPFixedU16ToDouble(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u64 scale_factor = static_cast<u64>((1023 - fbits) << 52);
-        code.mulsd(result, code.XmmBConst<64>(xword, scale_factor));
+        code.mulsd(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1856,7 +1857,7 @@ void EmitX64::EmitFPFixedS32ToDouble(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u64 scale_factor = static_cast<u64>((1023 - fbits) << 52);
-        code.mulsd(result, code.XmmBConst<64>(xword, scale_factor));
+        code.mulsd(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1881,7 +1882,7 @@ void EmitX64::EmitFPFixedU32ToDouble(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u64 scale_factor = static_cast<u64>((1023 - fbits) << 52);
-        code.mulsd(to, code.XmmBConst<64>(xword, scale_factor));
+        code.mulsd(to, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, to);
@@ -1900,7 +1901,7 @@ void EmitX64::EmitFPFixedS64ToDouble(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u64 scale_factor = static_cast<u64>((1023 - fbits) << 52);
-        code.mulsd(result, code.XmmBConst<64>(xword, scale_factor));
+        code.mulsd(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1919,7 +1920,7 @@ void EmitX64::EmitFPFixedS64ToSingle(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u32 scale_factor = static_cast<u32>((127 - fbits) << 23);
-        code.mulss(result, code.XmmBConst<32>(xword, scale_factor));
+        code.mulss(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1940,18 +1941,18 @@ void EmitX64::EmitFPFixedU64ToDouble(EmitContext& ctx, IR::Inst* inst) {
         const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
         code.movq(tmp, from);
-        code.punpckldq(tmp, code.XmmConst(xword, 0x4530000043300000, 0));
-        code.subpd(tmp, code.XmmConst(xword, 0x4330000000000000, 0x4530000000000000));
+        code.punpckldq(tmp, code.MConst(xword, 0x4530000043300000, 0));
+        code.subpd(tmp, code.MConst(xword, 0x4330000000000000, 0x4530000000000000));
         code.pshufd(result, tmp, 0b01001110);
         code.addpd(result, tmp);
         if (ctx.FPCR().RMode() == FP::RoundingMode::TowardsMinusInfinity) {
-            code.pand(result, code.XmmBConst<64>(xword, f64_non_sign_mask));
+            code.pand(result, code.MConst(xword, f64_non_sign_mask));
         }
     }
 
     if (fbits != 0) {
         const u64 scale_factor = static_cast<u64>((1023 - fbits) << 52);
-        code.mulsd(result, code.XmmBConst<64>(xword, scale_factor));
+        code.mulsd(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1995,7 +1996,7 @@ void EmitX64::EmitFPFixedU64ToSingle(EmitContext& ctx, IR::Inst* inst) {
 
     if (fbits != 0) {
         const u32 scale_factor = static_cast<u32>((127 - fbits) << 23);
-        code.mulss(result, code.XmmBConst<32>(xword, scale_factor));
+        code.mulss(result, code.MConst(xword, scale_factor));
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
