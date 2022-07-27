@@ -378,10 +378,12 @@ void EmitIR<IR::Opcode::PackedSaturatedSubS16>(oaknut::CodeGenerator& code, Emit
 
 template<>
 void EmitIR<IR::Opcode::PackedAbsDiffSumS8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitPackedOp(code, ctx, inst, [&](auto& Vresult, auto& Va, auto& Vb) {
+        code.MOVI(D2, oaknut::RepImm{0b00001111});
+        code.SABD(Vresult->B8(), Va->B8(), Vb->B8());
+        code.AND(Vresult->B8(), Vresult->B8(), V2.B8());  // TODO: Zext tracking
+        code.UADDLV(Vresult->toH(), Vresult->B8());
+    });
 }
 
 template<>
