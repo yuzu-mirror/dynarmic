@@ -1246,18 +1246,16 @@ void EmitIR<IR::Opcode::ByteReverseDual>(oaknut::CodeGenerator& code, EmitContex
 
 template<>
 void EmitIR<IR::Opcode::CountLeadingZeros32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOp<32>(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand) { code.CLZ(Wresult, Woperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::CountLeadingZeros64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOp<64>(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xoperand) { code.CLZ(Xresult, Xoperand); });
 }
 
 template<>
