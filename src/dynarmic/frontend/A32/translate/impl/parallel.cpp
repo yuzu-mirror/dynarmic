@@ -177,7 +177,7 @@ bool TranslatorVisitor::arm_USAD8(Cond cond, Reg d, Reg m, Reg n) {
         return true;
     }
 
-    const auto result = ir.PackedAbsDiffSumS8(ir.GetRegister(n), ir.GetRegister(m));
+    const auto result = ir.PackedAbsDiffSumU8(ir.GetRegister(n), ir.GetRegister(m));
     ir.SetRegister(d, result);
     return true;
 }
@@ -192,7 +192,7 @@ bool TranslatorVisitor::arm_USADA8(Cond cond, Reg d, Reg a, Reg m, Reg n) {
         return true;
     }
 
-    const auto tmp = ir.PackedAbsDiffSumS8(ir.GetRegister(n), ir.GetRegister(m));
+    const auto tmp = ir.PackedAbsDiffSumU8(ir.GetRegister(n), ir.GetRegister(m));
     const auto result = ir.AddWithCarry(ir.GetRegister(a), tmp, ir.Imm1(0));
     ir.SetRegister(d, result);
     return true;

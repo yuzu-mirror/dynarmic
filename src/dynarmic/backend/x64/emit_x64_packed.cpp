@@ -646,7 +646,7 @@ void EmitX64::EmitPackedSaturatedSubS16(EmitContext& ctx, IR::Inst* inst) {
     EmitPackedOperation(code, ctx, inst, &Xbyak::CodeGenerator::psubsw);
 }
 
-void EmitX64::EmitPackedAbsDiffSumS8(EmitContext& ctx, IR::Inst* inst) {
+void EmitX64::EmitPackedAbsDiffSumU8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);

@@ -195,7 +195,7 @@ public:
     U32 PackedSaturatedAddS16(const U32& a, const U32& b);
     U32 PackedSaturatedSubU16(const U32& a, const U32& b);
     U32 PackedSaturatedSubS16(const U32& a, const U32& b);
-    U32 PackedAbsDiffSumS8(const U32& a, const U32& b);
+    U32 PackedAbsDiffSumU8(const U32& a, const U32& b);
     U32 PackedSelect(const U32& ge, const U32& a, const U32& b);
 
     U32 CRC32Castagnoli8(const U32& a, const U32& b);

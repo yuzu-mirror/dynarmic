@@ -288,7 +288,7 @@ bool TranslatorVisitor::thumb32_USAD8(Reg n, Reg d, Reg m) {
 
     const auto reg_m = ir.GetRegister(m);
     const auto reg_n = ir.GetRegister(n);
-    const auto result = ir.PackedAbsDiffSumS8(reg_n, reg_m);
+    const auto result = ir.PackedAbsDiffSumU8(reg_n, reg_m);
 
     ir.SetRegister(d, result);
     return true;
@@ -302,7 +302,7 @@ bool TranslatorVisitor::thumb32_USADA8(Reg n, Reg a, Reg d, Reg m) {
     const auto reg_a = ir.GetRegister(a);
     const auto reg_m = ir.GetRegister(m);
     const auto reg_n = ir.GetRegister(n);
-    const auto tmp = ir.PackedAbsDiffSumS8(reg_n, reg_m);
+    const auto tmp = ir.PackedAbsDiffSumU8(reg_n, reg_m);
     const auto result = ir.AddWithCarry(reg_a, tmp, ir.Imm1(0));
 
     ir.SetRegister(d, result);

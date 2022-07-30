@@ -848,8 +848,8 @@ U32 IREmitter::PackedSaturatedSubS16(const U32& a, const U32& b) {
     return Inst<U32>(Opcode::PackedSaturatedSubS16, a, b);
 }
 
-U32 IREmitter::PackedAbsDiffSumS8(const U32& a, const U32& b) {
-    return Inst<U32>(Opcode::PackedAbsDiffSumS8, a, b);
+U32 IREmitter::PackedAbsDiffSumU8(const U32& a, const U32& b) {
+    return Inst<U32>(Opcode::PackedAbsDiffSumU8, a, b);
 }
 
 U32 IREmitter::PackedSelect(const U32& ge, const U32& a, const U32& b) {
