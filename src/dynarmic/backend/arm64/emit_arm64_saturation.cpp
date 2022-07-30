@@ -100,10 +100,43 @@ void EmitIR<IR::Opcode::SignedSaturatedSub64>(oaknut::CodeGenerator& code, EmitC
 
 template<>
 void EmitIR<IR::Opcode::SignedSaturation>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const size_t N = args[1].GetImmediateU8();
+    ASSERT(N >= 1 && N <= 32);
+
+    if (N == 32) {
+        ctx.reg_alloc.DefineAsExisting(inst, args[0]);
+        if (overflow_inst) {
+            auto Woverflow = ctx.reg_alloc.WriteW(overflow_inst);
+            RegAlloc::Realize(Woverflow);
+            code.MOV(*Woverflow, WZR);
+        }
+        return;
+    }
+
+    const u32 positive_saturated_value = (1u << (N - 1)) - 1;
+    const u32 negative_saturated_value = ~u32{0} << (N - 1);
+
+    auto Woperand = ctx.reg_alloc.ReadW(args[0]);
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    RegAlloc::Realize(Woperand, Wresult);
+    ctx.reg_alloc.SpillFlags();
+
+    code.MOV(Wscratch0, negative_saturated_value);
+    code.MOV(Wscratch1, positive_saturated_value);
+    code.CMP(*Woperand, Wscratch0);
+    code.CSEL(Wresult, Woperand, Wscratch0, GT);
+    code.CMP(*Woperand, Wscratch1);
+    code.CSEL(Wresult, Wresult, Wscratch1, LT);
+
+    if (overflow_inst) {
+        auto Woverflow = ctx.reg_alloc.WriteW(overflow_inst);
+        RegAlloc::Realize(Woverflow);
+        code.CMP(*Wresult, Woperand);
+        code.CSET(Woverflow, NE);
+    }
 }
 
 template<>
