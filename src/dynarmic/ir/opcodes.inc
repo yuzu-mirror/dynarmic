@@ -63,7 +63,6 @@ A64OPC(SetQ,                                                Void,           A64V
 A64OPC(SetSP,                                               Void,           U64                                                             )
 A64OPC(SetFPCR,                                             Void,           U32                                                             )
 A64OPC(SetFPSR,                                             Void,           U32                                                             )
-A64OPC(OrQC,                                                Void,           U1                                                              )
 A64OPC(SetPC,                                               Void,           U64                                                             )
 A64OPC(CallSupervisor,                                      Void,           U32                                                             )
 A64OPC(ExceptionRaised,                                     Void,           U64,            U64                                             )
@@ -178,6 +177,10 @@ OPCODE(MinUnsigned32,                                       U32,            U32,
 OPCODE(MinUnsigned64,                                       U64,            U64,            U64                                             )
 
 // Saturated instructions
+OPCODE(SignedSaturatedAddWithFlag32,                        U32,            U32,            U32                                             )
+OPCODE(SignedSaturatedSubWithFlag32,                        U32,            U32,            U32                                             )
+OPCODE(SignedSaturation,                                    U32,            U32,            U8                                              )
+OPCODE(UnsignedSaturation,                                  U32,            U32,            U8                                              )
 OPCODE(SignedSaturatedAdd8,                                 U8,             U8,             U8                                              )
 OPCODE(SignedSaturatedAdd16,                                U16,            U16,            U16                                             )
 OPCODE(SignedSaturatedAdd32,                                U32,            U32,            U32                                             )
@@ -188,7 +191,6 @@ OPCODE(SignedSaturatedSub8,                                 U8,             U8, 
 OPCODE(SignedSaturatedSub16,                                U16,            U16,            U16                                             )
 OPCODE(SignedSaturatedSub32,                                U32,            U32,            U32                                             )
 OPCODE(SignedSaturatedSub64,                                U64,            U64,            U64                                             )
-OPCODE(SignedSaturation,                                    U32,            U32,            U8                                              )
 OPCODE(UnsignedSaturatedAdd8,                               U8,             U8,             U8                                              )
 OPCODE(UnsignedSaturatedAdd16,                              U16,            U16,            U16                                             )
 OPCODE(UnsignedSaturatedAdd32,                              U32,            U32,            U32                                             )
@@ -197,7 +199,6 @@ OPCODE(UnsignedSaturatedSub8,                               U8,             U8, 
 OPCODE(UnsignedSaturatedSub16,                              U16,            U16,            U16                                             )
 OPCODE(UnsignedSaturatedSub32,                              U32,            U32,            U32                                             )
 OPCODE(UnsignedSaturatedSub64,                              U64,            U64,            U64                                             )
-OPCODE(UnsignedSaturation,                                  U32,            U32,            U8                                              )
 
 // Vector saturated instructions
 OPCODE(VectorSignedSaturatedAdd8,                           U128,           U128,           U128                                            )

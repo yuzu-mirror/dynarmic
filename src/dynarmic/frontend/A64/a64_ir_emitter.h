@@ -39,7 +39,6 @@ public:
     IR::U32 GetNZCVRaw();
     void SetNZCVRaw(IR::U32 value);
     void SetNZCV(const IR::NZCV& nzcv);
-    void OrQC(const IR::U1& value);
 
     void CallSupervisor(u32 imm);
     void ExceptionRaised(Exception exception);

@@ -131,8 +131,7 @@ bool TranslatorVisitor::SQADD_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     const IR::UAny operand1 = V_scalar(esize, Vn);
     const IR::UAny operand2 = V_scalar(esize, Vm);
     const auto result = ir.SignedSaturatedAdd(operand1, operand2);
-    ir.OrQC(result.overflow);
-    V_scalar(esize, Vd, result.result);
+    V_scalar(esize, Vd, result);
     return true;
 }
 
@@ -146,10 +145,7 @@ bool TranslatorVisitor::SQDMULH_vec_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     const IR::UAny operand1 = V_scalar(esize, Vn);
     const IR::UAny operand2 = V_scalar(esize, Vm);
     const auto result = ir.SignedSaturatedDoublingMultiplyReturnHigh(operand1, operand2);
-
-    ir.OrQC(result.overflow);
-
-    V_scalar(esize, Vd, result.result);
+    V_scalar(esize, Vd, result);
     return true;
 }
 
@@ -175,8 +171,7 @@ bool TranslatorVisitor::SQSUB_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     const IR::UAny operand1 = V_scalar(esize, Vn);
     const IR::UAny operand2 = V_scalar(esize, Vm);
     const auto result = ir.SignedSaturatedSub(operand1, operand2);
-    ir.OrQC(result.overflow);
-    V_scalar(esize, Vd, result.result);
+    V_scalar(esize, Vd, result);
     return true;
 }
 
@@ -186,8 +181,7 @@ bool TranslatorVisitor::UQADD_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     const IR::UAny operand1 = V_scalar(esize, Vn);
     const IR::UAny operand2 = V_scalar(esize, Vm);
     const auto result = ir.UnsignedSaturatedAdd(operand1, operand2);
-    ir.OrQC(result.overflow);
-    V_scalar(esize, Vd, result.result);
+    V_scalar(esize, Vd, result);
     return true;
 }
 
@@ -197,8 +191,7 @@ bool TranslatorVisitor::UQSUB_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
     const IR::UAny operand1 = V_scalar(esize, Vn);
     const IR::UAny operand2 = V_scalar(esize, Vm);
     const auto result = ir.UnsignedSaturatedSub(operand1, operand2);
-    ir.OrQC(result.overflow);
-    V_scalar(esize, Vd, result.result);
+    V_scalar(esize, Vd, result);
     return true;
 }
 

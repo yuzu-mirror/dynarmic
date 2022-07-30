@@ -150,13 +150,16 @@ public:
     U32U64 MinSigned(const U32U64& a, const U32U64& b);
     U32U64 MinUnsigned(const U32U64& a, const U32U64& b);
 
-    ResultAndOverflow<UAny> SignedSaturatedAdd(const UAny& a, const UAny& b);
-    ResultAndOverflow<UAny> SignedSaturatedDoublingMultiplyReturnHigh(const UAny& a, const UAny& b);
-    ResultAndOverflow<UAny> SignedSaturatedSub(const UAny& a, const UAny& b);
+    ResultAndOverflow<U32> SignedSaturatedAddWithFlag(const U32& a, const U32& b);
+    ResultAndOverflow<U32> SignedSaturatedSubWithFlag(const U32& a, const U32& b);
     ResultAndOverflow<U32> SignedSaturation(const U32& a, size_t bit_size_to_saturate_to);
-    ResultAndOverflow<UAny> UnsignedSaturatedAdd(const UAny& a, const UAny& b);
-    ResultAndOverflow<UAny> UnsignedSaturatedSub(const UAny& a, const UAny& b);
     ResultAndOverflow<U32> UnsignedSaturation(const U32& a, size_t bit_size_to_saturate_to);
+
+    UAny SignedSaturatedAdd(const UAny& a, const UAny& b);
+    UAny SignedSaturatedDoublingMultiplyReturnHigh(const UAny& a, const UAny& b);
+    UAny SignedSaturatedSub(const UAny& a, const UAny& b);
+    UAny UnsignedSaturatedAdd(const UAny& a, const UAny& b);
+    UAny UnsignedSaturatedSub(const UAny& a, const UAny& b);
 
     U128 VectorSignedSaturatedAdd(size_t esize, const U128& a, const U128& b);
     U128 VectorSignedSaturatedSub(size_t esize, const U128& a, const U128& b);

@@ -127,10 +127,7 @@ bool TranslatorVisitor::SQDMULH_elt_1(Imm<2> size, Imm<1> L, Imm<1> M, Imm<4> Vm
     const IR::UAny operand1 = V_scalar(esize, Vn);
     const IR::UAny operand2 = ir.VectorGetElement(esize, V(128, Vm), index);
     const auto result = ir.SignedSaturatedDoublingMultiplyReturnHigh(operand1, operand2);
-
-    ir.OrQC(result.overflow);
-
-    V_scalar(esize, Vd, result.result);
+    V_scalar(esize, Vd, result);
     return true;
 }
 

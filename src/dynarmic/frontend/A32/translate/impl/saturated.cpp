@@ -116,7 +116,7 @@ bool TranslatorVisitor::arm_QADD(Cond cond, Reg n, Reg d, Reg m) {
 
     const auto a = ir.GetRegister(m);
     const auto b = ir.GetRegister(n);
-    const auto result = ir.SignedSaturatedAdd(a, b);
+    const auto result = ir.SignedSaturatedAddWithFlag(a, b);
 
     ir.SetRegister(d, result.result);
     ir.OrQFlag(result.overflow);
@@ -135,7 +135,7 @@ bool TranslatorVisitor::arm_QSUB(Cond cond, Reg n, Reg d, Reg m) {
 
     const auto a = ir.GetRegister(m);
     const auto b = ir.GetRegister(n);
-    const auto result = ir.SignedSaturatedSub(a, b);
+    const auto result = ir.SignedSaturatedSubWithFlag(a, b);
 
     ir.SetRegister(d, result.result);
     ir.OrQFlag(result.overflow);
@@ -154,10 +154,10 @@ bool TranslatorVisitor::arm_QDADD(Cond cond, Reg n, Reg d, Reg m) {
 
     const auto a = ir.GetRegister(m);
     const auto b = ir.GetRegister(n);
-    const auto doubled = ir.SignedSaturatedAdd(b, b);
+    const auto doubled = ir.SignedSaturatedAddWithFlag(b, b);
     ir.OrQFlag(doubled.overflow);
 
-    const auto result = ir.SignedSaturatedAdd(a, doubled.result);
+    const auto result = ir.SignedSaturatedAddWithFlag(a, doubled.result);
     ir.SetRegister(d, result.result);
     ir.OrQFlag(result.overflow);
     return true;
@@ -175,10 +175,10 @@ bool TranslatorVisitor::arm_QDSUB(Cond cond, Reg n, Reg d, Reg m) {
 
     const auto a = ir.GetRegister(m);
     const auto b = ir.GetRegister(n);
-    const auto doubled = ir.SignedSaturatedAdd(b, b);
+    const auto doubled = ir.SignedSaturatedAddWithFlag(b, b);
     ir.OrQFlag(doubled.overflow);
 
-    const auto result = ir.SignedSaturatedSub(a, doubled.result);
+    const auto result = ir.SignedSaturatedSubWithFlag(a, doubled.result);
     ir.SetRegister(d, result.result);
     ir.OrQFlag(result.overflow);
     return true;

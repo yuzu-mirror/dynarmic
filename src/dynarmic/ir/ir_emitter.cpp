@@ -525,7 +525,33 @@ U32U64 IREmitter::MinUnsigned(const U32U64& a, const U32U64& b) {
     return Inst<U64>(Opcode::MinUnsigned64, a, b);
 }
 
-ResultAndOverflow<UAny> IREmitter::SignedSaturatedAdd(const UAny& a, const UAny& b) {
+ResultAndOverflow<U32> IREmitter::SignedSaturatedAddWithFlag(const U32& a, const U32& b) {
+    const auto result = Inst<U32>(Opcode::SignedSaturatedAddWithFlag32, a, b);
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+ResultAndOverflow<U32> IREmitter::SignedSaturatedSubWithFlag(const U32& a, const U32& b) {
+    const auto result = Inst<U32>(Opcode::SignedSaturatedSubWithFlag32, a, b);
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+ResultAndOverflow<U32> IREmitter::SignedSaturation(const U32& a, size_t bit_size_to_saturate_to) {
+    ASSERT(bit_size_to_saturate_to >= 1 && bit_size_to_saturate_to <= 32);
+    const auto result = Inst<U32>(Opcode::SignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+ResultAndOverflow<U32> IREmitter::UnsignedSaturation(const U32& a, size_t bit_size_to_saturate_to) {
+    ASSERT(bit_size_to_saturate_to <= 31);
+    const auto result = Inst<U32>(Opcode::UnsignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
+    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
+    return {result, overflow};
+}
+
+UAny IREmitter::SignedSaturatedAdd(const UAny& a, const UAny& b) {
     ASSERT(a.GetType() == b.GetType());
     const auto result = [&]() -> IR::UAny {
         switch (a.GetType()) {
@@ -541,11 +567,10 @@ ResultAndOverflow<UAny> IREmitter::SignedSaturatedAdd(const UAny& a, const UAny&
             return IR::UAny{};
         }
     }();
-    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
-    return {result, overflow};
+    return result;
 }
 
-ResultAndOverflow<UAny> IREmitter::SignedSaturatedDoublingMultiplyReturnHigh(const UAny& a, const UAny& b) {
+UAny IREmitter::SignedSaturatedDoublingMultiplyReturnHigh(const UAny& a, const UAny& b) {
     ASSERT(a.GetType() == b.GetType());
     const auto result = [&]() -> IR::UAny {
         switch (a.GetType()) {
@@ -557,12 +582,10 @@ ResultAndOverflow<UAny> IREmitter::SignedSaturatedDoublingMultiplyReturnHigh(con
             UNREACHABLE();
         }
     }();
-
-    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
-    return {result, overflow};
+    return result;
 }
 
-ResultAndOverflow<UAny> IREmitter::SignedSaturatedSub(const UAny& a, const UAny& b) {
+UAny IREmitter::SignedSaturatedSub(const UAny& a, const UAny& b) {
     ASSERT(a.GetType() == b.GetType());
     const auto result = [&]() -> IR::UAny {
         switch (a.GetType()) {
@@ -578,18 +601,10 @@ ResultAndOverflow<UAny> IREmitter::SignedSaturatedSub(const UAny& a, const UAny&
             return IR::UAny{};
         }
     }();
-    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
-    return {result, overflow};
+    return result;
 }
 
-ResultAndOverflow<U32> IREmitter::SignedSaturation(const U32& a, size_t bit_size_to_saturate_to) {
-    ASSERT(bit_size_to_saturate_to >= 1 && bit_size_to_saturate_to <= 32);
-    const auto result = Inst<U32>(Opcode::SignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
-    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
-    return {result, overflow};
-}
-
-ResultAndOverflow<UAny> IREmitter::UnsignedSaturatedAdd(const UAny& a, const UAny& b) {
+UAny IREmitter::UnsignedSaturatedAdd(const UAny& a, const UAny& b) {
     ASSERT(a.GetType() == b.GetType());
     const auto result = [&]() -> IR::UAny {
         switch (a.GetType()) {
@@ -605,11 +620,10 @@ ResultAndOverflow<UAny> IREmitter::UnsignedSaturatedAdd(const UAny& a, const UAn
             return IR::UAny{};
         }
     }();
-    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
-    return {result, overflow};
+    return result;
 }
 
-ResultAndOverflow<UAny> IREmitter::UnsignedSaturatedSub(const UAny& a, const UAny& b) {
+UAny IREmitter::UnsignedSaturatedSub(const UAny& a, const UAny& b) {
     ASSERT(a.GetType() == b.GetType());
     const auto result = [&]() -> IR::UAny {
         switch (a.GetType()) {
@@ -625,15 +639,7 @@ ResultAndOverflow<UAny> IREmitter::UnsignedSaturatedSub(const UAny& a, const UAn
             return IR::UAny{};
         }
     }();
-    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
-    return {result, overflow};
-}
-
-ResultAndOverflow<U32> IREmitter::UnsignedSaturation(const U32& a, size_t bit_size_to_saturate_to) {
-    ASSERT(bit_size_to_saturate_to <= 31);
-    const auto result = Inst<U32>(Opcode::UnsignedSaturation, a, Imm8(static_cast<u8>(bit_size_to_saturate_to)));
-    const auto overflow = Inst<U1>(Opcode::GetOverflowFromOp, result);
-    return {result, overflow};
+    return result;
 }
 
 U128 IREmitter::VectorSignedSaturatedAdd(size_t esize, const U128& a, const U128& b) {
