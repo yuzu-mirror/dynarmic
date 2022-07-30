@@ -40,10 +40,22 @@ void EmitIR<IR::Opcode::SignedSaturatedAddWithFlag32>(oaknut::CodeGenerator& cod
 
 template<>
 void EmitIR<IR::Opcode::SignedSaturatedSubWithFlag32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
+    ASSERT(overflow_inst);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Wa = ctx.reg_alloc.ReadW(args[0]);
+    auto Wb = ctx.reg_alloc.ReadW(args[1]);
+    auto Woverflow = ctx.reg_alloc.WriteW(overflow_inst);
+    RegAlloc::Realize(Wresult, Wa, Wb, Woverflow);
+    ctx.reg_alloc.SpillFlags();
+
+    code.SUBS(Wresult, *Wa, Wb);
+    code.ASR(Wscratch0, Wresult, 31);
+    code.EOR(Wscratch0, Wscratch0, 0x8000'0000);
+    code.CSEL(Wresult, Wresult, Wscratch0, VC);
+    code.CSET(Woverflow, VS);
 }
 
 template<>
