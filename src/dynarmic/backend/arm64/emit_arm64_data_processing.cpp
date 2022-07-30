@@ -645,10 +645,32 @@ void EmitIR<IR::Opcode::RotateRight64>(oaknut::CodeGenerator& code, EmitContext&
 
 template<>
 void EmitIR<IR::Opcode::RotateRightExtended>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Woperand = ctx.reg_alloc.ReadW(args[0]);
+
+    if (args[1].IsImmediate()) {
+        RegAlloc::Realize(Wresult, Woperand);
+
+        code.LSR(Wresult, Woperand, 1);
+        if (args[1].GetImmediateU1()) {
+            code.ORR(Wresult, Wresult, 0x8000'0000);
+        }
+    } else {
+        auto Wcarry_in = ctx.reg_alloc.ReadW(args[1]);
+        RegAlloc::Realize(Wresult, Woperand, Wcarry_in);
+
+        code.LSR(Wscratch0, Wcarry_in, 29);
+        code.EXTR(Wresult, Wscratch0, Woperand, 1);
+    }
+
+    if (carry_inst) {
+        auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+        RegAlloc::Realize(Wcarry_out);
+        code.UBFIZ(Wcarry_out, Woperand, 29, 1);
+    }
 }
 
 template<>
