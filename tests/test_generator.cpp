@@ -75,7 +75,7 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
         const std::vector<std::tuple<std::string, const char*>> list{
 #define INST(fn, name, bitstring) {#fn, bitstring},
 #include "dynarmic/frontend/A32/decoder/thumb16.inc"
-//#include "dynarmic/frontend/A32/decoder/thumb32.inc"
+#include "dynarmic/frontend/A32/decoder/thumb32.inc"
 #undef INST
         };
 
