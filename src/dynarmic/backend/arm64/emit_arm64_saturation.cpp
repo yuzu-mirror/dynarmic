@@ -114,8 +114,10 @@ void EmitIR<IR::Opcode::UnsignedSaturation>(oaknut::CodeGenerator& code, EmitCon
     const u32 saturated_value = (1u << N) - 1;
 
     code.MOV(Wscratch0, saturated_value);
+    code.CMP(*Woperand, 0);
+    code.CSEL(Wresult, Woperand, WZR, GT);
     code.CMP(*Woperand, Wscratch0);
-    code.CSEL(Wresult, Woperand, Wscratch0, LS);
+    code.CSEL(Wresult, Wresult, Wscratch0, LT);
 
     if (overflow_inst) {
         auto Woverflow = ctx.reg_alloc.WriteW(overflow_inst);
