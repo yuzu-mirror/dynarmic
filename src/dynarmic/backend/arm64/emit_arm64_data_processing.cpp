@@ -321,10 +321,31 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
 
 template<>
 void EmitIR<IR::Opcode::LogicalShiftLeft64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (args[1].IsImmediate()) {
+        const u8 shift = args[1].GetImmediateU8();
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
+        RegAlloc::Realize(Xresult, Xoperand);
+
+        if (shift <= 63) {
+            code.LSL(Xresult, Xoperand, shift);
+        } else {
+            code.MOV(Xresult, XZR);
+        }
+    } else {
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
+        auto Xshift = ctx.reg_alloc.ReadX(args[1]);
+        RegAlloc::Realize(Xresult, Xoperand, Xshift);
+        ctx.reg_alloc.SpillFlags();
+
+        code.AND(Xscratch0, Xshift, 0xff);
+        code.LSL(Xresult, Xoperand, Xscratch0);
+        code.CMP(Xscratch0, 64);
+        code.CSEL(Xresult, Xresult, XZR, LT);
+    }
 }
 
 template<>
@@ -430,10 +451,31 @@ void EmitIR<IR::Opcode::LogicalShiftRight32>(oaknut::CodeGenerator& code, EmitCo
 
 template<>
 void EmitIR<IR::Opcode::LogicalShiftRight64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (args[1].IsImmediate()) {
+        const u8 shift = args[1].GetImmediateU8();
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
+        RegAlloc::Realize(Xresult, Xoperand);
+
+        if (shift <= 63) {
+            code.LSR(Xresult, Xoperand, shift);
+        } else {
+            code.MOV(Xresult, XZR);
+        }
+    } else {
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
+        auto Xshift = ctx.reg_alloc.ReadX(args[1]);
+        RegAlloc::Realize(Xresult, Xoperand, Xshift);
+        ctx.reg_alloc.SpillFlags();
+
+        code.AND(Xscratch0, Xshift, 0xff);
+        code.LSR(Xresult, Xoperand, Xscratch0);
+        code.CMP(Xscratch0, 64);
+        code.CSEL(Xresult, Xresult, XZR, LT);
+    }
 }
 
 template<>
