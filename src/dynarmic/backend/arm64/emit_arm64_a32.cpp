@@ -247,18 +247,25 @@ void EmitIR<IR::Opcode::A32GetCpsr>(oaknut::CodeGenerator& code, EmitContext& ct
     code.ORR(Wcpsr, Wcpsr, Wscratch0, LSL, 5);
 }
 
+static void SetCpsrImpl(u32 value, A32JitState* jit_state) {
+    jit_state->SetCpsr(value);
+}
+
 template<>
 void EmitIR<IR::Opcode::A32SetCpsr>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.PrepareForCall(nullptr, args[0]);
+
+    // TODO: Inline
+
+    code.MOV(X1, Xstate);
+    code.MOV(Xscratch0, reinterpret_cast<u64>(&SetCpsrImpl));
+    code.BLR(Xscratch0);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32SetCpsrNZCV>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
     auto Wnzcv = ctx.reg_alloc.ReadW(args[0]);
     RegAlloc::Realize(Wnzcv);
 
