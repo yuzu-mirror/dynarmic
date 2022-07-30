@@ -732,13 +732,26 @@ static void MaybeAddSubImm(oaknut::CodeGenerator& code, u64 imm, EmitFn emit_fn)
 template<size_t bitsize, bool sub>
 static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
+    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     auto Rresult = ctx.reg_alloc.WriteReg<bitsize>(inst);
     auto Ra = ctx.reg_alloc.ReadReg<bitsize>(args[0]);
 
-    if (nzcv_inst) {
+    if (overflow_inst) {
+        // There is a limited set of circumstances where this is required, so assert for this.
+        ASSERT(!sub);
+        ASSERT(!nzcv_inst);
+        ASSERT(args[2].IsImmediate() && args[2].GetImmediateU1() == false);
+
+        auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
+        auto Woverflow = ctx.reg_alloc.WriteW(overflow_inst);
+        RegAlloc::Realize(Rresult, Ra, Rb, Woverflow);
+
+        code.ADDS(Rresult, *Ra, Rb);
+        code.CSET(Woverflow, VS);
+    } else if (nzcv_inst) {
         if (args[1].IsImmediate()) {
             const u64 imm = args[1].GetImmediateU64();
 
