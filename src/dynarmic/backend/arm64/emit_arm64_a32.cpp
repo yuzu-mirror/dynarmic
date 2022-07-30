@@ -380,10 +380,17 @@ void EmitIR<IR::Opcode::A32SetGEFlags>(oaknut::CodeGenerator& code, EmitContext&
 
 template<>
 void EmitIR<IR::Opcode::A32SetGEFlagsCompressed>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Wge = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wge);
+
+    code.LSR(Wscratch0, Wge, 16);
+    code.MOV(Wscratch1, 0x00204081);
+    code.MUL(Wscratch0, Wscratch0, Wscratch1);
+    code.AND(Wscratch0, Wscratch0, 0x01010101);
+    code.LSL(Wscratch1, Wscratch0, 8);
+    code.SUB(Wscratch0, Wscratch1, Wscratch0);
+    code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_ge));
 }
 
 template<>
