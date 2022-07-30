@@ -248,9 +248,14 @@ static void EmitPackedAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::
         auto Vge = ctx.reg_alloc.WriteD(ge_inst);
         RegAlloc::Realize(Vge);
 
-        code.CMEQ(Vge->H4(), Vresult->H4(), 0);
-        code.EOR(Vge->B8(), Vge->B8(), V2.B8());
-        code.SHRN(Vge->H4(), Vge->toQ().S4(), 16);
+        if (is_signed) {
+            code.CMGE(Vge->S2(), Vresult->S2(), 0);
+            code.XTN(Vge->H4(), Vge->toQ().S4());
+        } else {
+            code.CMEQ(Vge->H4(), Vresult->H4(), 0);
+            code.EOR(Vge->B8(), Vge->B8(), V2.B8());
+            code.SHRN(Vge->H4(), Vge->toQ().S4(), 16);
+        }
     }
 
     code.XTN(Vresult->H4(), Vresult->toQ().S4());
