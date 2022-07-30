@@ -964,13 +964,23 @@ void EmitIR<IR::Opcode::SignedDiv64>(oaknut::CodeGenerator& code, EmitContext& c
         [&](auto& Xresult, auto& Xa, auto& Xb) { code.SDIV(Xresult, Xa, Xb); });
 }
 
+template<size_t bitsize>
+static bool IsValidBitImm(u64 imm) {
+    static_assert(bitsize == 32 || bitsize == 64);
+    if constexpr (bitsize == 32) {
+        return static_cast<bool>(oaknut::detail::encode_bit_imm(static_cast<u32>(imm)));
+    } else {
+        return static_cast<bool>(oaknut::detail::encode_bit_imm(imm));
+    }
+}
+
 template<size_t bitsize, typename EmitFn>
 static void MaybeBitImm(oaknut::CodeGenerator& code, u64 imm, EmitFn emit_fn) {
     static_assert(bitsize == 32 || bitsize == 64);
     if constexpr (bitsize == 32) {
         imm = static_cast<u32>(imm);
     }
-    if (oaknut::detail::encode_bit_imm(imm)) {
+    if (IsValidBitImm<bitsize>(imm)) {
         emit_fn(imm);
     } else {
         code.MOV(Rscratch0<bitsize>(), imm);
@@ -1039,7 +1049,7 @@ static void EmitAndNot(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
 
             const u64 not_imm = bitsize == 32 ? static_cast<u32>(~args[1].GetImmediateU64()) : ~args[1].GetImmediateU64();
 
-            if (oaknut::detail::encode_bit_imm(not_imm)) {
+            if (IsValidBitImm<bitsize>(not_imm)) {
                 code.ANDS(Rresult, Ra, not_imm);
             } else {
                 code.MOV(Rscratch0<bitsize>(), args[1].GetImmediateU64());
@@ -1060,7 +1070,7 @@ static void EmitAndNot(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
 
         const u64 not_imm = bitsize == 32 ? static_cast<u32>(~args[1].GetImmediateU64()) : ~args[1].GetImmediateU64();
 
-        if (oaknut::detail::encode_bit_imm(not_imm)) {
+        if (IsValidBitImm<bitsize>(not_imm)) {
             code.AND(Rresult, Ra, not_imm);
         } else {
             code.MOV(Rscratch0<bitsize>(), args[1].GetImmediateU64());
