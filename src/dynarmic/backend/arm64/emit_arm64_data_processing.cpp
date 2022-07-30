@@ -713,8 +713,16 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
                 RegAlloc::Realize(Rresult, Ra);
                 ctx.reg_alloc.ReadWriteFlags(args[2], nzcv_inst);
 
-                code.MOV(Rscratch0<bitsize>(), imm);
-                sub ? code.SBCS(Rresult, Ra, Rscratch0<bitsize>()) : code.ADCS(Rresult, Ra, Rscratch0<bitsize>());
+                if (imm == 0) {
+                    if constexpr (bitsize == 32) {
+                        sub ? code.SBCS(Rresult, Ra, WZR) : code.ADCS(Rresult, Ra, WZR);
+                    } else {
+                        sub ? code.SBCS(Rresult, Ra, XZR) : code.ADCS(Rresult, Ra, XZR);
+                    }
+                } else {
+                    code.MOV(Rscratch0<bitsize>(), imm);
+                    sub ? code.SBCS(Rresult, Ra, Rscratch0<bitsize>()) : code.ADCS(Rresult, Ra, Rscratch0<bitsize>());
+                }
             }
         } else {
             auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
