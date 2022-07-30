@@ -16,9 +16,9 @@ namespace Dynarmic::Backend::Arm64 {
 
 struct A32JitState {
     u32 cpsr_nzcv = 0;
-    u32 cpsr_ge = 0;
-    u32 cpsr_jaifm = 0;
     u32 cpsr_q = 0;
+    u32 cpsr_jaifm = 0;
+    u32 cpsr_ge = 0;
 
     std::array<u32, 16> regs{};
 

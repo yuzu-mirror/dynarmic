@@ -224,10 +224,10 @@ void EmitIR<IR::Opcode::A32GetCpsr>(oaknut::CodeGenerator& code, EmitContext& ct
     auto Wcpsr = ctx.reg_alloc.WriteW(inst);
     RegAlloc::Realize(Wcpsr);
 
-    static_assert(offsetof(A32JitState, cpsr_jaifm) + sizeof(u32) == offsetof(A32JitState, cpsr_q));
+    static_assert(offsetof(A32JitState, cpsr_nzcv) + sizeof(u32) == offsetof(A32JitState, cpsr_q));
 
-    code.LDR(Wcpsr, Xstate, offsetof(A32JitState, cpsr_nzcv));
-    code.LDP(Wscratch0, Wscratch1, Xstate, offsetof(A32JitState, cpsr_jaifm));
+    code.LDP(Wscratch0, Wscratch1, Xstate, offsetof(A32JitState, cpsr_nzcv));
+    code.LDR(Wcpsr, Xstate, offsetof(A32JitState, cpsr_jaifm));
     code.ORR(Wcpsr, Wcpsr, Wscratch0);
     code.ORR(Wcpsr, Wcpsr, Wscratch1);
 
