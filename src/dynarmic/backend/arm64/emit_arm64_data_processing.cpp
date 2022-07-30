@@ -853,34 +853,30 @@ void EmitIR<IR::Opcode::UnsignedMultiplyHigh64>(oaknut::CodeGenerator& code, Emi
 
 template<>
 void EmitIR<IR::Opcode::UnsignedDiv32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOp<32>(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Wa, auto& Wb) { code.UDIV(Wresult, Wa, Wb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::UnsignedDiv64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOp<64>(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xa, auto& Xb) { code.UDIV(Xresult, Xa, Xb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::SignedDiv32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOp<32>(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Wa, auto& Wb) { code.SDIV(Wresult, Wa, Wb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::SignedDiv64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOp<64>(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xa, auto& Xb) { code.SDIV(Xresult, Xa, Xb); });
 }
 
 template<size_t bitsize, typename EmitFn>
