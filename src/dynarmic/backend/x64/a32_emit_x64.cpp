@@ -445,7 +445,7 @@ void A32EmitX64::EmitA32SetCpsr(A32EmitContext& ctx, IR::Inst* inst) {
 
     // cpsr_jaifm
     code.mov(tmp, cpsr);
-    code.and_(tmp, 0x07F0FDDF);
+    code.and_(tmp, 0x010001DF);
     code.mov(dword[r15 + offsetof(A32JitState, cpsr_jaifm)], tmp);
 
     if (code.HasHostFeature(HostFeature::FastBMI2)) {
