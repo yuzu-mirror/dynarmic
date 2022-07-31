@@ -80,11 +80,27 @@ void EmitIR<IR::Opcode::GetNZFromOp>(oaknut::CodeGenerator& code, EmitContext& c
         return;
     }
 
-    auto Wvalue = ctx.reg_alloc.ReadW(args[0]);
-    auto flags = ctx.reg_alloc.WriteFlags(inst);
-    RegAlloc::Realize(Wvalue, flags);
+    switch (args[0].GetType()) {
+    case IR::Type::U32: {
+        auto Wvalue = ctx.reg_alloc.ReadW(args[0]);
+        auto flags = ctx.reg_alloc.WriteFlags(inst);
+        RegAlloc::Realize(Wvalue, flags);
 
-    code.TST(*Wvalue, *Wvalue);
+        code.TST(*Wvalue, *Wvalue);
+        break;
+    }
+    case IR::Type::U64: {
+        auto Xvalue = ctx.reg_alloc.ReadX(args[0]);
+        auto flags = ctx.reg_alloc.WriteFlags(inst);
+        RegAlloc::Realize(Xvalue, flags);
+
+        code.TST(*Xvalue, *Xvalue);
+        break;
+    }
+    default:
+        ASSERT_FALSE("Invalid type for GetNZFromOp");
+        break;
+    }
 }
 
 template<>
