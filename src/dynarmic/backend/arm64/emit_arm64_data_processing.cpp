@@ -291,7 +291,11 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
             auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
             auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
             auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
-            RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            if (carry_arg.IsImmediate()) {
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift);
+            } else {
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            }
             ctx.reg_alloc.SpillFlags();
 
             // TODO: Use RMIF
@@ -312,7 +316,11 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
 
             code.l(zero);
             code.MOV(*Wresult, Woperand);
-            code.MOV(*Wcarry_out, Wcarry_in);
+            if (carry_arg.IsImmediate()) {
+                code.MOV(Wcarry_out, carry_arg.GetImmediateU32() << 29);
+            } else {
+                code.MOV(*Wcarry_out, Wcarry_in);
+            }
 
             code.l(end);
         }
@@ -421,7 +429,11 @@ void EmitIR<IR::Opcode::LogicalShiftRight32>(oaknut::CodeGenerator& code, EmitCo
             auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
             auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
             auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
-            RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            if (carry_arg.IsImmediate()) {
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift);
+            } else {
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            }
             ctx.reg_alloc.SpillFlags();
 
             // TODO: Use RMIF
@@ -442,7 +454,11 @@ void EmitIR<IR::Opcode::LogicalShiftRight32>(oaknut::CodeGenerator& code, EmitCo
 
             code.l(zero);
             code.MOV(*Wresult, Woperand);
-            code.MOV(*Wcarry_out, Wcarry_in);
+            if (carry_arg.IsImmediate()) {
+                code.MOV(Wcarry_out, carry_arg.GetImmediateU32() << 29);
+            } else {
+                code.MOV(*Wcarry_out, Wcarry_in);
+            }
 
             code.l(end);
         }
@@ -541,7 +557,11 @@ void EmitIR<IR::Opcode::ArithmeticShiftRight32>(oaknut::CodeGenerator& code, Emi
             auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
             auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
             auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
-            RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            if (carry_arg.IsImmediate()) {
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift);
+            } else {
+                RegAlloc::Realize(Wresult, Wcarry_out, Woperand, Wshift, Wcarry_in);
+            }
             ctx.reg_alloc.SpillFlags();
 
             // TODO: Use RMIF
@@ -568,7 +588,11 @@ void EmitIR<IR::Opcode::ArithmeticShiftRight32>(oaknut::CodeGenerator& code, Emi
 
             code.l(zero);
             code.MOV(*Wresult, Woperand);
-            code.MOV(*Wcarry_out, Wcarry_in);
+            if (carry_arg.IsImmediate()) {
+                code.MOV(Wcarry_out, carry_arg.GetImmediateU32() << 29);
+            } else {
+                code.MOV(*Wcarry_out, Wcarry_in);
+            }
 
             code.l(end);
         }
@@ -621,7 +645,22 @@ void EmitIR<IR::Opcode::RotateRight32>(oaknut::CodeGenerator& code, EmitContext&
 
         code.ROR(Wresult, Woperand, Wshift);
 
-        if (carry_inst) {
+        if (carry_inst && carry_arg.IsImmediate()) {
+            const u32 carry_in = carry_arg.GetImmediateU32() << 29;
+            auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
+            RegAlloc::Realize(Wcarry_out);
+            ctx.reg_alloc.SpillFlags();
+
+            code.TST(Wshift, 0xff);
+            code.LSR(Wcarry_out, Wresult, 31 - 29);
+            code.AND(Wcarry_out, Wcarry_out, 1 << 29);
+            if (carry_in) {
+                code.MOV(Wscratch0, carry_in);
+                code.CSEL(Wcarry_out, Wscratch0, Wcarry_out, EQ);
+            } else {
+                code.CSEL(Wcarry_out, WZR, Wcarry_out, EQ);
+            }
+        } else if (carry_inst) {
             auto Wcarry_in = ctx.reg_alloc.ReadW(carry_arg);
             auto Wcarry_out = ctx.reg_alloc.WriteW(carry_inst);
             RegAlloc::Realize(Wcarry_out, Wcarry_in);
