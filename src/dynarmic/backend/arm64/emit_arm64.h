@@ -68,5 +68,6 @@ void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
 void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target);
 oaknut::Label EmitA32Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
+void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 
 }  // namespace Dynarmic::Backend::Arm64

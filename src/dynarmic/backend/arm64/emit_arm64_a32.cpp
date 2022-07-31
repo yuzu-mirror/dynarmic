@@ -123,6 +123,11 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx) {
     EmitA32Terminal(code, ctx, ctx.block.GetTerminal(), location.SetSingleStepping(false), location.SingleStepping());
 }
 
+void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx) {
+    const A32::LocationDescriptor location{ctx.block.Location()};
+    EmitA32Terminal(code, ctx, IR::Term::LinkBlock{ctx.block.ConditionFailedLocation()}, location.SetSingleStepping(false), location.SingleStepping());
+}
+
 template<>
 void EmitIR<IR::Opcode::A32SetCheckBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);

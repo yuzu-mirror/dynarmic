@@ -133,6 +133,17 @@ void EmitIR<IR::Opcode::NZCVFromPackedFlags>(oaknut::CodeGenerator&, EmitContext
     ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
+static void EmitAddCycles(oaknut::CodeGenerator& code, EmitContext&, size_t cycles_to_add) {
+    code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
+    if (oaknut::AddSubImm::is_valid(cycles_to_add)) {
+        code.SUBS(Xscratch0, Xscratch0, cycles_to_add);
+    } else {
+        code.MOV(Xscratch1, cycles_to_add);
+        code.SUBS(Xscratch0, Xscratch0, Xscratch1);
+    }
+    code.STR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
+}
+
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& conf) {
     EmittedBlockInfo ebi;
 
@@ -140,6 +151,19 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     EmitContext ctx{block, reg_alloc, conf, ebi, {}};
 
     ebi.entry_point = code.ptr<CodePtr>();
+
+    if (ctx.block.GetCondition() == IR::Cond::AL) {
+        ASSERT(!ctx.block.HasConditionFailedLocation());
+    } else {
+        ASSERT(ctx.block.HasConditionFailedLocation());
+
+        oaknut::Label pass = EmitA32Cond(code, ctx, ctx.block.GetCondition());
+        if (conf.enable_cycle_counting) {
+            EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
+        }
+        EmitA32ConditionFailedTerminal(code, ctx);
+        code.l(pass);
+    }
 
     for (auto iter = block.begin(); iter != block.end(); ++iter) {
         IR::Inst* inst = &*iter;
@@ -172,15 +196,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     reg_alloc.AssertNoMoreUses();
 
     if (ctx.conf.enable_cycle_counting) {
-        const size_t cycles_to_add = block.CycleCount();
-        code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
-        if (oaknut::AddSubImm::is_valid(cycles_to_add)) {
-            code.SUBS(Xscratch0, Xscratch0, cycles_to_add);
-        } else {
-            code.MOV(Xscratch1, cycles_to_add);
-            code.SUBS(Xscratch0, Xscratch0, Xscratch1);
-        }
-        code.STR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
+        EmitAddCycles(code, ctx, block.CycleCount());
     }
 
     EmitA32Terminal(code, ctx);
