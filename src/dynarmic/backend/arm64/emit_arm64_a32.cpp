@@ -323,28 +323,49 @@ void EmitIR<IR::Opcode::A32SetCpsrNZC>(oaknut::CodeGenerator& code, EmitContext&
 
     // TODO: Track latent value
 
-    if (args[1].IsImmediate()) {
-        const u32 carry = args[1].GetImmediateU1() ? 0x2000'0000 : 0;
-        auto Wnz = ctx.reg_alloc.ReadW(args[0]);
-        RegAlloc::Realize(Wnz);
+    if (args[0].IsImmediate()) {
+        if (args[1].IsImmediate()) {
+            const u32 carry = args[1].GetImmediateU1() ? 0x2000'0000 : 0;
 
-        code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
-        code.AND(Wscratch0, Wscratch0, 0x10000000);
-        code.ORR(Wscratch0, Wscratch0, Wnz);
-        if (carry) {
-            code.ORR(Wscratch0, Wscratch0, carry);
+            code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+            code.AND(Wscratch0, Wscratch0, 0x10000000);
+            if (carry) {
+                code.ORR(Wscratch0, Wscratch0, carry);
+            }
+            code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+        } else {
+            auto Wc = ctx.reg_alloc.ReadW(args[1]);
+            RegAlloc::Realize(Wc);
+
+            code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+            code.AND(Wscratch0, Wscratch0, 0x10000000);
+            code.ORR(Wscratch0, Wscratch0, Wc);
+            code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
         }
-        code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
     } else {
-        auto Wnz = ctx.reg_alloc.ReadW(args[0]);
-        auto Wc = ctx.reg_alloc.ReadW(args[1]);
-        RegAlloc::Realize(Wnz, Wc);
+        if (args[1].IsImmediate()) {
+            const u32 carry = args[1].GetImmediateU1() ? 0x2000'0000 : 0;
+            auto Wnz = ctx.reg_alloc.ReadW(args[0]);
+            RegAlloc::Realize(Wnz);
 
-        code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
-        code.AND(Wscratch0, Wscratch0, 0x10000000);
-        code.ORR(Wscratch0, Wscratch0, Wnz);
-        code.ORR(Wscratch0, Wscratch0, Wc);
-        code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+            code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+            code.AND(Wscratch0, Wscratch0, 0x10000000);
+            code.ORR(Wscratch0, Wscratch0, Wnz);
+            if (carry) {
+                code.ORR(Wscratch0, Wscratch0, carry);
+            }
+            code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+        } else {
+            auto Wnz = ctx.reg_alloc.ReadW(args[0]);
+            auto Wc = ctx.reg_alloc.ReadW(args[1]);
+            RegAlloc::Realize(Wnz, Wc);
+
+            code.LDR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+            code.AND(Wscratch0, Wscratch0, 0x10000000);
+            code.ORR(Wscratch0, Wscratch0, Wnz);
+            code.ORR(Wscratch0, Wscratch0, Wc);
+            code.STR(Wscratch0, Xstate, offsetof(A32JitState, cpsr_nzcv));
+        }
     }
 }
 
