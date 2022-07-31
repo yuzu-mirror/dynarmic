@@ -489,13 +489,13 @@ HostLocInfo& RegAlloc::ValueInfo(const IR::Inst* value) {
     if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value); iter != gprs.end()) {
         return *iter;
     }
-    if (const auto iter = std::find_if(fprs.begin(), fprs.end(), contains_value); iter != gprs.end()) {
+    if (const auto iter = std::find_if(fprs.begin(), fprs.end(), contains_value); iter != fprs.end()) {
         return *iter;
     }
     if (contains_value(flags)) {
         return flags;
     }
-    if (const auto iter = std::find_if(spills.begin(), spills.end(), contains_value); iter != gprs.end()) {
+    if (const auto iter = std::find_if(spills.begin(), spills.end(), contains_value); iter != spills.end()) {
         return *iter;
     }
     ASSERT_FALSE("RegAlloc::ValueInfo: Value not found");
