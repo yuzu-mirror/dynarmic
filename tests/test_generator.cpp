@@ -67,6 +67,72 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A
     return true;
 }
 
+u32 GenRandomArmInst(u32 pc, bool is_last_inst) {
+    static const struct InstructionGeneratorInfo {
+        std::vector<InstructionGenerator> generators;
+        std::vector<InstructionGenerator> invalid;
+    } instructions = [] {
+        const std::vector<std::tuple<std::string, const char*>> list{
+#define INST(fn, name, bitstring) {#fn, bitstring},
+#include "dynarmic/frontend/A32/decoder/arm.inc"
+//#include "dynarmic/frontend/A32/decoder/asimd.inc"
+//#include "dynarmic/frontend/A32/decoder/vfp.inc"
+#undef INST
+        };
+
+        std::vector<InstructionGenerator> generators;
+        std::vector<InstructionGenerator> invalid;
+
+        // List of instructions not to test
+        static constexpr std::array do_not_test{
+            // Translating load/stores
+            "arm_LDRBT", "arm_LDRBT", "arm_LDRHT", "arm_LDRHT", "arm_LDRSBT", "arm_LDRSBT", "arm_LDRSHT", "arm_LDRSHT", "arm_LDRT", "arm_LDRT",
+            "arm_STRBT", "arm_STRBT", "arm_STRHT", "arm_STRHT", "arm_STRT", "arm_STRT",
+            // Exclusive load/stores
+            "arm_LDREXB", "arm_LDREXD", "arm_LDREXH", "arm_LDREX", "arm_LDAEXB", "arm_LDAEXD", "arm_LDAEXH", "arm_LDAEX",
+            "arm_STREXB", "arm_STREXD", "arm_STREXH", "arm_STREX", "arm_STLEXB", "arm_STLEXD", "arm_STLEXH", "arm_STLEX",
+            "arm_SWP", "arm_SWPB",
+            // Elevated load/store multiple instructions.
+            "arm_LDM_eret", "arm_LDM_usr",
+            "arm_STM_usr",
+            // Coprocessor
+            "arm_CDP", "arm_LDC", "arm_MCR", "arm_MCRR", "arm_MRC", "arm_MRRC", "arm_STC",
+            // System
+            "arm_CPS", "arm_RFE", "arm_SRS",
+            // Undefined
+            "arm_UDF",
+            // FPSCR is inaccurate
+            "vfp_VMRS",
+            // Incorrect Unicorn implementations
+            "asimd_VRECPS",         // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
+            "asimd_VRSQRTS",        // Unicorn does not fuse the multiply and subtraction, resulting in being off by 1ULP.
+            "vfp_VCVT_from_fixed",  // Unicorn does not do round-to-nearest-even for this instruction correctly.
+        };
+
+        for (const auto& [fn, bitstring] : list) {
+            if (std::find(do_not_test.begin(), do_not_test.end(), fn) != do_not_test.end()) {
+                invalid.emplace_back(InstructionGenerator{bitstring});
+                continue;
+            }
+            generators.emplace_back(InstructionGenerator{bitstring});
+        }
+        return InstructionGeneratorInfo{generators, invalid};
+    }();
+
+    while (true) {
+        const size_t index = RandInt<size_t>(0, instructions.generators.size() - 1);
+        const u32 inst = instructions.generators[index].Generate();
+
+        if ((instructions.generators[index].Mask() & 0xF0000000) == 0 && (inst & 0xF0000000) == 0xF0000000) {
+            continue;
+        }
+
+        if (ShouldTestInst(inst, pc, false, is_last_inst)) {
+            return inst;
+        }
+    }
+}
+
 std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_state = {}) {
     static const struct InstructionGeneratorInfo {
         std::vector<InstructionGenerator> generators;
@@ -211,21 +277,21 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
     fmt::print("instructions: ");
     for (auto instruction : instructions) {
         if constexpr (sizeof(decltype(instruction)) == 2) {
-            fmt::print("{:04x}", instruction);
+            fmt::print("{:04x} ", instruction);
         } else {
-            fmt::print("{:08x}", instruction);
+            fmt::print("{:08x} ", instruction);
         }
     }
     fmt::print("\n");
 
     fmt::print("initial_regs: ");
     for (u32 i : regs) {
-        fmt::print("{:08x}", i);
+        fmt::print("{:08x} ", i);
     }
     fmt::print("\n");
     fmt::print("initial_vecs: ");
     for (u32 i : vecs) {
-        fmt::print("{:08x}", i);
+        fmt::print("{:08x} ", i);
     }
     fmt::print("\n");
     fmt::print("initial_cpsr: {:08x}\n", cpsr);
@@ -233,12 +299,12 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
 
     fmt::print("final_regs: ");
     for (u32 i : jit.Regs()) {
-        fmt::print("{:08x}", i);
+        fmt::print("{:08x} ", i);
     }
     fmt::print("\n");
     fmt::print("final_vecs: ");
     for (u32 i : jit.ExtRegs()) {
-        fmt::print("{:08x}", i);
+        fmt::print("{:08x} ", i);
     }
     fmt::print("\n");
     fmt::print("final_cpsr: {:08x}\n", jit.Cpsr());
@@ -259,9 +325,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
 }
 }  // Anonymous namespace
 
-int main(int, char*[]) {
-    detail::g_rand_int_generator.seed(42);
-
+void TestThumb(size_t num_instructions, size_t num_iterations = 100000) {
     ThumbTestEnv jit_env{};
     Dynarmic::A32::Jit jit{GetUserConfig(jit_env)};
 
@@ -269,19 +333,58 @@ int main(int, char*[]) {
     std::array<u32, 64> ext_reg;
     std::vector<u16> instructions;
 
-    for (size_t iteration = 0; iteration < 1000000; ++iteration) {
+    for (size_t iteration = 0; iteration < num_iterations; ++iteration) {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
-
-        instructions = GenRandomThumbInst(0, true);
 
         const u32 start_address = 100;
         const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x1F0;
         const u32 fpcr = RandomFpcr();
 
+        instructions.clear();
+        for (size_t i = 0; i < num_instructions; ++i) {
+            const auto inst = GenRandomThumbInst(static_cast<u32>(start_address + 2 * instructions.size()), i == num_instructions - 1);
+            instructions.insert(instructions.end(), inst.begin(), inst.end());
+        }
+
+        regs[15] = start_address;
+        RunTestInstance(jit, jit_env, regs, ext_reg, instructions, cpsr, fpcr, num_instructions);
+    }
+}
+
+void TestArm(size_t num_instructions, size_t num_iterations = 100000) {
+    ArmTestEnv jit_env{};
+    Dynarmic::A32::Jit jit{GetUserConfig(jit_env)};
+
+    std::array<u32, 16> regs;
+    std::array<u32, 64> ext_reg;
+    std::vector<u32> instructions;
+
+    for (size_t iteration = 0; iteration < num_iterations; ++iteration) {
+        std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
+        std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
+
+        const u32 start_address = 100;
+        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28);
+        const u32 fpcr = RandomFpcr();
+
+        instructions.clear();
+        for (size_t i = 0; i < num_instructions; ++i) {
+            instructions.emplace_back(GenRandomArmInst(static_cast<u32>(start_address + 4 * instructions.size()), i == num_instructions - 1));
+        }
+
         regs[15] = start_address;
         RunTestInstance(jit, jit_env, regs, ext_reg, instructions, cpsr, fpcr, 1);
     }
+}
+
+int main(int, char*[]) {
+    detail::g_rand_int_generator.seed(42069);
+
+    TestThumb(1);
+    TestArm(1);
+    TestThumb(1024, 1000);
+    TestArm(1024, 1000);
 
     return 0;
 }
