@@ -214,6 +214,7 @@ void RegAlloc::AssertNoMoreUses() const {
 
 template<HostLoc::Kind kind>
 int RegAlloc::GenerateImmediate(const IR::Value& value) {
+    ASSERT(value.GetType() != IR::Type::U1);
     if constexpr (kind == HostLoc::Kind::Gpr) {
         const int new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
