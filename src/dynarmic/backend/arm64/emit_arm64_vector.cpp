@@ -232,60 +232,53 @@ void EmitIR<IR::Opcode::VectorArithmeticVShift64>(oaknut::CodeGenerator& code, E
     ASSERT_FALSE("Unimplemented");
 }
 
+template<size_t size, typename EmitFn>
+static void EmitBroadcast(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[1].IsImmediate());
+
+    auto Qvector = ctx.reg_alloc.WriteQ(inst);
+    auto Rvalue = ctx.reg_alloc.ReadReg<std::max<size_t>(32, size)>(args[0]);
+    RegAlloc::Realize(Qvector, Rvalue);
+
+    // TODO: fpr source
+
+    emit(Qvector, Rvalue);
+}
+
 template<>
 void EmitIR<IR::Opcode::VectorBroadcastLower8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBroadcast<8>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue) { code.DUP(Qvector->toD().B8(), Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorBroadcastLower16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBroadcast<16>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue) { code.DUP(Qvector->toD().H4(), Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorBroadcastLower32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBroadcast<32>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue) { code.DUP(Qvector->toD().S2(), Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorBroadcast8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBroadcast<8>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue) { code.DUP(Qvector->B16(), Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorBroadcast16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBroadcast<16>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue) { code.DUP(Qvector->H8(), Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorBroadcast32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBroadcast<32>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue) { code.DUP(Qvector->S4(), Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorBroadcast64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitBroadcast<64>(code, ctx, inst, [&](auto& Qvector, auto& Xvalue) { code.DUP(Qvector->D2(), Xvalue); });
 }
 
 template<>
