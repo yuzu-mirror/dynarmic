@@ -18,68 +18,74 @@ namespace Dynarmic::Backend::Arm64 {
 
 using namespace oaknut::util;
 
+template<size_t size, typename EmitFn>
+static void EmitGetElement(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[1].IsImmediate());
+    const u8 index = args[1].GetImmediateU8();
+
+    auto Rresult = ctx.reg_alloc.WriteReg<std::max<size_t>(32, size)>(inst);
+    auto Qvalue = ctx.reg_alloc.ReadQ(args[0]);
+    RegAlloc::Realize(Rresult, Qvalue);
+
+    // TODO: fpr destination
+
+    emit(Rresult, Qvalue, index);
+}
+
 template<>
 void EmitIR<IR::Opcode::VectorGetElement8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitGetElement<8>(code, ctx, inst, [&](auto& Wresult, auto& Qvalue, u8 index) { code.UMOV(Wresult, Qvalue->Belem()[index]); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorGetElement16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitGetElement<16>(code, ctx, inst, [&](auto& Wresult, auto& Qvalue, u8 index) { code.UMOV(Wresult, Qvalue->Helem()[index]); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorGetElement32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitGetElement<32>(code, ctx, inst, [&](auto& Wresult, auto& Qvalue, u8 index) { code.UMOV(Wresult, Qvalue->Selem()[index]); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorGetElement64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitGetElement<64>(code, ctx, inst, [&](auto& Xresult, auto& Qvalue, u8 index) { code.UMOV(Xresult, Qvalue->Delem()[index]); });
+}
+
+template<size_t size, typename EmitFn>
+static void EmitSetElement(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[1].IsImmediate());
+    const u8 index = args[1].GetImmediateU8();
+
+    auto Qvector = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+    auto Rvalue = ctx.reg_alloc.ReadReg<std::max<size_t>(32, size)>(args[2]);
+    RegAlloc::Realize(Qvector, Rvalue);
+
+    // TODO: fpr source
+
+    emit(Qvector, Rvalue, index);
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSetElement8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSetElement<8>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue, u8 index) { code.MOV(Qvector->Belem()[index], Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSetElement16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSetElement<16>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue, u8 index) { code.MOV(Qvector->Helem()[index], Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSetElement32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSetElement<32>(code, ctx, inst, [&](auto& Qvector, auto& Wvalue, u8 index) { code.MOV(Qvector->Selem()[index], Wvalue); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSetElement64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSetElement<64>(code, ctx, inst, [&](auto& Qvector, auto& Xvalue, u8 index) { code.MOV(Qvector->Delem()[index], Xvalue); });
 }
 
 template<>
