@@ -25,7 +25,6 @@ struct alignas(16) StackLayout {
     std::array<std::array<u64, 2>, SpillCount> spill;
 
     u32 save_host_fpcr;
-    u32 save_host_fpsr;
 
     bool check_bit;
 };
