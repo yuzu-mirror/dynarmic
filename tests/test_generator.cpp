@@ -31,6 +31,8 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
+constexpr bool mask_fpsr_cum_bits = true;
+
 namespace {
 using namespace Dynarmic;
 
@@ -308,7 +310,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
     }
     fmt::print("\n");
     fmt::print("final_cpsr: {:08x}\n", jit.Cpsr());
-    fmt::print("final_fpsr: {:08x}\n", jit.Fpscr());
+    fmt::print("final_fpsr: {:08x}\n", mask_fpsr_cum_bits ? jit.Fpscr() & 0xffffff00 : jit.Fpscr());
 
     fmt::print("mod_mem: ");
     for (auto [addr, value] : jit_env.modified_memory) {

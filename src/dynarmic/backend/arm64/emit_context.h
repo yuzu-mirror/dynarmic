@@ -7,6 +7,8 @@
 
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/ir/basic_block.h"
 
 namespace Dynarmic::IR {
 class Block;
@@ -15,18 +17,19 @@ class Block;
 namespace Dynarmic::Backend::Arm64 {
 
 struct EmitConfig;
-
-struct FpsrManager {
-    void Spill() {}  // TODO
-    void Load() {}   // TODO
-};
+class FpsrManager;
 
 struct EmitContext {
     IR::Block& block;
     RegAlloc& reg_alloc;
     const EmitConfig& conf;
     EmittedBlockInfo& ebi;
-    FpsrManager fpsr;
+    FpsrManager& fpsr;
+
+    FP::FPCR FPCR(bool fpcr_controlled = true) const {
+        const FP::FPCR fpcr = conf.descriptor_to_fpcr(block.Location());
+        return fpcr_controlled ? fpcr : fpcr.ASIMDStandardValue();
+    }
 };
 
 }  // namespace Dynarmic::Backend::Arm64

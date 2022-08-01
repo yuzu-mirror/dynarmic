@@ -18,9 +18,14 @@ using CodeGenerator = BasicCodeGenerator<PointerCodeGeneratorPolicy>;
 struct Label;
 }  // namespace oaknut
 
+namespace Dynarmic::FP {
+class FPCR;
+}  // namespace Dynarmic::FP
+
 namespace Dynarmic::IR {
 class Block;
 class Inst;
+class LocationDescriptor;
 enum class Cond;
 enum class Opcode;
 }  // namespace Dynarmic::IR
@@ -57,6 +62,11 @@ struct EmitConfig {
     bool hook_isb;
     bool enable_cycle_counting;
     bool always_little_endian;
+
+    FP::FPCR (*descriptor_to_fpcr)(const IR::LocationDescriptor& descriptor);
+
+    size_t state_nzcv_offset;
+    size_t state_fpsr_offset;
 };
 
 struct EmitContext;

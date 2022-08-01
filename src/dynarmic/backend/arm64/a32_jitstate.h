@@ -20,13 +20,14 @@ struct A32JitState {
     u32 cpsr_jaifm = 0;
     u32 cpsr_ge = 0;
 
+    u32 fpsr = 0;
+    u32 fpsr_nzcv = 0;
+
     std::array<u32, 16> regs{};
 
     u32 upper_location_descriptor;
 
     alignas(16) std::array<u32, 64> ext_regs{};
-
-    u32 fpsr = 0;
 
     u32 exclusive_state = 0;
 

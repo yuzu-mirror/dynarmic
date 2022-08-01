@@ -23,6 +23,7 @@
 
 namespace Dynarmic::Backend::Arm64 {
 
+class FpsrManager;
 class RegAlloc;
 
 struct HostLoc {
@@ -138,8 +139,8 @@ class RegAlloc {
 public:
     using ArgumentInfo = std::array<Argument, IR::max_arg_count>;
 
-    explicit RegAlloc(oaknut::CodeGenerator& code, std::vector<int> gpr_order, std::vector<int> fpr_order)
-            : code{code}, gpr_order{gpr_order}, fpr_order{fpr_order}, rand_gen{std::random_device{}()} {}
+    explicit RegAlloc(oaknut::CodeGenerator& code, FpsrManager& fpsr_manager, std::vector<int> gpr_order, std::vector<int> fpr_order)
+            : code{code}, fpsr_manager{fpsr_manager}, gpr_order{gpr_order}, fpr_order{fpr_order}, rand_gen{std::random_device{}()} {}
 
     ArgumentInfo GetArgumentInfo(IR::Inst* inst);
     bool IsValueLive(IR::Inst* inst) const;
@@ -266,6 +267,7 @@ private:
     HostLocInfo& ValueInfo(const IR::Inst* value);
 
     oaknut::CodeGenerator& code;
+    FpsrManager& fpsr_manager;
     std::vector<int> gpr_order;
     std::vector<int> fpr_order;
 

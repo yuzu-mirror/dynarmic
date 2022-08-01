@@ -13,6 +13,7 @@
 #include <mcl/stdint.hpp>
 
 #include "dynarmic/backend/arm64/abi.h"
+#include "dynarmic/backend/arm64/fpsr_manager.h"
 
 namespace Dynarmic::Backend::Arm64 {
 
@@ -148,6 +149,7 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
 }
 
 void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
+    fpsr_manager.Spill();
     SpillFlags();
 
     // TODO: Spill into callee-save registers

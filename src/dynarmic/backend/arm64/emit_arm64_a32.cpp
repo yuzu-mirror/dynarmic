@@ -11,6 +11,7 @@
 #include "dynarmic/backend/arm64/abi.h"
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/emit_context.h"
+#include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
 #include "dynarmic/frontend/A32/a32_types.h"
 #include "dynarmic/ir/basic_block.h"
@@ -505,34 +506,56 @@ void EmitIR<IR::Opcode::A32InstructionSynchronizationBarrier>(oaknut::CodeGenera
 
 template<>
 void EmitIR<IR::Opcode::A32GetFpscr>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto Wfpscr = ctx.reg_alloc.WriteW(inst);
+    RegAlloc::Realize(Wfpscr);
+    ctx.fpsr.Spill();
+
+    static_assert(offsetof(A32JitState, fpsr) + sizeof(u32) == offsetof(A32JitState, fpsr_nzcv));
+
+    code.LDR(Wfpscr, Xstate, offsetof(A32JitState, upper_location_descriptor));
+    code.LDP(Wscratch0, Wscratch1, Xstate, offsetof(A32JitState, fpsr));
+    code.AND(Wfpscr, Wfpscr, 0xffff'0000);
+    code.ORR(Wscratch0, Wscratch0, Wscratch1);
+    code.ORR(Wfpscr, Wfpscr, Wscratch0);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32SetFpscr>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Wfpscr = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wfpscr);
+    ctx.fpsr.Overwrite();
+
+    static_assert(offsetof(A32JitState, fpsr) + sizeof(u32) == offsetof(A32JitState, fpsr_nzcv));
+
+    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+    code.MOV(Wscratch1, 0x07f7'0000);
+    code.AND(Wscratch1, Wfpscr, Wscratch1);
+    code.AND(Wscratch0, Wscratch0, 0x0000'ffff);
+    code.ORR(Wscratch0, Wscratch0, Wscratch1);
+    code.STR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+
+    code.MOV(Wscratch0, 0x0800'009f);
+    code.AND(Wscratch0, Wfpscr, Wscratch0);
+    code.AND(Wscratch1, Wfpscr, 0xf000'0000);
+    code.STP(Wscratch0, Wscratch1, Xstate, offsetof(A32JitState, fpsr));
 }
 
 template<>
 void EmitIR<IR::Opcode::A32GetFpscrNZCV>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto Wnzcv = ctx.reg_alloc.WriteW(inst);
+    RegAlloc::Realize(Wnzcv);
+
+    code.LDR(Wnzcv, Xstate, offsetof(A32JitState, fpsr_nzcv));
 }
 
 template<>
 void EmitIR<IR::Opcode::A32SetFpscrNZCV>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Wnzcv = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wnzcv);
+
+    code.STR(Wnzcv, Xstate, offsetof(A32JitState, fpsr_nzcv));
 }
 
 }  // namespace Dynarmic::Backend::Arm64

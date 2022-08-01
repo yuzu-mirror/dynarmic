@@ -11,6 +11,7 @@
 #include "dynarmic/backend/arm64/a32_jitstate.h"
 #include "dynarmic/backend/arm64/abi.h"
 #include "dynarmic/backend/arm64/emit_context.h"
+#include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
@@ -147,8 +148,9 @@ static void EmitAddCycles(oaknut::CodeGenerator& code, EmitContext&, size_t cycl
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& conf) {
     EmittedBlockInfo ebi;
 
-    RegAlloc reg_alloc{code, GPR_ORDER, FPR_ORDER};
-    EmitContext ctx{block, reg_alloc, conf, ebi, {}};
+    FpsrManager fpsr_manager{code, conf.state_fpsr_offset};
+    RegAlloc reg_alloc{code, fpsr_manager, GPR_ORDER, FPR_ORDER};
+    EmitContext ctx{block, reg_alloc, conf, ebi, fpsr_manager};
 
     ebi.entry_point = code.ptr<CodePtr>();
 
@@ -192,6 +194,8 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 
         reg_alloc.AssertAllUnlocked();
     }
+
+    fpsr_manager.Spill();
 
     reg_alloc.AssertNoMoreUses();
 

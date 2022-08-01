@@ -5,10 +5,12 @@
 
 #include "dynarmic/backend/arm64/a32_address_space.h"
 
+#include "dynarmic/backend/arm64/a32_jitstate.h"
 #include "dynarmic/backend/arm64/abi.h"
 #include "dynarmic/backend/arm64/devirtualize.h"
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/stack_layout.h"
+#include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
 #include "dynarmic/ir/opt/passes.h"
@@ -95,11 +97,23 @@ void A32AddressSpace::EmitPrelude() {
 
     prelude_info.run_code = code.ptr<PreludeInfo::RunCodeFuncType>();
     ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
+
     code.MOV(Xstate, X1);
     code.MOV(Xhalt, X2);
+
+    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+    code.AND(Wscratch0, Wscratch0, 0xffff0000);
+    code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
+    code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
+    code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+
     code.BR(X0);
 
     prelude_info.return_from_run_code = code.ptr<void*>();
+
+    code.LDR(Wscratch0, SP, offsetof(StackLayout, save_host_fpcr));
+    code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+
     ABI_PopRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
     code.RET();
 
@@ -129,15 +143,19 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
 
     mem.unprotect();
 
-    EmittedBlockInfo block_info = EmitArm64(code, std::move(block), {
-                                                                        .hook_isb = conf.hook_isb,
-                                                                        .enable_cycle_counting = conf.enable_cycle_counting,
-                                                                        .always_little_endian = conf.always_little_endian,
-                                                                    });
+    const EmitConfig emit_conf{
+        .hook_isb = conf.hook_isb,
+        .enable_cycle_counting = conf.enable_cycle_counting,
+        .always_little_endian = conf.always_little_endian,
+        .descriptor_to_fpcr = [](const IR::LocationDescriptor& location) { return FP::FPCR{A32::LocationDescriptor{location}.FPSCR().Value()}; },
+        .state_nzcv_offset = offsetof(A32JitState, cpsr_nzcv),
+        .state_fpsr_offset = offsetof(A32JitState, fpsr),
+    };
+    EmittedBlockInfo block_info = EmitArm64(code, std::move(block), emit_conf);
+
     Link(block_info);
 
     mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
-
     mem.protect();
 
     return block_info;

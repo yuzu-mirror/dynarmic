@@ -59,15 +59,16 @@ void A32JitState::SetCpsr(u32 cpsr) {
 }
 
 constexpr u32 FPCR_MASK = A32::LocationDescriptor::FPSCR_MODE_MASK;
-constexpr u32 FPSR_MASK = 0xF800009F;
+constexpr u32 FPSR_MASK = 0x0800'009f;
 
 u32 A32JitState::Fpscr() const {
-    return (upper_location_descriptor & 0xffff0000) | fpsr;
+    return (upper_location_descriptor & 0xffff'0000) | fpsr | fpsr_nzcv;
 }
 
 void A32JitState::SetFpscr(u32 fpscr) {
+    fpsr_nzcv = fpscr & 0xf000'0000;
     fpsr = fpscr & FPSR_MASK;
-    upper_location_descriptor = (upper_location_descriptor & 0x0000ffff) | (fpscr & FPCR_MASK);
+    upper_location_descriptor = (upper_location_descriptor & 0x0000'ffff) | (fpscr & FPCR_MASK);
 }
 
 }  // namespace Dynarmic::Backend::Arm64
