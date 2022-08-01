@@ -93,7 +93,6 @@ bool HostLocInfo::Contains(const IR::Inst* value) const {
 
 void HostLocInfo::SetupScratchLocation() {
     ASSERT(IsCompletelyEmpty());
-    locked++;
     realized = true;
 }
 
@@ -101,7 +100,6 @@ void HostLocInfo::SetupLocation(const IR::Inst* value) {
     ASSERT(IsCompletelyEmpty());
     values.clear();
     values.emplace_back(value);
-    locked++;
     realized = true;
     uses_this_inst = 0;
     accumulated_uses = 0;
@@ -112,8 +110,8 @@ bool HostLocInfo::IsCompletelyEmpty() const {
     return values.empty() && !locked && !realized && !accumulated_uses && !expected_uses && !uses_this_inst;
 }
 
-bool HostLocInfo::IsImmediatelyAllocatable() const {
-    return values.empty() && !locked;
+bool HostLocInfo::MaybeAllocatable() const {
+    return !locked && !realized;
 }
 
 bool HostLocInfo::IsOneRemainingUse() const {
@@ -169,6 +167,7 @@ void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable
     const std::array<std::optional<Argument::copyable_reference>, 4> args{arg0, arg1, arg2, arg3};
     for (int i = 0; i < 4; i++) {
         if (args[i]) {
+            ASSERT(gprs[i].IsCompletelyEmpty());
             LoadCopyInto(args[i]->get().value, oaknut::XReg{i});
         }
     }
@@ -339,21 +338,43 @@ int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
     }
 }
 
+template<HostLoc::Kind kind>
+int RegAlloc::RealizeReadWriteImpl(const IR::Value& read_value, const IR::Inst* write_value) {
+    // TODO: Move elimination
+
+    const int write_loc = RealizeWriteImpl<kind>(write_value);
+
+    if constexpr (kind == HostLoc::Kind::Gpr) {
+        LoadCopyInto(read_value, oaknut::XReg{write_loc});
+        return write_loc;
+    } else if constexpr (kind == HostLoc::Kind::Fpr) {
+        LoadCopyInto(read_value, oaknut::QReg{write_loc});
+        return write_loc;
+    } else if constexpr (kind == HostLoc::Kind::Flags) {
+        ASSERT_FALSE("Incorrect function for ReadWrite of flags");
+    } else {
+        static_assert(kind == HostLoc::Kind::Fpr || kind == HostLoc::Kind::Gpr || kind == HostLoc::Kind::Flags);
+    }
+}
+
 template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Gpr>(const IR::Value& value);
 template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Fpr>(const IR::Value& value);
 template int RegAlloc::RealizeReadImpl<HostLoc::Kind::Flags>(const IR::Value& value);
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Gpr>(const IR::Inst* value);
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
 template int RegAlloc::RealizeWriteImpl<HostLoc::Kind::Flags>(const IR::Inst* value);
+template int RegAlloc::RealizeReadWriteImpl<HostLoc::Kind::Gpr>(const IR::Value&, const IR::Inst*);
+template int RegAlloc::RealizeReadWriteImpl<HostLoc::Kind::Fpr>(const IR::Value&, const IR::Inst*);
+template int RegAlloc::RealizeReadWriteImpl<HostLoc::Kind::Flags>(const IR::Value&, const IR::Inst*);
 
 int RegAlloc::AllocateRegister(const std::array<HostLocInfo, 32>& regs, const std::vector<int>& order) const {
-    const auto empty = std::find_if(order.begin(), order.end(), [&](int i) { return regs[i].IsImmediatelyAllocatable(); });
+    const auto empty = std::find_if(order.begin(), order.end(), [&](int i) { return regs[i].IsCompletelyEmpty(); });
     if (empty != order.end()) {
         return *empty;
     }
 
     std::vector<int> candidates;
-    std::copy_if(order.begin(), order.end(), std::back_inserter(candidates), [&](int i) { return !regs[i].locked; });
+    std::copy_if(order.begin(), order.end(), std::back_inserter(candidates), [&](int i) { return regs[i].MaybeAllocatable(); });
 
     // TODO: LRU
     std::uniform_int_distribution<size_t> dis{0, candidates.size() - 1};
@@ -405,7 +426,6 @@ void RegAlloc::ReadWriteFlags(Argument& read, IR::Inst* write) {
 
     if (write) {
         flags.SetupLocation(write);
-        flags.locked--;
         flags.realized = false;
     }
 }
@@ -435,7 +455,6 @@ void RegAlloc::LoadCopyInto(const IR::Value& value, oaknut::XReg reg) {
 
     const auto current_location = ValueLocation(value.GetInst());
     ASSERT(current_location);
-    ASSERT(gprs[reg.index()].IsCompletelyEmpty());
     switch (current_location->kind) {
     case HostLoc::Kind::Gpr:
         code.MOV(reg, oaknut::XReg{current_location->index});
@@ -449,6 +468,32 @@ void RegAlloc::LoadCopyInto(const IR::Value& value, oaknut::XReg reg) {
         break;
     case HostLoc::Kind::Flags:
         code.MRS(reg, oaknut::SystemReg::NZCV);
+        break;
+    }
+}
+
+void RegAlloc::LoadCopyInto(const IR::Value& value, oaknut::QReg reg) {
+    if (value.IsImmediate()) {
+        code.MOV(Xscratch0, value.GetImmediateAsU64());
+        code.FMOV(reg.toD(), Xscratch0);
+        return;
+    }
+
+    const auto current_location = ValueLocation(value.GetInst());
+    ASSERT(current_location);
+    switch (current_location->kind) {
+    case HostLoc::Kind::Gpr:
+        code.FMOV(reg.toD(), oaknut::XReg{current_location->index});
+        break;
+    case HostLoc::Kind::Fpr:
+        code.MOV(reg.B16(), oaknut::QReg{current_location->index}.B16());
+        break;
+    case HostLoc::Kind::Spill:
+        // TODO: Minimize move size to max value width
+        code.LDR(reg, SP, spill_offset + current_location->index * spill_slot_size);
+        break;
+    case HostLoc::Kind::Flags:
+        ASSERT_FALSE("Moving from flags into fprs is not currently supported");
         break;
     }
 }
