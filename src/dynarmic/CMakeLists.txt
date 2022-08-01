@@ -390,6 +390,8 @@ elseif(ARCHITECTURE STREQUAL "arm64")
         backend/arm64/emit_arm64_vector_floating_point.cpp
         backend/arm64/emit_arm64_vector_saturation.cpp
         backend/arm64/emit_context.h
+        backend/arm64/fpsr_manager.cpp
+        backend/arm64/fpsr_manager.h
         backend/arm64/reg_alloc.cpp
         backend/arm64/reg_alloc.h
         backend/arm64/stack_layout.h
