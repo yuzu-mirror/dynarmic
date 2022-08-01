@@ -197,26 +197,41 @@ void EmitIR<IR::Opcode::TestBit>(oaknut::CodeGenerator& code, EmitContext& ctx, 
 
 template<>
 void EmitIR<IR::Opcode::ConditionalSelect32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const IR::Cond cond = args[0].GetImmediateCond();
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Wthen = ctx.reg_alloc.ReadW(args[1]);
+    auto Welse = ctx.reg_alloc.ReadW(args[2]);
+    RegAlloc::Realize(Wresult, Wthen, Welse);
+    ctx.reg_alloc.SpillFlags();
+
+    // TODO: FSEL for fprs
+
+    code.LDR(Wscratch0, Xstate, ctx.conf.state_nzcv_offset);
+    code.MSR(oaknut::SystemReg::NZCV, Xscratch0);
+    code.CSEL(Wresult, Wthen, Welse, static_cast<oaknut::Cond>(cond));
 }
 
 template<>
 void EmitIR<IR::Opcode::ConditionalSelect64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const IR::Cond cond = args[0].GetImmediateCond();
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xthen = ctx.reg_alloc.ReadX(args[1]);
+    auto Xelse = ctx.reg_alloc.ReadX(args[2]);
+    RegAlloc::Realize(Xresult, Xthen, Xelse);
+    ctx.reg_alloc.SpillFlags();
+
+    // TODO: FSEL for fprs
+
+    code.LDR(Wscratch0, Xstate, ctx.conf.state_nzcv_offset);
+    code.MSR(oaknut::SystemReg::NZCV, Xscratch0);
+    code.CSEL(Xresult, Xthen, Xelse, static_cast<oaknut::Cond>(cond));
 }
 
 template<>
 void EmitIR<IR::Opcode::ConditionalSelectNZCV>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitIR<IR::Opcode::ConditionalSelect32>(code, ctx, inst);
 }
 
 template<>
