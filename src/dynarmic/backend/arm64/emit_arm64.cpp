@@ -192,6 +192,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
             break;
         }
 
+        reg_alloc.UpdateAllUses();
         reg_alloc.AssertAllUnlocked();
     }
 

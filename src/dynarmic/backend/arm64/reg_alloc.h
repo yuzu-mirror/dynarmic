@@ -46,8 +46,6 @@ struct Argument final {
 public:
     using copyable_reference = std::reference_wrapper<Argument>;
 
-    ~Argument();
-
     IR::Type GetType() const;
     bool IsImmediate() const;
 
@@ -284,6 +282,7 @@ public:
         (rs.Realize(), ...);
     }
 
+    void UpdateAllUses();
     void AssertAllUnlocked() const;
     void AssertNoMoreUses() const;
 

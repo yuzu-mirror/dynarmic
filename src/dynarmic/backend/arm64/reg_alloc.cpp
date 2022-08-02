@@ -31,14 +31,6 @@ static bool IsValuelessType(IR::Type type) {
     }
 }
 
-Argument::~Argument() {
-    if (!IsImmediate()) {
-        if (auto host_loc = reg_alloc.ValueLocation(value.GetInst())) {
-            reg_alloc.ValueInfo(*host_loc).UpdateUses();
-        }
-    }
-}
-
 IR::Type Argument::GetType() const {
     return value.GetType();
 }
@@ -195,6 +187,19 @@ void RegAlloc::DefineAsRegister(IR::Inst* inst, oaknut::Reg reg) {
     ASSERT(info.IsCompletelyEmpty());
     info.values.emplace_back(inst);
     info.expected_uses += inst->UseCount();
+}
+
+void RegAlloc::UpdateAllUses() {
+    for (auto& gpr : gprs) {
+        gpr.UpdateUses();
+    }
+    for (auto& fpr : fprs) {
+        fpr.UpdateUses();
+    }
+    flags.UpdateUses();
+    for (auto& spill : spills) {
+        spill.UpdateUses();
+    }
 }
 
 void RegAlloc::AssertAllUnlocked() const {
