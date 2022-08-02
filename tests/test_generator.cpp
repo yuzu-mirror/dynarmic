@@ -51,6 +51,7 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A
 
     for (const auto& ir_inst : block) {
         switch (ir_inst.GetOpcode()) {
+        case IR::Opcode::A32GetFpscr:
         case IR::Opcode::A32ExceptionRaised:
         case IR::Opcode::A32CallSupervisor:
         case IR::Opcode::A32CoprocInternalOperation:
@@ -78,7 +79,7 @@ u32 GenRandomArmInst(u32 pc, bool is_last_inst) {
 #define INST(fn, name, bitstring) {#fn, bitstring},
 #include "dynarmic/frontend/A32/decoder/arm.inc"
 //#include "dynarmic/frontend/A32/decoder/asimd.inc"
-//#include "dynarmic/frontend/A32/decoder/vfp.inc"
+#include "dynarmic/frontend/A32/decoder/vfp.inc"
 #undef INST
         };
 
@@ -149,7 +150,7 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
 
         const std::vector<std::tuple<std::string, const char*>> vfp_list{
 #define INST(fn, name, bitstring) {#fn, bitstring},
-//#include "dynarmic/frontend/A32/decoder/vfp.inc"
+#include "dynarmic/frontend/A32/decoder/vfp.inc"
 #undef INST
         };
 
@@ -385,6 +386,8 @@ int main(int, char*[]) {
 
     TestThumb(1);
     TestArm(1);
+    TestThumb(5);
+    TestArm(5);
     TestThumb(1024, 1000);
     TestArm(1024, 1000);
 
