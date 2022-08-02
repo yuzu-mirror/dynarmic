@@ -1404,6 +1404,30 @@ U128 IREmitter::VectorMultiply(size_t esize, const U128& a, const U128& b) {
     UNREACHABLE();
 }
 
+U128 IREmitter::VectorMultiplySignedWiden(size_t esize, const U128& a, const U128& b) {
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorMultiplySignedWiden8, a, b);
+    case 16:
+        return Inst<U128>(Opcode::VectorMultiplySignedWiden16, a, b);
+    case 32:
+        return Inst<U128>(Opcode::VectorMultiplySignedWiden32, a, b);
+    }
+    UNREACHABLE();
+}
+
+U128 IREmitter::VectorMultiplyUnsignedWiden(size_t esize, const U128& a, const U128& b) {
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorMultiplyUnsignedWiden8, a, b);
+    case 16:
+        return Inst<U128>(Opcode::VectorMultiplyUnsignedWiden16, a, b);
+    case 32:
+        return Inst<U128>(Opcode::VectorMultiplyUnsignedWiden32, a, b);
+    }
+    UNREACHABLE();
+}
+
 U128 IREmitter::VectorNarrow(size_t original_esize, const U128& a) {
     switch (original_esize) {
     case 16:

@@ -264,6 +264,8 @@ public:
     U128 VectorMinSigned(size_t esize, const U128& a, const U128& b);
     U128 VectorMinUnsigned(size_t esize, const U128& a, const U128& b);
     U128 VectorMultiply(size_t esize, const U128& a, const U128& b);
+    U128 VectorMultiplySignedWiden(size_t esize, const U128& a, const U128& b);
+    U128 VectorMultiplyUnsignedWiden(size_t esize, const U128& a, const U128& b);
     U128 VectorNarrow(size_t original_esize, const U128& a);
     U128 VectorNot(const U128& a);
     U128 VectorOr(const U128& a, const U128& b);

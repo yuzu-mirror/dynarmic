@@ -2221,6 +2221,30 @@ void EmitX64::EmitVectorMultiply64(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, tmp2);
 }
 
+void EmitX64::EmitVectorMultiplySignedWiden8(EmitContext&, IR::Inst*) {
+    ASSERT_FALSE("Unexpected VectorMultiplySignedWiden8");
+}
+
+void EmitX64::EmitVectorMultiplySignedWiden16(EmitContext&, IR::Inst*) {
+    ASSERT_FALSE("Unexpected VectorMultiplySignedWiden16");
+}
+
+void EmitX64::EmitVectorMultiplySignedWiden32(EmitContext&, IR::Inst*) {
+    ASSERT_FALSE("Unexpected VectorMultiplySignedWiden32");
+}
+
+void EmitX64::EmitVectorMultiplyUnsignedWiden8(EmitContext&, IR::Inst*) {
+    ASSERT_FALSE("Unexpected VectorMultiplyUnsignedWiden8");
+}
+
+void EmitX64::EmitVectorMultiplyUnsignedWiden16(EmitContext&, IR::Inst*) {
+    ASSERT_FALSE("Unexpected VectorMultiplyUnsignedWiden16");
+}
+
+void EmitX64::EmitVectorMultiplyUnsignedWiden32(EmitContext&, IR::Inst*) {
+    ASSERT_FALSE("Unexpected VectorMultiplyUnsignedWiden32");
+}
+
 void EmitX64::EmitVectorNarrow16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 

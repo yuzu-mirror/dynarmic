@@ -85,11 +85,10 @@ bool ScalarMultiplyLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t 
     const auto [m, index] = GetScalarLocation(esize, M, Vm);
 
     const auto scalar = v.ir.VectorGetElement(esize, v.ir.GetVector(m), index);
-    const auto ext_scalar = U ? (esize == 16 ? IR::U32U64{v.ir.ZeroExtendToWord(scalar)} : IR::U32U64{v.ir.ZeroExtendToLong(scalar)})
-                              : (esize == 16 ? IR::U32U64{v.ir.SignExtendToWord(scalar)} : IR::U32U64{v.ir.SignExtendToLong(scalar)});
-    const auto reg_n = U ? v.ir.VectorZeroExtend(esize, v.ir.GetVector(n)) : v.ir.VectorSignExtend(esize, v.ir.GetVector(n));
-    const auto reg_m = v.ir.VectorBroadcast(esize * 2, ext_scalar);
-    const auto addend = v.ir.VectorMultiply(esize * 2, reg_n, reg_m);
+    const auto reg_n = v.ir.GetVector(n);
+    const auto reg_m = v.ir.VectorBroadcast(esize, scalar);
+    const auto addend = U ? v.ir.VectorMultiplyUnsignedWiden(esize, reg_n, reg_m)
+                          : v.ir.VectorMultiplySignedWiden(esize, reg_n, reg_m);
     const auto result = [&] {
         switch (multiply) {
         case MultiplyBehavior::Multiply:

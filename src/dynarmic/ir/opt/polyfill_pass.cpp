@@ -138,6 +138,19 @@ void PolyfillSHA256Hash(IR::IREmitter& ir, IR::Inst& inst) {
     inst.ReplaceUsesWith(part1 ? x : y);
 }
 
+template<size_t esize, bool is_signed>
+void PolyfillVectorMultiplyWiden(IR::IREmitter& ir, IR::Inst& inst) {
+    IR::U128 n = (IR::U128)inst.GetArg(0);
+    IR::U128 m = (IR::U128)inst.GetArg(1);
+
+    const IR::U128 wide_n = is_signed ? ir.VectorSignExtend(esize, n) : ir.VectorZeroExtend(esize, n);
+    const IR::U128 wide_m = is_signed ? ir.VectorSignExtend(esize, m) : ir.VectorZeroExtend(esize, m);
+
+    const IR::U128 result = ir.VectorMultiply(esize * 2, wide_n, wide_m);
+
+    inst.ReplaceUsesWith(result);
+}
+
 }  // namespace
 
 void PolyfillPass(IR::Block& block, const PolyfillOptions& polyfill) {
@@ -164,6 +177,36 @@ void PolyfillPass(IR::Block& block, const PolyfillOptions& polyfill) {
         case IR::Opcode::SHA256Hash:
             if (polyfill.sha256) {
                 PolyfillSHA256Hash(ir, inst);
+            }
+            break;
+        case IR::Opcode::VectorMultiplySignedWiden8:
+            if (polyfill.vector_multiply_widen) {
+                PolyfillVectorMultiplyWiden<8, true>(ir, inst);
+            }
+            break;
+        case IR::Opcode::VectorMultiplySignedWiden16:
+            if (polyfill.vector_multiply_widen) {
+                PolyfillVectorMultiplyWiden<16, true>(ir, inst);
+            }
+            break;
+        case IR::Opcode::VectorMultiplySignedWiden32:
+            if (polyfill.vector_multiply_widen) {
+                PolyfillVectorMultiplyWiden<32, true>(ir, inst);
+            }
+            break;
+        case IR::Opcode::VectorMultiplyUnsignedWiden8:
+            if (polyfill.vector_multiply_widen) {
+                PolyfillVectorMultiplyWiden<8, false>(ir, inst);
+            }
+            break;
+        case IR::Opcode::VectorMultiplyUnsignedWiden16:
+            if (polyfill.vector_multiply_widen) {
+                PolyfillVectorMultiplyWiden<16, false>(ir, inst);
+            }
+            break;
+        case IR::Opcode::VectorMultiplyUnsignedWiden32:
+            if (polyfill.vector_multiply_widen) {
+                PolyfillVectorMultiplyWiden<32, false>(ir, inst);
             }
             break;
         default:
