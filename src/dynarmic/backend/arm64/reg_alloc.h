@@ -37,6 +37,7 @@ struct HostLoc final {
 };
 
 enum RWType {
+    Void,
     Read,
     Write,
     ReadWrite,
@@ -47,6 +48,7 @@ public:
     using copyable_reference = std::reference_wrapper<Argument>;
 
     IR::Type GetType() const;
+    bool IsVoid() const { return GetType() == IR::Type::Void; }
     bool IsImmediate() const;
 
     bool GetImmediateU1() const;
@@ -104,6 +106,14 @@ public:
     const T* operator->() const { return &reg.value(); }
 
     ~RAReg();
+    RAReg(RAReg&& other)
+            : reg_alloc{other.reg_alloc}
+            , rw{std::exchange(other.rw, RWType::Void)}
+            , read_value{std::exchange(other.read_value, {})}
+            , write_value{std::exchange(other.write_value, nullptr)}
+            , reg{std::exchange(other.reg, std::nullopt)} {
+    }
+    RAReg& operator=(RAReg&&) = delete;
 
 private:
     friend class RegAlloc;
@@ -111,14 +121,12 @@ private:
 
     RAReg(const RAReg&) = delete;
     RAReg& operator=(const RAReg&) = delete;
-    RAReg(RAReg&&) = delete;
-    RAReg& operator=(RAReg&&) = delete;
 
     void Realize();
 
     RegAlloc& reg_alloc;
     RWType rw;
-    const IR::Value read_value;
+    IR::Value read_value;
     const IR::Inst* write_value;
     std::optional<T> reg;
 };
