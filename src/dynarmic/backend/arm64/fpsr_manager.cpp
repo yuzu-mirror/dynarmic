@@ -21,7 +21,7 @@ void FpsrManager::Spill() {
         return;
 
     code.LDR(Wscratch0, Xstate, state_fpsr_offset);
-    code.MSR(oaknut::SystemReg::FPSR, Xscratch1);
+    code.MRS(Xscratch1, oaknut::SystemReg::FPSR);
     code.ORR(Wscratch0, Wscratch0, Wscratch1);
     code.STR(Wscratch0, Xstate, state_fpsr_offset);
 
@@ -32,7 +32,7 @@ void FpsrManager::Load() {
     if (fpsr_loaded)
         return;
 
-    code.MRS(XZR, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
 
     fpsr_loaded = true;
 }
