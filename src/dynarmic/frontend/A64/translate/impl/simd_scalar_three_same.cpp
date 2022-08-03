@@ -158,8 +158,7 @@ bool TranslatorVisitor::SQRDMULH_vec_1(Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
 
     const IR::U128 operand1 = ir.ZeroExtendToQuad(ir.VectorGetElement(esize, V(128, Vn), 0));
     const IR::U128 operand2 = ir.ZeroExtendToQuad(ir.VectorGetElement(esize, V(128, Vm), 0));
-    const IR::UpperAndLower multiply = ir.VectorSignedSaturatedDoublingMultiply(esize, operand1, operand2);
-    const IR::U128 result = ir.VectorAdd(esize, multiply.upper, ir.VectorLogicalShiftRight(esize, multiply.lower, static_cast<u8>(esize - 1)));
+    const IR::U128 result = ir.VectorSignedSaturatedDoublingMultiplyHighRounding(esize, operand1, operand2);
 
     V_scalar(esize, Vd, ir.VectorGetElement(esize, result, 0));
     return true;

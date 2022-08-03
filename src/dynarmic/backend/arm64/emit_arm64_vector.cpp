@@ -1359,7 +1359,7 @@ void EmitIR<IR::Opcode::VectorSignedSaturatedAccumulateUnsigned64>(oaknut::CodeG
 }
 
 template<>
-void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiply16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHigh16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     (void)code;
     (void)ctx;
     (void)inst;
@@ -1367,7 +1367,23 @@ void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiply16>(oaknut::CodeGen
 }
 
 template<>
-void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiply32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHigh32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHighRounding16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHighRounding32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     (void)code;
     (void)ctx;
     (void)inst;

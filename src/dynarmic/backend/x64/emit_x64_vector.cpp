@@ -3812,10 +3812,8 @@ void EmitX64::EmitVectorSignedSaturatedAccumulateUnsigned64(EmitContext& ctx, IR
     EmitVectorSignedSaturatedAccumulateUnsigned<64>(code, ctx, inst);
 }
 
-void EmitX64::EmitVectorSignedSaturatedDoublingMultiply16(EmitContext& ctx, IR::Inst* inst) {
-    const auto upper_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetUpperFromOp);
-    const auto lower_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetLowerFromOp);
-
+template<bool is_rounding>
+static void EmitVectorSignedSaturatedDoublingMultiply16(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm x = ctx.reg_alloc.UseXmm(args[0]);
     const Xbyak::Xmm y = ctx.reg_alloc.UseXmm(args[1]);
@@ -3839,52 +3837,53 @@ void EmitX64::EmitVectorSignedSaturatedDoublingMultiply16(EmitContext& ctx, IR::
     ctx.reg_alloc.Release(x);
     ctx.reg_alloc.Release(y);
 
-    if (lower_inst) {
-        const Xbyak::Xmm lower_result = ctx.reg_alloc.ScratchXmm();
-
-        if (code.HasHostFeature(HostFeature::AVX)) {
-            code.vpaddw(lower_result, lower_tmp, lower_tmp);
-        } else {
-            code.movdqa(lower_result, lower_tmp);
-            code.paddw(lower_result, lower_result);
-        }
-
-        ctx.reg_alloc.DefineValue(lower_inst, lower_result);
-        ctx.EraseInstruction(lower_inst);
-    }
-
-    const Xbyak::Xmm upper_result = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
     if (code.HasHostFeature(HostFeature::AVX)) {
-        code.vpsrlw(lower_tmp, lower_tmp, 15);
+        if constexpr (is_rounding) {
+            code.vpsrlw(lower_tmp, lower_tmp, 14);
+            code.vpaddw(lower_tmp, lower_tmp, code.MConst(xword, 0x0001000100010001, 0x0001000100010001));
+            code.vpsrlw(lower_tmp, lower_tmp, 1);
+        } else {
+            code.vpsrlw(lower_tmp, lower_tmp, 15);
+        }
         code.vpaddw(upper_tmp, upper_tmp, upper_tmp);
-        code.vpor(upper_result, upper_tmp, lower_tmp);
-        code.vpcmpeqw(upper_tmp, upper_result, code.MConst(xword, 0x8000800080008000, 0x8000800080008000));
-        code.vpxor(upper_result, upper_result, upper_tmp);
+        code.vpaddw(result, upper_tmp, lower_tmp);
+        code.vpcmpeqw(upper_tmp, result, code.MConst(xword, 0x8000800080008000, 0x8000800080008000));
+        code.vpxor(result, result, upper_tmp);
     } else {
         code.paddw(upper_tmp, upper_tmp);
-        code.psrlw(lower_tmp, 15);
-        code.movdqa(upper_result, upper_tmp);
-        code.por(upper_result, lower_tmp);
+        if constexpr (is_rounding) {
+            code.psrlw(lower_tmp, 14);
+            code.paddw(lower_tmp, code.MConst(xword, 0x0001000100010001, 0x0001000100010001));
+            code.psrlw(lower_tmp, 1);
+        } else {
+            code.psrlw(lower_tmp, 15);
+        }
+        code.movdqa(result, upper_tmp);
+        code.paddw(result, lower_tmp);
         code.movdqa(upper_tmp, code.MConst(xword, 0x8000800080008000, 0x8000800080008000));
-        code.pcmpeqw(upper_tmp, upper_result);
-        code.pxor(upper_result, upper_tmp);
+        code.pcmpeqw(upper_tmp, result);
+        code.pxor(result, upper_tmp);
     }
 
     const Xbyak::Reg32 bit = ctx.reg_alloc.ScratchGpr().cvt32();
     code.pmovmskb(bit, upper_tmp);
     code.or_(code.dword[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], bit);
 
-    if (upper_inst) {
-        ctx.reg_alloc.DefineValue(upper_inst, upper_result);
-        ctx.EraseInstruction(upper_inst);
-    }
+    ctx.reg_alloc.DefineValue(inst, result);
 }
 
-void EmitX64::EmitVectorSignedSaturatedDoublingMultiply32(EmitContext& ctx, IR::Inst* inst) {
-    const auto upper_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetUpperFromOp);
-    const auto lower_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetLowerFromOp);
+void EmitX64::EmitVectorSignedSaturatedDoublingMultiplyHigh16(EmitContext& ctx, IR::Inst* inst) {
+    EmitVectorSignedSaturatedDoublingMultiply16<false>(code, ctx, inst);
+}
 
+void EmitX64::EmitVectorSignedSaturatedDoublingMultiplyHighRounding16(EmitContext& ctx, IR::Inst* inst) {
+    EmitVectorSignedSaturatedDoublingMultiply16<true>(code, ctx, inst);
+}
+
+template<bool is_rounding>
+void EmitVectorSignedSaturatedDoublingMultiply32(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     if (code.HasHostFeature(HostFeature::AVX)) {
@@ -3904,37 +3903,29 @@ void EmitX64::EmitVectorSignedSaturatedDoublingMultiply32(EmitContext& ctx, IR::
         code.vpaddq(odds, odds, odds);
         code.vpaddq(even, even, even);
 
-        const Xbyak::Xmm upper_result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-        code.vpsrlq(upper_result, odds, 32);
-        code.vblendps(upper_result, upper_result, even, 0b1010);
+        if constexpr (is_rounding) {
+            code.vmovdqa(result, code.MConst(xword, 0x0000000080000000, 0x0000000080000000));
+            code.vpaddq(odds, odds, result);
+            code.vpaddq(even, even, result);
+        }
+
+        code.vpsrlq(result, odds, 32);
+        code.vblendps(result, result, even, 0b1010);
 
         const Xbyak::Xmm mask = ctx.reg_alloc.ScratchXmm();
         const Xbyak::Reg32 bit = ctx.reg_alloc.ScratchGpr().cvt32();
 
-        code.vpcmpeqd(mask, upper_result, code.MConst(xword, 0x8000000080000000, 0x8000000080000000));
-        code.vpxor(upper_result, upper_result, mask);
+        code.vpcmpeqd(mask, result, code.MConst(xword, 0x8000000080000000, 0x8000000080000000));
+        code.vpxor(result, result, mask);
         code.pmovmskb(bit, mask);
         code.or_(code.dword[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], bit);
 
         ctx.reg_alloc.Release(mask);
         ctx.reg_alloc.Release(bit);
 
-        if (upper_inst) {
-            ctx.reg_alloc.DefineValue(upper_inst, upper_result);
-            ctx.EraseInstruction(upper_inst);
-        }
-
-        if (lower_inst) {
-            const Xbyak::Xmm lower_result = ctx.reg_alloc.ScratchXmm();
-
-            code.vpsllq(lower_result, even, 32);
-            code.vblendps(lower_result, lower_result, odds, 0b0101);
-
-            ctx.reg_alloc.DefineValue(lower_inst, lower_result);
-            ctx.EraseInstruction(lower_inst);
-        }
-
+        ctx.reg_alloc.DefineValue(inst, result);
         return;
     }
 
@@ -3942,8 +3933,7 @@ void EmitX64::EmitVectorSignedSaturatedDoublingMultiply32(EmitContext& ctx, IR::
     const Xbyak::Xmm y = ctx.reg_alloc.UseScratchXmm(args[1]);
     const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
     const Xbyak::Xmm sign_correction = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Xmm upper_result = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Xmm lower_result = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
     // calculate sign correction
     code.movdqa(tmp, x);
@@ -3966,35 +3956,37 @@ void EmitX64::EmitVectorSignedSaturatedDoublingMultiply32(EmitContext& ctx, IR::
     code.paddq(tmp, tmp);
     code.paddq(x, x);
 
+    if constexpr (is_rounding) {
+        code.movdqa(result, code.MConst(xword, 0x0000000080000000, 0x0000000080000000));
+        code.paddq(tmp, result);
+        code.paddq(x, result);
+    }
+
     // put everything into place
-    code.pcmpeqw(upper_result, upper_result);
-    code.pcmpeqw(lower_result, lower_result);
-    code.psllq(upper_result, 32);
-    code.psrlq(lower_result, 32);
-    code.pand(upper_result, x);
-    code.pand(lower_result, tmp);
+    code.pcmpeqw(result, result);
+    code.psllq(result, 32);
+    code.pand(result, x);
     code.psrlq(tmp, 32);
-    code.psllq(x, 32);
-    code.por(upper_result, tmp);
-    code.por(lower_result, x);
-    code.psubd(upper_result, sign_correction);
+    code.por(result, tmp);
+    code.psubd(result, sign_correction);
 
     const Xbyak::Reg32 bit = ctx.reg_alloc.ScratchGpr().cvt32();
 
     code.movdqa(tmp, code.MConst(xword, 0x8000000080000000, 0x8000000080000000));
-    code.pcmpeqd(tmp, upper_result);
-    code.pxor(upper_result, tmp);
+    code.pcmpeqd(tmp, result);
+    code.pxor(result, tmp);
     code.pmovmskb(bit, tmp);
     code.or_(code.dword[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], bit);
 
-    if (upper_inst) {
-        ctx.reg_alloc.DefineValue(upper_inst, upper_result);
-        ctx.EraseInstruction(upper_inst);
-    }
-    if (lower_inst) {
-        ctx.reg_alloc.DefineValue(lower_inst, lower_result);
-        ctx.EraseInstruction(lower_inst);
-    }
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+void EmitX64::EmitVectorSignedSaturatedDoublingMultiplyHigh32(EmitContext& ctx, IR::Inst* inst) {
+    EmitVectorSignedSaturatedDoublingMultiply32<false>(code, ctx, inst);
+}
+
+void EmitX64::EmitVectorSignedSaturatedDoublingMultiplyHighRounding32(EmitContext& ctx, IR::Inst* inst) {
+    EmitVectorSignedSaturatedDoublingMultiply32<true>(code, ctx, inst);
 }
 
 void EmitX64::EmitVectorSignedSaturatedDoublingMultiplyLong16(EmitContext& ctx, IR::Inst* inst) {

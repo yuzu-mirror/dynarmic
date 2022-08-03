@@ -368,7 +368,7 @@ bool TranslatorVisitor::SQDMULH_elt_2(bool Q, Imm<2> size, Imm<1> L, Imm<1> M, I
     const IR::U128 operand1 = V(datasize, Vn);
     const IR::U128 operand2 = V(idxsize, Vm);
     const IR::U128 index_vector = ir.VectorBroadcastElement(esize, operand2, index);
-    const IR::U128 result = ir.VectorSignedSaturatedDoublingMultiply(esize, operand1, index_vector).upper;
+    const IR::U128 result = ir.VectorSignedSaturatedDoublingMultiplyHigh(esize, operand1, index_vector);
 
     V(datasize, Vd, result);
     return true;
@@ -387,8 +387,7 @@ bool TranslatorVisitor::SQRDMULH_elt_2(bool Q, Imm<2> size, Imm<1> L, Imm<1> M, 
     const IR::U128 operand1 = V(datasize, Vn);
     const IR::U128 operand2 = V(idxsize, Vm);
     const IR::U128 index_vector = ir.VectorBroadcastElement(esize, operand2, index);
-    const IR::UpperAndLower multiply = ir.VectorSignedSaturatedDoublingMultiply(esize, operand1, index_vector);
-    const IR::U128 result = ir.VectorAdd(esize, multiply.upper, ir.VectorLogicalShiftRight(esize, multiply.lower, static_cast<u8>(esize - 1)));
+    const IR::U128 result = ir.VectorSignedSaturatedDoublingMultiplyHighRounding(esize, operand1, index_vector);
 
     V(datasize, Vd, result);
     return true;

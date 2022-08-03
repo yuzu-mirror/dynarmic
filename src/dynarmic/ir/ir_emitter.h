@@ -296,7 +296,8 @@ public:
     UpperAndLower VectorSignedMultiply(size_t esize, const U128& a, const U128& b);
     U128 VectorSignedSaturatedAbs(size_t esize, const U128& a);
     U128 VectorSignedSaturatedAccumulateUnsigned(size_t esize, const U128& a, const U128& b);
-    UpperAndLower VectorSignedSaturatedDoublingMultiply(size_t esize, const U128& a, const U128& b);
+    U128 VectorSignedSaturatedDoublingMultiplyHigh(size_t esize, const U128& a, const U128& b);
+    U128 VectorSignedSaturatedDoublingMultiplyHighRounding(size_t esize, const U128& a, const U128& b);
     U128 VectorSignedSaturatedDoublingMultiplyLong(size_t esize, const U128& a, const U128& b);
     U128 VectorSignedSaturatedNarrowToSigned(size_t original_esize, const U128& a);
     U128 VectorSignedSaturatedNarrowToUnsigned(size_t original_esize, const U128& a);

@@ -106,7 +106,7 @@ bool ScalarMultiplyLong(TranslatorVisitor& v, bool U, bool D, size_t sz, size_t 
     return true;
 }
 
-bool ScalarMultiplyReturnHigh(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, Rounding round) {
+bool ScalarMultiplyDoublingReturnHigh(TranslatorVisitor& v, bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm, Rounding round) {
     if (sz == 0b11) {
         return v.DecodeError();
     }
@@ -126,15 +126,9 @@ bool ScalarMultiplyReturnHigh(TranslatorVisitor& v, bool Q, bool D, size_t sz, s
 
     const auto reg_n = v.ir.GetVector(n);
     const auto reg_m = v.ir.VectorBroadcastElement(esize, v.ir.GetVector(m), index);
-    const auto result = [&] {
-        const auto tmp = v.ir.VectorSignedSaturatedDoublingMultiply(esize, reg_n, reg_m);
-
-        if (round == Rounding::Round) {
-            return v.ir.VectorAdd(esize, tmp.upper, v.ir.VectorLogicalShiftRight(esize, tmp.lower, static_cast<u8>(esize - 1)));
-        }
-
-        return tmp.upper;
-    }();
+    const auto result = round == Rounding::None
+                          ? v.ir.VectorSignedSaturatedDoublingMultiplyHigh(esize, reg_n, reg_m)
+                          : v.ir.VectorSignedSaturatedDoublingMultiplyHighRounding(esize, reg_n, reg_m);
 
     v.ir.SetVector(d, result);
     return true;
@@ -184,11 +178,11 @@ bool TranslatorVisitor::asimd_VQDMULL_scalar(bool D, size_t sz, size_t Vn, size_
 }
 
 bool TranslatorVisitor::asimd_VQDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
-    return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::None);
+    return ScalarMultiplyDoublingReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::None);
 }
 
 bool TranslatorVisitor::asimd_VQRDMULH_scalar(bool Q, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool M, size_t Vm) {
-    return ScalarMultiplyReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::Round);
+    return ScalarMultiplyDoublingReturnHigh(*this, Q, D, sz, Vn, Vd, N, M, Vm, Rounding::Round);
 }
 
 }  // namespace Dynarmic::A32

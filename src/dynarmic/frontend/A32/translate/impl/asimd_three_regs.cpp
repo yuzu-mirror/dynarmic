@@ -663,9 +663,9 @@ bool TranslatorVisitor::asimd_VQDMULH(bool D, size_t sz, size_t Vn, size_t Vd, b
 
     const auto reg_n = ir.GetVector(n);
     const auto reg_m = ir.GetVector(m);
-    const auto result = ir.VectorSignedSaturatedDoublingMultiply(esize, reg_n, reg_m);
+    const auto result = ir.VectorSignedSaturatedDoublingMultiplyHigh(esize, reg_n, reg_m);
 
-    ir.SetVector(d, result.upper);
+    ir.SetVector(d, result);
     return true;
 }
 
@@ -685,8 +685,7 @@ bool TranslatorVisitor::asimd_VQRDMULH(bool D, size_t sz, size_t Vn, size_t Vd, 
 
     const auto reg_n = ir.GetVector(n);
     const auto reg_m = ir.GetVector(m);
-    const auto multiply = ir.VectorSignedSaturatedDoublingMultiply(esize, reg_n, reg_m);
-    const auto result = ir.VectorAdd(esize, multiply.upper, ir.VectorLogicalShiftRight(esize, multiply.lower, static_cast<u8>(esize - 1)));
+    const auto result = ir.VectorSignedSaturatedDoublingMultiplyHighRounding(esize, reg_n, reg_m);
 
     ir.SetVector(d, result);
     return true;
