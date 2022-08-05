@@ -21,6 +21,7 @@
 #include "dynarmic/backend/x64/jitstate_info.h"
 #include "dynarmic/common/cast_util.h"
 #include "dynarmic/interface/halt_reason.h"
+#include "dynarmic/ir/cond.h"
 
 namespace Dynarmic::Backend::X64 {
 
@@ -73,6 +74,9 @@ public:
     /// Code emitter: Performs a block lookup based on current state
     /// @note this clobbers ABI caller-save registers
     void LookupBlock();
+
+    /// Code emitter: Load required flags for conditional cond from rax into host rflags
+    void LoadRequiredFlagsForCondFromRax(IR::Cond cond);
 
     /// Code emitter: Calls the function
     template<typename FunctionPointer>

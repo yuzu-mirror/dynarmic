@@ -244,70 +244,49 @@ Xbyak::Label EmitX64::EmitCond(IR::Cond cond) {
 
     code.mov(eax, dword[r15 + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
 
-    // sahf restores SF, ZF, CF
-    // add al, 0x7F restores OF
+    code.LoadRequiredFlagsForCondFromRax(cond);
 
     switch (cond) {
-    case IR::Cond::EQ:  // z
-        code.sahf();
+    case IR::Cond::EQ:
         code.jz(pass);
         break;
-    case IR::Cond::NE:  //! z
-        code.sahf();
+    case IR::Cond::NE:
         code.jnz(pass);
         break;
-    case IR::Cond::CS:  // c
-        code.sahf();
+    case IR::Cond::CS:
         code.jc(pass);
         break;
-    case IR::Cond::CC:  //! c
-        code.sahf();
+    case IR::Cond::CC:
         code.jnc(pass);
         break;
-    case IR::Cond::MI:  // n
-        code.sahf();
+    case IR::Cond::MI:
         code.js(pass);
         break;
-    case IR::Cond::PL:  //! n
-        code.sahf();
+    case IR::Cond::PL:
         code.jns(pass);
         break;
-    case IR::Cond::VS:  // v
-        code.cmp(al, 0x81);
+    case IR::Cond::VS:
         code.jo(pass);
         break;
-    case IR::Cond::VC:  //! v
-        code.cmp(al, 0x81);
+    case IR::Cond::VC:
         code.jno(pass);
         break;
-    case IR::Cond::HI:  // c & !z
-        code.sahf();
-        code.cmc();
+    case IR::Cond::HI:
         code.ja(pass);
         break;
-    case IR::Cond::LS:  //! c | z
-        code.sahf();
-        code.cmc();
+    case IR::Cond::LS:
         code.jna(pass);
         break;
-    case IR::Cond::GE:  // n == v
-        code.cmp(al, 0x81);
-        code.sahf();
+    case IR::Cond::GE:
         code.jge(pass);
         break;
-    case IR::Cond::LT:  // n != v
-        code.cmp(al, 0x81);
-        code.sahf();
+    case IR::Cond::LT:
         code.jl(pass);
         break;
-    case IR::Cond::GT:  // !z & (n == v)
-        code.cmp(al, 0x81);
-        code.sahf();
+    case IR::Cond::GT:
         code.jg(pass);
         break;
-    case IR::Cond::LE:  // z | (n != v)
-        code.cmp(al, 0x81);
-        code.sahf();
+    case IR::Cond::LE:
         code.jle(pass);
         break;
     default:

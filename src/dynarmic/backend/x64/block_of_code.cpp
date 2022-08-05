@@ -393,6 +393,44 @@ void BlockOfCode::LookupBlock() {
     cb.LookupBlock->EmitCall(*this);
 }
 
+void BlockOfCode::LoadRequiredFlagsForCondFromRax(IR::Cond cond) {
+    // sahf restores SF, ZF, CF
+    // add al, 0x7F restores OF
+
+    switch (cond) {
+    case IR::Cond::EQ:  // z
+    case IR::Cond::NE:  // !z
+    case IR::Cond::CS:  // c
+    case IR::Cond::CC:  // !c
+    case IR::Cond::MI:  // n
+    case IR::Cond::PL:  // !n
+        sahf();
+        break;
+    case IR::Cond::VS:  // v
+    case IR::Cond::VC:  // !v
+        cmp(al, 0x81);
+        break;
+    case IR::Cond::HI:  // c & !z
+    case IR::Cond::LS:  // !c | z
+        sahf();
+        cmc();
+        break;
+    case IR::Cond::GE:  // n == v
+    case IR::Cond::LT:  // n != v
+    case IR::Cond::GT:  // !z & (n == v)
+    case IR::Cond::LE:  // z | (n != v)
+        cmp(al, 0x81);
+        sahf();
+        break;
+    case IR::Cond::AL:
+    case IR::Cond::NV:
+        break;
+    default:
+        ASSERT_MSG(false, "Unknown cond {}", static_cast<size_t>(cond));
+        break;
+    }
+}
+
 Xbyak::Address BlockOfCode::MConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper) {
     return constant_pool.GetConstant(frame, lower, upper);
 }

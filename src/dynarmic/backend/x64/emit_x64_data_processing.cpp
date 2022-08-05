@@ -143,70 +143,49 @@ static void EmitConditionalSelect(BlockOfCode& code, EmitContext& ctx, IR::Inst*
 
     code.mov(nzcv, dword[r15 + code.GetJitStateInfo().offsetof_cpsr_nzcv]);
 
-    // sahf restores SF, ZF, CF
-    // add al, 0x7F restores OF
+    code.LoadRequiredFlagsForCondFromRax(args[0].GetImmediateCond());
 
     switch (args[0].GetImmediateCond()) {
-    case IR::Cond::EQ:  // z
-        code.sahf();
+    case IR::Cond::EQ:
         code.cmovz(else_, then_);
         break;
-    case IR::Cond::NE:  //! z
-        code.sahf();
+    case IR::Cond::NE:
         code.cmovnz(else_, then_);
         break;
-    case IR::Cond::CS:  // c
-        code.sahf();
+    case IR::Cond::CS:
         code.cmovc(else_, then_);
         break;
-    case IR::Cond::CC:  //! c
-        code.sahf();
+    case IR::Cond::CC:
         code.cmovnc(else_, then_);
         break;
-    case IR::Cond::MI:  // n
-        code.sahf();
+    case IR::Cond::MI:
         code.cmovs(else_, then_);
         break;
-    case IR::Cond::PL:  //! n
-        code.sahf();
+    case IR::Cond::PL:
         code.cmovns(else_, then_);
         break;
-    case IR::Cond::VS:  // v
-        code.cmp(nzcv.cvt8(), 0x81);
+    case IR::Cond::VS:
         code.cmovo(else_, then_);
         break;
-    case IR::Cond::VC:  //! v
-        code.cmp(nzcv.cvt8(), 0x81);
+    case IR::Cond::VC:
         code.cmovno(else_, then_);
         break;
-    case IR::Cond::HI:  // c & !z
-        code.sahf();
-        code.cmc();
+    case IR::Cond::HI:
         code.cmova(else_, then_);
         break;
-    case IR::Cond::LS:  //! c | z
-        code.sahf();
-        code.cmc();
+    case IR::Cond::LS:
         code.cmovna(else_, then_);
         break;
-    case IR::Cond::GE:  // n == v
-        code.cmp(nzcv.cvt8(), 0x81);
-        code.sahf();
+    case IR::Cond::GE:
         code.cmovge(else_, then_);
         break;
-    case IR::Cond::LT:  // n != v
-        code.cmp(nzcv.cvt8(), 0x81);
-        code.sahf();
+    case IR::Cond::LT:
         code.cmovl(else_, then_);
         break;
-    case IR::Cond::GT:  // !z & (n == v)
-        code.cmp(nzcv.cvt8(), 0x81);
-        code.sahf();
+    case IR::Cond::GT:
         code.cmovg(else_, then_);
         break;
-    case IR::Cond::LE:  // z | (n != v)
-        code.cmp(nzcv.cvt8(), 0x81);
-        code.sahf();
+    case IR::Cond::LE:
         code.cmovle(else_, then_);
         break;
     case IR::Cond::AL:
