@@ -176,6 +176,14 @@ static void EmitThreeOpArrangedWiden(oaknut::CodeGenerator& code, EmitContext& c
 }
 
 template<size_t size, typename EmitFn>
+static void EmitThreeOpArrangedSaturatedWiden(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    EmitThreeOpArrangedWiden<size>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) {
+        ctx.fpsr.Load();
+        emit(Vresult, Va, Vb);
+    });
+}
+
+template<size_t size, typename EmitFn>
 static void EmitThreeOpArrangedLower(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
     EmitThreeOp(code, ctx, inst, [&](auto& Qresult, auto& Qa, auto& Qb) {
         if constexpr (size == 8) {
@@ -1360,50 +1368,32 @@ void EmitIR<IR::Opcode::VectorSignedSaturatedAccumulateUnsigned64>(oaknut::CodeG
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHigh16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedSaturated<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SQDMULH(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHigh32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedSaturated<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SQDMULH(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHighRounding16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedSaturated<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SQRDMULH(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyHighRounding32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedSaturated<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SQRDMULH(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyLong16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedSaturatedWiden<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SQDMULL(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedDoublingMultiplyLong32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedSaturatedWiden<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SQDMULL(Vresult, Va, Vb); });
 }
 
 template<>
