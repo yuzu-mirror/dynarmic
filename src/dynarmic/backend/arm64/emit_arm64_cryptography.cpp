@@ -72,34 +72,44 @@ void EmitIR<IR::Opcode::CRC32ISO64>(oaknut::CodeGenerator& code, EmitContext& ct
 
 template<>
 void EmitIR<IR::Opcode::AESDecryptSingleRound>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qoutput = ctx.reg_alloc.WriteQ(inst);
+    auto Qinput = ctx.reg_alloc.ReadQ(args[0]);
+    RegAlloc::Realize(Qoutput, Qinput);
+
+    code.MOVI(Qoutput->toD(), oaknut::RepImm{0});
+    code.AESD(Qoutput->B16(), Qinput->B16());
 }
 
 template<>
 void EmitIR<IR::Opcode::AESEncryptSingleRound>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qoutput = ctx.reg_alloc.WriteQ(inst);
+    auto Qinput = ctx.reg_alloc.ReadQ(args[0]);
+    RegAlloc::Realize(Qoutput, Qinput);
+
+    code.MOVI(Qoutput->toD(), oaknut::RepImm{0});
+    code.AESE(Qoutput->B16(), Qinput->B16());
 }
 
 template<>
 void EmitIR<IR::Opcode::AESInverseMixColumns>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qoutput = ctx.reg_alloc.WriteQ(inst);
+    auto Qinput = ctx.reg_alloc.ReadQ(args[0]);
+    RegAlloc::Realize(Qoutput, Qinput);
+
+    code.AESIMC(Qoutput->B16(), Qinput->B16());
 }
 
 template<>
 void EmitIR<IR::Opcode::AESMixColumns>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qoutput = ctx.reg_alloc.WriteQ(inst);
+    auto Qinput = ctx.reg_alloc.ReadQ(args[0]);
+    RegAlloc::Realize(Qoutput, Qinput);
+
+    code.AESMC(Qoutput->B16(), Qinput->B16());
 }
 
 template<>
@@ -112,26 +122,39 @@ void EmitIR<IR::Opcode::SM4AccessSubstitutionBox>(oaknut::CodeGenerator& code, E
 
 template<>
 void EmitIR<IR::Opcode::SHA256Hash>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qx = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+    auto Qy = ctx.reg_alloc.ReadQ(args[1]);
+    auto Qz = ctx.reg_alloc.ReadQ(args[2]);
+    const bool part1 = args[3].GetImmediateU1();
+    RegAlloc::Realize(Qx, Qy, Qz);
+
+    if (part1) {
+        code.SHA256H(Qx, Qy, Qz->S4());
+    } else {
+        code.SHA256H2(Qy, Qx, Qz->S4());  // Yes x and y are swapped
+    }
 }
 
 template<>
 void EmitIR<IR::Opcode::SHA256MessageSchedule0>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qa = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+    auto Qb = ctx.reg_alloc.ReadQ(args[1]);
+    RegAlloc::Realize(Qa, Qb);
+
+    code.SHA256SU0(Qa->S4(), Qb->S4());
 }
 
 template<>
 void EmitIR<IR::Opcode::SHA256MessageSchedule1>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qa = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+    auto Qb = ctx.reg_alloc.ReadQ(args[1]);
+    auto Qc = ctx.reg_alloc.ReadQ(args[2]);
+    RegAlloc::Realize(Qa, Qb, Qc);
+
+    code.SHA256SU1(Qa->S4(), Qb->S4(), Qc->S4());
 }
 
 }  // namespace Dynarmic::Backend::Arm64
