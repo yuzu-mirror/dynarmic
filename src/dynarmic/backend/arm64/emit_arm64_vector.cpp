@@ -1151,6 +1151,102 @@ void EmitIR<IR::Opcode::VectorPairedMinU32>(oaknut::CodeGenerator& code, EmitCon
 }
 
 template<>
+void EmitIR<IR::Opcode::VectorPairedMaxLowerS8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMaxLowerS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMaxLowerS32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMaxLowerU8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMaxLowerU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMaxLowerU32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMinLowerS8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMinLowerS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMinLowerS32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMinLowerU8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMinLowerU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorPairedMinLowerU32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
 void EmitIR<IR::Opcode::VectorPolynomialMultiply8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitThreeOpArranged<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.PMUL(Vresult, Va, Vb); });
 }

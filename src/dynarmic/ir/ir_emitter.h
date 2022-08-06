@@ -277,6 +277,10 @@ public:
     U128 VectorPairedMaxUnsigned(size_t esize, const U128& a, const U128& b);
     U128 VectorPairedMinSigned(size_t esize, const U128& a, const U128& b);
     U128 VectorPairedMinUnsigned(size_t esize, const U128& a, const U128& b);
+    U128 VectorPairedMaxSignedLower(size_t esize, const U128& a, const U128& b);
+    U128 VectorPairedMaxUnsignedLower(size_t esize, const U128& a, const U128& b);
+    U128 VectorPairedMinSignedLower(size_t esize, const U128& a, const U128& b);
+    U128 VectorPairedMinUnsignedLower(size_t esize, const U128& a, const U128& b);
     U128 VectorPolynomialMultiply(const U128& a, const U128& b);
     U128 VectorPolynomialMultiplyLong(size_t esize, const U128& a, const U128& b);
     U128 VectorPopulationCount(const U128& a);

@@ -264,24 +264,20 @@ bool PairedMinMaxOperation(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Ve
         switch (operation) {
         case MinMaxOperation::Max:
             if (sign == Signedness::Signed) {
-                return v.ir.VectorPairedMaxSigned(esize, operand1, operand2);
+                return Q ? v.ir.VectorPairedMaxSigned(esize, operand1, operand2) : v.ir.VectorPairedMaxSignedLower(esize, operand1, operand2);
             }
-            return v.ir.VectorPairedMaxUnsigned(esize, operand1, operand2);
+            return Q ? v.ir.VectorPairedMaxUnsigned(esize, operand1, operand2) : v.ir.VectorPairedMaxUnsignedLower(esize, operand1, operand2);
 
         case MinMaxOperation::Min:
             if (sign == Signedness::Signed) {
-                return v.ir.VectorPairedMinSigned(esize, operand1, operand2);
+                return Q ? v.ir.VectorPairedMinSigned(esize, operand1, operand2) : v.ir.VectorPairedMinSignedLower(esize, operand1, operand2);
             }
-            return v.ir.VectorPairedMinUnsigned(esize, operand1, operand2);
+            return Q ? v.ir.VectorPairedMinUnsigned(esize, operand1, operand2) : v.ir.VectorPairedMinUnsignedLower(esize, operand1, operand2);
 
         default:
             UNREACHABLE();
         }
     }();
-
-    if (datasize == 64) {
-        result = v.ir.VectorShuffleWords(result, 0b11011000);
-    }
 
     v.V(datasize, Vd, result);
     return true;

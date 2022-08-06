@@ -2646,6 +2646,19 @@ static void PairedOperation(VectorArray<T>& result, const VectorArray<T>& x, con
     }
 }
 
+template<typename T, typename Function>
+static void LowerPairedOperation(VectorArray<T>& result, const VectorArray<T>& x, const VectorArray<T>& y, Function fn) {
+    const size_t range = x.size() / 4;
+
+    for (size_t i = 0; i < range; i++) {
+        result[i] = fn(x[2 * i], x[2 * i + 1]);
+    }
+
+    for (size_t i = 0; i < range; i++) {
+        result[range + i] = fn(y[2 * i], y[2 * i + 1]);
+    }
+}
+
 template<typename T>
 static void PairedMax(VectorArray<T>& result, const VectorArray<T>& x, const VectorArray<T>& y) {
     PairedOperation(result, x, y, [](auto a, auto b) { return std::max(a, b); });
@@ -2654,6 +2667,16 @@ static void PairedMax(VectorArray<T>& result, const VectorArray<T>& x, const Vec
 template<typename T>
 static void PairedMin(VectorArray<T>& result, const VectorArray<T>& x, const VectorArray<T>& y) {
     PairedOperation(result, x, y, [](auto a, auto b) { return std::min(a, b); });
+}
+
+template<typename T>
+static void LowerPairedMax(VectorArray<T>& result, const VectorArray<T>& x, const VectorArray<T>& y) {
+    LowerPairedOperation(result, x, y, [](auto a, auto b) { return std::max(a, b); });
+}
+
+template<typename T>
+static void LowerPairedMin(VectorArray<T>& result, const VectorArray<T>& x, const VectorArray<T>& y) {
+    LowerPairedOperation(result, x, y, [](auto a, auto b) { return std::min(a, b); });
 }
 
 void EmitX64::EmitVectorPairedMaxS8(EmitContext& ctx, IR::Inst* inst) {
@@ -2824,6 +2847,78 @@ void EmitX64::EmitVectorPairedMinU32(EmitContext& ctx, IR::Inst* inst) {
 
         ctx.reg_alloc.DefineValue(inst, tmp1);
     }
+}
+
+void EmitX64::EmitVectorPairedMaxLowerS8(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s8>& result, const VectorArray<s8>& a, const VectorArray<s8>& b) {
+        LowerPairedMax(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMaxLowerS16(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s16>& result, const VectorArray<s16>& a, const VectorArray<s16>& b) {
+        LowerPairedMax(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMaxLowerS32(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s16>& result, const VectorArray<s32>& a, const VectorArray<s32>& b) {
+        LowerPairedMax(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMaxLowerU8(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u8>& result, const VectorArray<u8>& a, const VectorArray<u8>& b) {
+        LowerPairedMax(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMaxLowerU16(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u16>& result, const VectorArray<u16>& a, const VectorArray<u16>& b) {
+        LowerPairedMax(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMaxLowerU32(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u32>& result, const VectorArray<u32>& a, const VectorArray<u32>& b) {
+        LowerPairedMax(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMinLowerS8(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s8>& result, const VectorArray<s8>& a, const VectorArray<s8>& b) {
+        LowerPairedMin(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMinLowerS16(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s16>& result, const VectorArray<s16>& a, const VectorArray<s16>& b) {
+        LowerPairedMin(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMinLowerS32(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s32>& result, const VectorArray<s32>& a, const VectorArray<s32>& b) {
+        LowerPairedMin(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMinLowerU8(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u8>& result, const VectorArray<u8>& a, const VectorArray<u8>& b) {
+        LowerPairedMin(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMinLowerU16(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u16>& result, const VectorArray<u16>& a, const VectorArray<u16>& b) {
+        LowerPairedMin(result, a, b);
+    });
+}
+
+void EmitX64::EmitVectorPairedMinLowerU32(EmitContext& ctx, IR::Inst* inst) {
+    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u32>& result, const VectorArray<u32>& a, const VectorArray<u32>& b) {
+        LowerPairedMin(result, a, b);
+    });
 }
 
 template<typename D, typename T>
