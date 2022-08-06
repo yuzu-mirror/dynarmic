@@ -199,6 +199,27 @@ static void EmitThreeOpArrangedLower(oaknut::CodeGenerator& code, EmitContext& c
 }
 
 template<size_t size, typename EmitFn>
+static void EmitSaturatedAccumulate(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qaccumulator = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+    auto Qoperand = ctx.reg_alloc.ReadQ(args[1]);
+    RegAlloc::Realize(Qaccumulator, Qoperand);
+    ctx.fpsr.Load();
+
+    if constexpr (size == 8) {
+        emit(Qaccumulator->B16(), Qoperand->B16());
+    } else if constexpr (size == 16) {
+        emit(Qaccumulator->H8(), Qoperand->H8());
+    } else if constexpr (size == 32) {
+        emit(Qaccumulator->S4(), Qoperand->S4());
+    } else if constexpr (size == 64) {
+        emit(Qaccumulator->D2(), Qoperand->D2());
+    } else {
+        static_assert(size == 8 || size == 16 || size == 32 || size == 64);
+    }
+}
+
+template<size_t size, typename EmitFn>
 static void EmitImmShift(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Qresult = ctx.reg_alloc.WriteQ(inst);
@@ -1358,34 +1379,22 @@ void EmitIR<IR::Opcode::VectorSignedSaturatedAbs64>(oaknut::CodeGenerator& code,
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedAccumulateUnsigned8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<8>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.SUQADD(Vaccumulator, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedAccumulateUnsigned16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<16>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.SUQADD(Vaccumulator, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedAccumulateUnsigned32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<32>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.SUQADD(Vaccumulator, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedAccumulateUnsigned64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<64>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.SUQADD(Vaccumulator, Voperand); });
 }
 
 template<>
@@ -1732,34 +1741,22 @@ void EmitIR<IR::Opcode::VectorUnsignedRecipSqrtEstimate>(oaknut::CodeGenerator& 
 
 template<>
 void EmitIR<IR::Opcode::VectorUnsignedSaturatedAccumulateSigned8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<8>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.USQADD(Vaccumulator, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorUnsignedSaturatedAccumulateSigned16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<16>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.USQADD(Vaccumulator, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorUnsignedSaturatedAccumulateSigned32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<32>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.USQADD(Vaccumulator, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorUnsignedSaturatedAccumulateSigned64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitSaturatedAccumulate<64>(code, ctx, inst, [&](auto Vaccumulator, auto Voperand) { code.USQADD(Vaccumulator, Voperand); });
 }
 
 template<>
