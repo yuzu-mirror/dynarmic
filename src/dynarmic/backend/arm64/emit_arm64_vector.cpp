@@ -1322,6 +1322,15 @@ void EmitIR<IR::Opcode::VectorReduceAdd64>(oaknut::CodeGenerator& code, EmitCont
 }
 
 template<>
+void EmitIR<IR::Opcode::VectorRotateWholeVectorRight>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitImmShift<8>(code, ctx, inst, [&](auto Vresult, auto Voperand, u8 shift_amount) {
+        ASSERT(shift_amount % 8 == 0);
+        const u8 ext_imm = (shift_amount % 128) / 8;
+        code.EXT(Vresult, Voperand, Voperand, ext_imm);
+    });
+}
+
+template<>
 void EmitIR<IR::Opcode::VectorRoundingHalvingAddS8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitThreeOpArranged<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SRHADD(Vresult, Va, Vb); });
 }
@@ -1389,14 +1398,6 @@ void EmitIR<IR::Opcode::VectorRoundingShiftLeftU32>(oaknut::CodeGenerator& code,
 template<>
 void EmitIR<IR::Opcode::VectorRoundingShiftLeftU64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitThreeOpArranged<64>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.URSHL(Vresult, Va, Vb); });
-}
-
-template<>
-void EmitIR<IR::Opcode::VectorShuffleWords>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
 }
 
 template<>

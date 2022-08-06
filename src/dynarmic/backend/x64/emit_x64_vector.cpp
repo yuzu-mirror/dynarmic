@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <bit>
 #include <bitset>
 #include <cstdlib>
 #include <type_traits>
@@ -3320,6 +3321,20 @@ void EmitX64::EmitVectorReduceAdd64(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, data);
 }
 
+void EmitX64::EmitVectorRotateWholeVectorRight(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+    const u8 shift_amount = args[1].GetImmediateU8();
+    ASSERT(shift_amount % 32 == 0);
+    const u8 shuffle_imm = std::rotr<u8>(0b11100100, shift_amount / 32 * 2);
+
+    code.pshufd(result, operand, shuffle_imm);
+
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
 static void EmitVectorRoundingHalvingAddSigned(size_t esize, EmitContext& ctx, IR::Inst* inst, BlockOfCode& code) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
@@ -3499,22 +3514,6 @@ void EmitX64::EmitVectorRoundingShiftLeftU64(EmitContext& ctx, IR::Inst* inst) {
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u64>& result, const VectorArray<u64>& lhs, const VectorArray<s64>& rhs) {
         RoundingShiftLeft(result, lhs, rhs);
     });
-}
-
-static void VectorShuffleImpl(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, void (Xbyak::CodeGenerator::*fn)(const Xbyak::Mmx&, const Xbyak::Operand&, u8)) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
-    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
-    const u8 mask = args[1].GetImmediateU8();
-
-    (code.*fn)(result, operand, mask);
-
-    ctx.reg_alloc.DefineValue(inst, result);
-}
-
-void EmitX64::EmitVectorShuffleWords(EmitContext& ctx, IR::Inst* inst) {
-    VectorShuffleImpl(code, ctx, inst, &Xbyak::CodeGenerator::pshufd);
 }
 
 void EmitX64::EmitVectorSignExtend8(EmitContext& ctx, IR::Inst* inst) {

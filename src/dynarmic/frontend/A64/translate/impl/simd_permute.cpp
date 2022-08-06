@@ -103,7 +103,7 @@ bool TranslatorVisitor::ZIP2(bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec Vd) {
 
         // TODO: Urgh.
         const IR::U128 interleaved = ir.VectorInterleaveLower(esize, operand1, operand2);
-        return ir.VectorZeroUpper(ir.VectorShuffleWords(interleaved, 0b01001110));
+        return ir.VectorZeroUpper(ir.VectorRotateWholeVectorRight(interleaved, 64));
     }();
 
     V(datasize, Vd, result);

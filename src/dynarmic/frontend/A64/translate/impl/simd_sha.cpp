@@ -39,7 +39,7 @@ IR::U128 SHA1HashUpdate(IREmitter& ir, Vec Vm, Vec Vn, Vec Vd, SHA1HashUpdateFun
 
         // Move each 32-bit element to the left once
         // e.g. [3, 2, 1, 0], becomes [2, 1, 0, 3]
-        const IR::U128 shuffled_x = ir.VectorShuffleWords(x, 0b10010011);
+        const IR::U128 shuffled_x = ir.VectorRotateWholeVectorRight(x, 96);
         x = ir.VectorSetElement(32, shuffled_x, 0, y);
         y = high_x;
     }
@@ -91,7 +91,7 @@ bool TranslatorVisitor::SHA1SU1(Vec Vn, Vec Vd) {
     const IR::U128 n = ir.GetQ(Vn);
 
     // Shuffle down the whole vector and zero out the top 32 bits
-    const IR::U128 shuffled_n = ir.VectorSetElement(32, ir.VectorShuffleWords(n, 0b00111001), 3, ir.Imm32(0));
+    const IR::U128 shuffled_n = ir.VectorSetElement(32, ir.VectorRotateWholeVectorRight(n, 32), 3, ir.Imm32(0));
     const IR::U128 t = ir.VectorEor(d, shuffled_n);
     const IR::U128 rotated_t = ir.VectorRotateLeft(32, t, 1);
 

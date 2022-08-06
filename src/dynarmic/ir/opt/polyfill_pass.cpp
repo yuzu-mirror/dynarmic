@@ -45,7 +45,7 @@ void PolyfillSHA256MessageSchedule1(IR::IREmitter& ir, IR::Inst& inst) {
     const IR::U128 T0 = ir.VectorExtract(y, z, 32);
 
     const IR::U128 lower_half = [&] {
-        const IR::U128 T = ir.VectorShuffleWords(z, 0b01001110);
+        const IR::U128 T = ir.VectorRotateWholeVectorRight(z, 64);
         const IR::U128 tmp1 = ir.VectorRotateRight(32, T, 17);
         const IR::U128 tmp2 = ir.VectorRotateRight(32, T, 19);
         const IR::U128 tmp3 = ir.VectorLogicalShiftRight(32, T, 10);
@@ -61,8 +61,8 @@ void PolyfillSHA256MessageSchedule1(IR::IREmitter& ir, IR::Inst& inst) {
         const IR::U128 tmp4 = ir.VectorEor(tmp1, ir.VectorEor(tmp2, tmp3));
 
         // Shuffle the top two 32-bit elements downwards [3, 2, 1, 0] -> [1, 0, 3, 2]
-        const IR::U128 shuffled_d = ir.VectorShuffleWords(x, 0b01001110);
-        const IR::U128 shuffled_T0 = ir.VectorShuffleWords(T0, 0b01001110);
+        const IR::U128 shuffled_d = ir.VectorRotateWholeVectorRight(x, 64);
+        const IR::U128 shuffled_T0 = ir.VectorRotateWholeVectorRight(T0, 64);
 
         const IR::U128 tmp5 = ir.VectorAdd(32, tmp4, ir.VectorAdd(32, shuffled_d, shuffled_T0));
         return ir.VectorGetElement(64, tmp5, 0);
@@ -128,8 +128,8 @@ void PolyfillSHA256Hash(IR::IREmitter& ir, IR::Inst& inst) {
         const IR::U32 new_low_y = ir.Add(t, high_x);
 
         // Shuffle all words left by 1 element: [3, 2, 1, 0] -> [2, 1, 0, 3]
-        const IR::U128 shuffled_x = ir.VectorShuffleWords(x, 0b10010011);
-        const IR::U128 shuffled_y = ir.VectorShuffleWords(y, 0b10010011);
+        const IR::U128 shuffled_x = ir.VectorRotateWholeVectorRight(x, 96);
+        const IR::U128 shuffled_y = ir.VectorRotateWholeVectorRight(y, 96);
 
         x = ir.VectorSetElement(32, shuffled_x, 0, new_low_x);
         y = ir.VectorSetElement(32, shuffled_y, 0, new_low_y);

@@ -141,7 +141,7 @@ IR::U128 SM4Hash(IREmitter& ir, Vec Vn, Vec Vd, SM4RotationType type) {
         const IR::U32 intval_low_word = ir.VectorGetElement(32, intval_vec, 0);
         const IR::U32 round_result_low_word = ir.VectorGetElement(32, roundresult, 0);
         const IR::U32 intval = SM4Rotation(ir, intval_low_word, round_result_low_word, type);
-        roundresult = ir.VectorShuffleWords(roundresult, 0b00111001);
+        roundresult = ir.VectorRotateWholeVectorRight(roundresult, 32);
         roundresult = ir.VectorSetElement(32, roundresult, 3, intval);
     }
 
@@ -235,7 +235,7 @@ bool TranslatorVisitor::SM3PARTW1(Vec Vm, Vec Vn, Vec Vd) {
 
     const IR::U128 result_low_three_words = [&] {
         // Move the top-most 3 words down one element (i.e. [3, 2, 1, 0] -> [0, 3, 2, 1])
-        const IR::U128 shuffled_m = ir.VectorShuffleWords(m, 0b00111001);
+        const IR::U128 shuffled_m = ir.VectorRotateWholeVectorRight(m, 32);
 
         // We treat the uppermost word as junk data and don't touch/use it explicitly for now.
         // Given we don't do anything with it yet, the fact we EOR into it doesn't matter.
