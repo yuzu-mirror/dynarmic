@@ -1148,50 +1148,32 @@ void EmitIR<IR::Opcode::VectorReverseBits>(oaknut::CodeGenerator& code, EmitCont
 
 template<>
 void EmitIR<IR::Opcode::VectorReverseElementsInHalfGroups8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOpArranged<8>(code, ctx, inst, [&](auto Vresult, auto Voperand) { code.REV16(Vresult, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorReverseElementsInWordGroups8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOpArranged<8>(code, ctx, inst, [&](auto Vresult, auto Voperand) { code.REV32(Vresult, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorReverseElementsInWordGroups16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOpArranged<16>(code, ctx, inst, [&](auto Vresult, auto Voperand) { code.REV32(Vresult, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorReverseElementsInLongGroups8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOpArranged<8>(code, ctx, inst, [&](auto Vresult, auto Voperand) { code.REV64(Vresult, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorReverseElementsInLongGroups16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOpArranged<16>(code, ctx, inst, [&](auto Vresult, auto Voperand) { code.REV64(Vresult, Voperand); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorReverseElementsInLongGroups32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitTwoOpArranged<32>(code, ctx, inst, [&](auto Vresult, auto Voperand) { code.REV64(Vresult, Voperand); });
 }
 
 template<>
