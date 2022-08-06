@@ -1152,98 +1152,62 @@ void EmitIR<IR::Opcode::VectorPairedMinU32>(oaknut::CodeGenerator& code, EmitCon
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMaxLowerS8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SMAXP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMaxLowerS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SMAXP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMaxLowerS32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SMAXP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMaxLowerU8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.UMAXP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMaxLowerU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.UMAXP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMaxLowerU32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.UMAXP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMinLowerS8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SMINP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMinLowerS16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SMINP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMinLowerS32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.SMINP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMinLowerU8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.UMINP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMinLowerU16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.UMINP(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorPairedMinLowerU32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitThreeOpArrangedLower<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.UMINP(Vresult, Va, Vb); });
 }
 
 template<>
