@@ -220,6 +220,14 @@ static void EmitImmShift(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* ins
 }
 
 template<size_t size, typename EmitFn>
+static void EmitImmShiftSaturated(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
+    EmitImmShift<size>(code, ctx, inst, [&](auto Vresult, auto Voperand, u8 shift_amount) {
+        ctx.fpsr.Load();
+        emit(Vresult, Voperand, shift_amount);
+    });
+}
+
+template<size_t size, typename EmitFn>
 static void EmitReduce(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Vresult = ctx.reg_alloc.WriteVec<size>(inst);
@@ -1482,34 +1490,22 @@ void EmitIR<IR::Opcode::VectorSignedSaturatedShiftLeft64>(oaknut::CodeGenerator&
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedShiftLeftUnsigned8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitImmShiftSaturated<8>(code, ctx, inst, [&](auto Vresult, auto Voperand, u8 shift_amount) { code.SQSHLU(Vresult, Voperand, shift_amount); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedShiftLeftUnsigned16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitImmShiftSaturated<16>(code, ctx, inst, [&](auto Vresult, auto Voperand, u8 shift_amount) { code.SQSHLU(Vresult, Voperand, shift_amount); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedShiftLeftUnsigned32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitImmShiftSaturated<32>(code, ctx, inst, [&](auto Vresult, auto Voperand, u8 shift_amount) { code.SQSHLU(Vresult, Voperand, shift_amount); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorSignedSaturatedShiftLeftUnsigned64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitImmShiftSaturated<64>(code, ctx, inst, [&](auto Vresult, auto Voperand, u8 shift_amount) { code.SQSHLU(Vresult, Voperand, shift_amount); });
 }
 
 template<>
