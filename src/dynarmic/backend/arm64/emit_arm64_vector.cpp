@@ -1671,22 +1671,26 @@ void EmitIR<IR::Opcode::VectorTableLookup128>(oaknut::CodeGenerator& code, EmitC
 
 template<>
 void EmitIR<IR::Opcode::VectorTranspose8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpArranged<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.TRN1(Vresult, Va, Vb); });
+    const bool part = inst->GetArg(2).GetU1();
+    EmitThreeOpArranged<8>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { !part ? code.TRN1(Vresult, Va, Vb) : code.TRN2(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorTranspose16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpArranged<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.TRN1(Vresult, Va, Vb); });
+    const bool part = inst->GetArg(2).GetU1();
+    EmitThreeOpArranged<16>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { !part ? code.TRN1(Vresult, Va, Vb) : code.TRN2(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorTranspose32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpArranged<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.TRN1(Vresult, Va, Vb); });
+    const bool part = inst->GetArg(2).GetU1();
+    EmitThreeOpArranged<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { !part ? code.TRN1(Vresult, Va, Vb) : code.TRN2(Vresult, Va, Vb); });
 }
 
 template<>
 void EmitIR<IR::Opcode::VectorTranspose64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitThreeOpArranged<64>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.TRN1(Vresult, Va, Vb); });
+    const bool part = inst->GetArg(2).GetU1();
+    EmitThreeOpArranged<64>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { !part ? code.TRN1(Vresult, Va, Vb) : code.TRN2(Vresult, Va, Vb); });
 }
 
 template<>
