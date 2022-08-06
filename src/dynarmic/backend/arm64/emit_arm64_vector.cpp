@@ -1561,12 +1561,14 @@ void EmitIR<IR::Opcode::VectorTableLookup64>(oaknut::CodeGenerator& code, EmitCo
 
     switch (table_size) {
     case 1:
-        code.MOVI(V0.B16(), 0xff);
-        code.MOV(V0.D()[0], Dtable[0]->Delem()[0]);
+        code.MOVI(V2.B16(), 0x08);
+        code.CMGE(V2.B8(), Dindices->B8(), V2.B8());
+        code.ORR(V2.B8(), Dindices->B8(), V2.B8());
+        code.FMOV(D0, Dtable[0]);
         if (is_defaults_zero) {
-            code.TBL(Dresult->B8(), oaknut::List{V0.B16()}, Dindices->B8());
+            code.TBL(Dresult->B8(), oaknut::List{V0.B16()}, D2.B8());
         } else {
-            code.TBX(Dresult->B8(), oaknut::List{V0.B16()}, Dindices->B8());
+            code.TBX(Dresult->B8(), oaknut::List{V0.B16()}, D2.B8());
         }
         break;
     case 2:
@@ -1578,13 +1580,15 @@ void EmitIR<IR::Opcode::VectorTableLookup64>(oaknut::CodeGenerator& code, EmitCo
         }
         break;
     case 3:
+        code.MOVI(V2.B16(), 0x18);
+        code.CMGE(V2.B8(), Dindices->B8(), V2.B8());
+        code.ORR(V2.B8(), Dindices->B8(), V2.B8());
         code.ZIP1(V0.D2(), Dtable[0]->toQ().D2(), Dtable[1]->toQ().D2());
-        code.MOVI(V0.B16(), 0xff);
-        code.MOV(V0.D()[0], Dtable[2]->Delem()[0]);
+        code.FMOV(D1, Dtable[2]);
         if (is_defaults_zero) {
-            code.TBL(Dresult->B8(), oaknut::List{V0.B16(), V1.B16()}, Dindices->B8());
+            code.TBL(Dresult->B8(), oaknut::List{V0.B16(), V1.B16()}, D2.B8());
         } else {
-            code.TBX(Dresult->B8(), oaknut::List{V0.B16(), V1.B16()}, Dindices->B8());
+            code.TBX(Dresult->B8(), oaknut::List{V0.B16(), V1.B16()}, D2.B8());
         }
         break;
     case 4:
