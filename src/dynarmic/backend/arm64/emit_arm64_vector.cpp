@@ -1147,6 +1147,54 @@ void EmitIR<IR::Opcode::VectorReverseBits>(oaknut::CodeGenerator& code, EmitCont
 }
 
 template<>
+void EmitIR<IR::Opcode::VectorReverseElementsInHalfGroups8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorReverseElementsInWordGroups8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorReverseElementsInWordGroups16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorReverseElementsInLongGroups8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorReverseElementsInLongGroups16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::VectorReverseElementsInLongGroups32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
 void EmitIR<IR::Opcode::VectorReduceAdd8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitReduce<8>(code, ctx, inst, [&](auto& Bresult, auto Voperand) { code.ADDV(Bresult, Voperand); });
 }
@@ -1234,22 +1282,6 @@ void EmitIR<IR::Opcode::VectorRoundingShiftLeftU32>(oaknut::CodeGenerator& code,
 template<>
 void EmitIR<IR::Opcode::VectorRoundingShiftLeftU64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitThreeOpArranged<64>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.URSHL(Vresult, Va, Vb); });
-}
-
-template<>
-void EmitIR<IR::Opcode::VectorShuffleHighHalfwords>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
-}
-
-template<>
-void EmitIR<IR::Opcode::VectorShuffleLowHalfwords>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
 }
 
 template<>

@@ -281,6 +281,9 @@ public:
     U128 VectorPolynomialMultiplyLong(size_t esize, const U128& a, const U128& b);
     U128 VectorPopulationCount(const U128& a);
     U128 VectorReverseBits(const U128& a);
+    U128 VectorReverseElementsInHalfGroups(size_t esize, const U128& a);
+    U128 VectorReverseElementsInWordGroups(size_t esize, const U128& a);
+    U128 VectorReverseElementsInLongGroups(size_t esize, const U128& a);
     U128 VectorReduceAdd(size_t esize, const U128& a);
     U128 VectorRotateLeft(size_t esize, const U128& a, u8 amount);
     U128 VectorRotateRight(size_t esize, const U128& a, u8 amount);
@@ -288,8 +291,6 @@ public:
     U128 VectorRoundingHalvingAddUnsigned(size_t esize, const U128& a, const U128& b);
     U128 VectorRoundingShiftLeftSigned(size_t esize, const U128& a, const U128& b);
     U128 VectorRoundingShiftLeftUnsigned(size_t esize, const U128& a, const U128& b);
-    U128 VectorShuffleHighHalfwords(const U128& a, u8 mask);
-    U128 VectorShuffleLowHalfwords(const U128& a, u8 mask);
     U128 VectorShuffleWords(const U128& a, u8 mask);
     U128 VectorSignExtend(size_t original_esize, const U128& a);
     U128 VectorSignedAbsoluteDifference(size_t esize, const U128& a, const U128& b);

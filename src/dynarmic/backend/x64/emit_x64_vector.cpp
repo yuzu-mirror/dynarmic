@@ -3023,6 +3023,89 @@ void EmitX64::EmitVectorReverseBits(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, data);
 }
 
+void EmitX64::EmitVectorReverseElementsInHalfGroups8(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+
+    code.movdqa(tmp, data);
+    code.psllw(tmp, 8);
+    code.psrlw(data, 8);
+    code.por(data, tmp);
+
+    ctx.reg_alloc.DefineValue(inst, data);
+}
+
+void EmitX64::EmitVectorReverseElementsInWordGroups8(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+
+    // TODO: PSHUFB
+
+    code.movdqa(tmp, data);
+    code.psllw(tmp, 8);
+    code.psrlw(data, 8);
+    code.por(data, tmp);
+    code.pshuflw(data, data, 0b10110001);
+    code.pshufhw(data, data, 0b10110001);
+
+    ctx.reg_alloc.DefineValue(inst, data);
+}
+
+void EmitX64::EmitVectorReverseElementsInWordGroups16(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
+
+    code.pshuflw(data, data, 0b10110001);
+    code.pshufhw(data, data, 0b10110001);
+
+    ctx.reg_alloc.DefineValue(inst, data);
+}
+
+void EmitX64::EmitVectorReverseElementsInLongGroups8(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+
+    // TODO: PSHUFB
+
+    code.movdqa(tmp, data);
+    code.psllw(tmp, 8);
+    code.psrlw(data, 8);
+    code.por(data, tmp);
+    code.pshuflw(data, data, 0b00011011);
+    code.pshufhw(data, data, 0b00011011);
+
+    ctx.reg_alloc.DefineValue(inst, data);
+}
+
+void EmitX64::EmitVectorReverseElementsInLongGroups16(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
+
+    code.pshuflw(data, data, 0b00011011);
+    code.pshufhw(data, data, 0b00011011);
+
+    ctx.reg_alloc.DefineValue(inst, data);
+}
+
+void EmitX64::EmitVectorReverseElementsInLongGroups32(EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
+
+    code.pshuflw(data, data, 0b01001110);
+    code.pshufhw(data, data, 0b01001110);
+
+    ctx.reg_alloc.DefineValue(inst, data);
+}
+
 void EmitX64::EmitVectorReduceAdd8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
@@ -3306,14 +3389,6 @@ static void VectorShuffleImpl(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
     (code.*fn)(result, operand, mask);
 
     ctx.reg_alloc.DefineValue(inst, result);
-}
-
-void EmitX64::EmitVectorShuffleHighHalfwords(EmitContext& ctx, IR::Inst* inst) {
-    VectorShuffleImpl(code, ctx, inst, &Xbyak::CodeGenerator::pshufhw);
-}
-
-void EmitX64::EmitVectorShuffleLowHalfwords(EmitContext& ctx, IR::Inst* inst) {
-    VectorShuffleImpl(code, ctx, inst, &Xbyak::CodeGenerator::pshuflw);
 }
 
 void EmitX64::EmitVectorShuffleWords(EmitContext& ctx, IR::Inst* inst) {

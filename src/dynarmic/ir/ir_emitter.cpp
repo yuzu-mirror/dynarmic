@@ -1573,6 +1573,39 @@ U128 IREmitter::VectorReverseBits(const U128& a) {
     return Inst<U128>(Opcode::VectorReverseBits, a);
 }
 
+U128 IREmitter::VectorReverseElementsInHalfGroups(size_t esize, const U128& a) {
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorReverseElementsInHalfGroups8, a);
+    default:
+        UNREACHABLE();
+    }
+}
+
+U128 IREmitter::VectorReverseElementsInWordGroups(size_t esize, const U128& a) {
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorReverseElementsInWordGroups8, a);
+    case 16:
+        return Inst<U128>(Opcode::VectorReverseElementsInWordGroups16, a);
+    default:
+        UNREACHABLE();
+    }
+}
+
+U128 IREmitter::VectorReverseElementsInLongGroups(size_t esize, const U128& a) {
+    switch (esize) {
+    case 8:
+        return Inst<U128>(Opcode::VectorReverseElementsInLongGroups8, a);
+    case 16:
+        return Inst<U128>(Opcode::VectorReverseElementsInLongGroups16, a);
+    case 32:
+        return Inst<U128>(Opcode::VectorReverseElementsInLongGroups32, a);
+    default:
+        UNREACHABLE();
+    }
+}
+
 U128 IREmitter::VectorReduceAdd(size_t esize, const U128& a) {
     switch (esize) {
     case 8:
@@ -1664,14 +1697,6 @@ U128 IREmitter::VectorRoundingShiftLeftUnsigned(size_t esize, const U128& a, con
     }
 
     UNREACHABLE();
-}
-
-U128 IREmitter::VectorShuffleHighHalfwords(const U128& a, u8 mask) {
-    return Inst<U128>(Opcode::VectorShuffleHighHalfwords, a, mask);
-}
-
-U128 IREmitter::VectorShuffleLowHalfwords(const U128& a, u8 mask) {
-    return Inst<U128>(Opcode::VectorShuffleLowHalfwords, a, mask);
 }
 
 U128 IREmitter::VectorShuffleWords(const U128& a, u8 mask) {

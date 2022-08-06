@@ -117,47 +117,18 @@ bool TranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool
     const auto m = ToVector(Q, Vm, M);
     const auto result = [this, m, op, sz] {
         const auto reg_m = ir.GetVector(m);
-        const size_t esize = 16U << sz;
-        const auto shift = static_cast<u8>(8U << sz);
+        const size_t esize = 8 << sz;
 
-        // 64-bit regions
-        if (op == 0b00) {
-            IR::U128 result = ir.VectorOr(ir.VectorLogicalShiftRight(esize, reg_m, shift),
-                                          ir.VectorLogicalShiftLeft(esize, reg_m, shift));
-
-            switch (sz) {
-            case 0:  // 8-bit elements
-                result = ir.VectorShuffleLowHalfwords(result, 0b00011011);
-                result = ir.VectorShuffleHighHalfwords(result, 0b00011011);
-                break;
-            case 1:  // 16-bit elements
-                result = ir.VectorShuffleLowHalfwords(result, 0b01001110);
-                result = ir.VectorShuffleHighHalfwords(result, 0b01001110);
-                break;
-            }
-
-            return result;
+        switch (op) {
+        case 0b00:
+            return ir.VectorReverseElementsInLongGroups(esize, reg_m);
+        case 0b01:
+            return ir.VectorReverseElementsInWordGroups(esize, reg_m);
+        case 0b10:
+            return ir.VectorReverseElementsInHalfGroups(esize, reg_m);
         }
 
-        // 32-bit regions
-        if (op == 0b01) {
-            IR::U128 result = ir.VectorOr(ir.VectorLogicalShiftRight(esize, reg_m, shift),
-                                          ir.VectorLogicalShiftLeft(esize, reg_m, shift));
-
-            // If dealing with 8-bit elements we'll need to shuffle the bytes in each halfword
-            // e.g. Assume the following numbers point out bytes in a 32-bit word, we're essentially
-            //      changing [3, 2, 1, 0] to [2, 3, 0, 1]
-            if (sz == 0) {
-                result = ir.VectorShuffleLowHalfwords(result, 0b10110001);
-                result = ir.VectorShuffleHighHalfwords(result, 0b10110001);
-            }
-
-            return result;
-        }
-
-        // 16-bit regions
-        return ir.VectorOr(ir.VectorLogicalShiftRight(esize, reg_m, 8),
-                           ir.VectorLogicalShiftLeft(esize, reg_m, 8));
+        UNREACHABLE();
     }();
 
     ir.SetVector(d, result);
