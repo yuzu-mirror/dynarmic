@@ -486,13 +486,8 @@ bool TranslatorVisitor::asimd_VUZP(bool D, size_t sz, size_t Vd, bool Q, bool M,
 
     const auto reg_d = ir.GetVector(d);
     const auto reg_m = ir.GetVector(m);
-    auto result_d = ir.VectorDeinterleaveEven(esize, reg_d, reg_m);
-    auto result_m = ir.VectorDeinterleaveOdd(esize, reg_d, reg_m);
-
-    if (!Q) {
-        result_d = ir.VectorShuffleWords(result_d, 0b11011000);
-        result_m = ir.VectorShuffleWords(result_m, 0b11011000);
-    }
+    auto result_d = Q ? ir.VectorDeinterleaveEven(esize, reg_d, reg_m) : ir.VectorDeinterleaveEvenLower(esize, reg_d, reg_m);
+    auto result_m = Q ? ir.VectorDeinterleaveOdd(esize, reg_d, reg_m) : ir.VectorDeinterleaveOddLower(esize, reg_d, reg_m);
 
     ir.SetVector(d, result_d);
     ir.SetVector(m, result_m);
