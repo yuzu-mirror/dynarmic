@@ -236,7 +236,7 @@ bool TranslatorVisitor::asimd_VQSHL(bool U, bool D, size_t imm6, size_t Vd, bool
                 return ir.VectorUnsignedSaturatedShiftLeft(esize, reg_m, shift_vec);
             }
 
-            return ir.VectorSignedSaturatedShiftLeftUnsigned(esize, reg_m, shift_vec);
+            return ir.VectorSignedSaturatedShiftLeftUnsigned(esize, reg_m, shift_amount);
         }
         if (op) {
             return ir.VectorSignedSaturatedShiftLeft(esize, reg_m, shift_vec);

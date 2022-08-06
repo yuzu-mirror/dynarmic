@@ -1858,16 +1858,17 @@ U128 IREmitter::VectorSignedSaturatedShiftLeft(size_t esize, const U128& a, cons
     UNREACHABLE();
 }
 
-U128 IREmitter::VectorSignedSaturatedShiftLeftUnsigned(size_t esize, const U128& a, const U128& b) {
+U128 IREmitter::VectorSignedSaturatedShiftLeftUnsigned(size_t esize, const U128& a, u8 shift_amount) {
+    ASSERT(shift_amount < esize);
     switch (esize) {
     case 8:
-        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned8, a, b);
+        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned8, a, Imm8(shift_amount));
     case 16:
-        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned16, a, b);
+        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned16, a, Imm8(shift_amount));
     case 32:
-        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned32, a, b);
+        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned32, a, Imm8(shift_amount));
     case 64:
-        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned64, a, b);
+        return Inst<U128>(Opcode::VectorSignedSaturatedShiftLeftUnsigned64, a, Imm8(shift_amount));
     }
     UNREACHABLE();
 }

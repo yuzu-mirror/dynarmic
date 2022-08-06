@@ -182,7 +182,7 @@ bool SaturatingShiftLeft(TranslatorVisitor& v, bool Q, Imm<4> immh, Imm<3> immb,
             return v.ir.VectorUnsignedSaturatedShiftLeft(esize, operand, shift_vec);
         }
 
-        return v.ir.VectorSignedSaturatedShiftLeftUnsigned(esize, operand, shift_vec);
+        return v.ir.VectorSignedSaturatedShiftLeftUnsigned(esize, operand, shift);
     }();
 
     v.V(datasize, Vd, result);

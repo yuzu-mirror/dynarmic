@@ -47,7 +47,7 @@ bool SaturatingShiftLeft(TranslatorVisitor& v, Imm<4> immh, Imm<3> immb, Vec Vn,
 
     const IR::U128 operand = v.ir.ZeroExtendToQuad(v.V_scalar(esize, Vn));
     const IR::U128 shift = v.ir.ZeroExtendToQuad(v.I(esize, shift_amount));
-    const IR::U128 result = [&v, esize, operand, shift, type] {
+    const IR::U128 result = [&v, esize, operand, shift, type, shift_amount] {
         if (type == SaturatingShiftLeftType::Signed) {
             return v.ir.VectorSignedSaturatedShiftLeft(esize, operand, shift);
         }
@@ -56,7 +56,7 @@ bool SaturatingShiftLeft(TranslatorVisitor& v, Imm<4> immh, Imm<3> immb, Vec Vn,
             return v.ir.VectorUnsignedSaturatedShiftLeft(esize, operand, shift);
         }
 
-        return v.ir.VectorSignedSaturatedShiftLeftUnsigned(esize, operand, shift);
+        return v.ir.VectorSignedSaturatedShiftLeftUnsigned(esize, operand, shift_amount);
     }();
 
     v.ir.SetQ(Vd, result);

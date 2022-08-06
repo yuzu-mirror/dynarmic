@@ -130,6 +130,33 @@ static void EmitTwoArgumentFallbackWithSaturation(BlockOfCode& code, EmitContext
 }
 
 template<typename Lambda>
+static void EmitTwoArgumentFallbackWithSaturationAndImmediate(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
+    const auto fn = static_cast<mcl::equivalent_function_type<Lambda>*>(lambda);
+    constexpr u32 stack_space = 2 * 16;
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const Xbyak::Xmm arg1 = ctx.reg_alloc.UseXmm(args[0]);
+    const u8 arg2 = args[1].GetImmediateU8();
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+    ctx.reg_alloc.EndOfAllocScope();
+
+    ctx.reg_alloc.HostCall(nullptr);
+    ctx.reg_alloc.AllocStackSpace(stack_space + ABI_SHADOW_SPACE);
+    code.lea(code.ABI_PARAM1, ptr[rsp + ABI_SHADOW_SPACE + 0 * 16]);
+    code.lea(code.ABI_PARAM2, ptr[rsp + ABI_SHADOW_SPACE + 1 * 16]);
+
+    code.movaps(xword[code.ABI_PARAM2], arg1);
+    code.mov(code.ABI_PARAM3, arg2);
+    code.CallFunction(fn);
+    code.movaps(result, xword[rsp + ABI_SHADOW_SPACE + 0 * 16]);
+
+    ctx.reg_alloc.ReleaseStackSpace(stack_space + ABI_SHADOW_SPACE);
+
+    code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], code.ABI_RETURN.cvt8());
+
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
+template<typename Lambda>
 static void EmitTwoArgumentFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
     const auto fn = static_cast<mcl::equivalent_function_type<Lambda>*>(lambda);
     constexpr u32 stack_space = 3 * 16;
@@ -4436,26 +4463,18 @@ void EmitX64::EmitVectorSignedSaturatedShiftLeft64(EmitContext& ctx, IR::Inst* i
 }
 
 template<typename T, typename U = std::make_unsigned_t<T>>
-static bool VectorSignedSaturatedShiftLeftUnsigned(VectorArray<T>& dst, const VectorArray<T>& data, const VectorArray<T>& shift_values) {
+static bool VectorSignedSaturatedShiftLeftUnsigned(VectorArray<T>& dst, const VectorArray<T>& data, u8 shift_amount) {
     static_assert(std::is_signed_v<T>, "T must be signed.");
-
-    constexpr size_t bit_size_minus_one = mcl::bitsizeof<T> - 1;
 
     bool qc_flag = false;
     for (size_t i = 0; i < dst.size(); i++) {
         const T element = data[i];
-        const T shift = std::clamp<T>(static_cast<T>(mcl::bit::sign_extend<8>(static_cast<U>(shift_values[i] & 0xFF))),
-                                      -static_cast<T>(bit_size_minus_one), std::numeric_limits<T>::max());
+        const T shift = static_cast<T>(shift_amount);
 
         if (element == 0) {
             dst[i] = 0;
         } else if (element < 0) {
             dst[i] = 0;
-            qc_flag = true;
-        } else if (shift < 0) {
-            dst[i] = static_cast<T>(element >> -shift);
-        } else if (static_cast<U>(shift) > bit_size_minus_one) {
-            dst[i] = static_cast<T>(std::numeric_limits<U>::max());
             qc_flag = true;
         } else {
             const U shifted = static_cast<U>(element) << static_cast<U>(shift);
@@ -4474,19 +4493,19 @@ static bool VectorSignedSaturatedShiftLeftUnsigned(VectorArray<T>& dst, const Ve
 }
 
 void EmitX64::EmitVectorSignedSaturatedShiftLeftUnsigned8(EmitContext& ctx, IR::Inst* inst) {
-    EmitTwoArgumentFallbackWithSaturation(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s8>);
+    EmitTwoArgumentFallbackWithSaturationAndImmediate(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s8>);
 }
 
 void EmitX64::EmitVectorSignedSaturatedShiftLeftUnsigned16(EmitContext& ctx, IR::Inst* inst) {
-    EmitTwoArgumentFallbackWithSaturation(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s16>);
+    EmitTwoArgumentFallbackWithSaturationAndImmediate(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s16>);
 }
 
 void EmitX64::EmitVectorSignedSaturatedShiftLeftUnsigned32(EmitContext& ctx, IR::Inst* inst) {
-    EmitTwoArgumentFallbackWithSaturation(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s32>);
+    EmitTwoArgumentFallbackWithSaturationAndImmediate(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s32>);
 }
 
 void EmitX64::EmitVectorSignedSaturatedShiftLeftUnsigned64(EmitContext& ctx, IR::Inst* inst) {
-    EmitTwoArgumentFallbackWithSaturation(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s64>);
+    EmitTwoArgumentFallbackWithSaturationAndImmediate(code, ctx, inst, VectorSignedSaturatedShiftLeftUnsigned<s64>);
 }
 
 void EmitX64::EmitVectorSub8(EmitContext& ctx, IR::Inst* inst) {
