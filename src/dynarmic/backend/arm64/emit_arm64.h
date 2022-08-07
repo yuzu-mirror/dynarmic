@@ -44,7 +44,11 @@ enum class LinkTarget {
     WriteMemory16,
     WriteMemory32,
     WriteMemory64,
+    CallSVC,
+    ExceptionRaised,
     InstructionSynchronizationBarrierRaised,
+    AddTicks,
+    GetTicksRemaining,
 };
 
 struct Relocation {

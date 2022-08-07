@@ -505,18 +505,47 @@ void EmitIR<IR::Opcode::A32UpdateUpperLocationDescriptor>(oaknut::CodeGenerator&
 
 template<>
 void EmitIR<IR::Opcode::A32CallSupervisor>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.PrepareForCall(nullptr);
+
+    static_assert(offsetof(StackLayout, cycles_remaining) + sizeof(u64) == offsetof(StackLayout, cycles_to_run));
+
+    if (ctx.conf.enable_cycle_counting) {
+        code.LDP(Xscratch0, Xscratch1, SP, offsetof(StackLayout, cycles_remaining));
+        code.SUB(Xscratch0, Xscratch1, Xscratch0);
+        EmitRelocation(code, ctx, LinkTarget::AddTicks);
+    }
+
+    code.MOV(W1, args[0].GetImmediateU32());
+    EmitRelocation(code, ctx, LinkTarget::CallSVC);
+
+    if (ctx.conf.enable_cycle_counting) {
+        EmitRelocation(code, ctx, LinkTarget::GetTicksRemaining);
+        code.STP(X0, X0, SP, offsetof(StackLayout, cycles_remaining));
+    }
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExceptionRaised>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.PrepareForCall(nullptr);
+
+    static_assert(offsetof(StackLayout, cycles_remaining) + sizeof(u64) == offsetof(StackLayout, cycles_to_run));
+
+    if (ctx.conf.enable_cycle_counting) {
+        code.LDP(Xscratch0, Xscratch1, SP, offsetof(StackLayout, cycles_remaining));
+        code.SUB(Xscratch0, Xscratch1, Xscratch0);
+        EmitRelocation(code, ctx, LinkTarget::AddTicks);
+    }
+
+    code.MOV(W1, args[0].GetImmediateU32());
+    code.MOV(W2, args[1].GetImmediateU32());
+    EmitRelocation(code, ctx, LinkTarget::CallSVC);
+
+    if (ctx.conf.enable_cycle_counting) {
+        EmitRelocation(code, ctx, LinkTarget::GetTicksRemaining);
+        code.STP(X0, X0, SP, offsetof(StackLayout, cycles_remaining));
+    }
 }
 
 template<>
