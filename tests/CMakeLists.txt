@@ -11,6 +11,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
     target_sources(dynarmic_tests PRIVATE
         A32/test_arm_disassembler.cpp
         A32/test_arm_instructions.cpp
+        A32/test_coprocessor.cpp
         A32/test_thumb_instructions.cpp
         A32/testenv.h
         decoder_tests.cpp
