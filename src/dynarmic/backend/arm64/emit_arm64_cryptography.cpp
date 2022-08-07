@@ -123,15 +123,21 @@ void EmitIR<IR::Opcode::SM4AccessSubstitutionBox>(oaknut::CodeGenerator& code, E
 template<>
 void EmitIR<IR::Opcode::SHA256Hash>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto Qx = ctx.reg_alloc.ReadWriteQ(args[0], inst);
-    auto Qy = ctx.reg_alloc.ReadQ(args[1]);
-    auto Qz = ctx.reg_alloc.ReadQ(args[2]);
     const bool part1 = args[3].GetImmediateU1();
-    RegAlloc::Realize(Qx, Qy, Qz);
 
     if (part1) {
+        auto Qx = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+        auto Qy = ctx.reg_alloc.ReadQ(args[1]);
+        auto Qz = ctx.reg_alloc.ReadQ(args[2]);
+        RegAlloc::Realize(Qx, Qy, Qz);
+
         code.SHA256H(Qx, Qy, Qz->S4());
     } else {
+        auto Qx = ctx.reg_alloc.ReadQ(args[0]);
+        auto Qy = ctx.reg_alloc.ReadWriteQ(args[1], inst);
+        auto Qz = ctx.reg_alloc.ReadQ(args[2]);
+        RegAlloc::Realize(Qx, Qy, Qz);
+
         code.SHA256H2(Qy, Qx, Qz->S4());  // Yes x and y are swapped
     }
 }
