@@ -835,12 +835,11 @@ static void EmitCoprocessorException() {
     ASSERT_FALSE("Should raise coproc exception here");
 }
 
-static void CallCoprocCallback(BlockOfCode& code, RegAlloc& reg_alloc, A32::Jit* jit_interface, A32::Coprocessor::Callback callback, IR::Inst* inst = nullptr, std::optional<Argument::copyable_reference> arg0 = {}, std::optional<Argument::copyable_reference> arg1 = {}) {
-    reg_alloc.HostCall(inst, {}, {}, arg0, arg1);
+static void CallCoprocCallback(BlockOfCode& code, RegAlloc& reg_alloc, A32::Coprocessor::Callback callback, IR::Inst* inst = nullptr, std::optional<Argument::copyable_reference> arg0 = {}, std::optional<Argument::copyable_reference> arg1 = {}) {
+    reg_alloc.HostCall(inst, {}, arg0, arg1);
 
-    code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(jit_interface));
     if (callback.user_arg) {
-        code.mov(code.ABI_PARAM2, reinterpret_cast<u64>(*callback.user_arg));
+        code.mov(code.ABI_PARAM1, reinterpret_cast<u64>(*callback.user_arg));
     }
 
     code.CallFunction(callback.function);
@@ -868,7 +867,7 @@ void A32EmitX64::EmitA32CoprocInternalOperation(A32EmitContext& ctx, IR::Inst* i
         return;
     }
 
-    CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *action);
+    CallCoprocCallback(code, ctx.reg_alloc, *action);
 }
 
 void A32EmitX64::EmitA32CoprocSendOneWord(A32EmitContext& ctx, IR::Inst* inst) {
@@ -895,7 +894,7 @@ void A32EmitX64::EmitA32CoprocSendOneWord(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, nullptr, args[1]);
+        CallCoprocCallback(code, ctx.reg_alloc, *cb, nullptr, args[1]);
         return;
     }
 
@@ -935,7 +934,7 @@ void A32EmitX64::EmitA32CoprocSendTwoWords(A32EmitContext& ctx, IR::Inst* inst) 
     }
 
     if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, nullptr, args[1], args[2]);
+        CallCoprocCallback(code, ctx.reg_alloc, *cb, nullptr, args[1], args[2]);
         return;
     }
 
@@ -979,7 +978,7 @@ void A32EmitX64::EmitA32CoprocGetOneWord(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, inst);
+        CallCoprocCallback(code, ctx.reg_alloc, *cb, inst);
         return;
     }
 
@@ -1019,7 +1018,7 @@ void A32EmitX64::EmitA32CoprocGetTwoWords(A32EmitContext& ctx, IR::Inst* inst) {
     }
 
     if (const auto cb = std::get_if<A32::Coprocessor::Callback>(&action)) {
-        CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *cb, inst);
+        CallCoprocCallback(code, ctx.reg_alloc, *cb, inst);
         return;
     }
 
@@ -1070,7 +1069,7 @@ void A32EmitX64::EmitA32CoprocLoadWords(A32EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *action, nullptr, args[1]);
+    CallCoprocCallback(code, ctx.reg_alloc, *action, nullptr, args[1]);
 }
 
 void A32EmitX64::EmitA32CoprocStoreWords(A32EmitContext& ctx, IR::Inst* inst) {
@@ -1100,7 +1099,7 @@ void A32EmitX64::EmitA32CoprocStoreWords(A32EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
-    CallCoprocCallback(code, ctx.reg_alloc, jit_interface, *action, nullptr, args[1]);
+    CallCoprocCallback(code, ctx.reg_alloc, *action, nullptr, args[1]);
 }
 
 std::string A32EmitX64::LocationDescriptorToFriendlyName(const IR::LocationDescriptor& ir_descriptor) const {

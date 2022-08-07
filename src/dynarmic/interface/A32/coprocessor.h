@@ -28,7 +28,7 @@ public:
          * @param arg1 Purpose of this argument depends on type of callback.
          * @return Purpose of return value depends on type of callback.
          */
-        std::uint64_t (*function)(Jit* jit, void* user_arg, std::uint32_t arg0, std::uint32_t arg1);
+        std::uint64_t (*function)(void* user_arg, std::uint32_t arg0, std::uint32_t arg1);
         /// If std::nullopt, function will be called with a user_arg parameter containing garbage.
         std::optional<void*> user_arg;
     };

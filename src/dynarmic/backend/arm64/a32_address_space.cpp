@@ -150,6 +150,7 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
         .descriptor_to_fpcr = [](const IR::LocationDescriptor& location) { return FP::FPCR{A32::LocationDescriptor{location}.FPSCR().Value()}; },
         .state_nzcv_offset = offsetof(A32JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A32JitState, fpsr),
+        .coprocessors = conf.coprocessors,
     };
     EmittedBlockInfo block_info = EmitArm64(code, std::move(block), emit_conf);
 

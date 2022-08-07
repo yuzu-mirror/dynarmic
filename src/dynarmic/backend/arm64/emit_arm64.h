@@ -5,10 +5,14 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 #include <mcl/stdint.hpp>
+
+#include "dynarmic/interface/A32/coprocessor.h"
 
 namespace oaknut {
 struct PointerCodeGeneratorPolicy;
@@ -71,6 +75,8 @@ struct EmitConfig {
 
     size_t state_nzcv_offset;
     size_t state_fpsr_offset;
+
+    std::array<std::shared_ptr<A32::Coprocessor>, 16> coprocessors{};
 };
 
 struct EmitContext;
