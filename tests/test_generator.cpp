@@ -369,7 +369,7 @@ void TestThumb(size_t num_instructions, size_t num_iterations = 100000) {
     }
 }
 
-void TestArm(size_t num_instructions, size_t num_iterations = 100000) {
+void TestArm(size_t num_instructions, size_t num_iterations) {
     ArmTestEnv jit_env{};
     Dynarmic::A32::Jit jit{GetUserConfig(jit_env)};
 
@@ -398,12 +398,12 @@ void TestArm(size_t num_instructions, size_t num_iterations = 100000) {
 int main(int, char*[]) {
     detail::g_rand_int_generator.seed(42069);
 
-    TestThumb(1);
-    TestArm(1);
-    TestThumb(5);
-    TestArm(5);
-    TestThumb(1024, 1000);
-    TestArm(1024, 1000);
+    TestThumb(1, 100000);
+    TestArm(1, 100000);
+    TestThumb(5, 100000);
+    TestArm(5, 100000);
+    TestThumb(1024, 10000);
+    TestArm(1024, 10000);
 
     return 0;
 }
