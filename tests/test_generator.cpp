@@ -61,6 +61,20 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A
         case IR::Opcode::A32CoprocGetTwoWords:
         case IR::Opcode::A32CoprocLoadWords:
         case IR::Opcode::A32CoprocStoreWords:
+        // Half-precision
+        case IR::Opcode::FPVectorAbs16:
+        case IR::Opcode::FPVectorEqual16:
+        case IR::Opcode::FPVectorMulAdd16:
+        case IR::Opcode::FPVectorNeg16:
+        case IR::Opcode::FPVectorRecipEstimate16:
+        case IR::Opcode::FPVectorRecipStepFused16:
+        case IR::Opcode::FPVectorRoundInt16:
+        case IR::Opcode::FPVectorRSqrtEstimate16:
+        case IR::Opcode::FPVectorRSqrtStepFused16:
+        case IR::Opcode::FPVectorToSignedFixed16:
+        case IR::Opcode::FPVectorToUnsignedFixed16:
+        case IR::Opcode::FPVectorFromHalf32:
+        case IR::Opcode::FPVectorToHalf32:
             return false;
         default:
             continue;
@@ -78,7 +92,7 @@ u32 GenRandomArmInst(u32 pc, bool is_last_inst) {
         const std::vector<std::tuple<std::string, const char*>> list{
 #define INST(fn, name, bitstring) {#fn, bitstring},
 #include "dynarmic/frontend/A32/decoder/arm.inc"
-//#include "dynarmic/frontend/A32/decoder/asimd.inc"
+#include "dynarmic/frontend/A32/decoder/asimd.inc"
 #include "dynarmic/frontend/A32/decoder/vfp.inc"
 #undef INST
         };
@@ -156,7 +170,7 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
 
         const std::vector<std::tuple<std::string, const char*>> asimd_list{
 #define INST(fn, name, bitstring) {#fn, bitstring},
-//#include "dynarmic/frontend/A32/decoder/asimd.inc"
+#include "dynarmic/frontend/A32/decoder/asimd.inc"
 #undef INST
         };
 
