@@ -56,7 +56,7 @@ bool SaturatingShiftLeft(TranslatorVisitor& v, Imm<4> immh, Imm<3> immb, Vec Vn,
             return v.ir.VectorUnsignedSaturatedShiftLeft(esize, operand, shift);
         }
 
-        return v.ir.VectorSignedSaturatedShiftLeftUnsigned(esize, operand, shift_amount);
+        return v.ir.VectorSignedSaturatedShiftLeftUnsigned(esize, operand, static_cast<u8>(shift_amount));
     }();
 
     v.ir.SetQ(Vd, result);
