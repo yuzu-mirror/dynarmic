@@ -459,9 +459,6 @@ template<>
 void EmitIR<IR::Opcode::FPRoundInt64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     const auto rounding_mode = static_cast<FP::RoundingMode>(inst->GetArg(1).GetU8());
     const bool exact = inst->GetArg(2).GetU1();
-    if (exact) {
-        ASSERT(ctx.FPCR().RMode() == rounding_mode);
-    }
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Dresult = ctx.reg_alloc.WriteD(inst);
@@ -470,6 +467,7 @@ void EmitIR<IR::Opcode::FPRoundInt64>(oaknut::CodeGenerator& code, EmitContext& 
     ctx.fpsr.Load();
 
     if (exact) {
+        ASSERT(ctx.FPCR().RMode() == rounding_mode);
         code.FRINTX(Dresult, Doperand);
     } else {
         switch (rounding_mode) {
