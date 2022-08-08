@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <functional>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -23,6 +24,7 @@
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/common/llvm_disassemble.h"
+#include "dynarmic/common/variant_util.h"
 #include "dynarmic/frontend/A32/ITState.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/a32_types.h"
@@ -39,6 +41,37 @@
 namespace {
 using namespace Dynarmic;
 
+template<typename Fn>
+bool AnyLocationDescriptorForTerminalHas(IR::Terminal terminal, Fn fn) {
+    return Common::VisitVariant<bool>(terminal, [&](auto t) -> bool {
+        using T = std::decay_t<decltype(t)>;
+        if constexpr (std::is_same_v<T, IR::Term::Invalid>) {
+            return false;
+        } else if constexpr (std::is_same_v<T, IR::Term::ReturnToDispatch>) {
+            return false;
+        } else if constexpr (std::is_same_v<T, IR::Term::LinkBlock>) {
+            return fn(t.next);
+        } else if constexpr (std::is_same_v<T, IR::Term::LinkBlockFast>) {
+            return fn(t.next);
+        } else if constexpr (std::is_same_v<T, IR::Term::PopRSBHint>) {
+            return false;
+        } else if constexpr (std::is_same_v<T, IR::Term::Interpret>) {
+            return fn(t.next);
+        } else if constexpr (std::is_same_v<T, IR::Term::FastDispatchHint>) {
+            return false;
+        } else if constexpr (std::is_same_v<T, IR::Term::If>) {
+            return AnyLocationDescriptorForTerminalHas(t.then_, fn) || AnyLocationDescriptorForTerminalHas(t.else_, fn);
+        } else if constexpr (std::is_same_v<T, IR::Term::CheckBit>) {
+            return AnyLocationDescriptorForTerminalHas(t.then_, fn) || AnyLocationDescriptorForTerminalHas(t.else_, fn);
+        } else if constexpr (std::is_same_v<T, IR::Term::CheckHalt>) {
+            return AnyLocationDescriptorForTerminalHas(t.else_, fn);
+        } else {
+            ASSERT_MSG(false, "Invalid terminal type");
+            return false;
+        }
+    });
+}
+
 bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A32::ITState it_state = {}) {
     const A32::LocationDescriptor location = A32::LocationDescriptor{pc, {}, {}}.SetTFlag(is_thumb).SetIT(it_state);
     IR::Block block{location};
@@ -49,6 +82,10 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A
     }
 
     if (auto terminal = block.GetTerminal(); boost::get<IR::Term::Interpret>(&terminal)) {
+        return false;
+    }
+
+    if (AnyLocationDescriptorForTerminalHas(block.GetTerminal(), [&](IR::LocationDescriptor ld) { return A32::LocationDescriptor{ld}.PC() <= pc; })) {
         return false;
     }
 
@@ -429,11 +466,11 @@ TEST_CASE("A32: Single random arm instruction", "[arm]") {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
 
-        instructions[0] = GenRandomArmInst(0, true);
-
         const u32 start_address = 100;
         const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x10;
         const u32 fpcr = RandomFpcr();
+
+        instructions[0] = GenRandomArmInst(start_address, true);
 
         INFO("Instruction: 0x" << std::hex << instructions[0]);
 
@@ -457,15 +494,15 @@ TEST_CASE("A32: Small random arm block", "[arm]") {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
 
-        instructions[0] = GenRandomArmInst(0, false);
-        instructions[1] = GenRandomArmInst(4, false);
-        instructions[2] = GenRandomArmInst(8, false);
-        instructions[3] = GenRandomArmInst(12, false);
-        instructions[4] = GenRandomArmInst(16, true);
-
         const u32 start_address = 100;
         const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x10;
         const u32 fpcr = RandomFpcr();
+
+        instructions[0] = GenRandomArmInst(start_address + 0, false);
+        instructions[1] = GenRandomArmInst(start_address + 4, false);
+        instructions[2] = GenRandomArmInst(start_address + 8, false);
+        instructions[3] = GenRandomArmInst(start_address + 12, false);
+        instructions[4] = GenRandomArmInst(start_address + 16, true);
 
         INFO("Instruction 1: 0x" << std::hex << instructions[0]);
         INFO("Instruction 2: 0x" << std::hex << instructions[1]);
@@ -495,13 +532,13 @@ TEST_CASE("A32: Large random arm block", "[arm]") {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
 
-        for (size_t j = 0; j < instruction_count; ++j) {
-            instructions[j] = GenRandomArmInst(j * 4, j == instruction_count - 1);
-        }
-
         const u64 start_address = 100;
         const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x10;
         const u32 fpcr = RandomFpcr();
+
+        for (size_t j = 0; j < instruction_count; ++j) {
+            instructions[j] = GenRandomArmInst(start_address + j * 4, j == instruction_count - 1);
+        }
 
         regs[15] = start_address;
         RunTestInstance(jit, uni, jit_env, uni_env, regs, ext_reg, instructions, cpsr, fpcr, 100);
@@ -523,11 +560,11 @@ TEST_CASE("A32: Single random thumb instruction", "[thumb]") {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
 
-        instructions = GenRandomThumbInst(0, true);
-
         const u32 start_address = 100;
         const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x1F0;
         const u32 fpcr = RandomFpcr();
+
+        instructions = GenRandomThumbInst(start_address, true);
 
         INFO("Instruction: 0x" << std::hex << instructions[0]);
 
@@ -551,14 +588,14 @@ TEST_CASE("A32: Single random thumb instruction (offset)", "[thumb]") {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
 
-        instructions.clear();
-        instructions.push_back(0xbf00);  // NOP
-        const std::vector<u16> inst = GenRandomThumbInst(0, true);
-        instructions.insert(instructions.end(), inst.begin(), inst.end());
-
         const u32 start_address = 100;
         const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x1F0;
         const u32 fpcr = RandomFpcr();
+
+        instructions.clear();
+        instructions.push_back(0xbf00);  // NOP
+        const std::vector<u16> inst = GenRandomThumbInst(start_address + 2, true);
+        instructions.insert(instructions.end(), inst.begin(), inst.end());
 
         INFO("Instruction: 0x" << std::hex << inst[0]);
 
@@ -582,15 +619,15 @@ TEST_CASE("A32: Small random thumb block", "[thumb]") {
         std::generate(regs.begin(), regs.end(), [] { return RandInt<u32>(0, ~u32(0)); });
         std::generate(ext_reg.begin(), ext_reg.end(), [] { return RandInt<u32>(0, ~u32(0)); });
 
-        instructions.clear();
-        for (size_t i = 0; i < 5; i++) {
-            const std::vector<u16> inst = GenRandomThumbInst(instructions.size() * 2, i == 4);
-            instructions.insert(instructions.end(), inst.begin(), inst.end());
-        }
-
         const u32 start_address = 100;
         const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x1F0;
         const u32 fpcr = RandomFpcr();
+
+        instructions.clear();
+        for (size_t i = 0; i < 5; i++) {
+            const std::vector<u16> inst = GenRandomThumbInst(start_address + instructions.size() * 2, i == 4);
+            instructions.insert(instructions.end(), inst.begin(), inst.end());
+        }
 
         regs[15] = start_address;
         RunTestInstance(jit, uni, jit_env, uni_env, regs, ext_reg, instructions, cpsr, fpcr, 5);
@@ -615,10 +652,14 @@ TEST_CASE("A32: Test thumb IT instruction", "[thumb]") {
         const size_t pre_instructions = RandInt<size_t>(0, 3);
         const size_t post_instructions = RandInt<size_t>(5, 8);
 
+        const u32 start_address = 100;
+        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x1F0;
+        const u32 fpcr = RandomFpcr();
+
         instructions.clear();
 
         for (size_t i = 0; i < pre_instructions; i++) {
-            const std::vector<u16> inst = GenRandomThumbInst(instructions.size() * 2, false);
+            const std::vector<u16> inst = GenRandomThumbInst(start_address + instructions.size() * 2, false);
             instructions.insert(instructions.end(), inst.begin(), inst.end());
         }
 
@@ -635,14 +676,10 @@ TEST_CASE("A32: Test thumb IT instruction", "[thumb]") {
         }();
 
         for (size_t i = 0; i < post_instructions; i++) {
-            const std::vector<u16> inst = GenRandomThumbInst(instructions.size() * 2, i == post_instructions - 1, it_state);
+            const std::vector<u16> inst = GenRandomThumbInst(start_address + instructions.size() * 2, i == post_instructions - 1, it_state);
             instructions.insert(instructions.end(), inst.begin(), inst.end());
             it_state = it_state.Advance();
         }
-
-        const u32 start_address = 100;
-        const u32 cpsr = (RandInt<u32>(0, 0xF) << 28) | 0x1F0;
-        const u32 fpcr = RandomFpcr();
 
         regs[15] = start_address;
         RunTestInstance(jit, uni, jit_env, uni_env, regs, ext_reg, instructions, cpsr, fpcr, pre_instructions + 1 + post_instructions);
