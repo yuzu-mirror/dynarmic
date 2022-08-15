@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.12)
 project(dynarmic LANGUAGES C CXX ASM VERSION 6.2.3)
 
 # Determine if we're built as a subproject (using add_subdirectory)
@@ -45,7 +45,6 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMakeModules")
 # Compiler flags
 if (MSVC)
     set(DYNARMIC_CXX_FLAGS
-        /std:c++latest # CMAKE_CXX_STANDARD has no effect on MSVC until CMake 3.10.
         /experimental:external
         /external:W0
         /external:anglebrackets
