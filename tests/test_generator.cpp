@@ -342,7 +342,7 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
 }
 }  // Anonymous namespace
 
-void TestThumb(size_t num_instructions, size_t num_iterations = 100000) {
+void TestThumb(size_t num_instructions, size_t num_iterations) {
     ThumbTestEnv jit_env{};
     Dynarmic::A32::Jit jit{GetUserConfig(jit_env)};
 
