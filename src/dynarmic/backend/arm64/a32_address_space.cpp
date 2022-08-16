@@ -10,9 +10,11 @@
 #include "dynarmic/backend/arm64/devirtualize.h"
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/stack_layout.h"
+#include "dynarmic/common/cast_util.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
+#include "dynarmic/interface/exclusive_monitor.h"
 #include "dynarmic/ir/opt/passes.h"
 
 namespace Dynarmic::Backend::Arm64 {
@@ -35,6 +37,61 @@ static void* EmitCallTrampoline(oaknut::CodeGenerator& code, T* this_) {
     code.dx(info.this_ptr);
     code.l(l_addr);
     code.dx(info.fn_ptr);
+
+    return target;
+}
+
+template<auto callback, typename T>
+static void* EmitExclusiveReadCallTrampoline(oaknut::CodeGenerator& code, const A32::UserConfig& conf) {
+    using namespace oaknut::util;
+
+    oaknut::Label l_addr, l_this;
+
+    auto fn = [](const A32::UserConfig& conf, A32::VAddr vaddr) -> T {
+        return conf.global_monitor->ReadAndMark<T>(conf.processor_id, vaddr, [&]() -> T {
+            return (conf.callbacks->*callback)(vaddr);
+        });
+    };
+
+    void* target = code.ptr<void*>();
+    code.LDR(X0, l_this);
+    code.LDR(Xscratch0, l_addr);
+    code.BR(Xscratch0);
+
+    code.align(8);
+    code.l(l_this);
+    code.dx(mcl::bit_cast<u64>(&conf));
+    code.l(l_addr);
+    code.dx(mcl::bit_cast<u64>(Common::FptrCast(fn)));
+
+    return target;
+}
+
+template<auto callback, typename T>
+static void* EmitExclusiveWriteCallTrampoline(oaknut::CodeGenerator& code, const A32::UserConfig& conf) {
+    using namespace oaknut::util;
+
+    oaknut::Label l_addr, l_this;
+
+    auto fn = [](const A32::UserConfig& conf, A32::VAddr vaddr, T value) -> u32 {
+        return conf.global_monitor->DoExclusiveOperation<T>(conf.processor_id, vaddr,
+                                                            [&](T expected) -> bool {
+                                                                return (conf.callbacks->*callback)(vaddr, value, expected);
+                                                            })
+                 ? 0
+                 : 1;
+    };
+
+    void* target = code.ptr<void*>();
+    code.LDR(X0, l_this);
+    code.LDR(Xscratch0, l_addr);
+    code.BR(Xscratch0);
+
+    code.align(8);
+    code.l(l_this);
+    code.dx(mcl::bit_cast<u64>(&conf));
+    code.l(l_addr);
+    code.dx(mcl::bit_cast<u64>(Common::FptrCast(fn)));
 
     return target;
 }
@@ -121,11 +178,23 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.read_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead16>(code, conf.callbacks);
     prelude_info.read_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead32>(code, conf.callbacks);
     prelude_info.read_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead64>(code, conf.callbacks);
+    prelude_info.exclusive_read_memory_8 = EmitExclusiveReadCallTrampoline<&A32::UserCallbacks::MemoryRead8, u8>(code, conf);
+    prelude_info.exclusive_read_memory_16 = EmitExclusiveReadCallTrampoline<&A32::UserCallbacks::MemoryRead16, u16>(code, conf);
+    prelude_info.exclusive_read_memory_32 = EmitExclusiveReadCallTrampoline<&A32::UserCallbacks::MemoryRead32, u32>(code, conf);
+    prelude_info.exclusive_read_memory_64 = EmitExclusiveReadCallTrampoline<&A32::UserCallbacks::MemoryRead64, u64>(code, conf);
     prelude_info.write_memory_8 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite8>(code, conf.callbacks);
     prelude_info.write_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite16>(code, conf.callbacks);
     prelude_info.write_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite32>(code, conf.callbacks);
     prelude_info.write_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite64>(code, conf.callbacks);
+    prelude_info.exclusive_write_memory_8 = EmitExclusiveWriteCallTrampoline<&A32::UserCallbacks::MemoryWriteExclusive8, u8>(code, conf);
+    prelude_info.exclusive_write_memory_16 = EmitExclusiveWriteCallTrampoline<&A32::UserCallbacks::MemoryWriteExclusive16, u16>(code, conf);
+    prelude_info.exclusive_write_memory_32 = EmitExclusiveWriteCallTrampoline<&A32::UserCallbacks::MemoryWriteExclusive32, u32>(code, conf);
+    prelude_info.exclusive_write_memory_64 = EmitExclusiveWriteCallTrampoline<&A32::UserCallbacks::MemoryWriteExclusive64, u64>(code, conf);
+    prelude_info.call_svc = EmitCallTrampoline<&A32::UserCallbacks::CallSVC>(code, conf.callbacks);
+    prelude_info.exception_raised = EmitCallTrampoline<&A32::UserCallbacks::ExceptionRaised>(code, conf.callbacks);
     prelude_info.isb_raised = EmitCallTrampoline<&A32::UserCallbacks::InstructionSynchronizationBarrierRaised>(code, conf.callbacks);
+    prelude_info.add_ticks = EmitCallTrampoline<&A32::UserCallbacks::AddTicks>(code, conf.callbacks);
+    prelude_info.get_ticks_remaining = EmitCallTrampoline<&A32::UserCallbacks::GetTicksRemaining>(code, conf.callbacks);
 
     prelude_info.end_of_prelude = code.ptr<u32*>();
 
@@ -185,6 +254,18 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
         case LinkTarget::ReadMemory64:
             c.BL(prelude_info.read_memory_64);
             break;
+        case LinkTarget::ExclusiveReadMemory8:
+            c.BL(prelude_info.exclusive_read_memory_8);
+            break;
+        case LinkTarget::ExclusiveReadMemory16:
+            c.BL(prelude_info.exclusive_read_memory_16);
+            break;
+        case LinkTarget::ExclusiveReadMemory32:
+            c.BL(prelude_info.exclusive_read_memory_32);
+            break;
+        case LinkTarget::ExclusiveReadMemory64:
+            c.BL(prelude_info.exclusive_read_memory_64);
+            break;
         case LinkTarget::WriteMemory8:
             c.BL(prelude_info.write_memory_8);
             break;
@@ -197,8 +278,32 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
         case LinkTarget::WriteMemory64:
             c.BL(prelude_info.write_memory_64);
             break;
+        case LinkTarget::ExclusiveWriteMemory8:
+            c.BL(prelude_info.exclusive_write_memory_8);
+            break;
+        case LinkTarget::ExclusiveWriteMemory16:
+            c.BL(prelude_info.exclusive_write_memory_16);
+            break;
+        case LinkTarget::ExclusiveWriteMemory32:
+            c.BL(prelude_info.exclusive_write_memory_32);
+            break;
+        case LinkTarget::ExclusiveWriteMemory64:
+            c.BL(prelude_info.exclusive_write_memory_64);
+            break;
+        case LinkTarget::CallSVC:
+            c.BL(prelude_info.call_svc);
+            break;
+        case LinkTarget::ExceptionRaised:
+            c.BL(prelude_info.exception_raised);
+            break;
         case LinkTarget::InstructionSynchronizationBarrierRaised:
             c.BL(prelude_info.isb_raised);
+            break;
+        case LinkTarget::AddTicks:
+            c.BL(prelude_info.add_ticks);
+            break;
+        case LinkTarget::GetTicksRemaining:
+            c.BL(prelude_info.get_ticks_remaining);
             break;
         default:
             ASSERT_FALSE("Invalid relocation target");

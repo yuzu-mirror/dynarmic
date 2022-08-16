@@ -54,17 +54,30 @@ private:
 
         using RunCodeFuncType = HaltReason (*)(CodePtr entry_point, A32JitState* context, volatile u32* halt_reason);
         RunCodeFuncType run_code;
+        RunCodeFuncType step_code;
         void* return_from_run_code;
 
         void* read_memory_8;
         void* read_memory_16;
         void* read_memory_32;
         void* read_memory_64;
+        void* exclusive_read_memory_8;
+        void* exclusive_read_memory_16;
+        void* exclusive_read_memory_32;
+        void* exclusive_read_memory_64;
         void* write_memory_8;
         void* write_memory_16;
         void* write_memory_32;
         void* write_memory_64;
+        void* exclusive_write_memory_8;
+        void* exclusive_write_memory_16;
+        void* exclusive_write_memory_32;
+        void* exclusive_write_memory_64;
+        void* call_svc;
+        void* exception_raised;
         void* isb_raised;
+        void* add_ticks;
+        void* get_ticks_remaining;
     } prelude_info;
 };
 
