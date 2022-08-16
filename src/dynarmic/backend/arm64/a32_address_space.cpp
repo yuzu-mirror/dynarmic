@@ -166,6 +166,27 @@ void A32AddressSpace::EmitPrelude() {
 
     code.BR(X0);
 
+    prelude_info.step_code = code.ptr<PreludeInfo::RunCodeFuncType>();
+    ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
+
+    code.MOV(Xstate, X1);
+    code.MOV(Xhalt, X2);
+
+    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+    code.AND(Wscratch0, Wscratch0, 0xffff0000);
+    code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
+    code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
+    code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+
+    oaknut::Label step_hr_loop;
+    code.l(step_hr_loop);
+    code.LDAXR(Wscratch0, Xhalt);
+    code.ORR(Wscratch0, Wscratch0, static_cast<u32>(HaltReason::Step));
+    code.STLXR(Wscratch1, Wscratch0, Xhalt);
+    code.CBNZ(Wscratch1, step_hr_loop);
+
+    code.BR(X0);
+
     prelude_info.return_from_run_code = code.ptr<void*>();
 
     code.LDR(Wscratch0, SP, offsetof(StackLayout, save_host_fpcr));

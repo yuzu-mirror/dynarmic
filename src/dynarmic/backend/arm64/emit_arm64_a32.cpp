@@ -61,8 +61,8 @@ void EmitSetUpperLocationDescriptor(oaknut::CodeGenerator& code, EmitContext& ct
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location, bool) {
     EmitSetUpperLocationDescriptor(code, ctx, terminal.next, initial_location);
 
-    code.MOV(Xscratch0, terminal.next.Value());
-    code.STUR(Xscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
+    code.MOV(Wscratch0, A32::LocationDescriptor{terminal.next}.PC());
+    code.STR(Wscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
     EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
 
     // TODO: Implement LinkBlock optimization
@@ -71,8 +71,8 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location, bool) {
     EmitSetUpperLocationDescriptor(code, ctx, terminal.next, initial_location);
 
-    code.MOV(Xscratch0, terminal.next.Value());
-    code.STUR(Xscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
+    code.MOV(Wscratch0, A32::LocationDescriptor{terminal.next}.PC());
+    code.STR(Wscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
     EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
 
     // TODO: Implement LinkBlockFast optimization

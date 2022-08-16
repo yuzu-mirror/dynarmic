@@ -79,11 +79,11 @@ struct Jit::Impl final {
             jit_interface->is_executing = false;
         };
 
-        ASSERT_FALSE("Unimplemented");
+        HaltReason hr = core.Step(current_address_space, current_state, &halt_reason);
 
         PerformRequestedCacheInvalidation();
 
-        return HaltReason{};
+        return hr;
     }
 
     void ClearCache() {
