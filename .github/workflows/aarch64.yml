@@ -75,6 +75,10 @@ jobs:
         working-directory: ${{github.workspace}}/build-x64
         run: cmake --build . --config Release
 
-      - name: Test
+      - name: Basic tests
+        working-directory: ${{github.workspace}}
+        run: qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_tests -d yes
+
+      - name: Test against x86_64 implementation
         working-directory: ${{github.workspace}}
         run: diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator) <(./build-x64/tests/dynarmic_test_generator)
