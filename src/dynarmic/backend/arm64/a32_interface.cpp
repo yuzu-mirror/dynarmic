@@ -175,7 +175,11 @@ private:
         }
 
         if (!invalid_cache_ranges.empty()) {
-            ASSERT_FALSE("Unimplemented");
+            // TODO: Optimize
+            current_address_space.ClearCache();
+
+            invalid_cache_ranges.clear();
+            return;
         }
     }
 
