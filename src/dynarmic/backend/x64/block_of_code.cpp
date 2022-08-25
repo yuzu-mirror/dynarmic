@@ -59,13 +59,13 @@ constexpr size_t CONSTANT_POOL_SIZE = 2 * 1024 * 1024;
 class CustomXbyakAllocator : public Xbyak::Allocator {
 public:
 #ifndef _WIN32
-    static constexpr size_t PAGE_SIZE = 4096;
+    static constexpr size_t DYNARMIC_PAGE_SIZE = 4096;
 
     // Can't subclass Xbyak::MmapAllocator because it is not a pure interface
     // and doesn't expose its construtor
     uint8_t* alloc(size_t size) override {
         // Waste a page to store the size
-        size += PAGE_SIZE;
+        size += DYNARMIC_PAGE_SIZE;
 
 #    if defined(MAP_ANONYMOUS)
         int mode = MAP_PRIVATE | MAP_ANONYMOUS;
@@ -83,13 +83,13 @@ public:
             throw Xbyak::Error(Xbyak::ERR_CANT_ALLOC);
         }
         std::memcpy(p, &size, sizeof(size_t));
-        return static_cast<uint8_t*>(p) + PAGE_SIZE;
+        return static_cast<uint8_t*>(p) + DYNARMIC_PAGE_SIZE;
     }
 
     void free(uint8_t* p) override {
         size_t size;
-        std::memcpy(&size, p - PAGE_SIZE, sizeof(size_t));
-        munmap(p - PAGE_SIZE, size);
+        std::memcpy(&size, p - DYNARMIC_PAGE_SIZE, sizeof(size_t));
+        munmap(p - DYNARMIC_PAGE_SIZE, size);
     }
 #endif
 
