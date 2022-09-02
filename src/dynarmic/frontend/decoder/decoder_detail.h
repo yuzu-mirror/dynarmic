@@ -42,7 +42,7 @@ struct detail {
      * A '0' in a bitstring indicates that a zero must be present at that bit position.
      * A '1' in a bitstring indicates that a one must be present at that bit position.
      */
-#ifdef __APPLE__  // AppleClang workaround
+#ifdef __clang__
     static constexpr auto GetMaskAndExpect(std::array<char, opcode_bitsize> bitstring) {
 #else
     static consteval auto GetMaskAndExpect(std::array<char, opcode_bitsize> bitstring) {
