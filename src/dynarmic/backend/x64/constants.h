@@ -122,8 +122,8 @@ constexpr u32 FixupLUT(FpFixup src_qnan = FpFixup::Dest,
                        FpFixup src_posone = FpFixup::Dest,
                        FpFixup src_neginf = FpFixup::Dest,
                        FpFixup src_posinf = FpFixup::Dest,
-                       FpFixup src_pos = FpFixup::Dest,
-                       FpFixup src_neg = FpFixup::Dest) {
+                       FpFixup src_neg = FpFixup::Dest,
+                       FpFixup src_pos = FpFixup::Dest) {
     u32 fixup_lut = 0;
     fixup_lut = mcl::bit::set_bits<0, 3, u32>(fixup_lut, static_cast<u32>(src_qnan));
     fixup_lut = mcl::bit::set_bits<4, 7, u32>(fixup_lut, static_cast<u32>(src_snan));
@@ -131,8 +131,8 @@ constexpr u32 FixupLUT(FpFixup src_qnan = FpFixup::Dest,
     fixup_lut = mcl::bit::set_bits<12, 15, u32>(fixup_lut, static_cast<u32>(src_posone));
     fixup_lut = mcl::bit::set_bits<16, 19, u32>(fixup_lut, static_cast<u32>(src_neginf));
     fixup_lut = mcl::bit::set_bits<20, 23, u32>(fixup_lut, static_cast<u32>(src_posinf));
-    fixup_lut = mcl::bit::set_bits<24, 27, u32>(fixup_lut, static_cast<u32>(src_pos));
-    fixup_lut = mcl::bit::set_bits<28, 31, u32>(fixup_lut, static_cast<u32>(src_neg));
+    fixup_lut = mcl::bit::set_bits<24, 27, u32>(fixup_lut, static_cast<u32>(src_neg));
+    fixup_lut = mcl::bit::set_bits<28, 31, u32>(fixup_lut, static_cast<u32>(src_pos));
     return fixup_lut;
 }
 
