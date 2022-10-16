@@ -47,6 +47,33 @@ Context& Context::operator=(Context&& ctx) noexcept {
     return *this;
 }
 
+std::array<std::uint32_t, 16>& Context::Regs() {
+    return impl->state.regs;
+}
+const std::array<std::uint32_t, 16>& Context::Regs() const {
+    return impl->state.regs;
+}
+std::array<std::uint32_t, 64>& Context::ExtRegs() {
+    return impl->state.ext_regs;
+}
+const std::array<std::uint32_t, 64>& Context::ExtRegs() const {
+    return impl->state.ext_regs;
+}
+
+std::uint32_t Context::Cpsr() const {
+    return impl->state.Cpsr();
+}
+void Context::SetCpsr(std::uint32_t value) {
+    impl->state.SetCpsr(value);
+}
+
+std::uint32_t Context::Fpscr() const {
+    return impl->state.Fpscr();
+}
+void Context::SetFpscr(std::uint32_t value) {
+    return impl->state.SetFpscr(value);
+}
+
 struct Jit::Impl final {
     Impl(Jit* jit_interface, A32::UserConfig conf)
             : jit_interface(jit_interface)

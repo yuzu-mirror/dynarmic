@@ -540,7 +540,7 @@ void EmitIR<IR::Opcode::A32ExceptionRaised>(oaknut::CodeGenerator& code, EmitCon
 
     code.MOV(W1, args[0].GetImmediateU32());
     code.MOV(W2, args[1].GetImmediateU32());
-    EmitRelocation(code, ctx, LinkTarget::CallSVC);
+    EmitRelocation(code, ctx, LinkTarget::ExceptionRaised);
 
     if (ctx.conf.enable_cycle_counting) {
         EmitRelocation(code, ctx, LinkTarget::GetTicksRemaining);
