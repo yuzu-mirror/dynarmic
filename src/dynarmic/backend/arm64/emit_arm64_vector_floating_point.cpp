@@ -630,10 +630,19 @@ void EmitIR<IR::Opcode::FPVectorSub64>(oaknut::CodeGenerator& code, EmitContext&
 
 template<>
 void EmitIR<IR::Opcode::FPVectorToHalf32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const auto rounding_mode = static_cast<FP::RoundingMode>(args[1].GetImmediateU8());
+    ASSERT(rounding_mode == FP::RoundingMode::ToNearest_TieEven);
+    const bool fpcr_controlled = args[2].GetImmediateU1();
+
+    auto Dresult = ctx.reg_alloc.WriteD(inst);
+    auto Qoperand = ctx.reg_alloc.ReadQ(args[0]);
+    RegAlloc::Realize(Dresult, Qoperand);
+    ctx.fpsr.Load();
+
+    MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&] {
+        code.FCVTN(Dresult->H4(), Qoperand->S4());
+    });
 }
 
 template<>
