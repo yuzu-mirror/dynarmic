@@ -220,6 +220,7 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.end_of_prelude = code.ptr<u32*>();
 
     mem.invalidate_all();
+    mem.protect();
 }
 
 size_t A32AddressSpace::GetRemainingSize() {
