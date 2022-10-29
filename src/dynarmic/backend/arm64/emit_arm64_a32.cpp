@@ -311,20 +311,54 @@ void EmitIR<IR::Opcode::A32GetCpsr>(oaknut::CodeGenerator& code, EmitContext& ct
     code.ORR(Wcpsr, Wcpsr, Wscratch0, LSL, 5);
 }
 
-static void SetCpsrImpl(u32 value, A32JitState* jit_state) {
-    jit_state->SetCpsr(value);
-}
-
 template<>
 void EmitIR<IR::Opcode::A32SetCpsr>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr, args[0]);
+    auto Wcpsr = ctx.reg_alloc.ReadW(args[0]);
+    RegAlloc::Realize(Wcpsr);
 
-    // TODO: Inline
+    // NZCV, Q flags
+    code.AND(Wscratch0, Wcpsr, 0xF0000000);
+    code.AND(Wscratch1, Wcpsr, 1 << 27);
 
-    code.MOV(X1, Xstate);
-    code.MOV(Xscratch0, reinterpret_cast<u64>(&SetCpsrImpl));
-    code.BLR(Xscratch0);
+    static_assert(offsetof(A32JitState, cpsr_nzcv) + sizeof(u32) == offsetof(A32JitState, cpsr_q));
+    code.STP(Wscratch0, Wscratch1, Xstate, offsetof(A32JitState, cpsr_nzcv));
+
+    // GE flags
+    // this does the following:
+    // cpsr_ge |= mcl::bit::get_bit<19>(cpsr) ? 0xFF000000 : 0;
+    // cpsr_ge |= mcl::bit::get_bit<18>(cpsr) ? 0x00FF0000 : 0;
+    // cpsr_ge |= mcl::bit::get_bit<17>(cpsr) ? 0x0000FF00 : 0;
+    // cpsr_ge |= mcl::bit::get_bit<16>(cpsr) ? 0x000000FF : 0;
+    code.UBFX(Wscratch0, Wcpsr, 16, 4);
+    code.MOV(Wscratch1, 0x00204081);
+    code.MUL(Wscratch0, Wscratch0, Wscratch1);
+    code.AND(Wscratch0, Wscratch0, 0x01010101);
+    code.LSL(Wscratch1, Wscratch0, 8);
+    code.SUB(Wscratch0, Wscratch1, Wscratch0);
+
+    // Other flags
+    code.MOV(Wscratch1, 0x010001DF);
+    code.AND(Wscratch1, Wcpsr, Wscratch1);
+
+    static_assert(offsetof(A32JitState, cpsr_jaifm) + sizeof(u32) == offsetof(A32JitState, cpsr_ge));
+    code.STP(Wscratch1, Wscratch0, Xstate, offsetof(A32JitState, cpsr_jaifm));
+
+    // IT state
+    code.AND(Wscratch0, Wcpsr, 0xFC00);
+    code.LSR(Wscratch1, Wcpsr, 17);
+    code.AND(Wscratch1, Wscratch1, 0x300);
+    code.ORR(Wscratch0, Wscratch0, Wscratch1);
+
+    // E flag, T flag
+    code.LSR(Wscratch1, Wcpsr, 8);
+    code.AND(Wscratch1, Wscratch1, 0x2);
+    code.ORR(Wscratch0, Wscratch0, Wscratch1);
+    code.LDR(Wscratch1, Xstate, offsetof(A32JitState, upper_location_descriptor));
+    code.BFXIL(Wscratch0, Wcpsr, 5, 1);
+    code.AND(Wscratch1, Wscratch1, 0xFFFF0000);
+    code.ORR(Wscratch0, Wscratch0, Wscratch1);
+    code.STR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
 }
 
 template<>
