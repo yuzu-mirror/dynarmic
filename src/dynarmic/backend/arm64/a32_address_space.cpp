@@ -192,6 +192,12 @@ void A32AddressSpace::EmitPrelude() {
     code.LDR(Wscratch0, SP, offsetof(StackLayout, save_host_fpcr));
     code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
 
+    oaknut::Label exit_hr_loop;
+    code.l(exit_hr_loop);
+    code.LDAXR(W0, Xhalt);
+    code.STLXR(Wscratch0, WZR, Xhalt);
+    code.CBNZ(Wscratch0, exit_hr_loop);
+
     ABI_PopRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
     code.RET();
 
