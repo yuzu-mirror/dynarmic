@@ -107,8 +107,8 @@ struct detail {
             }
         }
 
-#ifndef DYNARMIC_IGNORE_ASSERTS
-        // Avoids a MSVC ICE.
+#if !defined(DYNARMIC_IGNORE_ASSERTS) && !defined(__ANDROID__)
+        // Avoids a MSVC ICE, and avoids Android NDK issue.
         ASSERT(std::all_of(masks.begin(), masks.end(), [](auto m) { return m != 0; }));
 #endif
 
