@@ -19,10 +19,9 @@ constexpr size_t SpillCount = 64;
 #endif
 
 struct alignas(16) StackLayout {
-    s64 cycles_remaining;
-    s64 cycles_to_run;
-
     std::array<std::array<u64, 2>, SpillCount> spill;
+
+    s64 cycles_to_run;
 
     u32 save_host_fpcr;
 

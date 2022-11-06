@@ -152,55 +152,6 @@ void A32AddressSpace::EmitPrelude() {
 
     mem.unprotect();
 
-    prelude_info.run_code = code.ptr<PreludeInfo::RunCodeFuncType>();
-    ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
-
-    code.MOV(Xstate, X1);
-    code.MOV(Xhalt, X2);
-
-    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
-    code.AND(Wscratch0, Wscratch0, 0xffff0000);
-    code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
-    code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
-    code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
-
-    code.BR(X0);
-
-    prelude_info.step_code = code.ptr<PreludeInfo::RunCodeFuncType>();
-    ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
-
-    code.MOV(Xstate, X1);
-    code.MOV(Xhalt, X2);
-
-    code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
-    code.AND(Wscratch0, Wscratch0, 0xffff0000);
-    code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
-    code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
-    code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
-
-    oaknut::Label step_hr_loop;
-    code.l(step_hr_loop);
-    code.LDAXR(Wscratch0, Xhalt);
-    code.ORR(Wscratch0, Wscratch0, static_cast<u32>(HaltReason::Step));
-    code.STLXR(Wscratch1, Wscratch0, Xhalt);
-    code.CBNZ(Wscratch1, step_hr_loop);
-
-    code.BR(X0);
-
-    prelude_info.return_from_run_code = code.ptr<void*>();
-
-    code.LDR(Wscratch0, SP, offsetof(StackLayout, save_host_fpcr));
-    code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
-
-    oaknut::Label exit_hr_loop;
-    code.l(exit_hr_loop);
-    code.LDAXR(W0, Xhalt);
-    code.STLXR(Wscratch0, WZR, Xhalt);
-    code.CBNZ(Wscratch0, exit_hr_loop);
-
-    ABI_PopRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
-    code.RET();
-
     prelude_info.read_memory_8 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead8>(code, conf.callbacks);
     prelude_info.read_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead16>(code, conf.callbacks);
     prelude_info.read_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead32>(code, conf.callbacks);
@@ -222,6 +173,112 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.isb_raised = EmitCallTrampoline<&A32::UserCallbacks::InstructionSynchronizationBarrierRaised>(code, conf.callbacks);
     prelude_info.add_ticks = EmitCallTrampoline<&A32::UserCallbacks::AddTicks>(code, conf.callbacks);
     prelude_info.get_ticks_remaining = EmitCallTrampoline<&A32::UserCallbacks::GetTicksRemaining>(code, conf.callbacks);
+
+    oaknut::Label return_from_run_code;
+
+    prelude_info.run_code = code.ptr<PreludeInfo::RunCodeFuncType>();
+    {
+        ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
+
+        code.MOV(X19, X0);
+        code.MOV(Xstate, X1);
+        code.MOV(Xhalt, X2);
+
+        if (conf.enable_cycle_counting) {
+            code.BL(prelude_info.get_ticks_remaining);
+            code.MOV(Xticks, X0);
+            code.STR(Xticks, SP, offsetof(StackLayout, cycles_to_run));
+        }
+
+        code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+        code.AND(Wscratch0, Wscratch0, 0xffff0000);
+        code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
+        code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
+        code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+
+        code.BR(X19);
+    }
+
+    prelude_info.step_code = code.ptr<PreludeInfo::RunCodeFuncType>();
+    {
+        ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
+
+        code.MOV(X19, X0);
+        code.MOV(Xstate, X1);
+        code.MOV(Xhalt, X2);
+
+        if (conf.enable_cycle_counting) {
+            code.MOV(Xticks, 1);
+            code.STR(Xticks, SP, offsetof(StackLayout, cycles_to_run));
+        }
+
+        code.LDR(Wscratch0, Xstate, offsetof(A32JitState, upper_location_descriptor));
+        code.AND(Wscratch0, Wscratch0, 0xffff0000);
+        code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
+        code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
+        code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+
+        oaknut::Label step_hr_loop;
+        code.l(step_hr_loop);
+        code.LDAXR(Wscratch0, Xhalt);
+        code.ORR(Wscratch0, Wscratch0, static_cast<u32>(HaltReason::Step));
+        code.STLXR(Wscratch1, Wscratch0, Xhalt);
+        code.CBNZ(Wscratch1, step_hr_loop);
+
+        code.BR(X19);
+    }
+
+    prelude_info.return_to_dispatcher = code.ptr<void*>();
+    {
+        oaknut::Label l_this, l_addr;
+
+        code.LDAR(Wscratch0, Xhalt);
+        code.CBNZ(Wscratch0, return_from_run_code);
+
+        if (conf.enable_cycle_counting) {
+            code.CMP(Xticks, 0);
+            code.B(LE, return_from_run_code);
+        }
+
+        code.LDR(X0, l_this);
+        code.MOV(X1, Xstate);
+        code.LDR(Xscratch0, l_addr);
+        code.BLR(Xscratch0);
+        code.BR(X0);
+
+        const auto fn = [](A32AddressSpace& self, A32JitState& context) -> CodePtr {
+            return self.GetOrEmit(context.GetLocationDescriptor());
+        };
+
+        code.align(8);
+        code.l(l_this);
+        code.dx(mcl::bit_cast<u64>(this));
+        code.l(l_addr);
+        code.dx(mcl::bit_cast<u64>(Common::FptrCast(fn)));
+    }
+
+    prelude_info.return_from_run_code = code.ptr<void*>();
+    {
+        code.l(return_from_run_code);
+
+        if (conf.enable_cycle_counting) {
+            code.LDR(X1, SP, offsetof(StackLayout, cycles_to_run));
+            code.SUB(X1, X1, Xticks);
+            code.BL(prelude_info.add_ticks);
+        }
+
+        code.LDR(Wscratch0, SP, offsetof(StackLayout, save_host_fpcr));
+        code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+
+        oaknut::Label exit_hr_loop;
+        code.l(exit_hr_loop);
+        code.LDAXR(W0, Xhalt);
+        code.STLXR(Wscratch0, WZR, Xhalt);
+        code.CBNZ(Wscratch0, exit_hr_loop);
+
+        ABI_PopRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
+        code.RET();
+    }
 
     prelude_info.end_of_prelude = code.ptr<u32*>();
 
@@ -267,6 +324,9 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
         CodeGenerator c{reinterpret_cast<u32*>(block_info.entry_point + ptr_offset)};
 
         switch (target) {
+        case LinkTarget::ReturnToDispatcher:
+            c.B(prelude_info.return_to_dispatcher);
+            break;
         case LinkTarget::ReturnFromRunCode:
             c.B(prelude_info.return_from_run_code);
             break;

@@ -39,6 +39,7 @@ namespace Dynarmic::Backend::Arm64 {
 using CodePtr = std::byte*;
 
 enum class LinkTarget {
+    ReturnToDispatcher,
     ReturnFromRunCode,
     ReadMemory8,
     ReadMemory16,

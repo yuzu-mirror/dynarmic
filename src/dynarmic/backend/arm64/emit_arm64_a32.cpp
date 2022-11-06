@@ -38,7 +38,7 @@ void EmitA32Terminal(oaknut::CodeGenerator&, EmitContext&, IR::Term::Interpret, 
 }
 
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::ReturnToDispatch, IR::LocationDescriptor, bool) {
-    EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 }
 
 void EmitSetUpperLocationDescriptor(oaknut::CodeGenerator& code, EmitContext& ctx, IR::LocationDescriptor new_location, IR::LocationDescriptor old_location) {
@@ -63,7 +63,7 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
 
     code.MOV(Wscratch0, A32::LocationDescriptor{terminal.next}.PC());
     code.STR(Wscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
-    EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 
     // TODO: Implement LinkBlock optimization
 }
@@ -73,19 +73,19 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
 
     code.MOV(Wscratch0, A32::LocationDescriptor{terminal.next}.PC());
     code.STR(Wscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
-    EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 
     // TODO: Implement LinkBlockFast optimization
 }
 
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool) {
-    EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 
     // TODO: Implement PopRSBHint optimization
 }
 
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::FastDispatchHint, IR::LocationDescriptor, bool) {
-    EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 
     // TODO: Implement FastDispatchHint optimization
 }
@@ -112,7 +112,7 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Ch
     code.CBNZ(Wscratch0, fail);
     EmitA32Terminal(code, ctx, terminal.else_, initial_location, is_single_step);
     code.l(fail);
-    EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 }
 
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Terminal terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
@@ -508,11 +508,9 @@ void EmitIR<IR::Opcode::A32CallSupervisor>(oaknut::CodeGenerator& code, EmitCont
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.PrepareForCall(nullptr);
 
-    static_assert(offsetof(StackLayout, cycles_remaining) + sizeof(u64) == offsetof(StackLayout, cycles_to_run));
-
     if (ctx.conf.enable_cycle_counting) {
-        code.LDP(Xscratch0, Xscratch1, SP, offsetof(StackLayout, cycles_remaining));
-        code.SUB(Xscratch0, Xscratch1, Xscratch0);
+        code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
+        code.SUB(Xscratch0, Xscratch0, Xticks);
         EmitRelocation(code, ctx, LinkTarget::AddTicks);
     }
 
@@ -521,7 +519,8 @@ void EmitIR<IR::Opcode::A32CallSupervisor>(oaknut::CodeGenerator& code, EmitCont
 
     if (ctx.conf.enable_cycle_counting) {
         EmitRelocation(code, ctx, LinkTarget::GetTicksRemaining);
-        code.STP(X0, X0, SP, offsetof(StackLayout, cycles_remaining));
+        code.STR(X0, SP, offsetof(StackLayout, cycles_to_run));
+        code.MOV(Xticks, X0);
     }
 }
 
@@ -530,11 +529,9 @@ void EmitIR<IR::Opcode::A32ExceptionRaised>(oaknut::CodeGenerator& code, EmitCon
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ctx.reg_alloc.PrepareForCall(nullptr);
 
-    static_assert(offsetof(StackLayout, cycles_remaining) + sizeof(u64) == offsetof(StackLayout, cycles_to_run));
-
     if (ctx.conf.enable_cycle_counting) {
-        code.LDP(Xscratch0, Xscratch1, SP, offsetof(StackLayout, cycles_remaining));
-        code.SUB(Xscratch0, Xscratch1, Xscratch0);
+        code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
+        code.SUB(Xscratch0, Xscratch0, Xticks);
         EmitRelocation(code, ctx, LinkTarget::AddTicks);
     }
 
@@ -544,7 +541,8 @@ void EmitIR<IR::Opcode::A32ExceptionRaised>(oaknut::CodeGenerator& code, EmitCon
 
     if (ctx.conf.enable_cycle_counting) {
         EmitRelocation(code, ctx, LinkTarget::GetTicksRemaining);
-        code.STP(X0, X0, SP, offsetof(StackLayout, cycles_remaining));
+        code.STR(X0, SP, offsetof(StackLayout, cycles_to_run));
+        code.MOV(Xticks, X0);
     }
 }
 

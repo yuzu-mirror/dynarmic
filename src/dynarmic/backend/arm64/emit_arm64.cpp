@@ -135,15 +135,17 @@ void EmitIR<IR::Opcode::NZCVFromPackedFlags>(oaknut::CodeGenerator&, EmitContext
     ctx.reg_alloc.DefineAsExisting(inst, args[0]);
 }
 
-static void EmitAddCycles(oaknut::CodeGenerator& code, EmitContext&, size_t cycles_to_add) {
-    code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
+static void EmitAddCycles(oaknut::CodeGenerator& code, EmitContext& ctx, size_t cycles_to_add) {
+    if (!ctx.conf.enable_cycle_counting) {
+        return;
+    }
+
     if (oaknut::AddSubImm::is_valid(cycles_to_add)) {
-        code.SUBS(Xscratch0, Xscratch0, cycles_to_add);
+        code.SUB(Xticks, Xticks, cycles_to_add);
     } else {
         code.MOV(Xscratch1, cycles_to_add);
-        code.SUBS(Xscratch0, Xscratch0, Xscratch1);
+        code.SUB(Xticks, Xticks, Xscratch1);
     }
-    code.STR(Xscratch0, SP, offsetof(StackLayout, cycles_remaining));
 }
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& conf) {
@@ -161,9 +163,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
         ASSERT(ctx.block.HasConditionFailedLocation());
 
         oaknut::Label pass = EmitA32Cond(code, ctx, ctx.block.GetCondition());
-        if (conf.enable_cycle_counting) {
-            EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
-        }
+        EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
         EmitA32ConditionFailedTerminal(code, ctx);
         code.l(pass);
     }
@@ -201,10 +201,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 
     reg_alloc.AssertNoMoreUses();
 
-    if (ctx.conf.enable_cycle_counting) {
-        EmitAddCycles(code, ctx, block.CycleCount());
-    }
-
+    EmitAddCycles(code, ctx, block.CycleCount());
     EmitA32Terminal(code, ctx);
 
     ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
