@@ -130,7 +130,7 @@ struct Jit::Impl final {
     }
 
     void HaltExecution(HaltReason hr) {
-        Atomic::Or(&halt_reason, ~static_cast<u32>(hr));
+        Atomic::Or(&halt_reason, static_cast<u32>(hr));
     }
 
     void ClearHalt(HaltReason hr) {
