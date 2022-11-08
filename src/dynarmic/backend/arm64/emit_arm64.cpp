@@ -216,4 +216,9 @@ void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget li
     code.NOP();
 }
 
+void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, BlockLinkType link_type, const IR::LocationDescriptor& descriptor) {
+    ctx.ebi.block_relocations[descriptor].emplace_back(BlockRelocation{code.ptr<CodePtr>() - ctx.ebi.entry_point, link_type});
+    code.NOP();
+}
+
 }  // namespace Dynarmic::Backend::Arm64

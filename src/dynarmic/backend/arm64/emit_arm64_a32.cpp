@@ -58,24 +58,34 @@ void EmitSetUpperLocationDescriptor(oaknut::CodeGenerator& code, EmitContext& ct
     }
 }
 
-void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location, bool) {
+void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
     EmitSetUpperLocationDescriptor(code, ctx, terminal.next, initial_location);
+
+    if (ctx.conf.HasOptimization(OptimizationFlag::BlockLinking) && !is_single_step) {
+        if (ctx.conf.enable_cycle_counting) {
+            code.CMP(Xticks, 0);
+            EmitRelocation(code, ctx, BlockLinkType::LinkBlockIfGreater, terminal.next);
+        } else {
+            code.LDAR(Wscratch0, Xhalt);
+            EmitRelocation(code, ctx, BlockLinkType::LinkBlockIfWscratch0IsZero, terminal.next);
+        }
+    }
 
     code.MOV(Wscratch0, A32::LocationDescriptor{terminal.next}.PC());
     code.STR(Wscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
     EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
-
-    // TODO: Implement LinkBlock optimization
 }
 
-void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location, bool) {
+void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
     EmitSetUpperLocationDescriptor(code, ctx, terminal.next, initial_location);
+
+    if (ctx.conf.HasOptimization(OptimizationFlag::BlockLinking) && !is_single_step) {
+        EmitRelocation(code, ctx, BlockLinkType::LinkBlockUnconditionally, terminal.next);
+    }
 
     code.MOV(Wscratch0, A32::LocationDescriptor{terminal.next}.PC());
     code.STR(Wscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
     EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
-
-    // TODO: Implement LinkBlockFast optimization
 }
 
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool) {

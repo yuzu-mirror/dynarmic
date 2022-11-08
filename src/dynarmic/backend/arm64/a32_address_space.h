@@ -9,6 +9,7 @@
 #include <oaknut/code_block.hpp>
 #include <oaknut/oaknut.hpp>
 #include <tsl/robin_map.h>
+#include <tsl/robin_set.h>
 
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/interface/A32/config.h"
@@ -39,7 +40,8 @@ private:
 
     size_t GetRemainingSize();
     EmittedBlockInfo Emit(IR::Block ir_block);
-    void Link(EmittedBlockInfo& block);
+    void Link(IR::LocationDescriptor block_descriptor, EmittedBlockInfo& block);
+    void RelinkForDescriptor(IR::LocationDescriptor target_descriptor);
 
     const A32::UserConfig conf;
 
@@ -48,6 +50,7 @@ private:
 
     tsl::robin_map<u64, CodePtr> block_entries;
     tsl::robin_map<u64, EmittedBlockInfo> block_infos;
+    tsl::robin_map<u64, tsl::robin_set<u64>> block_references;
 
     struct PreludeInfo {
         u32* end_of_prelude;

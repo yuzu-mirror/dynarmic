@@ -144,6 +144,7 @@ CodePtr A32AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
 void A32AddressSpace::ClearCache() {
     block_entries.clear();
     block_infos.clear();
+    block_references.clear();
     code.set_ptr(prelude_info.end_of_prelude);
 }
 
@@ -309,18 +310,57 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
         .state_nzcv_offset = offsetof(A32JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A32JitState, fpsr),
         .coprocessors = conf.coprocessors,
+        .optimizations = conf.unsafe_optimizations ? conf.optimizations : conf.optimizations & all_safe_optimizations,
     };
     EmittedBlockInfo block_info = EmitArm64(code, std::move(block), emit_conf);
 
-    Link(block_info);
+    Link(block.Location(), block_info);
 
     mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
+
+    RelinkForDescriptor(block.Location());
+
     mem.protect();
 
     return block_info;
 }
 
-void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
+static void LinkBlockLinks(const CodePtr entry_point, const CodePtr target_ptr, const std::vector<BlockRelocation>& block_relocations_list) {
+    using namespace oaknut;
+    using namespace oaknut::util;
+
+    for (auto [ptr_offset, type] : block_relocations_list) {
+        CodeGenerator c{reinterpret_cast<u32*>(entry_point + ptr_offset)};
+
+        switch (type) {
+        case BlockLinkType::LinkBlockUnconditionally:
+            if (target_ptr) {
+                c.B((void*)target_ptr);
+            } else {
+                c.NOP();
+            }
+            break;
+        case BlockLinkType::LinkBlockIfGreater:
+            if (target_ptr) {
+                c.B(GE, (void*)target_ptr);
+            } else {
+                c.NOP();
+            }
+            break;
+        case BlockLinkType::LinkBlockIfWscratch0IsZero:
+            if (target_ptr) {
+                c.CBZ(Wscratch0, (void*)target_ptr);
+            } else {
+                c.NOP();
+            }
+            break;
+        default:
+            ASSERT_FALSE("Invalid block relocation type");
+        }
+    }
+}
+
+void A32AddressSpace::Link(IR::LocationDescriptor block_descriptor, EmittedBlockInfo& block_info) {
     using namespace oaknut;
     using namespace oaknut::util;
 
@@ -399,6 +439,23 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
             break;
         default:
             ASSERT_FALSE("Invalid relocation target");
+        }
+    }
+
+    for (auto [target_descriptor, list] : block_info.block_relocations) {
+        block_references[target_descriptor.Value()].emplace(block_descriptor.Value());
+        LinkBlockLinks(block_info.entry_point, Get(target_descriptor), list);
+    }
+}
+
+void A32AddressSpace::RelinkForDescriptor(IR::LocationDescriptor target_descriptor) {
+    for (auto block_descriptor : block_references[target_descriptor.Value()]) {
+        if (auto iter = block_infos.find(block_descriptor); iter != block_infos.end()) {
+            const EmittedBlockInfo& block_info = iter->second;
+
+            LinkBlockLinks(block_info.entry_point, Get(target_descriptor), block_infos[block_descriptor].block_relocations[target_descriptor]);
+
+            mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
         }
     }
 }

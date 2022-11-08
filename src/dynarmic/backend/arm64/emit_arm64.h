@@ -11,8 +11,11 @@
 #include <vector>
 
 #include <mcl/stdint.hpp>
+#include <tsl/robin_map.h>
 
 #include "dynarmic/interface/A32/coprocessor.h"
+#include "dynarmic/interface/optimization_flags.h"
+#include "dynarmic/ir/location_descriptor.h"
 
 namespace oaknut {
 struct PointerCodeGeneratorPolicy;
@@ -29,7 +32,6 @@ class FPCR;
 namespace Dynarmic::IR {
 class Block;
 class Inst;
-class LocationDescriptor;
 enum class Cond;
 enum class Opcode;
 }  // namespace Dynarmic::IR
@@ -64,15 +66,27 @@ enum class LinkTarget {
     GetTicksRemaining,
 };
 
+enum class BlockLinkType {
+    LinkBlockUnconditionally,
+    LinkBlockIfGreater,
+    LinkBlockIfWscratch0IsZero,
+};
+
 struct Relocation {
     std::ptrdiff_t code_offset;
     LinkTarget target;
+};
+
+struct BlockRelocation {
+    std::ptrdiff_t code_offset;
+    BlockLinkType type;
 };
 
 struct EmittedBlockInfo {
     CodePtr entry_point;
     size_t size;
     std::vector<Relocation> relocations;
+    tsl::robin_map<IR::LocationDescriptor, std::vector<BlockRelocation>> block_relocations;
 };
 
 struct EmitConfig {
@@ -86,6 +100,10 @@ struct EmitConfig {
     size_t state_fpsr_offset;
 
     std::array<std::shared_ptr<A32::Coprocessor>, 16> coprocessors{};
+
+    OptimizationFlag optimizations;
+
+    bool HasOptimization(OptimizationFlag f) const { return (f & optimizations) != no_optimizations; }
 };
 
 struct EmitContext;
@@ -95,6 +113,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 template<IR::Opcode op>
 void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
 void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target);
+void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, BlockLinkType type, const IR::LocationDescriptor& descriptor);
 oaknut::Label EmitA32Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
