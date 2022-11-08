@@ -196,6 +196,9 @@ void A32AddressSpace::EmitPrelude() {
         code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
         code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
 
+        code.LDAR(Wscratch0, Xhalt);
+        code.CBNZ(Wscratch0, return_from_run_code);
+
         code.BR(X19);
     }
 
@@ -221,6 +224,7 @@ void A32AddressSpace::EmitPrelude() {
         oaknut::Label step_hr_loop;
         code.l(step_hr_loop);
         code.LDAXR(Wscratch0, Xhalt);
+        code.CBNZ(Wscratch0, return_from_run_code);
         code.ORR(Wscratch0, Wscratch0, static_cast<u32>(HaltReason::Step));
         code.STLXR(Wscratch1, Wscratch0, Xhalt);
         code.CBNZ(Wscratch1, step_hr_loop);

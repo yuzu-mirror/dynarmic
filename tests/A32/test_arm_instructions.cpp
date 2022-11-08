@@ -239,6 +239,7 @@ TEST_CASE("arm: Test InvalidateCacheRange", "[arm][A32]") {
 
     test_env.ticks_left = 4;
     jit.Run();
+    jit.Run();
 
     REQUIRE(jit.Regs()[0] == 5);
     REQUIRE(jit.Regs()[1] == 7);
