@@ -139,6 +139,9 @@ static void EmitAddCycles(oaknut::CodeGenerator& code, EmitContext& ctx, size_t 
     if (!ctx.conf.enable_cycle_counting) {
         return;
     }
+    if (cycles_to_add == 0) {
+        return;
+    }
 
     if (oaknut::AddSubImm::is_valid(cycles_to_add)) {
         code.SUB(Xticks, Xticks, cycles_to_add);
