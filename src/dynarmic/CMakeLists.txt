@@ -406,6 +406,9 @@ elseif(ARCHITECTURE STREQUAL "arm64")
             backend/arm64/a32_address_space.h
             backend/arm64/a32_core.h
             backend/arm64/a32_interface.cpp
+
+            # Move this to the list below when implemented
+            backend/arm64/a64_interface.cpp
         )
     endif()
 
