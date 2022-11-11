@@ -329,33 +329,13 @@ static void LinkBlockLinks(const CodePtr entry_point, const CodePtr target_ptr, 
     using namespace oaknut;
     using namespace oaknut::util;
 
-    for (auto [ptr_offset, type] : block_relocations_list) {
+    for (auto [ptr_offset] : block_relocations_list) {
         CodeGenerator c{reinterpret_cast<u32*>(entry_point + ptr_offset)};
 
-        switch (type) {
-        case BlockLinkType::LinkBlockUnconditionally:
-            if (target_ptr) {
-                c.B((void*)target_ptr);
-            } else {
-                c.NOP();
-            }
-            break;
-        case BlockLinkType::LinkBlockIfGreater:
-            if (target_ptr) {
-                c.B(GE, (void*)target_ptr);
-            } else {
-                c.NOP();
-            }
-            break;
-        case BlockLinkType::LinkBlockIfWscratch0IsZero:
-            if (target_ptr) {
-                c.CBZ(Wscratch0, (void*)target_ptr);
-            } else {
-                c.NOP();
-            }
-            break;
-        default:
-            ASSERT_FALSE("Invalid block relocation type");
+        if (target_ptr) {
+            c.B((void*)target_ptr);
+        } else {
+            c.NOP();
         }
     }
 }

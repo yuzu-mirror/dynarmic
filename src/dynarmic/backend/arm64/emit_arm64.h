@@ -66,12 +66,6 @@ enum class LinkTarget {
     GetTicksRemaining,
 };
 
-enum class BlockLinkType {
-    LinkBlockUnconditionally,
-    LinkBlockIfGreater,
-    LinkBlockIfWscratch0IsZero,
-};
-
 struct Relocation {
     std::ptrdiff_t code_offset;
     LinkTarget target;
@@ -79,7 +73,6 @@ struct Relocation {
 
 struct BlockRelocation {
     std::ptrdiff_t code_offset;
-    BlockLinkType type;
 };
 
 struct EmittedBlockInfo {
@@ -113,7 +106,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 template<IR::Opcode op>
 void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
 void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target);
-void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, BlockLinkType type, const IR::LocationDescriptor& descriptor);
+void EmitBlockLinkRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, const IR::LocationDescriptor& descriptor);
 oaknut::Label EmitA32Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
