@@ -83,7 +83,7 @@ struct Jit::Impl final {
 
     HaltReason Run() {
         ASSERT(!jit_interface->is_executing);
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&halt_reason)));
 
         jit_interface->is_executing = true;
         SCOPE_EXIT {
@@ -92,14 +92,14 @@ struct Jit::Impl final {
 
         HaltReason hr = core.Run(current_address_space, current_state, &halt_reason);
 
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(hr);
 
         return hr;
     }
 
     HaltReason Step() {
         ASSERT(!jit_interface->is_executing);
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&halt_reason)));
 
         jit_interface->is_executing = true;
         SCOPE_EXIT {
@@ -108,7 +108,7 @@ struct Jit::Impl final {
 
         HaltReason hr = core.Step(current_address_space, current_state, &halt_reason);
 
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(hr);
 
         return hr;
     }
@@ -131,10 +131,12 @@ struct Jit::Impl final {
 
     void HaltExecution(HaltReason hr) {
         Atomic::Or(&halt_reason, static_cast<u32>(hr));
+        Atomic::Barrier();
     }
 
     void ClearHalt(HaltReason hr) {
         Atomic::And(&halt_reason, ~static_cast<u32>(hr));
+        Atomic::Barrier();
     }
 
     std::array<std::uint32_t, 16>& Regs() {
@@ -192,21 +194,27 @@ struct Jit::Impl final {
     }
 
 private:
-    void PerformRequestedCacheInvalidation() {
-        if (invalidate_entire_cache) {
-            current_address_space.ClearCache();
+    void PerformRequestedCacheInvalidation(HaltReason hr) {
+        if (Has(hr, HaltReason::CacheInvalidation)) {
+            std::unique_lock lock{invalidation_mutex};
 
-            invalidate_entire_cache = false;
-            invalid_cache_ranges.clear();
-            return;
-        }
+            ClearHalt(HaltReason::CacheInvalidation);
 
-        if (!invalid_cache_ranges.empty()) {
-            // TODO: Optimize
-            current_address_space.ClearCache();
+            if (invalidate_entire_cache) {
+                current_address_space.ClearCache();
 
-            invalid_cache_ranges.clear();
-            return;
+                invalidate_entire_cache = false;
+                invalid_cache_ranges.clear();
+                return;
+            }
+
+            if (!invalid_cache_ranges.empty()) {
+                // TODO: Optimize
+                current_address_space.ClearCache();
+
+                invalid_cache_ranges.clear();
+                return;
+            }
         }
     }
 
