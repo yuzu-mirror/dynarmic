@@ -82,7 +82,7 @@ static void EmitExclusiveWriteMemory(oaknut::CodeGenerator& code, EmitContext& c
 }
 
 template<>
-void EmitIR<IR::Opcode::A64ClearExclusive>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst*) {
+void EmitIR<IR::Opcode::A64ClearExclusive>(oaknut::CodeGenerator& code, EmitContext&, IR::Inst*) {
     code.STR(WZR, Xstate, offsetof(A64JitState, exclusive_state));
 }
 

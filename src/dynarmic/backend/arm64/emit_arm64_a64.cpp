@@ -41,7 +41,6 @@ void EmitIR<IR::Opcode::A64SetCheckBit>(oaknut::CodeGenerator& code, EmitContext
 
 template<>
 void EmitIR<IR::Opcode::A64GetCFlag>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Wresult = ctx.reg_alloc.WriteW(inst);
     RegAlloc::Realize(Wresult);
     code.LDR(Wresult, Xstate, offsetof(A64JitState, cpsr_nzcv));
@@ -50,7 +49,6 @@ void EmitIR<IR::Opcode::A64GetCFlag>(oaknut::CodeGenerator& code, EmitContext& c
 
 template<>
 void EmitIR<IR::Opcode::A64GetNZCVRaw>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Wnzcv = ctx.reg_alloc.WriteW(inst);
     RegAlloc::Realize(Wnzcv);
 
@@ -125,8 +123,6 @@ void EmitIR<IR::Opcode::A64GetQ>(oaknut::CodeGenerator& code, EmitContext& ctx, 
 
 template<>
 void EmitIR<IR::Opcode::A64GetSP>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    const A64::Reg reg = inst->GetArg(0).GetA64RegRef();
-
     auto Xresult = ctx.reg_alloc.WriteX(inst);
     RegAlloc::Realize(Xresult);
 
@@ -135,8 +131,6 @@ void EmitIR<IR::Opcode::A64GetSP>(oaknut::CodeGenerator& code, EmitContext& ctx,
 
 template<>
 void EmitIR<IR::Opcode::A64GetFPCR>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    const A64::Reg reg = inst->GetArg(0).GetA64RegRef();
-
     auto Wresult = ctx.reg_alloc.WriteW(inst);
     RegAlloc::Realize(Wresult);
 
@@ -145,8 +139,6 @@ void EmitIR<IR::Opcode::A64GetFPCR>(oaknut::CodeGenerator& code, EmitContext& ct
 
 template<>
 void EmitIR<IR::Opcode::A64GetFPSR>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    const A64::Reg reg = inst->GetArg(0).GetA64RegRef();
-
     auto Wresult = ctx.reg_alloc.WriteW(inst);
     RegAlloc::Realize(Wresult);
 
@@ -310,7 +302,7 @@ void EmitIR<IR::Opcode::A64DataMemoryBarrier>(oaknut::CodeGenerator& code, EmitC
 }
 
 template<>
-void EmitIR<IR::Opcode::A64InstructionSynchronizationBarrier>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+void EmitIR<IR::Opcode::A64InstructionSynchronizationBarrier>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst*) {
     if (!ctx.conf.hook_isb) {
         return;
     }

@@ -47,7 +47,7 @@ static void* EmitExclusiveReadCallTrampoline(oaknut::CodeGenerator& code, const 
 
     oaknut::Label l_addr, l_this;
 
-    auto fn = [](const A32::UserConfig& conf, A32::VAddr vaddr) -> T {
+    auto fn = [](const A64::UserConfig& conf, A64::VAddr vaddr) -> T {
         return conf.global_monitor->ReadAndMark<T>(conf.processor_id, vaddr, [&]() -> T {
             return (conf.callbacks->*callback)(vaddr);
         });
@@ -176,7 +176,7 @@ void A64AddressSpace::EmitPrelude() {
     prelude_info.exclusive_write_memory_16 = EmitExclusiveWriteCallTrampoline<&A64::UserCallbacks::MemoryWriteExclusive16, u16>(code, conf);
     prelude_info.exclusive_write_memory_32 = EmitExclusiveWriteCallTrampoline<&A64::UserCallbacks::MemoryWriteExclusive32, u32>(code, conf);
     prelude_info.exclusive_write_memory_64 = EmitExclusiveWriteCallTrampoline<&A64::UserCallbacks::MemoryWriteExclusive64, u64>(code, conf);
-    prelude_info.exclusive_write_memory_128 = EmitExclusiveWriteCallTrampoline<&A64::UserCallbacks::MemoryWriteExclusive64, Vector>(code, conf);
+    prelude_info.exclusive_write_memory_128 = EmitExclusiveWriteCallTrampoline<&A64::UserCallbacks::MemoryWriteExclusive128, Vector>(code, conf);
     prelude_info.call_svc = EmitCallTrampoline<&A64::UserCallbacks::CallSVC>(code, conf.callbacks);
     prelude_info.exception_raised = EmitCallTrampoline<&A64::UserCallbacks::ExceptionRaised>(code, conf.callbacks);
     prelude_info.isb_raised = EmitCallTrampoline<&A64::UserCallbacks::InstructionSynchronizationBarrierRaised>(code, conf.callbacks);

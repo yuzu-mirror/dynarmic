@@ -316,7 +316,7 @@ void Jit::DumpDisassembly() const {
 }
 
 std::vector<std::string> Jit::Disassemble() const {
-    impl->Disassemble();
+    return impl->Disassemble();
 }
 
 }  // namespace Dynarmic::A64
