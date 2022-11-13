@@ -1395,18 +1395,30 @@ void EmitIR<IR::Opcode::CountLeadingZeros64>(oaknut::CodeGenerator& code, EmitCo
 
 template<>
 void EmitIR<IR::Opcode::ExtractRegister32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[2].IsImmediate());
+
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Wop1 = ctx.reg_alloc.ReadW(args[0]);
+    auto Wop2 = ctx.reg_alloc.ReadW(args[1]);
+    RegAlloc::Realize(Wresult, Wop1, Wop2);
+    const u8 lsb = args[2].GetImmediateU8();
+
+    code.EXTR(Wresult, Wop1, Wop2, lsb);
 }
 
 template<>
 void EmitIR<IR::Opcode::ExtractRegister64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[2].IsImmediate());
+
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xop1 = ctx.reg_alloc.ReadX(args[0]);
+    auto Xop2 = ctx.reg_alloc.ReadX(args[1]);
+    RegAlloc::Realize(Xresult, Xop1, Xop2);
+    const u8 lsb = args[2].GetImmediateU8();
+
+    code.EXTR(Xresult, Xop1, Xop2, lsb);
 }
 
 template<>
