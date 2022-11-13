@@ -1,5 +1,5 @@
 /* This file is part of the dynarmic project.
- * Copyright (c) 2021 MerryMage
+ * Copyright (c) 2022 MerryMage
  * SPDX-License-Identifier: 0BSD
  */
 
@@ -11,13 +11,162 @@
 #include <mcl/scope_exit.hpp>
 #include <mcl/stdint.hpp>
 
+#include "dynarmic/backend/arm64/a64_address_space.h"
+#include "dynarmic/backend/arm64/a64_core.h"
+#include "dynarmic/backend/arm64/a64_jitstate.h"
 #include "dynarmic/common/atomic.h"
 #include "dynarmic/interface/A64/a64.h"
 #include "dynarmic/interface/A64/config.h"
 
 namespace Dynarmic::A64 {
 
-struct Jit::Impl {};
+using namespace Backend::Arm64;
+
+struct Jit::Impl final {
+    Impl(Jit* jit_interface, A64::UserConfig conf)
+            : jit_interface(jit_interface)
+            , conf(conf)
+            , current_address_space(conf)
+            , core(conf) {}
+
+    HaltReason Run() {
+        ASSERT(!is_executing);
+        PerformRequestedCacheInvalidation();
+
+        is_executing = true;
+        SCOPE_EXIT {
+            is_executing = false;
+        };
+
+        HaltReason hr = core.Run(current_address_space, current_state, &halt_reason);
+
+        PerformRequestedCacheInvalidation();
+
+        return hr;
+    }
+
+    HaltReason Step() {
+        ASSERT(!is_executing);
+        PerformRequestedCacheInvalidation();
+
+        is_executing = true;
+        SCOPE_EXIT {
+            is_executing = false;
+        };
+
+        HaltReason hr = core.Step(current_address_space, current_state, &halt_reason);
+
+        PerformRequestedCacheInvalidation();
+
+        return hr;
+    }
+
+    void ClearCache() {
+        std::unique_lock lock{invalidation_mutex};
+        invalidate_entire_cache = true;
+        HaltExecution(HaltReason::CacheInvalidation);
+    }
+
+    void InvalidateCacheRange(std::uint64_t start_address, std::size_t length) {
+        std::unique_lock lock{invalidation_mutex};
+        invalid_cache_ranges.add(boost::icl::discrete_interval<u64>::closed(start_address, start_address + length - 1));
+        HaltExecution(HaltReason::CacheInvalidation);
+    }
+
+    void Reset() {
+        current_state = {};
+    }
+
+    void HaltExecution(HaltReason hr) {
+        Atomic::Or(&halt_reason, static_cast<u32>(hr));
+    }
+
+    void ClearHalt(HaltReason hr) {
+        Atomic::And(&halt_reason, ~static_cast<u32>(hr));
+    }
+
+    std::array<std::uint64_t, 31>& Regs() {
+        return current_state.reg;
+    }
+
+    const std::array<std::uint64_t, 31>& Regs() const {
+        return current_state.reg;
+    }
+
+    std::array<std::uint64_t, 64>& VecRegs() {
+        return current_state.vec;
+    }
+
+    const std::array<std::uint64_t, 64>& VecRegs() const {
+        return current_state.vec;
+    }
+
+    std::uint32_t Fpcr() const {
+        return current_state.fpcr;
+    }
+
+    void SetFpcr(std::uint32_t value) {
+        current_state.fpcr = value;
+    }
+
+    std::uint32_t Fpsr() const {
+        return current_state.fpsr;
+    }
+
+    void SetFpscr(std::uint32_t value) {
+        current_state.fpsr = value;
+    }
+
+    std::uint32_t Pstate() const {
+        return current_state.cpsr_nzcv;
+    }
+
+    void SetPstate(std::uint32_t value) {
+        current_state.cpsr_nzcv = value;
+    }
+
+    void ClearExclusiveState() {
+        current_state.exclusive_state = false;
+    }
+
+    void DumpDisassembly() const {
+        ASSERT_FALSE("Unimplemented");
+    }
+
+private:
+    void PerformRequestedCacheInvalidation() {
+        ClearHalt(HaltReason::CacheInvalidation);
+
+        if (invalidate_entire_cache) {
+            current_address_space.ClearCache();
+
+            invalidate_entire_cache = false;
+            invalid_cache_ranges.clear();
+            return;
+        }
+
+        if (!invalid_cache_ranges.empty()) {
+            // TODO: Optimize
+            current_address_space.ClearCache();
+
+            invalid_cache_ranges.clear();
+            return;
+        }
+    }
+
+    Jit* jit_interface;
+    A64::UserConfig conf;
+    A64JitState current_state{};
+    A64AddressSpace current_address_space;
+    A64Core core;
+
+    volatile u32 halt_reason = 0;
+
+    std::mutex invalidation_mutex;
+    boost::icl::interval_set<u64> invalid_cache_ranges;
+    bool invalidate_entire_cache = false;
+    bool is_executing = false;
+};
 
 Jit::Jit(UserConfig conf) {
     (void)conf;
