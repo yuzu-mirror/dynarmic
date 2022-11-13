@@ -620,10 +620,23 @@ void EmitIR<IR::Opcode::ArithmeticShiftRight32>(oaknut::CodeGenerator& code, Emi
 
 template<>
 void EmitIR<IR::Opcode::ArithmeticShiftRight64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+
+    if (shift_arg.IsImmediate()) {
+        const u8 shift = shift_arg.GetImmediateU8();
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(operand_arg);
+        RegAlloc::Realize(Xresult, Xoperand);
+        code.ASR(Xresult, Xoperand, shift <= 63 ? shift : 63);
+    } else {
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(operand_arg);
+        auto Xshift = ctx.reg_alloc.ReadX(shift_arg);
+        RegAlloc::Realize(Xresult, Xoperand, Xshift);
+        code.ASR(Xresult, Xoperand, Xshift);
+    }
 }
 
 template<>
@@ -694,10 +707,23 @@ void EmitIR<IR::Opcode::RotateRight32>(oaknut::CodeGenerator& code, EmitContext&
 
 template<>
 void EmitIR<IR::Opcode::RotateRight64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+
+    if (shift_arg.IsImmediate()) {
+        const u8 shift = shift_arg.GetImmediateU8();
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(operand_arg);
+        RegAlloc::Realize(Xresult, Xoperand);
+        code.ROR(Xresult, Xoperand, shift);
+    } else {
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(operand_arg);
+        auto Xshift = ctx.reg_alloc.ReadX(shift_arg);
+        RegAlloc::Realize(Xresult, Xoperand, Xshift);
+        code.ROR(Xresult, Xoperand, Xshift);
+    }
 }
 
 template<>
