@@ -192,7 +192,8 @@ private:
     bool is_executing = false;
 };
 
-Jit::Jit(UserConfig conf) : impl{std::make_unique<Jit::Impl>(this, conf)} {
+Jit::Jit(UserConfig conf)
+        : impl{std::make_unique<Jit::Impl>(this, conf)} {
 }
 
 Jit::~Jit() = default;

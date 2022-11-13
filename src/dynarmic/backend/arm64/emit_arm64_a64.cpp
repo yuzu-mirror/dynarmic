@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <oaknut/oaknut.hpp>
 #include <mcl/bit_cast.hpp>
+#include <oaknut/oaknut.hpp>
 
 #include "dynarmic/backend/arm64/a64_jitstate.h"
 #include "dynarmic/backend/arm64/abi.h"
@@ -104,7 +104,7 @@ void EmitIR<IR::Opcode::A64GetS>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Sresult = ctx.reg_alloc.WriteS(inst);
     RegAlloc::Realize(Sresult);
-    code.LDR(Sresult, Xstate, offsetof(A64JitState, vec) + sizeof(u64)*2 * static_cast<size_t>(vec));
+    code.LDR(Sresult, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
@@ -112,7 +112,7 @@ void EmitIR<IR::Opcode::A64GetD>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Dresult = ctx.reg_alloc.WriteD(inst);
     RegAlloc::Realize(Dresult);
-    code.LDR(Dresult, Xstate, offsetof(A64JitState, vec) + sizeof(u64)*2 * static_cast<size_t>(vec));
+    code.LDR(Dresult, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
@@ -120,7 +120,7 @@ void EmitIR<IR::Opcode::A64GetQ>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Qresult = ctx.reg_alloc.WriteQ(inst);
     RegAlloc::Realize(Qresult);
-    code.LDR(Qresult, Xstate, offsetof(A64JitState, vec) + sizeof(u64)*2 * static_cast<size_t>(vec));
+    code.LDR(Qresult, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
@@ -187,7 +187,7 @@ void EmitIR<IR::Opcode::A64SetS>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Svalue = ctx.reg_alloc.ReadS(args[1]);
     RegAlloc::Realize(Svalue);
-    code.STR(Svalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64)*2*static_cast<size_t>(vec));
+    code.STR(Svalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
@@ -196,7 +196,7 @@ void EmitIR<IR::Opcode::A64SetD>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Dvalue = ctx.reg_alloc.ReadD(args[1]);
     RegAlloc::Realize(Dvalue);
-    code.STR(Dvalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64)*2*static_cast<size_t>(vec));
+    code.STR(Dvalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
@@ -205,7 +205,7 @@ void EmitIR<IR::Opcode::A64SetQ>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Qvalue = ctx.reg_alloc.ReadQ(args[1]);
     RegAlloc::Realize(Qvalue);
-    code.STR(Qvalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64)*2*static_cast<size_t>(vec));
+    code.STR(Qvalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
