@@ -756,68 +756,114 @@ void EmitIR<IR::Opcode::RotateRightExtended>(oaknut::CodeGenerator& code, EmitCo
     }
 }
 
+template<typename ShiftI, typename ShiftR>
+static void EmitMaskedShift32(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, ShiftI si_fn, ShiftR sr_fn) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+
+    if (shift_arg.IsImmediate()) {
+        auto Wresult = ctx.reg_alloc.WriteW(inst);
+        auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+        RegAlloc::Realize(Wresult, Woperand);
+        const u32 shift = shift_arg.GetImmediateU32();
+
+        si_fn(Wresult, Woperand, static_cast<int>(shift & 0x1F));
+    } else {
+        auto Wresult = ctx.reg_alloc.WriteW(inst);
+        auto Woperand = ctx.reg_alloc.ReadW(operand_arg);
+        auto Wshift = ctx.reg_alloc.ReadW(shift_arg);
+        RegAlloc::Realize(Wresult, Woperand, Wshift);
+
+        sr_fn(Wresult, Woperand, Wshift);
+    }
+}
+
+template<typename ShiftI, typename ShiftR>
+static void EmitMaskedShift64(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, ShiftI si_fn, ShiftR sr_fn) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+
+    if (shift_arg.IsImmediate()) {
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(operand_arg);
+        RegAlloc::Realize(Xresult, Xoperand);
+        const u32 shift = shift_arg.GetImmediateU64();
+
+        si_fn(Xresult, Xoperand, static_cast<int>(shift & 0x3F));
+    } else {
+        auto Xresult = ctx.reg_alloc.WriteX(inst);
+        auto Xoperand = ctx.reg_alloc.ReadX(operand_arg);
+        auto Xshift = ctx.reg_alloc.ReadX(shift_arg);
+        RegAlloc::Realize(Xresult, Xoperand, Xshift);
+
+        sr_fn(Xresult, Xoperand, Xshift);
+    }
+}
+
 template<>
 void EmitIR<IR::Opcode::LogicalShiftLeftMasked32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift32(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand, auto shift) { code.LSL(Wresult, Woperand, shift); },
+        [&](auto& Wresult, auto& Woperand, auto& Wshift) { code.LSL(Wresult, Woperand, Wshift); });
 }
 
 template<>
 void EmitIR<IR::Opcode::LogicalShiftLeftMasked64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift64(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xoperand, auto shift) { code.LSL(Xresult, Xoperand, shift); },
+        [&](auto& Xresult, auto& Xoperand, auto& Xshift) { code.LSL(Xresult, Xoperand, Xshift); });
 }
 
 template<>
 void EmitIR<IR::Opcode::LogicalShiftRightMasked32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift32(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand, auto shift) { code.LSR(Wresult, Woperand, shift); },
+        [&](auto& Wresult, auto& Woperand, auto& Wshift) { code.LSR(Wresult, Woperand, Wshift); });
 }
 
 template<>
 void EmitIR<IR::Opcode::LogicalShiftRightMasked64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift64(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xoperand, auto shift) { code.LSR(Xresult, Xoperand, shift); },
+        [&](auto& Xresult, auto& Xoperand, auto& Xshift) { code.LSR(Xresult, Xoperand, Xshift); });
 }
 
 template<>
 void EmitIR<IR::Opcode::ArithmeticShiftRightMasked32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift32(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand, auto shift) { code.ASR(Wresult, Woperand, shift); },
+        [&](auto& Wresult, auto& Woperand, auto& Wshift) { code.ASR(Wresult, Woperand, Wshift); });
 }
 
 template<>
 void EmitIR<IR::Opcode::ArithmeticShiftRightMasked64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift64(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xoperand, auto shift) { code.ASR(Xresult, Xoperand, shift); },
+        [&](auto& Xresult, auto& Xoperand, auto& Xshift) { code.ASR(Xresult, Xoperand, Xshift); });
 }
 
 template<>
 void EmitIR<IR::Opcode::RotateRightMasked32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift32(
+        code, ctx, inst,
+        [&](auto& Wresult, auto& Woperand, auto shift) { code.ROR(Wresult, Woperand, shift); },
+        [&](auto& Wresult, auto& Woperand, auto& Wshift) { code.ROR(Wresult, Woperand, Wshift); });
 }
 
 template<>
 void EmitIR<IR::Opcode::RotateRightMasked64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaskedShift64(
+        code, ctx, inst,
+        [&](auto& Xresult, auto& Xoperand, auto shift) { code.ROR(Xresult, Xoperand, shift); },
+        [&](auto& Xresult, auto& Xoperand, auto& Xshift) { code.ROR(Xresult, Xoperand, Xshift); });
 }
 
 template<size_t bitsize, typename EmitFn>
