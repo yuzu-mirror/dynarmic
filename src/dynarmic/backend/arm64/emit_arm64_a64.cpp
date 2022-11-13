@@ -256,8 +256,8 @@ void EmitIR<IR::Opcode::A64SetW>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     RegAlloc::Realize(Wvalue);
 
     // TODO: Detect if Gpr vs Fpr is more appropriate
-
-    code.STR(Wvalue, Xstate, offsetof(A64JitState, reg) + sizeof(u64) * static_cast<size_t>(reg));
+    code.MOV(Wscratch0, Wvalue);
+    code.STR(Xscratch0, Xstate, offsetof(A64JitState, reg) + sizeof(u64) * static_cast<size_t>(reg));
 }
 
 template<>
@@ -280,7 +280,13 @@ void EmitIR<IR::Opcode::A64SetS>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Svalue = ctx.reg_alloc.ReadS(args[1]);
     RegAlloc::Realize(Svalue);
-    code.STR(Svalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
+
+    // TODO: Optimize
+    auto Qvalue = Svalue->toQ().B16();
+    code.FMOV(Wscratch0, Svalue);
+    code.EOR(Qvalue, Qvalue, Qvalue);
+    code.FMOV(Svalue, Wscratch0);
+    code.STR(Svalue->toQ(), Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
@@ -289,7 +295,13 @@ void EmitIR<IR::Opcode::A64SetD>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     const A64::Vec vec = inst->GetArg(0).GetA64VecRef();
     auto Dvalue = ctx.reg_alloc.ReadD(args[1]);
     RegAlloc::Realize(Dvalue);
-    code.STR(Dvalue, Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
+
+    // TODO: Optimize
+    auto Qvalue = Dvalue->toQ().B16();
+    code.FMOV(Xscratch0, Dvalue);
+    code.EOR(Qvalue, Qvalue, Qvalue);
+    code.FMOV(Dvalue, Xscratch0);
+    code.STR(Dvalue->toQ(), Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
 template<>
