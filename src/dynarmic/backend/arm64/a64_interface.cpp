@@ -85,6 +85,22 @@ struct Jit::Impl final {
         Atomic::And(&halt_reason, ~static_cast<u32>(hr));
     }
 
+    std::uint64_t PC() const {
+        return current_state.pc;
+    }
+
+    void SetPC(std::uint64_t value) {
+        current_state.pc = value;
+    }
+
+    std::uint64_t SP() const {
+        return current_state.sp;
+    }
+
+    void SetSP(std::uint64_t value) {
+        current_state.sp = value;
+    }
+
     std::array<std::uint64_t, 31>& Regs() {
         return current_state.reg;
     }
@@ -113,7 +129,7 @@ struct Jit::Impl final {
         return current_state.fpsr;
     }
 
-    void SetFpscr(std::uint32_t value) {
+    void SetFpsr(std::uint32_t value) {
         current_state.fpsr = value;
     }
 
@@ -129,7 +145,15 @@ struct Jit::Impl final {
         current_state.exclusive_state = false;
     }
 
+    bool IsExecuting() const {
+        return is_executing;
+    }
+
     void DumpDisassembly() const {
+        ASSERT_FALSE("Unimplemented");
+    }
+
+    std::vector<std::string> Disassemble() const {
         ASSERT_FALSE("Unimplemented");
     }
 
@@ -168,128 +192,130 @@ private:
     bool is_executing = false;
 };
 
-Jit::Jit(UserConfig conf) {
-    (void)conf;
+Jit::Jit(UserConfig conf) : impl{std::make_unique<Jit::Impl>(this, conf)} {
 }
 
 Jit::~Jit() = default;
 
 HaltReason Jit::Run() {
-    ASSERT_FALSE("not implemented");
+    return impl->Run();
 }
 
 HaltReason Jit::Step() {
-    ASSERT_FALSE("not implemented");
+    return impl->Step();
 }
 
 void Jit::ClearCache() {
+    impl->ClearCache();
 }
 
 void Jit::InvalidateCacheRange(std::uint64_t start_address, std::size_t length) {
-    (void)start_address;
-    (void)length;
+    impl->InvalidateCacheRange(start_address, length);
 }
 
 void Jit::Reset() {
+    impl->Reset();
 }
 
 void Jit::HaltExecution(HaltReason hr) {
-    (void)hr;
+    impl->HaltExecution(hr);
 }
 
 void Jit::ClearHalt(HaltReason hr) {
-    (void)hr;
+    impl->ClearHalt(hr);
 }
 
 std::uint64_t Jit::GetSP() const {
-    return 0;
+    return impl->SP();
 }
 
 void Jit::SetSP(std::uint64_t value) {
-    (void)value;
+    impl->SetSP(value);
 }
 
 std::uint64_t Jit::GetPC() const {
-    return 0;
+    return impl->PC();
 }
 
 void Jit::SetPC(std::uint64_t value) {
-    (void)value;
+    impl->SetPC(value);
 }
 
 std::uint64_t Jit::GetRegister(std::size_t index) const {
-    (void)index;
-    return 0;
+    return impl->Regs()[index];
 }
 
 void Jit::SetRegister(size_t index, std::uint64_t value) {
-    (void)index;
-    (void)value;
+    impl->Regs()[index] = value;
 }
 
 std::array<std::uint64_t, 31> Jit::GetRegisters() const {
-    return {};
+    return impl->Regs();
 }
 
 void Jit::SetRegisters(const std::array<std::uint64_t, 31>& value) {
-    (void)value;
+    impl->Regs() = value;
 }
 
 Vector Jit::GetVector(std::size_t index) const {
-    (void)index;
-    return {};
+    auto& vec = impl->VecRegs();
+    return {vec[index], vec[index + 1]};
 }
 
 void Jit::SetVector(std::size_t index, Vector value) {
-    (void)index;
-    (void)value;
+    auto& vec = impl->VecRegs();
+    vec[index] = value[0];
+    vec[index + 1] = value[1];
 }
 
 std::array<Vector, 32> Jit::GetVectors() const {
-    return {};
+    std::array<Vector, 32> ret;
+    std::memcpy(ret.data(), impl->VecRegs().data(), sizeof(ret));
+    return ret;
 }
 
 void Jit::SetVectors(const std::array<Vector, 32>& value) {
-    (void)value;
+    std::memcpy(impl->VecRegs().data(), value.data(), sizeof(value));
 }
 
 std::uint32_t Jit::GetFpcr() const {
-    return 0;
+    return impl->Fpcr();
 }
 
 void Jit::SetFpcr(std::uint32_t value) {
-    (void)value;
+    impl->SetFpcr(value);
 }
 
 std::uint32_t Jit::GetFpsr() const {
-    return 0;
+    return impl->Fpsr();
 }
 
 void Jit::SetFpsr(std::uint32_t value) {
-    (void)value;
+    impl->SetFpsr(value);
 }
 
 std::uint32_t Jit::GetPstate() const {
-    return 0;
+    return impl->Pstate();
 }
 
 void Jit::SetPstate(std::uint32_t value) {
-    (void)value;
+    impl->SetPstate(value);
 }
 
 void Jit::ClearExclusiveState() {
+    impl->ClearExclusiveState();
 }
 
 bool Jit::IsExecuting() const {
-    return false;
+    return impl->IsExecuting();
 }
 
 void Jit::DumpDisassembly() const {
-    ASSERT_FALSE("not implemented");
+    impl->DumpDisassembly();
 }
 
 std::vector<std::string> Jit::Disassemble() const {
-    ASSERT_FALSE("not implemented");
+    impl->Disassemble();
 }
 
 }  // namespace Dynarmic::A64
