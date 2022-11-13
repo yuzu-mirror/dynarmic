@@ -189,10 +189,14 @@ void EmitIR<IR::Opcode::IsZero64>(oaknut::CodeGenerator& code, EmitContext& ctx,
 
 template<>
 void EmitIR<IR::Opcode::TestBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xoperand = ctx.reg_alloc.ReadX(args[0]);
+    RegAlloc::Realize(Xresult, Xoperand);
+    ASSERT(args[1].IsImmediate());
+    ASSERT(args[1].GetImmediateU8() < 64);
+
+    code.UBFX(Xresult, Xoperand, args[1].GetImmediateU8(), 1);
 }
 
 template<>
