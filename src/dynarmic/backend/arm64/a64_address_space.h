@@ -86,6 +86,7 @@ private:
         void* dc_raised;
         void* ic_raised;
         void* isb_raised;
+        void* get_cntpct;
         void* add_ticks;
         void* get_ticks_remaining;
     } prelude_info;

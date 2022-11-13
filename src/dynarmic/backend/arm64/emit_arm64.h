@@ -68,6 +68,7 @@ enum class LinkTarget {
     InstructionSynchronizationBarrierRaised,
     InstructionCacheOperationRaised,
     DataCacheOperationRaised,
+    GetCNTPCT,
     AddTicks,
     GetTicksRemaining,
 };
@@ -89,6 +90,11 @@ struct EmittedBlockInfo {
 };
 
 struct EmitConfig {
+    u64* tpidr_el0;
+    const u64* tpidrro_el0;
+    u64 cntfreq_el0;
+    u32 dczid_el0;
+    u32 ctr_el0;
     bool hook_isb;
     bool enable_cycle_counting;
     bool always_little_endian;

@@ -182,6 +182,7 @@ void A64AddressSpace::EmitPrelude() {
     prelude_info.isb_raised = EmitCallTrampoline<&A64::UserCallbacks::InstructionSynchronizationBarrierRaised>(code, conf.callbacks);
     prelude_info.ic_raised = EmitCallTrampoline<&A64::UserCallbacks::InstructionCacheOperationRaised>(code, conf.callbacks);
     prelude_info.dc_raised = EmitCallTrampoline<&A64::UserCallbacks::DataCacheOperationRaised>(code, conf.callbacks);
+    prelude_info.get_cntpct = EmitCallTrampoline<&A64::UserCallbacks::GetCNTPCT>(code, conf.callbacks);
     prelude_info.add_ticks = EmitCallTrampoline<&A64::UserCallbacks::AddTicks>(code, conf.callbacks);
     prelude_info.get_ticks_remaining = EmitCallTrampoline<&A64::UserCallbacks::GetTicksRemaining>(code, conf.callbacks);
 
@@ -201,10 +202,12 @@ void A64AddressSpace::EmitPrelude() {
             code.STR(Xticks, SP, offsetof(StackLayout, cycles_to_run));
         }
 
-        code.LDR(Wscratch0, Xstate, offsetof(A64JitState, fpcr));
         code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
         code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
+        code.LDR(Wscratch0, Xstate, offsetof(A64JitState, fpcr));
+        code.LDR(Wscratch1, Xstate, offsetof(A64JitState, fpsr));
         code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+        code.MSR(oaknut::SystemReg::FPSR, Xscratch1);
 
         code.LDAR(Wscratch0, Xhalt);
         code.CBNZ(Wscratch0, return_from_run_code);
@@ -225,10 +228,12 @@ void A64AddressSpace::EmitPrelude() {
             code.STR(Xticks, SP, offsetof(StackLayout, cycles_to_run));
         }
 
-        code.LDR(Wscratch0, Xstate, offsetof(A64JitState, fpcr));
         code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
         code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
+        code.LDR(Wscratch0, Xstate, offsetof(A64JitState, fpcr));
+        code.LDR(Wscratch1, Xstate, offsetof(A64JitState, fpsr));
         code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
+        code.MSR(oaknut::SystemReg::FPSR, Xscratch1);
 
         oaknut::Label step_hr_loop;
         code.l(step_hr_loop);
@@ -311,6 +316,11 @@ EmittedBlockInfo A64AddressSpace::Emit(IR::Block block) {
     mem.unprotect();
 
     const EmitConfig emit_conf{
+        .tpidr_el0 = conf.tpidr_el0,
+        .tpidrro_el0 = conf.tpidrro_el0,
+        .cntfreq_el0 = conf.cntfrq_el0,
+        .dczid_el0 = conf.dczid_el0,
+        .ctr_el0 = conf.ctr_el0,
         .hook_isb = conf.hook_isb,
         .enable_cycle_counting = conf.enable_cycle_counting,
         .always_little_endian = true,
@@ -436,6 +446,9 @@ void A64AddressSpace::Link(IR::LocationDescriptor block_descriptor, EmittedBlock
             break;
         case LinkTarget::DataCacheOperationRaised:
             c.BL(prelude_info.dc_raised);
+            break;
+        case LinkTarget::GetCNTPCT:
+            c.BL(prelude_info.get_cntpct);
             break;
         case LinkTarget::AddTicks:
             c.BL(prelude_info.add_ticks);
