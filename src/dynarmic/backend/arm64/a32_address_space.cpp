@@ -308,6 +308,7 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
         .cntfreq_el0{},
         .dczid_el0{},
         .ctr_el0{},
+        .is_a64 = false,
         .hook_isb = conf.hook_isb,
         .enable_cycle_counting = conf.enable_cycle_counting,
         .always_little_endian = conf.always_little_endian,

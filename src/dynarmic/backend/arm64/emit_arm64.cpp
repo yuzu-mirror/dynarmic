@@ -164,10 +164,18 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
         ASSERT(!ctx.block.HasConditionFailedLocation());
     } else {
         ASSERT(ctx.block.HasConditionFailedLocation());
+        oaknut::Label pass;
 
-        oaknut::Label pass = EmitA32Cond(code, ctx, ctx.block.GetCondition());
-        EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
-        EmitA32ConditionFailedTerminal(code, ctx);
+        if (conf.is_a64) {
+            pass = EmitA64Cond(code, ctx, ctx.block.GetCondition());
+            EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
+            EmitA64ConditionFailedTerminal(code, ctx);
+        } else {
+            pass = EmitA32Cond(code, ctx, ctx.block.GetCondition());
+            EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
+            EmitA32ConditionFailedTerminal(code, ctx);
+        }
+
         code.l(pass);
     }
 
@@ -205,7 +213,11 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     reg_alloc.AssertNoMoreUses();
 
     EmitAddCycles(code, ctx, block.CycleCount());
-    EmitA32Terminal(code, ctx);
+    if (conf.is_a64) {
+        EmitA64Terminal(code, ctx);
+    } else {
+        EmitA32Terminal(code, ctx);
+    }
 
     ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
     return ebi;

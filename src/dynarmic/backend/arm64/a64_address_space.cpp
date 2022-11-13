@@ -321,6 +321,7 @@ EmittedBlockInfo A64AddressSpace::Emit(IR::Block block) {
         .cntfreq_el0 = conf.cntfrq_el0,
         .dczid_el0 = conf.dczid_el0,
         .ctr_el0 = conf.ctr_el0,
+        .is_a64 = true,
         .hook_isb = conf.hook_isb,
         .enable_cycle_counting = conf.enable_cycle_counting,
         .always_little_endian = true,

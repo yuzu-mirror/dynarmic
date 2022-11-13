@@ -95,6 +95,7 @@ struct EmitConfig {
     u64 cntfreq_el0;
     u32 dczid_el0;
     u32 ctr_el0;
+    bool is_a64;
     bool hook_isb;
     bool enable_cycle_counting;
     bool always_little_endian;
@@ -120,7 +121,10 @@ void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
 void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target);
 void EmitBlockLinkRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, const IR::LocationDescriptor& descriptor);
 oaknut::Label EmitA32Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
+oaknut::Label EmitA64Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
+void EmitA64ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 
 }  // namespace Dynarmic::Backend::Arm64

@@ -21,6 +21,107 @@ using namespace oaknut::util;
 
 static constexpr int nzcv_c_flag_shift = 29;
 
+oaknut::Label EmitA64Cond(oaknut::CodeGenerator& code, EmitContext&, IR::Cond cond) {
+    oaknut::Label pass;
+    // TODO: Flags in host flags
+    code.LDR(Wscratch0, Xstate, offsetof(A64JitState, cpsr_nzcv));
+    code.MSR(oaknut::SystemReg::NZCV, Xscratch0);
+    code.B(static_cast<oaknut::Cond>(cond), pass);
+    return pass;
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Terminal terminal, IR::LocationDescriptor initial_location, bool is_single_step);
+
+void EmitA64Terminal(oaknut::CodeGenerator&, EmitContext&, IR::Term::Interpret, IR::LocationDescriptor, bool) {
+    ASSERT_FALSE("Interpret should never be emitted.");
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::ReturnToDispatch, IR::LocationDescriptor, bool) {
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlock terminal, IR::LocationDescriptor, bool is_single_step) {
+    oaknut::Label fail;
+
+    if (ctx.conf.HasOptimization(OptimizationFlag::BlockLinking) && !is_single_step) {
+        if (ctx.conf.enable_cycle_counting) {
+            code.CMP(Xticks, 0);
+            code.B(LE, fail);
+            EmitBlockLinkRelocation(code, ctx, terminal.next);
+        } else {
+            code.LDAR(Wscratch0, Xhalt);
+            code.CBNZ(Wscratch0, fail);
+            EmitBlockLinkRelocation(code, ctx, terminal.next);
+        }
+    }
+
+    code.l(fail);
+    code.MOV(Xscratch0, A64::LocationDescriptor{terminal.next}.PC());
+    code.STR(Xscratch0, Xstate, offsetof(A64JitState, pc));
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlockFast terminal, IR::LocationDescriptor, bool is_single_step) {
+    if (ctx.conf.HasOptimization(OptimizationFlag::BlockLinking) && !is_single_step) {
+        EmitBlockLinkRelocation(code, ctx, terminal.next);
+    }
+
+    code.MOV(Wscratch0, A64::LocationDescriptor{terminal.next}.PC());
+    code.STR(Wscratch0, Xstate, offsetof(A64JitState, pc));
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool) {
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+
+    // TODO: Implement PopRSBHint optimization
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::FastDispatchHint, IR::LocationDescriptor, bool) {
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+
+    // TODO: Implement FastDispatchHint optimization
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::If terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    oaknut::Label pass = EmitA64Cond(code, ctx, terminal.if_);
+    EmitA64Terminal(code, ctx, terminal.else_, initial_location, is_single_step);
+    code.l(pass);
+    EmitA64Terminal(code, ctx, terminal.then_, initial_location, is_single_step);
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::CheckBit terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    oaknut::Label fail;
+    code.LDRB(Wscratch0, SP, offsetof(StackLayout, check_bit));
+    code.CBZ(Wscratch0, fail);
+    EmitA64Terminal(code, ctx, terminal.then_, initial_location, is_single_step);
+    code.l(fail);
+    EmitA64Terminal(code, ctx, terminal.else_, initial_location, is_single_step);
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    oaknut::Label fail;
+    code.LDAR(Wscratch0, Xhalt);
+    code.CBNZ(Wscratch0, fail);
+    EmitA64Terminal(code, ctx, terminal.else_, initial_location, is_single_step);
+    code.l(fail);
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Terminal terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    boost::apply_visitor([&](const auto& t) { EmitA64Terminal(code, ctx, t, initial_location, is_single_step); }, terminal);
+}
+
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx) {
+    const A64::LocationDescriptor location{ctx.block.Location()};
+    EmitA64Terminal(code, ctx, ctx.block.GetTerminal(), location.SetSingleStepping(false), location.SingleStepping());
+}
+
+void EmitA64ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx) {
+    const A64::LocationDescriptor location{ctx.block.Location()};
+    EmitA64Terminal(code, ctx, IR::Term::LinkBlock{ctx.block.ConditionFailedLocation()}, location.SetSingleStepping(false), location.SingleStepping());
+}
+
 template<>
 void EmitIR<IR::Opcode::A64SetCheckBit>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
