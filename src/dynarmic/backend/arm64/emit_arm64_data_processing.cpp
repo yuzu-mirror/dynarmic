@@ -1431,8 +1431,8 @@ void EmitIR<IR::Opcode::ReplicateBit32>(oaknut::CodeGenerator& code, EmitContext
     const u8 bit = args[1].GetImmediateU8();
     RegAlloc::Realize(Wresult, Wvalue);
 
-    code.UBFX(Wscratch0, Wvalue, bit, 1);
-    code.SUB(Wresult, WZR, Wscratch0);
+    code.LSL(Wresult, Wvalue, 31 - bit);
+    code.ASR(Wresult, Wresult, 31);
 }
 
 template<>
@@ -1445,8 +1445,8 @@ void EmitIR<IR::Opcode::ReplicateBit64>(oaknut::CodeGenerator& code, EmitContext
     const u8 bit = args[1].GetImmediateU8();
     RegAlloc::Realize(Xresult, Xvalue);
 
-    code.UBFX(Xscratch0, Xvalue, bit, 1);
-    code.SUB(Xresult, XZR, Xscratch0);
+    code.LSL(Xresult, Xvalue, 63 - bit);
+    code.ASR(Xresult, Xresult, 63);
 }
 
 static void EmitMaxMin32(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, oaknut::Cond cond) {

@@ -256,8 +256,8 @@ void EmitIR<IR::Opcode::A64SetW>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     RegAlloc::Realize(Wvalue);
 
     // TODO: Detect if Gpr vs Fpr is more appropriate
-    code.MOV(Wscratch0, Wvalue);
-    code.STR(Xscratch0, Xstate, offsetof(A64JitState, reg) + sizeof(u64) * static_cast<size_t>(reg));
+    code.MOV(*Wvalue, Wvalue);
+    code.STR(Wvalue->toX(), Xstate, offsetof(A64JitState, reg) + sizeof(u64) * static_cast<size_t>(reg));
 }
 
 template<>
@@ -281,11 +281,7 @@ void EmitIR<IR::Opcode::A64SetS>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     auto Svalue = ctx.reg_alloc.ReadS(args[1]);
     RegAlloc::Realize(Svalue);
 
-    // TODO: Optimize
-    auto Qvalue = Svalue->toQ().B16();
-    code.FMOV(Wscratch0, Svalue);
-    code.EOR(Qvalue, Qvalue, Qvalue);
-    code.FMOV(Svalue, Wscratch0);
+    code.FMOV(Svalue, Svalue);
     code.STR(Svalue->toQ(), Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
@@ -296,11 +292,7 @@ void EmitIR<IR::Opcode::A64SetD>(oaknut::CodeGenerator& code, EmitContext& ctx, 
     auto Dvalue = ctx.reg_alloc.ReadD(args[1]);
     RegAlloc::Realize(Dvalue);
 
-    // TODO: Optimize
-    auto Qvalue = Dvalue->toQ().B16();
-    code.FMOV(Xscratch0, Dvalue);
-    code.EOR(Qvalue, Qvalue, Qvalue);
-    code.FMOV(Dvalue, Xscratch0);
+    code.FMOV(Dvalue, Dvalue);
     code.STR(Dvalue->toQ(), Xstate, offsetof(A64JitState, vec) + sizeof(u64) * 2 * static_cast<size_t>(vec));
 }
 
