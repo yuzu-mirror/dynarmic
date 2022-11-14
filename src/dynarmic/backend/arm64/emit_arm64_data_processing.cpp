@@ -1353,9 +1353,13 @@ void EmitIR<IR::Opcode::ZeroExtendWordToLong>(oaknut::CodeGenerator&, EmitContex
 }
 
 template<>
-void EmitIR<IR::Opcode::ZeroExtendLongToQuad>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
+void EmitIR<IR::Opcode::ZeroExtendLongToQuad>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
+    auto Xvalue = ctx.reg_alloc.ReadX(args[0]);
+    auto Qresult = ctx.reg_alloc.WriteQ(inst);
+    RegAlloc::Realize(Xvalue, Qresult);
+
+    code.FMOV(Qresult->toD(), Xvalue);
 }
 
 template<>

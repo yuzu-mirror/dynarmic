@@ -465,7 +465,7 @@ void EmitIR<IR::Opcode::A64SetTPIDR>(oaknut::CodeGenerator& code, EmitContext& c
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Xvalue = ctx.reg_alloc.ReadX(args[0]);
     RegAlloc::Realize(Xvalue);
-    code.MOV(Xscratch0, mcl::bit_cast<u64>(ctx.conf.tpidrro_el0));
+    code.MOV(Xscratch0, mcl::bit_cast<u64>(ctx.conf.tpidr_el0));
     code.STR(Xvalue, Xscratch0);
 }
 
