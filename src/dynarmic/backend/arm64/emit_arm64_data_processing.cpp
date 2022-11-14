@@ -1423,82 +1423,96 @@ void EmitIR<IR::Opcode::ExtractRegister64>(oaknut::CodeGenerator& code, EmitCont
 
 template<>
 void EmitIR<IR::Opcode::ReplicateBit32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[1].IsImmediate());
+
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Wvalue = ctx.reg_alloc.ReadW(args[0]);
+    const u8 bit = args[1].GetImmediateU8();
+    RegAlloc::Realize(Wresult, Wvalue);
+
+    code.UBFX(Wscratch0, Wvalue, bit, 1);
+    code.SUB(Wresult, WZR, Wscratch0);
 }
 
 template<>
 void EmitIR<IR::Opcode::ReplicateBit64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[1].IsImmediate());
+
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xvalue = ctx.reg_alloc.ReadX(args[0]);
+    const u8 bit = args[1].GetImmediateU8();
+    RegAlloc::Realize(Xresult, Xvalue);
+
+    code.UBFX(Xscratch0, Xvalue, bit, 1);
+    code.SUB(Xresult, XZR, Xscratch0);
+}
+
+static void EmitMaxMin32(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, oaknut::Cond cond) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Wresult = ctx.reg_alloc.WriteW(inst);
+    auto Wop1 = ctx.reg_alloc.ReadW(args[0]);
+    auto Wop2 = ctx.reg_alloc.ReadW(args[1]);
+    RegAlloc::Realize(Wresult, Wop1, Wop2);
+    ctx.reg_alloc.SpillFlags();
+
+    code.CMP(Wop1->toW(), Wop2);
+    code.CSEL(Wresult, Wop1, Wop2, cond);
+}
+
+static void EmitMaxMin64(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, oaknut::Cond cond) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xop1 = ctx.reg_alloc.ReadX(args[0]);
+    auto Xop2 = ctx.reg_alloc.ReadX(args[1]);
+    RegAlloc::Realize(Xresult, Xop1, Xop2);
+    ctx.reg_alloc.SpillFlags();
+
+    code.CMP(Xop1->toX(), Xop2);
+    code.CSEL(Xresult, Xop1, Xop2, cond);
 }
 
 template<>
 void EmitIR<IR::Opcode::MaxSigned32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin32(code, ctx, inst, GT);
 }
 
 template<>
 void EmitIR<IR::Opcode::MaxSigned64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin64(code, ctx, inst, GT);
 }
 
 template<>
 void EmitIR<IR::Opcode::MaxUnsigned32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin32(code, ctx, inst, HI);
 }
 
 template<>
 void EmitIR<IR::Opcode::MaxUnsigned64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin64(code, ctx, inst, HI);
 }
 
 template<>
 void EmitIR<IR::Opcode::MinSigned32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin32(code, ctx, inst, LT);
 }
 
 template<>
 void EmitIR<IR::Opcode::MinSigned64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin64(code, ctx, inst, LT);
 }
 
 template<>
 void EmitIR<IR::Opcode::MinUnsigned32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin32(code, ctx, inst, LO);
 }
 
 template<>
 void EmitIR<IR::Opcode::MinUnsigned64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    EmitMaxMin64(code, ctx, inst, LO);
 }
 
 }  // namespace Dynarmic::Backend::Arm64
