@@ -385,14 +385,14 @@ void EmitIR<IR::Opcode::A64ExceptionRaised>(oaknut::CodeGenerator& code, EmitCon
 template<>
 void EmitIR<IR::Opcode::A64DataCacheOperationRaised>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr, args[1], args[2]);
+    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[1], args[2]);
     EmitRelocation(code, ctx, LinkTarget::DataCacheOperationRaised);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64InstructionCacheOperationRaised>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr, args[1], args[2]);
+    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[0], args[1]);
     EmitRelocation(code, ctx, LinkTarget::InstructionCacheOperationRaised);
 }
 

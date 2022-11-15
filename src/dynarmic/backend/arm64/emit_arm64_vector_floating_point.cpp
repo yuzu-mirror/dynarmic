@@ -11,6 +11,7 @@
 #include "dynarmic/backend/arm64/emit_context.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
+#include "dynarmic/common/fp/info.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
 #include "dynarmic/ir/opcodes.h"
@@ -234,10 +235,17 @@ void EmitToFixed(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) 
 
 template<>
 void EmitIR<IR::Opcode::FPVectorAbs16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    constexpr u16 non_sign_mask = FP::FPInfo<u16>::sign_mask - u16{1u};
+    constexpr u64 non_sign_mask64 = mcl::bit::replicate_element<16, u64>(non_sign_mask);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qoperand = ctx.reg_alloc.ReadQ(args[0]);
+    auto Qresult = ctx.reg_alloc.WriteQ(inst);
+    RegAlloc::Realize(Qoperand, Qresult);
+
+    code.MOV(Xscratch0, non_sign_mask64);
+    code.DUP(Qresult->D2(), Xscratch0);
+    code.AND(Qresult->B16(), Qoperand->B16(), Qresult->B16());
 }
 
 template<>
