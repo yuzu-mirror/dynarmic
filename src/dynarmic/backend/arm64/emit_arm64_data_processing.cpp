@@ -1242,7 +1242,7 @@ void EmitIR<IR::Opcode::AndNot32>(oaknut::CodeGenerator& code, EmitContext& ctx,
 
 template<>
 void EmitIR<IR::Opcode::AndNot64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitAndNot<32>(code, ctx, inst);
+    EmitAndNot<64>(code, ctx, inst);
 }
 
 template<>
