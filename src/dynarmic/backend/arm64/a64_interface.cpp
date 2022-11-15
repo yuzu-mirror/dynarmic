@@ -260,13 +260,13 @@ void Jit::SetRegisters(const std::array<std::uint64_t, 31>& value) {
 
 Vector Jit::GetVector(std::size_t index) const {
     auto& vec = impl->VecRegs();
-    return {vec[index], vec[index + 1]};
+    return {vec[index * 2], vec[index * 2 + 1]};
 }
 
 void Jit::SetVector(std::size_t index, Vector value) {
     auto& vec = impl->VecRegs();
-    vec[index] = value[0];
-    vec[index + 1] = value[1];
+    vec[index * 2] = value[0];
+    vec[index * 2 + 1] = value[1];
 }
 
 std::array<Vector, 32> Jit::GetVectors() const {
