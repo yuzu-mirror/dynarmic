@@ -142,10 +142,10 @@ void EmitIR<IR::Opcode::A64SetCheckBit>(oaknut::CodeGenerator& code, EmitContext
 
 template<>
 void EmitIR<IR::Opcode::A64GetCFlag>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    auto Wresult = ctx.reg_alloc.WriteW(inst);
-    RegAlloc::Realize(Wresult);
-    code.LDR(Wresult, Xstate, offsetof(A64JitState, cpsr_nzcv));
-    code.UBFX(Wresult, Wresult, nzcv_c_flag_shift, 1);
+    auto Wflag = ctx.reg_alloc.WriteW(inst);
+    RegAlloc::Realize(Wflag);
+    code.LDR(Wflag, Xstate, offsetof(A64JitState, cpsr_nzcv));
+    code.AND(Wflag, Wflag, 1 << nzcv_c_flag_shift);
 }
 
 template<>
