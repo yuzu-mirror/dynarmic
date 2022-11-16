@@ -69,9 +69,34 @@ void EmitIR<IR::Opcode::GetGEFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, I
 }
 
 template<>
-void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
-    [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (ctx.reg_alloc.IsValueLive(inst)) {
+        return;
+    }
+
+    switch (args[0].GetType()) {
+    case IR::Type::U32: {
+        auto Wvalue = ctx.reg_alloc.ReadW(args[0]);
+        auto flags = ctx.reg_alloc.WriteFlags(inst);
+        RegAlloc::Realize(Wvalue, flags);
+
+        code.CMP(*Wvalue, WZR.toW());
+        break;
+    }
+    case IR::Type::U64: {
+        auto Xvalue = ctx.reg_alloc.ReadX(args[0]);
+        auto flags = ctx.reg_alloc.WriteFlags(inst);
+        RegAlloc::Realize(Xvalue, flags);
+
+        code.CMP(*Xvalue, XZR.toX());
+        break;
+    }
+    default:
+        ASSERT_FALSE("Invalid type for GetNZCVFromOp");
+        break;
+    }
 }
 
 template<>
