@@ -1024,6 +1024,23 @@ TEST_CASE("A64: This is an infinite loop if fast dispatch is enabled", "[a64]") 
     jit.Run();
 }
 
+TEST_CASE("A64: EXTR", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x93d8fef7);  // EXTR X23, X23, X24, #63
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetRegister(23, 0);
+    jit.SetRegister(24, 1);
+
+    env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.GetRegister(23) == 0);
+}
+
 TEST_CASE("A64: Optimization failure when folding ADD", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};

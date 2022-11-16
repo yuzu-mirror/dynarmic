@@ -1408,7 +1408,7 @@ void EmitIR<IR::Opcode::ExtractRegister32>(oaknut::CodeGenerator& code, EmitCont
     RegAlloc::Realize(Wresult, Wop1, Wop2);
     const u8 lsb = args[2].GetImmediateU8();
 
-    code.EXTR(Wresult, Wop1, Wop2, lsb);
+    code.EXTR(Wresult, Wop2, Wop1, lsb);  // NB: flipped
 }
 
 template<>
@@ -1422,7 +1422,7 @@ void EmitIR<IR::Opcode::ExtractRegister64>(oaknut::CodeGenerator& code, EmitCont
     RegAlloc::Realize(Xresult, Xop1, Xop2);
     const u8 lsb = args[2].GetImmediateU8();
 
-    code.EXTR(Xresult, Xop1, Xop2, lsb);
+    code.EXTR(Xresult, Xop2, Xop1, lsb);  // NB: flipped
 }
 
 template<>
