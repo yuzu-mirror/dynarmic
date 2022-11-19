@@ -87,7 +87,7 @@ void A64EmitX64::GenMemory128Accessors() {
     code.movaps(xword[code.ABI_PARAM3], xmm1);
     code.movaps(xword[code.ABI_PARAM4], xmm2);
     Devirtualize<&A64::UserCallbacks::MemoryWriteExclusive128>(conf.callbacks).EmitCall(code);
-    code.add(rsp, 8 + 16 + ABI_SHADOW_SPACE);
+    code.add(rsp, 8 + 32 + ABI_SHADOW_SPACE);
 #else
     code.sub(rsp, 8);
     if (code.HasHostFeature(HostFeature::SSE41)) {
