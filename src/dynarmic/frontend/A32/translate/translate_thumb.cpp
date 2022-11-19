@@ -109,12 +109,15 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, TranslateCallbacks* tcb,
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();
+        u64 ticks_for_instruction = 1;
+
         if (const auto maybe_instruction = ReadThumbInstruction(arm_pc, tcb)) {
             const auto [thumb_instruction, inst_size] = *maybe_instruction;
             const bool is_thumb_16 = inst_size == ThumbInstSize::Thumb16;
             visitor.current_instruction_size = is_thumb_16 ? 2 : 4;
 
-            tcb->PreCodeTranslationHook(false, arm_pc, visitor.ir);
+            tcb->PreCodeTranslationHook(true, arm_pc, visitor.ir);
+            ticks_for_instruction = tcb->GetTicksForCode(true, arm_pc, thumb_instruction);
 
             if (IsUnconditionalInstruction(is_thumb_16, thumb_instruction) || visitor.ThumbConditionPassed()) {
                 if (is_thumb_16) {
@@ -143,6 +146,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, TranslateCallbacks* tcb,
             }
         } else {
             visitor.current_instruction_size = 2;
+
             should_continue = visitor.RaiseException(Exception::NoExecuteFault);
         }
 
@@ -151,7 +155,7 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, TranslateCallbacks* tcb,
         }
 
         visitor.ir.current_location = visitor.ir.current_location.AdvancePC(static_cast<int>(visitor.current_instruction_size)).AdvanceIT();
-        block.CycleCount()++;
+        block.CycleCount() += ticks_for_instruction;
     } while (should_continue && CondCanContinue(visitor.cond_state, visitor.ir) && !single_step);
 
     if (visitor.cond_state == ConditionalState::Translating || visitor.cond_state == ConditionalState::Trailing || single_step) {
@@ -178,6 +182,8 @@ bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descri
 
     const bool is_thumb_16 = IsThumb16(static_cast<u16>(thumb_instruction));
     visitor.current_instruction_size = is_thumb_16 ? 2 : 4;
+
+    const u64 ticks_for_instruction = 1;
 
     if (is_thumb_16) {
         if (const auto decoder = DecodeThumb16<TranslatorVisitor>(static_cast<u16>(thumb_instruction))) {
@@ -206,7 +212,7 @@ bool TranslateSingleThumbInstruction(IR::Block& block, LocationDescriptor descri
 
     const s32 advance_pc = is_thumb_16 ? 2 : 4;
     visitor.ir.current_location = visitor.ir.current_location.AdvancePC(advance_pc);
-    block.CycleCount()++;
+    block.CycleCount() += ticks_for_instruction;
 
     block.SetEndLocation(visitor.ir.current_location);
 

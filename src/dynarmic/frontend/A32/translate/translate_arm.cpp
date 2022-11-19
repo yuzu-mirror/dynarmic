@@ -28,10 +28,13 @@ IR::Block TranslateArm(LocationDescriptor descriptor, TranslateCallbacks* tcb, c
     bool should_continue = true;
     do {
         const u32 arm_pc = visitor.ir.current_location.PC();
-        visitor.current_instruction_size = 4;
+        u64 ticks_for_instruction = 1;
 
         if (const auto arm_instruction = tcb->MemoryReadCode(arm_pc)) {
+            visitor.current_instruction_size = 4;
+
             tcb->PreCodeTranslationHook(false, arm_pc, visitor.ir);
+            ticks_for_instruction = tcb->GetTicksForCode(false, arm_pc, *arm_instruction);
 
             if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(*arm_instruction)) {
                 should_continue = vfp_decoder->get().call(visitor, *arm_instruction);
@@ -43,6 +46,8 @@ IR::Block TranslateArm(LocationDescriptor descriptor, TranslateCallbacks* tcb, c
                 should_continue = visitor.arm_UDF();
             }
         } else {
+            visitor.current_instruction_size = 4;
+
             should_continue = visitor.RaiseException(Exception::NoExecuteFault);
         }
 
@@ -51,7 +56,7 @@ IR::Block TranslateArm(LocationDescriptor descriptor, TranslateCallbacks* tcb, c
         }
 
         visitor.ir.current_location = visitor.ir.current_location.AdvancePC(4);
-        block.CycleCount()++;
+        block.CycleCount() += ticks_for_instruction;
     } while (should_continue && CondCanContinue(visitor.cond_state, visitor.ir) && !single_step);
 
     if (visitor.cond_state == ConditionalState::Translating || visitor.cond_state == ConditionalState::Trailing || single_step) {
@@ -74,9 +79,14 @@ IR::Block TranslateArm(LocationDescriptor descriptor, TranslateCallbacks* tcb, c
 bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descriptor, u32 arm_instruction) {
     TranslatorVisitor visitor{block, descriptor, {}};
 
+    bool should_continue = true;
+
     // TODO: Proper cond handling
 
-    bool should_continue = true;
+    visitor.current_instruction_size = 4;
+
+    const u64 ticks_for_instruction = 1;
+
     if (const auto vfp_decoder = DecodeVFP<TranslatorVisitor>(arm_instruction)) {
         should_continue = vfp_decoder->get().call(visitor, arm_instruction);
     } else if (const auto asimd_decoder = DecodeASIMD<TranslatorVisitor>(arm_instruction)) {
@@ -90,7 +100,7 @@ bool TranslateSingleArmInstruction(IR::Block& block, LocationDescriptor descript
     // TODO: Feedback resulting cond status to caller somehow.
 
     visitor.ir.current_location = visitor.ir.current_location.AdvancePC(4);
-    block.CycleCount()++;
+    block.CycleCount() += ticks_for_instruction;
 
     block.SetEndLocation(visitor.ir.current_location);
 

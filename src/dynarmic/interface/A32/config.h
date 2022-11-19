@@ -109,6 +109,8 @@ struct UserCallbacks : public TranslateCallbacks {
     virtual void AddTicks(std::uint64_t ticks) = 0;
     // How many more ticks am I allowed to execute?
     virtual std::uint64_t GetTicksRemaining() = 0;
+    // How many ticks should this instruction take to execute?
+    std::uint64_t GetTicksForCode(bool /*is_thumb*/, VAddr /*vaddr*/, std::uint32_t /*instruction*/) override { return 1; }
 };
 
 struct UserConfig {
