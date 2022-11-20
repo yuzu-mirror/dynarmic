@@ -20,51 +20,59 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{45BD58A5-1711-417f-99E7-B640C56F8009}</ProjectGuid>
-    <TemplateGuid>{1bc93793-694f-48fe-9372-81e2b05556fd}</TemplateGuid>
+    <TemplateGuid>{dd38f7fc-d7bd-488b-9242-7d8754cde80d}</TemplateGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <Configuration>Release</Configuration>
     <Platform Condition="'$(Platform)' == ''">x64</Platform>
     <RootNamespace>$(MSBuildProjectName)</RootNamespace>
-    <WindowsTargetPlatformVersion>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetLatestSDKTargetPlatformVersion('Windows', '10.0'))</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <TargetVersion>Windows7</TargetVersion>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <TargetVersion>Windows10</TargetVersion>
+    <_NT_TARGET_VERSION>0x0601</_NT_TARGET_VERSION>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>WDM</DriverType>
     <SupportsPackaging>false</SupportsPackaging>
-    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+    <SpectreMitigation>false</SpectreMitigation>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <TargetVersion>Windows7</TargetVersion>
+    <TargetVersion>Windows10</TargetVersion>
+    <_NT_TARGET_VERSION>0x0601</_NT_TARGET_VERSION>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>WDM</DriverType>
     <SupportsPackaging>false</SupportsPackaging>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+    <SpectreMitigation>false</SpectreMitigation>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <TargetVersion>Windows7</TargetVersion>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <TargetVersion>Windows10</TargetVersion>
+    <_NT_TARGET_VERSION>0x0601</_NT_TARGET_VERSION>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>WDM</DriverType>
     <SupportsPackaging>false</SupportsPackaging>
-    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+    <SpectreMitigation>false</SpectreMitigation>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <TargetVersion>Windows7</TargetVersion>
+    <TargetVersion>Windows10</TargetVersion>
+    <_NT_TARGET_VERSION>0x0601</_NT_TARGET_VERSION>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
     <ConfigurationType>Driver</ConfigurationType>
     <DriverType>WDM</DriverType>
     <SupportsPackaging>false</SupportsPackaging>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+    <SpectreMitigation>false</SpectreMitigation>
+    <Driver_SpectreMitigation>false</Driver_SpectreMitigation>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -79,6 +87,7 @@
   <PropertyGroup />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <SignMode>Off</SignMode>
     <TimeStampServer />
     <OutDir>..\bin\DebugX86Kernel\</OutDir>
     <IntDir>obj\$(ProjectName)-$(Platform)-$(Configuration)\</IntDir>
@@ -87,6 +96,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <SignMode>Off</SignMode>
     <TimeStampServer />
     <OutDir>..\bin\ReleaseX86Kernel\</OutDir>
     <IntDir>obj\$(ProjectName)-$(Platform)-$(Configuration)\</IntDir>
@@ -95,6 +105,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <SignMode>Off</SignMode>
     <TimeStampServer />
     <OutDir>..\bin\DebugX64Kernel\</OutDir>
     <IntDir>obj\$(ProjectName)-$(Platform)-$(Configuration)\</IntDir>
@@ -103,6 +114,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <SignMode>Off</SignMode>
     <TimeStampServer />
     <OutDir>..\bin\ReleaseX64Kernel\</OutDir>
     <IntDir>obj\$(ProjectName)-$(Platform)-$(Configuration)\</IntDir>
@@ -111,13 +123,16 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_DEFINE;ZYDIS_STATIC_DEFINE;POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;DBG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_BUILD;ZYDIS_STATIC_BUILD;POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;DBG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/Gw /kernel</AdditionalOptions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalIncludeDirectories>../../dependencies/zycore/include;../../include;..;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <ControlFlowGuard>false</ControlFlowGuard>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <DisableSpecificWarnings>4201;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <GuardEHContMetadata>false</GuardEHContMetadata>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalOptions>/NOVCFEATURE /NOCOFFGRPINFO %(AdditionalOptions)</AdditionalOptions>
@@ -134,7 +149,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_DEFINE;ZYDIS_STATIC_DEFINE;POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_BUILD;ZYDIS_STATIC_BUILD;POOL_NX_OPTIN;_X86_=1;i386=1;STD_CALL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/Gw /kernel</AdditionalOptions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalIncludeDirectories>../../dependencies/zycore/include;../../include;..;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -143,6 +158,10 @@
       <ControlFlowGuard>false</ControlFlowGuard>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <Optimization>MaxSpeed</Optimization>
+      <DisableSpecificWarnings>4201;4603;4627;4986;4987;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <GuardEHContMetadata>false</GuardEHContMetadata>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -160,13 +179,16 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_DEFINE;ZYDIS_STATIC_DEFINE;POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;DBG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_BUILD;ZYDIS_STATIC_BUILD;POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;DBG;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/Gw /kernel</AdditionalOptions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalIncludeDirectories>../../dependencies/zycore/include;../../include;..;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <ControlFlowGuard>false</ControlFlowGuard>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <DisableSpecificWarnings>4201;4748;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <GuardEHContMetadata>false</GuardEHContMetadata>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalOptions>/NOVCFEATURE /NOCOFFGRPINFO %(AdditionalOptions)</AdditionalOptions>
@@ -177,13 +199,13 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <Version>6.1</Version>
       <AdditionalDependencies>Zydis.lib;%(AdditionalDependencies);$(KernelBufferOverflowLib);$(DDK_LIB_PATH)ntoskrnl.lib;$(DDK_LIB_PATH)hal.lib;$(DDK_LIB_PATH)wmilib.lib</AdditionalDependencies>
-      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_DEFINE;ZYDIS_STATIC_DEFINE;POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ZYAN_NO_LIBC;ZYDIS_NO_LIBC;ZYCORE_STATIC_BUILD;ZYDIS_STATIC_BUILD;POOL_NX_OPTIN;_WIN64;_AMD64_;AMD64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/Gw /kernel</AdditionalOptions>
       <DiagnosticsFormat>Caret</DiagnosticsFormat>
       <AdditionalIncludeDirectories>../../dependencies/zycore/include;../../include;..;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -192,10 +214,13 @@
       <ControlFlowGuard>false</ControlFlowGuard>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <Optimization>MaxSpeed</Optimization>
+      <DisableSpecificWarnings>4201;4603;4627;4986;4987;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <GuardEHContMetadata>false</GuardEHContMetadata>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
       <AdditionalOptions>/NOVCFEATURE /NOCOFFGRPINFO %(AdditionalOptions)</AdditionalOptions>
       <Profile>false</Profile>
       <RandomizedBaseAddress>true</RandomizedBaseAddress>
@@ -205,6 +230,7 @@
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <Version>6.1</Version>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -216,23 +242,31 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Allocator.h" />
+    <ClInclude Include="..\..\dependencies\zycore\include\Zycore\ArgParse.h" />
+    <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Atomic.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Bitset.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Comparison.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Defines.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Format.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\LibC.h" />
+    <ClInclude Include="..\..\dependencies\zycore\include\Zycore\List.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Object.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Status.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\String.h" />
-    <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Terminal.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Types.h" />
     <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Vector.h" />
+    <ClInclude Include="..\..\dependencies\zycore\include\Zycore\Zycore.h" />
     <ClInclude Include="..\..\include\Zydis\Decoder.h" />
     <ClInclude Include="..\..\include\Zydis\DecoderTypes.h" />
+    <ClInclude Include="..\..\include\Zydis\Defines.h" />
+    <ClInclude Include="..\..\include\Zydis\Disassembler.h" />
+    <ClInclude Include="..\..\include\Zydis\Encoder.h" />
     <ClInclude Include="..\..\include\Zydis\Formatter.h" />
+    <ClInclude Include="..\..\include\Zydis\FormatterBuffer.h" />
     <ClInclude Include="..\..\include\Zydis\MetaInfo.h" />
     <ClInclude Include="..\..\include\Zydis\Mnemonic.h" />
     <ClInclude Include="..\..\include\Zydis\Register.h" />
+    <ClInclude Include="..\..\include\Zydis\Segment.h" />
     <ClInclude Include="..\..\include\Zydis\SharedTypes.h" />
     <ClInclude Include="..\..\include\Zydis\ShortString.h" />
     <ClInclude Include="..\..\include\Zydis\Status.h" />

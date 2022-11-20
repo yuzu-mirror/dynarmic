@@ -108,16 +108,16 @@ static ZyanStatus ZydisFormatterPrintMnemonic(const ZydisFormatter* formatter,
     user_data->omit_immediate = ZYAN_TRUE;
 
     // Rewrite the instruction-mnemonic for the given instructions
-    if (context->instruction->operand_count &&
-        context->instruction->operands[context->instruction->operand_count - 1].type ==
+    if (context->instruction->operand_count_visible &&
+        context->operands[context->instruction->operand_count_visible - 1].type ==
         ZYDIS_OPERAND_TYPE_IMMEDIATE)
     {
         // Retrieve the `ZyanString` instance of the formatter-buffer
         ZyanString* string;
         ZYAN_CHECK(ZydisFormatterBufferGetString(buffer, &string));
 
-        const ZyanU8 condition_code = (ZyanU8)context->instruction->operands[
-            context->instruction->operand_count - 1].imm.value.u;
+        const ZyanU8 condition_code = (ZyanU8)context->operands[
+            context->instruction->operand_count_visible - 1].imm.value.u;
         switch (context->instruction->mnemonic)
         {
         case ZYDIS_MNEMONIC_CMPPS:
@@ -211,14 +211,19 @@ static void DisassembleBuffer(ZydisDecoder* decoder, ZyanU8* data, ZyanUSize len
     ZyanU64 runtime_address = 0x007FFFFFFF400000;
 
     ZydisDecodedInstruction instruction;
+    ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
     ZydisCustomUserData user_data;
     char buffer[256];
-    while (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(decoder, data, length, &instruction)))
+
+    while (ZYAN_SUCCESS(ZydisDecoderDecodeFull(decoder, data, length, &instruction, operands)))
     {
         ZYAN_PRINTF("%016" PRIX64 "  ", runtime_address);
-        ZydisFormatterFormatInstructionEx(&formatter, &instruction, &buffer[0], sizeof(buffer),
-            runtime_address, &user_data);
+
+        ZydisFormatterFormatInstruction(&formatter, &instruction, operands,
+            instruction.operand_count_visible, &buffer[0], sizeof(buffer), runtime_address,
+            &user_data);
         ZYAN_PRINTF(" %s\n", &buffer[0]);
+
         data += instruction.length;
         length -= instruction.length;
         runtime_address += instruction.length;
@@ -253,7 +258,7 @@ int main(void)
     };
 
     ZydisDecoder decoder;
-    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_ADDRESS_WIDTH_64);
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
 
     DisassembleBuffer(&decoder, &data[0], sizeof(data), ZYAN_FALSE);
     ZYAN_PUTS("");

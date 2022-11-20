@@ -9,6 +9,7 @@
     ISA-EXT: BASE
  EXCEPTIONS: NONE
  ATTRIBUTES: CPUFLAG_ACCESS ACCEPTS_REPE ACCEPTS_REPZ ACCEPTS_REPNE ACCEPTS_REPNZ 
+  OPTIMIZED: AF 
 
 == [ OPERANDS ] ============================================================================================
 ##       TYPE  VISIBILITY  ACTION      ENCODING   SIZE  NELEM  ELEMSZ  ELEMTYPE                        VALUE
@@ -27,7 +28,6 @@
     ACTIONS: [CF  : M  ] [PF  : M  ] [AF  : M  ] [ZF  : M  ] [SF  : M  ] [DF  : T  ] [OF  : M  ] 
        READ: 0x00000400
     WRITTEN: 0x000008D5
-  UNDEFINED: 0x00000000
 
 == [      ATT ] ============================================================================================
    ABSOLUTE: scasd

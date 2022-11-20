@@ -9,12 +9,13 @@
     ISA-EXT: BASE
  EXCEPTIONS: NONE
  ATTRIBUTES: HAS_MODRM CPUFLAG_ACCESS ACCEPTS_SEGMENT 
+  OPTIMIZED: 02 19 
 
 == [ OPERANDS ] ============================================================================================
 ##       TYPE  VISIBILITY  ACTION      ENCODING   SIZE  NELEM  ELEMSZ  ELEMTYPE                        VALUE
 --  ---------  ----------  ------  ------------   ----  -----  ------  --------  ---------------------------
  0   REGISTER    EXPLICIT      RW     MODRM_REG      8      1       8       INT                           bl
- 1     MEMORY    EXPLICIT       R      MODRM_RM      8      1       8      UINT  TYPE  =                 MEM
+ 1     MEMORY    EXPLICIT       R      MODRM_RM      8      1       8       INT  TYPE  =                 MEM
                                                                                  SEG   =                  ds
                                                                                  BASE  =                 rcx
                                                                                  INDEX =                none
@@ -27,7 +28,6 @@
     ACTIONS: [CF  : M  ] [PF  : M  ] [AF  : M  ] [ZF  : M  ] [SF  : M  ] [OF  : M  ] 
        READ: 0x00000000
     WRITTEN: 0x000008D5
-  UNDEFINED: 0x00000000
 
 == [      ATT ] ============================================================================================
    ABSOLUTE: add (%rcx), %bl

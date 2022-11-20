@@ -61,19 +61,19 @@ int main(int argc, char** argv)
     ZydisDecoder decoder;
     if (!ZYAN_STRCMP(argv[1], "-real"))
     {
-        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_REAL_16, ZYDIS_ADDRESS_WIDTH_16);
+        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_REAL_16, ZYDIS_STACK_WIDTH_16);
     } else
     if (!ZYAN_STRCMP(argv[1], "-16"))
     {
-        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_COMPAT_16, ZYDIS_ADDRESS_WIDTH_16);
+        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_COMPAT_16, ZYDIS_STACK_WIDTH_16);
     } else
     if (!ZYAN_STRCMP(argv[1], "-32"))
     {
-        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_COMPAT_32, ZYDIS_ADDRESS_WIDTH_32);
+        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_COMPAT_32, ZYDIS_STACK_WIDTH_32);
     } else
     if (!ZYAN_STRCMP(argv[1], "-64"))
     {
-        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_ADDRESS_WIDTH_64);
+        ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
     } else
     {
         ZYAN_FPRINTF(ZYAN_STDERR, "Usage: %s -[real|16|32|64] [input file]\n",
@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     // binary mode
     if (file == ZYAN_STDIN)
     {
-        _setmode(_fileno(ZYAN_STDIN), _O_BINARY);
+        (void)_setmode(_fileno(ZYAN_STDIN), _O_BINARY);
     }
 #endif
 
@@ -125,12 +125,13 @@ int main(int argc, char** argv)
         buffer_size += buffer_remaining;
 
         ZydisDecodedInstruction instruction;
+        ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
         ZyanStatus status;
         ZyanUSize read_offset = 0;
         char format_buffer[256];
 
-        while ((status = ZydisDecoderDecodeBuffer(&decoder, buffer + read_offset,
-            buffer_size - read_offset, &instruction)) != ZYDIS_STATUS_NO_MORE_DATA)
+        while ((status = ZydisDecoderDecodeFull(&decoder, buffer + read_offset,
+            buffer_size - read_offset, &instruction, operands)) != ZYDIS_STATUS_NO_MORE_DATA)
         {
             const ZyanU64 runtime_address = read_offset_base + read_offset;
 
@@ -140,8 +141,9 @@ int main(int argc, char** argv)
                 continue;
             }
 
-            ZydisFormatterFormatInstruction(&formatter, &instruction, format_buffer,
-                sizeof(format_buffer), runtime_address);
+            ZydisFormatterFormatInstruction(&formatter, &instruction, operands, 
+                instruction.operand_count_visible, format_buffer, sizeof(format_buffer),
+                runtime_address, ZYAN_NULL);
             ZYAN_PUTS(format_buffer);
 
             read_offset += instruction.length;
