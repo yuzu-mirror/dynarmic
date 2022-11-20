@@ -32,9 +32,10 @@
 #ifndef ZYCORE_API_PROCESS_H
 #define ZYCORE_API_PROCESS_H
 
-#include <ZycoreExportConfig.h>
 #include <Zycore/Status.h>
 #include <Zycore/Types.h>
+
+#ifndef ZYAN_NO_LIBC
 
 /* ============================================================================================== */
 /* Enums and types                                                                                */
@@ -63,5 +64,7 @@ ZYCORE_EXPORT ZyanStatus ZyanProcessFlushInstructionCache(void* address, ZyanUSi
 /* ---------------------------------------------------------------------------------------------- */
 
 /* ============================================================================================== */
+
+#endif /* ZYAN_NO_LIBC */
 
 #endif /* ZYCORE_API_PROCESS_H */
