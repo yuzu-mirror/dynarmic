@@ -8,15 +8,16 @@
     ISA-SET: AVX512F_128
     ISA-EXT: AVX512EVEX
  EXCEPTIONS: E4
- ATTRIBUTES: HAS_MODRM HAS_EVEX 
+ ATTRIBUTES: HAS_MODRM HAS_EVEX ACCEPTS_SEGMENT 
+  OPTIMIZED: 62 F1 75 1E 76 A5 DF 8F 5C 88 
 
 == [ OPERANDS ] ============================================================================================
 ##       TYPE  VISIBILITY  ACTION      ENCODING   SIZE  NELEM  ELEMSZ  ELEMTYPE                        VALUE
 --  ---------  ----------  ------  ------------   ----  -----  ------  --------  ---------------------------
  0   REGISTER    EXPLICIT       W     MODRM_REG     64     64       1       INT                           k4
  1   REGISTER    EXPLICIT       R          MASK     64     64       1       INT                           k6
- 2   REGISTER    EXPLICIT       R        NDSNDD    128      4      32      UINT                         xmm1
- 3     MEMORY    EXPLICIT       R      MODRM_RM     32      1      32      UINT  TYPE  =                 MEM
+ 2   REGISTER    EXPLICIT       R        NDSNDD    128      4      32       INT                         xmm1
+ 3     MEMORY    EXPLICIT       R      MODRM_RM     32      1      32       INT  TYPE  =                 MEM
                                                                                  SEG   =                  ss
                                                                                  BASE  =                 rbp
                                                                                  INDEX =                none

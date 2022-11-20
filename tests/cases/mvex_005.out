@@ -8,7 +8,8 @@
     ISA-SET: KNCE
     ISA-EXT: KNCE
  EXCEPTIONS: NONE
- ATTRIBUTES: HAS_MODRM HAS_SIB HAS_MVEX 
+ ATTRIBUTES: HAS_MODRM HAS_SIB HAS_MVEX ACCEPTS_SEGMENT 
+  OPTIMIZED: 62 A1 49 FA DB 8C E9 32 28 08 91 
 
 == [ OPERANDS ] ============================================================================================
 ##       TYPE  VISIBILITY  ACTION      ENCODING   SIZE  NELEM  ELEMSZ  ELEMTYPE                        VALUE
@@ -35,12 +36,12 @@
     CONVERT: SINT16
 
 == [      ATT ] ============================================================================================
-   ABSOLUTE: vpandd -0x6EF7D7CE(%rcx,%r13,8) {sint16} {cdab}, %zmm6, %zmm17 {%k2}
-   RELATIVE: vpandd -0x6EF7D7CE(%rcx,%r13,8) {sint16} {cdab}, %zmm6, %zmm17 {%k2}
+   ABSOLUTE: vpandd -0x6EF7D7CE(%rcx,%r13,8) {sint16} {eh}, %zmm6, %zmm17 {%k2}
+   RELATIVE: vpandd -0x6EF7D7CE(%rcx,%r13,8) {sint16} {eh}, %zmm6, %zmm17 {%k2}
 
 == [    INTEL ] ============================================================================================
-   ABSOLUTE: vpandd zmm17 {k2}, zmm6, ymmword ptr ds:[rcx+r13*8-0x6EF7D7CE] {sint16} {cdab}
-   RELATIVE: vpandd zmm17 {k2}, zmm6, ymmword ptr ds:[rcx+r13*8-0x6EF7D7CE] {sint16} {cdab}
+   ABSOLUTE: vpandd zmm17 {k2}, zmm6, ymmword ptr ds:[rcx+r13*8-0x6EF7D7CE] {sint16} {eh}
+   RELATIVE: vpandd zmm17 {k2}, zmm6, ymmword ptr ds:[rcx+r13*8-0x6EF7D7CE] {sint16} {eh}
 
 == [ SEGMENTS ] ============================================================================================
 62 A1 49 FA DB 8C E9 32 28 08 91 

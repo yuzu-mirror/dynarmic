@@ -115,15 +115,20 @@ static void DisassembleBuffer(ZydisDecoder* decoder, ZyanU8* data, ZyanUSize len
     ZyanU64 runtime_address = 0x007FFFFFFF400000;
 
     ZydisDecodedInstruction instruction;
+    ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
     char buffer[256];
-    while (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(decoder, data, length, &instruction)))
+
+    while (ZYAN_SUCCESS(ZydisDecoderDecodeFull(decoder, data, length, &instruction, operands)))
     {
         ZYAN_PRINTF("%016" PRIX64 "  ", runtime_address);
+
         // We have to pass a `runtime_address` different to `ZYDIS_RUNTIME_ADDRESS_NONE` to
         // enable printing of absolute addresses
-        ZydisFormatterFormatInstruction(&formatter, &instruction, &buffer[0], sizeof(buffer),
-            runtime_address);
+        ZydisFormatterFormatInstruction(&formatter, &instruction, operands,
+            instruction.operand_count_visible, &buffer[0], sizeof(buffer), runtime_address,
+            ZYAN_NULL);
         ZYAN_PRINTF(" %s\n", &buffer[0]);
+
         data += instruction.length;
         length -= instruction.length;
         runtime_address += instruction.length;
@@ -153,7 +158,7 @@ int main(void)
     };
 
     ZydisDecoder decoder;
-    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_ADDRESS_WIDTH_64);
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
 
     DisassembleBuffer(&decoder, &data[0], sizeof(data));
 

@@ -9,6 +9,7 @@
     ISA-EXT: BASE
  EXCEPTIONS: NONE
  ATTRIBUTES: ACCEPTS_SEGMENT 
+  OPTIMIZED: A3 7B 10 A8 C6 E9 7A 88 0F 
 
 == [ OPERANDS ] ============================================================================================
 ##       TYPE  VISIBILITY  ACTION      ENCODING   SIZE  NELEM  ELEMSZ  ELEMTYPE                        VALUE
@@ -24,11 +25,11 @@
 
 == [      ATT ] ============================================================================================
    ABSOLUTE: mov %eax, 0x0F887AE9C6A8107B
-   RELATIVE: mov %eax, 0xF887AE9C6A8107B
+   RELATIVE: mov %eax, 0x0F887AE9C6A8107B
 
 == [    INTEL ] ============================================================================================
    ABSOLUTE: mov dword ptr ds:[0x0F887AE9C6A8107B], eax
-   RELATIVE: mov dword ptr ds:[0xF887AE9C6A8107B], eax
+   RELATIVE: mov dword ptr ds:[0x0F887AE9C6A8107B], eax
 
 == [ SEGMENTS ] ============================================================================================
 A3 7B 10 A8 C6 E9 7A 88 0F 
