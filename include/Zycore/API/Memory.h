@@ -32,10 +32,11 @@
 #ifndef ZYCORE_API_MEMORY_H
 #define ZYCORE_API_MEMORY_H
 
-#include <ZycoreExportConfig.h>
 #include <Zycore/Defines.h>
 #include <Zycore/Status.h>
 #include <Zycore/Types.h>
+
+#ifndef ZYAN_NO_LIBC
 
 #if   defined(ZYAN_WINDOWS)
 #   include <windows.h>
@@ -130,5 +131,7 @@ ZYCORE_EXPORT ZyanStatus ZyanMemoryVirtualFree(void* address, ZyanUSize size);
 /* ---------------------------------------------------------------------------------------------- */
 
 /* ============================================================================================== */
+
+#endif /* ZYAN_NO_LIBC */
 
 #endif /* ZYCORE_API_MEMORY_H */

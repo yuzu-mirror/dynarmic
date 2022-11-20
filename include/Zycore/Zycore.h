@@ -32,7 +32,6 @@
 #ifndef ZYCORE_H
 #define ZYCORE_H
 
-#include <ZycoreExportConfig.h>
 #include <Zycore/Types.h>
 
 // TODO:
@@ -52,7 +51,7 @@ extern "C" {
 /**
  * A macro that defines the zycore version.
  */
-#define ZYCORE_VERSION (ZyanU64)0x0001000000000000
+#define ZYCORE_VERSION (ZyanU64)0x0001000400010000
 
 /* ---------------------------------------------------------------------------------------------- */
 /* Helper macros                                                                                  */

@@ -85,6 +85,9 @@
 #   define ZYAN_WINDOWS
 #elif defined(__EMSCRIPTEN__)
 #   define ZYAN_EMSCRIPTEN
+#elif defined(__wasi__) || defined(__WASI__)
+// via: https://reviews.llvm.org/D57155
+#   define ZYAN_WASI
 #elif defined(__APPLE__)
 #   define ZYAN_APPLE
 #   define ZYAN_POSIX
@@ -131,8 +134,14 @@
 #   define ZYAN_AARCH64
 #elif defined(_M_ARM) || defined(_M_ARMT) || defined(__arm__) || defined(__thumb__)
 #   define ZYAN_ARM
-#elif defined(__EMSCRIPTEN__)
-    // Nothing to do, `ZYAN_EMSCRIPTEN` is both platform and arch macro for this one.
+#elif defined(__EMSCRIPTEN__) || defined(__wasm__) || defined(__WASM__)
+#   define ZYAN_WASM
+#elif defined(__powerpc64__)
+#   define ZYAN_PPC64
+#elif defined(__powerpc__)
+#   define ZYAN_PPC
+#elif defined(__riscv) && __riscv_xlen == 64
+#   define ZYAN_RISCV64
 #else
 #   error "Unsupported architecture detected"
 #endif
@@ -158,6 +167,73 @@
 #endif
 
 /* ============================================================================================== */
+/* Deprecation hint                                                                               */
+/* ============================================================================================== */
+
+#if defined(ZYAN_GCC) || defined(ZYAN_CLANG)
+#   define ZYAN_DEPRECATED __attribute__((__deprecated__))
+#elif defined(ZYAN_MSVC)
+#   define ZYAN_DEPRECATED __declspec(deprecated)
+#else
+#   define ZYAN_DEPRECATED
+#endif
+
+/* ============================================================================================== */
+/* Generic DLL import/export helpers                                                              */
+/* ============================================================================================== */
+
+#if defined(ZYAN_MSVC)
+#   define ZYAN_DLLEXPORT __declspec(dllexport)
+#   define ZYAN_DLLIMPORT __declspec(dllimport)
+#else
+#   define ZYAN_DLLEXPORT
+#   define ZYAN_DLLIMPORT
+#endif
+
+/* ============================================================================================== */
+/* Zycore dll{export,import}                                                                      */
+/* ============================================================================================== */
+
+// This is a cut-down version of what CMake's `GenerateExportHeader` would usually generate. To
+// simplify builds without CMake, we define these things manually instead of relying on CMake
+// to generate the header.
+//
+// For static builds, our CMakeList will define `ZYCORE_STATIC_BUILD`. For shared library builds,
+// our CMake will define `ZYCORE_SHOULD_EXPORT` depending on whether the target is being imported or
+// exported. If CMake isn't used, users can manually define these to fit their use-case.
+
+// Backward compatibility: CMake would previously generate these variables names. However, because
+// they have pretty cryptic names, we renamed them when we got rid of `GenerateExportHeader`. For
+// backward compatibility for users that don't use CMake and previously manually defined these, we
+// translate the old defines here and print a warning.
+#if defined(ZYCORE_STATIC_DEFINE)
+#   pragma message("ZYCORE_STATIC_DEFINE was renamed to ZYCORE_STATIC_BUILD.")
+#   define ZYCORE_STATIC_BUILD
+#endif
+#if defined(Zycore_EXPORTS)
+#   pragma message("Zycore_EXPORTS was renamed to ZYCORE_SHOULD_EXPORT.")
+#   define ZYCORE_SHOULD_EXPORT
+#endif
+
+/**
+ * Symbol is exported in shared library builds.
+ */
+#if defined(ZYCORE_STATIC_BUILD)
+#   define ZYCORE_EXPORT
+#else
+#   if defined(ZYCORE_SHOULD_EXPORT)
+#       define ZYCORE_EXPORT ZYAN_DLLEXPORT
+#   else
+#       define ZYCORE_EXPORT ZYAN_DLLIMPORT
+#   endif
+#endif
+
+/**
+ * Symbol is not exported and for internal use only.
+ */
+#define ZYCORE_NO_EXPORT
+
+/* ============================================================================================== */
 /* Misc compatibility macros                                                                      */
 /* ============================================================================================== */
 
@@ -171,6 +247,14 @@
 #   define ZYAN_INLINE __inline
 #else
 #   define ZYAN_INLINE static inline
+#endif
+
+#if defined(ZYAN_MSVC)
+#   define ZYAN_NOINLINE __declspec(noinline)
+#elif defined(ZYAN_GCC) || defined(ZYAN_CLANG)
+#   define ZYAN_NOINLINE __attribute__((noinline))
+#else
+#   define ZYAN_NOINLINE
 #endif
 
 /* ============================================================================================== */
@@ -193,7 +277,7 @@
 /**
  * Compiler-time assertion.
  */
-#if __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__cplusplus)
 #   define ZYAN_STATIC_ASSERT(x) _Static_assert(x, #x)
 #elif (defined(__cplusplus) && __cplusplus >= 201103L) || \
       (defined(__cplusplus) && defined (_MSC_VER) && (_MSC_VER >= 1600)) || \
@@ -256,7 +340,7 @@
  * Intentional fallthrough.
  */
 #if defined(ZYAN_GCC) && __GNUC__ >= 7
-#   define ZYAN_FALLTHROUGH __attribute__((fallthrough))
+#   define ZYAN_FALLTHROUGH ; __attribute__((__fallthrough__))
 #else
 #   define ZYAN_FALLTHROUGH
 #endif

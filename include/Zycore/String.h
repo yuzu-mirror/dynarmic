@@ -32,7 +32,6 @@
 #ifndef ZYCORE_STRING_H
 #define ZYCORE_STRING_H
 
-#include <ZycoreExportConfig.h>
 #include <Zycore/Allocator.h>
 #include <Zycore/Status.h>
 #include <Zycore/Types.h>
@@ -55,12 +54,12 @@ extern "C" {
 /**
  * The default growth factor for all string instances.
  */
-#define ZYAN_STRING_DEFAULT_GROWTH_FACTOR       2.00f
+#define ZYAN_STRING_DEFAULT_GROWTH_FACTOR       2
 
 /**
  * The default shrink threshold for all string instances.
  */
-#define ZYAN_STRING_DEFAULT_SHRINK_THRESHOLD    0.25f
+#define ZYAN_STRING_DEFAULT_SHRINK_THRESHOLD    4
 
 /* ============================================================================================== */
 /* Enums and types                                                                                */
@@ -71,7 +70,7 @@ extern "C" {
 /* ---------------------------------------------------------------------------------------------- */
 
 /**
- * Defines the `ZyanStringFlags` datatype.
+ * Defines the `ZyanStringFlags` data-type.
  */
 typedef ZyanU8 ZyanStringFlags;
 
@@ -181,8 +180,8 @@ typedef struct ZyanStringView_
             /* vector */ \
             { \
                 /* allocator        */ ZYAN_NULL, \
-                /* growth_factor    */ 1.0f, \
-                /* shrink_threshold */ 0.0f, \
+                /* growth_factor    */ 1, \
+                /* shrink_threshold */ 0, \
                 /* size             */ sizeof(string), \
                 /* capacity         */ sizeof(string), \
                 /* element_size     */ sizeof(char), \
@@ -213,7 +212,7 @@ typedef struct ZyanStringView_
  * @return  A zyan status code.
  *
  * The memory for the string is dynamically allocated by the default allocator using the default
- * growth factor of `2.0f` and the default shrink threshold of `0.25f`.
+ * growth factor and the default shrink threshold.
  *
  * The allocated buffer will be at least one character larger than the given `capacity`, to reserve
  * space for the terminating '\0'.
@@ -231,12 +230,12 @@ ZYCORE_EXPORT ZYAN_REQUIRES_LIBC ZyanStatus ZyanStringInit(ZyanString* string, Z
  * @param   string              A pointer to the `ZyanString` instance.
  * @param   capacity            The initial capacity (number of characters).
  * @param   allocator           A pointer to a `ZyanAllocator` instance.
- * @param   growth_factor       The growth factor (from `1.0f` to `x.xf`).
- * @param   shrink_threshold    The shrink threshold (from `0.0f` to `1.0f`).
+ * @param   growth_factor       The growth factor.
+ * @param   shrink_threshold    The shrink threshold.
  *
  * @return  A zyan status code.
  *
- * A growth factor of `1.0f` disables overallocation and a shrink threshold of `0.0f` disables
+ * A growth factor of `1` disables overallocation and a shrink threshold of `0` disables
  * dynamic shrinking.
  *
  * The allocated buffer will be at least one character larger than the given `capacity`, to reserve
@@ -245,7 +244,7 @@ ZYCORE_EXPORT ZYAN_REQUIRES_LIBC ZyanStatus ZyanStringInit(ZyanString* string, Z
  * Finalization with `ZyanStringDestroy` is required for all strings created by this function.
  */
 ZYCORE_EXPORT ZyanStatus ZyanStringInitEx(ZyanString* string, ZyanUSize capacity,
-    ZyanAllocator* allocator, float growth_factor, float shrink_threshold);
+    ZyanAllocator* allocator, ZyanU8 growth_factor, ZyanU8 shrink_threshold);
 
 /**
  * Initializes the given `ZyanString` instance and configures it to use a custom user
@@ -295,7 +294,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringDestroy(ZyanString* string);
  * string or `destination` points to an already initialized `ZyanString` instance.
  *
  * The memory for the string is dynamically allocated by the default allocator using the default
- * growth factor of `2.0f` and the default shrink threshold of `0.25f`.
+ * growth factor and the default shrink threshold.
  *
  * The allocated buffer will be at least one character larger than the given `capacity`, to reserve
  * space for the terminating '\0'.
@@ -318,15 +317,15 @@ ZYCORE_EXPORT ZYAN_REQUIRES_LIBC ZyanStatus ZyanStringDuplicate(ZyanString* dest
  *                              This value is automatically adjusted to the size of the source
  *                              string, if a smaller value was passed.
  * @param   allocator           A pointer to a `ZyanAllocator` instance.
- * @param   growth_factor       The growth factor (from `1.0f` to `x.xf`).
- * @param   shrink_threshold    The shrink threshold (from `0.0f` to `1.0f`).
+ * @param   growth_factor       The growth factor.
+ * @param   shrink_threshold    The shrink threshold.
  *
  * @return  A zyan status code.
  *
  * The behavior of this function is undefined, if `source` is a view into the `destination`
  * string or `destination` points to an already initialized `ZyanString` instance.
  *
- * A growth factor of `1.0f` disables overallocation and a shrink threshold of `0.0f` disables
+ * A growth factor of `1` disables overallocation and a shrink threshold of `0` disables
  * dynamic shrinking.
  *
  * The allocated buffer will be at least one character larger than the given `capacity`, to reserve
@@ -336,7 +335,7 @@ ZYCORE_EXPORT ZYAN_REQUIRES_LIBC ZyanStatus ZyanStringDuplicate(ZyanString* dest
  */
 ZYCORE_EXPORT ZyanStatus ZyanStringDuplicateEx(ZyanString* destination,
     const ZyanStringView* source, ZyanUSize capacity, ZyanAllocator* allocator,
-    float growth_factor, float shrink_threshold);
+    ZyanU8 growth_factor, ZyanU8 shrink_threshold);
 
 /**
  * Initializes a new `ZyanString` instance by duplicating an existing string and
@@ -387,7 +386,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringDuplicateCustomBuffer(ZyanString* destination
  * string or `destination` points to an already initialized `ZyanString` instance.
  *
  * The memory for the string is dynamically allocated by the default allocator using the default
- * growth factor of `2.0f` and the default shrink threshold of `0.25f`.
+ * growth factor and the default shrink threshold.
  *
  * The allocated buffer will be at least one character larger than the given `capacity`, to reserve
  * space for the terminating '\0'.
@@ -414,15 +413,15 @@ ZYCORE_EXPORT ZYAN_REQUIRES_LIBC ZyanStatus ZyanStringConcat(ZyanString* destina
  *                              This value is automatically adjusted to the combined size of the
  *                              source strings, if a smaller value was passed.
  * @param   allocator           A pointer to a `ZyanAllocator` instance.
- * @param   growth_factor       The growth factor (from `1.0f` to `x.xf`).
- * @param   shrink_threshold    The shrink threshold (from `0.0f` to `1.0f`).
+ * @param   growth_factor       The growth factor.
+ * @param   shrink_threshold    The shrink threshold.
  *
  * @return  A zyan status code.
  *
  * The behavior of this function is undefined, if `s1` or `s2` are views into the `destination`
  * string or `destination` points to an already initialized `ZyanString` instance.
  *
- * A growth factor of `1.0f` disables overallocation and a shrink threshold of `0.0f` disables
+ * A growth factor of `1` disables overallocation and a shrink threshold of `0` disables
  * dynamic shrinking.
  *
  * The allocated buffer will be at least one character larger than the given `capacity`, to reserve
@@ -431,8 +430,8 @@ ZYCORE_EXPORT ZYAN_REQUIRES_LIBC ZyanStatus ZyanStringConcat(ZyanString* destina
  * Finalization with `ZyanStringDestroy` is required for all strings created by this function.
  */
 ZYCORE_EXPORT ZyanStatus ZyanStringConcatEx(ZyanString* destination, const ZyanStringView* s1,
-    const ZyanStringView* s2, ZyanUSize capacity, ZyanAllocator* allocator, float growth_factor,
-    float shrink_threshold);
+    const ZyanStringView* s2, ZyanUSize capacity, ZyanAllocator* allocator, ZyanU8 growth_factor,
+    ZyanU8 shrink_threshold);
 
 /**
  * Initializes a new `ZyanString` instance by concatenating two existing strings and
@@ -531,8 +530,8 @@ ZYCORE_EXPORT ZyanStatus ZyanStringViewGetSize(const ZyanStringView* view, ZyanU
  *
  * @warning The string is not guaranteed to be null terminated!
  *
- * @param   string  A pointer to the `ZyanStringView` instance.
- * @param   value   Receives a pointer to the C-style string.
+ * @param   view    A pointer to the `ZyanStringView` instance.
+ * @param   buffer  Receives a pointer to the C-style string.
  *
  * @return  A zyan status code.
  */
@@ -741,7 +740,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringLPosI(const ZyanStringView* haystack,
  *                      `index`.
  *
  * @return  `ZYAN_STATUS_TRUE`, if the needle was found, `ZYAN_STATUS_FALSE`, if not, or another
- *          zyan status code, if an error occured.
+ *          zyan status code, if an error occurred.
  *
  * The `found_index` is set to `-1`, if the needle was not found.
  */
@@ -758,7 +757,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringLPosIEx(const ZyanStringView* haystack,
  *                      `needle`.
  *
  * @return  `ZYAN_STATUS_TRUE`, if the needle was found, `ZYAN_STATUS_FALSE`, if not, or another
- *          zyan status code, if an error occured.
+ *          zyan status code, if an error occurred.
  *
  * The `found_index` is set to `-1`, if the needle was not found.
  */
@@ -778,7 +777,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringRPos(const ZyanStringView* haystack,
  *                      `index`.
  *
  * @return  `ZYAN_STATUS_TRUE`, if the needle was found, `ZYAN_STATUS_FALSE`, if not, or another
- *          zyan status code, if an error occured.
+ *          zyan status code, if an error occurred.
  *
  * The `found_index` is set to `-1`, if the needle was not found.
  */
@@ -795,7 +794,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringRPosEx(const ZyanStringView* haystack,
  *                      `needle`.
  *
  * @return  `ZYAN_STATUS_TRUE`, if the needle was found, `ZYAN_STATUS_FALSE`, if not, or another
- *          zyan status code, if an error occured.
+ *          zyan status code, if an error occurred.
  *
  * The `found_index` is set to `-1`, if the needle was not found.
  */
@@ -815,7 +814,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringRPosI(const ZyanStringView* haystack,
  *                      `index`.
  *
  * @return  `ZYAN_STATUS_TRUE`, if the needle was found, `ZYAN_STATUS_FALSE`, if not, or another
- *          zyan status code, if an error occured.
+ *          zyan status code, if an error occurred.
  *
  * The `found_index` is set to `-1`, if the needle was not found.
  */
@@ -841,7 +840,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringRPosIEx(const ZyanStringView* haystack,
  *                    in `s1` than in `s2`.
  *
  * @return  `ZYAN_STATUS_TRUE`, if the strings are equal, `ZYAN_STATUS_FALSE`, if not, or another
- *          zyan status code, if an error occured.
+ *          zyan status code, if an error occurred.
  */
 ZYCORE_EXPORT ZyanStatus ZyanStringCompare(const ZyanStringView* s1, const ZyanStringView* s2,
     ZyanI32* result);
@@ -861,7 +860,7 @@ ZYCORE_EXPORT ZyanStatus ZyanStringCompare(const ZyanStringView* s1, const ZyanS
  *                    in `s1` than in `s2`.
  *
  * @return  `ZYAN_STATUS_TRUE`, if the strings are equal, `ZYAN_STATUS_FALSE`, if not, or another
- *          zyan status code, if an error occured.
+ *          zyan status code, if an error occurred.
  */
 ZYCORE_EXPORT ZyanStatus ZyanStringCompareI(const ZyanStringView* s1, const ZyanStringView* s2,
     ZyanI32* result);

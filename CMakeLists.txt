@@ -2,12 +2,17 @@ if (TARGET Zycore)
     return()
 endif ()
 
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
-include(GenerateExportHeader)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.15")
+    # Enable runtime library selection via CMAKE_MSVC_RUNTIME_LIBRARY
+    cmake_policy(SET CMP0091 NEW)
+endif ()
+
+project(Zycore VERSION 1.4.0.0 LANGUAGES C)
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
-
-project(Zycore VERSION 1.0.0.0 LANGUAGES C CXX)
 
 # =============================================================================================== #
 # Overridable options                                                                             #
@@ -23,6 +28,9 @@ option(ZYAN_NO_LIBC
 option(ZYAN_DEV_MODE
     "Enable developer mode (-Wall, -Werror, ...)"
     OFF)
+option(ZYAN_FORCE_ASSERTS
+    "Forces asserts in release builds."
+    OFF)
 
 # Build configuration
 option(ZYCORE_BUILD_SHARED_LIB
@@ -36,80 +44,69 @@ option(ZYCORE_BUILD_TESTS
     OFF)
 
 # =============================================================================================== #
+# Forced assertions hack                                                                          #
+# =============================================================================================== #
+
+# The code for this is adapted from how LLVM forces asserts.
+if (ZYAN_FORCE_ASSERTS)
+    set(vars
+        CMAKE_CXX_FLAGS_RELEASE
+        CMAKE_CXX_FLAGS_RELWITHDEBINFO
+        CMAKE_CXX_FLAGS_MINSIZEREL
+        CMAKE_C_FLAGS_RELEASE
+        CMAKE_C_FLAGS_RELWITHDEBINFO
+        CMAKE_C_FLAGS_MINSIZEREL)
+
+    foreach (var ${vars})
+        string (REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " " "${var}" "${${var}}")
+        set("${var}" "${${var}} -UNDEBUG" CACHE STRING "" FORCE)
+    endforeach()
+endif ()
+
+# =============================================================================================== #
 # GoogleTest                                                                                      #
 # =============================================================================================== #
 
-# Download and unpack googletest
+# Search for GoogleTest, and fallback to downloading it if not found
 if (ZYCORE_BUILD_TESTS)
-    if (NOT DEFINED ZYCORE_DOWNLOADED_GTEST)
-        configure_file("CMakeLists.txt.in" "${CMAKE_BINARY_DIR}/gtest/download/CMakeLists.txt")
-        execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-            RESULT_VARIABLE result
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/gtest/download")
-        if (result)
-            message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-        endif()
-        execute_process(COMMAND ${CMAKE_COMMAND} --build .
-            RESULT_VARIABLE result
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/gtest/download")
-        if (result)
-            message(FATAL_ERROR "Build step for googletest failed: ${result}")
-        endif()
+    find_package(GTest QUIET)
+    if (GTest_FOUND)
+        # CMake 3.20 and upstream GTestConfig.cmake
+        if (TARGET GTest::gtest)
+            add_library(gtest ALIAS GTest::gtest)
+        # Older FindGTest
+        else ()
+            add_library(gtest ALIAS GTest::GTest)
+        endif ()
+    else ()
+        if (NOT DEFINED ZYCORE_DOWNLOADED_GTEST)
+            configure_file("CMakeLists.txt.in" "${CMAKE_BINARY_DIR}/gtest/download/CMakeLists.txt")
+            execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+                RESULT_VARIABLE result
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/gtest/download")
+            if (result)
+                message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+            endif()
+            execute_process(COMMAND ${CMAKE_COMMAND} --build .
+                RESULT_VARIABLE result
+                WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/gtest/download")
+            if (result)
+                message(FATAL_ERROR "Build step for googletest failed: ${result}")
+            endif()
 
-        set(ZYCORE_DOWNLOADED_GTEST TRUE CACHE BOOL "")
-        mark_as_advanced(ZYCORE_DOWNLOADED_GTEST)
-    endif ()
+            set(ZYCORE_DOWNLOADED_GTEST TRUE CACHE BOOL "")
+            mark_as_advanced(ZYCORE_DOWNLOADED_GTEST)
+        endif ()
 
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
     add_subdirectory("${CMAKE_BINARY_DIR}/gtest/src" "${CMAKE_BINARY_DIR}/gtest/build"
         EXCLUDE_FROM_ALL)
+    endif ()
 endif ()
 
-# =============================================================================================== #
-# Exported functions                                                                              #
-# =============================================================================================== #
-
-function (zyan_set_common_flags target)
-    if (NOT MSVC)
-        target_compile_options("${target}" PRIVATE "-std=c99")
-    endif ()
-
-    if (ZYAN_DEV_MODE)
-        # If in developer mode, be pedantic.
-        if (MSVC)
-            target_compile_options("${target}" PUBLIC "/WX" "/W4")
-        else ()
-            target_compile_options("${target}" PUBLIC "-Wall" "-pedantic" "-Wextra" "-Werror")
-        endif ()
-    endif ()
-endfunction ()
-
-function (zyan_set_source_group target)
-    if (ZYAN_DEV_MODE)
-        if (((CMAKE_MAJOR_VERSION GREATER 3) OR (CMAKE_MAJOR_VERSION EQUAL 3)) AND
-            ((CMAKE_MINOR_VERSION GREATER 8) OR (CMAKE_MINOR_VERSION EQUAL 8)))
-            # Mirror directory structure in project files
-            get_property("TARGET_SOURCE_FILES" TARGET "${target}" PROPERTY SOURCES)
-            source_group(TREE "${CMAKE_CURRENT_LIST_DIR}" FILES ${TARGET_SOURCE_FILES})
-        endif ()
-    endif ()
-endfunction ()
-
-function (zyan_maybe_enable_wpo target)
-    if (ZYAN_WHOLE_PROGRAM_OPTIMIZATION AND MSVC)
-        set_target_properties("${target}" PROPERTIES COMPILE_FLAGS "/GL")
-        set_target_properties("${target}" PROPERTIES LINK_FLAGS_RELEASE "/LTCG")
-    endif ()
-endfunction ()
-
-function (zyan_maybe_enable_wpo_for_lib target)
-    if (ZYAN_WHOLE_PROGRAM_OPTIMIZATION AND MSVC)
-        set_target_properties("${target}" PROPERTIES COMPILE_FLAGS "/GL")
-        set_target_properties("${target}" PROPERTIES LINK_FLAGS_RELEASE "/LTCG")
-        set_target_properties("${target}" PROPERTIES STATIC_LIBRARY_FLAGS_RELEASE "/LTCG")
-    endif ()
-endfunction ()
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(zyan-functions)
 
 # =============================================================================================== #
 # Library configuration                                                                           #
@@ -119,16 +116,23 @@ if (ZYCORE_BUILD_SHARED_LIB)
     add_library("Zycore" SHARED)
 else ()
     add_library("Zycore" STATIC)
+    target_compile_definitions("Zycore" PUBLIC "ZYCORE_STATIC_BUILD")
 endif ()
 
-set_target_properties("Zycore" PROPERTIES LINKER_LANGUAGE C)
+set_target_properties("Zycore" PROPERTIES
+    LINKER_LANGUAGE C
+    VERSION "${Zycore_VERSION}"
+    SOVERSION "${Zycore_VERSION_MAJOR}.${Zycore_VERSION_MINOR}"
+    DEFINE_SYMBOL "ZYCORE_SHOULD_EXPORT")
 target_include_directories("Zycore"
-    PUBLIC "include" ${PROJECT_BINARY_DIR}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PRIVATE "src")
-target_compile_definitions("Zycore" PRIVATE "_CRT_SECURE_NO_WARNINGS" "ZYCORE_EXPORTS")
+target_compile_definitions("Zycore" PRIVATE "_CRT_SECURE_NO_WARNINGS")
 zyan_set_common_flags("Zycore")
-zyan_maybe_enable_wpo_for_lib("Zycore")
-generate_export_header("Zycore" BASE_NAME "ZYCORE" EXPORT_FILE_NAME "ZycoreExportConfig.h")
+zyan_maybe_enable_wpo("Zycore")
 
 if (ZYAN_NO_LIBC)
     target_compile_definitions("Zycore" PUBLIC "ZYAN_NO_LIBC")
@@ -148,6 +152,7 @@ target_sources("Zycore"
         # Common
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Allocator.h"
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/ArgParse.h"
+        "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Atomic.h"
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Bitset.h"
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Comparison.h"
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Defines.h"
@@ -160,6 +165,14 @@ target_sources("Zycore"
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Types.h"
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Vector.h"
         "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Zycore.h"
+        "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Internal/AtomicGNU.h"
+        "${CMAKE_CURRENT_LIST_DIR}/include/Zycore/Internal/AtomicMSVC.h"
+        # API
+        "src/API/Memory.c"
+        "src/API/Process.c"
+        "src/API/Synchronization.c"
+        "src/API/Terminal.c"
+        "src/API/Thread.c"
         # Common
         "src/Allocator.c"
         "src/ArgParse.c"
@@ -170,17 +183,6 @@ target_sources("Zycore"
         "src/Vector.c"
         "src/Zycore.c")
 
-if (NOT ZYAN_NO_LIBC)
-    target_sources("Zycore"
-        PRIVATE
-            # API
-            "src/API/Memory.c"
-            "src/API/Process.c"
-            "src/API/Synchronization.c"
-            "src/API/Terminal.c"
-            "src/API/Thread.c")
-endif ()
-
 if (ZYCORE_BUILD_SHARED_LIB AND WIN32)
     target_sources("Zycore" PRIVATE "resources/VersionInfo.rc")
 endif ()
@@ -189,27 +191,50 @@ zyan_set_source_group("Zycore")
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT ZYAN_NO_LIBC)
     target_compile_definitions("Zycore" PRIVATE "_GNU_SOURCE")
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
     target_link_libraries("Zycore" Threads::Threads)
 endif ()
 
 configure_package_config_file(cmake/zycore-config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/zycore-config.cmake"
-    INSTALL_DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/zycore"
+)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/zycore-config-version.cmake"
+    COMPATIBILITY SameMajorVersion
 )
 install(FILES
+    "cmake/zyan-functions.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/zycore-config.cmake"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/zycore-config-version.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/zycore"
 )
 
-install(TARGETS "Zycore"
+install(TARGETS "Zycore" EXPORT "zycore-targets"
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES
-    "${PROJECT_BINARY_DIR}/ZycoreExportConfig.h"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(EXPORT "zycore-targets"
+    NAMESPACE "Zycore::"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/zycore")
 install(DIRECTORY "include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# =============================================================================================== #
+# Doxygen documentation                                                                           #
+# =============================================================================================== #
+
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    doxygen_add_docs(ZycoreDoc "include/Zycore/" ALL)
+    install(
+        DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html/"
+        DESTINATION "${CMAKE_INSTALL_DOCDIR}/api"
+        COMPONENT Documentation
+    )
+endif()
 
 # =============================================================================================== #
 # Developer mode                                                                                  #
@@ -245,19 +270,22 @@ endif ()
 
 function (zyan_add_test test)
     add_executable("Test${test}" "tests/${test}.cpp")
-
-    if (NOT MSVC)
-        target_compile_options("Test${test}" PRIVATE "-std=c++17")
-    endif ()
-
-    target_link_libraries("Test${test}" "Zycore")
-    target_link_libraries("Test${test}" "gtest")
-    set_target_properties("Test${test}" PROPERTIES FOLDER "Tests")
+    target_link_libraries("Test${test}" "Zycore" "gtest")
+    set_target_properties("Test${test}" PROPERTIES
+        LANGUAGE CXX
+        CXX_STANDARD 17
+        CXX_EXTENSIONS OFF
+        CXX_STANDARD_REQUIRED ON
+        FOLDER "Tests"
+    )
     target_compile_definitions("Test${test}" PRIVATE "_CRT_SECURE_NO_WARNINGS")
     zyan_maybe_enable_wpo("Test${test}")
+    add_test("${test}" "Test${test}")
 endfunction ()
 
 if (ZYCORE_BUILD_TESTS)
+    enable_language(CXX)
+    enable_testing()
     zyan_add_test("String")
     zyan_add_test("Vector")
     zyan_add_test("ArgParse")
