@@ -44,7 +44,7 @@ jobs:
         run: >
           cmake
           -B ${{github.workspace}}/build-arm64
-          -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
+          -DBOOST_INCLUDEDIR=${{github.workspace}}/externals/ext-boost
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           -DDYNARMIC_TESTS_USE_UNICORN=0
           -DDYNARMIC_USE_LLVM=0
@@ -62,7 +62,7 @@ jobs:
         run: >
           cmake
           -B ${{github.workspace}}/build-x64
-          -DBoost_INCLUDE_DIRS=${{github.workspace}}/externals/ext-boost
+          -DBOOST_INCLUDEDIR=${{github.workspace}}/externals/ext-boost
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
           -DCMAKE_C_COMPILER_LAUNCHER=ccache
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache

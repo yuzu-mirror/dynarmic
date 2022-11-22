@@ -257,8 +257,8 @@ endif()
 if (ARCHITECTURE STREQUAL "x86_64")
     target_link_libraries(dynarmic
         PRIVATE
-            $<BUILD_INTERFACE:xbyak>
-            $<BUILD_INTERFACE:Zydis>
+            xbyak::xbyak
+            Zydis::Zydis
     )
 
     target_sources(dynarmic PRIVATE
@@ -366,7 +366,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         target_sources(dynarmic PRIVATE backend/x64/exception_handler_generic.cpp)
     endif()
 elseif(ARCHITECTURE STREQUAL "arm64")
-    target_link_libraries(dynarmic PRIVATE $<BUILD_INTERFACE:merry::oaknut>)
+    target_link_libraries(dynarmic PRIVATE merry::oaknut)
 
     target_sources(dynarmic PRIVATE
         backend/arm64/a32_jitstate.cpp
@@ -431,13 +431,11 @@ set_target_properties(dynarmic PROPERTIES
     SOVERSION ${dynarmic_VERSION_MAJOR}
 )
 target_compile_options(dynarmic PRIVATE ${DYNARMIC_CXX_FLAGS})
-# $<BUILD_INTERFACE:> required because of https://gitlab.kitware.com/cmake/cmake/-/issues/15415
 target_link_libraries(dynarmic
-    PUBLIC
-        $<BUILD_INTERFACE:merry::mcl>
     PRIVATE
-        $<BUILD_INTERFACE:boost>
-        $<BUILD_INTERFACE:fmt::fmt>
+        Boost::boost
+        fmt::fmt
+        merry::mcl
         tsl::robin_map
         "$<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>"
 )

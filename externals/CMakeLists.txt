@@ -10,58 +10,59 @@ endif()
 
 # catch
 
-if (DYNARMIC_TESTS AND NOT TARGET catch)
-    add_library(catch INTERFACE)
-    target_include_directories(catch INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/catch/include>)
+if (NOT TARGET Catch2::Catch2)
+    if (DYNARMIC_TESTS)
+        add_library(Catch2::Catch2 INTERFACE IMPORTED GLOBAL)
+        target_include_directories(Catch2::Catch2 INTERFACE catch/include)
+    endif()
 endif()
 
 # fmt
 
-if (NOT TARGET fmt AND NOT TARGET fmt::fmt)
+if (NOT TARGET fmt::fmt)
     # fmtlib formatting library
-    add_subdirectory(fmt)
+    option(FMT_INSTALL "" ON)
+    add_subdirectory(fmt EXCLUDE_FROM_ALL)
 endif()
 
 # mcl
 
 if (NOT TARGET merry::mcl)
-    add_subdirectory(mcl)
+    option(MCL_INSTALL "" ON)
+    add_subdirectory(mcl EXCLUDE_FROM_ALL)
 endif()
 
 # oaknut
 
 if (NOT TARGET merry::oaknut)
     if (ARCHITECTURE STREQUAL "arm64")
-        add_subdirectory(oaknut)
+        add_subdirectory(oaknut EXCLUDE_FROM_ALL)
     endif()
 endif()
 
 # robin-map
 
 if (NOT TARGET tsl::robin_map)
-    add_subdirectory(robin-map)
+    add_subdirectory(robin-map EXCLUDE_FROM_ALL)
 endif()
 
 # xbyak
 
-if (NOT TARGET xbyak)
+if (NOT TARGET xbyak::xbyak)
     if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
-        add_library(xbyak INTERFACE)
-        file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
-        file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/xbyak/xbyak DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
-        target_include_directories(xbyak SYSTEM INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/xbyak/include)
-        target_compile_definitions(xbyak INTERFACE XBYAK_NO_OP_NAMES)
+        add_subdirectory(xbyak EXCLUDE_FROM_ALL)
     endif()
 endif()
 
 # zydis
 
-if (NOT TARGET Zydis)
+if (NOT TARGET Zydis::Zydis)
     if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
         option(ZYDIS_BUILD_TOOLS "" OFF)
         option(ZYDIS_BUILD_EXAMPLES "" OFF)
         option(ZYDIS_BUILD_DOXYGEN "" OFF)
         set(ZYAN_ZYCORE_PATH "${CMAKE_CURRENT_LIST_DIR}/zycore" CACHE PATH "")
         add_subdirectory(zydis EXCLUDE_FROM_ALL)
+        add_library(Zydis::Zydis ALIAS Zydis)
     endif()
 endif()

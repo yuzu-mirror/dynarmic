@@ -113,36 +113,14 @@ if (NOT DEFINED ARCHITECTURE)
 endif()
 message(STATUS "Target architecture: ${ARCHITECTURE}")
 
-# Include Boost
-if (NOT TARGET boost)
-    if (NOT Boost_INCLUDE_DIRS)
-        find_package(Boost 1.57.0 REQUIRED)
-    endif()
-    add_library(boost INTERFACE)
-    target_include_directories(boost SYSTEM INTERFACE ${Boost_INCLUDE_DIRS})
-endif()
+# Forced use of external for non-REQUIRED library is possible with e.g. cmake -DCMAKE_DISABLE_FIND_PACKAGE_fmt=ON ...
+find_package(Boost 1.57 REQUIRED)
+find_package(fmt 9)
+find_package(tsl-robin-map)
 
-if (DYNARMIC_NO_BUNDLED_FMT AND NOT TARGET fmt AND NOT TARGET fmt::fmt)
-    find_package(fmt REQUIRED)
-    add_library(fmt ALIAS fmt::fmt)
-endif()
-
-if (DYNARMIC_NO_BUNDLED_ROBIN_MAP AND NOT TARGET tsl::robin_map)
-    find_package(tsl-robin-map REQUIRED)
-endif()
-
-if (DYNARMIC_NO_BUNDLED_XBYAK AND NOT TARGET xbyak)
-    if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
-        find_package(xbyak REQUIRED)
-        add_library(xbyak ALIAS xbyak::xbyak)
-    endif()
-endif()
-
-if (DYNARMIC_NO_BUNDLED_ZYDIS AND NOT TARGET Zydis)
-    if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
-        find_package(Zydis REQUIRED)
-        add_library(Zydis ALIAS Zydis::Zydis)
-    endif()
+if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
+    find_package(xbyak 6)
+    find_package(Zydis 4)
 endif()
 
 # Enable unit-testing.
@@ -156,13 +134,11 @@ if (DYNARMIC_USE_LLVM)
     llvm_map_components_to_libnames(llvm_libs armdesc armdisassembler aarch64desc aarch64disassembler x86desc x86disassembler)
 endif()
 
-if (DYNARMIC_TESTS_USE_UNICORN AND DYNARMIC_TESTS)
-    find_package(Unicorn REQUIRED)
-endif()
-
-if (DYNARMIC_TESTS AND DYNARMIC_NO_BUNDLED_CATCH AND NOT TARGET catch)
-    find_package(Catch2 REQUIRED)
-    add_library(catch ALIAS Catch2::Catch2)
+if (DYNARMIC_TESTS)
+    find_package(Catch2 2)
+    if (DYNARMIC_TESTS_USE_UNICORN)
+        find_package(Unicorn REQUIRED)
+    endif()
 endif()
 
 # Pull in externals CMakeLists for libs where available
@@ -177,28 +153,26 @@ endif()
 #
 # Install
 #
-if (MASTER_PROJECT)
-    include(GNUInstallDirs)
-    include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-    install(TARGETS dynarmic EXPORT dynarmicTargets)
-    install(EXPORT dynarmicTargets
-        NAMESPACE dynarmic::
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dynarmic"
-    )
+install(TARGETS dynarmic EXPORT dynarmicTargets)
+install(EXPORT dynarmicTargets
+    NAMESPACE dynarmic::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dynarmic"
+)
 
-    configure_package_config_file(CMakeModules/dynarmicConfig.cmake.in
-        dynarmicConfig.cmake
-        INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dynarmic"
-    )
-    write_basic_package_version_file(dynarmicConfigVersion.cmake
-        COMPATIBILITY SameMajorVersion
-    )
-    install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/dynarmicConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/dynarmicConfigVersion.cmake"
-        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dynarmic"
-    )
+configure_package_config_file(CMakeModules/dynarmicConfig.cmake.in
+    dynarmicConfig.cmake
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dynarmic"
+)
+write_basic_package_version_file(dynarmicConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion
+)
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/dynarmicConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/dynarmicConfigVersion.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/dynarmic"
+)
 
-    install(DIRECTORY src/dynarmic TYPE INCLUDE FILES_MATCHING PATTERN "*.h")
-endif()
+install(DIRECTORY src/dynarmic TYPE INCLUDE FILES_MATCHING PATTERN "*.h")
