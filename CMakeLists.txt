@@ -139,8 +139,10 @@ if (DYNARMIC_NO_BUNDLED_XBYAK AND NOT TARGET xbyak)
 endif()
 
 if (DYNARMIC_NO_BUNDLED_ZYDIS AND NOT TARGET Zydis)
-    find_package(Zydis REQUIRED)
-    add_library(Zydis ALIAS Zydis::Zydis)
+    if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
+        find_package(Zydis REQUIRED)
+        add_library(Zydis ALIAS Zydis::Zydis)
+    endif()
 endif()
 
 # Enable unit-testing.
