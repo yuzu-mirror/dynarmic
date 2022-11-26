@@ -649,12 +649,14 @@ int main(int, char*[]) {
     TestArm(1, 1);
     TestA64(1, 1);
 
-    TestThumb(1, 100000);
-    TestArm(1, 100000);
-    TestThumb(5, 100000);
-    TestArm(5, 100000);
-    TestThumb(1024, 10000);
-    TestArm(1024, 10000);
+    TestA64(1, 10000);
+
+    // TestThumb(1, 100000);
+    // TestArm(1, 100000);
+    // TestThumb(5, 100000);
+    // TestArm(5, 100000);
+    // TestThumb(1024, 10000);
+    // TestArm(1024, 10000);
 
     return 0;
 }
