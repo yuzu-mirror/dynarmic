@@ -201,8 +201,8 @@ static void EmitThreeOpArrangedLower(oaknut::CodeGenerator& code, EmitContext& c
 template<size_t size, typename EmitFn>
 static void EmitSaturatedAccumulate(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitFn emit) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto Qaccumulator = ctx.reg_alloc.ReadWriteQ(args[0], inst);
-    auto Qoperand = ctx.reg_alloc.ReadQ(args[1]);
+    auto Qaccumulator = ctx.reg_alloc.ReadWriteQ(args[1], inst);  // NB: Swapped
+    auto Qoperand = ctx.reg_alloc.ReadQ(args[0]);                 // NB: Swapped
     RegAlloc::Realize(Qaccumulator, Qoperand);
     ctx.fpsr.Load();
 
