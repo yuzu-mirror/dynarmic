@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(oaknut LANGUAGES CXX VERSION 1.1.3)
+project(oaknut LANGUAGES CXX VERSION 1.1.4)
 
 # Determine if we're built as a subproject (using add_subdirectory)
 # or if this is the master project.
@@ -85,3 +85,12 @@ if (MASTER_PROJECT)
         target_compile_options(oaknut-tests PRIVATE -Wall -Wextra -Wcast-qual -pedantic -pedantic-errors -Wfatal-errors -Wno-missing-braces)
     endif()
 endif()
+
+# Export
+include(GNUInstallDirs)
+
+install(TARGETS oaknut EXPORT oaknutTargets)
+install(EXPORT oaknutTargets
+    NAMESPACE merry::
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/oaknut"
+)
