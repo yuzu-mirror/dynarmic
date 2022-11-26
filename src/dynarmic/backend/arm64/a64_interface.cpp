@@ -23,9 +23,8 @@ namespace Dynarmic::A64 {
 using namespace Backend::Arm64;
 
 struct Jit::Impl final {
-    Impl(Jit* jit_interface, A64::UserConfig conf)
-            : jit_interface(jit_interface)
-            , conf(conf)
+    Impl(Jit*, A64::UserConfig conf)
+            : conf(conf)
             , current_address_space(conf)
             , core(conf) {}
 
@@ -178,7 +177,6 @@ private:
         }
     }
 
-    Jit* jit_interface;
     A64::UserConfig conf;
     A64JitState current_state{};
     A64AddressSpace current_address_space;
