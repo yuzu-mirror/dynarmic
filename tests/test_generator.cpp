@@ -64,7 +64,48 @@ bool ShouldTestInst(IR::Block& block) {
         case IR::Opcode::A64CallSupervisor:
         case IR::Opcode::A64DataCacheOperationRaised:
         case IR::Opcode::A64GetCNTPCT:
+        // Unimplemented
+        case IR::Opcode::SignedSaturatedAdd8:
+        case IR::Opcode::SignedSaturatedAdd16:
+        case IR::Opcode::SignedSaturatedAdd32:
+        case IR::Opcode::SignedSaturatedAdd64:
+        case IR::Opcode::SignedSaturatedDoublingMultiplyReturnHigh16:
+        case IR::Opcode::SignedSaturatedDoublingMultiplyReturnHigh32:
+        case IR::Opcode::SignedSaturatedSub8:
+        case IR::Opcode::SignedSaturatedSub16:
+        case IR::Opcode::SignedSaturatedSub32:
+        case IR::Opcode::SignedSaturatedSub64:
+        case IR::Opcode::UnsignedSaturatedAdd8:
+        case IR::Opcode::UnsignedSaturatedAdd16:
+        case IR::Opcode::UnsignedSaturatedAdd32:
+        case IR::Opcode::UnsignedSaturatedAdd64:
+        case IR::Opcode::UnsignedSaturatedSub8:
+        case IR::Opcode::UnsignedSaturatedSub16:
+        case IR::Opcode::UnsignedSaturatedSub32:
+        case IR::Opcode::UnsignedSaturatedSub64:
+        case IR::Opcode::VectorMaxS64:
+        case IR::Opcode::VectorMaxU64:
+        case IR::Opcode::VectorMinS64:
+        case IR::Opcode::VectorMinU64:
+        case IR::Opcode::VectorMultiply64:
+        case IR::Opcode::SM4AccessSubstitutionBox:
+        // Half-prec conversions
+        case IR::Opcode::FPHalfToFixedS16:
+        case IR::Opcode::FPHalfToFixedS32:
+        case IR::Opcode::FPHalfToFixedS64:
+        case IR::Opcode::FPHalfToFixedU16:
+        case IR::Opcode::FPHalfToFixedU32:
+        case IR::Opcode::FPHalfToFixedU64:
         // Half-precision
+        case IR::Opcode::FPAbs16:
+        case IR::Opcode::FPMulAdd16:
+        case IR::Opcode::FPNeg16:
+        case IR::Opcode::FPRecipEstimate16:
+        case IR::Opcode::FPRecipExponent16:
+        case IR::Opcode::FPRecipStepFused16:
+        case IR::Opcode::FPRoundInt16:
+        case IR::Opcode::FPRSqrtEstimate16:
+        case IR::Opcode::FPRSqrtStepFused16:
         case IR::Opcode::FPVectorAbs16:
         case IR::Opcode::FPVectorEqual16:
         case IR::Opcode::FPVectorMulAdd16:
