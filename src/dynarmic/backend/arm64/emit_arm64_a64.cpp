@@ -342,7 +342,7 @@ void EmitIR<IR::Opcode::A64SetPC>(oaknut::CodeGenerator& code, EmitContext& ctx,
 template<>
 void EmitIR<IR::Opcode::A64CallSupervisor>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr);
+    ctx.reg_alloc.PrepareForCall();
 
     if (ctx.conf.enable_cycle_counting) {
         code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
@@ -363,7 +363,7 @@ void EmitIR<IR::Opcode::A64CallSupervisor>(oaknut::CodeGenerator& code, EmitCont
 template<>
 void EmitIR<IR::Opcode::A64ExceptionRaised>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr);
+    ctx.reg_alloc.PrepareForCall();
 
     if (ctx.conf.enable_cycle_counting) {
         code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
@@ -385,14 +385,14 @@ void EmitIR<IR::Opcode::A64ExceptionRaised>(oaknut::CodeGenerator& code, EmitCon
 template<>
 void EmitIR<IR::Opcode::A64DataCacheOperationRaised>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[1], args[2]);
+    ctx.reg_alloc.PrepareForCall({}, args[1], args[2]);
     EmitRelocation(code, ctx, LinkTarget::DataCacheOperationRaised);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64InstructionCacheOperationRaised>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr, {}, args[0], args[1]);
+    ctx.reg_alloc.PrepareForCall({}, args[0], args[1]);
     EmitRelocation(code, ctx, LinkTarget::InstructionCacheOperationRaised);
 }
 
@@ -412,7 +412,7 @@ void EmitIR<IR::Opcode::A64InstructionSynchronizationBarrier>(oaknut::CodeGenera
         return;
     }
 
-    ctx.reg_alloc.PrepareForCall(nullptr);
+    ctx.reg_alloc.PrepareForCall();
     EmitRelocation(code, ctx, LinkTarget::InstructionSynchronizationBarrierRaised);
 }
 
@@ -426,8 +426,9 @@ void EmitIR<IR::Opcode::A64GetCNTFRQ>(oaknut::CodeGenerator& code, EmitContext& 
 template<>
 void EmitIR<IR::Opcode::A64GetCNTPCT>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     // FIXME: AddTicks / GetTicksRemaining
-    ctx.reg_alloc.PrepareForCall(inst);
+    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst);
     EmitRelocation(code, ctx, LinkTarget::GetCNTPCT);
+    code.MOV(Xresult, X0);
 }
 
 template<>

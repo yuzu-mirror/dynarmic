@@ -138,7 +138,7 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
-void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
+void RegAlloc::PrepareForCall(std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
     fpsr_manager.Spill();
     SpillFlags();
 
@@ -180,14 +180,20 @@ void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable
             ngrn++;
         }
     }
+}
 
-    if (result) {
-        if (result->GetType() == IR::Type::U128) {
-            DefineAsRegister(result, Q0);
-        } else {
-            DefineAsRegister(result, X0);
-        }
-    }
+oaknut::XReg RegAlloc::PrepareForCallReg(IR::Inst* result, std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
+    PrepareForCall(arg0, arg1, arg2, arg3);
+    ASSERT(result && result->GetType() != IR::Type::U128);
+    DefineAsRegister(result, X0);
+    return X0;
+}
+
+oaknut::QReg RegAlloc::PrepareForCallVec(IR::Inst* result, std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
+    PrepareForCall(arg0, arg1, arg2, arg3);
+    ASSERT(result && result->GetType() == IR::Type::U128);
+    DefineAsRegister(result, Q8);
+    return Q8;
 }
 
 void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {

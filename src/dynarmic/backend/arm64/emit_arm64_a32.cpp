@@ -555,7 +555,7 @@ void EmitIR<IR::Opcode::A32UpdateUpperLocationDescriptor>(oaknut::CodeGenerator&
 template<>
 void EmitIR<IR::Opcode::A32CallSupervisor>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr);
+    ctx.reg_alloc.PrepareForCall();
 
     if (ctx.conf.enable_cycle_counting) {
         code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
@@ -576,7 +576,7 @@ void EmitIR<IR::Opcode::A32CallSupervisor>(oaknut::CodeGenerator& code, EmitCont
 template<>
 void EmitIR<IR::Opcode::A32ExceptionRaised>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(nullptr);
+    ctx.reg_alloc.PrepareForCall();
 
     if (ctx.conf.enable_cycle_counting) {
         code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
@@ -611,7 +611,7 @@ void EmitIR<IR::Opcode::A32InstructionSynchronizationBarrier>(oaknut::CodeGenera
         return;
     }
 
-    ctx.reg_alloc.PrepareForCall(nullptr);
+    ctx.reg_alloc.PrepareForCall();
     EmitRelocation(code, ctx, LinkTarget::InstructionSynchronizationBarrierRaised);
 }
 

@@ -25,18 +25,31 @@ static bool IsOrdered(IR::AccType acctype) {
 
 static void EmitReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(inst, {}, args[1]);
+    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst, {}, args[1]);
     const bool ordered = IsOrdered(args[2].GetImmediateAccType());
 
     EmitRelocation(code, ctx, fn);
     if (ordered) {
         code.DMB(oaknut::BarrierOp::ISH);
     }
+    code.MOV(Xresult, X0);
+}
+
+static void EmitReadMemory128(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qresult = ctx.reg_alloc.PrepareForCallVec(inst, {}, args[1]);
+    const bool ordered = IsOrdered(args[2].GetImmediateAccType());
+
+    EmitRelocation(code, ctx, fn);
+    if (ordered) {
+        code.DMB(oaknut::BarrierOp::ISH);
+    }
+    code.MOV(Qresult.B16(), Q0.B16());
 }
 
 static void EmitExclusiveReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(inst, {}, args[1]);
+    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst, {}, args[1]);
     const bool ordered = IsOrdered(args[2].GetImmediateAccType());
 
     code.MOV(Wscratch0, 1);
@@ -45,11 +58,26 @@ static void EmitExclusiveReadMemory(oaknut::CodeGenerator& code, EmitContext& ct
     if (ordered) {
         code.DMB(oaknut::BarrierOp::ISH);
     }
+    code.MOV(Xresult, X0);
+}
+
+static void EmitExclusiveReadMemory128(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qresult = ctx.reg_alloc.PrepareForCallVec(inst, {}, args[1]);
+    const bool ordered = IsOrdered(args[2].GetImmediateAccType());
+
+    code.MOV(Wscratch0, 1);
+    code.STRB(Wscratch0, Xstate, offsetof(A64JitState, exclusive_state));
+    EmitRelocation(code, ctx, fn);
+    if (ordered) {
+        code.DMB(oaknut::BarrierOp::ISH);
+    }
+    code.MOV(Qresult.B16(), Q0.B16());
 }
 
 static void EmitWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(inst, {}, args[1], args[2]);
+    ctx.reg_alloc.PrepareForCall({}, args[1], args[2]);
     const bool ordered = IsOrdered(args[3].GetImmediateAccType());
 
     if (ordered) {
@@ -63,7 +91,7 @@ static void EmitWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::I
 
 static void EmitExclusiveWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ctx.reg_alloc.PrepareForCall(inst, {}, args[1], args[2]);
+    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst, {}, args[1], args[2]);
     const bool ordered = IsOrdered(args[3].GetImmediateAccType());
 
     oaknut::Label end;
@@ -79,6 +107,7 @@ static void EmitExclusiveWriteMemory(oaknut::CodeGenerator& code, EmitContext& c
         code.DMB(oaknut::BarrierOp::ISH);
     }
     code.l(end);
+    code.MOV(Xresult, X0);
 }
 
 template<>
@@ -108,7 +137,7 @@ void EmitIR<IR::Opcode::A64ReadMemory64>(oaknut::CodeGenerator& code, EmitContex
 
 template<>
 void EmitIR<IR::Opcode::A64ReadMemory128>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory128);
+    EmitReadMemory128(code, ctx, inst, LinkTarget::ReadMemory128);
 }
 
 template<>
@@ -133,7 +162,7 @@ void EmitIR<IR::Opcode::A64ExclusiveReadMemory64>(oaknut::CodeGenerator& code, E
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveReadMemory128>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory128);
+    EmitExclusiveReadMemory128(code, ctx, inst, LinkTarget::ExclusiveReadMemory128);
 }
 
 template<>
