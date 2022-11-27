@@ -454,8 +454,15 @@ target_link_libraries(dynarmic
         fmt::fmt
         merry::mcl
         tsl::robin_map
-        "$<$<BOOL:DYNARMIC_USE_LLVM>:${llvm_libs}>"
 )
+if (DYNARMIC_USE_LLVM)
+    target_include_directories(dynarmic PRIVATE ${LLVM_INCLUDE_DIRS})
+    target_compile_definitions(dynarmic PRIVATE DYNARMIC_USE_LLVM=1 ${LLVM_DEFINITIONS})
+    if (BUILD_SHARED_LIBS)
+        set(USE_SHARED "USE_SHARED")
+    endif()
+    llvm_config(dynarmic ${USE_SHARED} armdesc armdisassembler aarch64desc aarch64disassembler x86desc x86disassembler)
+endif()
 if (DYNARMIC_ENABLE_CPU_FEATURE_DETECTION)
     target_compile_definitions(dynarmic PRIVATE DYNARMIC_ENABLE_CPU_FEATURE_DETECTION=1)
 endif()
