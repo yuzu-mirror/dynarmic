@@ -6,7 +6,10 @@
 #include <algorithm>
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <functional>
+#include <limits>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -642,21 +645,46 @@ void TestA64(size_t num_instructions, size_t num_iterations) {
     }
 }
 
-int main(int, char*[]) {
-    detail::g_rand_int_generator.seed(42069);
+static std::optional<size_t> str2sz(char const* s) {
+    char* end = nullptr;
+    errno = 0;
 
-    TestThumb(1, 1);
-    TestArm(1, 1);
-    TestA64(1, 1);
+    const long l = std::strtol(s, &end, 10);
+    if (errno == ERANGE || l > std::numeric_limits<size_t>::max() || l < 0) {
+        return std::nullopt;
+    }
+    if (*s == '\0' || *end != '\0') {
+        return std::nullopt;
+    }
+    return static_cast<size_t>(l);
+}
 
-    TestA64(1, 10000);
+int main(int argc, char* argv[]) {
+    if (argc != 5) {
+        fmt::print("Usage: {} <thumb|arm|a64> <seed> <instruction_count> <iteration_count>\n", argv[0]);
+    }
 
-    // TestThumb(1, 100000);
-    // TestArm(1, 100000);
-    // TestThumb(5, 100000);
-    // TestArm(5, 100000);
-    // TestThumb(1024, 10000);
-    // TestArm(1024, 10000);
+    const auto seed = str2sz(argv[2]);
+    const auto instruction_count = str2sz(argv[3]);
+    const auto iterator_count = str2sz(argv[4]);
+
+    if (!seed || !instruction_count || !iterator_count) {
+        fmt::print("invalid numeric arguments\n");
+        return 1;
+    }
+
+    detail::g_rand_int_generator.seed(*seed);
+
+    if (strcmp(argv[1], "thumb") == 0) {
+        TestThumb(*instruction_count, *iterator_count);
+    } else if (strcmp(argv[1], "arm") == 0) {
+        TestArm(*instruction_count, *iterator_count);
+    } else if (strcmp(argv[1], "a64") == 0) {
+        TestA64(*instruction_count, *iterator_count);
+    } else {
+        fmt::print("unrecognized instruction class\n");
+        return 1;
+    }
 
     return 0;
 }
