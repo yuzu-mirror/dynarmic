@@ -82,7 +82,7 @@ void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator& code, EmitContext&
         auto flags = ctx.reg_alloc.WriteFlags(inst);
         RegAlloc::Realize(Wvalue, flags);
 
-        code.CMP(*Wvalue, WZR.toW());
+        code.TST(*Wvalue, Wvalue);
         break;
     }
     case IR::Type::U64: {
@@ -90,7 +90,7 @@ void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator& code, EmitContext&
         auto flags = ctx.reg_alloc.WriteFlags(inst);
         RegAlloc::Realize(Xvalue, flags);
 
-        code.CMP(*Xvalue, XZR.toX());
+        code.TST(*Xvalue, Xvalue);
         break;
     }
     default:

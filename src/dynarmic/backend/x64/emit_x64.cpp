@@ -154,7 +154,7 @@ void EmitX64::EmitGetNZFromOp(EmitContext& ctx, IR::Inst* inst) {
 
     const Xbyak::Reg64 nz = ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
     const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
-    code.cmp(value, 0);
+    code.test(value, value);
     code.lahf();
     code.movzx(eax, ah);
     ctx.reg_alloc.DefineValue(inst, nz);
@@ -180,9 +180,9 @@ void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
 
     const Xbyak::Reg64 nzcv = ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
     const Xbyak::Reg value = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
-    code.cmp(value, 0);
+    code.test(value, value);
     code.lahf();
-    code.seto(code.al);
+    code.mov(al, 0);
     ctx.reg_alloc.DefineValue(inst, nzcv);
 }
 
