@@ -143,7 +143,7 @@ bool ShouldTestA32Inst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst
     return ShouldTestInst(block);
 }
 
-bool ShouldTestA64Inst(u32 instruction, u32 pc, bool is_last_inst) {
+bool ShouldTestA64Inst(u32 instruction, u64 pc, bool is_last_inst) {
     const A64::LocationDescriptor location = A64::LocationDescriptor{pc, {}};
     IR::Block block{location};
     const bool should_continue = A64::TranslateSingleInstruction(block, location, instruction);
@@ -650,7 +650,7 @@ static std::optional<size_t> str2sz(char const* s) {
     errno = 0;
 
     const long l = std::strtol(s, &end, 10);
-    if (errno == ERANGE || l > std::numeric_limits<size_t>::max() || l < 0) {
+    if (errno == ERANGE || l < 0) {
         return std::nullopt;
     }
     if (*s == '\0' || *end != '\0') {
@@ -673,7 +673,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    detail::g_rand_int_generator.seed(*seed);
+    detail::g_rand_int_generator.seed(static_cast<std::mt19937::result_type>(*seed));
 
     if (strcmp(argv[1], "thumb") == 0) {
         TestThumb(*instruction_count, *iterator_count);
