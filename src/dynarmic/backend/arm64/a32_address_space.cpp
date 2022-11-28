@@ -311,6 +311,7 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
         .is_a64 = false,
         .hook_isb = conf.hook_isb,
         .enable_cycle_counting = conf.enable_cycle_counting,
+        .wall_clock_cntpct = conf.wall_clock_cntpct,
         .always_little_endian = conf.always_little_endian,
         .descriptor_to_fpcr = [](const IR::LocationDescriptor& location) { return FP::FPCR{A32::LocationDescriptor{location}.FPSCR().Value()}; },
         .state_nzcv_offset = offsetof(A32JitState, cpsr_nzcv),

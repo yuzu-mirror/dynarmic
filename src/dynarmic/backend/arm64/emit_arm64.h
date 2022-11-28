@@ -98,6 +98,7 @@ struct EmitConfig {
     bool is_a64;
     bool hook_isb;
     bool enable_cycle_counting;
+    bool wall_clock_cntpct;
     bool always_little_endian;
 
     FP::FPCR (*descriptor_to_fpcr)(const IR::LocationDescriptor& descriptor);

@@ -441,6 +441,7 @@ EmittedBlockInfo A64AddressSpace::Emit(IR::Block block) {
         .is_a64 = true,
         .hook_isb = conf.hook_isb,
         .enable_cycle_counting = conf.enable_cycle_counting,
+        .wall_clock_cntpct = conf.wall_clock_cntpct,
         .always_little_endian = true,
         .descriptor_to_fpcr = [](const IR::LocationDescriptor& location) { return A64::LocationDescriptor{location}.FPCR(); },
         .state_nzcv_offset = offsetof(A64JitState, cpsr_nzcv),
