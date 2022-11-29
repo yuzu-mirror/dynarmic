@@ -423,7 +423,7 @@ void EmitIR<IR::Opcode::A64GetCNTFRQ>(oaknut::CodeGenerator& code, EmitContext& 
 
 template<>
 void EmitIR<IR::Opcode::A64GetCNTPCT>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst);
+    ctx.reg_alloc.PrepareForCall();
     if (!ctx.conf.wall_clock_cntpct && ctx.conf.enable_cycle_counting) {
         code.LDR(X1, SP, offsetof(StackLayout, cycles_to_run));
         code.SUB(X1, X1, Xticks);
@@ -433,7 +433,7 @@ void EmitIR<IR::Opcode::A64GetCNTPCT>(oaknut::CodeGenerator& code, EmitContext& 
         code.MOV(Xticks, X0);
     }
     EmitRelocation(code, ctx, LinkTarget::GetCNTPCT);
-    code.MOV(Xresult, X0);
+    ctx.reg_alloc.DefineAsRegister(inst, X0);
 }
 
 template<>

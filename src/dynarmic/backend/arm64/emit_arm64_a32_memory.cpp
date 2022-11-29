@@ -25,19 +25,19 @@ static bool IsOrdered(IR::AccType acctype) {
 
 static void EmitReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst, {}, args[1]);
+    ctx.reg_alloc.PrepareForCall({}, args[1]);
     const bool ordered = IsOrdered(args[2].GetImmediateAccType());
 
     EmitRelocation(code, ctx, fn);
     if (ordered) {
         code.DMB(oaknut::BarrierOp::ISH);
     }
-    code.MOV(Xresult, X0);
+    ctx.reg_alloc.DefineAsRegister(inst, X0);
 }
 
 static void EmitExclusiveReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst, {}, args[1]);
+    ctx.reg_alloc.PrepareForCall({}, args[1]);
     const bool ordered = IsOrdered(args[2].GetImmediateAccType());
 
     code.MOV(Wscratch0, 1);
@@ -46,7 +46,7 @@ static void EmitExclusiveReadMemory(oaknut::CodeGenerator& code, EmitContext& ct
     if (ordered) {
         code.DMB(oaknut::BarrierOp::ISH);
     }
-    code.MOV(Xresult, X0);
+    ctx.reg_alloc.DefineAsRegister(inst, X0);
 }
 
 static void EmitWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
@@ -65,7 +65,7 @@ static void EmitWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::I
 
 static void EmitExclusiveWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, LinkTarget fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto Xresult = ctx.reg_alloc.PrepareForCallReg(inst, {}, args[1], args[2]);
+    ctx.reg_alloc.PrepareForCall({}, args[1], args[2]);
     const bool ordered = IsOrdered(args[3].GetImmediateAccType());
 
     oaknut::Label end;
@@ -81,7 +81,7 @@ static void EmitExclusiveWriteMemory(oaknut::CodeGenerator& code, EmitContext& c
         code.DMB(oaknut::BarrierOp::ISH);
     }
     code.l(end);
-    code.MOV(Xresult, X0);
+    ctx.reg_alloc.DefineAsRegister(inst, X0);
 }
 
 template<>
