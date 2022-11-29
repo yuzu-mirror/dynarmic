@@ -19,8 +19,6 @@ namespace Dynarmic::Backend::Arm64 {
 
 using namespace oaknut::util;
 
-static constexpr int nzcv_c_flag_shift = 29;
-
 oaknut::Label EmitA64Cond(oaknut::CodeGenerator& code, EmitContext&, IR::Cond cond) {
     oaknut::Label pass;
     // TODO: Flags in host flags
@@ -145,7 +143,7 @@ void EmitIR<IR::Opcode::A64GetCFlag>(oaknut::CodeGenerator& code, EmitContext& c
     auto Wflag = ctx.reg_alloc.WriteW(inst);
     RegAlloc::Realize(Wflag);
     code.LDR(Wflag, Xstate, offsetof(A64JitState, cpsr_nzcv));
-    code.AND(Wflag, Wflag, 1 << nzcv_c_flag_shift);
+    code.AND(Wflag, Wflag, 1 << 29);
 }
 
 template<>

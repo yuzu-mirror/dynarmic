@@ -303,21 +303,30 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
     mem.unprotect();
 
     const EmitConfig emit_conf{
-        .tpidr_el0{},
-        .tpidrro_el0{},
-        .cntfreq_el0{},
-        .dczid_el0{},
-        .ctr_el0{},
-        .is_a64 = false,
+        .optimizations = conf.unsafe_optimizations ? conf.optimizations : conf.optimizations & all_safe_optimizations,
+
         .hook_isb = conf.hook_isb,
-        .enable_cycle_counting = conf.enable_cycle_counting,
+
+        .cntfreq_el0{},
+        .ctr_el0{},
+        .dczid_el0{},
+        .tpidrro_el0{},
+        .tpidr_el0{},
+
         .wall_clock_cntpct = conf.wall_clock_cntpct,
+        .enable_cycle_counting = conf.enable_cycle_counting,
+
         .always_little_endian = conf.always_little_endian,
+
         .descriptor_to_fpcr = [](const IR::LocationDescriptor& location) { return FP::FPCR{A32::LocationDescriptor{location}.FPSCR().Value()}; },
+        .emit_cond = EmitA32Cond,
+        .emit_condition_failed_terminal = EmitA32ConditionFailedTerminal,
+        .emit_terminal = EmitA32Terminal,
+
         .state_nzcv_offset = offsetof(A32JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A32JitState, fpsr),
+
         .coprocessors = conf.coprocessors,
-        .optimizations = conf.unsafe_optimizations ? conf.optimizations : conf.optimizations & all_safe_optimizations,
     };
     EmittedBlockInfo block_info = EmitArm64(code, std::move(block), emit_conf);
 

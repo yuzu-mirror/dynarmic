@@ -38,6 +38,8 @@ enum class Opcode;
 
 namespace Dynarmic::Backend::Arm64 {
 
+struct EmitContext;
+
 using CodePtr = std::byte*;
 
 enum class LinkTarget {
@@ -90,30 +92,38 @@ struct EmittedBlockInfo {
 };
 
 struct EmitConfig {
-    u64* tpidr_el0;
-    const u64* tpidrro_el0;
-    u64 cntfreq_el0;
-    u32 dczid_el0;
-    u32 ctr_el0;
-    bool is_a64;
+    OptimizationFlag optimizations;
+    bool HasOptimization(OptimizationFlag f) const { return (f & optimizations) != no_optimizations; }
+
     bool hook_isb;
-    bool enable_cycle_counting;
+
+    // System registers
+    u64 cntfreq_el0;
+    u32 ctr_el0;
+    u32 dczid_el0;
+    const u64* tpidrro_el0;
+    u64* tpidr_el0;
+
+    // Timing
     bool wall_clock_cntpct;
+    bool enable_cycle_counting;
+
+    // Endianness
     bool always_little_endian;
 
+    // Frontend specific callbacks
     FP::FPCR (*descriptor_to_fpcr)(const IR::LocationDescriptor& descriptor);
+    oaknut::Label (*emit_cond)(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
+    void (*emit_condition_failed_terminal)(oaknut::CodeGenerator& code, EmitContext& ctx);
+    void (*emit_terminal)(oaknut::CodeGenerator& code, EmitContext& ctx);
 
+    // State offsets
     size_t state_nzcv_offset;
     size_t state_fpsr_offset;
 
+    // A32 specific
     std::array<std::shared_ptr<A32::Coprocessor>, 16> coprocessors{};
-
-    OptimizationFlag optimizations;
-
-    bool HasOptimization(OptimizationFlag f) const { return (f & optimizations) != no_optimizations; }
 };
-
-struct EmitContext;
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf);
 

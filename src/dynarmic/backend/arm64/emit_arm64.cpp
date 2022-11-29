@@ -8,7 +8,6 @@
 #include <fmt/ostream.h>
 #include <oaknut/oaknut.hpp>
 
-#include "dynarmic/backend/arm64/a32_jitstate.h"
 #include "dynarmic/backend/arm64/abi.h"
 #include "dynarmic/backend/arm64/emit_context.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
@@ -191,15 +190,9 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
         ASSERT(ctx.block.HasConditionFailedLocation());
         oaknut::Label pass;
 
-        if (conf.is_a64) {
-            pass = EmitA64Cond(code, ctx, ctx.block.GetCondition());
-            EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
-            EmitA64ConditionFailedTerminal(code, ctx);
-        } else {
-            pass = EmitA32Cond(code, ctx, ctx.block.GetCondition());
-            EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
-            EmitA32ConditionFailedTerminal(code, ctx);
-        }
+        pass = conf.emit_cond(code, ctx, ctx.block.GetCondition());
+        EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
+        conf.emit_condition_failed_terminal(code, ctx);
 
         code.l(pass);
     }
@@ -238,11 +231,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     reg_alloc.AssertNoMoreUses();
 
     EmitAddCycles(code, ctx, block.CycleCount());
-    if (conf.is_a64) {
-        EmitA64Terminal(code, ctx);
-    } else {
-        EmitA32Terminal(code, ctx);
-    }
+    conf.emit_terminal(code, ctx);
 
     ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
     return ebi;

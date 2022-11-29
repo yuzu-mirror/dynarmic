@@ -433,21 +433,30 @@ EmittedBlockInfo A64AddressSpace::Emit(IR::Block block) {
     mem.unprotect();
 
     const EmitConfig emit_conf{
+        .optimizations = conf.unsafe_optimizations ? conf.optimizations : conf.optimizations & all_safe_optimizations,
+
+        .hook_isb = conf.hook_isb,
+
         .tpidr_el0 = conf.tpidr_el0,
         .tpidrro_el0 = conf.tpidrro_el0,
         .cntfreq_el0 = conf.cntfrq_el0,
         .dczid_el0 = conf.dczid_el0,
         .ctr_el0 = conf.ctr_el0,
-        .is_a64 = true,
-        .hook_isb = conf.hook_isb,
-        .enable_cycle_counting = conf.enable_cycle_counting,
+
         .wall_clock_cntpct = conf.wall_clock_cntpct,
+        .enable_cycle_counting = conf.enable_cycle_counting,
+
         .always_little_endian = true,
+
         .descriptor_to_fpcr = [](const IR::LocationDescriptor& location) { return A64::LocationDescriptor{location}.FPCR(); },
+        .emit_cond = EmitA64Cond,
+        .emit_condition_failed_terminal = EmitA64ConditionFailedTerminal,
+        .emit_terminal = EmitA64Terminal,
+
         .state_nzcv_offset = offsetof(A64JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A64JitState, fpsr),
+
         .coprocessors{},
-        .optimizations = conf.unsafe_optimizations ? conf.optimizations : conf.optimizations & all_safe_optimizations,
     };
     EmittedBlockInfo block_info = EmitArm64(code, std::move(block), emit_conf);
 

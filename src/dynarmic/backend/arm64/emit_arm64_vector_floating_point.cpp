@@ -258,7 +258,7 @@ void EmitToFixed(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) 
     });
 }
 
-template<typename JitState, typename Lambda>
+template<typename Lambda>
 static void EmitTwoOpFallbackWithoutRegAlloc(oaknut::CodeGenerator& code, EmitContext& ctx, oaknut::QReg Qresult, oaknut::QReg Qarg1, Lambda lambda, bool fpcr_controlled) {
     const auto fn = static_cast<mcl::equivalent_function_type<Lambda>*>(lambda);
 
@@ -274,7 +274,7 @@ static void EmitTwoOpFallbackWithoutRegAlloc(oaknut::CodeGenerator& code, EmitCo
     code.ADD(X0, Xscratch0, 0 * 16);
     code.ADD(X1, Xscratch0, 1 * 16);
     code.MOV(X2, fpcr);
-    code.ADD(X3, Xstate, offsetof(JitState, fpsr));
+    code.ADD(X3, Xstate, ctx.conf.state_fpsr_offset);
     code.STR(Qarg1, X1);
     code.BLR(Xscratch1);
 
@@ -289,7 +289,7 @@ static void EmitTwoOpFallbackWithoutRegAlloc(oaknut::CodeGenerator& code, EmitCo
     code.l(end);
 }
 
-template<size_t fpcr_controlled_arg_index = 1, typename JitState, typename Lambda>
+template<size_t fpcr_controlled_arg_index = 1, typename Lambda>
 static void EmitTwoOpFallback(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     auto Qarg1 = ctx.reg_alloc.ReadQ(args[0]);
@@ -300,7 +300,7 @@ static void EmitTwoOpFallback(oaknut::CodeGenerator& code, EmitContext& ctx, IR:
     ctx.fpsr.Spill();
 
     const bool fpcr_controlled = args[fpcr_controlled_arg_index].GetImmediateU1();
-    EmitTwoOpFallbackWithoutRegAlloc<JitState>(code, ctx, Qresult, Qarg1, lambda, fpcr_controlled);
+    EmitTwoOpFallbackWithoutRegAlloc(code, ctx, Qresult, Qarg1, lambda, fpcr_controlled);
 }
 
 template<>
@@ -592,11 +592,7 @@ void EmitIR<IR::Opcode::FPVectorRoundInt16>(oaknut::CodeGenerator& code, EmitCon
         },
         mp::cartesian_product<rounding_list, exact_list>{});
 
-    if (ctx.conf.is_a64) {
-        EmitTwoOpFallback<3, A64JitState>(code, ctx, inst, lut.at(std::make_tuple(rounding, exact)));
-    } else {
-        EmitTwoOpFallback<3, A32JitState>(code, ctx, inst, lut.at(std::make_tuple(rounding, exact)));
-    }
+    EmitTwoOpFallback<3>(code, ctx, inst, lut.at(std::make_tuple(rounding, exact)));
 }
 
 template<>
