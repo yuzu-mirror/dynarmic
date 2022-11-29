@@ -396,11 +396,11 @@ EmitConfig A64AddressSpace::GetEmitConfig() {
 
         .hook_isb = conf.hook_isb,
 
-        .tpidr_el0 = conf.tpidr_el0,
-        .tpidrro_el0 = conf.tpidrro_el0,
         .cntfreq_el0 = conf.cntfrq_el0,
-        .dczid_el0 = conf.dczid_el0,
         .ctr_el0 = conf.ctr_el0,
+        .dczid_el0 = conf.dczid_el0,
+        .tpidrro_el0 = conf.tpidrro_el0,
+        .tpidr_el0 = conf.tpidr_el0,
 
         .wall_clock_cntpct = conf.wall_clock_cntpct,
         .enable_cycle_counting = conf.enable_cycle_counting,
