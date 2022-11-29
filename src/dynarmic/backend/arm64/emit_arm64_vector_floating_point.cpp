@@ -263,30 +263,20 @@ static void EmitTwoOpFallbackWithoutRegAlloc(oaknut::CodeGenerator& code, EmitCo
     const auto fn = static_cast<mcl::equivalent_function_type<Lambda>*>(lambda);
 
     const u32 fpcr = ctx.FPCR(fpcr_controlled).Value();
-    constexpr u64 stack_size = sizeof(u64) * 4;  // sizeof(u128)*2
-    oaknut::Label fn_ptr, end;
+    constexpr u64 stack_size = sizeof(u64) * 4;  // sizeof(u128) * 2
 
     ABI_PushRegisters(code, ABI_CALLER_SAVE & ~(1ull << Qresult.index()), stack_size);
-    code.MOV(Xscratch0, SP);
-    code.LDR(Xscratch1, fn_ptr);
 
-    // Call lambda(Vec&, Vec&, fpcr, fpsr&)
-    code.ADD(X0, Xscratch0, 0 * 16);
-    code.ADD(X1, Xscratch0, 1 * 16);
+    code.MOV(Xscratch0, mcl::bit_cast<u64>(fn));
+    code.ADD(X0, SP, 0 * 16);
+    code.ADD(X1, SP, 1 * 16);
     code.MOV(X2, fpcr);
     code.ADD(X3, Xstate, ctx.conf.state_fpsr_offset);
     code.STR(Qarg1, X1);
-    code.BLR(Xscratch1);
-
-    // Reload result
+    code.BLR(Xscratch0);
     code.LDR(Qresult, SP);
-    ABI_PopRegisters(code, ABI_CALLER_SAVE & ~(1ull << Qresult.index()), stack_size);
 
-    code.B(end);
-    code.align(8);
-    code.l(fn_ptr);
-    code.dx(mcl::bit_cast<u64>(fn));
-    code.l(end);
+    ABI_PopRegisters(code, ABI_CALLER_SAVE & ~(1ull << Qresult.index()), stack_size);
 }
 
 template<size_t fpcr_controlled_arg_index = 1, typename Lambda>
@@ -295,7 +285,6 @@ static void EmitTwoOpFallback(oaknut::CodeGenerator& code, EmitContext& ctx, IR:
     auto Qarg1 = ctx.reg_alloc.ReadQ(args[0]);
     auto Qresult = ctx.reg_alloc.WriteQ(inst);
     RegAlloc::Realize(Qarg1, Qresult);
-
     ctx.reg_alloc.SpillFlags();
     ctx.fpsr.Spill();
 

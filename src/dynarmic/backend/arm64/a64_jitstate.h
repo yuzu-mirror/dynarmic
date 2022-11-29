@@ -20,7 +20,7 @@ struct A64JitState {
 
     u32 cpsr_nzcv = 0;
 
-    alignas(16) std::array<u64, 64> vec{};  // Extension registers.
+    alignas(16) std::array<u64, 64> vec{};
 
     u32 exclusive_state = 0;
 
