@@ -294,17 +294,11 @@ static void EmitTwoOpFallback(oaknut::CodeGenerator& code, EmitContext& ctx, IR:
 
 template<>
 void EmitIR<IR::Opcode::FPVectorAbs16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    constexpr u16 non_sign_mask = FP::FPInfo<u16>::sign_mask - u16{1u};
-    constexpr u64 non_sign_mask64 = mcl::bit::replicate_element<16, u64>(non_sign_mask);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    auto Qoperand = ctx.reg_alloc.ReadQ(args[0]);
-    auto Qresult = ctx.reg_alloc.WriteQ(inst);
-    RegAlloc::Realize(Qoperand, Qresult);
+    auto Qresult = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+    RegAlloc::Realize(Qresult);
 
-    code.MOV(Xscratch0, non_sign_mask64);
-    code.DUP(Qresult->D2(), Xscratch0);
-    code.AND(Qresult->B16(), Qoperand->B16(), Qresult->B16());
+    code.BIC(Qresult->H8(), 0b10000000, LSL, 8);
 }
 
 template<>
