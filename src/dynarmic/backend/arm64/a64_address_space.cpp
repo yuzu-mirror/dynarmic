@@ -293,9 +293,7 @@ void A64AddressSpace::EmitPrelude() {
         code.MRS(Xscratch1, oaknut::SystemReg::FPCR);
         code.STR(Wscratch1, SP, offsetof(StackLayout, save_host_fpcr));
         code.LDR(Wscratch0, Xstate, offsetof(A64JitState, fpcr));
-        code.LDR(Wscratch1, Xstate, offsetof(A64JitState, fpsr));
         code.MSR(oaknut::SystemReg::FPCR, Xscratch0);
-        code.MSR(oaknut::SystemReg::FPSR, Xscratch1);
 
         code.LDAR(Wscratch0, Xhalt);
         code.CBNZ(Wscratch0, return_from_run_code);
