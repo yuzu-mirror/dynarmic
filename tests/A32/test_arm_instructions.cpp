@@ -582,3 +582,22 @@ TEST_CASE("arm: vmsr, vcmp, vmrs", "[arm][A32]") {
     test_env.ticks_left = 4;
     jit.Run();
 }
+
+TEST_CASE("arm: sdiv maximally", "[arm][A32]") {
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+    test_env.code_mem = {
+        0xe712f011,  // sdiv r2, r1, r0
+        0xeafffffe,  // b +#0
+    };
+
+    jit.Regs()[1] = 0x80000000;
+    jit.Regs()[0] = 0xffffffff;
+
+    jit.SetCpsr(0x000001d0);  // User-mode
+
+    test_env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.Regs()[2] == 0x80000000);
+}

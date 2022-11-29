@@ -1199,3 +1199,24 @@ TEST_CASE("A64: SQRDMULH QC flag when output invalidated", "[a64]") {
     REQUIRE(jit.GetFpsr() == 0x08000000);
     REQUIRE(jit.GetVector(11) == Vector{0xb4cb'4fec'8563'1032, 0x0000'0000'0000'0000});
 }
+
+TEST_CASE("A64: SDIV maximally", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x9ac00c22);  // SDIV X2, X1, X0
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetRegister(0, 0xffffffffffffffff);
+    jit.SetRegister(1, 0x8000000000000000);
+    jit.SetRegister(2, 0xffffffffffffffff);
+    jit.SetPC(0);
+
+    env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.GetRegister(0) == 0xffffffffffffffff);
+    REQUIRE(jit.GetRegister(1) == 0x8000000000000000);
+    REQUIRE(jit.GetRegister(2) == 0x8000000000000000);
+    REQUIRE(jit.GetPC() == 4);
+}

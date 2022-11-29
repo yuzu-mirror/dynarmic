@@ -1189,16 +1189,17 @@ void EmitX64::EmitSignedDiv32(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.ScratchGpr(HostLoc::RAX);
     ctx.reg_alloc.ScratchGpr(HostLoc::RDX);
     const Xbyak::Reg32 dividend = ctx.reg_alloc.UseGpr(args[0]).cvt32();
-    const Xbyak::Reg32 divisor = ctx.reg_alloc.UseGpr(args[1]).cvt32();
+    const Xbyak::Reg32 divisor = ctx.reg_alloc.UseScratchGpr(args[1]).cvt32();
 
     Xbyak::Label end;
 
     code.xor_(eax, eax);
     code.test(divisor, divisor);
     code.jz(end);
-    code.mov(eax, dividend);
-    code.cdq();
-    code.idiv(divisor);
+    code.movsxd(rax, dividend);
+    code.movsxd(divisor.cvt64(), divisor);
+    code.cqo();
+    code.idiv(divisor.cvt64());
     code.L(end);
 
     ctx.reg_alloc.DefineValue(inst, eax);
@@ -1212,11 +1213,17 @@ void EmitX64::EmitSignedDiv64(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Reg64 dividend = ctx.reg_alloc.UseGpr(args[0]);
     const Xbyak::Reg64 divisor = ctx.reg_alloc.UseGpr(args[1]);
 
-    Xbyak::Label end;
+    Xbyak::Label end, ok;
 
     code.xor_(eax, eax);
     code.test(divisor, divisor);
     code.jz(end);
+    code.cmp(divisor, -1);
+    code.jne(ok);
+    code.mov(rax, 0x8000000000000000);
+    code.cmp(dividend, rax);
+    code.je(end);
+    code.L(ok);
     code.mov(rax, dividend);
     code.cqo();
     code.idiv(divisor);
