@@ -161,10 +161,8 @@ static void* EmitWrite128CallTrampoline(oaknut::CodeGenerator& code, A64::UserCa
     oaknut::Label l_addr, l_this;
 
     void* target = code.ptr<void*>();
-    ABI_PushRegisters(code, 0, sizeof(Vector));
-    code.STR(Q0, SP);
-    code.LDP(X2, X3, SP);
-    ABI_PopRegisters(code, 0, sizeof(Vector));
+    code.FMOV(X2, D0);
+    code.FMOV(X3, V0.D()[1]);
 
     code.LDR(X0, l_this);
     code.LDR(Xscratch0, l_addr);
@@ -194,10 +192,8 @@ static void* EmitExclusiveWrite128CallTrampoline(oaknut::CodeGenerator& code, co
     };
 
     void* target = code.ptr<void*>();
-    ABI_PushRegisters(code, 0, sizeof(Vector));
-    code.STR(Q0, SP);
-    code.LDP(X2, X3, SP);
-    ABI_PopRegisters(code, 0, sizeof(Vector));
+    code.FMOV(X2, D0);
+    code.FMOV(X3, V0.D()[1]);
 
     code.LDR(X0, l_this);
     code.LDR(Xscratch0, l_addr);
