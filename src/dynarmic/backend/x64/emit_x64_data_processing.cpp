@@ -1218,7 +1218,7 @@ void EmitX64::EmitSignedDiv64(EmitContext& ctx, IR::Inst* inst) {
     code.xor_(eax, eax);
     code.test(divisor, divisor);
     code.jz(end);
-    code.cmp(divisor, -1);
+    code.cmp(divisor, 0xffffffff);  // is sign extended
     code.jne(ok);
     code.mov(rax, 0x8000000000000000);
     code.cmp(dividend, rax);
