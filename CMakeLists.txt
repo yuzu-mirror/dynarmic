@@ -17,6 +17,7 @@ option(DYNARMIC_TESTS "Build tests" ${MASTER_PROJECT})
 option(DYNARMIC_TESTS_USE_UNICORN "Enable fuzzing tests against unicorn" OFF)
 option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
 option(DYNARMIC_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
+option(DYNARMIC_USE_BUNDLED_EXTERNALS "Use all bundled externals (useful when e.g. cross-compiling)" OFF)
 option(DYNARMIC_WARNINGS_AS_ERRORS "Warnings as errors" ${MASTER_PROJECT})
 if (NOT DEFINED DYNARMIC_FRONTENDS)
     set(DYNARMIC_FRONTENDS "A32;A64" CACHE STRING "Selects which frontends to enable")
@@ -113,20 +114,25 @@ if (NOT DEFINED ARCHITECTURE)
 endif()
 message(STATUS "Target architecture: ${ARCHITECTURE}")
 
-# Forced use of external for non-REQUIRED library is possible with e.g. cmake -DCMAKE_DISABLE_FIND_PACKAGE_fmt=ON ...
-find_package(Boost 1.57 REQUIRED)
-find_package(fmt 9)
-find_package(tsl-robin-map)
+# Forced use of individual bundled libraries for non-REQUIRED library is possible with e.g. cmake -DCMAKE_DISABLE_FIND_PACKAGE_fmt=ON ...
 
-if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
-    find_package(xbyak 6)
-    find_package(Zydis 4)
+if (DYNARMIC_USE_BUNDLED_EXTERNALS)
+    set(CMAKE_DISABLE_FIND_PACKAGE_Catch2 ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_fmt ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_tsl-robin-map ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_xbyak ON)
+    set(CMAKE_DISABLE_FIND_PACKAGE_Zydis ON)
 endif()
 
-# Enable unit-testing.
-enable_testing(true)
+find_package(Boost 1.57 REQUIRED)
+find_package(fmt 9 QUIET)
+find_package(tsl-robin-map QUIET)
 
-# Include LLVM
+if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
+    find_package(xbyak 6 QUIET)
+    find_package(Zydis 4 QUIET)
+endif()
+
 if (DYNARMIC_USE_LLVM)
     find_package(LLVM REQUIRED CONFIG)
     include_directories(${LLVM_INCLUDE_DIRS})
@@ -135,7 +141,7 @@ if (DYNARMIC_USE_LLVM)
 endif()
 
 if (DYNARMIC_TESTS)
-    find_package(Catch2 2)
+    find_package(Catch2 2 QUIET)
     if (DYNARMIC_TESTS_USE_UNICORN)
         find_package(Unicorn REQUIRED)
     endif()
@@ -147,6 +153,7 @@ add_subdirectory(externals)
 # Dynarmic project files
 add_subdirectory(src/dynarmic)
 if (DYNARMIC_TESTS)
+    enable_testing(true)
     add_subdirectory(tests)
 endif()
 
