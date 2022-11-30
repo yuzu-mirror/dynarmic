@@ -269,8 +269,8 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(oaknut::CodeGenerator& code, EmitCon
         }
     } else {
         if (shift_arg.IsImmediate() && shift_arg.GetImmediateU8() == 0) {
-            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
             ctx.reg_alloc.DefineAsExisting(carry_inst, carry_arg);
+            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
         } else if (shift_arg.IsImmediate()) {
             // TODO: Use RMIF
             const u8 shift = shift_arg.GetImmediateU8();
@@ -406,8 +406,8 @@ void EmitIR<IR::Opcode::LogicalShiftRight32>(oaknut::CodeGenerator& code, EmitCo
         }
     } else {
         if (shift_arg.IsImmediate() && shift_arg.GetImmediateU8() == 0) {
-            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
             ctx.reg_alloc.DefineAsExisting(carry_inst, carry_arg);
+            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
         } else if (shift_arg.IsImmediate()) {
             // TODO: Use RMIF
             const u8 shift = shift_arg.GetImmediateU8();
@@ -541,8 +541,8 @@ void EmitIR<IR::Opcode::ArithmeticShiftRight32>(oaknut::CodeGenerator& code, Emi
         }
     } else {
         if (shift_arg.IsImmediate() && shift_arg.GetImmediateU8() == 0) {
-            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
             ctx.reg_alloc.DefineAsExisting(carry_inst, carry_arg);
+            ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
         } else if (shift_arg.IsImmediate()) {
             // TODO: Use RMIF
 
@@ -632,11 +632,10 @@ void EmitIR<IR::Opcode::RotateRight32>(oaknut::CodeGenerator& code, EmitContext&
     auto& carry_arg = args[2];
 
     if (shift_arg.IsImmediate() && shift_arg.GetImmediateU8() == 0) {
-        ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
-
         if (carry_inst) {
             ctx.reg_alloc.DefineAsExisting(carry_inst, carry_arg);
         }
+        ctx.reg_alloc.DefineAsExisting(inst, operand_arg);
     } else if (shift_arg.IsImmediate()) {
         const u8 shift = shift_arg.GetImmediateU8() % 32;
         auto Wresult = ctx.reg_alloc.WriteW(inst);

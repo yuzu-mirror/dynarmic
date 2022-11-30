@@ -170,12 +170,13 @@ void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable
 }
 
 void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
+    ASSERT(!ValueLocation(inst));
+
     if (arg.value.IsImmediate()) {
         inst->ReplaceUsesWith(arg.value);
         return;
     }
 
-    ASSERT(!ValueLocation(inst));
     auto& info = ValueInfo(arg.value.GetInst());
     info.values.emplace_back(inst);
     info.expected_uses += inst->UseCount();
