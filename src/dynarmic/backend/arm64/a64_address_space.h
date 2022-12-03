@@ -6,23 +6,23 @@
 #pragma once
 
 #include "dynarmic/backend/arm64/address_space.h"
-#include "dynarmic/interface/A32/config.h"
+#include "dynarmic/interface/A64/config.h"
 
 namespace Dynarmic::Backend::Arm64 {
 
-class A32AddressSpace final : public AddressSpace {
+class A64AddressSpace final : public AddressSpace {
 public:
-    explicit A32AddressSpace(const A32::UserConfig& conf);
+    explicit A64AddressSpace(const A64::UserConfig& conf);
 
     IR::Block GenerateIR(IR::LocationDescriptor) const override;
 
 protected:
-    friend class A32Core;
+    friend class A64Core;
 
     void EmitPrelude();
     EmitConfig GetEmitConfig() override;
 
-    const A32::UserConfig conf;
+    const A64::UserConfig conf;
 };
 
 }  // namespace Dynarmic::Backend::Arm64

@@ -373,6 +373,8 @@ elseif(ARCHITECTURE STREQUAL "arm64")
         backend/arm64/a32_jitstate.h
         backend/arm64/abi.cpp
         backend/arm64/abi.h
+        backend/arm64/address_space.cpp
+        backend/arm64/address_space.h
         backend/arm64/devirtualize.h
         backend/arm64/emit_arm64.cpp
         backend/arm64/emit_arm64.h
@@ -406,14 +408,16 @@ elseif(ARCHITECTURE STREQUAL "arm64")
             backend/arm64/a32_address_space.h
             backend/arm64/a32_core.h
             backend/arm64/a32_interface.cpp
-
-            # Move this to the list below when implemented
-            backend/arm64/a64_interface.cpp
         )
     endif()
 
     if ("A64" IN_LIST DYNARMIC_FRONTENDS)
-        message(FATAL_ERROR "TODO: Unimplemented frontend for this host architecture")
+	target_sources(dynarmic PRIVATE
+            backend/arm64/a64_address_space.cpp
+            backend/arm64/a64_address_space.h
+            backend/arm64/a64_core.h
+            backend/arm64/a64_interface.cpp
+	)
     endif()
 else()
     message(FATAL_ERROR "Unsupported architecture")

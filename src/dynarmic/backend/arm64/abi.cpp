@@ -55,13 +55,15 @@ static FrameInfo CalculateFrameInfo(RegisterList rl, size_t frame_size) {
     };
 }
 
-#define DO_IT(TYPE, REG_TYPE, PAIR_OP, SINGLE_OP, OFFSET)                                                                                   \
-    for (size_t i = 0; i < frame_info.TYPE##s.size() - 1; i += 2) {                                                                         \
-        code.PAIR_OP(oaknut::REG_TYPE{frame_info.TYPE##s[i]}, oaknut::REG_TYPE{frame_info.TYPE##s[i + 1]}, SP, (OFFSET) + i * TYPE##_size); \
-    }                                                                                                                                       \
-    if (frame_info.TYPE##s.size() % 2 == 1) {                                                                                               \
-        const size_t i = frame_info.TYPE##s.size() - 1;                                                                                     \
-        code.SINGLE_OP(oaknut::REG_TYPE{frame_info.TYPE##s[i]}, SP, (OFFSET) + i * TYPE##_size);                                            \
+#define DO_IT(TYPE, REG_TYPE, PAIR_OP, SINGLE_OP, OFFSET)                                                                                       \
+    if (frame_info.TYPE##s.size() > 0) {                                                                                                        \
+        for (size_t i = 0; i < frame_info.TYPE##s.size() - 1; i += 2) {                                                                         \
+            code.PAIR_OP(oaknut::REG_TYPE{frame_info.TYPE##s[i]}, oaknut::REG_TYPE{frame_info.TYPE##s[i + 1]}, SP, (OFFSET) + i * TYPE##_size); \
+        }                                                                                                                                       \
+        if (frame_info.TYPE##s.size() % 2 == 1) {                                                                                               \
+            const size_t i = frame_info.TYPE##s.size() - 1;                                                                                     \
+            code.SINGLE_OP(oaknut::REG_TYPE{frame_info.TYPE##s[i]}, SP, (OFFSET) + i * TYPE##_size);                                            \
+        }                                                                                                                                       \
     }
 
 void ABI_PushRegisters(oaknut::CodeGenerator& code, RegisterList rl, size_t frame_size) {

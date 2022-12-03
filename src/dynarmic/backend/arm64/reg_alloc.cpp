@@ -138,7 +138,7 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
-void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
+void RegAlloc::PrepareForCall(std::optional<Argument::copyable_reference> arg0, std::optional<Argument::copyable_reference> arg1, std::optional<Argument::copyable_reference> arg2, std::optional<Argument::copyable_reference> arg3) {
     fpsr_manager.Spill();
     SpillFlags();
 
@@ -157,15 +157,28 @@ void RegAlloc::PrepareForCall(IR::Inst* result, std::optional<Argument::copyable
     }
 
     const std::array<std::optional<Argument::copyable_reference>, 4> args{arg0, arg1, arg2, arg3};
+
+    // AAPCS64 Next General-purpose Register Number
+    int ngrn = 0;
+    // AAPCS64 Next SIMD and Floating-point Register Number
+    int nsrn = 0;
+
     for (int i = 0; i < 4; i++) {
         if (args[i]) {
-            ASSERT(gprs[i].IsCompletelyEmpty());
-            LoadCopyInto(args[i]->get().value, oaknut::XReg{i});
+            if (args[i]->get().GetType() == IR::Type::U128) {
+                ASSERT(fprs[nsrn].IsCompletelyEmpty());
+                LoadCopyInto(args[i]->get().value, oaknut::QReg{nsrn});
+                nsrn++;
+            } else {
+                ASSERT(gprs[ngrn].IsCompletelyEmpty());
+                LoadCopyInto(args[i]->get().value, oaknut::XReg{ngrn});
+                ngrn++;
+            }
+        } else {
+            // Gaps are assumed to be in general-purpose registers
+            // TODO: should there be a separate list passed for FPRs instead?
+            ngrn++;
         }
-    }
-
-    if (result) {
-        DefineAsRegister(result, X0);
     }
 }
 

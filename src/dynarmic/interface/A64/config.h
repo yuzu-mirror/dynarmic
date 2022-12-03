@@ -198,7 +198,7 @@ struct UserConfig {
 
     /// Pointer to where TPIDR_EL0 is stored. This pointer will be inserted into
     /// emitted code.
-    const std::uint64_t* tpidr_el0 = nullptr;
+    std::uint64_t* tpidr_el0 = nullptr;
 
     /// Pointer to the page table which we can use for direct page table access.
     /// If an entry in page_table is null, the relevant memory callback will be called.

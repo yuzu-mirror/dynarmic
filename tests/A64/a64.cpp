@@ -1024,6 +1024,54 @@ TEST_CASE("A64: This is an infinite loop if fast dispatch is enabled", "[a64]") 
     jit.Run();
 }
 
+TEST_CASE("A64: EXTR", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x93d8fef7);  // EXTR X23, X23, X24, #63
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetRegister(23, 0);
+    jit.SetRegister(24, 1);
+
+    env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.GetRegister(23) == 0);
+}
+
+TEST_CASE("A64: Isolated GetNZCVFromOp", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0xaa1f03f5);  // MOV X21, XZR
+    env.code_mem.emplace_back(0x912a02da);  // ADD X26, X22, #0xa80
+    env.code_mem.emplace_back(0x913662dc);  // ADD X28, X22, #0xd98
+    env.code_mem.emplace_back(0x320003e8);  // MOV W8, #1
+    env.code_mem.emplace_back(0xa9006bfc);  // STP X28, X26, [SP]
+    env.code_mem.emplace_back(0x7200011f);  // TST W8, #1
+    env.code_mem.emplace_back(0xf94007e8);  // LDR X8, [SP, #8]
+    env.code_mem.emplace_back(0x321e03e3);  // MOV W3, #4
+    env.code_mem.emplace_back(0xaa1303e2);  // MOV X2, X19
+    env.code_mem.emplace_back(0x9a881357);  // CSEL X23, X26, X8, NE
+    env.code_mem.emplace_back(0xf94003e8);  // LDR X8, [SP]
+    env.code_mem.emplace_back(0xaa1703e0);  // MOV X0, X23
+    env.code_mem.emplace_back(0x9a881396);  // CSEL X22, X28, X8, NE
+    env.code_mem.emplace_back(0x92407ea8);  // AND X8, X21, #0xffffffff
+    env.code_mem.emplace_back(0x1ac8269b);  // LSR W27, W20, W8
+    env.code_mem.emplace_back(0x0b1b0768);  // ADD W8, W27, W27, LSL #1
+    env.code_mem.emplace_back(0x937f7d01);  // SBFIZ X1, X8, #1, #32
+    env.code_mem.emplace_back(0x2a1f03e4);  // MOV W4, WZR
+    env.code_mem.emplace_back(0x531e7779);  // LSL W25, W27, #2
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+
+    env.ticks_left = 20;
+    jit.Run();
+}
+
 TEST_CASE("A64: Optimization failure when folding ADD", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};

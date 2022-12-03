@@ -575,6 +575,20 @@ void EmitIR<IR::Opcode::FPDoubleToHalf>(oaknut::CodeGenerator& code, EmitContext
 
 template<>
 void EmitIR<IR::Opcode::FPDoubleToSingle>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    const auto rounding_mode = static_cast<FP::RoundingMode>(inst->GetArg(1).GetU8());
+
+    if (rounding_mode == FP::RoundingMode::ToOdd) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        auto Sto = ctx.reg_alloc.WriteS(inst);
+        auto Dfrom = ctx.reg_alloc.ReadD(args[0]);
+        RegAlloc::Realize(Sto, Dfrom);
+        ctx.fpsr.Load();
+
+        code.FCVTXN(Sto, Dfrom);
+
+        return;
+    }
+
     EmitConvert<64, 32>(code, ctx, inst, [&](auto& Sto, auto& Dfrom) { code.FCVT(Sto, Dfrom); });
 }
 

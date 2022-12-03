@@ -6,7 +6,10 @@
 #include <algorithm>
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 #include <functional>
+#include <limits>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -14,6 +17,7 @@
 #include <mcl/stdint.hpp>
 
 #include "./A32/testenv.h"
+#include "./A64/testenv.h"
 #include "./fuzz_util.h"
 #include "./rand_int.h"
 #include "dynarmic/common/fp/fpcr.h"
@@ -22,7 +26,11 @@
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/a32_types.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
+#include "dynarmic/frontend/A64/a64_location_descriptor.h"
+#include "dynarmic/frontend/A64/a64_types.h"
+#include "dynarmic/frontend/A64/translate/a64_translate.h"
 #include "dynarmic/interface/A32/a32.h"
+#include "dynarmic/interface/A64/a64.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/location_descriptor.h"
 #include "dynarmic/ir/opcodes.h"
@@ -36,21 +44,14 @@ constexpr bool mask_fpsr_cum_bits = true;
 namespace {
 using namespace Dynarmic;
 
-bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A32::ITState it_state = {}) {
-    const A32::LocationDescriptor location = A32::LocationDescriptor{pc, {}, {}}.SetTFlag(is_thumb).SetIT(it_state);
-    IR::Block block{location};
-    const bool should_continue = A32::TranslateSingleInstruction(block, location, instruction);
-
-    if (!should_continue && !is_last_inst) {
-        return false;
-    }
-
+bool ShouldTestInst(IR::Block& block) {
     if (auto terminal = block.GetTerminal(); boost::get<IR::Term::Interpret>(&terminal)) {
         return false;
     }
 
     for (const auto& ir_inst : block) {
         switch (ir_inst.GetOpcode()) {
+        // A32
         case IR::Opcode::A32GetFpscr:
         case IR::Opcode::A32ExceptionRaised:
         case IR::Opcode::A32CallSupervisor:
@@ -61,7 +62,53 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A
         case IR::Opcode::A32CoprocGetTwoWords:
         case IR::Opcode::A32CoprocLoadWords:
         case IR::Opcode::A32CoprocStoreWords:
+        // A64
+        case IR::Opcode::A64ExceptionRaised:
+        case IR::Opcode::A64CallSupervisor:
+        case IR::Opcode::A64DataCacheOperationRaised:
+        case IR::Opcode::A64GetCNTPCT:
+        // Unimplemented
+        case IR::Opcode::SignedSaturatedAdd8:
+        case IR::Opcode::SignedSaturatedAdd16:
+        case IR::Opcode::SignedSaturatedAdd32:
+        case IR::Opcode::SignedSaturatedAdd64:
+        case IR::Opcode::SignedSaturatedDoublingMultiplyReturnHigh16:
+        case IR::Opcode::SignedSaturatedDoublingMultiplyReturnHigh32:
+        case IR::Opcode::SignedSaturatedSub8:
+        case IR::Opcode::SignedSaturatedSub16:
+        case IR::Opcode::SignedSaturatedSub32:
+        case IR::Opcode::SignedSaturatedSub64:
+        case IR::Opcode::UnsignedSaturatedAdd8:
+        case IR::Opcode::UnsignedSaturatedAdd16:
+        case IR::Opcode::UnsignedSaturatedAdd32:
+        case IR::Opcode::UnsignedSaturatedAdd64:
+        case IR::Opcode::UnsignedSaturatedSub8:
+        case IR::Opcode::UnsignedSaturatedSub16:
+        case IR::Opcode::UnsignedSaturatedSub32:
+        case IR::Opcode::UnsignedSaturatedSub64:
+        case IR::Opcode::VectorMaxS64:
+        case IR::Opcode::VectorMaxU64:
+        case IR::Opcode::VectorMinS64:
+        case IR::Opcode::VectorMinU64:
+        case IR::Opcode::VectorMultiply64:
+        case IR::Opcode::SM4AccessSubstitutionBox:
+        // Half-prec conversions
+        case IR::Opcode::FPHalfToFixedS16:
+        case IR::Opcode::FPHalfToFixedS32:
+        case IR::Opcode::FPHalfToFixedS64:
+        case IR::Opcode::FPHalfToFixedU16:
+        case IR::Opcode::FPHalfToFixedU32:
+        case IR::Opcode::FPHalfToFixedU64:
         // Half-precision
+        case IR::Opcode::FPAbs16:
+        case IR::Opcode::FPMulAdd16:
+        case IR::Opcode::FPNeg16:
+        case IR::Opcode::FPRecipEstimate16:
+        case IR::Opcode::FPRecipExponent16:
+        case IR::Opcode::FPRecipStepFused16:
+        case IR::Opcode::FPRoundInt16:
+        case IR::Opcode::FPRSqrtEstimate16:
+        case IR::Opcode::FPRSqrtStepFused16:
         case IR::Opcode::FPVectorAbs16:
         case IR::Opcode::FPVectorEqual16:
         case IR::Opcode::FPVectorMulAdd16:
@@ -82,6 +129,30 @@ bool ShouldTestInst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A
     }
 
     return true;
+}
+
+bool ShouldTestA32Inst(u32 instruction, u32 pc, bool is_thumb, bool is_last_inst, A32::ITState it_state = {}) {
+    const A32::LocationDescriptor location = A32::LocationDescriptor{pc, {}, {}}.SetTFlag(is_thumb).SetIT(it_state);
+    IR::Block block{location};
+    const bool should_continue = A32::TranslateSingleInstruction(block, location, instruction);
+
+    if (!should_continue && !is_last_inst) {
+        return false;
+    }
+
+    return ShouldTestInst(block);
+}
+
+bool ShouldTestA64Inst(u32 instruction, u64 pc, bool is_last_inst) {
+    const A64::LocationDescriptor location = A64::LocationDescriptor{pc, {}};
+    IR::Block block{location};
+    const bool should_continue = A64::TranslateSingleInstruction(block, location, instruction);
+
+    if (!should_continue && !is_last_inst) {
+        return false;
+    }
+
+    return ShouldTestInst(block);
 }
 
 u32 GenRandomArmInst(u32 pc, bool is_last_inst) {
@@ -144,7 +215,7 @@ u32 GenRandomArmInst(u32 pc, bool is_last_inst) {
             continue;
         }
 
-        if (ShouldTestInst(inst, pc, false, is_last_inst)) {
+        if (ShouldTestA32Inst(inst, pc, false, is_last_inst)) {
             return inst;
         }
     }
@@ -245,7 +316,7 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
         const u32 inst = instructions.generators[index].Generate();
         const bool is_four_bytes = (inst >> 16) != 0;
 
-        if (ShouldTestInst(is_four_bytes ? mcl::bit::swap_halves_32(inst) : inst, pc, true, is_last_inst, it_state)) {
+        if (ShouldTestA32Inst(is_four_bytes ? mcl::bit::swap_halves_32(inst) : inst, pc, true, is_last_inst, it_state)) {
             if (is_four_bytes)
                 return {static_cast<u16>(inst >> 16), static_cast<u16>(inst)};
             return {static_cast<u16>(inst)};
@@ -253,8 +324,65 @@ std::vector<u16> GenRandomThumbInst(u32 pc, bool is_last_inst, A32::ITState it_s
     }
 }
 
+u32 GenRandomA64Inst(u64 pc, bool is_last_inst) {
+    static const struct InstructionGeneratorInfo {
+        std::vector<InstructionGenerator> generators;
+        std::vector<InstructionGenerator> invalid;
+    } instructions = [] {
+        const std::vector<std::tuple<std::string, const char*>> list{
+#define INST(fn, name, bitstring) {#fn, bitstring},
+#include "dynarmic/frontend/A64/decoder/a64.inc"
+#undef INST
+        };
+
+        std::vector<InstructionGenerator> generators;
+        std::vector<InstructionGenerator> invalid;
+
+        // List of instructions not to test
+        const std::vector<std::string> do_not_test{
+            // Dynarmic and QEMU currently differ on how the exclusive monitor's address range works.
+            "STXR",
+            "STLXR",
+            "STXP",
+            "STLXP",
+            "LDXR",
+            "LDAXR",
+            "LDXP",
+            "LDAXP",
+            // Behaviour differs from QEMU
+            "MSR_reg",
+            "MSR_imm",
+            "MRS",
+        };
+
+        for (const auto& [fn, bitstring] : list) {
+            if (fn == "UnallocatedEncoding") {
+                continue;
+            }
+            if (std::find(do_not_test.begin(), do_not_test.end(), fn) != do_not_test.end()) {
+                invalid.emplace_back(InstructionGenerator{bitstring});
+                continue;
+            }
+            generators.emplace_back(InstructionGenerator{bitstring});
+        }
+        return InstructionGeneratorInfo{generators, invalid};
+    }();
+
+    while (true) {
+        const size_t index = RandInt<size_t>(0, instructions.generators.size() - 1);
+        const u32 inst = instructions.generators[index].Generate();
+
+        if (std::any_of(instructions.invalid.begin(), instructions.invalid.end(), [inst](const auto& invalid) { return invalid.Match(inst); })) {
+            continue;
+        }
+        if (ShouldTestA64Inst(inst, pc, is_last_inst)) {
+            return inst;
+        }
+    }
+}
+
 template<typename TestEnv>
-Dynarmic::A32::UserConfig GetUserConfig(TestEnv& testenv) {
+Dynarmic::A32::UserConfig GetA32UserConfig(TestEnv& testenv) {
     Dynarmic::A32::UserConfig user_config;
     user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     user_config.callbacks = &testenv;
@@ -262,14 +390,14 @@ Dynarmic::A32::UserConfig GetUserConfig(TestEnv& testenv) {
 }
 
 template<size_t num_jit_reruns = 1, typename TestEnv>
-static void RunTestInstance(Dynarmic::A32::Jit& jit,
-                            TestEnv& jit_env,
-                            const std::array<u32, 16>& regs,
-                            const std::array<u32, 64>& vecs,
-                            const std::vector<typename TestEnv::InstructionType>& instructions,
-                            const u32 cpsr,
-                            const u32 fpscr,
-                            const size_t ticks_left) {
+void RunTestInstance(Dynarmic::A32::Jit& jit,
+                     TestEnv& jit_env,
+                     const std::array<u32, 16>& regs,
+                     const std::array<u32, 64>& vecs,
+                     const std::vector<typename TestEnv::InstructionType>& instructions,
+                     const u32 cpsr,
+                     const u32 fpscr,
+                     const size_t ticks_left) {
     const u32 initial_pc = regs[15];
     const u32 num_words = initial_pc / sizeof(typename TestEnv::InstructionType);
     const u32 code_mem_size = num_words + static_cast<u32>(instructions.size());
@@ -294,37 +422,37 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
         jit.Run();
     }
 
-    fmt::print("instructions: ");
+    fmt::print("instructions:");
     for (auto instruction : instructions) {
         if constexpr (sizeof(decltype(instruction)) == 2) {
-            fmt::print("{:04x} ", instruction);
+            fmt::print(" {:04x}", instruction);
         } else {
-            fmt::print("{:08x} ", instruction);
+            fmt::print(" {:08x}", instruction);
         }
     }
     fmt::print("\n");
 
-    fmt::print("initial_regs: ");
+    fmt::print("initial_regs:");
     for (u32 i : regs) {
-        fmt::print("{:08x} ", i);
+        fmt::print(" {:08x}", i);
     }
     fmt::print("\n");
-    fmt::print("initial_vecs: ");
+    fmt::print("initial_vecs:");
     for (u32 i : vecs) {
-        fmt::print("{:08x} ", i);
+        fmt::print(" {:08x}", i);
     }
     fmt::print("\n");
     fmt::print("initial_cpsr: {:08x}\n", cpsr);
     fmt::print("initial_fpcr: {:08x}\n", fpscr);
 
-    fmt::print("final_regs: ");
+    fmt::print("final_regs:");
     for (u32 i : jit.Regs()) {
-        fmt::print("{:08x} ", i);
+        fmt::print(" {:08x}", i);
     }
     fmt::print("\n");
-    fmt::print("final_vecs: ");
+    fmt::print("final_vecs:");
     for (u32 i : jit.ExtRegs()) {
-        fmt::print("{:08x} ", i);
+        fmt::print(" {:08x}", i);
     }
     fmt::print("\n");
     fmt::print("final_cpsr: {:08x}\n", jit.Cpsr());
@@ -343,11 +471,104 @@ static void RunTestInstance(Dynarmic::A32::Jit& jit,
 
     fmt::print("===\n");
 }
+
+Dynarmic::A64::UserConfig GetA64UserConfig(A64TestEnv& jit_env) {
+    Dynarmic::A64::UserConfig jit_user_config{&jit_env};
+    jit_user_config.optimizations &= ~OptimizationFlag::FastDispatch;
+    // The below corresponds to the settings for qemu's aarch64_max_initfn
+    jit_user_config.dczid_el0 = 7;
+    jit_user_config.ctr_el0 = 0x80038003;
+    return jit_user_config;
+}
+
+template<size_t num_jit_reruns = 1>
+void RunTestInstance(Dynarmic::A64::Jit& jit,
+                     A64TestEnv& jit_env,
+                     const std::array<u64, 31>& regs,
+                     const std::array<std::array<u64, 2>, 32>& vecs,
+                     const std::vector<u32>& instructions,
+                     const u32 pstate,
+                     const u32 fpcr,
+                     const u64 initial_sp,
+                     const u64 start_address,
+                     const size_t ticks_left) {
+    jit.ClearCache();
+
+    for (size_t jit_rerun_count = 0; jit_rerun_count < num_jit_reruns; ++jit_rerun_count) {
+        jit_env.code_mem = instructions;
+        jit_env.code_mem.emplace_back(0x14000000);  // B .
+        jit_env.code_mem_start_address = start_address;
+        jit_env.modified_memory.clear();
+        jit_env.interrupts.clear();
+
+        jit.SetRegisters(regs);
+        jit.SetVectors(vecs);
+        jit.SetPC(start_address);
+        jit.SetSP(initial_sp);
+        jit.SetFpcr(fpcr);
+        jit.SetFpsr(0);
+        jit.SetPstate(pstate);
+        jit.ClearCache();
+
+        jit_env.ticks_left = ticks_left;
+        jit.Run();
+    }
+
+    fmt::print("instructions:");
+    for (u32 instruction : instructions) {
+        fmt::print(" {:08x}", instruction);
+    }
+    fmt::print("\n");
+
+    fmt::print("initial_regs:");
+    for (u64 i : regs) {
+        fmt::print(" {:016x}", i);
+    }
+    fmt::print("\n");
+    fmt::print("initial_vecs:");
+    for (auto i : vecs) {
+        fmt::print(" {:016x}:{:016x}", i[0], i[1]);
+    }
+    fmt::print("\n");
+    fmt::print("initial_sp: {:016x}\n", initial_sp);
+    fmt::print("initial_pstate: {:08x}\n", pstate);
+    fmt::print("initial_fpcr: {:08x}\n", fpcr);
+
+    fmt::print("final_regs:");
+    for (u64 i : jit.GetRegisters()) {
+        fmt::print(" {:016x}", i);
+    }
+    fmt::print("\n");
+    fmt::print("final_vecs:");
+    for (auto i : jit.GetVectors()) {
+        fmt::print(" {:016x}:{:016x}", i[0], i[1]);
+    }
+    fmt::print("\n");
+    fmt::print("final_sp: {:016x}\n", jit.GetSP());
+    fmt::print("final_pc: {:016x}\n", jit.GetPC());
+    fmt::print("final_pstate: {:08x}\n", jit.GetPstate());
+    fmt::print("final_fpcr: {:08x}\n", jit.GetFpcr());
+    fmt::print("final_qc : {}\n", FP::FPSR{jit.GetFpsr()}.QC());
+
+    fmt::print("mod_mem:");
+    for (auto [addr, value] : jit_env.modified_memory) {
+        fmt::print(" {:08x}:{:02x}", addr, value);
+    }
+    fmt::print("\n");
+
+    fmt::print("interrupts:\n");
+    for (const auto& i : jit_env.interrupts) {
+        std::puts(i.c_str());
+    }
+
+    fmt::print("===\n");
+}
+
 }  // Anonymous namespace
 
 void TestThumb(size_t num_instructions, size_t num_iterations) {
     ThumbTestEnv jit_env{};
-    Dynarmic::A32::Jit jit{GetUserConfig(jit_env)};
+    Dynarmic::A32::Jit jit{GetA32UserConfig(jit_env)};
 
     std::array<u32, 16> regs;
     std::array<u32, 64> ext_reg;
@@ -374,7 +595,7 @@ void TestThumb(size_t num_instructions, size_t num_iterations) {
 
 void TestArm(size_t num_instructions, size_t num_iterations) {
     ArmTestEnv jit_env{};
-    Dynarmic::A32::Jit jit{GetUserConfig(jit_env)};
+    Dynarmic::A32::Jit jit{GetA32UserConfig(jit_env)};
 
     std::array<u32, 16> regs;
     std::array<u32, 64> ext_reg;
@@ -394,19 +615,76 @@ void TestArm(size_t num_instructions, size_t num_iterations) {
         }
 
         regs[15] = start_address;
-        RunTestInstance(jit, jit_env, regs, ext_reg, instructions, cpsr, fpcr, 1);
+        RunTestInstance(jit, jit_env, regs, ext_reg, instructions, cpsr, fpcr, num_instructions);
     }
 }
 
-int main(int, char*[]) {
-    detail::g_rand_int_generator.seed(42069);
+void TestA64(size_t num_instructions, size_t num_iterations) {
+    A64TestEnv jit_env{};
+    Dynarmic::A64::Jit jit{GetA64UserConfig(jit_env)};
 
-    TestThumb(1, 100000);
-    TestArm(1, 100000);
-    TestThumb(5, 100000);
-    TestArm(5, 100000);
-    TestThumb(1024, 10000);
-    TestArm(1024, 10000);
+    std::array<u64, 31> regs;
+    std::array<std::array<u64, 2>, 32> vecs;
+    std::vector<u32> instructions;
+
+    for (size_t iteration = 0; iteration < num_iterations; ++iteration) {
+        std::generate(regs.begin(), regs.end(), [] { return RandInt<u64>(0, ~u64(0)); });
+        std::generate(vecs.begin(), vecs.end(), RandomVector);
+
+        const u32 start_address = 100;
+        const u32 pstate = (RandInt<u32>(0, 0xF) << 28);
+        const u32 fpcr = RandomFpcr();
+        const u64 initial_sp = RandInt<u64>(0x30'0000'0000, 0x40'0000'0000) * 4;
+
+        instructions.clear();
+        for (size_t i = 0; i < num_instructions; ++i) {
+            instructions.emplace_back(GenRandomA64Inst(static_cast<u32>(start_address + 4 * instructions.size()), i == num_instructions - 1));
+        }
+
+        RunTestInstance(jit, jit_env, regs, vecs, instructions, pstate, fpcr, initial_sp, start_address, num_instructions);
+    }
+}
+
+static std::optional<size_t> str2sz(char const* s) {
+    char* end = nullptr;
+    errno = 0;
+
+    const long l = std::strtol(s, &end, 10);
+    if (errno == ERANGE || l < 0) {
+        return std::nullopt;
+    }
+    if (*s == '\0' || *end != '\0') {
+        return std::nullopt;
+    }
+    return static_cast<size_t>(l);
+}
+
+int main(int argc, char* argv[]) {
+    if (argc != 5) {
+        fmt::print("Usage: {} <thumb|arm|a64> <seed> <instruction_count> <iteration_count>\n", argv[0]);
+    }
+
+    const auto seed = str2sz(argv[2]);
+    const auto instruction_count = str2sz(argv[3]);
+    const auto iterator_count = str2sz(argv[4]);
+
+    if (!seed || !instruction_count || !iterator_count) {
+        fmt::print("invalid numeric arguments\n");
+        return 1;
+    }
+
+    detail::g_rand_int_generator.seed(static_cast<std::mt19937::result_type>(*seed));
+
+    if (strcmp(argv[1], "thumb") == 0) {
+        TestThumb(*instruction_count, *iterator_count);
+    } else if (strcmp(argv[1], "arm") == 0) {
+        TestArm(*instruction_count, *iterator_count);
+    } else if (strcmp(argv[1], "a64") == 0) {
+        TestA64(*instruction_count, *iterator_count);
+    } else {
+        fmt::print("unrecognized instruction class\n");
+        return 1;
+    }
 
     return 0;
 }

@@ -38,6 +38,8 @@ enum class Opcode;
 
 namespace Dynarmic::Backend::Arm64 {
 
+struct EmitContext;
+
 using CodePtr = std::byte*;
 
 enum class LinkTarget {
@@ -47,21 +49,28 @@ enum class LinkTarget {
     ReadMemory16,
     ReadMemory32,
     ReadMemory64,
+    ReadMemory128,
     ExclusiveReadMemory8,
     ExclusiveReadMemory16,
     ExclusiveReadMemory32,
     ExclusiveReadMemory64,
+    ExclusiveReadMemory128,
     WriteMemory8,
     WriteMemory16,
     WriteMemory32,
     WriteMemory64,
+    WriteMemory128,
     ExclusiveWriteMemory8,
     ExclusiveWriteMemory16,
     ExclusiveWriteMemory32,
     ExclusiveWriteMemory64,
+    ExclusiveWriteMemory128,
     CallSVC,
     ExceptionRaised,
     InstructionSynchronizationBarrierRaised,
+    InstructionCacheOperationRaised,
+    DataCacheOperationRaised,
+    GetCNTPCT,
     AddTicks,
     GetTicksRemaining,
 };
@@ -83,23 +92,38 @@ struct EmittedBlockInfo {
 };
 
 struct EmitConfig {
+    OptimizationFlag optimizations;
+    bool HasOptimization(OptimizationFlag f) const { return (f & optimizations) != no_optimizations; }
+
     bool hook_isb;
+
+    // System registers
+    u64 cntfreq_el0;
+    u32 ctr_el0;
+    u32 dczid_el0;
+    const u64* tpidrro_el0;
+    u64* tpidr_el0;
+
+    // Timing
+    bool wall_clock_cntpct;
     bool enable_cycle_counting;
+
+    // Endianness
     bool always_little_endian;
 
+    // Frontend specific callbacks
     FP::FPCR (*descriptor_to_fpcr)(const IR::LocationDescriptor& descriptor);
+    oaknut::Label (*emit_cond)(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
+    void (*emit_condition_failed_terminal)(oaknut::CodeGenerator& code, EmitContext& ctx);
+    void (*emit_terminal)(oaknut::CodeGenerator& code, EmitContext& ctx);
 
+    // State offsets
     size_t state_nzcv_offset;
     size_t state_fpsr_offset;
 
+    // A32 specific
     std::array<std::shared_ptr<A32::Coprocessor>, 16> coprocessors{};
-
-    OptimizationFlag optimizations;
-
-    bool HasOptimization(OptimizationFlag f) const { return (f & optimizations) != no_optimizations; }
 };
-
-struct EmitContext;
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf);
 
@@ -108,7 +132,10 @@ void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);
 void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target);
 void EmitBlockLinkRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, const IR::LocationDescriptor& descriptor);
 oaknut::Label EmitA32Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
+oaknut::Label EmitA64Cond(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
+void EmitA64ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 
 }  // namespace Dynarmic::Backend::Arm64

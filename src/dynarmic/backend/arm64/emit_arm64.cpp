@@ -8,7 +8,6 @@
 #include <fmt/ostream.h>
 #include <oaknut/oaknut.hpp>
 
-#include "dynarmic/backend/arm64/a32_jitstate.h"
 #include "dynarmic/backend/arm64/abi.h"
 #include "dynarmic/backend/arm64/emit_context.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
@@ -40,7 +39,7 @@ template<>
 void EmitIR<IR::Opcode::CallHostFunction>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    ctx.reg_alloc.PrepareForCall(nullptr, args[1], args[2], args[3]);
+    ctx.reg_alloc.PrepareForCall(args[1], args[2], args[3]);
     code.MOV(Xscratch0, args[0].GetImmediateU64());
     code.BLR(Xscratch0);
 }
@@ -69,9 +68,34 @@ void EmitIR<IR::Opcode::GetGEFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, I
 }
 
 template<>
-void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
-    [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    if (ctx.reg_alloc.IsValueLive(inst)) {
+        return;
+    }
+
+    switch (args[0].GetType()) {
+    case IR::Type::U32: {
+        auto Wvalue = ctx.reg_alloc.ReadW(args[0]);
+        auto flags = ctx.reg_alloc.WriteFlags(inst);
+        RegAlloc::Realize(Wvalue, flags);
+
+        code.TST(*Wvalue, Wvalue);
+        break;
+    }
+    case IR::Type::U64: {
+        auto Xvalue = ctx.reg_alloc.ReadX(args[0]);
+        auto flags = ctx.reg_alloc.WriteFlags(inst);
+        RegAlloc::Realize(Xvalue, flags);
+
+        code.TST(*Xvalue, Xvalue);
+        break;
+    }
+    default:
+        ASSERT_FALSE("Invalid type for GetNZCVFromOp");
+        break;
+    }
 }
 
 template<>
@@ -164,10 +188,12 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
         ASSERT(!ctx.block.HasConditionFailedLocation());
     } else {
         ASSERT(ctx.block.HasConditionFailedLocation());
+        oaknut::Label pass;
 
-        oaknut::Label pass = EmitA32Cond(code, ctx, ctx.block.GetCondition());
+        pass = conf.emit_cond(code, ctx, ctx.block.GetCondition());
         EmitAddCycles(code, ctx, ctx.block.ConditionFailedCycleCount());
-        EmitA32ConditionFailedTerminal(code, ctx);
+        conf.emit_condition_failed_terminal(code, ctx);
+
         code.l(pass);
     }
 
@@ -205,7 +231,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     reg_alloc.AssertNoMoreUses();
 
     EmitAddCycles(code, ctx, block.CycleCount());
-    EmitA32Terminal(code, ctx);
+    conf.emit_terminal(code, ctx);
 
     ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
     return ebi;

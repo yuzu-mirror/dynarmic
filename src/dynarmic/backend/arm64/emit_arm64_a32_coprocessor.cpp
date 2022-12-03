@@ -24,7 +24,7 @@ static void EmitCoprocessorException() {
 }
 
 static void CallCoprocCallback(oaknut::CodeGenerator& code, EmitContext& ctx, A32::Coprocessor::Callback callback, IR::Inst* inst = nullptr, std::optional<Argument::copyable_reference> arg0 = {}, std::optional<Argument::copyable_reference> arg1 = {}) {
-    ctx.reg_alloc.PrepareForCall(inst, {}, arg0, arg1);
+    ctx.reg_alloc.PrepareForCall({}, arg0, arg1);
 
     if (callback.user_arg) {
         code.MOV(X0, reinterpret_cast<u64>(*callback.user_arg));
@@ -32,6 +32,10 @@ static void CallCoprocCallback(oaknut::CodeGenerator& code, EmitContext& ctx, A3
 
     code.MOV(Xscratch0, reinterpret_cast<u64>(callback.function));
     code.BLR(Xscratch0);
+
+    if (inst) {
+        ctx.reg_alloc.DefineAsRegister(inst, X0);
+    }
 }
 
 template<>

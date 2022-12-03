@@ -3,14 +3,31 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include <mcl/bit_cast.hpp>
+#include <mcl/mp/metavalue/lift_value.hpp>
+#include <mcl/mp/typelist/cartesian_product.hpp>
+#include <mcl/mp/typelist/get.hpp>
+#include <mcl/mp/typelist/lift_sequence.hpp>
+#include <mcl/mp/typelist/list.hpp>
+#include <mcl/mp/typelist/lower_to_tuple.hpp>
+#include <mcl/type_traits/function_info.hpp>
+#include <mcl/type_traits/integer_of_size.hpp>
 #include <oaknut/oaknut.hpp>
 
 #include "dynarmic/backend/arm64/a32_jitstate.h"
+#include "dynarmic/backend/arm64/a64_jitstate.h"
 #include "dynarmic/backend/arm64/abi.h"
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/emit_context.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
+#include "dynarmic/common/cast_util.h"
+#include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/fp/fpsr.h"
+#include "dynarmic/common/fp/info.h"
+#include "dynarmic/common/fp/op.h"
+#include "dynarmic/common/fp/rounding_mode.h"
+#include "dynarmic/common/lut_from_list.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
 #include "dynarmic/ir/opcodes.h"
@@ -18,6 +35,15 @@
 namespace Dynarmic::Backend::Arm64 {
 
 using namespace oaknut::util;
+namespace mp = mcl::mp;
+
+using A64FullVectorWidth = std::integral_constant<size_t, 128>;
+
+// Array alias that always sizes itself according to the given type T
+// relative to the size of a vector register. e.g. T = u32 would result
+// in a std::array<u32, 4>.
+template<typename T>
+using VectorArray = std::array<T, A64FullVectorWidth::value / mcl::bitsizeof<T>>;
 
 template<typename EmitFn>
 static void MaybeStandardFPSCRValue(oaknut::CodeGenerator& code, EmitContext& ctx, bool fpcr_controlled, EmitFn emit) {
@@ -232,12 +258,47 @@ void EmitToFixed(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) 
     });
 }
 
+template<typename Lambda>
+static void EmitTwoOpFallbackWithoutRegAlloc(oaknut::CodeGenerator& code, EmitContext& ctx, oaknut::QReg Qresult, oaknut::QReg Qarg1, Lambda lambda, bool fpcr_controlled) {
+    const auto fn = static_cast<mcl::equivalent_function_type<Lambda>*>(lambda);
+
+    const u32 fpcr = ctx.FPCR(fpcr_controlled).Value();
+    constexpr u64 stack_size = sizeof(u64) * 4;  // sizeof(u128) * 2
+
+    ABI_PushRegisters(code, ABI_CALLER_SAVE & ~(1ull << Qresult.index()), stack_size);
+
+    code.MOV(Xscratch0, mcl::bit_cast<u64>(fn));
+    code.ADD(X0, SP, 0 * 16);
+    code.ADD(X1, SP, 1 * 16);
+    code.MOV(X2, fpcr);
+    code.ADD(X3, Xstate, ctx.conf.state_fpsr_offset);
+    code.STR(Qarg1, X1);
+    code.BLR(Xscratch0);
+    code.LDR(Qresult, SP);
+
+    ABI_PopRegisters(code, ABI_CALLER_SAVE & ~(1ull << Qresult.index()), stack_size);
+}
+
+template<size_t fpcr_controlled_arg_index = 1, typename Lambda>
+static void EmitTwoOpFallback(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, Lambda lambda) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qarg1 = ctx.reg_alloc.ReadQ(args[0]);
+    auto Qresult = ctx.reg_alloc.WriteQ(inst);
+    RegAlloc::Realize(Qarg1, Qresult);
+    ctx.reg_alloc.SpillFlags();
+    ctx.fpsr.Spill();
+
+    const bool fpcr_controlled = args[fpcr_controlled_arg_index].GetImmediateU1();
+    EmitTwoOpFallbackWithoutRegAlloc(code, ctx, Qresult, Qarg1, lambda, fpcr_controlled);
+}
+
 template<>
 void EmitIR<IR::Opcode::FPVectorAbs16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto Qresult = ctx.reg_alloc.ReadWriteQ(args[0], inst);
+    RegAlloc::Realize(Qresult);
+
+    code.BIC(Qresult->H8(), 0b10000000, LSL, 8);
 }
 
 template<>
@@ -486,10 +547,35 @@ void EmitIR<IR::Opcode::FPVectorRecipStepFused64>(oaknut::CodeGenerator& code, E
 
 template<>
 void EmitIR<IR::Opcode::FPVectorRoundInt16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    const auto rounding = static_cast<FP::RoundingMode>(inst->GetArg(1).GetU8());
+    const bool exact = inst->GetArg(2).GetU1();
+
+    using rounding_list = mp::list<
+        mp::lift_value<FP::RoundingMode::ToNearest_TieEven>,
+        mp::lift_value<FP::RoundingMode::TowardsPlusInfinity>,
+        mp::lift_value<FP::RoundingMode::TowardsMinusInfinity>,
+        mp::lift_value<FP::RoundingMode::TowardsZero>,
+        mp::lift_value<FP::RoundingMode::ToNearest_TieAwayFromZero>>;
+    using exact_list = mp::list<std::true_type, std::false_type>;
+
+    static const auto lut = Common::GenerateLookupTableFromList(
+        []<typename I>(I) {
+            using FPT = u16;
+            return std::pair{
+                mp::lower_to_tuple_v<I>,
+                Common::FptrCast(
+                    [](VectorArray<FPT>& output, const VectorArray<FPT>& input, FP::FPCR fpcr, FP::FPSR& fpsr) {
+                        constexpr FP::RoundingMode rounding_mode = mp::get<0, I>::value;
+                        constexpr bool exact = mp::get<1, I>::value;
+
+                        for (size_t i = 0; i < output.size(); ++i) {
+                            output[i] = static_cast<FPT>(FP::FPRoundInt<FPT>(input[i], fpcr, rounding_mode, exact, fpsr));
+                        }
+                    })};
+        },
+        mp::cartesian_product<rounding_list, exact_list>{});
+
+    EmitTwoOpFallback<3>(code, ctx, inst, lut.at(std::make_tuple(rounding, exact)));
 }
 
 template<>

@@ -271,11 +271,7 @@ public:
         }
     }
 
-    void PrepareForCall(IR::Inst* result = nullptr,
-                        std::optional<Argument::copyable_reference> arg0 = {},
-                        std::optional<Argument::copyable_reference> arg1 = {},
-                        std::optional<Argument::copyable_reference> arg2 = {},
-                        std::optional<Argument::copyable_reference> arg3 = {});
+    void PrepareForCall(std::optional<Argument::copyable_reference> arg0 = {}, std::optional<Argument::copyable_reference> arg1 = {}, std::optional<Argument::copyable_reference> arg2 = {}, std::optional<Argument::copyable_reference> arg3 = {});
 
     void DefineAsExisting(IR::Inst* inst, Argument& arg);
     void DefineAsRegister(IR::Inst* inst, oaknut::Reg reg);
