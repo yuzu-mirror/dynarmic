@@ -73,6 +73,7 @@ static void EmitExclusiveWriteMemory(oaknut::CodeGenerator& code, EmitContext& c
     if (ordered) {
         code.DMB(oaknut::BarrierOp::ISH);
     }
+    code.MOV(W0, 1);
     code.LDRB(Wscratch0, Xstate, offsetof(A32JitState, exclusive_state));
     code.CBZ(Wscratch0, end);
     code.STRB(WZR, Xstate, offsetof(A32JitState, exclusive_state));
