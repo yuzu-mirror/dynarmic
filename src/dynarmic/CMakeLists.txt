@@ -386,6 +386,8 @@ elseif(ARCHITECTURE STREQUAL "arm64")
         backend/arm64/emit_arm64_cryptography.cpp
         backend/arm64/emit_arm64_data_processing.cpp
         backend/arm64/emit_arm64_floating_point.cpp
+        backend/arm64/emit_arm64_memory.cpp
+        backend/arm64/emit_arm64_memory.h
         backend/arm64/emit_arm64_packed.cpp
         backend/arm64/emit_arm64_saturation.cpp
         backend/arm64/emit_arm64_vector.cpp

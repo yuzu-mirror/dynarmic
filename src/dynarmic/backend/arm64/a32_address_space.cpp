@@ -288,6 +288,7 @@ EmitConfig A32AddressSpace::GetEmitConfig() {
 
         .state_nzcv_offset = offsetof(A32JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A32JitState, fpsr),
+        .state_exclusive_state_offset = offsetof(A32JitState, exclusive_state),
 
         .coprocessors = conf.coprocessors,
     };

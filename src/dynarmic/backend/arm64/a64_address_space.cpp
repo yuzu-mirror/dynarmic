@@ -408,6 +408,7 @@ EmitConfig A64AddressSpace::GetEmitConfig() {
 
         .state_nzcv_offset = offsetof(A64JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A64JitState, fpsr),
+        .state_exclusive_state_offset = offsetof(A64JitState, exclusive_state),
 
         .coprocessors{},
     };

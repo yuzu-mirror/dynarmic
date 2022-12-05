@@ -120,6 +120,7 @@ struct EmitConfig {
     // State offsets
     size_t state_nzcv_offset;
     size_t state_fpsr_offset;
+    size_t state_exclusive_state_offset;
 
     // A32 specific
     std::array<std::shared_ptr<A32::Coprocessor>, 16> coprocessors{};
