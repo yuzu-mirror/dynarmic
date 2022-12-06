@@ -27,102 +27,102 @@ void EmitIR<IR::Opcode::A64ClearExclusive>(oaknut::CodeGenerator& code, EmitCont
 
 template<>
 void EmitIR<IR::Opcode::A64ReadMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory8);
+    EmitReadMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ReadMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory16);
+    EmitReadMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ReadMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory32);
+    EmitReadMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ReadMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory64);
+    EmitReadMemory<64>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ReadMemory128>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory128(code, ctx, inst, LinkTarget::ReadMemory128);
+    EmitReadMemory<128>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveReadMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory8);
+    EmitExclusiveReadMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveReadMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory16);
+    EmitExclusiveReadMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveReadMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory32);
+    EmitExclusiveReadMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveReadMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory64);
+    EmitExclusiveReadMemory<64>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveReadMemory128>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory128(code, ctx, inst, LinkTarget::ExclusiveReadMemory128);
+    EmitExclusiveReadMemory<128>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64WriteMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory8);
+    EmitWriteMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64WriteMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory16);
+    EmitWriteMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64WriteMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory32);
+    EmitWriteMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64WriteMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory64);
+    EmitWriteMemory<64>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64WriteMemory128>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory128);
+    EmitWriteMemory<128>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveWriteMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory8);
+    EmitExclusiveWriteMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveWriteMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory16);
+    EmitExclusiveWriteMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveWriteMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory32);
+    EmitExclusiveWriteMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveWriteMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory64);
+    EmitExclusiveWriteMemory<64>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A64ExclusiveWriteMemory128>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory128);
+    EmitExclusiveWriteMemory<128>(code, ctx, inst);
 }
 
 }  // namespace Dynarmic::Backend::Arm64

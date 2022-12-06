@@ -26,82 +26,82 @@ void EmitIR<IR::Opcode::A32ClearExclusive>(oaknut::CodeGenerator& code, EmitCont
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory8);
+    EmitReadMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory16);
+    EmitReadMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory32);
+    EmitReadMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ReadMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitReadMemory(code, ctx, inst, LinkTarget::ReadMemory64);
+    EmitReadMemory<64>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveReadMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory8);
+    EmitExclusiveReadMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveReadMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory16);
+    EmitExclusiveReadMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveReadMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory32);
+    EmitExclusiveReadMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveReadMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveReadMemory(code, ctx, inst, LinkTarget::ExclusiveReadMemory64);
+    EmitExclusiveReadMemory<64>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory8);
+    EmitWriteMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory16);
+    EmitWriteMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory32);
+    EmitWriteMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32WriteMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitWriteMemory(code, ctx, inst, LinkTarget::WriteMemory64);
+    EmitWriteMemory<64>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveWriteMemory8>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory8);
+    EmitExclusiveWriteMemory<8>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveWriteMemory16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory16);
+    EmitExclusiveWriteMemory<16>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveWriteMemory32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory32);
+    EmitExclusiveWriteMemory<32>(code, ctx, inst);
 }
 
 template<>
 void EmitIR<IR::Opcode::A32ExclusiveWriteMemory64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    EmitExclusiveWriteMemory(code, ctx, inst, LinkTarget::ExclusiveWriteMemory64);
+    EmitExclusiveWriteMemory<64>(code, ctx, inst);
 }
 
 }  // namespace Dynarmic::Backend::Arm64
