@@ -84,7 +84,7 @@ if (("A32" IN_LIST DYNARMIC_FRONTENDS) AND ("A64" IN_LIST DYNARMIC_FRONTENDS))
     target_compile_definitions(dynarmic_print_info PRIVATE FMT_USE_USER_DEFINED_LITERALS=1)
 endif()
 
-if ("A32" IN_LIST DYNARMIC_FRONTENDS)
+if (("A32" IN_LIST DYNARMIC_FRONTENDS) AND ("A64" IN_LIST DYNARMIC_FRONTENDS))
     add_executable(dynarmic_test_generator
         fuzz_util.cpp
         fuzz_util.h
