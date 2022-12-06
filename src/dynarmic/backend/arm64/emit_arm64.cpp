@@ -180,7 +180,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 
     FpsrManager fpsr_manager{code, conf.state_fpsr_offset};
     RegAlloc reg_alloc{code, fpsr_manager, GPR_ORDER, FPR_ORDER};
-    EmitContext ctx{block, reg_alloc, conf, ebi, fpsr_manager};
+    EmitContext ctx{block, reg_alloc, conf, ebi, fpsr_manager, {}};
 
     ebi.entry_point = code.ptr<CodePtr>();
 
@@ -232,6 +232,12 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 
     EmitAddCycles(code, ctx, block.CycleCount());
     conf.emit_terminal(code, ctx);
+    code.BRK(0);
+
+    for (const auto& deferred_emit : ctx.deferred_emits) {
+        deferred_emit();
+    }
+    code.BRK(0);
 
     ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
     return ebi;

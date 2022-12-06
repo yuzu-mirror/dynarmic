@@ -5,6 +5,12 @@
 
 #pragma once
 
+#include <functional>
+#include <memory>
+#include <vector>
+
+#include <oaknut/oaknut.hpp>
+
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
 #include "dynarmic/common/fp/fpcr.h"
@@ -19,12 +25,20 @@ namespace Dynarmic::Backend::Arm64 {
 struct EmitConfig;
 class FpsrManager;
 
+using SharedLabel = std::shared_ptr<oaknut::Label>;
+
+inline SharedLabel GenSharedLabel() {
+    return std::make_shared<oaknut::Label>();
+}
+
 struct EmitContext {
     IR::Block& block;
     RegAlloc& reg_alloc;
     const EmitConfig& conf;
     EmittedBlockInfo& ebi;
     FpsrManager& fpsr;
+
+    std::vector<std::function<void()>> deferred_emits;
 
     FP::FPCR FPCR(bool fpcr_controlled = true) const {
         const FP::FPCR fpcr = conf.descriptor_to_fpcr(block.Location());
