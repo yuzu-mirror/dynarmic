@@ -396,6 +396,14 @@ EmitConfig A64AddressSpace::GetEmitConfig() {
         .tpidrro_el0 = conf.tpidrro_el0,
         .tpidr_el0 = conf.tpidr_el0,
 
+        .page_table_pointer = mcl::bit_cast<u64>(conf.page_table),
+        .page_table_address_space_bits = conf.page_table_address_space_bits,
+        .page_table_pointer_mask_bits = conf.page_table_pointer_mask_bits,
+        .silently_mirror_page_table = conf.silently_mirror_page_table,
+        .absolute_offset_page_table = conf.absolute_offset_page_table,
+        .detect_misaligned_access_via_page_table = conf.detect_misaligned_access_via_page_table,
+        .only_detect_misalignment_via_page_table_on_page_boundary = conf.only_detect_misalignment_via_page_table_on_page_boundary,
+
         .wall_clock_cntpct = conf.wall_clock_cntpct,
         .enable_cycle_counting = conf.enable_cycle_counting,
 

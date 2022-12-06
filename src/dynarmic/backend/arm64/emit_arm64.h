@@ -104,6 +104,15 @@ struct EmitConfig {
     const u64* tpidrro_el0;
     u64* tpidr_el0;
 
+    // Page table
+    u64 page_table_pointer;
+    size_t page_table_address_space_bits;
+    int page_table_pointer_mask_bits;
+    bool silently_mirror_page_table;
+    bool absolute_offset_page_table;
+    u8 detect_misaligned_access_via_page_table;
+    bool only_detect_misalignment_via_page_table_on_page_boundary;
+
     // Timing
     bool wall_clock_cntpct;
     bool enable_cycle_counting;
