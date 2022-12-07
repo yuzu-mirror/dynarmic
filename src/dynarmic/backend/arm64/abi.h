@@ -15,6 +15,8 @@ namespace Dynarmic::Backend::Arm64 {
 constexpr oaknut::XReg Xstate{28};
 constexpr oaknut::XReg Xhalt{27};
 constexpr oaknut::XReg Xticks{26};
+constexpr oaknut::XReg Xfastmem{25};
+constexpr oaknut::XReg Xpagetable{24};
 
 constexpr oaknut::XReg Xscratch0{16}, Xscratch1{17};
 constexpr oaknut::WReg Wscratch0{16}, Wscratch1{17};
@@ -41,7 +43,7 @@ constexpr auto Rscratch1() {
     }
 }
 
-constexpr std::initializer_list<int> GPR_ORDER{19, 20, 21, 22, 23, 24, 25, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8};
+constexpr std::initializer_list<int> GPR_ORDER{19, 20, 21, 22, 23, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8};
 constexpr std::initializer_list<int> FPR_ORDER{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 using RegisterList = u64;
