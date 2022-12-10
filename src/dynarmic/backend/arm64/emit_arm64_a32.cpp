@@ -14,6 +14,7 @@
 #include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
 #include "dynarmic/frontend/A32/a32_types.h"
+#include "dynarmic/interface/halt_reason.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
 #include "dynarmic/ir/opcodes.h"
@@ -142,6 +143,22 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx) {
 void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx) {
     const A32::LocationDescriptor location{ctx.block.Location()};
     EmitA32Terminal(code, ctx, IR::Term::LinkBlock{ctx.block.ConditionFailedLocation()}, location.SetSingleStepping(false), location.SingleStepping());
+}
+
+void EmitA32CheckMemoryAbort(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, oaknut::Label& end) {
+    if (!ctx.conf.check_halt_on_memory_access) {
+        return;
+    }
+
+    const A32::LocationDescriptor current_location{IR::LocationDescriptor{inst->GetArg(0).GetU64()}};
+
+    code.LDAR(Xscratch0, Xhalt);
+    code.TST(Xscratch0, static_cast<u32>(HaltReason::MemoryAbort));
+    code.B(EQ, end);
+    EmitSetUpperLocationDescriptor(code, ctx, current_location, ctx.block.Location());
+    code.MOV(Wscratch0, current_location.PC());
+    code.STR(Wscratch0, Xstate, offsetof(A32JitState, regs) + sizeof(u32) * 15);
+    EmitRelocation(code, ctx, LinkTarget::ReturnFromRunCode);
 }
 
 template<>

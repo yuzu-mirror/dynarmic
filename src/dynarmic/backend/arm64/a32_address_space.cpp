@@ -276,6 +276,8 @@ EmitConfig A32AddressSpace::GetEmitConfig() {
         .tpidrro_el0{},
         .tpidr_el0{},
 
+        .check_halt_on_memory_access = conf.check_halt_on_memory_access,
+
         .page_table_pointer = mcl::bit_cast<u64>(conf.page_table),
         .page_table_address_space_bits = 32,
         .page_table_pointer_mask_bits = conf.page_table_pointer_mask_bits,
@@ -293,6 +295,7 @@ EmitConfig A32AddressSpace::GetEmitConfig() {
         .emit_cond = EmitA32Cond,
         .emit_condition_failed_terminal = EmitA32ConditionFailedTerminal,
         .emit_terminal = EmitA32Terminal,
+        .emit_check_memory_abort = EmitA32CheckMemoryAbort,
 
         .state_nzcv_offset = offsetof(A32JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A32JitState, fpsr),

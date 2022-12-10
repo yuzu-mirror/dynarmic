@@ -396,6 +396,8 @@ EmitConfig A64AddressSpace::GetEmitConfig() {
         .tpidrro_el0 = conf.tpidrro_el0,
         .tpidr_el0 = conf.tpidr_el0,
 
+        .check_halt_on_memory_access = conf.check_halt_on_memory_access,
+
         .page_table_pointer = mcl::bit_cast<u64>(conf.page_table),
         .page_table_address_space_bits = conf.page_table_address_space_bits,
         .page_table_pointer_mask_bits = conf.page_table_pointer_mask_bits,
@@ -413,6 +415,7 @@ EmitConfig A64AddressSpace::GetEmitConfig() {
         .emit_cond = EmitA64Cond,
         .emit_condition_failed_terminal = EmitA64ConditionFailedTerminal,
         .emit_terminal = EmitA64Terminal,
+        .emit_check_memory_abort = EmitA64CheckMemoryAbort,
 
         .state_nzcv_offset = offsetof(A64JitState, cpsr_nzcv),
         .state_fpsr_offset = offsetof(A64JitState, fpsr),

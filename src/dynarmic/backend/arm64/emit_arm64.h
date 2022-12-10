@@ -104,6 +104,9 @@ struct EmitConfig {
     const u64* tpidrro_el0;
     u64* tpidr_el0;
 
+    // Memory
+    bool check_halt_on_memory_access;
+
     // Page table
     u64 page_table_pointer;
     size_t page_table_address_space_bits;
@@ -125,6 +128,7 @@ struct EmitConfig {
     oaknut::Label (*emit_cond)(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Cond cond);
     void (*emit_condition_failed_terminal)(oaknut::CodeGenerator& code, EmitContext& ctx);
     void (*emit_terminal)(oaknut::CodeGenerator& code, EmitContext& ctx);
+    void (*emit_check_memory_abort)(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, oaknut::Label& end);
 
     // State offsets
     size_t state_nzcv_offset;
@@ -147,5 +151,7 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 void EmitA32ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
 void EmitA64ConditionFailedTerminal(oaknut::CodeGenerator& code, EmitContext& ctx);
+void EmitA32CheckMemoryAbort(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, oaknut::Label& end);
+void EmitA64CheckMemoryAbort(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst, oaknut::Label& end);
 
 }  // namespace Dynarmic::Backend::Arm64
