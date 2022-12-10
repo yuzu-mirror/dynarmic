@@ -19,6 +19,7 @@ jobs:
       - name: Install build dependencies
         if: ${{matrix.os == 'ubuntu-latest'}}
         run: >
+          sudo apt-get update &&
           sudo apt-get install
           gcc-10-aarch64-linux-gnu
           g++-10-aarch64-linux-gnu
