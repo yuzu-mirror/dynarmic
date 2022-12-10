@@ -42,6 +42,35 @@ static void* EmitCallTrampoline(oaknut::CodeGenerator& code, T* this_) {
     return target;
 }
 
+template<auto mfp, typename T>
+static void* EmitWrappedReadCallTrampoline(oaknut::CodeGenerator& code, T* this_) {
+    using namespace oaknut::util;
+
+    const auto info = Devirtualize<mfp>(this_);
+
+    oaknut::Label l_addr, l_this;
+
+    constexpr u64 save_regs = ABI_CALLER_SAVE & ~ToRegList(Xscratch0);
+
+    void* target = code.ptr<void*>();
+    ABI_PushRegisters(code, save_regs, 0);
+    code.LDR(X0, l_this);
+    code.LDR(X1, Xscratch0);
+    code.LDR(Xscratch0, l_addr);
+    code.BLR(Xscratch0);
+    code.MOV(Xscratch0, X0);
+    ABI_PopRegisters(code, save_regs, 0);
+    code.RET();
+
+    code.align(8);
+    code.l(l_this);
+    code.dx(info.this_ptr);
+    code.l(l_addr);
+    code.dx(info.fn_ptr);
+
+    return target;
+}
+
 template<auto callback, typename T>
 static void* EmitExclusiveReadCallTrampoline(oaknut::CodeGenerator& code, const A32::UserConfig& conf) {
     using namespace oaknut::util;
@@ -64,6 +93,35 @@ static void* EmitExclusiveReadCallTrampoline(oaknut::CodeGenerator& code, const 
     code.dx(mcl::bit_cast<u64>(&conf));
     code.l(l_addr);
     code.dx(mcl::bit_cast<u64>(Common::FptrCast(fn)));
+
+    return target;
+}
+
+template<auto mfp, typename T>
+static void* EmitWrappedWriteCallTrampoline(oaknut::CodeGenerator& code, T* this_) {
+    using namespace oaknut::util;
+
+    const auto info = Devirtualize<mfp>(this_);
+
+    oaknut::Label l_addr, l_this;
+
+    constexpr u64 save_regs = ABI_CALLER_SAVE;
+
+    void* target = code.ptr<void*>();
+    ABI_PushRegisters(code, save_regs, 0);
+    code.LDR(X0, l_this);
+    code.LDR(X1, Xscratch0);
+    code.LDR(X2, Xscratch1);
+    code.LDR(Xscratch0, l_addr);
+    code.BLR(Xscratch0);
+    ABI_PopRegisters(code, save_regs, 0);
+    code.RET();
+
+    code.align(8);
+    code.l(l_this);
+    code.dx(info.this_ptr);
+    code.l(l_addr);
+    code.dx(info.fn_ptr);
 
     return target;
 }
@@ -130,6 +188,10 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.read_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead16>(code, conf.callbacks);
     prelude_info.read_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead32>(code, conf.callbacks);
     prelude_info.read_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead64>(code, conf.callbacks);
+    prelude_info.wrapped_read_memory_8 = EmitWrappedReadCallTrampoline<&A32::UserCallbacks::MemoryRead8>(code, conf.callbacks);
+    prelude_info.wrapped_read_memory_16 = EmitWrappedReadCallTrampoline<&A32::UserCallbacks::MemoryRead16>(code, conf.callbacks);
+    prelude_info.wrapped_read_memory_32 = EmitWrappedReadCallTrampoline<&A32::UserCallbacks::MemoryRead32>(code, conf.callbacks);
+    prelude_info.wrapped_read_memory_64 = EmitWrappedReadCallTrampoline<&A32::UserCallbacks::MemoryRead64>(code, conf.callbacks);
     prelude_info.exclusive_read_memory_8 = EmitExclusiveReadCallTrampoline<&A32::UserCallbacks::MemoryRead8, u8>(code, conf);
     prelude_info.exclusive_read_memory_16 = EmitExclusiveReadCallTrampoline<&A32::UserCallbacks::MemoryRead16, u16>(code, conf);
     prelude_info.exclusive_read_memory_32 = EmitExclusiveReadCallTrampoline<&A32::UserCallbacks::MemoryRead32, u32>(code, conf);
@@ -138,6 +200,10 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.write_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite16>(code, conf.callbacks);
     prelude_info.write_memory_32 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite32>(code, conf.callbacks);
     prelude_info.write_memory_64 = EmitCallTrampoline<&A32::UserCallbacks::MemoryWrite64>(code, conf.callbacks);
+    prelude_info.wrapped_write_memory_8 = EmitWrappedWriteCallTrampoline<&A32::UserCallbacks::MemoryWrite8>(code, conf.callbacks);
+    prelude_info.wrapped_write_memory_16 = EmitWrappedWriteCallTrampoline<&A32::UserCallbacks::MemoryWrite16>(code, conf.callbacks);
+    prelude_info.wrapped_write_memory_32 = EmitWrappedWriteCallTrampoline<&A32::UserCallbacks::MemoryWrite32>(code, conf.callbacks);
+    prelude_info.wrapped_write_memory_64 = EmitWrappedWriteCallTrampoline<&A32::UserCallbacks::MemoryWrite64>(code, conf.callbacks);
     prelude_info.exclusive_write_memory_8 = EmitExclusiveWriteCallTrampoline<&A32::UserCallbacks::MemoryWriteExclusive8, u8>(code, conf);
     prelude_info.exclusive_write_memory_16 = EmitExclusiveWriteCallTrampoline<&A32::UserCallbacks::MemoryWriteExclusive16, u16>(code, conf);
     prelude_info.exclusive_write_memory_32 = EmitExclusiveWriteCallTrampoline<&A32::UserCallbacks::MemoryWriteExclusive32, u32>(code, conf);

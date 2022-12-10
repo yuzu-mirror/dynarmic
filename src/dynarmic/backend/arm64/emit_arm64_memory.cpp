@@ -62,6 +62,38 @@ LinkTarget WriteMemoryLinkTarget(size_t bitsize) {
     UNREACHABLE();
 }
 
+LinkTarget WrappedReadMemoryLinkTarget(size_t bitsize) {
+    switch (bitsize) {
+    case 8:
+        return LinkTarget::WrappedReadMemory8;
+    case 16:
+        return LinkTarget::WrappedReadMemory16;
+    case 32:
+        return LinkTarget::WrappedReadMemory32;
+    case 64:
+        return LinkTarget::WrappedReadMemory64;
+    case 128:
+        return LinkTarget::WrappedReadMemory128;
+    }
+    UNREACHABLE();
+}
+
+LinkTarget WrappedWriteMemoryLinkTarget(size_t bitsize) {
+    switch (bitsize) {
+    case 8:
+        return LinkTarget::WrappedWriteMemory8;
+    case 16:
+        return LinkTarget::WrappedWriteMemory16;
+    case 32:
+        return LinkTarget::WrappedWriteMemory32;
+    case 64:
+        return LinkTarget::WrappedWriteMemory64;
+    case 128:
+        return LinkTarget::WrappedWriteMemory128;
+    }
+    UNREACHABLE();
+}
+
 LinkTarget ExclusiveReadMemoryLinkTarget(size_t bitsize) {
     switch (bitsize) {
     case 8:
@@ -336,20 +368,17 @@ void InlinePageTableEmitReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx
     EmitMemoryLdr<bitsize>(code, Rvalue->index(), Xbase, Xoffset, ordered);
 
     ctx.deferred_emits.emplace_back([&code, &ctx, inst, Xaddr = *Xaddr, Rvalue = *Rvalue, ordered, fallback, end] {
-        const u64 save_regs = ABI_CALLER_SAVE & ~ToRegList(Rvalue);
         code.l(*fallback);
-        ABI_PushRegisters(code, save_regs, 0);
-        code.MOV(X1, Xaddr);
-        EmitRelocation(code, ctx, ReadMemoryLinkTarget(bitsize));
+        code.MOV(Xscratch0, Xaddr);
+        EmitRelocation(code, ctx, WrappedReadMemoryLinkTarget(bitsize));
         if (ordered) {
             code.DMB(oaknut::BarrierOp::ISH);
         }
         if constexpr (bitsize == 128) {
             code.MOV(Rvalue.B16(), Q0.B16());
         } else {
-            code.MOV(Rvalue.toX(), X0);
+            code.MOV(Rvalue.toX(), Xscratch0);
         }
-        ABI_PopRegisters(code, save_regs, 0);
         ctx.conf.emit_check_memory_abort(code, ctx, inst, *end);
         code.B(*end);
     });
@@ -379,26 +408,21 @@ void InlinePageTableEmitWriteMemory(oaknut::CodeGenerator& code, EmitContext& ct
     EmitMemoryStr<bitsize>(code, Rvalue->index(), Xbase, Xoffset, ordered);
 
     ctx.deferred_emits.emplace_back([&code, &ctx, inst, Xaddr = *Xaddr, Rvalue = *Rvalue, ordered, fallback, end] {
-        const u64 save_regs = ABI_CALLER_SAVE;
         code.l(*fallback);
-        ABI_PushRegisters(code, save_regs, 0);
         if constexpr (bitsize == 128) {
-            code.MOV(X1, Xaddr);
+            code.MOV(Xscratch0, Xaddr);
             code.MOV(Q0.B16(), Rvalue.B16());
         } else {
             code.MOV(Xscratch0, Xaddr);
             code.MOV(Xscratch1, Rvalue.toX());
-            code.MOV(X1, Xscratch0);
-            code.MOV(X2, Xscratch1);
         }
         if (ordered) {
             code.DMB(oaknut::BarrierOp::ISH);
         }
-        EmitRelocation(code, ctx, WriteMemoryLinkTarget(bitsize));
+        EmitRelocation(code, ctx, WrappedWriteMemoryLinkTarget(bitsize));
         if (ordered) {
             code.DMB(oaknut::BarrierOp::ISH);
         }
-        ABI_PopRegisters(code, save_regs, 0);
         ctx.conf.emit_check_memory_abort(code, ctx, inst, *end);
         code.B(*end);
     });

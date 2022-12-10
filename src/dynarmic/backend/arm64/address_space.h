@@ -61,6 +61,11 @@ protected:
         void* read_memory_32;
         void* read_memory_64;
         void* read_memory_128;
+        void* wrapped_read_memory_8;
+        void* wrapped_read_memory_16;
+        void* wrapped_read_memory_32;
+        void* wrapped_read_memory_64;
+        void* wrapped_read_memory_128;
         void* exclusive_read_memory_8;
         void* exclusive_read_memory_16;
         void* exclusive_read_memory_32;
@@ -71,6 +76,11 @@ protected:
         void* write_memory_32;
         void* write_memory_64;
         void* write_memory_128;
+        void* wrapped_write_memory_8;
+        void* wrapped_write_memory_16;
+        void* wrapped_write_memory_32;
+        void* wrapped_write_memory_64;
+        void* wrapped_write_memory_128;
         void* exclusive_write_memory_8;
         void* exclusive_write_memory_16;
         void* exclusive_write_memory_32;

@@ -118,6 +118,21 @@ void AddressSpace::Link(IR::LocationDescriptor block_descriptor, EmittedBlockInf
         case LinkTarget::ReadMemory128:
             c.BL(prelude_info.read_memory_128);
             break;
+        case LinkTarget::WrappedReadMemory8:
+            c.BL(prelude_info.wrapped_read_memory_8);
+            break;
+        case LinkTarget::WrappedReadMemory16:
+            c.BL(prelude_info.wrapped_read_memory_16);
+            break;
+        case LinkTarget::WrappedReadMemory32:
+            c.BL(prelude_info.wrapped_read_memory_32);
+            break;
+        case LinkTarget::WrappedReadMemory64:
+            c.BL(prelude_info.wrapped_read_memory_64);
+            break;
+        case LinkTarget::WrappedReadMemory128:
+            c.BL(prelude_info.wrapped_read_memory_128);
+            break;
         case LinkTarget::ExclusiveReadMemory8:
             c.BL(prelude_info.exclusive_read_memory_8);
             break;
@@ -147,6 +162,21 @@ void AddressSpace::Link(IR::LocationDescriptor block_descriptor, EmittedBlockInf
             break;
         case LinkTarget::WriteMemory128:
             c.BL(prelude_info.write_memory_128);
+            break;
+        case LinkTarget::WrappedWriteMemory8:
+            c.BL(prelude_info.wrapped_write_memory_8);
+            break;
+        case LinkTarget::WrappedWriteMemory16:
+            c.BL(prelude_info.wrapped_write_memory_16);
+            break;
+        case LinkTarget::WrappedWriteMemory32:
+            c.BL(prelude_info.wrapped_write_memory_32);
+            break;
+        case LinkTarget::WrappedWriteMemory64:
+            c.BL(prelude_info.wrapped_write_memory_64);
+            break;
+        case LinkTarget::WrappedWriteMemory128:
+            c.BL(prelude_info.wrapped_write_memory_128);
             break;
         case LinkTarget::ExclusiveWriteMemory8:
             c.BL(prelude_info.exclusive_write_memory_8);
