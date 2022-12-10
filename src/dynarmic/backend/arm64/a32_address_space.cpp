@@ -157,6 +157,9 @@ void A32AddressSpace::EmitPrelude() {
         code.MOV(X19, X0);
         code.MOV(Xstate, X1);
         code.MOV(Xhalt, X2);
+        if (conf.page_table) {
+            code.MOV(Xpagetable, mcl::bit_cast<u64>(conf.page_table));
+        }
 
         if (conf.enable_cycle_counting) {
             code.BL(prelude_info.get_ticks_remaining);
@@ -183,6 +186,9 @@ void A32AddressSpace::EmitPrelude() {
         code.MOV(X19, X0);
         code.MOV(Xstate, X1);
         code.MOV(Xhalt, X2);
+        if (conf.page_table) {
+            code.MOV(Xpagetable, mcl::bit_cast<u64>(conf.page_table));
+        }
 
         if (conf.enable_cycle_counting) {
             code.MOV(Xticks, 1);
