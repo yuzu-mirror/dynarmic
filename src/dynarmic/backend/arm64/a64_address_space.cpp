@@ -163,13 +163,13 @@ static void* EmitRead128CallTrampoline(oaknut::CodeGenerator& code, A64::UserCal
     oaknut::Label l_addr, l_this;
 
     void* target = code.ptr<void*>();
-    ABI_PushRegisters(code, (1ull << 29) | (1ull << 30), sizeof(Vector));
+    ABI_PushRegisters(code, (1ull << 29) | (1ull << 30), 0);
     code.LDR(X0, l_this);
     code.LDR(Xscratch0, l_addr);
     code.BLR(Xscratch0);
-    code.STP(X0, X1, SP);
-    code.LDR(Q0, SP);
-    ABI_PopRegisters(code, (1ull << 29) | (1ull << 30), sizeof(Vector));
+    code.FMOV(D0, X0);
+    code.FMOV(V0.D()[1], X1);
+    ABI_PopRegisters(code, (1ull << 29) | (1ull << 30), 0);
     code.RET();
 
     code.align(8);
@@ -191,14 +191,14 @@ static void* EmitWrappedRead128CallTrampoline(oaknut::CodeGenerator& code, A64::
     constexpr u64 save_regs = ABI_CALLER_SAVE & ~ToRegList(Q0);
 
     void* target = code.ptr<void*>();
-    ABI_PushRegisters(code, save_regs, sizeof(Vector));
+    ABI_PushRegisters(code, save_regs, 0);
     code.LDR(X0, l_this);
     code.LDR(X1, Xscratch0);
     code.LDR(Xscratch0, l_addr);
     code.BLR(Xscratch0);
-    code.STP(X0, X1, SP);
-    code.LDR(Q0, SP);
-    ABI_PopRegisters(code, save_regs, sizeof(Vector));
+    code.FMOV(D0, X0);
+    code.FMOV(V0.D()[1], X1);
+    ABI_PopRegisters(code, save_regs, 0);
     code.RET();
 
     code.align(8);
@@ -222,13 +222,13 @@ static void* EmitExclusiveRead128CallTrampoline(oaknut::CodeGenerator& code, con
     };
 
     void* target = code.ptr<void*>();
-    ABI_PushRegisters(code, (1ull << 29) | (1ull << 30), sizeof(Vector));
+    ABI_PushRegisters(code, (1ull << 29) | (1ull << 30), 0);
     code.LDR(X0, l_this);
     code.LDR(Xscratch0, l_addr);
     code.BLR(Xscratch0);
-    code.STP(X0, X1, SP);
-    code.LDR(Q0, SP);
-    ABI_PopRegisters(code, (1ull << 29) | (1ull << 30), sizeof(Vector));
+    code.FMOV(D0, X0);
+    code.FMOV(V0.D()[1], X1);
+    ABI_PopRegisters(code, (1ull << 29) | (1ull << 30), 0);
     code.RET();
 
     code.align(8);
