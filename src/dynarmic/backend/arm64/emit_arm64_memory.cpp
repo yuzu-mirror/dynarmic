@@ -336,7 +336,7 @@ void InlinePageTableEmitReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx
     EmitMemoryLdr<bitsize>(code, Rvalue->index(), Xbase, Xoffset, ordered);
 
     ctx.deferred_emits.emplace_back([&code, &ctx, inst, Xaddr = *Xaddr, Rvalue = *Rvalue, ordered, fallback, end] {
-        const u64 save_regs = ABI_CALLER_SAVE & ~((bitsize == 128 ? (1ull << 32) : 1ull) << Rvalue.index());
+        const u64 save_regs = ABI_CALLER_SAVE & ~ToRegList(Rvalue);
         code.l(*fallback);
         ABI_PushRegisters(code, save_regs, 0);
         code.MOV(X1, Xaddr);

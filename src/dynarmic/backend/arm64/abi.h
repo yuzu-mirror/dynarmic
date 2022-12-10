@@ -6,6 +6,8 @@
 #pragma once
 
 #include <initializer_list>
+#include <stdexcept>
+#include <type_traits>
 
 #include <mcl/stdint.hpp>
 #include <oaknut/oaknut.hpp>
@@ -47,6 +49,22 @@ constexpr std::initializer_list<int> GPR_ORDER{19, 20, 21, 22, 23, 9, 10, 11, 12
 constexpr std::initializer_list<int> FPR_ORDER{8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31};
 
 using RegisterList = u64;
+
+constexpr RegisterList ToRegList(oaknut::Reg reg) {
+    if (reg.is_vector()) {
+        return RegisterList{1} << (reg.index() + 32);
+    }
+
+    if (reg.index() == 31) {
+        throw std::out_of_range("ZR not allowed in reg list");
+    }
+
+    if (reg.index() == -1) {
+        return RegisterList{1} << 31;
+    }
+
+    return RegisterList{1} << reg.index();
+}
 
 constexpr RegisterList ABI_CALLEE_SAVE = 0x0000ff00'3ff80000;
 constexpr RegisterList ABI_CALLER_SAVE = 0xffffffff'4000ffff;
