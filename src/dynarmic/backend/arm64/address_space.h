@@ -35,6 +35,8 @@ public:
 
     CodePtr GetOrEmit(IR::LocationDescriptor descriptor);
 
+    void InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>& descriptors);
+
     void ClearCache();
 
 protected:
@@ -43,7 +45,7 @@ protected:
     size_t GetRemainingSize();
     EmittedBlockInfo Emit(IR::Block ir_block);
     void Link(IR::LocationDescriptor block_descriptor, EmittedBlockInfo& block);
-    void RelinkForDescriptor(IR::LocationDescriptor target_descriptor);
+    void RelinkForDescriptor(IR::LocationDescriptor target_descriptor, CodePtr target_ptr);
 
     const size_t code_cache_size;
     oaknut::CodeBlock mem;

@@ -46,11 +46,30 @@ CodePtr AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
 
     IR::Block ir_block = GenerateIR(descriptor);
     const EmittedBlockInfo block_info = Emit(std::move(ir_block));
-
-    block_infos.insert_or_assign(descriptor.Value(), block_info);
-    block_entries.insert_or_assign(descriptor.Value(), block_info.entry_point);
-    reverse_block_entries.insert_or_assign(block_info.entry_point, descriptor.Value());
     return block_info.entry_point;
+}
+
+void AddressSpace::InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>& descriptors) {
+    mem.unprotect();
+
+    for (const auto& descriptor : descriptors) {
+        const auto iter = block_infos.find(descriptor.Value());
+        if (iter == block_infos.end()) {
+            continue;
+        }
+
+        // Unlink before removal because InvalidateBasicBlocks can be called within a fastmem callback,
+        // and the currently executing block may have references to itself which need to be unlinked.
+        RelinkForDescriptor(descriptor, nullptr);
+
+        const auto entry_point = iter->second.entry_point;
+
+        block_infos.erase(iter);
+        block_entries.erase(descriptor.Value());
+        reverse_block_entries.erase(entry_point);
+    }
+
+    mem.protect();
 }
 
 void AddressSpace::ClearCache() {
@@ -74,12 +93,14 @@ EmittedBlockInfo AddressSpace::Emit(IR::Block block) {
 
     EmittedBlockInfo block_info = EmitArm64(code, std::move(block), GetEmitConfig());
 
+    block_infos.insert_or_assign(block.Location().Value(), block_info);
+    block_entries.insert_or_assign(block.Location().Value(), block_info.entry_point);
+    reverse_block_entries.insert_or_assign(block_info.entry_point, block.Location().Value());
+
     Link(block.Location(), block_info);
+    RelinkForDescriptor(block.Location(), block_info.entry_point);
 
     mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
-
-    RelinkForDescriptor(block.Location());
-
     mem.protect();
 
     return block_info;
@@ -239,12 +260,14 @@ void AddressSpace::Link(IR::LocationDescriptor block_descriptor, EmittedBlockInf
     }
 }
 
-void AddressSpace::RelinkForDescriptor(IR::LocationDescriptor target_descriptor) {
+void AddressSpace::RelinkForDescriptor(IR::LocationDescriptor target_descriptor, CodePtr target_ptr) {
     for (auto block_descriptor : block_references[target_descriptor.Value()]) {
-        if (auto iter = block_infos.find(block_descriptor); iter != block_infos.end()) {
-            const EmittedBlockInfo& block_info = iter->second;
+        if (auto block_iter = block_infos.find(block_descriptor); block_iter != block_infos.end()) {
+            const EmittedBlockInfo& block_info = block_iter->second;
 
-            LinkBlockLinks(block_info.entry_point, Get(target_descriptor), block_infos[block_descriptor].block_relocations[target_descriptor]);
+            if (auto relocation_iter = block_info.block_relocations.find(target_descriptor); relocation_iter != block_info.block_relocations.end()) {
+                LinkBlockLinks(block_info.entry_point, target_ptr, relocation_iter->second);
+            }
 
             mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
         }
