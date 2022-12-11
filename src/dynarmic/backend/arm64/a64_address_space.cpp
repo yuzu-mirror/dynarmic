@@ -55,7 +55,7 @@ static void* EmitWrappedReadCallTrampoline(oaknut::CodeGenerator& code, T* this_
     void* target = code.ptr<void*>();
     ABI_PushRegisters(code, save_regs, 0);
     code.LDR(X0, l_this);
-    code.LDR(X1, Xscratch0);
+    code.MOV(X1, Xscratch0);
     code.LDR(Xscratch0, l_addr);
     code.BLR(Xscratch0);
     code.MOV(Xscratch0, X0);
@@ -110,8 +110,8 @@ static void* EmitWrappedWriteCallTrampoline(oaknut::CodeGenerator& code, T* this
     void* target = code.ptr<void*>();
     ABI_PushRegisters(code, save_regs, 0);
     code.LDR(X0, l_this);
-    code.LDR(X1, Xscratch0);
-    code.LDR(X2, Xscratch1);
+    code.MOV(X1, Xscratch0);
+    code.MOV(X2, Xscratch1);
     code.LDR(Xscratch0, l_addr);
     code.BLR(Xscratch0);
     ABI_PopRegisters(code, save_regs, 0);
@@ -193,7 +193,7 @@ static void* EmitWrappedRead128CallTrampoline(oaknut::CodeGenerator& code, A64::
     void* target = code.ptr<void*>();
     ABI_PushRegisters(code, save_regs, 0);
     code.LDR(X0, l_this);
-    code.LDR(X1, Xscratch0);
+    code.MOV(X1, Xscratch0);
     code.LDR(Xscratch0, l_addr);
     code.BLR(Xscratch0);
     code.FMOV(D0, X0);
@@ -275,7 +275,7 @@ static void* EmitWrappedWrite128CallTrampoline(oaknut::CodeGenerator& code, A64:
     void* target = code.ptr<void*>();
     ABI_PushRegisters(code, save_regs, 0);
     code.LDR(X0, l_this);
-    code.LDR(X1, Xscratch0);
+    code.MOV(X1, Xscratch0);
     code.FMOV(X2, D0);
     code.FMOV(X3, V0.D()[1]);
     code.LDR(Xscratch0, l_addr);
