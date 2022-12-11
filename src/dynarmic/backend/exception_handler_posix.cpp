@@ -130,17 +130,19 @@ void SigHandler::RemoveCodeBlock(u64 host_pc) {
 void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
     ASSERT(sig == SIGSEGV || sig == SIGBUS);
 
+    auto& mctx = ((ucontext_t*)raw_context)->uc_mcontext;
+
 #if defined(MCL_ARCHITECTURE_X86_64)
 
 #    if defined(__APPLE__)
-#        define CTX_RIP (((ucontext_t*)raw_context)->uc_mcontext->__ss.__rip)
-#        define CTX_RSP (((ucontext_t*)raw_context)->uc_mcontext->__ss.__rsp)
+#        define CTX_RIP (mctx->__ss.__rip)
+#        define CTX_RSP (mctx->__ss.__rsp)
 #    elif defined(__linux__)
-#        define CTX_RIP (((ucontext_t*)raw_context)->uc_mcontext.gregs[REG_RIP])
-#        define CTX_RSP (((ucontext_t*)raw_context)->uc_mcontext.gregs[REG_RSP])
+#        define CTX_RIP (mctx.gregs[REG_RIP])
+#        define CTX_RSP (mctx.gregs[REG_RSP])
 #    elif defined(__FreeBSD__)
-#        define CTX_RIP (((ucontext_t*)raw_context)->uc_mcontext.mc_rip)
-#        define CTX_RSP (((ucontext_t*)raw_context)->uc_mcontext.mc_rsp)
+#        define CTX_RIP (mctx.mc_rip)
+#        define CTX_RSP (mctx.mc_rsp)
 #    else
 #        error "Unknown platform"
 #    endif
@@ -165,31 +167,31 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 #elif defined(MCL_ARCHITECTURE_ARM64)
 
 #    if defined(__APPLE__)
-#        define CTX_PC (((ucontext_t*)raw_context)->uc_mcontext->__ss.__pc)
-#        define CTX_SP (((ucontext_t*)raw_context)->uc_mcontext->__ss.__sp)
-#        define CTX_LR (((ucontext_t*)raw_context)->uc_mcontext->__ss.__lr)
-#        define CTX_X(i) (((ucontext_t*)raw_context)->uc_mcontext->__ss.__x[i])
-#        define CTX_Q(i) (((ucontext_t*)raw_context)->uc_mcontext->__ns.__v[i])
+#        define CTX_PC (mctx->__ss.__pc)
+#        define CTX_SP (mctx->__ss.__sp)
+#        define CTX_LR (mctx->__ss.__lr)
+#        define CTX_X(i) (mctx->__ss.__x[i])
+#        define CTX_Q(i) (mctx->__ns.__v[i])
 #    elif defined(__linux__)
-#        define CTX_PC (((ucontext_t*)raw_context)->uc_mcontext.pc)
-#        define CTX_SP (((ucontext_t*)raw_context)->uc_mcontext.sp)
-#        define CTX_LR (((ucontext_t*)raw_context)->uc_mcontext.regs[30])
-#        define CTX_X(i) (((ucontext_t*)raw_context)->uc_mcontext.regs[i])
-#        define CTX_Q(i) (fp->vregs[i])
-    const auto fp = [raw_context] {
-        _aarch64_ctx* head = (_aarch64_ctx*)(((ucontext_t*)raw_context)->uc_mcontext.__reserved);
-        while (head->magic != FPSIMD_MAGIC) {
-            ASSERT(head->magic && head->size);
-            head = (_aarch64_ctx*)(((char*)head) + head->size);
+#        define CTX_PC (mctx.pc)
+#        define CTX_SP (mctx.sp)
+#        define CTX_LR (mctx.regs[30])
+#        define CTX_X(i) (mctx.regs[i])
+#        define CTX_Q(i) (fpctx->vregs[i])
+    const auto fpctx = [&mctx] {
+        _aarch64_ctx* header = (_aarch64_ctx*)&mctx.__reserved;
+        while (header->magic != FPSIMD_MAGIC) {
+            ASSERT(header->magic && header->size);
+            header = (_aarch64_ctx*)((char*)header + header->size);
         }
-        return (fpsimd_context*)head;
+        return (fpsimd_context*)header;
     }();
 #    elif defined(__FreeBSD__)
-#        define CTX_PC (((ucontext_t*)raw_context)->uc_mcontext.mc_gpregs.gp_elr)
-#        define CTX_SP (((ucontext_t*)raw_context)->uc_mcontext.mc_gpregs.gp_sp)
-#        define CTX_LR (((ucontext_t*)raw_context)->uc_mcontext.mc_gpregs.gp_lr)
-#        define CTX_X(i) (((ucontext_t*)raw_context)->uc_mcontext.mc_gpregs.gp_x[i])
-#        define CTX_Q(i) (((ucontext_t*)raw_context)->uc_mcontext.mc_fpregs.fp_q[i])
+#        define CTX_PC (mctx.mc_gpregs.gp_elr)
+#        define CTX_SP (mctx.mc_gpregs.gp_sp)
+#        define CTX_LR (mctx.mc_gpregs.gp_lr)
+#        define CTX_X(i) (mctx.mc_gpregs.gp_x[i])
+#        define CTX_Q(i) (mctx.mc_fpregs.fp_q[i])
 #    else
 #        error "Unknown platform"
 #    endif
