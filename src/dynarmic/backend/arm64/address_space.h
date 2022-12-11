@@ -15,6 +15,7 @@
 #include <tsl/robin_set.h>
 
 #include "dynarmic/backend/arm64/emit_arm64.h"
+#include "dynarmic/backend/arm64/fastmem.h"
 #include "dynarmic/interface/halt_reason.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/location_descriptor.h"
@@ -47,6 +48,8 @@ protected:
     void Link(IR::LocationDescriptor block_descriptor, EmittedBlockInfo& block);
     void RelinkForDescriptor(IR::LocationDescriptor target_descriptor, CodePtr target_ptr);
 
+    FakeCall FastmemCallback(u64 host_pc);
+
     const size_t code_cache_size;
     oaknut::CodeBlock mem;
     oaknut::CodeGenerator code;
@@ -55,6 +58,9 @@ protected:
     std::map<CodePtr, u64> reverse_block_entries;
     tsl::robin_map<u64, EmittedBlockInfo> block_infos;
     tsl::robin_map<u64, tsl::robin_set<u64>> block_references;
+
+    ExceptionHandler exception_handler;
+    FastmemManager fastmem_manager;
 
     struct PreludeInfo {
         u32* end_of_prelude;

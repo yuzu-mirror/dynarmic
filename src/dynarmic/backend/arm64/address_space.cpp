@@ -19,7 +19,13 @@ namespace Dynarmic::Backend::Arm64 {
 AddressSpace::AddressSpace(size_t code_cache_size)
         : code_cache_size(code_cache_size)
         , mem(code_cache_size)
-        , code(mem.ptr()) {}
+        , code(mem.ptr())
+        , fastmem_manager(exception_handler) {
+    exception_handler.Register(mem, code_cache_size);
+    exception_handler.SetFastmemCallback([this](u64 host_pc) {
+        return FastmemCallback(host_pc);
+    });
+}
 
 AddressSpace::~AddressSpace() = default;
 
@@ -91,7 +97,7 @@ EmittedBlockInfo AddressSpace::Emit(IR::Block block) {
 
     mem.unprotect();
 
-    EmittedBlockInfo block_info = EmitArm64(code, std::move(block), GetEmitConfig());
+    EmittedBlockInfo block_info = EmitArm64(code, std::move(block), GetEmitConfig(), fastmem_manager);
 
     block_infos.insert_or_assign(block.Location().Value(), block_info);
     block_entries.insert_or_assign(block.Location().Value(), block_info.entry_point);
@@ -272,6 +278,41 @@ void AddressSpace::RelinkForDescriptor(IR::LocationDescriptor target_descriptor,
             mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
         }
     }
+}
+
+FakeCall AddressSpace::FastmemCallback(u64 host_pc) {
+    {
+        const auto host_ptr = mcl::bit_cast<CodePtr>(host_pc);
+
+        const auto location_descriptor = ReverseGet(host_ptr);
+        if (!location_descriptor) {
+            goto fail;
+        }
+
+        const auto block_iter = block_infos.find(location_descriptor->Value());
+        if (block_iter == block_infos.end()) {
+            goto fail;
+        }
+
+        const auto block_entry_point = block_iter->second.entry_point;
+        const auto iter = block_iter->second.fastmem_patch_info.find(host_ptr - block_entry_point);
+        if (iter == block_iter->second.fastmem_patch_info.end()) {
+            goto fail;
+        }
+
+        if (iter->second.recompile) {
+            const auto marker = iter->second.marker;
+            fastmem_manager.MarkDoNotFastmem(marker);
+            InvalidateBasicBlocks({std::get<0>(marker)});
+        }
+
+        return iter->second.fc;
+    }
+
+fail:
+    fmt::print("dynarmic: Segfault happened within JITted code at host_pc = {:016x}\n", host_pc);
+    fmt::print("Segfault wasn't at a fastmem patch location!\n");
+    ASSERT_FALSE("segfault");
 }
 
 }  // namespace Dynarmic::Backend::Arm64

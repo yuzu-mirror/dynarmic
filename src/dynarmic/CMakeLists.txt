@@ -395,6 +395,7 @@ elseif(ARCHITECTURE STREQUAL "arm64")
         backend/arm64/emit_arm64_vector_saturation.cpp
         backend/arm64/emit_context.h
         backend/arm64/exclusive_monitor.cpp
+        backend/arm64/fastmem.h
         backend/arm64/fpsr_manager.cpp
         backend/arm64/fpsr_manager.h
         backend/arm64/reg_alloc.cpp

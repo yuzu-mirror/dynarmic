@@ -13,6 +13,7 @@
 #include <mcl/stdint.hpp>
 #include <tsl/robin_map.h>
 
+#include "dynarmic/backend/arm64/fastmem.h"
 #include "dynarmic/interface/A32/coprocessor.h"
 #include "dynarmic/interface/optimization_flags.h"
 #include "dynarmic/ir/location_descriptor.h"
@@ -99,6 +100,7 @@ struct EmittedBlockInfo {
     size_t size;
     std::vector<Relocation> relocations;
     tsl::robin_map<IR::LocationDescriptor, std::vector<BlockRelocation>> block_relocations;
+    tsl::robin_map<std::ptrdiff_t, FastmemPatchInfo> fastmem_patch_info;
 };
 
 struct EmitConfig {
@@ -149,7 +151,7 @@ struct EmitConfig {
     std::array<std::shared_ptr<A32::Coprocessor>, 16> coprocessors{};
 };
 
-EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf);
+EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf, FastmemManager& fastmem_manager);
 
 template<IR::Opcode op>
 void EmitIR(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst);

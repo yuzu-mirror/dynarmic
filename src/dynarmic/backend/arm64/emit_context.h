@@ -23,6 +23,7 @@ class Block;
 namespace Dynarmic::Backend::Arm64 {
 
 struct EmitConfig;
+class FastmemManager;
 class FpsrManager;
 
 using SharedLabel = std::shared_ptr<oaknut::Label>;
@@ -37,6 +38,7 @@ struct EmitContext {
     const EmitConfig& conf;
     EmittedBlockInfo& ebi;
     FpsrManager& fpsr;
+    FastmemManager& fastmem;
 
     std::vector<std::function<void()>> deferred_emits;
 
