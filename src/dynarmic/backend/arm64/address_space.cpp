@@ -300,13 +300,15 @@ FakeCall AddressSpace::FastmemCallback(u64 host_pc) {
             goto fail;
         }
 
+        const auto result = iter->second.fc;
+
         if (iter->second.recompile) {
             const auto marker = iter->second.marker;
             fastmem_manager.MarkDoNotFastmem(marker);
             InvalidateBasicBlocks({std::get<0>(marker)});
         }
 
-        return iter->second.fc;
+        return result;
     }
 
 fail:

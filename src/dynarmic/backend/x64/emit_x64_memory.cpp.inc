@@ -37,16 +37,18 @@ FakeCall AxxEmitX64::FastmemCallback(u64 rip_) {
         ASSERT_FALSE("iter != fastmem_patch_info.end()");
     }
 
+    FakeCall result{
+        .call_rip = iter->second.callback,
+        .ret_rip = iter->second.resume_rip,
+    };
+
     if (iter->second.recompile) {
         const auto marker = iter->second.marker;
         do_not_fastmem.emplace(marker);
         InvalidateBasicBlocks({std::get<0>(marker)});
     }
 
-    return FakeCall{
-        .call_rip = iter->second.callback,
-        .ret_rip = iter->second.resume_rip,
-    };
+    return result;
 }
 
 template<std::size_t bitsize, auto callback>

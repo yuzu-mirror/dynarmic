@@ -36,8 +36,12 @@ public:
     explicit FastmemManager(ExceptionHandler& eh)
             : exception_handler(eh) {}
 
+    bool SupportsFastmem() const {
+        return exception_handler.SupportsFastmem();
+    }
+
     bool ShouldFastmem(DoNotFastmemMarker marker) const {
-        return exception_handler.SupportsFastmem() && do_not_fastmem.count(marker) == 0;
+        return do_not_fastmem.count(marker) == 0;
     }
 
     void MarkDoNotFastmem(DoNotFastmemMarker marker) {
