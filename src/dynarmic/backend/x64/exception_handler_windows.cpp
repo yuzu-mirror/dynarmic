@@ -13,8 +13,8 @@
 #include <mcl/bit_cast.hpp>
 #include <mcl/stdint.hpp>
 
+#include "dynarmic/backend/exception_handler.h"
 #include "dynarmic/backend/x64/block_of_code.h"
-#include "dynarmic/backend/x64/exception_handler.h"
 #include "dynarmic/common/safe_ops.h"
 
 using UBYTE = u8;
@@ -77,7 +77,9 @@ struct UNW_EXCEPTION_INFO {
     // OPTIONAL ARBITRARY HandlerData;
 };
 
-namespace Dynarmic::Backend::X64 {
+namespace Dynarmic::Backend {
+
+using namespace Dynarmic::Backend::X64;
 
 struct PrologueInformation {
     std::vector<UNWIND_CODE> unwind_code;
@@ -259,4 +261,4 @@ void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
     impl->SetCallback(cb);
 }
 
-}  // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend

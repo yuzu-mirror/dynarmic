@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/backend/x64/exception_handler.h"
+#include "dynarmic/backend/exception_handler.h"
 
-namespace Dynarmic::Backend::X64 {
+namespace Dynarmic::Backend {
 
 struct ExceptionHandler::Impl final {
 };
@@ -13,9 +13,17 @@ struct ExceptionHandler::Impl final {
 ExceptionHandler::ExceptionHandler() = default;
 ExceptionHandler::~ExceptionHandler() = default;
 
-void ExceptionHandler::Register(BlockOfCode&) {
+#if defined(MCL_ARCHITECTURE_X86_64)
+void ExceptionHandler::Register(X64::BlockOfCode&) {
     // Do nothing
 }
+#elif defined(MCL_ARCHITECTURE_ARM64)
+void ExceptionHandler::Register(oaknut::CodeBlock&, std::size_t) {
+    // Do nothing
+}
+#else
+#    error "Invalid architecture"
+#endif
 
 bool ExceptionHandler::SupportsFastmem() const noexcept {
     return false;
@@ -25,4 +33,4 @@ void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)>) {
     // Do nothing
 }
 
-}  // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend

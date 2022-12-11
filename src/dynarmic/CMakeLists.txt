@@ -1,4 +1,5 @@
 add_library(dynarmic
+    backend/exception_handler.h
     common/cast_util.h
     common/crypto/aes.cpp
     common/crypto/aes.h
@@ -289,7 +290,6 @@ if (ARCHITECTURE STREQUAL "x86_64")
         backend/x64/emit_x64_vector.cpp
         backend/x64/emit_x64_vector_floating_point.cpp
         backend/x64/emit_x64_vector_saturation.cpp
-        backend/x64/exception_handler.h
         backend/x64/exclusive_monitor.cpp
         backend/x64/exclusive_monitor_friend.h
         backend/x64/host_feature.h
@@ -336,7 +336,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
         find_path(MACH_EXC_DEFS_DIR "mach/mach_exc.defs")
         if (NOT MACH_EXC_DEFS_DIR)
             message(WARNING "macOS fastmem disabled: unable to find mach/mach_exc.defs")
-            target_sources(dynarmic PRIVATE backend/x64/exception_handler_generic.cpp)
+            target_sources(dynarmic PRIVATE backend/exception_handler_generic.cpp)
         else()
             message(STATUS "mach/mach_exc.defs location: ${MACH_EXC_DEFS_DIR}")
             execute_process(
@@ -361,9 +361,9 @@ if (ARCHITECTURE STREQUAL "x86_64")
         if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
             target_link_libraries(dynarmic PRIVATE rt)
         endif()
-        target_sources(dynarmic PRIVATE backend/x64/exception_handler_posix.cpp)
+        target_sources(dynarmic PRIVATE backend/exception_handler_posix.cpp)
     else()
-        target_sources(dynarmic PRIVATE backend/x64/exception_handler_generic.cpp)
+        target_sources(dynarmic PRIVATE backend/exception_handler_generic.cpp)
     endif()
 elseif(ARCHITECTURE STREQUAL "arm64")
     target_link_libraries(dynarmic PRIVATE merry::oaknut)
@@ -414,12 +414,21 @@ elseif(ARCHITECTURE STREQUAL "arm64")
     endif()
 
     if ("A64" IN_LIST DYNARMIC_FRONTENDS)
-	target_sources(dynarmic PRIVATE
+        target_sources(dynarmic PRIVATE
             backend/arm64/a64_address_space.cpp
             backend/arm64/a64_address_space.h
             backend/arm64/a64_core.h
             backend/arm64/a64_interface.cpp
-	)
+        )
+    endif()
+
+    if (UNIX)
+        if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            target_link_libraries(dynarmic PRIVATE rt)
+        endif()
+        target_sources(dynarmic PRIVATE backend/exception_handler_posix.cpp)
+    else()
+        target_sources(dynarmic PRIVATE backend/exception_handler_generic.cpp)
     endif()
 else()
     message(FATAL_ERROR "Unsupported architecture")

@@ -19,7 +19,7 @@
 #include <xbyak/xbyak.h>
 #include <xbyak/xbyak_util.h>
 
-#include "dynarmic/backend/x64/exception_handler.h"
+#include "dynarmic/backend/exception_handler.h"
 #include "dynarmic/backend/x64/reg_alloc.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/ir/location_descriptor.h"

@@ -18,13 +18,15 @@
 #include <mcl/bit_cast.hpp>
 #include <mcl/stdint.hpp>
 
+#include "dynarmic/backend/exception_handler.h"
 #include "dynarmic/backend/x64/block_of_code.h"
-#include "dynarmic/backend/x64/exception_handler.h"
 
 #define mig_external extern "C"
 #include "dynarmic/backend/x64/mig/mach_exc_server.h"
 
-namespace Dynarmic::Backend::X64 {
+namespace Dynarmic::Backend {
+
+using namespace Dynarmic::Backend::X64;
 
 namespace {
 
@@ -224,4 +226,4 @@ void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
     impl->SetCallback(cb);
 }
 
-}  // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend
