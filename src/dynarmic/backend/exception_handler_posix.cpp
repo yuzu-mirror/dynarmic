@@ -178,7 +178,7 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 #        define CTX_LR (mctx.regs[30])
 #        define CTX_X(i) (mctx.regs[i])
 #        define CTX_Q(i) (fpctx->vregs[i])
-    const auto fpctx = [&mctx] {
+    [[maybe_unused]] const auto fpctx = [&mctx] {
         _aarch64_ctx* header = (_aarch64_ctx*)&mctx.__reserved;
         while (header->magic != FPSIMD_MAGIC) {
             ASSERT(header->magic && header->size);
@@ -203,18 +203,7 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
         if (iter != sig_handler.code_block_infos.end()) {
             FakeCall fc = iter->cb(CTX_PC);
 
-            CTX_LR = fc.ret_pc;
             CTX_PC = fc.call_pc;
-
-            if (fc.load_xscratch0) {
-                CTX_X(Arm64::Xscratch0.index()) = CTX_X(*fc.load_xscratch0);
-            }
-            if (fc.load_xscratch1) {
-                CTX_X(Arm64::Xscratch1.index()) = CTX_X(*fc.load_xscratch1);
-            }
-            if (fc.load_q0) {
-                CTX_Q(0) = CTX_Q(*fc.load_q0);
-            }
 
             return;
         }

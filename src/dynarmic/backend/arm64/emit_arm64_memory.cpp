@@ -503,7 +503,6 @@ void FastmemEmitReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::In
                 .marker = marker,
                 .fc = FakeCall{
                     .call_pc = mcl::bit_cast<u64>(code.ptr<void*>()),
-                    .ret_pc = 0,
                 },
                 .recompile = ctx.conf.recompile_on_fastmem_failure,
             });
@@ -554,7 +553,6 @@ void FastmemEmitWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::I
                 .marker = marker,
                 .fc = FakeCall{
                     .call_pc = mcl::bit_cast<u64>(code.ptr<void*>()),
-                    .ret_pc = 0,
                 },
                 .recompile = ctx.conf.recompile_on_fastmem_failure,
             });

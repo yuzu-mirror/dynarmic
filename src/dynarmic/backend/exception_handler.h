@@ -34,10 +34,6 @@ struct FakeCall {
 #elif defined(MCL_ARCHITECTURE_ARM64)
 struct FakeCall {
     u64 call_pc;
-    u64 ret_pc;
-    std::optional<int> load_xscratch0;
-    std::optional<int> load_xscratch1;
-    std::optional<int> load_q0;
 };
 #else
 #    error "Invalid architecture"
