@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <map>
+#include <optional>
+
 #include <mcl/stdint.hpp>
 #include <oaknut/code_block.hpp>
 #include <oaknut/oaknut.hpp>
@@ -27,6 +30,9 @@ public:
 
     CodePtr Get(IR::LocationDescriptor descriptor);
 
+    // Returns "most likely" LocationDescriptor assocated with the emitted code at that location
+    std::optional<IR::LocationDescriptor> ReverseGet(CodePtr host_pc);
+
     CodePtr GetOrEmit(IR::LocationDescriptor descriptor);
 
     void ClearCache();
@@ -44,6 +50,7 @@ protected:
     oaknut::CodeGenerator code;
 
     tsl::robin_map<u64, CodePtr> block_entries;
+    std::map<CodePtr, u64> reverse_block_entries;
     tsl::robin_map<u64, EmittedBlockInfo> block_infos;
     tsl::robin_map<u64, tsl::robin_set<u64>> block_references;
 

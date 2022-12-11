@@ -30,6 +30,15 @@ CodePtr AddressSpace::Get(IR::LocationDescriptor descriptor) {
     return nullptr;
 }
 
+std::optional<IR::LocationDescriptor> AddressSpace::ReverseGet(CodePtr host_pc) {
+    if (auto iter = reverse_block_entries.upper_bound(host_pc); iter != reverse_block_entries.begin()) {
+        // upper_bound locates the first value greater than host_pc, so we need to decrement
+        --iter;
+        return IR::LocationDescriptor{iter->second};
+    }
+    return std::nullopt;
+}
+
 CodePtr AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
     if (CodePtr block_entry = Get(descriptor)) {
         return block_entry;
@@ -40,11 +49,13 @@ CodePtr AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
 
     block_infos.insert_or_assign(descriptor.Value(), block_info);
     block_entries.insert_or_assign(descriptor.Value(), block_info.entry_point);
+    reverse_block_entries.insert_or_assign(block_info.entry_point, descriptor.Value());
     return block_info.entry_point;
 }
 
 void AddressSpace::ClearCache() {
     block_entries.clear();
+    reverse_block_entries.clear();
     block_infos.clear();
     block_references.clear();
     code.set_ptr(prelude_info.end_of_prelude);
