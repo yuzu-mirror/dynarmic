@@ -14,6 +14,10 @@ if (NOT TARGET Catch2::Catch2)
     if (DYNARMIC_TESTS)
         add_library(Catch2::Catch2 INTERFACE IMPORTED GLOBAL)
         target_include_directories(Catch2::Catch2 INTERFACE catch/include)
+        
+        if(CMAKE_SYSTEM_NAME STREQUAL "Android")
+            target_link_libraries(Catch2::Catch2 INTERFACE log)
+        endif()
     endif()
 endif()
 

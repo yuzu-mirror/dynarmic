@@ -9,15 +9,14 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
+        platform: [ linux, android ]
       fail-fast: false
 
-    runs-on: ${{matrix.os}}
+    runs-on: ubuntu-latest
 
     steps:
 
       - name: Install build dependencies
-        if: ${{matrix.os == 'ubuntu-latest'}}
         run: >
           sudo apt-get update &&
           sudo apt-get install
@@ -30,6 +29,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Ccache
+        if: matrix.platform == 'linux'
         uses: hendrikmuhs/ccache-action@v1.2
 
       - name: Checkout ext-boost repo
@@ -38,7 +38,8 @@ jobs:
           repository: MerryMage/ext-boost
           path: externals/ext-boost
 
-      - name: Configure CMake for AArch64
+      - name: Configure CMake for AArch64 (Linux)
+        if: matrix.platform == 'linux'
         env:
           CC: aarch64-linux-gnu-gcc-10
           CXX: aarch64-linux-gnu-g++-10
@@ -50,12 +51,27 @@ jobs:
           -DDYNARMIC_TESTS_USE_UNICORN=0
           -DDYNARMIC_USE_LLVM=0
           -G Ninja
+          
+      - name: Configure CMake for AArch64 (Android)
+        if: matrix.platform == 'android'
+        run: >
+          cmake
+          -B ${{github.workspace}}/build-arm64
+          -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DANDROID_ABI=arm64-v8a
+          -DANDROID_PLATFORM=29
+          -DBoost_INCLUDE_DIR=${{github.workspace}}/externals/ext-boost
+          -DDYNARMIC_TESTS_USE_UNICORN=0
+          -DDYNARMIC_USE_LLVM=0
+          -G Ninja
 
       - name: Build AArch64
         working-directory: ${{github.workspace}}/build-arm64
         run: cmake --build . --config Release
 
       - name: Configure CMake for x86_64
+        if: matrix.platform == 'linux'
         env:
           CC: gcc-10
           CXX: g++-10
@@ -71,14 +87,17 @@ jobs:
           -G Ninja
 
       - name: Build x86_64
+        if: matrix.platform == 'linux'
         working-directory: ${{github.workspace}}/build-x64
         run: cmake --build . --config Release
 
       - name: Basic tests
+        if: matrix.platform == 'linux'
         working-directory: ${{github.workspace}}
         run: qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_tests -d yes
 
       - name: Test against x86_64 implementation (A32, thumb)
+        if: matrix.platform == 'linux'
         working-directory: ${{github.workspace}}
         run: |
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator thumb 42 1 100000) <(./build-x64/tests/dynarmic_test_generator thumb 42 1 100000)
@@ -86,6 +105,7 @@ jobs:
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator thumb 42 100 1000) <(./build-x64/tests/dynarmic_test_generator thumb 42 100 1000)
 
       - name: Test against x86_64 implementation (A32, arm)
+        if: matrix.platform == 'linux'
         working-directory: ${{github.workspace}}
         run: |
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator arm 42 1 100000) <(./build-x64/tests/dynarmic_test_generator arm 42 1 100000)
@@ -93,6 +113,7 @@ jobs:
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator arm 42 100 1000) <(./build-x64/tests/dynarmic_test_generator arm 42 100 1000)
 
       - name: Test against x86_64 implementation (A64)
+        if: matrix.platform == 'linux'
         working-directory: ${{github.workspace}}
         run: |
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator a64 42 1 100000) <(./build-x64/tests/dynarmic_test_generator a64 42 1 100000)
