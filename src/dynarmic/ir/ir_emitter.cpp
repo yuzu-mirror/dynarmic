@@ -5,6 +5,8 @@
 
 #include "dynarmic/ir/ir_emitter.h"
 
+#include <vector>
+
 #include <mcl/assert.hpp>
 #include <mcl/bit_cast.hpp>
 

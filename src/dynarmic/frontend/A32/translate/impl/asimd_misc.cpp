@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include <vector>
+
 #include <mcl/assert.hpp>
 #include <mcl/bit/bit_count.hpp>
 #include <mcl/bit/bit_field.hpp>
