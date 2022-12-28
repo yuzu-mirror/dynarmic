@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 include(GNUInstallDirs)
 
-project(mcl LANGUAGES CXX VERSION 0.1.11)
+project(mcl LANGUAGES CXX VERSION 0.1.12)
 
 # Determine if we're built as a subproject (using add_subdirectory)
 # or if this is the master project.
@@ -70,7 +70,7 @@ if (MSVC)
         list(APPEND MCL_CXX_FLAGS /WX)
     endif()
 
-    if (CMAKE_VS_PLATFORM_TOOLSET MATCHES "LLVM-vs[0-9]+")
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         list(APPEND MCL_CXX_FLAGS
              -Qunused-arguments
              -Wno-missing-braces)
