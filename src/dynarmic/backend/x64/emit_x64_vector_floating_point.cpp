@@ -1081,6 +1081,80 @@ static void EmitFPVectorMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::I
     // !NaN    QNaN     op1
     // QNaN    QNaN     op1
 
+    if (code.HasHostFeature(HostFeature::AVX)) {
+        MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&] {
+            using FPT = mcl::unsigned_integer_of_size<fsize>;
+
+            // result = xmm_a == SNaN || xmm_b == QNaN
+            {
+                // evaluate xmm_b == QNaN
+                FCODE(vcmpunordp)(tmp1, xmm_b, xmm_b);
+                ICODE(vpsll)(tmp2, xmm_b, static_cast<u8>(fsize - FP::FPInfo<FPT>::explicit_mantissa_width));
+                {
+                    code.vpsrad(tmp2, tmp2, 31);
+                    if constexpr (fsize == 64) {
+                        code.vpshufd(tmp2, tmp2, 0b11110101);
+                    }
+                }
+                code.vandps(result, tmp1, tmp2);
+
+                // evaluate xmm_a == SNaN
+                FCODE(vcmpunordp)(tmp1, xmm_a, xmm_a);
+                ICODE(vpsll)(tmp2, xmm_a, static_cast<u8>(fsize - FP::FPInfo<FPT>::explicit_mantissa_width));
+                {
+                    code.vpsrad(tmp2, tmp2, 31);
+                    if constexpr (fsize == 64) {
+                        code.vpshufd(tmp2, tmp2, 0b11110101);
+                    }
+                }
+                code.vandnps(tmp2, tmp2, tmp1);
+
+                code.vorps(result, tmp2);
+            }
+
+            // Denormalization quiets SNaNs, therefore should happen after SNaN detection!
+            DenormalsAreZero<fsize>(code, ctx.FPCR(fpcr_controlled), {xmm_a, xmm_b}, tmp1);
+
+            // intermediate result = max/min(xmm_a, xmm_b)
+            {
+                const Xbyak::Xmm eq_mask = tmp1;
+                const Xbyak::Xmm eq = tmp2;
+
+                FCODE(vcmpeqp)(eq_mask, xmm_a, xmm_b);
+
+                if constexpr (is_max) {
+                    code.vandps(eq, xmm_a, xmm_b);
+                    FCODE(vmaxp)(intermediate_result, xmm_a, xmm_b);
+                } else {
+                    code.vorps(eq, xmm_a, xmm_b);
+                    FCODE(vminp)(intermediate_result, xmm_a, xmm_b);
+                }
+
+                code.blendvps(intermediate_result, eq);  // eq_mask is in xmm0
+            }
+
+            {
+                code.vblendvps(result, intermediate_result, xmm_a, result);
+            }
+
+            if (ctx.FPCR(fpcr_controlled).DN()) {
+                const Xbyak::Xmm ord_mask = tmp1;
+
+                FCODE(vcmpunordp)(ord_mask, result, result);
+                code.blendvps(result, GetNaNVector<fsize>(code));  // ord_mask is in xmm0
+            } else {
+                const Xbyak::Xmm nan_mask = tmp1;
+
+                FCODE(vcmpunordp)(nan_mask, result, result);
+                code.vandps(nan_mask, nan_mask, GetVectorOf<fsize, FP::FPInfo<FPT>::mantissa_msb>(code));
+                code.vorps(result, result, nan_mask);
+            }
+        });
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&] {
         using FPT = mcl::unsigned_integer_of_size<fsize>;
 
