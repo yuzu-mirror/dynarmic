@@ -31,27 +31,49 @@ const std::vector test_cases{
     TestCase{0xbf800000, 0xbf800000, 0xbf800000, 0xbf800000, 0xbf800000, 0xbf800000},  // -1.0
     TestCase{0x7f800000, 0x7f800000, 0x7f800000, 0x7f800000, 0x7f800000, 0x7f800000},  // +Inf
     TestCase{0xff800000, 0xff800000, 0xff800000, 0xff800000, 0xff800000, 0xff800000},  // -Inf
-    TestCase{0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042},  // QNaN
+    TestCase{0x7fc00041, 0x7fc00041, 0x7fc00041, 0x7fc00041, 0x7fc00041, 0x7fc00041},  // QNaN
     TestCase{0x7f800042, 0x7f800042, 0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042},  // SNaN
     TestCase{0x00000000, 0x80000000, 0x00000000, 0x00000000, 0x80000000, 0x80000000},  // (+0.0, -0.0)
     TestCase{0x3f800000, 0xbf800000, 0x3f800000, 0x3f800000, 0xbf800000, 0xbf800000},  // (+1.0, -1.0)
     TestCase{0x3f800000, 0x7f800000, 0x7f800000, 0x7f800000, 0x3f800000, 0x3f800000},  // (+1.0, +Inf)
     TestCase{0x3f800000, 0xff800000, 0x3f800000, 0x3f800000, 0xff800000, 0xff800000},  // (+1.0, -Inf)
-    TestCase{0x3f800000, 0x7fc00042, 0x7fc00042, 0x3f800000, 0x7fc00042, 0x3f800000},  // (+1.0, QNaN)
+    TestCase{0x7f800000, 0xff800000, 0x7f800000, 0x7f800000, 0xff800000, 0xff800000},  // (+Inf, -Inf)
+    TestCase{0x3f800000, 0x7fc00041, 0x7fc00041, 0x3f800000, 0x7fc00041, 0x3f800000},  // (+1.0, QNaN)
     TestCase{0x3f800000, 0x7f800042, 0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042},  // (+1.0, SNaN)
+    TestCase{0x7f800000, 0x7fc00041, 0x7fc00041, 0x7f800000, 0x7fc00041, 0x7f800000},  // (+Inf, QNaN)
+    TestCase{0x7f800000, 0x7f800042, 0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042},  // (+Inf, SNaN)
+    TestCase{0x7fc00041, 0x7f800042, 0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042},  // (QNaN, SNaN)
+    TestCase{0xffa57454, 0xe343a6b3, 0xffe57454, 0xffe57454, 0xffe57454, 0xffe57454},
 };
+
+const std::vector unidirectional_test_cases{
+    TestCase{0x7fc00041, 0x7fc00043, 0x7fc00041, 0x7fc00041, 0x7fc00041, 0x7fc00041},  // (QNaN, QNaN)
+    TestCase{0x7f800042, 0x7f800044, 0x7fc00042, 0x7fc00042, 0x7fc00042, 0x7fc00042},  // (SNaN, SNaN)
+};
+
+constexpr u32 default_nan = 0x7fc00000;
+
+bool is_nan(u32 value) {
+    return (value & 0x7f800000) == 0x7f800000 && (value & 0x007fffff) != 0;
+}
+
+u32 force_default_nan(u32 value) {
+    return is_nan(value) ? default_nan : value;
+}
 
 template<typename Fn>
 void run_test(u32 instruction, Fn fn) {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    for (const auto test_case : test_cases) {
-        env.code_mem.emplace_back(instruction);  // FMAX S0, S1, S2
-        env.code_mem.emplace_back(0x14000000);   // B .
+    env.code_mem.emplace_back(instruction);  // FMAX S0, S1, S2
+    env.code_mem.emplace_back(0x14000000);   // B .
 
+    for (const auto test_case : test_cases) {
         INFO(test_case.a);
         INFO(test_case.b);
+
+        jit.SetFpcr(0);
 
         jit.SetVector(0, {42, 0});
         jit.SetVector(1, {test_case.a, 0});
@@ -72,6 +94,57 @@ void run_test(u32 instruction, Fn fn) {
         jit.Run();
 
         REQUIRE(jit.GetVector(0)[0] == fn(test_case));
+
+        jit.SetFpcr(0x02000000);
+
+        jit.SetVector(0, {42, 0});
+        jit.SetVector(1, {test_case.a, 0});
+        jit.SetVector(2, {test_case.b, 0});
+        jit.SetPC(0);
+
+        env.ticks_left = 2;
+        jit.Run();
+
+        REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
+
+        jit.SetVector(0, {42, 0});
+        jit.SetVector(1, {test_case.b, 0});
+        jit.SetVector(2, {test_case.a, 0});
+        jit.SetPC(0);
+
+        env.ticks_left = 2;
+        jit.Run();
+
+        REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
+    }
+
+    for (const auto test_case : unidirectional_test_cases) {
+        INFO(test_case.a);
+        INFO(test_case.b);
+
+        jit.SetFpcr(0);
+
+        jit.SetVector(0, {42, 0});
+        jit.SetVector(1, {test_case.a, 0});
+        jit.SetVector(2, {test_case.b, 0});
+        jit.SetPC(0);
+
+        env.ticks_left = 2;
+        jit.Run();
+
+        REQUIRE(jit.GetVector(0)[0] == fn(test_case));
+
+        jit.SetFpcr(0x02000000);
+
+        jit.SetVector(0, {42, 0});
+        jit.SetVector(1, {test_case.a, 0});
+        jit.SetVector(2, {test_case.b, 0});
+        jit.SetPC(0);
+
+        env.ticks_left = 2;
+        jit.Run();
+
+        REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
     }
 }
 

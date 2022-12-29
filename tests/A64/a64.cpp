@@ -702,6 +702,24 @@ TEST_CASE("A64: FMAXNM (example)", "[a64]") {
     REQUIRE(jit.GetVector(2) == Vector{0x7fc0000009503366, 0x3ff0000000000000});
 }
 
+TEST_CASE("A64: FMAXNM (example 2)", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x4e3bc6fd);  // FMAXNM.4S V29, V23, V27
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetFpcr(0x01400000);
+    jit.SetVector(23, {0xb485877c'42280000, 0x317285d3'b5c8e5d3});
+    jit.SetVector(27, {0xbc48d091'c79b271e, 0xff800001'3304c3ef});
+
+    env.ticks_left = 2;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(29) == Vector{0xb485877c'42280000, 0xffc00001'3304c3ef});
+}
+
 TEST_CASE("A64: 128-bit exclusive read/write", "[a64]") {
     A64TestEnv env;
     ExclusiveMonitor monitor{1};
