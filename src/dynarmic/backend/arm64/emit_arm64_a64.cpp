@@ -359,8 +359,8 @@ void EmitIR<IR::Opcode::A64CallSupervisor>(oaknut::CodeGenerator& code, EmitCont
     ctx.reg_alloc.PrepareForCall();
 
     if (ctx.conf.enable_cycle_counting) {
-        code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
-        code.SUB(Xscratch0, Xscratch0, Xticks);
+        code.LDR(X1, SP, offsetof(StackLayout, cycles_to_run));
+        code.SUB(X1, X1, Xticks);
         EmitRelocation(code, ctx, LinkTarget::AddTicks);
     }
 
@@ -380,8 +380,8 @@ void EmitIR<IR::Opcode::A64ExceptionRaised>(oaknut::CodeGenerator& code, EmitCon
     ctx.reg_alloc.PrepareForCall();
 
     if (ctx.conf.enable_cycle_counting) {
-        code.LDR(Xscratch0, SP, offsetof(StackLayout, cycles_to_run));
-        code.SUB(Xscratch0, Xscratch0, Xticks);
+        code.LDR(X1, SP, offsetof(StackLayout, cycles_to_run));
+        code.SUB(X1, X1, Xticks);
         EmitRelocation(code, ctx, LinkTarget::AddTicks);
     }
 
