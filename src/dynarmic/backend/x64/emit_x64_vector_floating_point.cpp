@@ -1027,14 +1027,9 @@ static void EmitFPVectorMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
             // x86-64 treats differently signed zeros as equal while ARM does not.
             // Thus if we AND together things that x86-64 thinks are equal we'll get the positive zero.
 
-            if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
-                // vrangep{s,d} will already correctly handle comparing
-                // signed zeros similar to ARM
-                // max(+0.0, -0.0) = +0.0.
-                // min(+0.0, -0.0) = -0.0
-                constexpr FpRangeSelect range_select = is_max ? FpRangeSelect::Max : FpRangeSelect::Min;
-                FCODE(vrangep)(result, result, xmm_b, FpRangeLUT(range_select, FpRangeSign::Preserve));
-            } else if (code.HasHostFeature(HostFeature::AVX)) {
+            // vrangep{s,d} here ends up not being significantly shorter than the AVX implementation
+
+            if (code.HasHostFeature(HostFeature::AVX)) {
                 FCODE(vcmpeqp)(mask, result, xmm_b);
                 if constexpr (is_max) {
                     FCODE(vandp)(eq, result, xmm_b);
