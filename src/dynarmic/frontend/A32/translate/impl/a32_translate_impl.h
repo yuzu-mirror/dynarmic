@@ -857,6 +857,8 @@ struct TranslatorVisitor final {
     bool asimd_VMLA(bool op, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
     bool asimd_VMUL(bool P, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
     bool asimd_VPMAX_int(bool U, bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, bool op, size_t Vm);
+    bool v8_VMAXNM(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
+    bool v8_VMINNM(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
     bool asimd_VQDMULH(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
     bool asimd_VQRDMULH(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);
     bool asimd_VPADD(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm);

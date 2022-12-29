@@ -647,6 +647,18 @@ bool TranslatorVisitor::asimd_VPMAX_int(bool U, bool D, size_t sz, size_t Vn, si
     return true;
 }
 
+bool TranslatorVisitor::v8_VMAXNM(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        return ir.FPVectorMaxNumeric(32, reg_n, reg_m, false);
+    });
+}
+
+bool TranslatorVisitor::v8_VMINNM(bool D, bool sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
+    return FloatingPointInstruction(*this, D, sz, Vn, Vd, N, Q, M, Vm, [this](const auto&, const auto& reg_n, const auto& reg_m) {
+        return ir.FPVectorMinNumeric(32, reg_n, reg_m, false);
+    });
+}
+
 bool TranslatorVisitor::asimd_VQDMULH(bool D, size_t sz, size_t Vn, size_t Vd, bool N, bool Q, bool M, size_t Vm) {
     if (Q && (mcl::bit::get_bit<0>(Vd) || mcl::bit::get_bit<0>(Vn) || mcl::bit::get_bit<0>(Vm))) {
         return UndefinedInstruction();

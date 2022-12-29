@@ -28,6 +28,8 @@ INST(asimd_VCEQ_reg,        "VCEG (register)",          "111100110Dzznnnndddd100
 INST(asimd_VMLA,            "VMLA/VMLS",                "1111001o0Dzznnnndddd1001NQM0mmmm") // ASIMD
 INST(asimd_VMUL,            "VMUL",                     "1111001P0Dzznnnndddd1001NQM1mmmm") // ASIMD
 INST(asimd_VPMAX_int,       "VPMAX/VPMIN (integer)",    "1111001U0Dzznnnndddd1010NQMommmm") // ASIMD
+INST(v8_VMAXNM,             "VMAXNM",                   "111100110D0znnnndddd1111NQM1mmmm") // v8
+INST(v8_VMINNM,             "VMINNM",                   "111100110D1znnnndddd1111NQM1mmmm") // v8
 INST(asimd_VQDMULH,         "VQDMULH",                  "111100100Dzznnnndddd1011NQM0mmmm") // ASIMD
 INST(asimd_VQRDMULH,        "VQRDMULH",                 "111100110Dzznnnndddd1011NQM0mmmm") // ASIMD
 INST(asimd_VPADD,           "VPADD",                    "111100100Dzznnnndddd1011NQM1mmmm") // ASIMD
