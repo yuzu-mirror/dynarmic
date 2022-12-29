@@ -6,7 +6,7 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  build:
+  build_linux:
     strategy:
       matrix:
         platform: [ linux, android ]
@@ -119,3 +119,40 @@ jobs:
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator a64 42 1 100000) <(./build-x64/tests/dynarmic_test_generator a64 42 1 100000)
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator a64 42 10 10000) <(./build-x64/tests/dynarmic_test_generator a64 42 10 10000)
           diff <(qemu-aarch64 -L /usr/aarch64-linux-gnu ./build-arm64/tests/dynarmic_test_generator a64 42 100 1000) <(./build-x64/tests/dynarmic_test_generator a64 42 100 1000)
+
+  build_windows:
+    strategy:
+      fail-fast: false
+
+    runs-on: windows-latest
+
+    steps:
+
+      - name: Checkout dynarmic repo
+        uses: actions/checkout@v2
+
+      - name: Checkout ext-boost repo
+        uses: actions/checkout@v2
+        with:
+          repository: MerryMage/ext-boost
+          path: externals/ext-boost
+
+      - name: Setup msvc-arm64 environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_arm64
+
+      - name: Configure CMake for AArch64 (Windows)
+        run: >
+          cmake
+          -B ${{github.workspace}}/build-arm64
+          -DBOOST_INCLUDEDIR=${{github.workspace}}/externals/ext-boost
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+          -DDYNARMIC_WARNINGS_AS_ERRORS=0
+          -DDYNARMIC_TESTS_USE_UNICORN=0
+          -DDYNARMIC_USE_LLVM=0
+          -G Ninja
+
+      - name: Build AArch64
+        working-directory: ${{github.workspace}}/build-arm64
+        run: cmake --build . --config Release
