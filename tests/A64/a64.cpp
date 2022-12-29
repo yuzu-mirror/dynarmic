@@ -614,7 +614,7 @@ TEST_CASE("A64: FABS", "[a64]") {
     REQUIRE(jit.GetVector(6) == Vector{0x7fffffffffffffff, 0x0000000000000000});
 }
 
-TEST_CASE("A64: FMIN", "[a64]") {
+TEST_CASE("A64: FMIN (example)", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
@@ -636,7 +636,7 @@ TEST_CASE("A64: FMIN", "[a64]") {
     REQUIRE(jit.GetVector(2) == Vector{0xbff0000000000000, 0x3ff0000000000000});
 }
 
-TEST_CASE("A64: FMAX", "[a64]") {
+TEST_CASE("A64: FMAX (example)", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
@@ -658,7 +658,7 @@ TEST_CASE("A64: FMAX", "[a64]") {
     REQUIRE(jit.GetVector(2) == Vector{0x7fc0000009503366, 0x6e4b0a41ffffffff});
 }
 
-TEST_CASE("A64: FMINNM", "[a64]") {
+TEST_CASE("A64: FMINNM (example)", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
@@ -680,7 +680,7 @@ TEST_CASE("A64: FMINNM", "[a64]") {
     REQUIRE(jit.GetVector(2) == Vector{0xfff0000000000000, 0x3ff0000000000000});
 }
 
-TEST_CASE("A64: FMAXNM", "[a64]") {
+TEST_CASE("A64: FMAXNM (example)", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
