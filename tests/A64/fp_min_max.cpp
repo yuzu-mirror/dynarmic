@@ -69,82 +69,84 @@ void run_test(u32 instruction, Fn fn) {
     env.code_mem.emplace_back(instruction);  // FMAX S0, S1, S2
     env.code_mem.emplace_back(0x14000000);   // B .
 
-    for (const auto test_case : test_cases) {
-        INFO(test_case.a);
-        INFO(test_case.b);
+    for (const auto base_fpcr : {0, 0x01000000}) {
+        for (const auto test_case : test_cases) {
+            INFO(test_case.a);
+            INFO(test_case.b);
 
-        jit.SetFpcr(0);
+            jit.SetFpcr(base_fpcr);
 
-        jit.SetVector(0, {42, 0});
-        jit.SetVector(1, {test_case.a, 0});
-        jit.SetVector(2, {test_case.b, 0});
-        jit.SetPC(0);
+            jit.SetVector(0, {42, 0});
+            jit.SetVector(1, {test_case.a, 0});
+            jit.SetVector(2, {test_case.b, 0});
+            jit.SetPC(0);
 
-        env.ticks_left = 2;
-        jit.Run();
+            env.ticks_left = 2;
+            jit.Run();
 
-        REQUIRE(jit.GetVector(0)[0] == fn(test_case));
+            REQUIRE(jit.GetVector(0)[0] == fn(test_case));
 
-        jit.SetVector(0, {42, 0});
-        jit.SetVector(1, {test_case.b, 0});
-        jit.SetVector(2, {test_case.a, 0});
-        jit.SetPC(0);
+            jit.SetVector(0, {42, 0});
+            jit.SetVector(1, {test_case.b, 0});
+            jit.SetVector(2, {test_case.a, 0});
+            jit.SetPC(0);
 
-        env.ticks_left = 2;
-        jit.Run();
+            env.ticks_left = 2;
+            jit.Run();
 
-        REQUIRE(jit.GetVector(0)[0] == fn(test_case));
+            REQUIRE(jit.GetVector(0)[0] == fn(test_case));
 
-        jit.SetFpcr(0x02000000);
+            jit.SetFpcr(base_fpcr | 0x02000000);
 
-        jit.SetVector(0, {42, 0});
-        jit.SetVector(1, {test_case.a, 0});
-        jit.SetVector(2, {test_case.b, 0});
-        jit.SetPC(0);
+            jit.SetVector(0, {42, 0});
+            jit.SetVector(1, {test_case.a, 0});
+            jit.SetVector(2, {test_case.b, 0});
+            jit.SetPC(0);
 
-        env.ticks_left = 2;
-        jit.Run();
+            env.ticks_left = 2;
+            jit.Run();
 
-        REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
+            REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
 
-        jit.SetVector(0, {42, 0});
-        jit.SetVector(1, {test_case.b, 0});
-        jit.SetVector(2, {test_case.a, 0});
-        jit.SetPC(0);
+            jit.SetVector(0, {42, 0});
+            jit.SetVector(1, {test_case.b, 0});
+            jit.SetVector(2, {test_case.a, 0});
+            jit.SetPC(0);
 
-        env.ticks_left = 2;
-        jit.Run();
+            env.ticks_left = 2;
+            jit.Run();
 
-        REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
-    }
+            REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
+        }
 
-    for (const auto test_case : unidirectional_test_cases) {
-        INFO(test_case.a);
-        INFO(test_case.b);
+        for (const auto test_case : unidirectional_test_cases) {
+            INFO(test_case.a);
+            INFO(test_case.b);
 
-        jit.SetFpcr(0);
+            jit.SetFpcr(base_fpcr);
 
-        jit.SetVector(0, {42, 0});
-        jit.SetVector(1, {test_case.a, 0});
-        jit.SetVector(2, {test_case.b, 0});
-        jit.SetPC(0);
+            jit.SetVector(0, {42, 0});
+            jit.SetVector(1, {test_case.a, 0});
+            jit.SetVector(2, {test_case.b, 0});
+            jit.SetPC(0);
 
-        env.ticks_left = 2;
-        jit.Run();
+            env.ticks_left = 2;
+            jit.Run();
 
-        REQUIRE(jit.GetVector(0)[0] == fn(test_case));
+            REQUIRE(jit.GetVector(0)[0] == fn(test_case));
 
-        jit.SetFpcr(0x02000000);
+            jit.SetFpcr(base_fpcr | 0x02000000);
 
-        jit.SetVector(0, {42, 0});
-        jit.SetVector(1, {test_case.a, 0});
-        jit.SetVector(2, {test_case.b, 0});
-        jit.SetPC(0);
+            jit.SetVector(0, {42, 0});
+            jit.SetVector(1, {test_case.a, 0});
+            jit.SetVector(2, {test_case.b, 0});
+            jit.SetPC(0);
 
-        env.ticks_left = 2;
-        jit.Run();
+            env.ticks_left = 2;
+            jit.Run();
 
-        REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
+            REQUIRE(jit.GetVector(0)[0] == force_default_nan(fn(test_case)));
+        }
     }
 }
 
