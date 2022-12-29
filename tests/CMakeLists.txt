@@ -12,6 +12,7 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         A32/test_arm_disassembler.cpp
         A32/test_arm_instructions.cpp
         A32/test_coprocessor.cpp
+        A32/test_svc.cpp
         A32/test_thumb_instructions.cpp
         A32/testenv.h
         decoder_tests.cpp

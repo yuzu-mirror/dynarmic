@@ -17,7 +17,7 @@
 #include "dynarmic/interface/A32/a32.h"
 
 template<typename InstructionType_, u32 infinite_loop_u32>
-class A32TestEnv final : public Dynarmic::A32::UserCallbacks {
+class A32TestEnv : public Dynarmic::A32::UserCallbacks {
 public:
     using InstructionType = InstructionType_;
     using RegisterArray = std::array<u32, 16>;
