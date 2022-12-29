@@ -2634,12 +2634,32 @@ U128 IREmitter::FPVectorMax(size_t esize, const U128& a, const U128& b, bool fpc
     UNREACHABLE();
 }
 
+U128 IREmitter::FPVectorMaxNumeric(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
+    switch (esize) {
+    case 32:
+        return Inst<U128>(Opcode::FPVectorMaxNumeric32, a, b, Imm1(fpcr_controlled));
+    case 64:
+        return Inst<U128>(Opcode::FPVectorMaxNumeric64, a, b, Imm1(fpcr_controlled));
+    }
+    UNREACHABLE();
+}
+
 U128 IREmitter::FPVectorMin(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
     switch (esize) {
     case 32:
         return Inst<U128>(Opcode::FPVectorMin32, a, b, Imm1(fpcr_controlled));
     case 64:
         return Inst<U128>(Opcode::FPVectorMin64, a, b, Imm1(fpcr_controlled));
+    }
+    UNREACHABLE();
+}
+
+U128 IREmitter::FPVectorMinNumeric(size_t esize, const U128& a, const U128& b, bool fpcr_controlled) {
+    switch (esize) {
+    case 32:
+        return Inst<U128>(Opcode::FPVectorMinNumeric32, a, b, Imm1(fpcr_controlled));
+    case 64:
+        return Inst<U128>(Opcode::FPVectorMinNumeric64, a, b, Imm1(fpcr_controlled));
     }
     UNREACHABLE();
 }

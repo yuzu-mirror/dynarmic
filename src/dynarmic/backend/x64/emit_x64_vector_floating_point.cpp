@@ -1060,6 +1060,117 @@ static void EmitFPVectorMinMax(BlockOfCode& code, EmitContext& ctx, IR::Inst* in
         CheckInputNaN::Yes);
 }
 
+template<size_t fsize, bool is_max>
+static void EmitFPVectorMinMaxNumeric(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    const bool fpcr_controlled = inst->GetArg(2).GetU1();
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    const Xbyak::Xmm xmm_a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm xmm_b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm intermediate_result = ctx.reg_alloc.ScratchXmm();
+
+    const Xbyak::Xmm tmp1 = xmm0;
+    const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
+
+    // NaN requirements:
+    // op1     op2      result
+    // SNaN    anything op1
+    // !SNaN   SNaN     op2
+    // QNaN    !NaN     op2
+    // !NaN    QNaN     op1
+    // QNaN    QNaN     op1
+
+    MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&] {
+        using FPT = mcl::unsigned_integer_of_size<fsize>;
+
+        // result = xmm_a == SNaN || xmm_b == QNaN
+        {
+            // evaluate xmm_b == QNaN
+            code.xorps(tmp1, tmp1);
+            FCODE(cmpunordp)(tmp1, xmm_b);
+            code.movaps(tmp2, xmm_b);
+            ICODE(psll)(tmp2, static_cast<int>(fsize - FP::FPInfo<FPT>::explicit_mantissa_width));
+            {
+                code.psrad(tmp2, 31);
+                if constexpr (fsize == 64) {
+                    code.pshufd(tmp2, tmp2, 0b11110101);
+                }
+            }
+            code.andps(tmp1, tmp2);
+
+            code.movaps(result, tmp1);
+
+            // evaluate xmm_a == SNaN
+            code.xorps(tmp1, tmp1);
+            FCODE(cmpunordp)(tmp1, xmm_a);
+            code.movaps(tmp2, xmm_a);
+            ICODE(psll)(tmp2, static_cast<int>(fsize - FP::FPInfo<FPT>::explicit_mantissa_width));
+            {
+                code.psrad(tmp2, 31);
+                if constexpr (fsize == 64) {
+                    code.pshufd(tmp2, tmp2, 0b11110101);
+                }
+            }
+            code.andnps(tmp2, tmp1);
+
+            code.orps(result, tmp2);
+        }
+
+        // Denormalization quiets SNaNs, therefore should happen after SNaN detection!
+        DenormalsAreZero<fsize>(code, ctx.FPCR(fpcr_controlled), {xmm_a, xmm_b}, tmp1);
+
+        // intermediate result = max/min(xmm_a, xmm_b)
+        {
+            const Xbyak::Xmm eq_mask = tmp1;
+            const Xbyak::Xmm eq = tmp2;
+
+            code.movaps(eq_mask, xmm_a);
+            FCODE(cmpneqp)(eq_mask, xmm_b);
+
+            code.movaps(eq, xmm_a);
+            code.movaps(intermediate_result, xmm_a);
+            if constexpr (is_max) {
+                code.andps(eq, xmm_b);
+                FCODE(maxp)(intermediate_result, xmm_b);
+            } else {
+                code.orps(eq, xmm_b);
+                FCODE(minp)(intermediate_result, xmm_b);
+            }
+
+            code.andps(intermediate_result, eq_mask);
+            code.andnps(eq_mask, eq);
+            code.orps(intermediate_result, eq_mask);
+        }
+
+        {
+            code.andps(xmm_a, result);
+            code.andnps(result, intermediate_result);
+            code.orps(result, xmm_a);
+        }
+
+        if (ctx.FPCR(fpcr_controlled).DN()) {
+            const Xbyak::Xmm ord_mask = tmp1;
+
+            code.xorps(ord_mask, ord_mask);
+            FCODE(cmpordp)(ord_mask, result);
+
+            code.andps(result, ord_mask);
+            code.andnps(ord_mask, GetNaNVector<fsize>(code));
+            code.orps(result, ord_mask);
+        } else {
+            const Xbyak::Xmm nan_mask = tmp1;
+
+            code.xorps(nan_mask, nan_mask);
+            FCODE(cmpunordp)(nan_mask, result);
+            code.andps(nan_mask, GetVectorOf<fsize, FP::FPInfo<FPT>::mantissa_msb>(code));
+            code.orps(result, nan_mask);
+        }
+    });
+
+    ctx.reg_alloc.DefineValue(inst, result);
+}
+
 void EmitX64::EmitFPVectorMax32(EmitContext& ctx, IR::Inst* inst) {
     EmitFPVectorMinMax<32, true>(code, ctx, inst);
 }
@@ -1068,12 +1179,28 @@ void EmitX64::EmitFPVectorMax64(EmitContext& ctx, IR::Inst* inst) {
     EmitFPVectorMinMax<64, true>(code, ctx, inst);
 }
 
+void EmitX64::EmitFPVectorMaxNumeric32(EmitContext& ctx, IR::Inst* inst) {
+    EmitFPVectorMinMaxNumeric<32, true>(code, ctx, inst);
+}
+
+void EmitX64::EmitFPVectorMaxNumeric64(EmitContext& ctx, IR::Inst* inst) {
+    EmitFPVectorMinMaxNumeric<64, true>(code, ctx, inst);
+}
+
 void EmitX64::EmitFPVectorMin32(EmitContext& ctx, IR::Inst* inst) {
     EmitFPVectorMinMax<32, false>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorMin64(EmitContext& ctx, IR::Inst* inst) {
     EmitFPVectorMinMax<64, false>(code, ctx, inst);
+}
+
+void EmitX64::EmitFPVectorMinNumeric32(EmitContext& ctx, IR::Inst* inst) {
+    EmitFPVectorMinMaxNumeric<32, false>(code, ctx, inst);
+}
+
+void EmitX64::EmitFPVectorMinNumeric64(EmitContext& ctx, IR::Inst* inst) {
+    EmitFPVectorMinMaxNumeric<64, false>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPVectorMul32(EmitContext& ctx, IR::Inst* inst) {

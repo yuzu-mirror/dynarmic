@@ -417,6 +417,16 @@ void EmitIR<IR::Opcode::FPVectorMax64>(oaknut::CodeGenerator& code, EmitContext&
 }
 
 template<>
+void EmitIR<IR::Opcode::FPVectorMaxNumeric32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitThreeOpArranged<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.FMAXNM(Vresult, Va, Vb); });
+}
+
+template<>
+void EmitIR<IR::Opcode::FPVectorMaxNumeric64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitThreeOpArranged<64>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.FMAXNM(Vresult, Va, Vb); });
+}
+
+template<>
 void EmitIR<IR::Opcode::FPVectorMin32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitThreeOpArranged<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.FMIN(Vresult, Va, Vb); });
 }
@@ -424,6 +434,16 @@ void EmitIR<IR::Opcode::FPVectorMin32>(oaknut::CodeGenerator& code, EmitContext&
 template<>
 void EmitIR<IR::Opcode::FPVectorMin64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitThreeOpArranged<64>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.FMIN(Vresult, Va, Vb); });
+}
+
+template<>
+void EmitIR<IR::Opcode::FPVectorMinNumeric32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitThreeOpArranged<32>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.FMINNM(Vresult, Va, Vb); });
+}
+
+template<>
+void EmitIR<IR::Opcode::FPVectorMinNumeric64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitThreeOpArranged<64>(code, ctx, inst, [&](auto Vresult, auto Va, auto Vb) { code.FMINNM(Vresult, Va, Vb); });
 }
 
 template<>
