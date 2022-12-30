@@ -280,7 +280,7 @@ static void* EmitWrappedWrite128CallTrampoline(oaknut::CodeGenerator& code, A64:
     code.FMOV(X3, V0.D()[1]);
     code.LDR(Xscratch0, l_addr);
     code.BLR(Xscratch0);
-    ABI_PushRegisters(code, save_regs, 0);
+    ABI_PopRegisters(code, save_regs, 0);
     code.RET();
 
     code.align(8);
