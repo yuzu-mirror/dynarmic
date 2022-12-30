@@ -1,5 +1,14 @@
 # History
 
+* 2022/Dec/07 ver 6.68 support prefetchit{0,1}
+* 2022/Nov/30 ver 6.67 support CMPccXADD
+* 2022/Nov/25 ver 6.66 support RAO-INT
+* 2022/Nov/22 ver 6.65 consider x32
+* 2022/Nov/04 ver 6.64 some vmov* support addressing with mask
+* 2022/Oct/06 ver 6.63 vpmadd52{h,l}uq support AVX-IFMA
+* 2022/Oct/05 ver 6.63 support amx_fp16/avx_vnni_int8/avx_ne_convert and add setDefaultEncoding()
+* 2022/Aug/15 ver 6.62 add serialize instruction
+* 2022/Aug/02 ver 6.61.1 noexcept is supported by Visual Studio 2015 or later
 * 2022/Jul/29 ver 6.61 fix exception of movzx eax, ah in 64-bit mode
 * 2022/Jun/16 ver 6.60.2 fix detection of GFNI, VAES, and VPCLMULQDQ
 * 2022/Jun/15 ver 6.60.1 fix link error of Xbyak::util::Cpu on Visual Studio with /O0 option

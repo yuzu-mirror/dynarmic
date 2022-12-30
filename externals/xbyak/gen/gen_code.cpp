@@ -560,6 +560,8 @@ void put()
 			{ 0, "nta", 0x18},
 			{ 2, "wt1", 0x0D},
 			{ 1, "w", 0x0D},
+			{ 7, "it0", 0x18},
+			{ 6, "it1", 0x18},
 		};
 		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
 			const Tbl *p = &tbl[i];
@@ -693,6 +695,7 @@ void put()
 			{ "lock", 0xF0 },
 
 			{ "sahf", 0x9E },
+			{ "serialize", 0x0F, 0x01, 0xE8 },
 			{ "stc", 0xF9 },
 			{ "std", 0xFD },
 			{ "sti", 0xFB },
@@ -804,6 +807,23 @@ void put()
 			const Tbl *p = &tbl[i];
 			printf("void %s(const Operand& op1, const Operand& op2) { opRM_RM(op1, op2, 0x%02X); }\n", p->name, p->code);
 			printf("void %s(const Operand& op, uint32_t imm) { opRM_I(op, imm, 0x%02X, %d); }\n", p->name, p->code, p->ext);
+		}
+	}
+	{
+		const struct Tbl {
+			const char *name;
+			uint8_t prefix;
+		} tbl[] = {
+			{ "aadd", 0 },
+			{ "aand", 0x66 },
+			{ "aor", 0xF2 },
+			{ "axor", 0xF3 },
+		};
+		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
+			const Tbl *p = &tbl[i];
+			printf("void %s(const Address& addr, const Reg32e &reg) { ", p->name);
+			if (p->prefix) printf("db(0x%02X); ", p->prefix);
+			printf("opModM(addr, reg, 0x0F, 0x38, 0x0FC); }\n");
 		}
 	}
 
@@ -1666,6 +1686,25 @@ void put()
 		puts("void vcvtps2ph(const Operand& op, const Xmm& x, uint8_t imm) { checkCvt1(x, op); opVex(x, 0, op, T_0F3A | T_66 | T_W0 | T_EVEX | T_EW0 | T_N8 | T_N_VL | T_SAE_Y | T_M_K, 0x1D, imm); }");
 
 	}
+	{
+		const struct Tbl {
+			const char *name;
+			int type;
+			uint8_t code;
+		} tbl[] = {
+			{ "vbcstnebf162ps", T_F3 | T_0F38 | T_W0 | T_B16 | T_YMM, 0xB1 },
+			{ "vbcstnesh2ps", T_66 | T_0F38 | T_W0 | T_B16 | T_YMM, 0xB1 },
+			{ "vcvtneebf162ps", T_F3 | T_0F38 | T_W0 | T_YMM, 0xB0 },
+			{ "vcvtneeph2ps", T_66 | T_0F38 | T_W0 | T_YMM, 0xB0 },
+			{ "vcvtneobf162ps", T_F2 | T_0F38 | T_W0 | T_YMM, 0xB0 },
+			{ "vcvtneoph2ps", T_0F38 | T_W0 | T_YMM, 0xB0 }
+		};
+		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
+			const Tbl& p = tbl[i];
+			printf("void %s(const Xmm& x, const Address& addr) { opVex(x, 0, addr, %s, 0x%02X); }\n", p.name, type2String(p.type).c_str(), p.code);
+		}
+		puts("void vcvtneps2bf16(const Xmm& x, const Operand& op, PreferredEncoding encoding = DefaultEncoding) { opCvt2(x, op, T_F3 | T_0F38 | T_EW0 | T_YMM | T_SAE_Z | T_B32 | orEvexIf(encoding), 0x72); }");
+	}
 	// haswell gpr(reg, reg, r/m)
 	{
 		const struct Tbl {
@@ -1755,11 +1794,33 @@ void put()
 			{ 0x51, "vpdpbusds", T_66 | T_0F38 | T_YMM | T_EW0 | T_SAE_Z | T_B32},
 			{ 0x52, "vpdpwssd", T_66 | T_0F38 | T_YMM | T_EW0 | T_SAE_Z | T_B32},
 			{ 0x53, "vpdpwssds", T_66 | T_0F38 | T_YMM | T_EW0 | T_SAE_Z | T_B32},
+			{ 0xB4, "vpmadd52luq", T_66 | T_0F38 | T_YMM | T_EW1 | T_B64 },
+			{ 0xB5, "vpmadd52huq", T_66 | T_0F38 | T_YMM | T_EW1 | T_B64 },
 		};
 		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
 			const Tbl *p = &tbl[i];
 			std::string type = type2String(p->type);
-			printf("void %s(const Xmm& x1, const Xmm& x2, const Operand& op, PreferredEncoding encoding = DefaultEncoding) { opVnni(x1, x2, op, %s, 0x%02X, encoding); }\n", p->name, type.c_str(), p->code);
+			printf("void %s(const Xmm& x1, const Xmm& x2, const Operand& op, PreferredEncoding encoding = DefaultEncoding) { opEncoding(x1, x2, op, %s, 0x%02X, encoding); }\n", p->name, type.c_str(), p->code);
+		}
+	}
+	// avx-vnni-int8
+	{
+		const struct Tbl {
+			uint8_t code;
+			const char *name;
+			int type;
+		} tbl[] = {
+			{ 0x50, "vpdpbssd", T_F2 | T_0F38 | T_W0 | T_YMM },
+			{ 0x51, "vpdpbssds", T_F2 | T_0F38 | T_W0 | T_YMM },
+			{ 0x50, "vpdpbsud", T_F3 | T_0F38 | T_W0 | T_YMM },
+			{ 0x51, "vpdpbsuds", T_F3 | T_0F38 | T_W0 | T_YMM },
+			{ 0x50, "vpdpbuud", T_0F38 | T_W0 | T_YMM },
+			{ 0x51, "vpdpbuuds", T_0F38 | T_W0 | T_YMM },
+		};
+		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
+			const Tbl *p = &tbl[i];
+			std::string type = type2String(p->type);
+			printf("void %s(const Xmm& x1, const Xmm& x2, const Operand& op) { opAVX_X_X_XM(x1, x2, op, %s, 0x%02X); }\n", p->name, type.c_str(), p->code);
 		}
 	}
 }
@@ -1824,6 +1885,34 @@ void put64()
 
 	puts("void vmovq(const Xmm& x, const Reg64& r) { opAVX_X_X_XM(x, xm0, Xmm(r.getIdx()), T_66 | T_0F | T_W1 | T_EVEX | T_EW1, 0x6E); }");
 	puts("void vmovq(const Reg64& r, const Xmm& x) { opAVX_X_X_XM(x, xm0, Xmm(r.getIdx()), T_66 | T_0F | T_W1 | T_EVEX | T_EW1, 0x7E); }");
+	// CMPccXADD
+	{
+		const struct Tbl {
+			const char *name;
+			uint8_t code;
+		} tbl[] = {
+			{ "be", 0xE6 },
+			{ "b", 0xE2 },
+			{ "le", 0xEE },
+			{ "l", 0xEC },
+			{ "nbe", 0xE7 },
+			{ "nb", 0xE3 },
+			{ "nle", 0xEF },
+			{ "nl", 0xED },
+			{ "no", 0xE1 },
+			{ "np", 0xEB },
+			{ "ns", 0xE9 },
+			{ "nz", 0xE5 },
+			{ "o", 0xE0 },
+			{ "p", 0xEA },
+			{ "s", 0xE8 },
+			{ "z", 0xE4 },
+		};
+		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
+			const Tbl *p = &tbl[i];
+			printf("void cmp%sxadd(const Address& addr, const Reg32e& r1, const Reg32e& r2) { opGpr(r1, addr, r2, T_66 | T_0F38, 0x%02X, false); }\n", p->name, p->code);
+		}
+	}
 }
 
 void putAMX_TILE()
@@ -1842,6 +1931,7 @@ void putAMX_INT8()
 	puts("void tdpbsud(const Tmm& x1, const Tmm& x2, const Tmm& x3) { opVex(x1, &x3, x2, T_F3 | T_0F38 | T_W0, 0x5e); }");
 	puts("void tdpbusd(const Tmm& x1, const Tmm& x2, const Tmm& x3) { opVex(x1, &x3, x2, T_66 | T_0F38 | T_W0, 0x5e); }");
 	puts("void tdpbuud(const Tmm& x1, const Tmm& x2, const Tmm& x3) { opVex(x1, &x3, x2, T_0F38 | T_W0, 0x5e); }");
+	puts("void tdpfp16ps(const Tmm &x1, const Tmm &x2, const Tmm &x3) { opVex(x1, &x3, x2, T_F2 | T_0F38 | T_W0, 0x5c); }");
 }
 void putAMX_BF16()
 {

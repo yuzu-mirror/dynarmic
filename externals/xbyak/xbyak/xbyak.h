@@ -118,7 +118,7 @@
 	#endif
 #endif
 
-#if (__cplusplus >= 201103) || (defined(_MSC_VER) && _MSC_VER >= 1800)
+#if (__cplusplus >= 201103) || (defined(_MSC_VER) && _MSC_VER >= 1900)
 	#undef XBYAK_TLS
 	#define XBYAK_TLS thread_local
 	#define XBYAK_VARIADIC_TEMPLATE
@@ -144,11 +144,18 @@
 	#pragma warning(disable : 4127) /* constant expresison */
 #endif
 
+// disable -Warray-bounds because it may be a bug of gcc. https://gcc.gnu.org/bugzilla/show_bug.cgi?id=104603
+#if defined(__GNUC__) && !defined(__clang__)
+	#define XBYAK_DISABLE_WARNING_ARRAY_BOUNDS
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 namespace Xbyak {
 
 enum {
 	DEFAULT_MAX_CODE_SIZE = 4096,
-	VERSION = 0x6610 /* 0xABCD = A.BC(.D) */
+	VERSION = 0x6680 /* 0xABCD = A.BC(.D) */
 };
 
 #ifndef MIE_INTEGER_TYPE_DEFINED
@@ -371,7 +378,7 @@ inline bool IsInInt32(uint64_t x) { return ~uint64_t(0x7fffffffu) <= x || x <= 0
 
 inline uint32_t VerifyInInt32(uint64_t x)
 {
-#ifdef XBYAK64
+#if defined(XBYAK64) && !defined(__ILP32__)
 	if (!IsInInt32(x)) XBYAK_THROW_RET(ERR_OFFSET_IS_TOO_BIG, 0)
 #endif
 	return static_cast<uint32_t>(x);
@@ -1478,7 +1485,6 @@ public:
 		clabelDefList_.clear();
 		clabelUndefList_.clear();
 		resetLabelPtrList();
-		ClearError();
 	}
 	void enterLocal()
 	{
@@ -1820,7 +1826,7 @@ private:
 	void setSIB(const RegExp& e, int reg, int disp8N = 0)
 	{
 		uint64_t disp64 = e.getDisp();
-#ifdef XBYAK64
+#if defined(XBYAK64) && !defined(__ILP32__)
 #ifdef XBYAK_OLD_DISP_CHECK
 		// treat 0xffffffff as 0xffffffffffffffff
 		uint64_t high = disp64 >> 32;
@@ -2412,18 +2418,21 @@ private:
 		if (addr.getRegExp().getIndex().getKind() != kind) XBYAK_THROW(ERR_BAD_VSIB_ADDRESSING)
 		opVex(x, 0, addr, type, code);
 	}
-	void opVnni(const Xmm& x1, const Xmm& x2, const Operand& op, int type, int code0, PreferredEncoding encoding)
+	void opEncoding(const Xmm& x1, const Xmm& x2, const Operand& op, int type, int code0, PreferredEncoding encoding)
 	{
+		opAVX_X_X_XM(x1, x2, op, type | orEvexIf(encoding), code0);
+	}
+	int orEvexIf(PreferredEncoding encoding) {
 		if (encoding == DefaultEncoding) {
-			encoding = EvexEncoding;
+			encoding = defaultEncoding_;
 		}
 		if (encoding == EvexEncoding) {
 #ifdef XBYAK_DISABLE_AVX512
 			XBYAK_THROW(ERR_EVEX_IS_INVALID)
 #endif
-			type |= T_MUST_EVEX;
+			return T_MUST_EVEX;
 		}
-		opAVX_X_X_XM(x1, x2, op, type, code0);
+		return 0;
 	}
 	void opInOut(const Reg& a, const Reg& d, uint8_t code)
 	{
@@ -2508,6 +2517,7 @@ public:
 #endif
 private:
 	bool isDefaultJmpNEAR_;
+	PreferredEncoding defaultEncoding_;
 public:
 	void L(const std::string& label) { labelMgr_.defineSlabel(label); }
 	void L(Label& label) { labelMgr_.defineClabel(label); }
@@ -2787,11 +2797,13 @@ public:
 		, es(Segment::es), cs(Segment::cs), ss(Segment::ss), ds(Segment::ds), fs(Segment::fs), gs(Segment::gs)
 #endif
 		, isDefaultJmpNEAR_(false)
+		, defaultEncoding_(EvexEncoding)
 	{
 		labelMgr_.set(this);
 	}
 	void reset()
 	{
+		ClearError();
 		resetSize();
 		labelMgr_.reset();
 		labelMgr_.set(this);
@@ -2822,6 +2834,9 @@ public:
 #ifdef XBYAK_UNDEF_JNL
 	#undef jnl
 #endif
+
+	// set default encoding to select Vex or Evex
+	void setDefaultEncoding(PreferredEncoding encoding) { defaultEncoding_ = encoding; }
 
 	/*
 		use single byte nop if useMultiByteNop = false
@@ -2925,6 +2940,10 @@ static const XBYAK_CONSTEXPR Segment es(Segment::es), cs(Segment::cs), ss(Segmen
 
 #ifdef _MSC_VER
 	#pragma warning(pop)
+#endif
+
+#if defined(__GNUC__) && !defined(__clang__)
+	#pragma GCC diagnostic pop
 #endif
 
 } // end of namespace

@@ -5,6 +5,7 @@
 #include <xbyak/xbyak_util.h>
 #include <cybozu/inttype.hpp>
 #include <cybozu/test.hpp>
+#include <algorithm>
 
 using namespace Xbyak;
 
@@ -97,13 +98,17 @@ CYBOZU_TEST_AUTO(mov_const)
 			}
 #ifdef XBYAK64
 			CYBOZU_TEST_NO_EXCEPTION(mov(rax, ptr[(void*)0x7fffffff]));
-			CYBOZU_TEST_EXCEPTION(mov(rax, ptr[(void*)0x17fffffff]), Xbyak::Error);
+			if (sizeof(void*) != 4) { // sizeof(void*) == 4 on x32
+				CYBOZU_TEST_EXCEPTION(mov(rax, ptr[(void*)0x17fffffff]), Xbyak::Error);
+			}
 #ifdef XBYAK_OLD_DISP_CHECK
 			CYBOZU_TEST_NO_EXCEPTION(mov(rax, ptr[(void*)0x80000000]));
 			CYBOZU_TEST_NO_EXCEPTION(mov(rax, ptr[(void*)0xffffffff]));
 #else
-			CYBOZU_TEST_EXCEPTION(mov(rax, ptr[(void*)0x80000000ull]), Xbyak::Error);
-			CYBOZU_TEST_EXCEPTION(mov(rax, ptr[(void*)0xffffffffull]), Xbyak::Error);
+			if (sizeof(void*) != 4) { // sizeof(void*) == 4 on x32
+				CYBOZU_TEST_EXCEPTION(mov(rax, ptr[(void*)0x80000000ull]), Xbyak::Error);
+				CYBOZU_TEST_EXCEPTION(mov(rax, ptr[(void*)0xffffffffull]), Xbyak::Error);
+			}
 #endif
 #endif
 		}
@@ -875,6 +880,10 @@ CYBOZU_TEST_AUTO(vnni)
 			vpdpbusd(xm0, xm1, xm2);
 			vpdpbusd(xm0, xm1, xm2, EvexEncoding); // EVEX
 			vpdpbusd(xm0, xm1, xm2, VexEncoding); // VEX
+			setDefaultEncoding(VexEncoding);
+			vpdpbusd(xm0, xm1, xm2); // VEX
+			setDefaultEncoding(EvexEncoding);
+			vpdpbusd(xm0, xm1, xm2); // EVEX
 		}
 		void badVex()
 		{
@@ -885,6 +894,8 @@ CYBOZU_TEST_AUTO(vnni)
 		0x62, 0xF2, 0x75, 0x08, 0x50, 0xC2,
 		0x62, 0xF2, 0x75, 0x08, 0x50, 0xC2,
 		0xC4, 0xE2, 0x71, 0x50, 0xC2,
+		0xC4, 0xE2, 0x71, 0x50, 0xC2,
+		0x62, 0xF2, 0x75, 0x08, 0x50, 0xC2,
 	};
 	const size_t n = sizeof(tbl) / sizeof(tbl[0]);
 	CYBOZU_TEST_EQUAL(c.getSize(), n);
@@ -1975,3 +1986,175 @@ CYBOZU_TEST_AUTO(cpu)
 	Cpu cpu;
 	CYBOZU_TEST_EQUAL(cpu.has(Cpu::tINTEL) && cpu.has(Cpu::tAMD), cpu.has(Cpu::tINTEL | Cpu::tAMD));
 }
+
+CYBOZU_TEST_AUTO(minmax)
+{
+	using namespace Xbyak::util;
+	CYBOZU_TEST_EQUAL((std::min)(3, 4), local::min_(3, 4));
+	CYBOZU_TEST_EQUAL((std::max)(3, 4), local::max_(3, 4));
+}
+
+CYBOZU_TEST_AUTO(rao_int)
+{
+	struct Code : Xbyak::CodeGenerator {
+		Code()
+		{
+#ifdef XBYAK64
+			aadd(ptr[rax], ecx);
+			aadd(ptr[eax], ecx);
+			aadd(ptr[rax], r10);
+			aand(ptr[rax], ecx);
+			aand(ptr[eax], ecx);
+			aand(ptr[rax], r10);
+			aor(ptr[rax], ecx);
+			aor(ptr[eax], ecx);
+			aor(ptr[rax], r10);
+			axor(ptr[rax], ecx);
+			axor(ptr[eax], ecx);
+			axor(ptr[rax], r10);
+#else
+			aadd(ptr[eax], ecx);
+			aand(ptr[eax], ecx);
+			aor(ptr[eax], ecx);
+			axor(ptr[eax], ecx);
+#endif
+		}
+	} c;
+	const uint8_t tbl[] = {
+#ifdef XBYAK64
+		// aadd
+		0x0f, 0x38, 0xfc, 0x08,
+		0x67, 0x0f, 0x38, 0xfc, 0x08,
+		0x4c, 0x0f, 0x38, 0xfc, 0x10,
+
+		// aand
+		0x66, 0x0f, 0x38, 0xfc, 0x08,
+		0x66, 0x67, 0x0f, 0x38, 0xfc, 0x08,
+		0x66, 0x4c, 0x0f, 0x38, 0xfc, 0x10,
+
+		// aor
+		0xf2, 0x0f, 0x38, 0xfc, 0x08,
+		0xf2, 0x67, 0x0f, 0x38, 0xfc, 0x08,
+		0xf2, 0x4c, 0x0f, 0x38, 0xfc, 0x10,
+
+		// axor
+		0xf3, 0x0f, 0x38, 0xfc, 0x08,
+		0xf3, 0x67, 0x0f, 0x38, 0xfc, 0x08,
+		0xf3, 0x4c, 0x0f, 0x38, 0xfc, 0x10,
+#else
+		// aadd
+		0x0f, 0x38, 0xfc, 0x08,
+		// aand
+		0x66, 0x0f, 0x38, 0xfc, 0x08,
+		// aor
+		0xf2, 0x0f, 0x38, 0xfc, 0x08,
+		// axor
+		0xf3, 0x0f, 0x38, 0xfc, 0x08,
+#endif
+	};
+	const size_t n = sizeof(tbl) / sizeof(tbl[0]);
+	CYBOZU_TEST_EQUAL(c.getSize(), n);
+	CYBOZU_TEST_EQUAL_ARRAY(c.getCode(), tbl, n);
+}
+
+#ifdef XBYAK64
+CYBOZU_TEST_AUTO(CMPccXADD)
+{
+	struct Code : Xbyak::CodeGenerator {
+		Code()
+		{
+			// 32bit reg
+			cmpbexadd(ptr[rax+r10*4], ecx, edx);
+			cmpbxadd(ptr[rax+r10*4], ecx, edx);
+			cmplexadd(ptr[rax+r10*4], ecx, edx);
+			cmplxadd(ptr[rax+r10*4], ecx, edx);
+			cmpnbexadd(ptr[rax+r10*4], ecx, edx);
+			cmpnbxadd(ptr[rax+r10*4], ecx, edx);
+			cmpnlexadd(ptr[rax+r10*4], ecx, edx);
+			cmpnlxadd(ptr[rax+r10*4], ecx, edx);
+			cmpnoxadd(ptr[rax+r10*4], ecx, edx);
+			cmpnpxadd(ptr[rax+r10*4], ecx, edx);
+			cmpnsxadd(ptr[rax+r10*4], ecx, edx);
+			cmpnzxadd(ptr[rax+r10*4], ecx, edx);
+			cmpoxadd(ptr[rax+r10*4], ecx, edx);
+			cmppxadd(ptr[rax+r10*4], ecx, edx);
+			cmpsxadd(ptr[rax+r10*4], ecx, edx);
+			cmpzxadd(ptr[rax+r10*4], ecx, edx);
+			// 64bit reg
+			cmpbexadd(ptr[rax+r10*4], rcx, rdx);
+			cmpbxadd(ptr[rax+r10*4], rcx, rdx);
+			cmplexadd(ptr[rax+r10*4], rcx, rdx);
+			cmplxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnbexadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnbxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnlexadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnlxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnoxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnpxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnsxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpnzxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpoxadd(ptr[rax+r10*4], rcx, rdx);
+			cmppxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpsxadd(ptr[rax+r10*4], rcx, rdx);
+			cmpzxadd(ptr[rax+r10*4], rcx, rdx);
+		}
+	} c;
+	const uint8_t tbl[] = {
+		// 32bit reg
+		0xc4, 0xa2, 0x69, 0xe6, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe2, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xee, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xec, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe7, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe3, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xef, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xed, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe1, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xeb, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe9, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe5, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe0, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xea, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe8, 0x0c, 0x90,
+		0xc4, 0xa2, 0x69, 0xe4, 0x0c, 0x90,
+		// 64bit reg
+		0xc4, 0xa2, 0xe9, 0xe6, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe2, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xee, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xec, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe7, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe3, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xef, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xed, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe1, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xeb, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe9, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe5, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe0, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xea, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe8, 0x0c, 0x90,
+		0xc4, 0xa2, 0xe9, 0xe4, 0x0c, 0x90,
+	};
+	const size_t n = sizeof(tbl) / sizeof(tbl[0]);
+	CYBOZU_TEST_EQUAL(c.getSize(), n);
+	CYBOZU_TEST_EQUAL_ARRAY(c.getCode(), tbl, n);
+}
+
+CYBOZU_TEST_AUTO(prefetchiti)
+{
+	struct Code : Xbyak::CodeGenerator {
+		Code()
+		{
+			prefetchit0(ptr[rax]);
+			prefetchit1(ptr[rax]);
+		}
+	} c;
+	const uint8_t tbl[] = {
+		0x0f, 0x18, 0x38,
+		0x0f, 0x18, 0x30
+	};
+	const size_t n = sizeof(tbl) / sizeof(tbl[0]);
+	CYBOZU_TEST_EQUAL(c.getSize(), n);
+	CYBOZU_TEST_EQUAL_ARRAY(c.getCode(), tbl, n);
+}
+#endif
