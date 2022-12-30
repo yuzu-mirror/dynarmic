@@ -1,6 +1,9 @@
-TARGET = make_nm normalize_prefix bad_address misc cvt_test cvt_test32 noexception misc32
+TARGET = make_nm normalize_prefix bad_address misc cvt_test cvt_test32 noexception misc32 detect_x32
 XBYAK_INC=../xbyak/xbyak.h
 UNAME_S=$(shell uname -s)
+ifeq ($(shell ./detect_x32),x32)
+X32?=1
+endif
 BIT=32
 ifeq ($(shell uname -m),x86_64)
 BIT=64
@@ -20,9 +23,9 @@ endif
 
 all: $(TARGET)
 
-CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wfloat-equal -Wpointer-arith
+CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wwrite-strings -Wfloat-equal -Wpointer-arith
 
-CFLAGS=-O2 -fomit-frame-pointer -Wall -fno-operator-names -I../ -I./ $(CFLAGS_WARN) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) #-std=c++0x
+CFLAGS=-O2 -Wall -I../ -I./ $(CFLAGS_WARN) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) #-std=c++0x
 make_nm:
 	$(CXX) $(CFLAGS) make_nm.cpp -o $@
 normalize_prefix: normalize_prefix.cpp ../xbyak/xbyak.h
@@ -53,12 +56,11 @@ noexception: noexception.cpp ../xbyak/xbyak.h
 test_nm: normalize_prefix $(TARGET)
 	$(MAKE) -C ../gen
 ifneq ($(ONLY_64BIT),1)
-	./test_nm.sh
-	./test_nm.sh noexcept
-	./noexception
-	./test_nm.sh Y
-	./test_nm.sh avx512
-	./test_address.sh
+	CXX=$(CXX) ./test_nm.sh
+	CXX=$(CXX) ./test_nm.sh noexcept
+	CXX=$(CXX) ./test_nm.sh Y
+	CXX=$(CXX) ./test_nm.sh avx512
+	CXX=$(CXX) ./test_address.sh
 	./jmp
 	./cvt_test32
 endif
@@ -67,32 +69,38 @@ endif
 	./misc32
 	./cvt_test
 ifeq ($(BIT),64)
-	./test_address.sh 64
-	./test_nm.sh 64
-	./test_nm.sh Y64
+	CXX=$(CXX) ./test_address.sh 64
+ifneq ($(X32),1)
+	CXX=$(CXX) ./test_nm.sh 64
+	CXX=$(CXX) ./test_nm.sh Y64
+endif
 	./jmp64
 endif
 
 test_avx: normalize_prefix
 ifneq ($(ONLY_64BIT),0)
-	./test_avx.sh
-	./test_avx.sh Y
+	CXX=$(CXX) ./test_avx.sh
+	CXX=$(CXX) ./test_avx.sh Y
 endif
 ifeq ($(BIT),64)
-	./test_address.sh 64
-	./test_avx.sh 64
-	./test_avx.sh Y64
+	CXX=$(CXX) ./test_avx.sh 64
+ifneq ($(X32),1)
+	CXX=$(CXX) ./test_avx.sh Y64
+endif
 endif
 
 test_avx512: normalize_prefix
 ifneq ($(ONLY_64BIT),0)
-	./test_avx512.sh
+	CXX=$(CXX) ./test_avx512.sh
 endif
 ifeq ($(BIT),64)
-	./test_avx512.sh 64
+	CXX=$(CXX) ./test_avx512.sh 64
 endif
 
-test:
+detect_x32: detect_x32.c
+	$(CC) $< -o $@
+
+test: detect_x32
 	$(MAKE) test_nm
 	$(MAKE) test_avx
 	$(MAKE) test_avx512
@@ -103,5 +111,4 @@ clean:
 lib_run: lib_test.cpp lib_run.cpp lib.h
 	$(CXX) $(CFLAGS) lib_run.cpp lib_test.cpp -o lib_run
 make_nm: make_nm.cpp $(XBYAK_INC)
-
 

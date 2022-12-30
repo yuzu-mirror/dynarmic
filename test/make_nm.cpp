@@ -533,6 +533,7 @@ class Test {
 			"nop",
 
 			"sahf",
+			"serialize",
 			"stc",
 			"std",
 			"sti",
@@ -1017,9 +1018,7 @@ class Test {
 	}
 	void putCmov() const
 	{
-		const struct {
-			const char *s;
-		} tbl[] = {
+		const char tbl[][4] = {
 			"o",
 			"no",
 			"b",
@@ -1053,11 +1052,11 @@ class Test {
 		};
 		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
 			char buf[32];
-			snprintf(buf, sizeof(buf), "cmov%s", tbl[i].s);
+			snprintf(buf, sizeof(buf), "cmov%s", tbl[i]);
 			put(buf, REG16, REG16|MEM);
 			put(buf, REG32, REG32|MEM);
 			put(buf, REG64, REG64|MEM);
-			snprintf(buf, sizeof(buf), "set%s", tbl[i].s);
+			snprintf(buf, sizeof(buf), "set%s", tbl[i]);
 			put(buf, REG8|REG8_3|MEM);
 		}
 	}
@@ -1294,7 +1293,7 @@ class Test {
 			put(p, REG64, "0x1234567890abcdefLL", "0x1234567890abcdef");
 			put("movbe", REG16|REG32e, MEM);
 			put("movbe", MEM, REG16|REG32e);
-#ifdef XBYAK64
+#if defined(XBYAK64) && !defined(__ILP32__)
 			put(p, RAX|EAX|AX|AL, "ptr [0x1234567890abcdefLL]", "[qword 0x1234567890abcdef]");
 			put(p, "ptr [0x1234567890abcdefLL]", "[qword 0x1234567890abcdef]", RAX|EAX|AX|AL);
 			put(p, "qword [rax], 0");
@@ -2608,7 +2607,7 @@ public:
 		putMPX();
 #endif
 
-#ifdef XBYAK64
+#if defined(XBYAK64) && !defined(__ILP32__)
 
 #ifdef USE_YASM
 		putRip();
