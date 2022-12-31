@@ -14,6 +14,16 @@ set(BUILD_TESTING OFF)
 # simply add the directory to that file as a subdirectory
 # to have CMake automatically recognize them.
 
+# catch
+
+if (NOT TARGET Catch2::Catch2WithMain)
+    if (DYNARMIC_TESTS)
+        add_subdirectory(catch EXCLUDE_FROM_ALL)
+        list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/externals/catch/extras")
+        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} PARENT_SCOPE)
+    endif()
+endif()
+
 # fmt
 
 if (NOT TARGET fmt::fmt)
