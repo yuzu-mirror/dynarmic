@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <mcl/bit/swap.hpp>
+#include <mcl/macro/architecture.hpp>
 #include <mcl/stdint.hpp>
 
 #include "./A32/testenv.h"
@@ -38,6 +39,12 @@
 // Must be declared last for all necessary operator<< to be declared prior to this.
 #include <fmt/format.h>
 #include <fmt/ostream.h>
+
+#if defined(__APPLE__) && defined(MCL_ARCHITECTURE_ARM64)
+#    include <mach/mach_init.h>
+#    include <mach/mach_port.h>
+#    include <mach/task.h>
+#endif
 
 constexpr bool mask_fpsr_cum_bits = true;
 
@@ -660,6 +667,11 @@ static std::optional<size_t> str2sz(char const* s) {
 }
 
 int main(int argc, char* argv[]) {
+#if defined(__APPLE__) && defined(MCL_ARCHITECTURE_ARM64)
+    // Allows for attaching a debugger to this process to work when debugging fastmem (since we currently use POSIX signals rather than a mach socket on arm64).
+    task_set_exception_ports(mach_task_self(), EXC_MASK_BAD_ACCESS, MACH_PORT_NULL, EXCEPTION_DEFAULT, 0);
+#endif
+
     if (argc != 5) {
         fmt::print("Usage: {} <thumb|arm|a64> <seed> <instruction_count> <iteration_count>\n", argv[0]);
     }
