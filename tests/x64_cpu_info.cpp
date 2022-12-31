@@ -4,6 +4,10 @@
  */
 
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
 #include <utility>
 
 #include <catch2/catch_test_macros.hpp>
@@ -13,8 +17,8 @@ TEST_CASE("Host CPU supports", "[a64]") {
     using Cpu = Xbyak::util::Cpu;
     Cpu cpu_info;
 
-    std::array<uint32_t, 4> cpu_name;
-    for (uint32_t i = 2; i < 5; ++i) {
+    std::array<std::uint32_t, 4> cpu_name;
+    for (std::uint32_t i = 2; i < 5; ++i) {
         cpu_info.getCpuid(0x80000000 | i, cpu_name.data());
         std::printf("%.16s", reinterpret_cast<const char*>(cpu_name.data()));
     }
@@ -96,11 +100,11 @@ TEST_CASE("Host CPU supports", "[a64]") {
 #undef X
     };
 
-    constexpr size_t line_max = 80;
-    size_t line_length = 0;
+    constexpr std::size_t line_max = 80;
+    std::size_t line_length = 0;
     for (const auto& [type, name] : types) {
         if (cpu_info.has(type)) {
-            const size_t name_length = std::strlen(name) + 1;
+            const std::size_t name_length = std::strlen(name) + 1;
             if ((line_length + name_length) >= line_max) {
                 line_length = name_length;
                 std::putchar('\n');
