@@ -105,6 +105,6 @@ create_target_directory_groups(dynarmic_tests)
 target_link_libraries(dynarmic_tests PRIVATE dynarmic Boost::boost Catch2::Catch2WithMain fmt::fmt merry::mcl)
 target_include_directories(dynarmic_tests PRIVATE . ../src)
 target_compile_options(dynarmic_tests PRIVATE ${DYNARMIC_CXX_FLAGS})
-target_compile_definitions(dynarmic_tests PRIVATE FMT_USE_USER_DEFINED_LITERALS=1 CATCH_CONFIG_ENABLE_BENCHMARKING=1)
+target_compile_definitions(dynarmic_tests PRIVATE FMT_USE_USER_DEFINED_LITERALS=1)
 
 add_test(dynarmic_tests dynarmic_tests --durations yes)

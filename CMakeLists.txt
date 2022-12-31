@@ -8,14 +8,16 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   set(MASTER_PROJECT ON)
 endif()
 
-include(CMakeDependentOption)
+if (MASTER_PROJECT)
+    include(CTest)
+endif()
 
 # Dynarmic project options
 option(DYNARMIC_ENABLE_CPU_FEATURE_DETECTION "Turning this off causes dynarmic to assume the host CPU doesn't support anything later than SSE3" ON)
 option(DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT "Enables support for systems that require W^X" OFF)
 option(DYNARMIC_FATAL_ERRORS "Errors are fatal" OFF)
 option(DYNARMIC_IGNORE_ASSERTS "Ignore asserts" OFF)
-cmake_dependent_option(DYNARMIC_TESTS "Build tests" ${MASTER_PROJECT} "NOT DEFINED BUILD_TESTING" "${BUILD_TESTING}")
+option(DYNARMIC_TESTS "Build tests" ${BUILD_TESTING})
 option(DYNARMIC_TESTS_USE_UNICORN "Enable fuzzing tests against unicorn" OFF)
 option(DYNARMIC_USE_LLVM "Support disassembly of jitted x86_64 code using LLVM" OFF)
 option(DYNARMIC_USE_PRECOMPILED_HEADERS "Use precompiled headers" ON)
@@ -154,7 +156,6 @@ add_subdirectory(externals)
 # Dynarmic project files
 add_subdirectory(src/dynarmic)
 if (DYNARMIC_TESTS)
-    enable_testing()
     add_subdirectory(tests)
 endif()
 
