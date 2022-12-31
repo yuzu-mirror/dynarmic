@@ -7,7 +7,7 @@
 #include <iomanip>
 #include <iostream>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <mcl/assert.hpp>
 
 #include "dynarmic/frontend/A32/decoder/asimd.h"

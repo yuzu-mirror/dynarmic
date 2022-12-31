@@ -12,7 +12,7 @@
 #include <string_view>
 #include <tuple>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <mcl/bit/bit_field.hpp>
 #include <mcl/stdint.hpp>
 

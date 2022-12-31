@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <mcl/stdint.hpp>
 
 #include "./testenv.h"

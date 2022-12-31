@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <mcl/scope_exit.hpp>
 #include <mcl/stdint.hpp>
 

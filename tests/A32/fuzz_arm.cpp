@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <mcl/bit/bit_count.hpp>
 #include <mcl/bit/swap.hpp>
 #include <mcl/scope_exit.hpp>

@@ -145,7 +145,7 @@ if (DYNARMIC_USE_LLVM)
 endif()
 
 if (DYNARMIC_TESTS)
-    find_package(Catch2 2 QUIET)
+    find_package(Catch2 3 QUIET)
     if (DYNARMIC_TESTS_USE_UNICORN)
         find_package(Unicorn REQUIRED)
     endif()
