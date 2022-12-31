@@ -21,6 +21,8 @@ AddressSpace::AddressSpace(size_t code_cache_size)
         , mem(code_cache_size)
         , code(mem.ptr())
         , fastmem_manager(exception_handler) {
+    ASSERT_MSG(code_cache_size <= 128 * 1024 * 1024, "code_cache_size > 128 MiB not currently supported");
+
     exception_handler.Register(mem, code_cache_size);
     exception_handler.SetFastmemCallback([this](u64 host_pc) {
         return FastmemCallback(host_pc);

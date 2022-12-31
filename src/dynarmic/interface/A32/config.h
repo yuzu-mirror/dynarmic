@@ -228,9 +228,9 @@ struct UserConfig {
     ///       in unusual behavior.
     bool always_little_endian = false;
 
-    // Minimum size is about 8MiB. Maximum size is about 2GiB. Maximum size is limited by
-    // the maximum length of a x64 jump.
-    size_t code_cache_size = 256 * 1024 * 1024;  // bytes
+    // Minimum size is about 8MiB. Maximum size is about 128MiB (arm64 host) or 2GiB (x64 host).
+    // Maximum size is limited by the maximum length of a x86_64 / arm64 jump.
+    size_t code_cache_size = 128 * 1024 * 1024;  // bytes
 };
 
 }  // namespace A32
