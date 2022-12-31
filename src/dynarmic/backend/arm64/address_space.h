@@ -32,7 +32,10 @@ public:
     CodePtr Get(IR::LocationDescriptor descriptor);
 
     // Returns "most likely" LocationDescriptor assocated with the emitted code at that location
-    std::optional<IR::LocationDescriptor> ReverseGet(CodePtr host_pc);
+    std::optional<IR::LocationDescriptor> ReverseGetLocation(CodePtr host_pc);
+
+    // Returns "most likely" entry_point associated with the emitted code at that location
+    CodePtr ReverseGetEntryPoint(CodePtr host_pc);
 
     CodePtr GetOrEmit(IR::LocationDescriptor descriptor);
 
@@ -45,7 +48,7 @@ protected:
 
     size_t GetRemainingSize();
     EmittedBlockInfo Emit(IR::Block ir_block);
-    void Link(IR::LocationDescriptor block_descriptor, EmittedBlockInfo& block);
+    void Link(EmittedBlockInfo& block);
     void RelinkForDescriptor(IR::LocationDescriptor target_descriptor, CodePtr target_ptr);
 
     FakeCall FastmemCallback(u64 host_pc);
@@ -54,10 +57,12 @@ protected:
     oaknut::CodeBlock mem;
     oaknut::CodeGenerator code;
 
-    tsl::robin_map<u64, CodePtr> block_entries;
-    std::map<CodePtr, u64> reverse_block_entries;
-    tsl::robin_map<u64, EmittedBlockInfo> block_infos;
-    tsl::robin_map<u64, tsl::robin_set<u64>> block_references;
+    // A IR::LocationDescriptor will have one current CodePtr.
+    // However, there can be multiple other CodePtrs which are older, previously invalidated blocks.
+    tsl::robin_map<IR::LocationDescriptor, CodePtr> block_entries;
+    std::map<CodePtr, IR::LocationDescriptor> reverse_block_entries;
+    tsl::robin_map<CodePtr, EmittedBlockInfo> block_infos;
+    tsl::robin_map<IR::LocationDescriptor, tsl::robin_set<CodePtr>> block_references;
 
     ExceptionHandler exception_handler;
     FastmemManager fastmem_manager;
