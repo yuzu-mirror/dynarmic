@@ -4,6 +4,9 @@ if (BUILD_SHARED_LIBS)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
+# Allow options shadowing with normal variables when subproject use old cmake policy
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 # For libraries that already come with a CMakeLists file,
 # simply add the directory to that file as a subdirectory
 # to have CMake automatically recognize them.
@@ -25,14 +28,14 @@ endif()
 
 if (NOT TARGET fmt::fmt)
     # fmtlib formatting library
-    option(FMT_INSTALL "" ON)
+    set(FMT_INSTALL ON)
     add_subdirectory(fmt EXCLUDE_FROM_ALL)
 endif()
 
 # mcl
 
 if (NOT TARGET merry::mcl)
-    option(MCL_INSTALL "" ON)
+    set(MCL_INSTALL ON)
     add_subdirectory(mcl EXCLUDE_FROM_ALL)
 endif()
 
@@ -62,10 +65,11 @@ endif()
 
 if (NOT TARGET Zydis::Zydis)
     if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
-        option(ZYDIS_BUILD_TOOLS "" OFF)
-        option(ZYDIS_BUILD_EXAMPLES "" OFF)
-        option(ZYDIS_BUILD_DOXYGEN "" OFF)
+        set(ZYDIS_BUILD_TOOLS OFF)
+        set(ZYDIS_BUILD_EXAMPLES OFF)
+        set(ZYDIS_BUILD_DOXYGEN OFF)
         set(ZYAN_ZYCORE_PATH "${CMAKE_CURRENT_LIST_DIR}/zycore" CACHE PATH "")
+        set(CMAKE_DISABLE_FIND_PACKAGE_Doxygen ON)
         add_subdirectory(zydis EXCLUDE_FROM_ALL)
         add_library(Zydis::Zydis ALIAS Zydis)
     endif()
