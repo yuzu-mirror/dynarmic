@@ -1,19 +1,21 @@
 Dynarmic
 ========
 
-[![Github Actions Build Status](https://github.com/MerryMage/dynarmic/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/MerryMage/dynarmic/actions/workflows/build-and-test.yml)
+[![Github Actions Build Status (x86-64)](https://github.com/MerryMage/dynarmic/actions/workflows/x86-64.yml/badge.svg)](https://github.com/MerryMage/dynarmic/actions/workflows/x86-64.yml) [![Github Actions Build Status (AArch64)](https://github.com/merryhime/dynarmic/actions/workflows/aarch64.yml/badge.svg)](https://github.com/MerryMage/dynarmic/actions/workflows/AArch64.yml)
 
 A dynamic recompiler for ARM.
 
 ### Supported guest architectures
 
-* ARMv6K, ARMv7A
+* ARMv6K
+* ARMv7A
 * 32-bit ARMv8
 * 64-bit ARMv8
 
 ### Supported host architectures
 
 * x86-64
+* 64-bit ARMv8 (AArch64)
 
 There are no plans to support x86-32.
 
@@ -66,22 +68,6 @@ Documentation
 
 Design documentation can be found at [docs/Design.md](docs/Design.md).
 
-Plans
------
-
-### Near-term
-
-* Complete ARMv8 support
-
-### Medium-term
-
-* Optimizations
-
-### Long-term
-
-* ARMv7A guest support
-* ARMv5 guest support
-* ARMv8 host support
 
 Usage Example
 -------------
