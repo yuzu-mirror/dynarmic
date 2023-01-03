@@ -284,33 +284,59 @@ std::pair<oaknut::XReg, oaknut::XReg> InlinePageTableEmitVAddrLookup(oaknut::Cod
 
 template<std::size_t bitsize>
 CodePtr EmitMemoryLdr(oaknut::CodeGenerator& code, int value_idx, oaknut::XReg Xbase, oaknut::XReg Xoffset, bool ordered, bool extend32 = false) {
-    const auto ext = extend32 ? oaknut::IndexExt::UXTW : oaknut::IndexExt::LSL;
+    const auto index_ext = extend32 ? oaknut::IndexExt::UXTW : oaknut::IndexExt::LSL;
+    const auto add_ext = extend32 ? oaknut::AddSubExt::UXTW : oaknut::AddSubExt::LSL;
     const auto Roffset = extend32 ? oaknut::RReg{Xoffset.toW()} : oaknut::RReg{Xoffset};
 
-    const CodePtr fastmem_location = code.ptr<CodePtr>();
-    switch (bitsize) {
-    case 8:
-        code.LDRB(oaknut::WReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 16:
-        code.LDRH(oaknut::WReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 32:
-        code.LDR(oaknut::WReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 64:
-        code.LDR(oaknut::XReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 128:
-        code.LDR(oaknut::QReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-    }
+    CodePtr fastmem_location = code.ptr<CodePtr>();
 
     if (ordered) {
-        // TODO: Use LDAR
-        code.DMB(oaknut::BarrierOp::ISH);
+        code.ADD(Xscratch0, Xbase, Roffset, add_ext);
+
+        fastmem_location = code.ptr<CodePtr>();
+
+        switch (bitsize) {
+        case 8:
+            code.LDARB(oaknut::WReg{value_idx}, Xscratch0);
+            break;
+        case 16:
+            code.LDARH(oaknut::WReg{value_idx}, Xscratch0);
+            break;
+        case 32:
+            code.LDAR(oaknut::WReg{value_idx}, Xscratch0);
+            break;
+        case 64:
+            code.LDAR(oaknut::XReg{value_idx}, Xscratch0);
+            break;
+        case 128:
+            code.LDR(oaknut::QReg{value_idx}, Xscratch0);
+            code.DMB(oaknut::BarrierOp::ISH);
+            break;
+        default:
+            ASSERT_FALSE("Invalid bitsize");
+        }
+    } else {
+        fastmem_location = code.ptr<CodePtr>();
+
+        switch (bitsize) {
+        case 8:
+            code.LDRB(oaknut::WReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 16:
+            code.LDRH(oaknut::WReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 32:
+            code.LDR(oaknut::WReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 64:
+            code.LDR(oaknut::XReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 128:
+            code.LDR(oaknut::QReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        default:
+            ASSERT_FALSE("Invalid bitsize");
+        }
     }
 
     return fastmem_location;
@@ -318,38 +344,60 @@ CodePtr EmitMemoryLdr(oaknut::CodeGenerator& code, int value_idx, oaknut::XReg X
 
 template<std::size_t bitsize>
 CodePtr EmitMemoryStr(oaknut::CodeGenerator& code, int value_idx, oaknut::XReg Xbase, oaknut::XReg Xoffset, bool ordered, bool extend32 = false) {
-    const auto ext = extend32 ? oaknut::IndexExt::UXTW : oaknut::IndexExt::LSL;
+    const auto index_ext = extend32 ? oaknut::IndexExt::UXTW : oaknut::IndexExt::LSL;
+    const auto add_ext = extend32 ? oaknut::AddSubExt::UXTW : oaknut::AddSubExt::LSL;
     const auto Roffset = extend32 ? oaknut::RReg{Xoffset.toW()} : oaknut::RReg{Xoffset};
 
-    if (ordered) {
-        // TODO: Use STLR
-        code.DMB(oaknut::BarrierOp::ISH);
-    }
-
-    const CodePtr fastmem_location = code.ptr<CodePtr>();
-    switch (bitsize) {
-    case 8:
-        code.STRB(oaknut::WReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 16:
-        code.STRH(oaknut::WReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 32:
-        code.STR(oaknut::WReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 64:
-        code.STR(oaknut::XReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    case 128:
-        code.STR(oaknut::QReg{value_idx}, Xbase, Roffset, ext);
-        break;
-    default:
-        ASSERT_FALSE("Invalid bitsize");
-    }
+    CodePtr fastmem_location;
 
     if (ordered) {
-        // TODO: Use STLR
-        code.DMB(oaknut::BarrierOp::ISH);
+        code.ADD(Xscratch0, Xbase, Roffset, add_ext);
+
+        fastmem_location = code.ptr<CodePtr>();
+
+        switch (bitsize) {
+        case 8:
+            code.STLRB(oaknut::WReg{value_idx}, Xscratch0);
+            break;
+        case 16:
+            code.STLRH(oaknut::WReg{value_idx}, Xscratch0);
+            break;
+        case 32:
+            code.STLR(oaknut::WReg{value_idx}, Xscratch0);
+            break;
+        case 64:
+            code.STLR(oaknut::XReg{value_idx}, Xscratch0);
+            break;
+        case 128:
+            code.DMB(oaknut::BarrierOp::ISH);
+            code.STR(oaknut::QReg{value_idx}, Xscratch0);
+            code.DMB(oaknut::BarrierOp::ISH);
+            break;
+        default:
+            ASSERT_FALSE("Invalid bitsize");
+        }
+    } else {
+        fastmem_location = code.ptr<CodePtr>();
+
+        switch (bitsize) {
+        case 8:
+            code.STRB(oaknut::WReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 16:
+            code.STRH(oaknut::WReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 32:
+            code.STR(oaknut::WReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 64:
+            code.STR(oaknut::XReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        case 128:
+            code.STR(oaknut::QReg{value_idx}, Xbase, Roffset, index_ext);
+            break;
+        default:
+            ASSERT_FALSE("Invalid bitsize");
+        }
     }
 
     return fastmem_location;
