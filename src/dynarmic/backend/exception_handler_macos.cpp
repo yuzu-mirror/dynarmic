@@ -16,17 +16,36 @@
 #include <fmt/format.h>
 #include <mcl/assert.hpp>
 #include <mcl/bit_cast.hpp>
+#include <mcl/macro/architecture.hpp>
 #include <mcl/stdint.hpp>
 
 #include "dynarmic/backend/exception_handler.h"
-#include "dynarmic/backend/x64/block_of_code.h"
 
-#define mig_external extern "C"
-#include "dynarmic/backend/x64/mig/mach_exc_server.h"
+#if defined(MCL_ARCHITECTURE_X86_64)
+
+#    include "dynarmic/backend/x64/block_of_code.h"
+#    define mig_external extern "C"
+#    include "dynarmic/backend/x64/mig/mach_exc_server.h"
+
+#    define THREAD_STATE x86_THREAD_STATE64
+#    define THREAD_STATE_COUNT x86_THREAD_STATE64_COUNT
+
+using dynarmic_thread_state_t = x86_thread_state64_t;
+
+#elif defined(MCL_ARCHITECTURE_ARM64)
+
+#    include <oaknut/code_block.hpp>
+#    define mig_external extern "C"
+#    include "dynarmic/backend/arm64/mig/mach_exc_server.h"
+
+#    define THREAD_STATE ARM_THREAD_STATE64
+#    define THREAD_STATE_COUNT ARM_THREAD_STATE64_COUNT
+
+using dynarmic_thread_state_t = arm_thread_state64_t;
+
+#endif
 
 namespace Dynarmic::Backend {
-
-using namespace Dynarmic::Backend::X64;
 
 namespace {
 
@@ -45,7 +64,7 @@ public:
     MachHandler();
     ~MachHandler();
 
-    kern_return_t HandleRequest(x86_thread_state64_t* thread_state);
+    kern_return_t HandleRequest(dynarmic_thread_state_t* thread_state);
 
     void AddCodeBlock(CodeBlockInfo info);
     void RemoveCodeBlock(u64 rip);
@@ -69,7 +88,7 @@ MachHandler::MachHandler() {
 
     KCHECK(mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &server_port));
     KCHECK(mach_port_insert_right(mach_task_self(), server_port, server_port, MACH_MSG_TYPE_MAKE_SEND));
-    KCHECK(task_set_exception_ports(mach_task_self(), EXC_MASK_BAD_ACCESS, server_port, EXCEPTION_STATE | MACH_EXCEPTION_CODES, x86_THREAD_STATE64));
+    KCHECK(task_set_exception_ports(mach_task_self(), EXC_MASK_BAD_ACCESS, server_port, EXCEPTION_STATE | MACH_EXCEPTION_CODES, THREAD_STATE));
 
     // The below doesn't actually work, and I'm not sure why; since this doesn't work we'll have a spurious error message upon shutdown.
     mach_port_t prev;
@@ -110,6 +129,7 @@ void MachHandler::MessagePump() {
     }
 }
 
+#if defined(MCL_ARCHITECTURE_X86_64)
 kern_return_t MachHandler::HandleRequest(x86_thread_state64_t* ts) {
     std::lock_guard<std::mutex> guard(code_block_infos_mutex);
 
@@ -127,6 +147,24 @@ kern_return_t MachHandler::HandleRequest(x86_thread_state64_t* ts) {
 
     return KERN_SUCCESS;
 }
+#elif defined(MCL_ARCHITECTURE_ARM64)
+kern_return_t MachHandler::HandleRequest(arm_thread_state64_t* ts) {
+    std::lock_guard<std::mutex> guard(code_block_infos_mutex);
+
+    const auto iter = FindCodeBlockInfo(ts->__pc);
+    if (iter == code_block_infos.end()) {
+        fmt::print(stderr, "Unhandled EXC_BAD_ACCESS at pc {:#016x}\n", ts->__pc);
+        return KERN_FAILURE;
+    }
+
+    FakeCall fc = iter->cb(ts->__pc);
+
+    // TODO: Sign with ptrauth_sign_unauthenticated if pointer authentication is enabled.
+    ts->__pc = fc.call_pc;
+
+    return KERN_SUCCESS;
+}
+#endif
 
 void MachHandler::AddCodeBlock(CodeBlockInfo cbi) {
     std::lock_guard<std::mutex> guard(code_block_infos_mutex);
@@ -173,7 +211,7 @@ mig_external kern_return_t catch_mach_exception_raise_state(
         fmt::print(stderr, "dynarmic: catch_mach_exception_raise_state: Invalid arguments.\n");
         return KERN_INVALID_ARGUMENT;
     }
-    if (*flavor != x86_THREAD_STATE64 || old_stateCnt != x86_THREAD_STATE64_COUNT || *new_stateCnt < x86_THREAD_STATE64_COUNT) {
+    if (*flavor != THREAD_STATE || old_stateCnt != THREAD_STATE_COUNT || *new_stateCnt < THREAD_STATE_COUNT) {
         fmt::print(stderr, "dynarmic: catch_mach_exception_raise_state: Unexpected flavor.\n");
         return KERN_INVALID_ARGUMENT;
     }
@@ -182,17 +220,17 @@ mig_external kern_return_t catch_mach_exception_raise_state(
         return KERN_FAILURE;
     }
 
-    x86_thread_state64_t* ts = reinterpret_cast<x86_thread_state64_t*>(new_state);
-    std::memcpy(ts, reinterpret_cast<const x86_thread_state64_t*>(old_state), sizeof(x86_thread_state64_t));
-    *new_stateCnt = x86_THREAD_STATE64_COUNT;
+    dynarmic_thread_state_t* ts = reinterpret_cast<dynarmic_thread_state_t*>(new_state);
+    std::memcpy(ts, reinterpret_cast<const dynarmic_thread_state_t*>(old_state), sizeof(dynarmic_thread_state_t));
+    *new_stateCnt = THREAD_STATE_COUNT;
 
     return mach_handler.HandleRequest(ts);
 }
 
 struct ExceptionHandler::Impl final {
-    Impl(BlockOfCode& code)
-            : code_begin(mcl::bit_cast<u64>(code.getCode()))
-            , code_end(code_begin + code.GetTotalCodeSize()) {}
+    Impl(u64 code_begin_, u64 code_end_)
+            : code_begin(code_begin_)
+            , code_end(code_end_) {}
 
     void SetCallback(std::function<FakeCall(u64)> cb) {
         CodeBlockInfo cbi;
@@ -211,12 +249,23 @@ private:
 };
 
 ExceptionHandler::ExceptionHandler() = default;
-
 ExceptionHandler::~ExceptionHandler() = default;
 
-void ExceptionHandler::Register(BlockOfCode& code) {
-    impl = std::make_unique<Impl>(code);
+#if defined(MCL_ARCHITECTURE_X86_64)
+void ExceptionHandler::Register(X64::BlockOfCode& code) {
+    const u64 code_begin = mcl::bit_cast<u64>(code.getCode());
+    const u64 code_end = code_begin + code.GetTotalCodeSize();
+    impl = std::make_unique<Impl>(code_begin, code_end);
 }
+#elif defined(MCL_ARCHITECTURE_ARM64)
+void ExceptionHandler::Register(oaknut::CodeBlock& mem, std::size_t size) {
+    const u64 code_begin = mcl::bit_cast<u64>(mem.ptr());
+    const u64 code_end = code_begin + size;
+    impl = std::make_unique<Impl>(code_begin, code_end);
+}
+#else
+#    error "Invalid architecture"
+#endif
 
 bool ExceptionHandler::SupportsFastmem() const noexcept {
     return static_cast<bool>(impl);
