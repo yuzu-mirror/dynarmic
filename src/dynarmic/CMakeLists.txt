@@ -414,7 +414,6 @@ elseif (APPLE)
                 -sheader "${CMAKE_CURRENT_SOURCE_DIR}/backend/x64/mig/mach_exc_server.h"
                 "${MACH_EXC_DEFS_DIR}/mach/mach_exc.defs"
         )
-        message(STATUS "mach/mach_exc.defs location: ${MACH_EXC_DEFS_DIR}")
         execute_process(
             COMMAND
                 mkdir -p "${CMAKE_CURRENT_SOURCE_DIR}/backend/arm64/mig"
@@ -486,7 +485,8 @@ if (DYNARMIC_USE_PRECOMPILED_HEADERS)
     set(PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/ir/ir_emitter.h>")
     if ("x86_64" IN_LIST ARCHITECTURE)
         list(PREPEND PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:<xbyak/xbyak.h$<ANGLE-R>>")
-    elseif("arm64" IN_LIST ARCHITECTURE)
+    endif()
+    if("arm64" IN_LIST ARCHITECTURE)
         list(PREPEND PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:<oaknut/oaknut.hpp$<ANGLE-R>>")
     endif()
     target_precompile_headers(dynarmic PRIVATE ${PRECOMPILED_HEADERS})
