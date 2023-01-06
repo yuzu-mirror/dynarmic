@@ -280,7 +280,7 @@ void A64EmitX64::GenFastmemFallbacks() {
 }
 
 #define Axx A64
-#include "emit_x64_memory.cpp.inc"
+#include "dynarmic/backend/x64/emit_x64_memory.cpp.inc"
 #undef Axx
 
 void A64EmitX64::EmitA64ReadMemory8(A64EmitContext& ctx, IR::Inst* inst) {

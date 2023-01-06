@@ -134,7 +134,7 @@ find_package(fmt 9 QUIET)
 find_package(mcl 0.1.12 EXACT QUIET)
 find_package(tsl-robin-map QUIET)
 
-if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
+if ("x86_64" IN_LIST ARCHITECTURE)
     find_package(xbyak 6 QUIET)
     find_package(Zydis 4 QUIET)
 endif()

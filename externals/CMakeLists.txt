@@ -40,7 +40,7 @@ endif()
 # oaknut
 
 if (NOT TARGET merry::oaknut)
-    if (ARCHITECTURE STREQUAL "arm64")
+    if ("arm64" IN_LIST ARCHITECTURE)
         add_subdirectory(oaknut EXCLUDE_FROM_ALL)
     endif()
 endif()
@@ -54,7 +54,7 @@ endif()
 # xbyak
 
 if (NOT TARGET xbyak::xbyak)
-    if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
+    if ("x86_64" IN_LIST ARCHITECTURE)
         add_subdirectory(xbyak EXCLUDE_FROM_ALL)
     endif()
 endif()
@@ -62,7 +62,7 @@ endif()
 # zydis
 
 if (NOT TARGET Zydis::Zydis)
-    if (ARCHITECTURE STREQUAL "x86" OR ARCHITECTURE STREQUAL "x86_64")
+    if ("x86_64" IN_LIST ARCHITECTURE)
         set(ZYDIS_BUILD_TOOLS OFF)
         set(ZYDIS_BUILD_EXAMPLES OFF)
         set(ZYDIS_BUILD_DOXYGEN OFF)

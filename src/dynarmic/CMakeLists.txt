@@ -1,3 +1,5 @@
+include(TargetArchitectureSpecificSources)
+
 add_library(dynarmic
     backend/exception_handler.h
     common/cast_util.h
@@ -255,14 +257,14 @@ if ("A64" IN_LIST DYNARMIC_FRONTENDS)
     )
 endif()
 
-if (ARCHITECTURE STREQUAL "x86_64")
+if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(dynarmic
         PRIVATE
             xbyak::xbyak
             Zydis::Zydis
     )
 
-    target_sources(dynarmic PRIVATE
+    target_architecture_specific_sources(dynarmic "x86_64"
         backend/x64/abi.cpp
         backend/x64/abi.h
         backend/x64/block_of_code.cpp
@@ -309,7 +311,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
     )
 
     if ("A32" IN_LIST DYNARMIC_FRONTENDS)
-        target_sources(dynarmic PRIVATE
+        target_architecture_specific_sources(dynarmic "x86_64"
             backend/x64/a32_emit_x64.cpp
             backend/x64/a32_emit_x64.h
             backend/x64/a32_emit_x64_memory.cpp
@@ -320,7 +322,7 @@ if (ARCHITECTURE STREQUAL "x86_64")
     endif()
 
     if ("A64" IN_LIST DYNARMIC_FRONTENDS)
-        target_sources(dynarmic PRIVATE
+        target_architecture_specific_sources(dynarmic "x86_64"
             backend/x64/a64_emit_x64.cpp
             backend/x64/a64_emit_x64.h
             backend/x64/a64_emit_x64_memory.cpp
@@ -329,11 +331,12 @@ if (ARCHITECTURE STREQUAL "x86_64")
             backend/x64/a64_jitstate.h
         )
     endif()
+endif()
 
-elseif(ARCHITECTURE STREQUAL "arm64")
+if("arm64" IN_LIST ARCHITECTURE)
     target_link_libraries(dynarmic PRIVATE merry::oaknut)
 
-    target_sources(dynarmic PRIVATE
+    target_architecture_specific_sources(dynarmic "arm64"
         backend/arm64/a32_jitstate.cpp
         backend/arm64/a32_jitstate.h
         backend/arm64/a64_jitstate.h
@@ -372,7 +375,7 @@ elseif(ARCHITECTURE STREQUAL "arm64")
     )
 
     if ("A32" IN_LIST DYNARMIC_FRONTENDS)
-        target_sources(dynarmic PRIVATE
+        target_architecture_specific_sources(dynarmic "arm64"
             backend/arm64/a32_address_space.cpp
             backend/arm64/a32_address_space.h
             backend/arm64/a32_core.h
@@ -381,7 +384,7 @@ elseif(ARCHITECTURE STREQUAL "arm64")
     endif()
 
     if ("A64" IN_LIST DYNARMIC_FRONTENDS)
-        target_sources(dynarmic PRIVATE
+        target_architecture_specific_sources(dynarmic "arm64"
             backend/arm64/a64_address_space.cpp
             backend/arm64/a64_address_space.h
             backend/arm64/a64_core.h
@@ -481,9 +484,9 @@ target_compile_definitions(dynarmic PRIVATE FMT_USE_USER_DEFINED_LITERALS=1)
 
 if (DYNARMIC_USE_PRECOMPILED_HEADERS)
     set(PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/ir/ir_emitter.h>")
-    if (ARCHITECTURE STREQUAL "x86_64")
+    if ("x86_64" IN_LIST ARCHITECTURE)
         list(PREPEND PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:<xbyak/xbyak.h$<ANGLE-R>>")
-    elseif(ARCHITECTURE STREQUAL "arm64")
+    elseif("arm64" IN_LIST ARCHITECTURE)
         list(PREPEND PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:<oaknut/oaknut.hpp$<ANGLE-R>>")
     endif()
     target_precompile_headers(dynarmic PRIVATE ${PRECOMPILED_HEADERS})

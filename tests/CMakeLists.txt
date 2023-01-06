@@ -1,3 +1,5 @@
+include(TargetArchitectureSpecificSources)
+
 add_executable(dynarmic_tests
     fp/FPToFixed.cpp
     fp/FPValue.cpp
@@ -55,14 +57,14 @@ if (DYNARMIC_TESTS_USE_UNICORN)
     endif()
 endif()
 
-if (ARCHITECTURE STREQUAL "x86_64")
+if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(dynarmic_tests PRIVATE xbyak::xbyak)
 
-    target_sources(dynarmic_tests PRIVATE
+    target_architecture_specific_sources(dynarmic_tests "x86_64"
         x64_cpu_info.cpp
     )
 
-    if (NOT MSVC)
+    if (NOT MSVC AND NOT DYNARMIC_MULTIARCH_BUILD)
         target_sources(dynarmic_tests PRIVATE
             rsqrt_test.cpp
             rsqrt_test_fn.s

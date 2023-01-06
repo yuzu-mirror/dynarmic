@@ -1,5 +1,11 @@
 include(CheckSymbolExists)
 
+if (CMAKE_OSX_ARCHITECTURES)
+    set(DYNARMIC_MULTIARCH_BUILD 1)
+    set(ARCHITECTURE "${CMAKE_OSX_ARCHITECTURES}")
+    return()
+endif()
+
 function(detect_architecture symbol arch)
     if (NOT DEFINED ARCHITECTURE)
         set(CMAKE_REQUIRED_QUIET YES)
