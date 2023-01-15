@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include <mcl/mp/metavalue/lift_value.hpp>
 #include <oaknut/oaknut.hpp>
 
 #include "dynarmic/backend/arm64/a32_jitstate.h"
@@ -11,6 +12,7 @@
 #include "dynarmic/backend/arm64/emit_context.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
+#include "dynarmic/common/always_false.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
 #include "dynarmic/ir/opcodes.h"
@@ -37,7 +39,7 @@ static void Emit(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst, EmitF
     } else if constexpr (size == 64) {
         emit(Qresult->D2(), Qa->D2(), Qb->D2());
     } else {
-        static_assert(size == 8 || size == 16 || size == 32 || size == 64);
+        static_assert(Common::always_false_v<mcl::mp::lift_value<size>>);
     }
 }
 

@@ -2,6 +2,7 @@ include(TargetArchitectureSpecificSources)
 
 add_library(dynarmic
     backend/exception_handler.h
+    common/always_false.h
     common/cast_util.h
     common/crypto/aes.cpp
     common/crypto/aes.h
@@ -23,6 +24,10 @@ add_library(dynarmic
     common/fp/op/FPMulAdd.cpp
     common/fp/op/FPMulAdd.h
     common/fp/op/FPNeg.h
+    common/fp/op/FPRSqrtEstimate.cpp
+    common/fp/op/FPRSqrtEstimate.h
+    common/fp/op/FPRSqrtStepFused.cpp
+    common/fp/op/FPRSqrtStepFused.h
     common/fp/op/FPRecipEstimate.cpp
     common/fp/op/FPRecipEstimate.h
     common/fp/op/FPRecipExponent.cpp
@@ -31,10 +36,6 @@ add_library(dynarmic
     common/fp/op/FPRecipStepFused.h
     common/fp/op/FPRoundInt.cpp
     common/fp/op/FPRoundInt.h
-    common/fp/op/FPRSqrtEstimate.cpp
-    common/fp/op/FPRSqrtEstimate.h
-    common/fp/op/FPRSqrtStepFused.cpp
-    common/fp/op/FPRSqrtStepFused.h
     common/fp/op/FPToFixed.cpp
     common/fp/op/FPToFixed.h
     common/fp/process_exception.cpp

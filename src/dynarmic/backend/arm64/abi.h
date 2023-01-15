@@ -9,8 +9,11 @@
 #include <stdexcept>
 #include <type_traits>
 
+#include <mcl/mp/metavalue/lift_value.hpp>
 #include <mcl/stdint.hpp>
 #include <oaknut/oaknut.hpp>
+
+#include "dynarmic/common/always_false.h"
 
 namespace Dynarmic::Backend::Arm64 {
 
@@ -30,7 +33,7 @@ constexpr auto Rscratch0() {
     } else if constexpr (bitsize == 64) {
         return Xscratch0;
     } else {
-        static_assert(bitsize == 32 || bitsize == 64);
+        static_assert(Common::always_false_v<mcl::mp::lift_value<bitsize>>);
     }
 }
 
@@ -41,7 +44,7 @@ constexpr auto Rscratch1() {
     } else if constexpr (bitsize == 64) {
         return Xscratch1;
     } else {
-        static_assert(bitsize == 32 || bitsize == 64);
+        static_assert(Common::always_false_v<mcl::mp::lift_value<bitsize>>);
     }
 }
 

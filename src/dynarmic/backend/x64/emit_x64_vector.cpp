@@ -1155,16 +1155,6 @@ void EmitX64::EmitVectorDeinterleaveEvenLower32(EmitContext& ctx, IR::Inst* inst
     ctx.reg_alloc.DefineValue(inst, lhs);
 }
 
-void EmitX64::EmitVectorDeinterleaveEvenLower64(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
-    [[maybe_unused]] const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
-
-    code.movq(lhs, lhs);
-
-    ctx.reg_alloc.DefineValue(inst, lhs);
-}
-
 void EmitX64::EmitVectorDeinterleaveOdd8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
@@ -1248,16 +1238,6 @@ void EmitX64::EmitVectorDeinterleaveOddLower32(EmitContext& ctx, IR::Inst* inst)
     code.unpckhpd(lhs, zero);
 
     ctx.reg_alloc.DefineValue(inst, lhs);
-}
-
-void EmitX64::EmitVectorDeinterleaveOddLower64(EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    [[maybe_unused]] const Xbyak::Xmm lhs = ctx.reg_alloc.UseXmm(args[0]);
-    const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
-
-    code.movq(rhs, rhs);
-
-    ctx.reg_alloc.DefineValue(inst, rhs);
 }
 
 void EmitX64::EmitVectorEor(EmitContext& ctx, IR::Inst* inst) {
