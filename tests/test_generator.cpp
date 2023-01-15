@@ -667,11 +667,6 @@ static std::optional<size_t> str2sz(char const* s) {
 }
 
 int main(int argc, char* argv[]) {
-#if defined(__APPLE__) && defined(MCL_ARCHITECTURE_ARM64)
-    // Allows for attaching a debugger to this process to work when debugging fastmem (since we currently use POSIX signals rather than a mach socket on arm64).
-    task_set_exception_ports(mach_task_self(), EXC_MASK_BAD_ACCESS, MACH_PORT_NULL, EXCEPTION_DEFAULT, 0);
-#endif
-
     if (argc != 5) {
         fmt::print("Usage: {} <thumb|arm|a64> <seed> <instruction_count> <iteration_count>\n", argv[0]);
     }
