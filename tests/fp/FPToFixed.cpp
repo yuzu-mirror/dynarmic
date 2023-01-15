@@ -38,3 +38,20 @@ TEST_CASE("FPToFixed", "[fp]") {
         REQUIRE(fpsr.Value() == expected_fpsr);
     }
 }
+
+TEST_CASE("FPToFixed edge cases", "[fp]") {
+    const std::vector<std::tuple<u64, u64, bool, FP::RoundingMode>> test_cases{
+        {0x41dffffffffffffe, 0x7fffffff, false, FP::RoundingMode::ToNearest_TieEven},
+        {0x41dffffffffffffe, 0x7fffffff, false, FP::RoundingMode::TowardsPlusInfinity},
+        {0x41dffffffffffffe, 0x7fffffff, false, FP::RoundingMode::TowardsMinusInfinity},
+        {0x41dffffffffffffe, 0x7fffffff, false, FP::RoundingMode::TowardsZero},
+        {0x41dffffffffffffe, 0x7fffffff, false, FP::RoundingMode::ToNearest_TieAwayFromZero},
+    };
+
+    const FPCR fpcr;
+    FPSR fpsr;
+    for (auto [input, expected_output, unsigned_, rounding_mode] : test_cases) {
+        const u64 output = FPToFixed<u64>(32, input, 0, unsigned_, fpcr, rounding_mode, fpsr);
+        REQUIRE(output == expected_output);
+    }
+}

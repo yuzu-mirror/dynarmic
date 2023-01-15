@@ -5,6 +5,7 @@
 
 #include "dynarmic/common/fp/op/FPToFixed.h"
 
+#include <fmt/format.h>
 #include <mcl/assert.hpp>
 #include <mcl/bit/bit_count.hpp>
 #include <mcl/bit/bit_field.hpp>
@@ -75,7 +76,7 @@ u64 FPToFixed(size_t ibits, FPT op, size_t fbits, bool unsigned_, FPCR fpcr, Rou
     }
 
     // Detect Overflow
-    const int min_exponent_for_overflow = static_cast<int>(ibits) - static_cast<int>(mcl::bit::highest_set_bit(value.mantissa + (round_up ? 1 : 0))) - (unsigned_ ? 0 : 1);
+    const int min_exponent_for_overflow = static_cast<int>(ibits) - static_cast<int>(mcl::bit::highest_set_bit(value.mantissa + (round_up ? Safe::LogicalShiftRight<u64>(1, exponent) : 0))) - (unsigned_ ? 0 : 1);
     if (exponent >= min_exponent_for_overflow) {
         // Positive overflow
         if (unsigned_ || !sign) {
