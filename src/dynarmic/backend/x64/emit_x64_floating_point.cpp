@@ -286,7 +286,7 @@ void FPTwoOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
     } else if (ctx.FPCR().DN()) {
         ForceToDefaultNaN<fsize>(code, result);
     } else {
-        PostProcessNaN<fsize>(code, result, ctx.reg_alloc.ScratchXmm());
+        PostProcessNaN<fsize>(code, result, xmm0);
     }
     code.L(*end);
 

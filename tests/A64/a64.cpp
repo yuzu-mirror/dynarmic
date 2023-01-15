@@ -1286,3 +1286,119 @@ TEST_CASE("A64: SDIV maximally", "[a64]") {
     REQUIRE(jit.GetRegister(2) == 0x8000000000000000);
     REQUIRE(jit.GetPC() == 4);
 }
+
+// Restricted register set required to trigger:
+// const HostLocList any_gpr = { HostLoc::RAX, HostLoc::RBX, HostLoc::RCX, HostLoc::R13, HostLoc::R14 };
+// const HostLocList any_xmm = { HostLoc::XMM1, HostLoc::XMM2, HostLoc::XMM3, HostLoc::XMM4, HostLoc::XMM5, HostLoc::XMM6 };
+TEST_CASE("A64: rand1", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem = {0x2ea2e69a, 0x6f7168e7, 0x7eb0f816, 0x6ebd369d, 0x1e65c302, 0x1e63011c, 0x1e67c349, 0x0f861bd6, 0x9e59cbbc, 0x5e61cb8b, 0x6e218b01, 0x4eb2409f, 0x7f7c2452, 0x7e207a8d, 0xd503369f};
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetRegister(0, 0x67e1d59cc30a788c);
+    jit.SetRegister(1, 0x0e771a2a79dfb060);
+    jit.SetRegister(2, 0x35cc7e7831247f7c);
+    jit.SetRegister(3, 0x63a22cce1f9cde66);
+    jit.SetRegister(4, 0xb6a022d8406543a3);
+    jit.SetRegister(5, 0x6712e272c4ad27a0);
+    jit.SetRegister(6, 0x9d2a01c3bc374837);
+    jit.SetRegister(7, 0x83bc2f62feb76043);
+    jit.SetRegister(8, 0x9ba9e8c3d543f1bf);
+    jit.SetRegister(9, 0xe4aee4636277b787);
+    jit.SetRegister(10, 0x9cd9e201dacc233b);
+    jit.SetRegister(11, 0x39e0a5c3bb44efc9);
+    jit.SetRegister(12, 0xca229296c29f8742);
+    jit.SetRegister(13, 0x4cdf038f1323ff2d);
+    jit.SetRegister(14, 0x377ad499a81b1f5a);
+    jit.SetRegister(15, 0x8217307060f11c6d);
+    jit.SetRegister(16, 0xd1af2e75ea62dba7);
+    jit.SetRegister(17, 0x77661148c760e9d6);
+    jit.SetRegister(18, 0xf05a251f9cf60f9e);
+    jit.SetRegister(19, 0xf54301927e8fa020);
+    jit.SetRegister(20, 0x534c76f6f6d6805c);
+    jit.SetRegister(21, 0x60240c3e727aae2d);
+    jit.SetRegister(22, 0x52b82c212af254d6);
+    jit.SetRegister(23, 0xb0ad501210d12c07);
+    jit.SetRegister(24, 0x596a9119514f3460);
+    jit.SetRegister(25, 0xa933e19b69b2c6f7);
+    jit.SetRegister(26, 0x6f3693ec0f5e7708);
+    jit.SetRegister(27, 0xc6a3908a03fb9737);
+    jit.SetRegister(28, 0x113ba38d50953b60);
+    jit.SetRegister(29, 0xbe5395907134511e);
+    jit.SetRegister(30, 0x9a5d96aa066e5c39);
+    jit.SetPC(0);
+    jit.SetSP(0x000000c6bec5a48c);
+
+    jit.SetVector(0, {0x0faa90e6561b1ffb, 0xb8c1c925ee613293});
+    jit.SetVector(1, {0x3fa365cf7a4f3eaa, 0xbd0fabf98eb5c061});
+    jit.SetVector(2, {0x3d7722d0e4444b00, 0xf30ba88476b79615});
+    jit.SetVector(3, {0xf794f4953fb4a413, 0xedd6426638cf0242});
+    jit.SetVector(4, {0x1ddfdd8985c58693, 0xc344d565e68ab18b});
+    jit.SetVector(5, {0x600fcef72b18ae5f, 0x3af9964747ff06b9});
+    jit.SetVector(6, {0x276b755d4452ec74, 0xf5579ddb0f2146b4});
+    jit.SetVector(7, {0xd1823739c80439e5, 0xd8c4bc8cf08fce6e});
+    jit.SetVector(8, {0x0e4c8796dca46ad0, 0x53293d124cd38d6e});
+    jit.SetVector(9, {0x860e30c54fcbe0b8, 0x09c57c6b723e45f5});
+    jit.SetVector(10, {0xe3652801c3d11ddb, 0x4ef5f76fa85d28b9});
+    jit.SetVector(11, {0xa6c22b4e20d5a3a2, 0x5b98938307afb538});
+    jit.SetVector(12, {0x915960a26d2d8c02, 0x0ecdf8bc35c8a184});
+    jit.SetVector(13, {0xa79a1f506ed066b4, 0x23de2152171ce4c6});
+    jit.SetVector(14, {0xd4b85ed863708645, 0x3cf7b2693ac76d3f});
+    jit.SetVector(15, {0x8900b9888729557b, 0x2eeeef32083bf9b9});
+    jit.SetVector(16, {0x0b40331c7fc30b54, 0xcb5fb7d6ca96ccca});
+    jit.SetVector(17, {0x0040b87ea24910c7, 0x97f925750c5da4c5});
+    jit.SetVector(18, {0xf19de744c8c88b3d, 0xa1406fae21f53d8c});
+    jit.SetVector(19, {0x02b6e985e99a6a3d, 0xe470d5328c9b2af5});
+    jit.SetVector(20, {0x6bfb919ed9752198, 0xcaab56c2adc2c486});
+    jit.SetVector(21, {0x4c1dd31e9fb91bae, 0xe1d4a4b936d1dfab});
+    jit.SetVector(22, {0x5d8c08ee0dbe758a, 0xb1b25da077a0ba26});
+    jit.SetVector(23, {0xf1f3377346a6e4db, 0x4995274fe7e17908});
+    jit.SetVector(24, {0xa1c4d7cca6fe8a95, 0xb267a94646819606});
+    jit.SetVector(25, {0x8bbe1a250a008e73, 0xc729df1ac7eeb7d3});
+    jit.SetVector(26, {0x48c23bc8ce6857d5, 0x35bb31ef278268d7});
+    jit.SetVector(27, {0x0473d63f3f0c5075, 0xf4bb5d79938901f4});
+    jit.SetVector(28, {0x01e2930f7313493e, 0xdc6ef4adadcc8e37});
+    jit.SetVector(29, {0x2c500da43b460d13, 0x7bb4520d5580a648});
+    jit.SetVector(30, {0xdf4e3d139b825da0, 0x19fea0310522fda2});
+    jit.SetVector(31, {0xf8b440b8d5e25111, 0x73758151a32b6b13});
+
+    jit.SetPstate(0x60000000);
+    jit.SetFpcr(0x01080000);
+
+    env.ticks_left = 16;
+    jit.Run();
+
+    REQUIRE(jit.GetRegister(0) == 0x67e1d59cc30a788c);
+    REQUIRE(jit.GetRegister(1) == 0x0e771a2a79dfb060);
+    REQUIRE(jit.GetRegister(2) == 0x35cc7e7831247f7c);
+    REQUIRE(jit.GetRegister(3) == 0x63a22cce1f9cde66);
+    REQUIRE(jit.GetRegister(4) == 0xb6a022d8406543a3);
+    REQUIRE(jit.GetRegister(5) == 0x6712e272c4ad27a0);
+    REQUIRE(jit.GetRegister(6) == 0x9d2a01c3bc374837);
+    REQUIRE(jit.GetRegister(7) == 0x83bc2f62feb76043);
+    REQUIRE(jit.GetRegister(8) == 0x9ba9e8c3d543f1bf);
+    REQUIRE(jit.GetRegister(9) == 0xe4aee4636277b787);
+    REQUIRE(jit.GetRegister(10) == 0x9cd9e201dacc233b);
+    REQUIRE(jit.GetRegister(11) == 0x39e0a5c3bb44efc9);
+    REQUIRE(jit.GetRegister(12) == 0xca229296c29f8742);
+    REQUIRE(jit.GetRegister(13) == 0x4cdf038f1323ff2d);
+    REQUIRE(jit.GetRegister(14) == 0x377ad499a81b1f5a);
+    REQUIRE(jit.GetRegister(15) == 0x8217307060f11c6d);
+    REQUIRE(jit.GetRegister(16) == 0xd1af2e75ea62dba7);
+    REQUIRE(jit.GetRegister(17) == 0x77661148c760e9d6);
+    REQUIRE(jit.GetRegister(18) == 0xf05a251f9cf60f9e);
+    REQUIRE(jit.GetRegister(19) == 0xf54301927e8fa020);
+    REQUIRE(jit.GetRegister(20) == 0x534c76f6f6d6805c);
+    REQUIRE(jit.GetRegister(21) == 0x60240c3e727aae2d);
+    REQUIRE(jit.GetRegister(22) == 0x52b82c212af254d6);
+    REQUIRE(jit.GetRegister(23) == 0xb0ad501210d12c07);
+    REQUIRE(jit.GetRegister(24) == 0x596a9119514f3460);
+    REQUIRE(jit.GetRegister(25) == 0xa933e19b69b2c6f7);
+    REQUIRE(jit.GetRegister(26) == 0x6f3693ec0f5e7708);
+    REQUIRE(jit.GetRegister(27) == 0xc6a3908a03fb9737);
+    REQUIRE(jit.GetRegister(28) == 0x0000000000000000);
+    REQUIRE(jit.GetRegister(29) == 0xbe5395907134511e);
+    REQUIRE(jit.GetRegister(30) == 0x9a5d96aa066e5c39);
+}
