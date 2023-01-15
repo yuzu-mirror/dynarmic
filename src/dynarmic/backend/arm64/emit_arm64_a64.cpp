@@ -65,8 +65,8 @@ void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
         EmitBlockLinkRelocation(code, ctx, terminal.next);
     }
 
-    code.MOV(Wscratch0, A64::LocationDescriptor{terminal.next}.PC());
-    code.STR(Wscratch0, Xstate, offsetof(A64JitState, pc));
+    code.MOV(Xscratch0, A64::LocationDescriptor{terminal.next}.PC());
+    code.STR(Xscratch0, Xstate, offsetof(A64JitState, pc));
     EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 }
 
