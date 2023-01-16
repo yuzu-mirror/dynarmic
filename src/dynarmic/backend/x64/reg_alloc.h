@@ -35,6 +35,8 @@ public:
     bool IsEmpty() const;
     bool IsLastUse() const;
 
+    void SetLastUse();
+
     void ReadLock();
     void WriteLock();
     void AddArgReference();
@@ -46,10 +48,13 @@ public:
 
     void AddValue(IR::Inst* inst);
 
+    void EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index) const;
+
 private:
     // Current instruction state
     size_t is_being_used_count = 0;
     bool is_scratch = false;
+    bool is_set_last_use = false;
 
     // Block state
     size_t current_references = 0;
@@ -139,6 +144,8 @@ public:
     void EndOfAllocScope();
 
     void AssertNoMoreUses();
+
+    void EmitVerboseDebuggingOutput();
 
 private:
     friend struct Argument;

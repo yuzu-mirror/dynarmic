@@ -102,6 +102,19 @@ if (("A32" IN_LIST DYNARMIC_FRONTENDS) AND ("A64" IN_LIST DYNARMIC_FRONTENDS))
     target_compile_definitions(dynarmic_test_generator PRIVATE FMT_USE_USER_DEFINED_LITERALS=1)
 endif()
 
+if (("A32" IN_LIST DYNARMIC_FRONTENDS) AND ("A64" IN_LIST DYNARMIC_FRONTENDS))
+    add_executable(dynarmic_test_reader
+        test_reader.cpp
+    )
+
+    create_target_directory_groups(dynarmic_test_reader)
+
+    target_link_libraries(dynarmic_test_reader PRIVATE dynarmic Boost::boost fmt::fmt merry::mcl)
+    target_include_directories(dynarmic_test_reader PRIVATE . ../src)
+    target_compile_options(dynarmic_test_reader PRIVATE ${DYNARMIC_CXX_FLAGS})
+    target_compile_definitions(dynarmic_test_reader PRIVATE FMT_USE_USER_DEFINED_LITERALS=1)
+endif()
+
 create_target_directory_groups(dynarmic_tests)
 
 target_link_libraries(dynarmic_tests PRIVATE dynarmic Boost::boost Catch2::Catch2WithMain fmt::fmt merry::mcl)

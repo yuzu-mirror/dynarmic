@@ -40,12 +40,6 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
-#if defined(__APPLE__) && defined(MCL_ARCHITECTURE_ARM64)
-#    include <mach/mach_init.h>
-#    include <mach/mach_port.h>
-#    include <mach/task.h>
-#endif
-
 constexpr bool mask_fpsr_cum_bits = true;
 
 namespace {

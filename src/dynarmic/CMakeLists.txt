@@ -24,10 +24,6 @@ add_library(dynarmic
     common/fp/op/FPMulAdd.cpp
     common/fp/op/FPMulAdd.h
     common/fp/op/FPNeg.h
-    common/fp/op/FPRSqrtEstimate.cpp
-    common/fp/op/FPRSqrtEstimate.h
-    common/fp/op/FPRSqrtStepFused.cpp
-    common/fp/op/FPRSqrtStepFused.h
     common/fp/op/FPRecipEstimate.cpp
     common/fp/op/FPRecipEstimate.h
     common/fp/op/FPRecipExponent.cpp
@@ -36,6 +32,10 @@ add_library(dynarmic
     common/fp/op/FPRecipStepFused.h
     common/fp/op/FPRoundInt.cpp
     common/fp/op/FPRoundInt.h
+    common/fp/op/FPRSqrtEstimate.cpp
+    common/fp/op/FPRSqrtEstimate.h
+    common/fp/op/FPRSqrtStepFused.cpp
+    common/fp/op/FPRSqrtStepFused.h
     common/fp/op/FPToFixed.cpp
     common/fp/op/FPToFixed.h
     common/fp/process_exception.cpp
@@ -98,6 +98,10 @@ add_library(dynarmic
 
 if ("A32" IN_LIST DYNARMIC_FRONTENDS)
     target_sources(dynarmic PRIVATE
+        frontend/A32/a32_ir_emitter.cpp
+        frontend/A32/a32_ir_emitter.h
+        frontend/A32/a32_location_descriptor.cpp
+        frontend/A32/a32_location_descriptor.h
         frontend/A32/decoder/arm.h
         frontend/A32/decoder/arm.inc
         frontend/A32/decoder/asimd.h
@@ -112,21 +116,17 @@ if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         frontend/A32/disassembler/disassembler_arm.cpp
         frontend/A32/disassembler/disassembler_thumb.cpp
         frontend/A32/FPSCR.h
-        frontend/A32/a32_ir_emitter.cpp
-        frontend/A32/a32_ir_emitter.h
-        frontend/A32/a32_location_descriptor.cpp
-        frontend/A32/a32_location_descriptor.h
         frontend/A32/ITState.h
         frontend/A32/PSR.h
         frontend/A32/translate/a32_translate.cpp
         frontend/A32/translate/a32_translate.h
+        frontend/A32/translate/conditional_state.cpp
+        frontend/A32/translate/conditional_state.h
         frontend/A32/translate/impl/a32_branch.cpp
         frontend/A32/translate/impl/a32_crc32.cpp
         frontend/A32/translate/impl/a32_exception_generating.cpp
         frontend/A32/translate/impl/a32_translate_impl.cpp
         frontend/A32/translate/impl/a32_translate_impl.h
-        frontend/A32/translate/conditional_state.cpp
-        frontend/A32/translate/conditional_state.h
         frontend/A32/translate/impl/asimd_load_store_structures.cpp
         frontend/A32/translate/impl/asimd_misc.cpp
         frontend/A32/translate/impl/asimd_one_reg_modified_immediate.cpp
@@ -284,12 +284,12 @@ if ("x86_64" IN_LIST ARCHITECTURE)
         backend/x64/emit_x64_crc32.cpp
         backend/x64/emit_x64_data_processing.cpp
         backend/x64/emit_x64_floating_point.cpp
-        backend/x64/emit_x64_memory.h
         backend/x64/emit_x64_memory.cpp.inc
+        backend/x64/emit_x64_memory.h
         backend/x64/emit_x64_packed.cpp
         backend/x64/emit_x64_saturation.cpp
-        backend/x64/emit_x64_sm4.cpp
         backend/x64/emit_x64_sha.cpp
+        backend/x64/emit_x64_sm4.cpp
         backend/x64/emit_x64_vector.cpp
         backend/x64/emit_x64_vector_floating_point.cpp
         backend/x64/emit_x64_vector_saturation.cpp
@@ -305,6 +305,8 @@ if ("x86_64" IN_LIST ARCHITECTURE)
         backend/x64/reg_alloc.cpp
         backend/x64/reg_alloc.h
         backend/x64/stack_layout.h
+        backend/x64/verbose_debugging_output.cpp
+        backend/x64/verbose_debugging_output.h
         common/spin_lock_x64.cpp
         common/spin_lock_x64.h
         common/x64_disassemble.cpp
@@ -334,7 +336,7 @@ if ("x86_64" IN_LIST ARCHITECTURE)
     endif()
 endif()
 
-if("arm64" IN_LIST ARCHITECTURE)
+if ("arm64" IN_LIST ARCHITECTURE)
     target_link_libraries(dynarmic PRIVATE merry::oaknut)
 
     target_architecture_specific_sources(dynarmic "arm64"
@@ -433,7 +435,7 @@ elseif (APPLE)
         )
     endif()
 elseif (UNIX)
-    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         target_link_libraries(dynarmic PRIVATE rt)
     endif()
     target_sources(dynarmic PRIVATE backend/exception_handler_posix.cpp)
@@ -487,7 +489,7 @@ if (DYNARMIC_USE_PRECOMPILED_HEADERS)
     if ("x86_64" IN_LIST ARCHITECTURE)
         list(PREPEND PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:<xbyak/xbyak.h$<ANGLE-R>>")
     endif()
-    if("arm64" IN_LIST ARCHITECTURE)
+    if ("arm64" IN_LIST ARCHITECTURE)
         list(PREPEND PRECOMPILED_HEADERS "$<$<COMPILE_LANGUAGE:CXX>:<oaknut/oaknut.hpp$<ANGLE-R>>")
     endif()
     target_precompile_headers(dynarmic PRIVATE ${PRECOMPILED_HEADERS})

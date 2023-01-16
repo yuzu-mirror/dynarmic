@@ -17,6 +17,7 @@
 #include "dynarmic/backend/x64/nzcv_util.h"
 #include "dynarmic/backend/x64/perf_map.h"
 #include "dynarmic/backend/x64/stack_layout.h"
+#include "dynarmic/backend/x64/verbose_debugging_output.h"
 #include "dynarmic/common/variant_util.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
@@ -100,6 +101,34 @@ void EmitX64::PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, I
     code.add(index_reg.cvt32(), 1);
     code.and_(index_reg.cvt32(), u32(code.GetJitStateInfo().rsb_ptr_mask));
     code.mov(dword[r15 + code.GetJitStateInfo().offsetof_rsb_ptr], index_reg.cvt32());
+}
+
+void EmitX64::EmitVerboseDebuggingOutput(RegAlloc& reg_alloc) {
+    code.sub(rsp, sizeof(RegisterData));
+    for (int i = 0; i < 16; i++) {
+        if (rsp.getIdx() == i) {
+            continue;
+        }
+        code.mov(qword[rsp + offsetof(RegisterData, gprs) + sizeof(u64) * i], Xbyak::Reg64{i});
+    }
+    for (int i = 0; i < 16; i++) {
+        code.movaps(xword[rsp + offsetof(RegisterData, xmms) + 2 * sizeof(u64) * i], Xbyak::Xmm{i});
+    }
+    code.lea(rax, ptr[rsp + sizeof(RegisterData) + offsetof(StackLayout, spill)]);
+    code.mov(xword[rsp + offsetof(RegisterData, spill)], rax);
+
+    reg_alloc.EmitVerboseDebuggingOutput();
+
+    for (int i = 0; i < 16; i++) {
+        if (rsp.getIdx() == i) {
+            continue;
+        }
+        code.mov(Xbyak::Reg64{i}, qword[rsp + offsetof(RegisterData, gprs) + sizeof(u64) * i]);
+    }
+    for (int i = 0; i < 16; i++) {
+        code.movaps(Xbyak::Xmm{i}, xword[rsp + offsetof(RegisterData, xmms) + 2 * sizeof(u64) * i]);
+    }
+    code.add(rsp, sizeof(RegisterData));
 }
 
 void EmitX64::EmitPushRSB(EmitContext& ctx, IR::Inst* inst) {

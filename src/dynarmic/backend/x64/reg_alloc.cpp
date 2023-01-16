@@ -11,10 +11,12 @@
 
 #include <fmt/ostream.h>
 #include <mcl/assert.hpp>
+#include <mcl/bit_cast.hpp>
 #include <xbyak/xbyak.h>
 
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/stack_layout.h"
+#include "dynarmic/backend/x64/verbose_debugging_output.h"
 
 namespace Dynarmic::Backend::X64 {
 
@@ -85,6 +87,11 @@ bool HostLocInfo::IsLastUse() const {
     return is_being_used_count == 0 && current_references == 1 && accumulated_uses + 1 == total_uses;
 }
 
+void HostLocInfo::SetLastUse() {
+    ASSERT(IsLastUse());
+    is_set_last_use = true;
+}
+
 void HostLocInfo::ReadLock() {
     ASSERT(!is_scratch);
     is_being_used_count++;
@@ -119,7 +126,7 @@ void HostLocInfo::ReleaseAll() {
     accumulated_uses += current_references;
     current_references = 0;
 
-    ASSERT(total_uses == std::accumulate(values.begin(), values.end(), size_t(0), [](size_t sum, IR::Inst* inst) { return sum + inst->UseCount(); }));
+    is_set_last_use = false;
 
     if (total_uses == accumulated_uses) {
         values.clear();
@@ -141,9 +148,23 @@ size_t HostLocInfo::GetMaxBitWidth() const {
 }
 
 void HostLocInfo::AddValue(IR::Inst* inst) {
+    if (is_set_last_use) {
+        is_set_last_use = false;
+        values.clear();
+    }
     values.push_back(inst);
     total_uses += inst->UseCount();
     max_bit_width = std::max(max_bit_width, GetBitWidth(inst->GetType()));
+}
+
+void HostLocInfo::EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index) const {
+    using namespace Xbyak::util;
+    for (IR::Inst* value : values) {
+        code.mov(code.ABI_PARAM1, rsp);
+        code.mov(code.ABI_PARAM2, host_loc_index);
+        code.mov(code.ABI_PARAM3, mcl::bit_cast<u64>(value));
+        code.CallFunction(PrintVerboseDebuggingOutputLine);
+    }
 }
 
 IR::Type Argument::GetType() const {
@@ -369,6 +390,8 @@ HostLoc RegAlloc::UseScratchImpl(IR::Value use_value, const std::vector<HostLoc>
     if (can_use_current_location && !LocInfo(current_location).IsLocked()) {
         if (!LocInfo(current_location).IsLastUse()) {
             MoveOutOfTheWay(current_location);
+        } else {
+            LocInfo(current_location).SetLastUse();
         }
         LocInfo(current_location).WriteLock();
         return current_location;
@@ -469,6 +492,12 @@ void RegAlloc::EndOfAllocScope() {
 
 void RegAlloc::AssertNoMoreUses() {
     ASSERT(std::all_of(hostloc_info.begin(), hostloc_info.end(), [](const auto& i) { return i.IsEmpty(); }));
+}
+
+void RegAlloc::EmitVerboseDebuggingOutput() {
+    for (size_t i = 0; i < hostloc_info.size(); i++) {
+        hostloc_info[i].EmitVerboseDebuggingOutput(code, i);
+    }
 }
 
 HostLoc RegAlloc::SelectARegister(const std::vector<HostLoc>& desired_locations) const {

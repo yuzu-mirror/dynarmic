@@ -94,6 +94,10 @@ A32EmitX64::A32EmitX64(BlockOfCode& code, A32::UserConfig conf, A32::Jit* jit_in
 A32EmitX64::~A32EmitX64() = default;
 
 A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
+    if (conf.very_verbose_debugging_output) {
+        std::puts(IR::DumpBlock(block).c_str());
+    }
+
     code.EnableWriting();
     SCOPE_EXIT { code.DisableWriting(); };
 
@@ -142,6 +146,10 @@ A32EmitX64::BlockDescriptor A32EmitX64::Emit(IR::Block& block) {
         }
 
         reg_alloc.EndOfAllocScope();
+
+        if (conf.very_verbose_debugging_output) {
+            EmitVerboseDebuggingOutput(reg_alloc);
+        }
     }
 
     reg_alloc.AssertNoMoreUses();
