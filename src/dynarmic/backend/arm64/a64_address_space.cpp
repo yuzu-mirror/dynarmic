@@ -11,7 +11,6 @@
 #include "dynarmic/backend/arm64/emit_arm64.h"
 #include "dynarmic/backend/arm64/stack_layout.h"
 #include "dynarmic/common/cast_util.h"
-#include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/frontend/A64/a64_location_descriptor.h"
 #include "dynarmic/frontend/A64/translate/a64_translate.h"
 #include "dynarmic/interface/A64/config.h"

@@ -5,7 +5,6 @@
 
 #include "dynarmic/backend/arm64/emit_arm64.h"
 
-#include <fmt/ostream.h>
 #include <oaknut/oaknut.hpp>
 
 #include "dynarmic/backend/arm64/abi.h"

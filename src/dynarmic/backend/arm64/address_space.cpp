@@ -12,7 +12,6 @@
 #include "dynarmic/common/cast_util.h"
 #include "dynarmic/common/fp/fpcr.h"
 #include "dynarmic/interface/exclusive_monitor.h"
-#include "dynarmic/ir/opt/passes.h"
 
 namespace Dynarmic::Backend::Arm64 {
 

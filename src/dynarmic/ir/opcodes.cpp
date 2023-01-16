@@ -6,12 +6,7 @@
 #include "dynarmic/ir/opcodes.h"
 
 #include <array>
-#include <ostream>
-#include <string>
 #include <vector>
-
-#include <fmt/format.h>
-#include <fmt/ostream.h>
 
 #include "dynarmic/ir/type.h"
 

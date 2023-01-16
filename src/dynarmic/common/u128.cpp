@@ -5,7 +5,6 @@
 
 #include "dynarmic/common/u128.h"
 
-#include <mcl/bitsizeof.hpp>
 #include <mcl/stdint.hpp>
 
 namespace Dynarmic {

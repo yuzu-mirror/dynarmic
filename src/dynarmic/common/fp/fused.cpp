@@ -7,7 +7,6 @@
 
 #include <mcl/bit/bit_count.hpp>
 
-#include "dynarmic/common/fp/mantissa_util.h"
 #include "dynarmic/common/fp/unpacked.h"
 #include "dynarmic/common/u128.h"
 

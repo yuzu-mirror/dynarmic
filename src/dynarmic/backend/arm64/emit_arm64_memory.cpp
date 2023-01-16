@@ -17,7 +17,6 @@
 #include "dynarmic/backend/arm64/fastmem.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
-#include "dynarmic/interface/halt_reason.h"
 #include "dynarmic/ir/acc_type.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"

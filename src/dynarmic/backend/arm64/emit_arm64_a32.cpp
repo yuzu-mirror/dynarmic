@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include <fmt/ostream.h>
 #include <mcl/bit/bit_field.hpp>
 #include <oaknut/oaknut.hpp>
 

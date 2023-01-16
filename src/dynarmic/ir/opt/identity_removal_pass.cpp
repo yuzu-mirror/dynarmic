@@ -5,8 +5,6 @@
 
 #include <vector>
 
-#include <mcl/iterator/reverse.hpp>
-
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/opcodes.h"
 #include "dynarmic/ir/opt/passes.h"

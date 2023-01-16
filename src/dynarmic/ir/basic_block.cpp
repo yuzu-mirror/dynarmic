@@ -11,7 +11,6 @@
 #include <string>
 
 #include <fmt/format.h>
-#include <fmt/ostream.h>
 #include <mcl/assert.hpp>
 
 #include "dynarmic/common/memory_pool.h"
