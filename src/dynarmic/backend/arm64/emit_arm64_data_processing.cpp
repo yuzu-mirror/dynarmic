@@ -898,6 +898,7 @@ static void EmitAddSub(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* 
 
         auto Rb = ctx.reg_alloc.ReadReg<bitsize>(args[1]);
         auto Woverflow = ctx.reg_alloc.WriteW(overflow_inst);
+        ctx.reg_alloc.SpillFlags();
         RegAlloc::Realize(Rresult, Ra, Rb, Woverflow);
 
         code.ADDS(Rresult, *Ra, Rb);
