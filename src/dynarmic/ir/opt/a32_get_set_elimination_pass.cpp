@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include <algorithm>
 #include <array>
+#include <functional>
 
 #include <mcl/assert.hpp>
 #include <mcl/stdint.hpp>
@@ -39,16 +41,20 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
     RegisterInfo c_flag;
     RegisterInfo ge;
 
-    auto do_set = [&](RegisterInfo& info, IR::Value value, Iterator inst) {
+    auto do_set = [&](RegisterInfo& info, IR::Value value, Iterator inst, std::initializer_list<std::reference_wrapper<RegisterInfo>> dependants = {}) {
         if (info.has_value_request) {
             info.value_request->ReplaceUsesWith(value);
         }
         info.has_value_request = false;
 
-        if (info.set_not_required) {
+        if (info.set_not_required && std::all_of(dependants.begin(), dependants.end(), [](auto d) { return !d.get().has_value_request; })) {
             inst->Invalidate();
         }
         info.set_not_required = true;
+
+        for (auto d : dependants) {
+            d.get() = {};
+        }
     };
 
     auto do_set_valueless = [&](ValuelessRegisterInfo& info, Iterator inst) {
@@ -89,11 +95,14 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
         case IR::Opcode::A32SetExtendedRegister32: {
             const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
             const size_t reg_index = A32::RegNumber(reg);
-            do_set(ext_reg_singles_info[reg_index], inst->GetArg(1), inst);
-
-            ext_reg_doubles_info[reg_index / 2] = {};
-            ext_reg_vector_double_info[reg_index / 2] = {};
-            ext_reg_vector_quad_info[reg_index / 4] = {};
+            do_set(ext_reg_singles_info[reg_index],
+                   inst->GetArg(1),
+                   inst,
+                   {
+                       ext_reg_doubles_info[reg_index / 2],
+                       ext_reg_vector_double_info[reg_index / 2],
+                       ext_reg_vector_quad_info[reg_index / 4],
+                   });
             break;
         }
         case IR::Opcode::A32GetExtendedRegister32: {
@@ -105,12 +114,15 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
         case IR::Opcode::A32SetExtendedRegister64: {
             const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
             const size_t reg_index = A32::RegNumber(reg);
-            do_set(ext_reg_doubles_info[reg_index], inst->GetArg(1), inst);
-
-            ext_reg_singles_info[reg_index * 2 + 0] = {};
-            ext_reg_singles_info[reg_index * 2 + 1] = {};
-            ext_reg_vector_double_info[reg_index] = {};
-            ext_reg_vector_quad_info[reg_index / 2] = {};
+            do_set(ext_reg_doubles_info[reg_index],
+                   inst->GetArg(1),
+                   inst,
+                   {
+                       ext_reg_singles_info[reg_index * 2 + 0],
+                       ext_reg_singles_info[reg_index * 2 + 1],
+                       ext_reg_vector_double_info[reg_index],
+                       ext_reg_vector_quad_info[reg_index / 2],
+                   });
             break;
         }
         case IR::Opcode::A32GetExtendedRegister64: {
@@ -123,25 +135,31 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
             const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
             const size_t reg_index = A32::RegNumber(reg);
             if (A32::IsDoubleExtReg(reg)) {
-                do_set(ext_reg_vector_double_info[reg_index], inst->GetArg(1), inst);
-
-                ext_reg_singles_info[reg_index * 2 + 0] = {};
-                ext_reg_singles_info[reg_index * 2 + 1] = {};
-                ext_reg_doubles_info[reg_index] = {};
-                ext_reg_vector_quad_info[reg_index / 2] = {};
+                do_set(ext_reg_vector_double_info[reg_index],
+                       inst->GetArg(1),
+                       inst,
+                       {
+                           ext_reg_singles_info[reg_index * 2 + 0],
+                           ext_reg_singles_info[reg_index * 2 + 1],
+                           ext_reg_doubles_info[reg_index],
+                           ext_reg_vector_quad_info[reg_index / 2],
+                       });
             } else {
                 DEBUG_ASSERT(A32::IsQuadExtReg(reg));
 
-                do_set(ext_reg_vector_quad_info[reg_index], inst->GetArg(1), inst);
-
-                ext_reg_singles_info[reg_index * 4 + 0] = {};
-                ext_reg_singles_info[reg_index * 4 + 1] = {};
-                ext_reg_singles_info[reg_index * 4 + 2] = {};
-                ext_reg_singles_info[reg_index * 4 + 3] = {};
-                ext_reg_doubles_info[reg_index * 2 + 0] = {};
-                ext_reg_doubles_info[reg_index * 2 + 1] = {};
-                ext_reg_vector_double_info[reg_index * 2 + 0] = {};
-                ext_reg_vector_double_info[reg_index * 2 + 1] = {};
+                do_set(ext_reg_vector_quad_info[reg_index],
+                       inst->GetArg(1),
+                       inst,
+                       {
+                           ext_reg_singles_info[reg_index * 4 + 0],
+                           ext_reg_singles_info[reg_index * 4 + 1],
+                           ext_reg_singles_info[reg_index * 4 + 2],
+                           ext_reg_singles_info[reg_index * 4 + 3],
+                           ext_reg_doubles_info[reg_index * 2 + 0],
+                           ext_reg_doubles_info[reg_index * 2 + 1],
+                           ext_reg_vector_double_info[reg_index * 2 + 0],
+                           ext_reg_vector_double_info[reg_index * 2 + 1],
+                       });
             }
             break;
         }
