@@ -17,59 +17,58 @@
 
 namespace Dynarmic::Optimization {
 
-void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
-    using Iterator = IR::Block::iterator;
+void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
+    using Iterator = std::reverse_iterator<IR::Block::iterator>;
+
     struct RegisterInfo {
-        IR::Value register_value;
-        bool set_instruction_present = false;
-        Iterator last_set_instruction;
+        bool set_not_required = false;
+        bool has_value_request = false;
+        Iterator value_request = {};
+    };
+    struct ValuelessRegisterInfo {
+        bool set_not_required = false;
     };
     std::array<RegisterInfo, 15> reg_info;
     std::array<RegisterInfo, 64> ext_reg_singles_info;
     std::array<RegisterInfo, 32> ext_reg_doubles_info;
     std::array<RegisterInfo, 32> ext_reg_vector_double_info;
     std::array<RegisterInfo, 16> ext_reg_vector_quad_info;
-    struct CpsrInfo {
-        RegisterInfo nz;
-        RegisterInfo c;
-        RegisterInfo nzc;
-        RegisterInfo nzcv;
-        RegisterInfo ge;
-    } cpsr_info;
+    ValuelessRegisterInfo nzcvq;
+    ValuelessRegisterInfo nzcv;
+    ValuelessRegisterInfo nz;
+    RegisterInfo c_flag;
+    RegisterInfo ge;
 
-    const auto do_delete_last_set = [&block](RegisterInfo& info) {
-        if (info.set_instruction_present) {
-            info.set_instruction_present = false;
-            info.last_set_instruction->Invalidate();
-            block.Instructions().erase(info.last_set_instruction);
+    auto do_set = [&](RegisterInfo& info, IR::Value value, Iterator inst) {
+        if (info.has_value_request) {
+            info.value_request->ReplaceUsesWith(value);
         }
-        info = {};
-    };
+        info.has_value_request = false;
 
-    const auto do_set = [&do_delete_last_set](RegisterInfo& info, IR::Value value, Iterator set_inst) {
-        do_delete_last_set(info);
-        info.register_value = value;
-        info.set_instruction_present = true;
-        info.last_set_instruction = set_inst;
-    };
-
-    const auto do_set_without_inst = [&do_delete_last_set](RegisterInfo& info, IR::Value value) {
-        do_delete_last_set(info);
-        info.register_value = value;
-    };
-
-    const auto do_get = [](RegisterInfo& info, Iterator get_inst) {
-        if (info.register_value.IsEmpty()) {
-            info.register_value = IR::Value(&*get_inst);
-            return;
+        if (info.set_not_required) {
+            inst->Invalidate();
         }
-        get_inst->ReplaceUsesWith(info.register_value);
+        info.set_not_required = true;
     };
 
-    // Location and version don't matter here.
+    auto do_set_valueless = [&](ValuelessRegisterInfo& info, Iterator inst) {
+        if (info.set_not_required) {
+            inst->Invalidate();
+        }
+        info.set_not_required = true;
+    };
+
+    auto do_get = [](RegisterInfo& info, Iterator inst) {
+        if (info.has_value_request) {
+            info.value_request->ReplaceUsesWith(IR::Value{&*inst});
+        }
+        info.has_value_request = true;
+        info.value_request = inst;
+    };
+
     A32::IREmitter ir{block, A32::LocationDescriptor{block.Location()}, {}};
 
-    for (auto inst = block.begin(); inst != block.end(); ++inst) {
+    for (auto inst = block.rbegin(); inst != block.rend(); ++inst) {
         switch (inst->GetOpcode()) {
         case IR::Opcode::A32SetRegister: {
             const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
@@ -101,10 +100,6 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
             const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
             const size_t reg_index = A32::RegNumber(reg);
             do_get(ext_reg_singles_info[reg_index], inst);
-
-            ext_reg_doubles_info[reg_index / 2] = {};
-            ext_reg_vector_double_info[reg_index / 2] = {};
-            ext_reg_vector_quad_info[reg_index / 4] = {};
             break;
         }
         case IR::Opcode::A32SetExtendedRegister64: {
@@ -122,11 +117,6 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
             const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
             const size_t reg_index = A32::RegNumber(reg);
             do_get(ext_reg_doubles_info[reg_index], inst);
-
-            ext_reg_singles_info[reg_index * 2 + 0] = {};
-            ext_reg_singles_info[reg_index * 2 + 1] = {};
-            ext_reg_vector_double_info[reg_index] = {};
-            ext_reg_vector_quad_info[reg_index / 2] = {};
             break;
         }
         case IR::Opcode::A32SetVector: {
@@ -160,100 +150,123 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions opt) {
             const size_t reg_index = A32::RegNumber(reg);
             if (A32::IsDoubleExtReg(reg)) {
                 do_get(ext_reg_vector_double_info[reg_index], inst);
-
-                ext_reg_singles_info[reg_index * 2 + 0] = {};
-                ext_reg_singles_info[reg_index * 2 + 1] = {};
-                ext_reg_doubles_info[reg_index] = {};
-                ext_reg_vector_quad_info[reg_index / 2] = {};
             } else {
                 DEBUG_ASSERT(A32::IsQuadExtReg(reg));
-
                 do_get(ext_reg_vector_quad_info[reg_index], inst);
-
-                ext_reg_singles_info[reg_index * 4 + 0] = {};
-                ext_reg_singles_info[reg_index * 4 + 1] = {};
-                ext_reg_singles_info[reg_index * 4 + 2] = {};
-                ext_reg_singles_info[reg_index * 4 + 3] = {};
-                ext_reg_doubles_info[reg_index * 2 + 0] = {};
-                ext_reg_doubles_info[reg_index * 2 + 1] = {};
-                ext_reg_vector_double_info[reg_index * 2 + 0] = {};
-                ext_reg_vector_double_info[reg_index * 2 + 1] = {};
             }
             break;
         }
         case IR::Opcode::A32GetCFlag: {
-            if (cpsr_info.c.register_value.IsEmpty() && cpsr_info.nzcv.register_value.GetType() == IR::Type::NZCVFlags) {
-                ir.SetInsertionPointBefore(inst);
-                IR::U1 c = ir.GetCFlagFromNZCV(IR::NZCV{cpsr_info.nzcv.register_value});
-                inst->ReplaceUsesWith(c);
-                cpsr_info.c.register_value = c;
-                break;
-            }
-
-            do_get(cpsr_info.c, inst);
-            // ensure source is not deleted
-            cpsr_info.nzc = {};
-            cpsr_info.nzcv = {};
+            do_get(c_flag, inst);
             break;
         }
-        case IR::Opcode::A32SetCpsrNZCV:
+        case IR::Opcode::A32SetCpsrNZCV: {
+            if (c_flag.has_value_request) {
+                ir.SetInsertionPointBefore(inst.base());  // base is one ahead
+                IR::U1 c = ir.GetCFlagFromNZCV(IR::NZCV{inst->GetArg(0)});
+                c_flag.value_request->ReplaceUsesWith(c);
+                c_flag.has_value_request = false;
+                break;  // This case will be executed again because of the above
+            }
+
+            do_set_valueless(nzcv, inst);
+
+            nz = {.set_not_required = true};
+            c_flag = {.set_not_required = true};
+            break;
+        }
         case IR::Opcode::A32SetCpsrNZCVRaw: {
-            do_delete_last_set(cpsr_info.nz);
-            do_delete_last_set(cpsr_info.c);
-            do_delete_last_set(cpsr_info.nzc);
-            do_set(cpsr_info.nzcv, inst->GetArg(0), inst);
+            if (c_flag.has_value_request) {
+                nzcv.set_not_required = false;
+            }
+
+            do_set_valueless(nzcv, inst);
+
+            nzcvq = {};
+            nz = {.set_not_required = true};
+            c_flag = {.set_not_required = true};
             break;
         }
         case IR::Opcode::A32SetCpsrNZCVQ: {
-            do_delete_last_set(cpsr_info.nz);
-            do_delete_last_set(cpsr_info.c);
-            do_delete_last_set(cpsr_info.nzc);
-            do_delete_last_set(cpsr_info.nzcv);
+            if (c_flag.has_value_request) {
+                nzcvq.set_not_required = false;
+            }
+
+            do_set_valueless(nzcvq, inst);
+
+            nzcv = {.set_not_required = true};
+            nz = {.set_not_required = true};
+            c_flag = {.set_not_required = true};
             break;
         }
         case IR::Opcode::A32SetCpsrNZ: {
-            if (cpsr_info.nzc.set_instruction_present) {
-                cpsr_info.nzc.last_set_instruction->SetArg(0, IR::Value::EmptyNZCVImmediateMarker());
-            }
+            do_set_valueless(nz, inst);
 
-            if (opt.convert_nz_to_nzc && !cpsr_info.c.register_value.IsEmpty()) {
-                ir.SetInsertionPointAfter(inst);
-                ir.SetCpsrNZC(IR::NZCV{inst->GetArg(0)}, ir.GetCFlag());
-                inst->Invalidate();
-                break;
-            }
-
-            // cpsr_info.c remains valid
-            cpsr_info.nzc = {};
-            cpsr_info.nzcv = {};
-            do_set(cpsr_info.nz, inst->GetArg(0), inst);
+            nzcvq = {};
+            nzcv = {};
             break;
         }
         case IR::Opcode::A32SetCpsrNZC: {
-            if (opt.convert_nzc_to_nz && !inst->GetArg(1).IsImmediate() && inst->GetArg(1).GetInstRecursive()->GetOpcode() == IR::Opcode::A32GetCFlag) {
-                ir.SetInsertionPointAfter(inst);
-                ir.SetCpsrNZ(IR::NZCV{inst->GetArg(0)});
+            if (c_flag.has_value_request) {
+                c_flag.value_request->ReplaceUsesWith(inst->GetArg(1));
+                c_flag.has_value_request = false;
+            }
+
+            if (!inst->GetArg(1).IsImmediate() && inst->GetArg(1).GetInstRecursive()->GetOpcode() == IR::Opcode::A32GetCFlag) {
+                const auto nz_value = inst->GetArg(0);
+
                 inst->Invalidate();
+
+                ir.SetInsertionPointBefore(inst.base());
+                ir.SetCpsrNZ(IR::NZCV{nz_value});
+
+                nzcvq = {};
+                nzcv = {};
+                nz = {.set_not_required = true};
                 break;
             }
 
-            cpsr_info.nzcv = {};
-            do_set(cpsr_info.nzc, {}, inst);
-            do_set_without_inst(cpsr_info.nz, inst->GetArg(0));
-            do_set_without_inst(cpsr_info.c, inst->GetArg(1));
+            if (nz.set_not_required && c_flag.set_not_required) {
+                inst->Invalidate();
+            } else if (nz.set_not_required) {
+                inst->SetArg(0, IR::Value::EmptyNZCVImmediateMarker());
+            }
+            nz.set_not_required = true;
+            c_flag.set_not_required = true;
+
+            nzcv = {};
+            nzcvq = {};
             break;
         }
         case IR::Opcode::A32SetGEFlags: {
-            do_set(cpsr_info.ge, inst->GetArg(0), inst);
+            do_set(ge, inst->GetArg(0), inst);
             break;
         }
         case IR::Opcode::A32GetGEFlags: {
-            do_get(cpsr_info.ge, inst);
+            do_get(ge, inst);
+            break;
+        }
+        case IR::Opcode::A32SetGEFlagsCompressed: {
+            ge = {.set_not_required = true};
+            break;
+        }
+        case IR::Opcode::A32OrQFlag: {
             break;
         }
         default: {
             if (inst->ReadsFromCPSR() || inst->WritesToCPSR()) {
-                cpsr_info = {};
+                nzcvq = {};
+                nzcv = {};
+                nz = {};
+                c_flag = {};
+                ge = {};
+            }
+            if (inst->ReadsFromCoreRegister() || inst->WritesToCoreRegister()) {
+                reg_info = {};
+                ext_reg_singles_info = {};
+                ext_reg_doubles_info = {};
+                ext_reg_vector_double_info = {};
+                ext_reg_vector_quad_info = {};
             }
             break;
         }
