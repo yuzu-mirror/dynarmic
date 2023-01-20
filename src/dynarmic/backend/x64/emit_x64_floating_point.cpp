@@ -1870,6 +1870,8 @@ void EmitX64::EmitFPFixedU32ToDouble(EmitContext& ctx, IR::Inst* inst) {
     const size_t fbits = args[1].GetImmediateU8();
     [[maybe_unused]] const FP::RoundingMode rounding_mode = static_cast<FP::RoundingMode>(args[2].GetImmediateU8());  // Not required
 
+    code.xorps(to, to);
+
     if (code.HasHostFeature(HostFeature::AVX512F)) {
         const Xbyak::Reg64 from = ctx.reg_alloc.UseGpr(args[0]);
         code.vcvtusi2sd(to, to, from.cvt32());
