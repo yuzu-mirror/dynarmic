@@ -562,6 +562,8 @@ EmitConfig A64AddressSpace::GetEmitConfig() {
         .state_exclusive_state_offset = offsetof(A64JitState, exclusive_state),
 
         .coprocessors{},
+
+        .very_verbose_debugging_output = conf.very_verbose_debugging_output,
     };
 }
 

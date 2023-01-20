@@ -373,6 +373,8 @@ if ("arm64" IN_LIST ARCHITECTURE)
         backend/arm64/reg_alloc.cpp
         backend/arm64/reg_alloc.h
         backend/arm64/stack_layout.h
+        backend/arm64/verbose_debugging_output.cpp
+        backend/arm64/verbose_debugging_output.h
         common/spin_lock_arm64.cpp
         common/spin_lock_arm64.h
     )

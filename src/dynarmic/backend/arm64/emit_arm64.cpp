@@ -11,6 +11,7 @@
 #include "dynarmic/backend/arm64/emit_context.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
 #include "dynarmic/backend/arm64/reg_alloc.h"
+#include "dynarmic/backend/arm64/verbose_debugging_output.h"
 #include "dynarmic/ir/basic_block.h"
 #include "dynarmic/ir/microinstruction.h"
 #include "dynarmic/ir/opcodes.h"
@@ -175,6 +176,10 @@ static void EmitAddCycles(oaknut::CodeGenerator& code, EmitContext& ctx, size_t 
 }
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& conf, FastmemManager& fastmem_manager) {
+    if (conf.very_verbose_debugging_output) {
+        std::puts(IR::DumpBlock(block).c_str());
+    }
+
     EmittedBlockInfo ebi;
 
     FpsrManager fpsr_manager{code, conf.state_fpsr_offset};
@@ -223,6 +228,10 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
 
         reg_alloc.UpdateAllUses();
         reg_alloc.AssertAllUnlocked();
+
+        if (conf.very_verbose_debugging_output) {
+            EmitVerboseDebuggingOutput(code, ctx);
+        }
     }
 
     fpsr_manager.Spill();

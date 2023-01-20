@@ -7,14 +7,18 @@
 
 #include <algorithm>
 #include <array>
+#include <iterator>
 
 #include <mcl/assert.hpp>
 #include <mcl/bit/bit_field.hpp>
+#include <mcl/bit_cast.hpp>
 #include <mcl/mp/metavalue/lift_value.hpp>
 #include <mcl/stdint.hpp>
 
 #include "dynarmic/backend/arm64/abi.h"
+#include "dynarmic/backend/arm64/emit_context.h"
 #include "dynarmic/backend/arm64/fpsr_manager.h"
+#include "dynarmic/backend/arm64/verbose_debugging_output.h"
 #include "dynarmic/common/always_false.h"
 
 namespace Dynarmic::Backend::Arm64 {
@@ -232,6 +236,34 @@ void RegAlloc::AssertNoMoreUses() const {
     ASSERT(std::all_of(fprs.begin(), fprs.end(), is_empty));
     ASSERT(is_empty(flags));
     ASSERT(std::all_of(spills.begin(), spills.end(), is_empty));
+}
+
+void RegAlloc::EmitVerboseDebuggingOutput(EmitContext& ctx) {
+    code.MOV(X19, mcl::bit_cast<u64>(&PrintVerboseDebuggingOutputLine));  // Non-volatile register
+
+    const auto do_location = [&](HostLocInfo& info, HostLocType type, size_t index) {
+        using namespace oaknut::util;
+        for (const IR::Inst* value : info.values) {
+            const auto inst_offset = std::distance(ctx.block.begin(), IR::Block::iterator(const_cast<IR::Inst*>(value)));
+            code.MOV(X0, SP);
+            code.MOV(X1, static_cast<u64>(type));
+            code.MOV(X2, index);
+            code.MOV(X3, mcl::bit_cast<u64>(inst_offset));
+            code.MOV(X4, static_cast<u64>(value->GetType()));
+            code.BLR(X19);
+        }
+    };
+
+    for (size_t i = 0; i < gprs.size(); i++) {
+        do_location(gprs[i], HostLocType::X, i);
+    }
+    for (size_t i = 0; i < fprs.size(); i++) {
+        do_location(fprs[i], HostLocType::Q, i);
+    }
+    do_location(flags, HostLocType::Nzcv, 0);
+    for (size_t i = 0; i < spills.size(); i++) {
+        do_location(spills[i], HostLocType::Spill, i);
+    }
 }
 
 template<HostLoc::Kind kind>

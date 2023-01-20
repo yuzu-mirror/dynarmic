@@ -155,6 +155,9 @@ struct EmitConfig {
 
     // A32 specific
     std::array<std::shared_ptr<A32::Coprocessor>, 16> coprocessors{};
+
+    // Debugging
+    bool very_verbose_debugging_output;
 };
 
 EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const EmitConfig& emit_conf, FastmemManager& fastmem_manager);

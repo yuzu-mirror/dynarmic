@@ -174,6 +174,7 @@ IR::Block A32AddressSpace::GenerateIR(IR::LocationDescriptor descriptor) const {
         Optimization::ConstantPropagation(ir_block);
         Optimization::DeadCodeElimination(ir_block);
     }
+    Optimization::IdentityRemovalPass(ir_block);
     Optimization::VerificationPass(ir_block);
 
     return ir_block;
@@ -385,6 +386,8 @@ EmitConfig A32AddressSpace::GetEmitConfig() {
         .state_exclusive_state_offset = offsetof(A32JitState, exclusive_state),
 
         .coprocessors = conf.coprocessors,
+
+        .very_verbose_debugging_output = conf.very_verbose_debugging_output,
     };
 }
 
