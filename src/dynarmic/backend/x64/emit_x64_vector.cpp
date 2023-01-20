@@ -4679,7 +4679,11 @@ void EmitX64::EmitVectorTableLookup64(EmitContext& ctx, IR::Inst* inst) {
             code.punpcklqdq(xmm_table0, xmm_table0_upper);
             ctx.reg_alloc.Release(xmm_table0_upper);
         }
-        if (table_size == 4) {
+        if (table_size == 3) {
+            code.pxor(xmm0, xmm0);
+            code.punpcklqdq(xmm_table1, xmm0);
+        } else {
+            ASSERT(table_size == 4);
             const Xbyak::Xmm xmm_table1_upper = ctx.reg_alloc.UseXmm(table[3]);
             code.punpcklqdq(xmm_table1, xmm_table1_upper);
             ctx.reg_alloc.Release(xmm_table1_upper);
