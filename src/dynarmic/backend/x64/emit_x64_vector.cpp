@@ -4245,10 +4245,11 @@ static void EmitVectorSignedSaturatedNarrowToSigned(size_t original_esize, Block
     const Xbyak::Xmm sign = ctx.reg_alloc.ScratchXmm();
 
     code.movdqa(dest, src);
+    code.pxor(xmm0, xmm0);
 
     switch (original_esize) {
     case 16:
-        code.packsswb(dest, dest);
+        code.packsswb(dest, xmm0);
         code.movdqa(sign, src);
         code.psraw(sign, 15);
         code.packsswb(sign, sign);
@@ -4256,7 +4257,7 @@ static void EmitVectorSignedSaturatedNarrowToSigned(size_t original_esize, Block
         code.punpcklbw(reconstructed, sign);
         break;
     case 32:
-        code.packssdw(dest, dest);
+        code.packssdw(dest, xmm0);
         code.movdqa(reconstructed, dest);
         code.movdqa(sign, dest);
         code.psraw(sign, 15);
