@@ -663,6 +663,7 @@ static std::optional<size_t> str2sz(char const* s) {
 int main(int argc, char* argv[]) {
     if (argc != 5) {
         fmt::print("Usage: {} <thumb|arm|a64> <seed> <instruction_count> <iteration_count>\n", argv[0]);
+        return 1;
     }
 
     const auto seed = str2sz(argv[2]);

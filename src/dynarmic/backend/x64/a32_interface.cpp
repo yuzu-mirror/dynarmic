@@ -183,6 +183,7 @@ private:
             Optimization::ConstantPropagation(ir_block);
             Optimization::DeadCodeElimination(ir_block);
         }
+        Optimization::IdentityRemovalPass(ir_block);
         Optimization::VerificationPass(ir_block);
         return emitter.Emit(ir_block);
     }

@@ -17,6 +17,7 @@
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/stack_layout.h"
 #include "dynarmic/backend/x64/verbose_debugging_output.h"
+#include "dynarmic/ir/basic_block.h"
 
 namespace Dynarmic::Backend::X64 {
 
@@ -157,12 +158,14 @@ void HostLocInfo::AddValue(IR::Inst* inst) {
     max_bit_width = std::max(max_bit_width, GetBitWidth(inst->GetType()));
 }
 
-void HostLocInfo::EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index) const {
+void HostLocInfo::EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index, const IR::Block& block) const {
     using namespace Xbyak::util;
     for (IR::Inst* value : values) {
+        const auto inst_offset = std::distance(block.begin(), IR::Block::const_iterator(value));
         code.mov(code.ABI_PARAM1, rsp);
         code.mov(code.ABI_PARAM2, host_loc_index);
-        code.mov(code.ABI_PARAM3, mcl::bit_cast<u64>(value));
+        code.mov(code.ABI_PARAM3, mcl::bit_cast<u64>(inst_offset));
+        code.mov(code.ABI_PARAM4, GetBitWidth(value->GetType()));
         code.CallFunction(PrintVerboseDebuggingOutputLine);
     }
 }
@@ -269,6 +272,24 @@ RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
         }
     }
     return ret;
+}
+
+void RegAlloc::RegisterPseudoOperation(IR::Inst* inst) {
+    ASSERT(IsValueLive(inst));
+
+    for (size_t i = 0; i < inst->NumArgs(); i++) {
+        const IR::Value arg = inst->GetArg(i);
+        if (!arg.IsImmediate() && !IsValuelessType(arg.GetType())) {
+            if (const auto loc = ValueLocation(arg.GetInst())) {
+                // May not necessarily have a value (e.g. CMP variant of Sub32).
+                LocInfo(*loc).AddArgReference();
+            }
+        }
+    }
+}
+
+bool RegAlloc::IsValueLive(IR::Inst* inst) const {
+    return !!ValueLocation(inst);
 }
 
 Xbyak::Reg64 RegAlloc::UseGpr(Argument& arg) {
@@ -494,9 +515,9 @@ void RegAlloc::AssertNoMoreUses() {
     ASSERT(std::all_of(hostloc_info.begin(), hostloc_info.end(), [](const auto& i) { return i.IsEmpty(); }));
 }
 
-void RegAlloc::EmitVerboseDebuggingOutput() {
+void RegAlloc::EmitVerboseDebuggingOutput(const IR::Block& block) {
     for (size_t i = 0; i < hostloc_info.size(); i++) {
-        hostloc_info[i].EmitVerboseDebuggingOutput(code, i);
+        hostloc_info[i].EmitVerboseDebuggingOutput(code, i, block);
     }
 }
 

@@ -33,7 +33,6 @@ void EmitX64::EmitPackedAddU8(EmitContext& ctx, IR::Inst* inst) {
         code.pxor(xmm_ge, ones);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-        ctx.EraseInstruction(ge_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, xmm_a);
@@ -56,7 +55,6 @@ void EmitX64::EmitPackedAddS8(EmitContext& ctx, IR::Inst* inst) {
         code.pcmpgtb(xmm_ge, xmm0);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-        ctx.EraseInstruction(ge_inst);
     }
 
     code.paddb(xmm_a, xmm_b);
@@ -86,7 +84,6 @@ void EmitX64::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
             code.pxor(xmm_ge, ones);
 
             ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-            ctx.EraseInstruction(ge_inst);
         } else {
             const Xbyak::Xmm tmp_a = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
@@ -99,7 +96,6 @@ void EmitX64::EmitPackedAddU16(EmitContext& ctx, IR::Inst* inst) {
             code.pcmpgtw(tmp_b, tmp_a);  // *Signed* comparison!
 
             ctx.reg_alloc.DefineValue(ge_inst, tmp_b);
-            ctx.EraseInstruction(ge_inst);
         }
     }
 
@@ -123,7 +119,6 @@ void EmitX64::EmitPackedAddS16(EmitContext& ctx, IR::Inst* inst) {
         code.pcmpgtw(xmm_ge, xmm0);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-        ctx.EraseInstruction(ge_inst);
     }
 
     code.paddw(xmm_a, xmm_b);
@@ -146,7 +141,6 @@ void EmitX64::EmitPackedSubU8(EmitContext& ctx, IR::Inst* inst) {
         code.pcmpeqb(xmm_ge, xmm_a);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-        ctx.EraseInstruction(ge_inst);
     }
 
     code.psubb(xmm_a, xmm_b);
@@ -171,7 +165,6 @@ void EmitX64::EmitPackedSubS8(EmitContext& ctx, IR::Inst* inst) {
         code.pcmpgtb(xmm_ge, xmm0);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-        ctx.EraseInstruction(ge_inst);
     }
 
     code.psubb(xmm_a, xmm_b);
@@ -205,7 +198,6 @@ void EmitX64::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
         code.psubw(xmm_a, xmm_b);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-        ctx.EraseInstruction(ge_inst);
         ctx.reg_alloc.DefineValue(inst, xmm_a);
         return;
     }
@@ -226,7 +218,6 @@ void EmitX64::EmitPackedSubU16(EmitContext& ctx, IR::Inst* inst) {
     code.psubw(xmm_a, xmm_b);
 
     ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-    ctx.EraseInstruction(ge_inst);
     ctx.reg_alloc.DefineValue(inst, xmm_a);
 }
 
@@ -247,7 +238,6 @@ void EmitX64::EmitPackedSubS16(EmitContext& ctx, IR::Inst* inst) {
         code.pcmpgtw(xmm_ge, xmm0);
 
         ctx.reg_alloc.DefineValue(ge_inst, xmm_ge);
-        ctx.EraseInstruction(ge_inst);
     }
 
     code.psubw(xmm_a, xmm_b);
@@ -554,7 +544,6 @@ static void EmitPackedSubAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst
         code.or_(ge_sum, ge_diff);
 
         ctx.reg_alloc.DefineValue(ge_inst, ge_sum);
-        ctx.EraseInstruction(ge_inst);
     }
 
     if (is_halving) {

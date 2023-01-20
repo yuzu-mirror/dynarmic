@@ -64,7 +64,6 @@ void EmitSignedSaturatedOp(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) 
     if constexpr (has_overflow_inst) {
         if (const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp)) {
             ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-            ctx.EraseInstruction(overflow_inst);
         }
     } else {
         code.or_(code.byte[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], overflow.cvt8());
@@ -155,7 +154,6 @@ void EmitX64::EmitSignedSaturation(EmitContext& ctx, IR::Inst* inst) {
         code.seta(overflow.cvt8());
 
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -185,7 +183,6 @@ void EmitX64::EmitUnsignedSaturation(EmitContext& ctx, IR::Inst* inst) {
         code.seta(overflow.cvt8());
 
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);

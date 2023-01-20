@@ -119,7 +119,7 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
         ctx.reg_alloc.EndOfAllocScope();
 
         if (conf.very_verbose_debugging_output) {
-            EmitVerboseDebuggingOutput(reg_alloc);
+            EmitVerboseDebuggingOutput(reg_alloc, block);
         }
     }
 

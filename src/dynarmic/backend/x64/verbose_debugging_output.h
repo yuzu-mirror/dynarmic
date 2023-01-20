@@ -31,6 +31,6 @@ struct alignas(16) RegisterData {
 #    pragma warning(pop)
 #endif
 
-void PrintVerboseDebuggingOutputLine(RegisterData& reg_data, HostLoc hostloc, u64 inst_addr);
+void PrintVerboseDebuggingOutputLine(RegisterData& reg_data, HostLoc hostloc, size_t inst_index, size_t bitsize);
 
 }  // namespace Dynarmic::Backend::X64

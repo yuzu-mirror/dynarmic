@@ -3633,7 +3633,6 @@ void EmitX64::EmitVectorSignedMultiply16(EmitContext& ctx, IR::Inst* inst) {
         }
 
         ctx.reg_alloc.DefineValue(upper_inst, result);
-        ctx.EraseInstruction(upper_inst);
     }
 
     if (lower_inst) {
@@ -3645,7 +3644,6 @@ void EmitX64::EmitVectorSignedMultiply16(EmitContext& ctx, IR::Inst* inst) {
             code.pmullw(result, y);
         }
         ctx.reg_alloc.DefineValue(lower_inst, result);
-        ctx.EraseInstruction(lower_inst);
     }
 }
 
@@ -3663,7 +3661,6 @@ void EmitX64::EmitVectorSignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
         code.vpmulld(result, x, y);
 
         ctx.reg_alloc.DefineValue(lower_inst, result);
-        ctx.EraseInstruction(lower_inst);
         return;
     }
 
@@ -3675,7 +3672,6 @@ void EmitX64::EmitVectorSignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
             const Xbyak::Xmm lower_result = ctx.reg_alloc.ScratchXmm();
             code.vpmulld(lower_result, x, y);
             ctx.reg_alloc.DefineValue(lower_inst, lower_result);
-            ctx.EraseInstruction(lower_inst);
         }
 
         const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -3687,7 +3683,6 @@ void EmitX64::EmitVectorSignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
         code.shufps(result, x, 0b11011101);
 
         ctx.reg_alloc.DefineValue(upper_inst, result);
-        ctx.EraseInstruction(upper_inst);
         return;
     }
 
@@ -3730,11 +3725,9 @@ void EmitX64::EmitVectorSignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
 
     if (upper_inst) {
         ctx.reg_alloc.DefineValue(upper_inst, upper_result);
-        ctx.EraseInstruction(upper_inst);
     }
     if (lower_inst) {
         ctx.reg_alloc.DefineValue(lower_inst, lower_result);
-        ctx.EraseInstruction(lower_inst);
     }
 }
 
@@ -5139,7 +5132,6 @@ void EmitX64::EmitVectorUnsignedMultiply16(EmitContext& ctx, IR::Inst* inst) {
         }
 
         ctx.reg_alloc.DefineValue(upper_inst, result);
-        ctx.EraseInstruction(upper_inst);
     }
 
     if (lower_inst) {
@@ -5151,7 +5143,6 @@ void EmitX64::EmitVectorUnsignedMultiply16(EmitContext& ctx, IR::Inst* inst) {
             code.pmullw(result, y);
         }
         ctx.reg_alloc.DefineValue(lower_inst, result);
-        ctx.EraseInstruction(lower_inst);
     }
 }
 
@@ -5169,7 +5160,6 @@ void EmitX64::EmitVectorUnsignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
         code.vpmulld(result, x, y);
 
         ctx.reg_alloc.DefineValue(lower_inst, result);
-        ctx.EraseInstruction(lower_inst);
         return;
     }
 
@@ -5181,7 +5171,6 @@ void EmitX64::EmitVectorUnsignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
             const Xbyak::Xmm lower_result = ctx.reg_alloc.ScratchXmm();
             code.vpmulld(lower_result, x, y);
             ctx.reg_alloc.DefineValue(lower_inst, lower_result);
-            ctx.EraseInstruction(lower_inst);
         }
 
         const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
@@ -5193,7 +5182,6 @@ void EmitX64::EmitVectorUnsignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
         code.shufps(result, x, 0b11011101);
 
         ctx.reg_alloc.DefineValue(upper_inst, result);
-        ctx.EraseInstruction(upper_inst);
         return;
     }
 
@@ -5224,11 +5212,9 @@ void EmitX64::EmitVectorUnsignedMultiply32(EmitContext& ctx, IR::Inst* inst) {
 
     if (upper_inst) {
         ctx.reg_alloc.DefineValue(upper_inst, upper_result);
-        ctx.EraseInstruction(upper_inst);
     }
     if (lower_inst) {
         ctx.reg_alloc.DefineValue(lower_inst, lower_result);
-        ctx.EraseInstruction(lower_inst);
     }
 }
 

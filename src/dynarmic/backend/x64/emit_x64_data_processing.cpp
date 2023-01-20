@@ -71,7 +71,6 @@ void EmitX64::EmitMostSignificantWord(EmitContext& ctx, IR::Inst* inst) {
         const Xbyak::Reg64 carry = ctx.reg_alloc.ScratchGpr();
         code.setc(carry.cvt8());
         ctx.reg_alloc.DefineValue(carry_inst, carry);
-        ctx.EraseInstruction(carry_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -332,7 +331,6 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
             }
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
@@ -350,7 +348,6 @@ void EmitX64::EmitLogicalShiftLeft32(EmitContext& ctx, IR::Inst* inst) {
             code.shr(result.cvt64(), 32);
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         }
     }
@@ -469,7 +466,6 @@ void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             }
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
@@ -486,7 +482,6 @@ void EmitX64::EmitLogicalShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             code.setc(carry.cvt8());
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         }
     }
@@ -603,7 +598,6 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             }
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
@@ -620,7 +614,6 @@ void EmitX64::EmitArithmeticShiftRight32(EmitContext& ctx, IR::Inst* inst) {
             code.setc(carry.cvt8());
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         }
     }
@@ -718,7 +711,6 @@ void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
             }
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         } else {
             ctx.reg_alloc.UseScratch(shift_arg, HostLoc::RCX);
@@ -737,7 +729,6 @@ void EmitX64::EmitRotateRight32(EmitContext& ctx, IR::Inst* inst) {
             code.L(end);
 
             ctx.reg_alloc.DefineValue(carry_inst, carry);
-            ctx.EraseInstruction(carry_inst);
             ctx.reg_alloc.DefineValue(inst, result);
         }
     }
@@ -788,7 +779,6 @@ void EmitX64::EmitRotateRightExtended(EmitContext& ctx, IR::Inst* inst) {
         code.setc(carry);
 
         ctx.reg_alloc.DefineValue(carry_inst, carry);
-        ctx.EraseInstruction(carry_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -974,17 +964,14 @@ static void EmitAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
         code.lahf();
         code.seto(code.al);
         ctx.reg_alloc.DefineValue(nzcv_inst, nzcv);
-        ctx.EraseInstruction(nzcv_inst);
     }
     if (carry_inst) {
         code.setc(carry);
         ctx.reg_alloc.DefineValue(carry_inst, carry);
-        ctx.EraseInstruction(carry_inst);
     }
     if (overflow_inst) {
         code.seto(overflow);
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
     }
 
     ctx.reg_alloc.DefineValue(inst, result);
@@ -1064,7 +1051,6 @@ static void EmitSub(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
         code.lahf();
         code.seto(code.al);
         ctx.reg_alloc.DefineValue(nzcv_inst, nzcv);
-        ctx.EraseInstruction(nzcv_inst);
     }
     if (carry_inst) {
         if (invert_output_carry) {
@@ -1073,12 +1059,10 @@ static void EmitSub(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
             code.setc(carry);
         }
         ctx.reg_alloc.DefineValue(carry_inst, carry);
-        ctx.EraseInstruction(carry_inst);
     }
     if (overflow_inst) {
         code.seto(overflow);
         ctx.reg_alloc.DefineValue(overflow_inst, overflow);
-        ctx.EraseInstruction(overflow_inst);
     }
     if (!is_cmp) {
         ctx.reg_alloc.DefineValue(inst, result);

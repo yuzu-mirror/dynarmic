@@ -103,7 +103,7 @@ void EmitX64::PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, I
     code.mov(dword[r15 + code.GetJitStateInfo().offsetof_rsb_ptr], index_reg.cvt32());
 }
 
-void EmitX64::EmitVerboseDebuggingOutput(RegAlloc& reg_alloc) {
+void EmitX64::EmitVerboseDebuggingOutput(RegAlloc& reg_alloc, const IR::Block& block) {
     code.sub(rsp, sizeof(RegisterData));
     for (int i = 0; i < 16; i++) {
         if (rsp.getIdx() == i) {
@@ -117,7 +117,7 @@ void EmitX64::EmitVerboseDebuggingOutput(RegAlloc& reg_alloc) {
     code.lea(rax, ptr[rsp + sizeof(RegisterData) + offsetof(StackLayout, spill)]);
     code.mov(xword[rsp + offsetof(RegisterData, spill)], rax);
 
-    reg_alloc.EmitVerboseDebuggingOutput();
+    reg_alloc.EmitVerboseDebuggingOutput(block);
 
     for (int i = 0; i < 16; i++) {
         if (rsp.getIdx() == i) {
@@ -143,27 +143,32 @@ void EmitX64::EmitPushRSB(EmitContext& ctx, IR::Inst* inst) {
     PushRSBHelper(loc_desc_reg, index_reg, IR::LocationDescriptor{unique_hash_of_target});
 }
 
-void EmitX64::EmitGetCarryFromOp(EmitContext&, IR::Inst*) {
-    ASSERT_MSG(false, "should never happen");
+void EmitX64::EmitGetCarryFromOp(EmitContext& ctx, IR::Inst* inst) {
+    ctx.reg_alloc.RegisterPseudoOperation(inst);
 }
 
-void EmitX64::EmitGetOverflowFromOp(EmitContext&, IR::Inst*) {
-    ASSERT_MSG(false, "should never happen");
+void EmitX64::EmitGetOverflowFromOp(EmitContext& ctx, IR::Inst* inst) {
+    ctx.reg_alloc.RegisterPseudoOperation(inst);
 }
 
-void EmitX64::EmitGetGEFromOp(EmitContext&, IR::Inst*) {
-    ASSERT_MSG(false, "should never happen");
+void EmitX64::EmitGetGEFromOp(EmitContext& ctx, IR::Inst* inst) {
+    ctx.reg_alloc.RegisterPseudoOperation(inst);
 }
 
-void EmitX64::EmitGetUpperFromOp(EmitContext&, IR::Inst*) {
-    ASSERT_MSG(false, "should never happen");
+void EmitX64::EmitGetUpperFromOp(EmitContext& ctx, IR::Inst* inst) {
+    ctx.reg_alloc.RegisterPseudoOperation(inst);
 }
 
-void EmitX64::EmitGetLowerFromOp(EmitContext&, IR::Inst*) {
-    ASSERT_MSG(false, "should never happen");
+void EmitX64::EmitGetLowerFromOp(EmitContext& ctx, IR::Inst* inst) {
+    ctx.reg_alloc.RegisterPseudoOperation(inst);
 }
 
 void EmitX64::EmitGetNZFromOp(EmitContext& ctx, IR::Inst* inst) {
+    if (ctx.reg_alloc.IsValueLive(inst)) {
+        ctx.reg_alloc.RegisterPseudoOperation(inst);
+        return;
+    }
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const int bitsize = [&] {
@@ -190,6 +195,11 @@ void EmitX64::EmitGetNZFromOp(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitGetNZCVFromOp(EmitContext& ctx, IR::Inst* inst) {
+    if (ctx.reg_alloc.IsValueLive(inst)) {
+        ctx.reg_alloc.RegisterPseudoOperation(inst);
+        return;
+    }
+
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const int bitsize = [&] {

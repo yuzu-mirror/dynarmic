@@ -23,6 +23,7 @@
 
 namespace Dynarmic::IR {
 enum class AccType;
+class Block;
 }  // namespace Dynarmic::IR
 
 namespace Dynarmic::Backend::X64 {
@@ -48,7 +49,7 @@ public:
 
     void AddValue(IR::Inst* inst);
 
-    void EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index) const;
+    void EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index, const IR::Block& block) const;
 
 private:
     // Current instruction state
@@ -110,6 +111,8 @@ public:
     explicit RegAlloc(BlockOfCode& code, std::vector<HostLoc> gpr_order, std::vector<HostLoc> xmm_order);
 
     ArgumentInfo GetArgumentInfo(IR::Inst* inst);
+    void RegisterPseudoOperation(IR::Inst* inst);
+    bool IsValueLive(IR::Inst* inst) const;
 
     Xbyak::Reg64 UseGpr(Argument& arg);
     Xbyak::Xmm UseXmm(Argument& arg);
@@ -145,7 +148,7 @@ public:
 
     void AssertNoMoreUses();
 
-    void EmitVerboseDebuggingOutput();
+    void EmitVerboseDebuggingOutput(const IR::Block& block);
 
 private:
     friend struct Argument;
