@@ -956,10 +956,17 @@ void EmitIR<IR::Opcode::VectorMultiply32>(oaknut::CodeGenerator& code, EmitConte
 
 template<>
 void EmitIR<IR::Opcode::VectorMultiply64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
-    (void)code;
-    (void)ctx;
-    (void)inst;
-    ASSERT_FALSE("Unimplemented");
+    ASSERT_MSG(ctx.conf.very_verbose_debugging_output, "VectorMultiply64 is for debugging only");
+    EmitThreeOp(code, ctx, inst, [&](auto& Qresult, auto& Qa, auto& Qb) {
+        code.FMOV(Xscratch0, Qa->toD());
+        code.FMOV(Xscratch1, Qb->toD());
+        code.MUL(Xscratch0, Xscratch0, Xscratch1);
+        code.FMOV(Qresult->toD(), Xscratch0);
+        code.FMOV(Xscratch0, Qa->Delem()[1]);
+        code.FMOV(Xscratch1, Qb->Delem()[1]);
+        code.MUL(Xscratch0, Xscratch0, Xscratch1);
+        code.FMOV(Qresult->Delem()[1], Xscratch0);
+    });
 }
 
 template<>
