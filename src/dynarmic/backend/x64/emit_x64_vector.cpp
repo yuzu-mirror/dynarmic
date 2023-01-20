@@ -4622,16 +4622,26 @@ void EmitX64::EmitVectorTableLookup64(EmitContext& ctx, IR::Inst* inst) {
         0x6060606060606060,
     };
 
-    if (code.HasHostFeature(HostFeature::SSSE3) && is_defaults_zero && table_size <= 2) {
+    if (code.HasHostFeature(HostFeature::SSSE3) && is_defaults_zero && table_size == 1) {
+        const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
+        const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseXmm(table[0]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+        code.xorps(result, result);
+        code.movsd(result, xmm_table0);
+        code.paddusb(indicies, code.MConst(xword, 0x7070707070707070, 0xFFFFFFFFFFFFFFFF));
+        code.pshufb(result, indicies);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
+    if (code.HasHostFeature(HostFeature::SSSE3) && is_defaults_zero && table_size == 2) {
         const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
         const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+        const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
 
-        if (table_size == 2) {
-            const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
-            code.punpcklqdq(xmm_table0, xmm_table0_upper);
-            ctx.reg_alloc.Release(xmm_table0_upper);
-        }
-
+        code.punpcklqdq(xmm_table0, xmm_table0_upper);
         code.paddusb(indicies, code.MConst(xword, 0x7070707070707070, 0xFFFFFFFFFFFFFFFF));
         code.pshufb(xmm_table0, indicies);
 
