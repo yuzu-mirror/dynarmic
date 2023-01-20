@@ -1,5 +1,32 @@
 @PACKAGE_INIT@
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+include(CMakeFindDependencyMacro)
 
+set(ARCHITECTURE @ARCHITECTURE@)
+
+find_dependency(Boost 1.57 REQUIRED)
+if (NOT @CMAKE_DISABLE_FIND_PACKAGE_fmt@)
+    find_dependency(fmt 9 QUIET)
+endif()
+if (NOT @CMAKE_DISABLE_FIND_PACKAGE_mcl@)
+    find_dependency(mcl 0.1.12 EXACT QUIET)
+endif()
+if (NOT @CMAKE_DISABLE_FIND_PACKAGE_tsl-robin-map@)
+    find_dependency(tsl-robin-map QUIET)
+endif()
+
+if ("x86_64" IN_LIST ARCHITECTURE)
+    if (NOT @CMAKE_DISABLE_FIND_PACKAGE_xbyak@)
+        find_dependency(xbyak 6 QUIET)
+    endif()
+    if (NOT @CMAKE_DISABLE_FIND_PACKAGE_Zydis@)
+        find_dependency(Zydis 4 QUIET)
+    endif()
+endif()
+
+if (@DYNARMIC_USE_LLVM@)
+    find_dependency(LLVM REQUIRED CONFIG)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
 check_required_components(@PROJECT_NAME@)
