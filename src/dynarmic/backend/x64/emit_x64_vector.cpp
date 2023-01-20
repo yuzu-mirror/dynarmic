@@ -4286,6 +4286,7 @@ void EmitX64::EmitVectorSignedSaturatedNarrowToSigned32(EmitContext& ctx, IR::In
 
 void EmitX64::EmitVectorSignedSaturatedNarrowToSigned64(EmitContext& ctx, IR::Inst* inst) {
     EmitOneArgumentFallbackWithSaturation(code, ctx, inst, [](VectorArray<s32>& result, const VectorArray<s64>& a) {
+        result = {};
         bool qc_flag = false;
         for (size_t i = 0; i < a.size(); ++i) {
             const s64 saturated = std::clamp<s64>(a[i], -s64(0x80000000), s64(0x7FFFFFFF));
@@ -4301,22 +4302,21 @@ static void EmitVectorSignedSaturatedNarrowToUnsigned(size_t original_esize, Blo
     const Xbyak::Xmm src = ctx.reg_alloc.UseXmm(args[0]);
     const Xbyak::Xmm dest = ctx.reg_alloc.ScratchXmm();
     const Xbyak::Xmm reconstructed = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Xmm zero = ctx.reg_alloc.ScratchXmm();
 
     code.movdqa(dest, src);
-    code.pxor(zero, zero);
+    code.pxor(xmm0, xmm0);
 
     switch (original_esize) {
     case 16:
-        code.packuswb(dest, dest);
+        code.packuswb(dest, xmm0);
         code.movdqa(reconstructed, dest);
-        code.punpcklbw(reconstructed, zero);
+        code.punpcklbw(reconstructed, xmm0);
         break;
     case 32:
         ASSERT(code.HasHostFeature(HostFeature::SSE41));
-        code.packusdw(dest, dest);  // SSE4.1
+        code.packusdw(dest, xmm0);  // SSE4.1
         code.movdqa(reconstructed, dest);
-        code.punpcklwd(reconstructed, zero);
+        code.punpcklwd(reconstructed, xmm0);
         break;
     default:
         UNREACHABLE();
@@ -4342,6 +4342,7 @@ void EmitX64::EmitVectorSignedSaturatedNarrowToUnsigned32(EmitContext& ctx, IR::
     }
 
     EmitOneArgumentFallbackWithSaturation(code, ctx, inst, [](VectorArray<u16>& result, const VectorArray<s32>& a) {
+        result = {};
         bool qc_flag = false;
         for (size_t i = 0; i < a.size(); ++i) {
             const s32 saturated = std::clamp<s32>(a[i], 0, 0xFFFF);
@@ -4354,6 +4355,7 @@ void EmitX64::EmitVectorSignedSaturatedNarrowToUnsigned32(EmitContext& ctx, IR::
 
 void EmitX64::EmitVectorSignedSaturatedNarrowToUnsigned64(EmitContext& ctx, IR::Inst* inst) {
     EmitOneArgumentFallbackWithSaturation(code, ctx, inst, [](VectorArray<u32>& result, const VectorArray<s64>& a) {
+        result = {};
         bool qc_flag = false;
         for (size_t i = 0; i < a.size(); ++i) {
             const s64 saturated = std::clamp<s64>(a[i], 0, 0xFFFFFFFF);
@@ -5320,6 +5322,7 @@ void EmitX64::EmitVectorUnsignedSaturatedAccumulateSigned64(EmitContext& ctx, IR
 
 void EmitX64::EmitVectorUnsignedSaturatedNarrow16(EmitContext& ctx, IR::Inst* inst) {
     EmitOneArgumentFallbackWithSaturation(code, ctx, inst, [](VectorArray<u8>& result, const VectorArray<u16>& a) {
+        result = {};
         bool qc_flag = false;
         for (size_t i = 0; i < a.size(); ++i) {
             const u16 saturated = std::clamp<u16>(a[i], 0, 0xFF);
@@ -5332,6 +5335,7 @@ void EmitX64::EmitVectorUnsignedSaturatedNarrow16(EmitContext& ctx, IR::Inst* in
 
 void EmitX64::EmitVectorUnsignedSaturatedNarrow32(EmitContext& ctx, IR::Inst* inst) {
     EmitOneArgumentFallbackWithSaturation(code, ctx, inst, [](VectorArray<u16>& result, const VectorArray<u32>& a) {
+        result = {};
         bool qc_flag = false;
         for (size_t i = 0; i < a.size(); ++i) {
             const u32 saturated = std::clamp<u32>(a[i], 0, 0xFFFF);
@@ -5344,6 +5348,7 @@ void EmitX64::EmitVectorUnsignedSaturatedNarrow32(EmitContext& ctx, IR::Inst* in
 
 void EmitX64::EmitVectorUnsignedSaturatedNarrow64(EmitContext& ctx, IR::Inst* inst) {
     EmitOneArgumentFallbackWithSaturation(code, ctx, inst, [](VectorArray<u32>& result, const VectorArray<u64>& a) {
+        result = {};
         bool qc_flag = false;
         for (size_t i = 0; i < a.size(); ++i) {
             const u64 saturated = std::clamp<u64>(a[i], 0, 0xFFFFFFFF);
