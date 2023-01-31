@@ -168,17 +168,14 @@ std::string DumpBlock(const IR::Block& block) {
     }
     ret += '\n';
 
-    std::map<const IR::Inst*, size_t> inst_to_index;
-    size_t index = 0;
-
-    const auto arg_to_string = [&inst_to_index](const IR::Value& arg) -> std::string {
+    const auto arg_to_string = [](const IR::Value& arg) -> std::string {
         if (arg.IsEmpty()) {
             return "<null>";
         } else if (!arg.IsImmediate()) {
-            if (const auto iter = inst_to_index.find(arg.GetInst()); iter != inst_to_index.end()) {
-                return fmt::format("%{}", iter->second);
+            if (const unsigned name = arg.GetInst()->GetName()) {
+                return fmt::format("%{}", name);
             }
-            return fmt::format("%<unknown inst {:016x}>", reinterpret_cast<u64>(arg.GetInst()));
+            return fmt::format("%<unnamed inst {:016x}>", reinterpret_cast<u64>(arg.GetInst()));
         }
         switch (arg.GetType()) {
         case Type::U1:
@@ -209,7 +206,11 @@ std::string DumpBlock(const IR::Block& block) {
 
         ret += fmt::format("[{:016x}] ", reinterpret_cast<u64>(&inst));
         if (GetTypeOf(op) != Type::Void) {
-            ret += fmt::format("%{:<5} = ", index);
+            if (inst.GetName()) {
+                ret += fmt::format("%{:<5} = ", inst.GetName());
+            } else {
+                ret += "noname = ";
+            }
         } else {
             ret += "         ";  // '%00000 = ' -> 1 + 5 + 3 = 9 spaces
         }
@@ -233,7 +234,6 @@ std::string DumpBlock(const IR::Block& block) {
         ret += fmt::format(" (uses: {})", inst.UseCount());
 
         ret += '\n';
-        inst_to_index[&inst] = index++;
     }
 
     ret += "terminal = " + TerminalToString(block.GetTerminal()) + '\n';

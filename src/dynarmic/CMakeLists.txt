@@ -86,6 +86,7 @@ add_library(dynarmic
     ir/opt/dead_code_elimination_pass.cpp
     ir/opt/identity_removal_pass.cpp
     ir/opt/ir_matcher.h
+    ir/opt/naming_pass.cpp
     ir/opt/passes.h
     ir/opt/polyfill_pass.cpp
     ir/opt/verification_pass.cpp

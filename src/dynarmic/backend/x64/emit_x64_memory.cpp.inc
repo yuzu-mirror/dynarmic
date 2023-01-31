@@ -19,7 +19,7 @@ std::optional<AxxEmitX64::DoNotFastmemMarker> AxxEmitX64::ShouldFastmem(AxxEmitC
         return std::nullopt;
     }
 
-    const auto marker = std::make_tuple(ctx.Location(), ctx.GetInstOffset(inst));
+    const auto marker = std::make_tuple(ctx.Location(), inst->GetName());
     if (do_not_fastmem.count(marker) > 0) {
         return std::nullopt;
     }

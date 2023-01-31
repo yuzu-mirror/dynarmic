@@ -333,6 +333,7 @@ IR::Block A64AddressSpace::GenerateIR(IR::LocationDescriptor descriptor) const {
                                         {conf.define_unpredictable_behaviour, conf.wall_clock_cntpct});
 
     Optimization::A64CallbackConfigPass(ir_block, conf);
+    Optimization::NamingPass(ir_block);
     if (conf.HasOptimization(OptimizationFlag::GetSetElimination) && !conf.check_halt_on_memory_access) {
         Optimization::A64GetSetElimination(ir_block);
         Optimization::DeadCodeElimination(ir_block);

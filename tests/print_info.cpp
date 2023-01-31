@@ -58,20 +58,23 @@ void PrintA32Instruction(u32 instruction) {
     fmt::print("Name: {}\n", GetNameOfA32Instruction(instruction));
 
     const A32::LocationDescriptor location{0, {}, {}};
-    IR::Block block{location};
-    const bool should_continue = A32::TranslateSingleInstruction(block, location, instruction);
+    IR::Block ir_block{location};
+    const bool should_continue = A32::TranslateSingleInstruction(ir_block, location, instruction);
     fmt::print("should_continue: {}\n\n", should_continue);
-    fmt::print("IR:\n");
-    fmt::print("{}\n", IR::DumpBlock(block));
 
-    Optimization::A32GetSetElimination(block, {});
-    Optimization::DeadCodeElimination(block);
-    Optimization::ConstantPropagation(block);
-    Optimization::DeadCodeElimination(block);
-    Optimization::IdentityRemovalPass(block);
+    Optimization::NamingPass(ir_block);
+
+    fmt::print("IR:\n");
+    fmt::print("{}\n", IR::DumpBlock(ir_block));
+
+    Optimization::A32GetSetElimination(ir_block, {});
+    Optimization::DeadCodeElimination(ir_block);
+    Optimization::ConstantPropagation(ir_block);
+    Optimization::DeadCodeElimination(ir_block);
+    Optimization::IdentityRemovalPass(ir_block);
 
     fmt::print("Optimized IR:\n");
-    fmt::print("{}\n", IR::DumpBlock(block));
+    fmt::print("{}\n", IR::DumpBlock(ir_block));
 }
 
 void PrintA64Instruction(u32 instruction) {
@@ -79,20 +82,23 @@ void PrintA64Instruction(u32 instruction) {
     fmt::print("Name: {}\n", GetNameOfA64Instruction(instruction));
 
     const A64::LocationDescriptor location{0, {}};
-    IR::Block block{location};
-    const bool should_continue = A64::TranslateSingleInstruction(block, location, instruction);
+    IR::Block ir_block{location};
+    const bool should_continue = A64::TranslateSingleInstruction(ir_block, location, instruction);
     fmt::print("should_continue: {}\n\n", should_continue);
-    fmt::print("IR:\n");
-    fmt::print("{}\n", IR::DumpBlock(block));
 
-    Optimization::A64GetSetElimination(block);
-    Optimization::DeadCodeElimination(block);
-    Optimization::ConstantPropagation(block);
-    Optimization::DeadCodeElimination(block);
-    Optimization::IdentityRemovalPass(block);
+    Optimization::NamingPass(ir_block);
+
+    fmt::print("IR:\n");
+    fmt::print("{}\n", IR::DumpBlock(ir_block));
+
+    Optimization::A64GetSetElimination(ir_block);
+    Optimization::DeadCodeElimination(ir_block);
+    Optimization::ConstantPropagation(ir_block);
+    Optimization::DeadCodeElimination(ir_block);
+    Optimization::IdentityRemovalPass(ir_block);
 
     fmt::print("Optimized IR:\n");
-    fmt::print("{}\n", IR::DumpBlock(block));
+    fmt::print("{}\n", IR::DumpBlock(ir_block));
 }
 
 void PrintThumbInstruction(u32 instruction) {
@@ -103,20 +109,23 @@ void PrintThumbInstruction(u32 instruction) {
     fmt::print("{:08x} {}\n", instruction, Common::DisassembleAArch32(true, 0, (u8*)&instruction, inst_size));
 
     const A32::LocationDescriptor location{0, A32::PSR{0x1F0}, {}};
-    IR::Block block{location};
-    const bool should_continue = A32::TranslateSingleInstruction(block, location, instruction);
+    IR::Block ir_block{location};
+    const bool should_continue = A32::TranslateSingleInstruction(ir_block, location, instruction);
     fmt::print("should_continue: {}\n\n", should_continue);
-    fmt::print("IR:\n");
-    fmt::print("{}\n", IR::DumpBlock(block));
 
-    Optimization::A32GetSetElimination(block, {});
-    Optimization::DeadCodeElimination(block);
-    Optimization::ConstantPropagation(block);
-    Optimization::DeadCodeElimination(block);
-    Optimization::IdentityRemovalPass(block);
+    Optimization::NamingPass(ir_block);
+
+    fmt::print("IR:\n");
+    fmt::print("{}\n", IR::DumpBlock(ir_block));
+
+    Optimization::A32GetSetElimination(ir_block, {});
+    Optimization::DeadCodeElimination(ir_block);
+    Optimization::ConstantPropagation(ir_block);
+    Optimization::DeadCodeElimination(ir_block);
+    Optimization::IdentityRemovalPass(ir_block);
 
     fmt::print("Optimized IR:\n");
-    fmt::print("{}\n", IR::DumpBlock(block));
+    fmt::print("{}\n", IR::DumpBlock(ir_block));
 }
 
 class ExecEnv final : public Dynarmic::A32::UserCallbacks {

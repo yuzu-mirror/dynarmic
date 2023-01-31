@@ -141,12 +141,18 @@ public:
 
     void ReplaceUsesWith(Value replacement);
 
+    // IR name (i.e. instruction number in block). This is set in the naming pass. Treat 0 as an invalid name.
+    // This is used for debugging and fastmem instruction identification.
+    void SetName(unsigned value) { name = value; }
+    unsigned GetName() const { return name; }
+
 private:
     void Use(const Value& value);
     void UndoUse(const Value& value);
 
     Opcode op;
-    size_t use_count = 0;
+    unsigned use_count = 0;
+    unsigned name = 0;
     std::array<Value, max_arg_count> args;
 
     // Linked list of pseudooperations associated with this instruction.

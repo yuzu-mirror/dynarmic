@@ -53,7 +53,6 @@ struct EmitContext {
     EmitContext(RegAlloc& reg_alloc, IR::Block& block);
     virtual ~EmitContext();
 
-    size_t GetInstOffset(IR::Inst* inst) const;
     void EraseInstruction(IR::Inst* inst);
 
     virtual FP::FPCR FPCR(bool fpcr_controlled = true) const = 0;

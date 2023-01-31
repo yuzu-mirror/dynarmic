@@ -95,7 +95,7 @@ protected:
     std::string LocationDescriptorToFriendlyName(const IR::LocationDescriptor&) const override;
 
     // Fastmem information
-    using DoNotFastmemMarker = std::tuple<IR::LocationDescriptor, std::ptrdiff_t>;
+    using DoNotFastmemMarker = std::tuple<IR::LocationDescriptor, unsigned>;
     struct FastmemPatchInfo {
         u64 resume_rip;
         u64 callback;

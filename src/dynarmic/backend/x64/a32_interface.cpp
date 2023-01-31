@@ -174,6 +174,7 @@ private:
 
         IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, conf.callbacks, {conf.arch_version, conf.define_unpredictable_behaviour, conf.hook_hint_instructions});
         Optimization::PolyfillPass(ir_block, polyfill_options);
+        Optimization::NamingPass(ir_block);
         if (conf.HasOptimization(OptimizationFlag::GetSetElimination) && !conf.check_halt_on_memory_access) {
             Optimization::A32GetSetElimination(ir_block, {.convert_nz_to_nzc = true});
             Optimization::DeadCodeElimination(ir_block);
@@ -197,7 +198,9 @@ Jit::~Jit() = default;
 HaltReason Jit::Run() {
     ASSERT(!is_executing);
     is_executing = true;
-    SCOPE_EXIT { this->is_executing = false; };
+    SCOPE_EXIT {
+        this->is_executing = false;
+    };
 
     const HaltReason hr = impl->Execute();
 
@@ -209,7 +212,9 @@ HaltReason Jit::Run() {
 HaltReason Jit::Step() {
     ASSERT(!is_executing);
     is_executing = true;
-    SCOPE_EXIT { this->is_executing = false; };
+    SCOPE_EXIT {
+        this->is_executing = false;
+    };
 
     const HaltReason hr = impl->Step();
 

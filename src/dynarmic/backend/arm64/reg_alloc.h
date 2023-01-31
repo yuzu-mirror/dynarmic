@@ -336,7 +336,7 @@ private:
 
     mutable std::mt19937 rand_gen;
 
-    tsl::robin_set<IR::Inst*> defined_insts;
+    tsl::robin_set<const IR::Inst*> defined_insts;
 };
 
 template<typename T>
