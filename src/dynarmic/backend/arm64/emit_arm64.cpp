@@ -52,26 +52,26 @@ void EmitIR<IR::Opcode::PushRSB>(oaknut::CodeGenerator&, EmitContext&, IR::Inst*
 template<>
 void EmitIR<IR::Opcode::GetCarryFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
     [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+    ASSERT(ctx.reg_alloc.WasValueDefined(inst));
 }
 
 template<>
 void EmitIR<IR::Opcode::GetOverflowFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
     [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+    ASSERT(ctx.reg_alloc.WasValueDefined(inst));
 }
 
 template<>
 void EmitIR<IR::Opcode::GetGEFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
     [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+    ASSERT(ctx.reg_alloc.WasValueDefined(inst));
 }
 
 template<>
 void EmitIR<IR::Opcode::GetNZCVFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (ctx.reg_alloc.IsValueLive(inst)) {
+    if (ctx.reg_alloc.WasValueDefined(inst)) {
         return;
     }
 
@@ -102,7 +102,7 @@ template<>
 void EmitIR<IR::Opcode::GetNZFromOp>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-    if (ctx.reg_alloc.IsValueLive(inst)) {
+    if (ctx.reg_alloc.WasValueDefined(inst)) {
         return;
     }
 
@@ -132,13 +132,13 @@ void EmitIR<IR::Opcode::GetNZFromOp>(oaknut::CodeGenerator& code, EmitContext& c
 template<>
 void EmitIR<IR::Opcode::GetUpperFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
     [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+    ASSERT(ctx.reg_alloc.WasValueDefined(inst));
 }
 
 template<>
 void EmitIR<IR::Opcode::GetLowerFromOp>(oaknut::CodeGenerator&, EmitContext& ctx, IR::Inst* inst) {
     [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+    ASSERT(ctx.reg_alloc.WasValueDefined(inst));
 }
 
 template<>

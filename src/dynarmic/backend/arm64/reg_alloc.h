@@ -15,6 +15,7 @@
 #include <mcl/stdint.hpp>
 #include <mcl/type_traits/is_instance_of_template.hpp>
 #include <oaknut/oaknut.hpp>
+#include <tsl/robin_set.h>
 
 #include "dynarmic/backend/arm64/stack_layout.h"
 #include "dynarmic/ir/cond.h"
@@ -95,11 +96,15 @@ public:
 
     operator T() const { return reg.value(); }
 
-    operator oaknut::WRegWsp() const requires(std::is_same_v<T, oaknut::WReg>) {
+    operator oaknut::WRegWsp() const
+    requires(std::is_same_v<T, oaknut::WReg>)
+    {
         return reg.value();
     }
 
-    operator oaknut::XRegSp() const requires(std::is_same_v<T, oaknut::XReg>) {
+    operator oaknut::XRegSp() const
+    requires(std::is_same_v<T, oaknut::XReg>)
+    {
         return reg.value();
     }
 
@@ -157,7 +162,7 @@ public:
             : code{code}, fpsr_manager{fpsr_manager}, gpr_order{gpr_order}, fpr_order{fpr_order}, rand_gen{std::random_device{}()} {}
 
     ArgumentInfo GetArgumentInfo(IR::Inst* inst);
-    bool IsValueLive(IR::Inst* inst) const;
+    bool WasValueDefined(IR::Inst* inst) const;
 
     auto ReadX(Argument& arg) { return RAReg<oaknut::XReg>{*this, RWType::Read, arg.value, nullptr}; }
     auto ReadW(Argument& arg) { return RAReg<oaknut::WReg>{*this, RWType::Read, arg.value, nullptr}; }
@@ -330,6 +335,8 @@ private:
     std::array<HostLocInfo, SpillCount> spills;
 
     mutable std::mt19937 rand_gen;
+
+    tsl::robin_set<IR::Inst*> defined_insts;
 };
 
 template<typename T>

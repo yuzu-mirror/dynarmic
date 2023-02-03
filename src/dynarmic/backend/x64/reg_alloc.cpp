@@ -275,7 +275,7 @@ RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
 }
 
 void RegAlloc::RegisterPseudoOperation(IR::Inst* inst) {
-    ASSERT(IsValueLive(inst));
+    ASSERT(IsValueLive(inst) || !inst->HasUses());
 
     for (size_t i = 0; i < inst->NumArgs(); i++) {
         const IR::Value arg = inst->GetArg(i);
