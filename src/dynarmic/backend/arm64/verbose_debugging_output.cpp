@@ -17,6 +17,8 @@ using namespace oaknut::util;
 
 void EmitVerboseDebuggingOutput(oaknut::CodeGenerator& code, EmitContext& ctx) {
     code.SUB(SP, SP, sizeof(RegisterData));
+    code.MRS(X0, oaknut::SystemReg::FPSR);
+    code.STR(X0, SP, offsetof(RegisterData, fpsr));
     for (int i = 0; i < 30; i++) {
         if (i == 18) {
             continue;  // Platform register
@@ -44,6 +46,8 @@ void EmitVerboseDebuggingOutput(oaknut::CodeGenerator& code, EmitContext& ctx) {
         }
         code.LDR(oaknut::XReg{i}, SP, offsetof(RegisterData, x) + i * sizeof(u64));
     }
+    code.LDR(X0, SP, offsetof(RegisterData, fpsr));
+    code.MSR(oaknut::SystemReg::FPSR, X0);
     code.ADD(SP, SP, sizeof(RegisterData));
 }
 

@@ -46,6 +46,7 @@ struct alignas(16) RegisterData {
     std::array<Vector, 32> q;
     u32 nzcv;
     decltype(StackLayout::spill)* spill;
+    u32 fpsr;
 };
 
 #ifdef _MSC_VER

@@ -105,6 +105,7 @@ void EmitX64::PushRSBHelper(Xbyak::Reg64 loc_desc_reg, Xbyak::Reg64 index_reg, I
 
 void EmitX64::EmitVerboseDebuggingOutput(RegAlloc& reg_alloc, const IR::Block& block) {
     code.sub(rsp, sizeof(RegisterData));
+    code.stmxcsr(dword[rsp + offsetof(RegisterData, mxcsr)]);
     for (int i = 0; i < 16; i++) {
         if (rsp.getIdx() == i) {
             continue;
@@ -128,6 +129,7 @@ void EmitX64::EmitVerboseDebuggingOutput(RegAlloc& reg_alloc, const IR::Block& b
     for (int i = 0; i < 16; i++) {
         code.movaps(Xbyak::Xmm{i}, xword[rsp + offsetof(RegisterData, xmms) + 2 * sizeof(u64) * i]);
     }
+    code.ldmxcsr(dword[rsp + offsetof(RegisterData, mxcsr)]);
     code.add(rsp, sizeof(RegisterData));
 }
 
@@ -398,7 +400,9 @@ void EmitX64::ClearCache() {
 
 void EmitX64::InvalidateBasicBlocks(const tsl::robin_set<IR::LocationDescriptor>& locations) {
     code.EnableWriting();
-    SCOPE_EXIT { code.DisableWriting(); };
+    SCOPE_EXIT {
+        code.DisableWriting();
+    };
 
     for (const auto& descriptor : locations) {
         const auto it = block_descriptors.find(descriptor);

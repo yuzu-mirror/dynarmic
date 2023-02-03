@@ -25,6 +25,7 @@ struct alignas(16) RegisterData {
     std::array<u64, 16> gprs;
     std::array<Vector, 16> xmms;
     decltype(StackLayout::spill)* spill;
+    u32 mxcsr;
 };
 
 #ifdef _MSC_VER
