@@ -26,6 +26,7 @@ Projects using Dynarmic
 * [yuzu - Nintendo Switch emulator](https://yuzu-emu.org)
 * [EKA2L1 - An Experimental Symbian OS emulator](https://github.com/EKA2L1/EKA2L1)
 * [Vita3K - An Experimental PSVita emulator](https://vita3k.org)
+* [touchHLE - A high-level emulator for iPhone OS applications](https://touchhle.org/)
 * [unidbg - Android native library emulation, with experimental iOS emulation](https://github.com/zhkl0228/unidbg)
 
 Alternatives to Dynarmic
