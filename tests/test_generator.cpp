@@ -383,10 +383,13 @@ u32 GenRandomA64Inst(u64 pc, bool is_last_inst) {
 }
 
 template<typename TestEnv>
-Dynarmic::A32::UserConfig GetA32UserConfig(TestEnv& testenv) {
+Dynarmic::A32::UserConfig GetA32UserConfig(TestEnv& testenv, bool noopt) {
     Dynarmic::A32::UserConfig user_config;
     user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     user_config.callbacks = &testenv;
+    if (noopt) {
+        user_config.optimizations = no_optimizations;
+    }
     return user_config;
 }
 
@@ -473,16 +476,19 @@ void RunTestInstance(Dynarmic::A32::Jit& jit,
     fmt::print("===\n");
 }
 
-Dynarmic::A64::UserConfig GetA64UserConfig(A64TestEnv& jit_env) {
+Dynarmic::A64::UserConfig GetA64UserConfig(A64TestEnv& jit_env, bool noopt) {
     Dynarmic::A64::UserConfig jit_user_config{&jit_env};
     jit_user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     // The below corresponds to the settings for qemu's aarch64_max_initfn
     jit_user_config.dczid_el0 = 7;
     jit_user_config.ctr_el0 = 0x80038003;
+    if (noopt) {
+        jit_user_config.optimizations = no_optimizations;
+    }
     return jit_user_config;
 }
 
-template<size_t num_jit_reruns = 1>
+template<size_t num_jit_reruns = 2>
 void RunTestInstance(Dynarmic::A64::Jit& jit,
                      A64TestEnv& jit_env,
                      const std::array<u64, 31>& regs,
@@ -567,9 +573,9 @@ void RunTestInstance(Dynarmic::A64::Jit& jit,
 
 }  // Anonymous namespace
 
-void TestThumb(size_t num_instructions, size_t num_iterations) {
+void TestThumb(size_t num_instructions, size_t num_iterations, bool noopt) {
     ThumbTestEnv jit_env{};
-    Dynarmic::A32::Jit jit{GetA32UserConfig(jit_env)};
+    Dynarmic::A32::Jit jit{GetA32UserConfig(jit_env, noopt)};
 
     std::array<u32, 16> regs;
     std::array<u32, 64> ext_reg;
@@ -594,9 +600,9 @@ void TestThumb(size_t num_instructions, size_t num_iterations) {
     }
 }
 
-void TestArm(size_t num_instructions, size_t num_iterations) {
+void TestArm(size_t num_instructions, size_t num_iterations, bool noopt) {
     ArmTestEnv jit_env{};
-    Dynarmic::A32::Jit jit{GetA32UserConfig(jit_env)};
+    Dynarmic::A32::Jit jit{GetA32UserConfig(jit_env, noopt)};
 
     std::array<u32, 16> regs;
     std::array<u32, 64> ext_reg;
@@ -620,9 +626,9 @@ void TestArm(size_t num_instructions, size_t num_iterations) {
     }
 }
 
-void TestA64(size_t num_instructions, size_t num_iterations) {
+void TestA64(size_t num_instructions, size_t num_iterations, bool noopt) {
     A64TestEnv jit_env{};
-    Dynarmic::A64::Jit jit{GetA64UserConfig(jit_env)};
+    Dynarmic::A64::Jit jit{GetA64UserConfig(jit_env, noopt)};
 
     std::array<u64, 31> regs;
     std::array<std::array<u64, 2>, 32> vecs;
@@ -661,14 +667,15 @@ static std::optional<size_t> str2sz(char const* s) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 5) {
-        fmt::print("Usage: {} <thumb|arm|a64> <seed> <instruction_count> <iteration_count>\n", argv[0]);
+    if (argc < 5 || argc > 6) {
+        fmt::print("Usage: {} <thumb|arm|a64> <seed> <instruction_count> <iteration_count> [noopt]\n", argv[0]);
         return 1;
     }
 
     const auto seed = str2sz(argv[2]);
     const auto instruction_count = str2sz(argv[3]);
     const auto iterator_count = str2sz(argv[4]);
+    const bool noopt = argc == 6 && (strcmp(argv[5], "noopt") == 0);
 
     if (!seed || !instruction_count || !iterator_count) {
         fmt::print("invalid numeric arguments\n");
@@ -678,11 +685,11 @@ int main(int argc, char* argv[]) {
     detail::g_rand_int_generator.seed(static_cast<std::mt19937::result_type>(*seed));
 
     if (strcmp(argv[1], "thumb") == 0) {
-        TestThumb(*instruction_count, *iterator_count);
+        TestThumb(*instruction_count, *iterator_count, noopt);
     } else if (strcmp(argv[1], "arm") == 0) {
-        TestArm(*instruction_count, *iterator_count);
+        TestArm(*instruction_count, *iterator_count, noopt);
     } else if (strcmp(argv[1], "a64") == 0) {
-        TestA64(*instruction_count, *iterator_count);
+        TestA64(*instruction_count, *iterator_count, noopt);
     } else {
         fmt::print("unrecognized instruction class\n");
         return 1;

@@ -63,11 +63,14 @@ u64 ParseHex(std::string_view hex) {
 }
 
 template<typename TestEnv>
-Dynarmic::A32::UserConfig GetA32UserConfig(TestEnv& testenv) {
+Dynarmic::A32::UserConfig GetA32UserConfig(TestEnv& testenv, bool noopt) {
     Dynarmic::A32::UserConfig user_config;
     user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     user_config.callbacks = &testenv;
     user_config.very_verbose_debugging_output = true;
+    if (noopt) {
+        user_config.optimizations = no_optimizations;
+    }
     return user_config;
 }
 
@@ -154,13 +157,16 @@ void RunTestInstance(Dynarmic::A32::Jit& jit,
     fmt::print("===\n");
 }
 
-A64::UserConfig GetA64UserConfig(A64TestEnv& jit_env) {
+A64::UserConfig GetA64UserConfig(A64TestEnv& jit_env, bool noopt) {
     A64::UserConfig jit_user_config{&jit_env};
     jit_user_config.optimizations &= ~OptimizationFlag::FastDispatch;
     // The below corresponds to the settings for qemu's aarch64_max_initfn
     jit_user_config.dczid_el0 = 7;
     jit_user_config.ctr_el0 = 0x80038003;
     jit_user_config.very_verbose_debugging_output = true;
+    if (noopt) {
+        jit_user_config.optimizations = no_optimizations;
+    }
     return jit_user_config;
 }
 
@@ -247,7 +253,7 @@ void RunTestInstance(A64::Jit& jit,
     fmt::print("===\n");
 }
 
-void RunThumb() {
+void RunThumb(bool noopt) {
     std::array<u32, 16> initial_regs{};
     std::array<u32, 64> initial_vecs{};
     std::vector<u16> instructions{};
@@ -283,7 +289,7 @@ void RunThumb() {
     }
 
     ThumbTestEnv jit_env{};
-    A32::Jit jit{GetA32UserConfig(jit_env)};
+    A32::Jit jit{GetA32UserConfig(jit_env, noopt)};
     RunTestInstance(jit,
                     jit_env,
                     initial_regs,
@@ -294,7 +300,7 @@ void RunThumb() {
                     instructions.size());
 }
 
-void RunArm() {
+void RunArm(bool noopt) {
     std::array<u32, 16> initial_regs{};
     std::array<u32, 64> initial_vecs{};
     std::vector<u32> instructions{};
@@ -330,7 +336,7 @@ void RunArm() {
     }
 
     ArmTestEnv jit_env{};
-    A32::Jit jit{GetA32UserConfig(jit_env)};
+    A32::Jit jit{GetA32UserConfig(jit_env, noopt)};
     RunTestInstance(jit,
                     jit_env,
                     initial_regs,
@@ -341,7 +347,7 @@ void RunArm() {
                     instructions.size());
 }
 
-void RunA64() {
+void RunA64(bool noopt) {
     std::array<u64, 31> initial_regs{};
     std::array<std::array<u64, 2>, 32> initial_vecs{};
     std::vector<u32> instructions{};
@@ -385,7 +391,7 @@ void RunA64() {
     }
 
     A64TestEnv jit_env{};
-    A64::Jit jit{GetA64UserConfig(jit_env)};
+    A64::Jit jit{GetA64UserConfig(jit_env, noopt)};
     RunTestInstance(jit,
                     jit_env,
                     initial_regs,
@@ -399,17 +405,19 @@ void RunA64() {
 }
 
 int main(int argc, char** argv) {
-    if (argc != 2) {
-        fmt::print("Usage: {} <thumb|arm|a64>\n", argv[0]);
+    if (argc < 2 || argc > 3) {
+        fmt::print("Usage: {} <thumb|arm|a64> [noopt]\n", argv[0]);
         return 1;
     }
 
+    const bool noopt = argc == 3 && (strcmp(argv[2], "noopt") == 0);
+
     if (strcmp(argv[1], "thumb") == 0) {
-        RunThumb();
+        RunThumb(noopt);
     } else if (strcmp(argv[1], "arm") == 0) {
-        RunArm();
+        RunArm(noopt);
     } else if (strcmp(argv[1], "a64") == 0) {
-        RunA64();
+        RunA64(noopt);
     } else {
         fmt::print("unrecognized instruction class\n");
         return 1;
