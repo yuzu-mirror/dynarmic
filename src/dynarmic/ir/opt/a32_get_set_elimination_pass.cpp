@@ -135,8 +135,11 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
             const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
             const size_t reg_index = A32::RegNumber(reg);
             if (A32::IsDoubleExtReg(reg)) {
+                ir.SetInsertionPointBefore(std::prev(inst.base()));
+                const IR::U128 stored_value = ir.VectorZeroUpper(IR::U128{inst->GetArg(1)});
+
                 do_set(ext_reg_vector_double_info[reg_index],
-                       inst->GetArg(1),
+                       stored_value,
                        inst,
                        {
                            ext_reg_singles_info[reg_index * 2 + 0],
