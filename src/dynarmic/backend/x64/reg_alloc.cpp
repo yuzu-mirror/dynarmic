@@ -17,7 +17,6 @@
 #include "dynarmic/backend/x64/abi.h"
 #include "dynarmic/backend/x64/stack_layout.h"
 #include "dynarmic/backend/x64/verbose_debugging_output.h"
-#include "dynarmic/ir/basic_block.h"
 
 namespace Dynarmic::Backend::X64 {
 
@@ -158,13 +157,12 @@ void HostLocInfo::AddValue(IR::Inst* inst) {
     max_bit_width = std::max(max_bit_width, GetBitWidth(inst->GetType()));
 }
 
-void HostLocInfo::EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index, const IR::Block& block) const {
+void HostLocInfo::EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index) const {
     using namespace Xbyak::util;
     for (IR::Inst* value : values) {
-        const auto inst_offset = std::distance(block.begin(), IR::Block::const_iterator(value));
         code.mov(code.ABI_PARAM1, rsp);
         code.mov(code.ABI_PARAM2, host_loc_index);
-        code.mov(code.ABI_PARAM3, mcl::bit_cast<u64>(inst_offset));
+        code.mov(code.ABI_PARAM3, value->GetName());
         code.mov(code.ABI_PARAM4, GetBitWidth(value->GetType()));
         code.CallFunction(PrintVerboseDebuggingOutputLine);
     }
@@ -515,9 +513,9 @@ void RegAlloc::AssertNoMoreUses() {
     ASSERT(std::all_of(hostloc_info.begin(), hostloc_info.end(), [](const auto& i) { return i.IsEmpty(); }));
 }
 
-void RegAlloc::EmitVerboseDebuggingOutput(const IR::Block& block) {
+void RegAlloc::EmitVerboseDebuggingOutput() {
     for (size_t i = 0; i < hostloc_info.size(); i++) {
-        hostloc_info[i].EmitVerboseDebuggingOutput(code, i, block);
+        hostloc_info[i].EmitVerboseDebuggingOutput(code, i);
     }
 }
 

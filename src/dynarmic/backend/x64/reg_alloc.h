@@ -23,7 +23,6 @@
 
 namespace Dynarmic::IR {
 enum class AccType;
-class Block;
 }  // namespace Dynarmic::IR
 
 namespace Dynarmic::Backend::X64 {
@@ -49,7 +48,7 @@ public:
 
     void AddValue(IR::Inst* inst);
 
-    void EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index, const IR::Block& block) const;
+    void EmitVerboseDebuggingOutput(BlockOfCode& code, size_t host_loc_index) const;
 
 private:
     // Current instruction state
@@ -148,7 +147,7 @@ public:
 
     void AssertNoMoreUses();
 
-    void EmitVerboseDebuggingOutput(const IR::Block& block);
+    void EmitVerboseDebuggingOutput();
 
 private:
     friend struct Argument;

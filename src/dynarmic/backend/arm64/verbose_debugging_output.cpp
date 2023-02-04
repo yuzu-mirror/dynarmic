@@ -33,7 +33,7 @@ void EmitVerboseDebuggingOutput(oaknut::CodeGenerator& code, EmitContext& ctx) {
     code.ADD(X0, SP, sizeof(RegisterData) + offsetof(StackLayout, spill));
     code.STR(X0, SP, offsetof(RegisterData, spill));
 
-    ctx.reg_alloc.EmitVerboseDebuggingOutput(ctx);
+    ctx.reg_alloc.EmitVerboseDebuggingOutput();
 
     code.LDR(X0, SP, offsetof(RegisterData, nzcv));
     code.MSR(oaknut::SystemReg::NZCV, X0);

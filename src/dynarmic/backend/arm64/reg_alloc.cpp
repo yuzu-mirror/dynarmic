@@ -242,17 +242,16 @@ void RegAlloc::AssertNoMoreUses() const {
     ASSERT(std::all_of(spills.begin(), spills.end(), is_empty));
 }
 
-void RegAlloc::EmitVerboseDebuggingOutput(EmitContext& ctx) {
+void RegAlloc::EmitVerboseDebuggingOutput() {
     code.MOV(X19, mcl::bit_cast<u64>(&PrintVerboseDebuggingOutputLine));  // Non-volatile register
 
     const auto do_location = [&](HostLocInfo& info, HostLocType type, size_t index) {
         using namespace oaknut::util;
         for (const IR::Inst* value : info.values) {
-            const auto inst_offset = std::distance(ctx.block.begin(), IR::Block::iterator(const_cast<IR::Inst*>(value)));
             code.MOV(X0, SP);
             code.MOV(X1, static_cast<u64>(type));
             code.MOV(X2, index);
-            code.MOV(X3, mcl::bit_cast<u64>(inst_offset));
+            code.MOV(X3, value->GetName());
             code.MOV(X4, static_cast<u64>(value->GetType()));
             code.BLR(X19);
         }

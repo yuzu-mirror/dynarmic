@@ -24,7 +24,6 @@
 
 namespace Dynarmic::Backend::Arm64 {
 
-struct EmitContext;
 class FpsrManager;
 class RegAlloc;
 
@@ -296,7 +295,7 @@ public:
     void AssertAllUnlocked() const;
     void AssertNoMoreUses() const;
 
-    void EmitVerboseDebuggingOutput(EmitContext& ctx);
+    void EmitVerboseDebuggingOutput();
 
 private:
     friend struct Argument;
