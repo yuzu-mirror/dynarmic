@@ -70,7 +70,9 @@ A64EmitX64::BlockDescriptor A64EmitX64::Emit(IR::Block& block) {
     }
 
     code.EnableWriting();
-    SCOPE_EXIT { code.DisableWriting(); };
+    SCOPE_EXIT {
+        code.DisableWriting();
+    };
 
     const std::vector<HostLoc> gpr_order = [this] {
         std::vector<HostLoc> gprs{any_gpr};
