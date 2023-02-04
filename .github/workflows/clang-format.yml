@@ -12,7 +12,7 @@ jobs:
     - name: Checkout dynarmic repo
       uses: actions/checkout@v2
 
-    - uses: DoozyX/clang-format-lint-action@v0.12
+    - uses: DoozyX/clang-format-lint-action@v0.15
       with:
         source: 'src tests'
-        clangFormatVersion: 12
+        clangFormatVersion: 15
