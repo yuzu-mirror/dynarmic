@@ -19,52 +19,45 @@
 
 namespace Dynarmic::Optimization {
 
-void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
+namespace {
+
+void FlagsPass(IR::Block& block) {
     using Iterator = std::reverse_iterator<IR::Block::iterator>;
 
-    struct RegisterInfo {
+    struct FlagInfo {
         bool set_not_required = false;
         bool has_value_request = false;
         Iterator value_request = {};
     };
-    struct ValuelessRegisterInfo {
+    struct ValuelessFlagInfo {
         bool set_not_required = false;
     };
-    std::array<RegisterInfo, 15> reg_info;
-    std::array<RegisterInfo, 64> ext_reg_singles_info;
-    std::array<RegisterInfo, 32> ext_reg_doubles_info;
-    std::array<RegisterInfo, 32> ext_reg_vector_double_info;
-    std::array<RegisterInfo, 16> ext_reg_vector_quad_info;
-    ValuelessRegisterInfo nzcvq;
-    ValuelessRegisterInfo nzcv;
-    ValuelessRegisterInfo nz;
-    RegisterInfo c_flag;
-    RegisterInfo ge;
+    ValuelessFlagInfo nzcvq;
+    ValuelessFlagInfo nzcv;
+    ValuelessFlagInfo nz;
+    FlagInfo c_flag;
+    FlagInfo ge;
 
-    auto do_set = [&](RegisterInfo& info, IR::Value value, Iterator inst, std::initializer_list<std::reference_wrapper<RegisterInfo>> dependants = {}) {
+    auto do_set = [&](FlagInfo& info, IR::Value value, Iterator inst) {
         if (info.has_value_request) {
             info.value_request->ReplaceUsesWith(value);
         }
         info.has_value_request = false;
 
-        if (info.set_not_required && std::all_of(dependants.begin(), dependants.end(), [](auto d) { return !d.get().has_value_request; })) {
-            inst->Invalidate();
-        }
-        info.set_not_required = true;
-
-        for (auto d : dependants) {
-            d.get() = {};
-        }
-    };
-
-    auto do_set_valueless = [&](ValuelessRegisterInfo& info, Iterator inst) {
         if (info.set_not_required) {
             inst->Invalidate();
         }
         info.set_not_required = true;
     };
 
-    auto do_get = [](RegisterInfo& info, Iterator inst) {
+    auto do_set_valueless = [&](ValuelessFlagInfo& info, Iterator inst) {
+        if (info.set_not_required) {
+            inst->Invalidate();
+        }
+        info.set_not_required = true;
+    };
+
+    auto do_get = [](FlagInfo& info, Iterator inst) {
         if (info.has_value_request) {
             info.value_request->ReplaceUsesWith(IR::Value{&*inst});
         }
@@ -76,107 +69,6 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
 
     for (auto inst = block.rbegin(); inst != block.rend(); ++inst) {
         switch (inst->GetOpcode()) {
-        case IR::Opcode::A32SetRegister: {
-            const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
-            if (reg == A32::Reg::PC) {
-                break;
-            }
-            const auto reg_index = static_cast<size_t>(reg);
-            do_set(reg_info[reg_index], inst->GetArg(1), inst);
-            break;
-        }
-        case IR::Opcode::A32GetRegister: {
-            const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
-            ASSERT(reg != A32::Reg::PC);
-            const size_t reg_index = static_cast<size_t>(reg);
-            do_get(reg_info[reg_index], inst);
-            break;
-        }
-        case IR::Opcode::A32SetExtendedRegister32: {
-            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
-            const size_t reg_index = A32::RegNumber(reg);
-            do_set(ext_reg_singles_info[reg_index],
-                   inst->GetArg(1),
-                   inst,
-                   {
-                       ext_reg_doubles_info[reg_index / 2],
-                       ext_reg_vector_double_info[reg_index / 2],
-                       ext_reg_vector_quad_info[reg_index / 4],
-                   });
-            break;
-        }
-        case IR::Opcode::A32GetExtendedRegister32: {
-            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
-            const size_t reg_index = A32::RegNumber(reg);
-            do_get(ext_reg_singles_info[reg_index], inst);
-            break;
-        }
-        case IR::Opcode::A32SetExtendedRegister64: {
-            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
-            const size_t reg_index = A32::RegNumber(reg);
-            do_set(ext_reg_doubles_info[reg_index],
-                   inst->GetArg(1),
-                   inst,
-                   {
-                       ext_reg_singles_info[reg_index * 2 + 0],
-                       ext_reg_singles_info[reg_index * 2 + 1],
-                       ext_reg_vector_double_info[reg_index],
-                       ext_reg_vector_quad_info[reg_index / 2],
-                   });
-            break;
-        }
-        case IR::Opcode::A32GetExtendedRegister64: {
-            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
-            const size_t reg_index = A32::RegNumber(reg);
-            do_get(ext_reg_doubles_info[reg_index], inst);
-            break;
-        }
-        case IR::Opcode::A32SetVector: {
-            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
-            const size_t reg_index = A32::RegNumber(reg);
-            if (A32::IsDoubleExtReg(reg)) {
-                ir.SetInsertionPointBefore(std::prev(inst.base()));
-                const IR::U128 stored_value = ir.VectorZeroUpper(IR::U128{inst->GetArg(1)});
-
-                do_set(ext_reg_vector_double_info[reg_index],
-                       stored_value,
-                       inst,
-                       {
-                           ext_reg_singles_info[reg_index * 2 + 0],
-                           ext_reg_singles_info[reg_index * 2 + 1],
-                           ext_reg_doubles_info[reg_index],
-                           ext_reg_vector_quad_info[reg_index / 2],
-                       });
-            } else {
-                DEBUG_ASSERT(A32::IsQuadExtReg(reg));
-
-                do_set(ext_reg_vector_quad_info[reg_index],
-                       inst->GetArg(1),
-                       inst,
-                       {
-                           ext_reg_singles_info[reg_index * 4 + 0],
-                           ext_reg_singles_info[reg_index * 4 + 1],
-                           ext_reg_singles_info[reg_index * 4 + 2],
-                           ext_reg_singles_info[reg_index * 4 + 3],
-                           ext_reg_doubles_info[reg_index * 2 + 0],
-                           ext_reg_doubles_info[reg_index * 2 + 1],
-                           ext_reg_vector_double_info[reg_index * 2 + 0],
-                           ext_reg_vector_double_info[reg_index * 2 + 1],
-                       });
-            }
-            break;
-        }
-        case IR::Opcode::A32GetVector: {
-            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
-            const size_t reg_index = A32::RegNumber(reg);
-            if (A32::IsDoubleExtReg(reg)) {
-                do_get(ext_reg_vector_double_info[reg_index], inst);
-            } else {
-                DEBUG_ASSERT(A32::IsQuadExtReg(reg));
-                do_get(ext_reg_vector_quad_info[reg_index], inst);
-            }
-            break;
-        }
         case IR::Opcode::A32GetCFlag: {
             do_get(c_flag, inst);
             break;
@@ -282,17 +174,204 @@ void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
                 c_flag = {};
                 ge = {};
             }
+            break;
+        }
+        }
+    }
+}
+
+void RegisterPass(IR::Block& block) {
+    using Iterator = IR::Block::iterator;
+
+    struct RegInfo {
+        IR::Value register_value;
+        std::optional<Iterator> last_set_instruction;
+    };
+    std::array<RegInfo, 15> reg_info;
+
+    const auto do_get = [](RegInfo& info, Iterator get_inst) {
+        if (info.register_value.IsEmpty()) {
+            info.register_value = IR::Value(&*get_inst);
+            return;
+        }
+        get_inst->ReplaceUsesWith(info.register_value);
+    };
+
+    const auto do_set = [](RegInfo& info, IR::Value value, Iterator set_inst) {
+        if (info.last_set_instruction) {
+            (*info.last_set_instruction)->Invalidate();
+        }
+        info = {
+            .register_value = value,
+            .last_set_instruction = set_inst,
+        };
+    };
+
+    enum class ExtValueType {
+        Empty,
+        Single,
+        Double,
+        VectorDouble,
+        VectorQuad,
+    };
+    struct ExtRegInfo {
+        ExtValueType value_type = ExtValueType::Empty;
+        IR::Value register_value;
+        std::optional<Iterator> last_set_instruction;
+    };
+    std::array<ExtRegInfo, 64> ext_reg_info;
+
+    const auto do_ext_get = [](ExtValueType type, std::initializer_list<std::reference_wrapper<ExtRegInfo>> infos, Iterator get_inst) {
+        if (!std::all_of(infos.begin(), infos.end(), [type](const auto& info) { return info.get().value_type == type; })) {
+            for (auto& info : infos) {
+                info.get() = {
+                    .value_type = type,
+                    .register_value = IR::Value(&*get_inst),
+                    .last_set_instruction = std::nullopt,
+                };
+            }
+            return;
+        }
+        get_inst->ReplaceUsesWith(std::data(infos)[0].get().register_value);
+    };
+
+    const auto do_ext_set = [](ExtValueType type, std::initializer_list<std::reference_wrapper<ExtRegInfo>> infos, IR::Value value, Iterator set_inst) {
+        if (std::all_of(infos.begin(), infos.end(), [type](const auto& info) { return info.get().value_type == type; })) {
+            if (std::data(infos)[0].get().last_set_instruction) {
+                (*std::data(infos)[0].get().last_set_instruction)->Invalidate();
+            }
+        }
+        for (auto& info : infos) {
+            info.get() = {
+                .value_type = type,
+                .register_value = value,
+                .last_set_instruction = set_inst,
+            };
+        }
+    };
+
+    // Location and version don't matter here.
+    A32::IREmitter ir{block, A32::LocationDescriptor{block.Location()}, {}};
+
+    for (auto inst = block.begin(); inst != block.end(); ++inst) {
+        switch (inst->GetOpcode()) {
+        case IR::Opcode::A32GetRegister: {
+            const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
+            ASSERT(reg != A32::Reg::PC);
+            const size_t reg_index = static_cast<size_t>(reg);
+            do_get(reg_info[reg_index], inst);
+            break;
+        }
+        case IR::Opcode::A32SetRegister: {
+            const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
+            if (reg == A32::Reg::PC) {
+                break;
+            }
+            const auto reg_index = static_cast<size_t>(reg);
+            do_set(reg_info[reg_index], inst->GetArg(1), inst);
+            break;
+        }
+        case IR::Opcode::A32GetExtendedRegister32: {
+            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+            const size_t reg_index = A32::RegNumber(reg);
+            do_ext_get(ExtValueType::Single, {ext_reg_info[reg_index]}, inst);
+            break;
+        }
+        case IR::Opcode::A32SetExtendedRegister32: {
+            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+            const size_t reg_index = A32::RegNumber(reg);
+            do_ext_set(ExtValueType::Single, {ext_reg_info[reg_index]}, inst->GetArg(1), inst);
+            break;
+        }
+        case IR::Opcode::A32GetExtendedRegister64: {
+            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+            const size_t reg_index = A32::RegNumber(reg);
+            do_ext_get(ExtValueType::Double,
+                       {
+                           ext_reg_info[reg_index * 2 + 0],
+                           ext_reg_info[reg_index * 2 + 1],
+                       },
+                       inst);
+            break;
+        }
+        case IR::Opcode::A32SetExtendedRegister64: {
+            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+            const size_t reg_index = A32::RegNumber(reg);
+            do_ext_set(ExtValueType::Double,
+                       {
+                           ext_reg_info[reg_index * 2 + 0],
+                           ext_reg_info[reg_index * 2 + 1],
+                       },
+                       inst->GetArg(1),
+                       inst);
+            break;
+        }
+        case IR::Opcode::A32GetVector: {
+            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+            const size_t reg_index = A32::RegNumber(reg);
+            if (A32::IsDoubleExtReg(reg)) {
+                do_ext_get(ExtValueType::VectorDouble,
+                           {
+                               ext_reg_info[reg_index * 2 + 0],
+                               ext_reg_info[reg_index * 2 + 1],
+                           },
+                           inst);
+            } else {
+                DEBUG_ASSERT(A32::IsQuadExtReg(reg));
+                do_ext_get(ExtValueType::VectorQuad,
+                           {
+                               ext_reg_info[reg_index * 4 + 0],
+                               ext_reg_info[reg_index * 4 + 1],
+                               ext_reg_info[reg_index * 4 + 2],
+                               ext_reg_info[reg_index * 4 + 3],
+                           },
+                           inst);
+            }
+            break;
+        }
+        case IR::Opcode::A32SetVector: {
+            const A32::ExtReg reg = inst->GetArg(0).GetA32ExtRegRef();
+            const size_t reg_index = A32::RegNumber(reg);
+            if (A32::IsDoubleExtReg(reg)) {
+                ir.SetInsertionPointAfter(inst);
+                const IR::U128 stored_value = ir.VectorZeroUpper(IR::U128{inst->GetArg(1)});
+                do_ext_set(ExtValueType::VectorDouble,
+                           {
+                               ext_reg_info[reg_index * 2 + 0],
+                               ext_reg_info[reg_index * 2 + 1],
+                           },
+                           stored_value,
+                           inst);
+            } else {
+                DEBUG_ASSERT(A32::IsQuadExtReg(reg));
+                do_ext_set(ExtValueType::VectorQuad,
+                           {
+                               ext_reg_info[reg_index * 4 + 0],
+                               ext_reg_info[reg_index * 4 + 1],
+                               ext_reg_info[reg_index * 4 + 2],
+                               ext_reg_info[reg_index * 4 + 3],
+                           },
+                           inst->GetArg(1),
+                           inst);
+            }
+            break;
+        }
+        default: {
             if (inst->ReadsFromCoreRegister() || inst->WritesToCoreRegister()) {
                 reg_info = {};
-                ext_reg_singles_info = {};
-                ext_reg_doubles_info = {};
-                ext_reg_vector_double_info = {};
-                ext_reg_vector_quad_info = {};
+                ext_reg_info = {};
             }
             break;
         }
         }
     }
+}
+
+}  // namespace
+
+void A32GetSetElimination(IR::Block& block, A32GetSetEliminationOptions) {
+    FlagsPass(block);
+    RegisterPass(block);
 }
 
 }  // namespace Dynarmic::Optimization

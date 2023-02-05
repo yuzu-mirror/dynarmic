@@ -406,26 +406,6 @@ void RunTestInstance(Dynarmic::A32::Jit& jit,
     const u32 num_words = initial_pc / sizeof(typename TestEnv::InstructionType);
     const u32 code_mem_size = num_words + static_cast<u32>(instructions.size());
 
-    jit.ClearCache();
-
-    for (size_t jit_rerun_count = 0; jit_rerun_count < num_jit_reruns; ++jit_rerun_count) {
-        jit_env.code_mem.resize(code_mem_size);
-        std::fill(jit_env.code_mem.begin(), jit_env.code_mem.end(), TestEnv::infinite_loop);
-
-        std::copy(instructions.begin(), instructions.end(), jit_env.code_mem.begin() + num_words);
-        jit_env.PadCodeMem();
-        jit_env.modified_memory.clear();
-        jit_env.interrupts.clear();
-
-        jit.Regs() = regs;
-        jit.ExtRegs() = vecs;
-        jit.SetFpscr(fpscr);
-        jit.SetCpsr(cpsr);
-
-        jit_env.ticks_left = ticks_left;
-        jit.Run();
-    }
-
     fmt::print("instructions:");
     for (auto instruction : instructions) {
         if constexpr (sizeof(decltype(instruction)) == 2) {
@@ -448,6 +428,26 @@ void RunTestInstance(Dynarmic::A32::Jit& jit,
     fmt::print("\n");
     fmt::print("initial_cpsr: {:08x}\n", cpsr);
     fmt::print("initial_fpcr: {:08x}\n", fpscr);
+
+    jit.ClearCache();
+
+    for (size_t jit_rerun_count = 0; jit_rerun_count < num_jit_reruns; ++jit_rerun_count) {
+        jit_env.code_mem.resize(code_mem_size);
+        std::fill(jit_env.code_mem.begin(), jit_env.code_mem.end(), TestEnv::infinite_loop);
+
+        std::copy(instructions.begin(), instructions.end(), jit_env.code_mem.begin() + num_words);
+        jit_env.PadCodeMem();
+        jit_env.modified_memory.clear();
+        jit_env.interrupts.clear();
+
+        jit.Regs() = regs;
+        jit.ExtRegs() = vecs;
+        jit.SetFpscr(fpscr);
+        jit.SetCpsr(cpsr);
+
+        jit_env.ticks_left = ticks_left;
+        jit.Run();
+    }
 
     fmt::print("final_regs:");
     for (u32 i : jit.Regs()) {
