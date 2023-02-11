@@ -55,21 +55,14 @@ bool MultiplyLong(TranslatorVisitor& v, bool Q, Imm<2> size, Vec Vm, Vec Vn, Vec
     const size_t datasize = 64;
     const size_t doubled_datasize = datasize * 2;
 
-    const auto get_operands = [&] {
-        const auto p1 = v.Vpart(datasize, Vn, Q);
-        const auto p2 = v.Vpart(datasize, Vm, Q);
+    IR::U128 result = [&] {
+        const auto reg_n = v.Vpart(datasize, Vn, Q);
+        const auto reg_m = v.Vpart(datasize, Vm, Q);
 
-        if (sign == Signedness::Signed) {
-            return std::make_pair(v.ir.VectorSignExtend(esize, p1),
-                                  v.ir.VectorSignExtend(esize, p2));
-        }
-
-        return std::make_pair(v.ir.VectorZeroExtend(esize, p1),
-                              v.ir.VectorZeroExtend(esize, p2));
-    };
-
-    const auto [operand1, operand2] = get_operands();
-    IR::U128 result = v.ir.VectorMultiply(doubled_esize, operand1, operand2);
+        return sign == Signedness::Signed
+                 ? v.ir.VectorMultiplySignedWiden(esize, reg_n, reg_m)
+                 : v.ir.VectorMultiplyUnsignedWiden(esize, reg_n, reg_m);
+    }();
 
     if (behavior == MultiplyLongBehavior::Accumulate) {
         const IR::U128 addend = v.V(doubled_datasize, Vd);

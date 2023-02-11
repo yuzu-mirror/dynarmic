@@ -166,23 +166,15 @@ bool MultiplyLong(TranslatorVisitor& v, bool Q, Imm<2> size, Imm<1> L, Imm<1> M,
     const size_t datasize = 64;
     const auto [index, Vm] = Combine(size, H, L, M, Vmlo);
 
-    const auto extend_operands = [&](const IR::U128& lhs, const IR::U128& rhs) {
-        if (sign == Signedness::Signed) {
-            return std::make_pair(v.ir.VectorSignExtend(esize, lhs),
-                                  v.ir.VectorSignExtend(esize, rhs));
-        }
-
-        return std::make_pair(v.ir.VectorZeroExtend(esize, lhs),
-                              v.ir.VectorZeroExtend(esize, rhs));
-    };
-
     const IR::U128 operand1 = v.Vpart(datasize, Vn, Q);
     const IR::U128 operand2 = v.V(idxsize, Vm);
     const IR::U128 index_vector = v.ir.VectorBroadcastElement(esize, operand2, index);
 
     const IR::U128 result = [&] {
-        const auto [extended_op1, extended_index] = extend_operands(operand1, index_vector);
-        const IR::U128 product = v.ir.VectorMultiply(2 * esize, extended_op1, extended_index);
+        const IR::U128 product = sign == Signedness::Signed
+                                   ? v.ir.VectorMultiplySignedWiden(esize, operand1, index_vector)
+                                   : v.ir.VectorMultiplyUnsignedWiden(esize, operand1, index_vector);
+
         if (extra_behavior == ExtraBehavior::None) {
             return product;
         }
