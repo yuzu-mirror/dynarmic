@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-#include "dynarmic/backend/x64/block_range_information.h"
+#include "dynarmic/backend/block_range_information.h"
 
 #include <boost/icl/interval_map.hpp>
 #include <boost/icl/interval_set.hpp>
 #include <mcl/stdint.hpp>
 #include <tsl/robin_set.h>
 
-namespace Dynarmic::Backend::X64 {
+namespace Dynarmic::Backend {
 
 template<typename ProgramCounterType>
 void BlockRangeInformation<ProgramCounterType>::AddRange(boost::icl::discrete_interval<ProgramCounterType> range, IR::LocationDescriptor location) {
@@ -40,4 +40,4 @@ tsl::robin_set<IR::LocationDescriptor> BlockRangeInformation<ProgramCounterType>
 template class BlockRangeInformation<u32>;
 template class BlockRangeInformation<u64>;
 
-}  // namespace Dynarmic::Backend::X64
+}  // namespace Dynarmic::Backend

@@ -115,6 +115,8 @@ EmittedBlockInfo AddressSpace::Emit(IR::Block block) {
     mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);
     mem.protect();
 
+    RegisterNewBasicBlock(block, block_info);
+
     return block_info;
 }
 

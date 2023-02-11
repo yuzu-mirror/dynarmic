@@ -1,6 +1,8 @@
 include(TargetArchitectureSpecificSources)
 
 add_library(dynarmic
+    backend/block_range_information.cpp
+    backend/block_range_information.h
     backend/exception_handler.h
     common/always_false.h
     common/cast_util.h
@@ -271,8 +273,6 @@ if ("x86_64" IN_LIST ARCHITECTURE)
         backend/x64/abi.h
         backend/x64/block_of_code.cpp
         backend/x64/block_of_code.h
-        backend/x64/block_range_information.cpp
-        backend/x64/block_range_information.h
         backend/x64/callback.cpp
         backend/x64/callback.h
         backend/x64/constant_pool.cpp

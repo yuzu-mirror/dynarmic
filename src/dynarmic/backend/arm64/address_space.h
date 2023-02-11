@@ -45,6 +45,7 @@ public:
 
 protected:
     virtual EmitConfig GetEmitConfig() = 0;
+    virtual void RegisterNewBasicBlock(const IR::Block& block, const EmittedBlockInfo& block_info) = 0;
 
     size_t GetRemainingSize();
     EmittedBlockInfo Emit(IR::Block ir_block);

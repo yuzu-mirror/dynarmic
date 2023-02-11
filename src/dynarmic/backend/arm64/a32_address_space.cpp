@@ -181,6 +181,10 @@ IR::Block A32AddressSpace::GenerateIR(IR::LocationDescriptor descriptor) const {
     return ir_block;
 }
 
+void A32AddressSpace::InvalidateCacheRanges(const boost::icl::interval_set<u32>& ranges) {
+    InvalidateBasicBlocks(block_ranges.InvalidateRanges(ranges));
+}
+
 void A32AddressSpace::EmitPrelude() {
     using namespace oaknut::util;
 
@@ -390,6 +394,13 @@ EmitConfig A32AddressSpace::GetEmitConfig() {
 
         .very_verbose_debugging_output = conf.very_verbose_debugging_output,
     };
+}
+
+void A32AddressSpace::RegisterNewBasicBlock(const IR::Block& block, const EmittedBlockInfo&) {
+    const A32::LocationDescriptor descriptor{block.Location()};
+    const A32::LocationDescriptor end_location{block.EndLocation()};
+    const auto range = boost::icl::discrete_interval<u32>::closed(descriptor.PC(), end_location.PC() - 1);
+    block_ranges.AddRange(range, descriptor);
 }
 
 }  // namespace Dynarmic::Backend::Arm64

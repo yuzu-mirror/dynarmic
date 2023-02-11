@@ -209,8 +209,7 @@ private:
             }
 
             if (!invalid_cache_ranges.empty()) {
-                // TODO: Optimize
-                current_address_space.ClearCache();
+                current_address_space.InvalidateCacheRanges(invalid_cache_ranges);
 
                 invalid_cache_ranges.clear();
                 return;

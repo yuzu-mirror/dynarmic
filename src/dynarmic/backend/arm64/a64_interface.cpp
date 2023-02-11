@@ -30,7 +30,7 @@ struct Jit::Impl final {
 
     HaltReason Run() {
         ASSERT(!is_executing);
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&halt_reason)));
 
         is_executing = true;
         SCOPE_EXIT {
@@ -39,14 +39,14 @@ struct Jit::Impl final {
 
         HaltReason hr = core.Run(current_address_space, current_state, &halt_reason);
 
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(hr);
 
         return hr;
     }
 
     HaltReason Step() {
         ASSERT(!is_executing);
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&halt_reason)));
 
         is_executing = true;
         SCOPE_EXIT {
@@ -55,7 +55,7 @@ struct Jit::Impl final {
 
         HaltReason hr = core.Step(current_address_space, current_state, &halt_reason);
 
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(hr);
 
         return hr;
     }
@@ -157,23 +157,26 @@ struct Jit::Impl final {
     }
 
 private:
-    void PerformRequestedCacheInvalidation() {
-        ClearHalt(HaltReason::CacheInvalidation);
+    void PerformRequestedCacheInvalidation(HaltReason hr) {
+        if (Has(hr, HaltReason::CacheInvalidation)) {
+            std::unique_lock lock{invalidation_mutex};
 
-        if (invalidate_entire_cache) {
-            current_address_space.ClearCache();
+            ClearHalt(HaltReason::CacheInvalidation);
 
-            invalidate_entire_cache = false;
-            invalid_cache_ranges.clear();
-            return;
-        }
+            if (invalidate_entire_cache) {
+                current_address_space.ClearCache();
 
-        if (!invalid_cache_ranges.empty()) {
-            // TODO: Optimize
-            current_address_space.ClearCache();
+                invalidate_entire_cache = false;
+                invalid_cache_ranges.clear();
+                return;
+            }
 
-            invalid_cache_ranges.clear();
-            return;
+            if (!invalid_cache_ranges.empty()) {
+                current_address_space.InvalidateCacheRanges(invalid_cache_ranges);
+
+                invalid_cache_ranges.clear();
+                return;
+            }
         }
     }
 
