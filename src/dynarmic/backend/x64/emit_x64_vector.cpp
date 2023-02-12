@@ -4608,7 +4608,60 @@ void EmitX64::EmitVectorTableLookup64(EmitContext& ctx, IR::Inst* inst) {
     const size_t table_size = std::count_if(table.begin(), table.end(), [](const auto& elem) { return !elem.IsVoid(); });
     const bool is_defaults_zero = inst->GetArg(0).IsZero();
 
-    // TODO: AVX512VL implementation when available (VPERMB / VPERMI2B / VPERMT2B)
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW | HostFeature::AVX512VBMI)) {
+        const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
+        Xbyak::Xmm defaults = ctx.reg_alloc.UseScratchXmm(args[0]);
+
+        const u8 index_count = u8(table_size * 8);
+        const u64 index_count64 = mcl::bit::replicate_element<u8, u64>(index_count);
+
+        Xbyak::Opmask valid_indices = k1;
+        code.vpcmpb(valid_indices, indicies, code.MConst(xword, index_count64, 0), CmpInt::LessThan);
+
+        if (is_defaults_zero) {
+            defaults = defaults | valid_indices | T_z;
+        } else {
+            defaults = defaults | valid_indices;
+        }
+
+        switch (table_size) {
+        case 1: {
+            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+            code.vpermb(defaults, indicies, xmm_table0);
+            break;
+        }
+        case 2: {
+            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+            const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
+            code.vpunpcklqdq(xmm_table0, xmm_table0, xmm_table0_upper);
+            code.vpermb(defaults, indicies, xmm_table0);
+            break;
+        }
+        case 3: {
+            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+            const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
+            const Xbyak::Xmm xmm_table1 = ctx.reg_alloc.UseXmm(table[2]);
+            code.vpunpcklqdq(xmm_table0, xmm_table0, xmm_table0_upper);
+            code.vpermi2b(indicies, xmm_table0, xmm_table1);
+            code.vmovdqu8(defaults, indicies);
+            break;
+        }
+        case 4: {
+            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+            const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
+            const Xbyak::Xmm xmm_table1 = ctx.reg_alloc.UseScratchXmm(table[2]);
+            const Xbyak::Xmm xmm_table1_upper = ctx.reg_alloc.UseXmm(table[3]);
+            code.vpunpcklqdq(xmm_table0, xmm_table0, xmm_table0_upper);
+            code.vpunpcklqdq(xmm_table1, xmm_table1, xmm_table1_upper);
+            code.vpermi2b(indicies, xmm_table0, xmm_table1);
+            code.vmovdqu8(defaults, indicies);
+            break;
+        }
+        }
+
+        ctx.reg_alloc.DefineValue(inst, defaults);
+        return;
+    }
 
     const std::array<u64, 5> sat_const{
         0,
