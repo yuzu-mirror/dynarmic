@@ -601,3 +601,104 @@ TEST_CASE("arm: sdiv maximally", "[arm][A32]") {
 
     REQUIRE(jit.Regs()[2] == 0x80000000);
 }
+
+TEST_CASE("arm: tbl", "[arm][A32]") {
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+
+    test_env.code_mem.emplace_back(0xf3f408a0);  // vtbl.8  d16, {d20               }, d16
+    test_env.code_mem.emplace_back(0xf3f419a1);  // vtbl.8  d17, {d20, d21          }, d17
+    test_env.code_mem.emplace_back(0xf3f42aa2);  // vtbl.8  d18, {d20, d21, d22     }, d18
+    test_env.code_mem.emplace_back(0xf3f43ba3);  // vtbl.8  d19, {d20, d21, d22, d23}, d19
+    test_env.code_mem.emplace_back(0xeafffffe);  // b +#0
+
+    // Indices
+    jit.ExtRegs()[16 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[16 * 2 + 1] = 0x20'1F'10'0F;
+
+    jit.ExtRegs()[17 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[17 * 2 + 1] = 0x20'1F'10'0F;
+
+    jit.ExtRegs()[18 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[18 * 2 + 1] = 0x20'1F'10'0F;
+
+    jit.ExtRegs()[19 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[19 * 2 + 1] = 0x20'1F'10'0F;
+
+    // Table
+    jit.ExtRegs()[20 * 2 + 0] = 0x03'02'01'00;
+    jit.ExtRegs()[20 * 2 + 1] = 0x07'06'05'04;
+    jit.ExtRegs()[21 * 2 + 0] = 0x0B'0A'09'08;
+    jit.ExtRegs()[21 * 2 + 1] = 0x0F'0E'0D'0C;
+    jit.ExtRegs()[22 * 2 + 0] = 0x13'12'11'10;
+    jit.ExtRegs()[22 * 2 + 1] = 0x17'16'15'14;
+    jit.ExtRegs()[23 * 2 + 0] = 0x1B'1A'19'18;
+    jit.ExtRegs()[23 * 2 + 1] = 0x1F'1E'1D'1C;
+
+    test_env.ticks_left = 5;
+    jit.Run();
+
+    REQUIRE(jit.ExtRegs()[16 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[16 * 2 + 1] == 0x00'00'00'00);
+
+    REQUIRE(jit.ExtRegs()[17 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[17 * 2 + 1] == 0x00'00'00'0F);
+
+    REQUIRE(jit.ExtRegs()[18 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[18 * 2 + 1] == 0x00'00'10'0F);
+
+    REQUIRE(jit.ExtRegs()[19 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[19 * 2 + 1] == 0x00'1F'10'0F);
+}
+
+TEST_CASE("arm: tbx", "[arm][A32]") {
+    ArmTestEnv test_env;
+    A32::Jit jit{GetUserConfig(&test_env)};
+
+    test_env.code_mem.emplace_back(0xf3f408e0);  // vtbx.8  d16, {d20               }, d16
+    test_env.code_mem.emplace_back(0xf3f419e1);  // vtbx.8  d17, {d20, d21          }, d17
+    test_env.code_mem.emplace_back(0xf3f42ae2);  // vtbx.8  d18, {d20, d21, d22     }, d18
+    test_env.code_mem.emplace_back(0xf3f43be3);  // vtbx.8  d19, {d20, d21, d22, d23}, d19
+    test_env.code_mem.emplace_back(0xeafffffe);  // b +#0
+
+    // Indices
+    jit.ExtRegs()[16 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[16 * 2 + 1] = 0x20'1F'10'0F;
+
+    jit.ExtRegs()[17 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[17 * 2 + 1] = 0x20'1F'10'0F;
+
+    jit.ExtRegs()[18 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[18 * 2 + 1] = 0x20'1F'10'0F;
+
+    jit.ExtRegs()[19 * 2 + 0] = 0x05'02'01'00;
+    jit.ExtRegs()[19 * 2 + 1] = 0x20'1F'10'0F;
+
+    // Table
+    jit.ExtRegs()[20 * 2 + 0] = 0x03'02'01'00;
+    jit.ExtRegs()[20 * 2 + 1] = 0x07'06'05'04;
+
+    jit.ExtRegs()[21 * 2 + 0] = 0x0B'0A'09'08;
+    jit.ExtRegs()[21 * 2 + 1] = 0x0F'0E'0D'0C;
+
+    jit.ExtRegs()[22 * 2 + 0] = 0x13'12'11'10;
+    jit.ExtRegs()[22 * 2 + 1] = 0x17'16'15'14;
+
+    jit.ExtRegs()[23 * 2 + 0] = 0x1B'1A'19'18;
+    jit.ExtRegs()[23 * 2 + 1] = 0x1F'1E'1D'1C;
+
+    test_env.ticks_left = 5;
+    jit.Run();
+
+    REQUIRE(jit.ExtRegs()[16 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[16 * 2 + 1] == 0x20'1F'10'0F);
+
+    REQUIRE(jit.ExtRegs()[17 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[17 * 2 + 1] == 0x20'1F'10'0F);
+
+    REQUIRE(jit.ExtRegs()[18 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[18 * 2 + 1] == 0x20'1F'10'0F);
+
+    REQUIRE(jit.ExtRegs()[19 * 2 + 0] == 0x05'02'01'00);
+    REQUIRE(jit.ExtRegs()[19 * 2 + 1] == 0x20'1F'10'0F);
+}
