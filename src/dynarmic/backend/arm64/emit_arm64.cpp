@@ -256,9 +256,19 @@ void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget li
     code.NOP();
 }
 
-void EmitBlockLinkRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, const IR::LocationDescriptor& descriptor) {
-    ctx.ebi.block_relocations[descriptor].emplace_back(BlockRelocation{code.ptr<CodePtr>() - ctx.ebi.entry_point});
-    code.NOP();
+void EmitBlockLinkRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, const IR::LocationDescriptor& descriptor, BlockRelocationType type) {
+    ctx.ebi.block_relocations[descriptor].emplace_back(BlockRelocation{code.ptr<CodePtr>() - ctx.ebi.entry_point, type});
+    switch (type) {
+    case BlockRelocationType::Branch:
+        code.NOP();
+        break;
+    case BlockRelocationType::MoveToScratch0:
+        code.NOP();
+        code.NOP();
+        break;
+    default:
+        UNREACHABLE();
+    }
 }
 
 }  // namespace Dynarmic::Backend::Arm64

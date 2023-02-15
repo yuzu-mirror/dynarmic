@@ -46,11 +46,11 @@ void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
         if (ctx.conf.enable_cycle_counting) {
             code.CMP(Xticks, 0);
             code.B(LE, fail);
-            EmitBlockLinkRelocation(code, ctx, terminal.next);
+            EmitBlockLinkRelocation(code, ctx, terminal.next, BlockRelocationType::Branch);
         } else {
             code.LDAR(Wscratch0, Xhalt);
             code.CBNZ(Wscratch0, fail);
-            EmitBlockLinkRelocation(code, ctx, terminal.next);
+            EmitBlockLinkRelocation(code, ctx, terminal.next, BlockRelocationType::Branch);
         }
     }
 
@@ -62,7 +62,7 @@ void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
 
 void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::LinkBlockFast terminal, IR::LocationDescriptor, bool is_single_step) {
     if (ctx.conf.HasOptimization(OptimizationFlag::BlockLinking) && !is_single_step) {
-        EmitBlockLinkRelocation(code, ctx, terminal.next);
+        EmitBlockLinkRelocation(code, ctx, terminal.next, BlockRelocationType::Branch);
     }
 
     code.MOV(Xscratch0, A64::LocationDescriptor{terminal.next}.PC());

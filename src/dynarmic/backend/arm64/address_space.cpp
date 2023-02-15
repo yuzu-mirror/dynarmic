@@ -124,13 +124,27 @@ static void LinkBlockLinks(const CodePtr entry_point, const CodePtr target_ptr, 
     using namespace oaknut;
     using namespace oaknut::util;
 
-    for (auto [ptr_offset] : block_relocations_list) {
+    for (auto [ptr_offset, type] : block_relocations_list) {
         CodeGenerator c{reinterpret_cast<u32*>(entry_point + ptr_offset)};
 
-        if (target_ptr) {
-            c.B((void*)target_ptr);
-        } else {
-            c.NOP();
+        switch (type) {
+        case BlockRelocationType::Branch:
+            if (target_ptr) {
+                c.B((void*)target_ptr);
+            } else {
+                c.NOP();
+            }
+            break;
+        case BlockRelocationType::MoveToScratch0:
+            if (target_ptr) {
+                c.ADRL(Xscratch0, (void*)target_ptr);
+            } else {
+                c.NOP();
+                c.NOP();
+            }
+            break;
+        default:
+            ASSERT_FALSE("Invalid BlockRelocationType");
         }
     }
 }
