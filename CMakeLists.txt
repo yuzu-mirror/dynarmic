@@ -141,6 +141,7 @@ endif()
 
 if (DYNARMIC_USE_LLVM)
     find_package(LLVM REQUIRED CONFIG)
+    separate_arguments(LLVM_DEFINITIONS)
 endif()
 
 if (DYNARMIC_TESTS)
