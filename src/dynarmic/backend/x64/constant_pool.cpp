@@ -15,6 +15,7 @@ namespace Dynarmic::Backend::X64 {
 
 ConstantPool::ConstantPool(BlockOfCode& code, size_t size)
         : code(code), insertion_point(0) {
+    code.EnsureMemoryCommitted(align_size + size);
     code.int3();
     code.align(align_size);
     pool = std::span<ConstantT>(

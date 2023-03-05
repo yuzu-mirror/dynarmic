@@ -270,6 +270,7 @@ private:
             invalidate_entire_cache = true;
             PerformRequestedCacheInvalidation();
         }
+        block_of_code.EnsureMemoryCommitted(MINIMUM_REMAINING_CODESIZE);
 
         // JIT Compile
         const auto get_code = [this](u64 vaddr) { return conf.callbacks->MemoryReadCode(vaddr); };

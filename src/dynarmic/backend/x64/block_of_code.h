@@ -51,6 +51,8 @@ public:
     void ClearCache();
     /// Calculates how much space is remaining to use.
     size_t SpaceRemaining() const;
+    /// Ensure at least codesize bytes of code cache memory are committed at the current code_ptr.
+    void EnsureMemoryCommitted(size_t codesize);
 
     /// Runs emulated code from code_ptr.
     HaltReason RunCode(void* jit_state, CodePtr code_ptr) const;
@@ -175,6 +177,10 @@ private:
 
     bool prelude_complete = false;
     CodePtr code_begin = nullptr;
+
+#ifdef _WIN32
+    size_t committed_size = 0;
+#endif
 
     ConstantPool constant_pool;
 

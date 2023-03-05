@@ -55,10 +55,25 @@ const std::array<Xbyak::Reg64, ABI_PARAM_COUNT> BlockOfCode::ABI_PARAMS = {Block
 namespace {
 
 constexpr size_t CONSTANT_POOL_SIZE = 2 * 1024 * 1024;
+constexpr size_t PRELUDE_COMMIT_SIZE = 16 * 1024 * 1024;
 
 class CustomXbyakAllocator : public Xbyak::Allocator {
 public:
-#ifndef _WIN32
+#ifdef _WIN32
+    uint8_t* alloc(size_t size) override {
+        void* p = VirtualAlloc(nullptr, size, MEM_RESERVE, PAGE_READWRITE);
+        if (p == nullptr) {
+            throw Xbyak::Error(Xbyak::ERR_CANT_ALLOC);
+        }
+        return static_cast<uint8_t*>(p);
+    }
+
+    void free(uint8_t* p) override {
+        VirtualFree(static_cast<void*>(p), 0, MEM_RELEASE);
+    }
+
+    bool useProtect() const override { return false; }
+#else
     static constexpr size_t DYNARMIC_PAGE_SIZE = 4096;
 
     // Can't subclass Xbyak::MmapAllocator because it is not a pure interface
@@ -91,10 +106,10 @@ public:
         std::memcpy(&size, p - DYNARMIC_PAGE_SIZE, sizeof(size_t));
         munmap(p - DYNARMIC_PAGE_SIZE, size);
     }
-#endif
 
-#ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
+#    ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
     bool useProtect() const override { return false; }
+#    endif
 #endif
 };
 
@@ -211,6 +226,7 @@ BlockOfCode::BlockOfCode(RunCodeCallbacks cb, JitStateInfo jsi, size_t total_cod
         , constant_pool(*this, CONSTANT_POOL_SIZE)
         , host_features(GetHostFeatures()) {
     EnableWriting();
+    EnsureMemoryCommitted(PRELUDE_COMMIT_SIZE);
     GenRunCode(rcp);
 }
 
@@ -223,13 +239,21 @@ void BlockOfCode::PreludeComplete() {
 
 void BlockOfCode::EnableWriting() {
 #ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
+#    ifdef _WIN32
+    ProtectMemory(getCode(), committed_size, false);
+#    else
     ProtectMemory(getCode(), maxSize_, false);
+#    endif
 #endif
 }
 
 void BlockOfCode::DisableWriting() {
 #ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
+#    ifdef _WIN32
+    ProtectMemory(getCode(), committed_size, true);
+#    else
     ProtectMemory(getCode(), maxSize_, true);
+#    endif
 #endif
 }
 
@@ -244,6 +268,19 @@ size_t BlockOfCode::SpaceRemaining() const {
     if (current_ptr >= &top_[maxSize_])
         return 0;
     return &top_[maxSize_] - current_ptr;
+}
+
+void BlockOfCode::EnsureMemoryCommitted([[maybe_unused]] size_t codesize) {
+#ifdef _WIN32
+    if (committed_size < size_ + codesize) {
+        committed_size = std::min<size_t>(maxSize_, committed_size + codesize);
+#    ifdef DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT
+        VirtualAlloc(top_, committed_size, MEM_COMMIT, PAGE_READWRITE);
+#    else
+        VirtualAlloc(top_, committed_size, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+#    endif
+    }
+#endif
 }
 
 HaltReason BlockOfCode::RunCode(void* jit_state, CodePtr code_ptr) const {
@@ -479,6 +516,8 @@ void* BlockOfCode::AllocateFromCodeSpace(size_t alloc_size) {
     if (size_ + alloc_size >= maxSize_) {
         throw Xbyak::Error(Xbyak::ERR_CODE_IS_TOO_BIG);
     }
+
+    EnsureMemoryCommitted(alloc_size);
 
     void* ret = getCurr<void*>();
     size_ += alloc_size;

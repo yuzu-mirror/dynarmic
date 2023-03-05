@@ -167,6 +167,7 @@ private:
             invalidate_entire_cache = true;
             PerformCacheInvalidation();
         }
+        block_of_code.EnsureMemoryCommitted(MINIMUM_REMAINING_CODESIZE);
 
         IR::Block ir_block = A32::Translate(A32::LocationDescriptor{descriptor}, conf.callbacks, {conf.arch_version, conf.define_unpredictable_behaviour, conf.hook_hint_instructions});
         Optimization::PolyfillPass(ir_block, polyfill_options);
