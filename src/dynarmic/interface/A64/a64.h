@@ -18,8 +18,6 @@
 namespace Dynarmic {
 namespace A64 {
 
-struct Context;
-
 class Jit final {
 public:
     explicit Jit(UserConfig conf);

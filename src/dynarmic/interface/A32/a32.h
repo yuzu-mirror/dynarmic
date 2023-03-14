@@ -17,8 +17,6 @@
 namespace Dynarmic {
 namespace A32 {
 
-struct Context;
-
 class Jit final {
 public:
     explicit Jit(UserConfig conf);
@@ -79,10 +77,6 @@ public:
     /// View and modify FPSCR.
     std::uint32_t Fpscr() const;
     void SetFpscr(std::uint32_t value);
-
-    Context SaveContext() const;
-    void SaveContext(Context&) const;
-    void LoadContext(const Context&);
 
     /// Clears exclusive state for this core.
     void ClearExclusiveState();

@@ -16,63 +16,10 @@
 #include "dynarmic/backend/arm64/a32_jitstate.h"
 #include "dynarmic/common/atomic.h"
 #include "dynarmic/interface/A32/a32.h"
-#include "dynarmic/interface/A32/context.h"
 
 namespace Dynarmic::A32 {
 
 using namespace Backend::Arm64;
-
-struct Context::Impl {
-    A32JitState state;
-};
-
-Context::Context()
-        : impl(std::make_unique<Context::Impl>()) {}
-
-Context::~Context() = default;
-
-Context::Context(const Context& ctx)
-        : impl(std::make_unique<Context::Impl>(*ctx.impl)) {}
-
-Context::Context(Context&& ctx) noexcept
-        : impl(std::move(ctx.impl)) {}
-
-Context& Context::operator=(const Context& ctx) {
-    *impl = *ctx.impl;
-    return *this;
-}
-
-Context& Context::operator=(Context&& ctx) noexcept {
-    impl = std::move(ctx.impl);
-    return *this;
-}
-
-std::array<std::uint32_t, 16>& Context::Regs() {
-    return impl->state.regs;
-}
-const std::array<std::uint32_t, 16>& Context::Regs() const {
-    return impl->state.regs;
-}
-std::array<std::uint32_t, 64>& Context::ExtRegs() {
-    return impl->state.ext_regs;
-}
-const std::array<std::uint32_t, 64>& Context::ExtRegs() const {
-    return impl->state.ext_regs;
-}
-
-std::uint32_t Context::Cpsr() const {
-    return impl->state.Cpsr();
-}
-void Context::SetCpsr(std::uint32_t value) {
-    impl->state.SetCpsr(value);
-}
-
-std::uint32_t Context::Fpscr() const {
-    return impl->state.Fpscr();
-}
-void Context::SetFpscr(std::uint32_t value) {
-    return impl->state.SetFpscr(value);
-}
 
 struct Jit::Impl final {
     Impl(Jit* jit_interface, A32::UserConfig conf)
@@ -169,20 +116,6 @@ struct Jit::Impl final {
 
     void SetFpscr(std::uint32_t value) {
         current_state.SetFpscr(value);
-    }
-
-    Context SaveContext() const {
-        Context ctx;
-        ctx.impl->state = current_state;
-        return ctx;
-    }
-
-    void SaveContext(Context& ctx) const {
-        ctx.impl->state = current_state;
-    }
-
-    void LoadContext(const Context& ctx) {
-        current_state = ctx.impl->state;
     }
 
     void ClearExclusiveState() {
@@ -293,18 +226,6 @@ std::uint32_t Jit::Fpscr() const {
 
 void Jit::SetFpscr(std::uint32_t value) {
     impl->SetFpscr(value);
-}
-
-Context Jit::SaveContext() const {
-    return impl->SaveContext();
-}
-
-void Jit::SaveContext(Context& ctx) const {
-    impl->SaveContext(ctx);
-}
-
-void Jit::LoadContext(const Context& ctx) {
-    impl->LoadContext(ctx);
 }
 
 void Jit::ClearExclusiveState() {
