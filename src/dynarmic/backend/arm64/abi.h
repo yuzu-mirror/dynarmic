@@ -23,8 +23,8 @@ constexpr oaknut::XReg Xticks{26};
 constexpr oaknut::XReg Xfastmem{25};
 constexpr oaknut::XReg Xpagetable{24};
 
-constexpr oaknut::XReg Xscratch0{16}, Xscratch1{17};
-constexpr oaknut::WReg Wscratch0{16}, Wscratch1{17};
+constexpr oaknut::XReg Xscratch0{16}, Xscratch1{17}, Xscratch2{30};
+constexpr oaknut::WReg Wscratch0{16}, Wscratch1{17}, Wscratch2{30};
 
 template<size_t bitsize>
 constexpr auto Rscratch0() {
@@ -69,7 +69,7 @@ constexpr RegisterList ToRegList(oaknut::Reg reg) {
     return RegisterList{1} << reg.index();
 }
 
-constexpr RegisterList ABI_CALLEE_SAVE = 0x0000ff00'3ff80000;
+constexpr RegisterList ABI_CALLEE_SAVE = 0x0000ff00'7ff80000;
 constexpr RegisterList ABI_CALLER_SAVE = 0xffffffff'4000ffff;
 
 void ABI_PushRegisters(oaknut::CodeGenerator& code, RegisterList rl, size_t stack_space);
