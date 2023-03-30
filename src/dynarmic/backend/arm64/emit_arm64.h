@@ -93,7 +93,7 @@ struct Relocation {
 
 enum class BlockRelocationType {
     Branch,
-    MoveToScratch0,
+    MoveToScratch1,
 };
 
 struct BlockRelocation {

@@ -120,7 +120,7 @@ EmittedBlockInfo AddressSpace::Emit(IR::Block block) {
     return block_info;
 }
 
-static void LinkBlockLinks(const CodePtr entry_point, const CodePtr target_ptr, const std::vector<BlockRelocation>& block_relocations_list) {
+static void LinkBlockLinks(const CodePtr entry_point, const CodePtr target_ptr, const std::vector<BlockRelocation>& block_relocations_list, void* return_to_dispatcher) {
     using namespace oaknut;
     using namespace oaknut::util;
 
@@ -135,12 +135,11 @@ static void LinkBlockLinks(const CodePtr entry_point, const CodePtr target_ptr, 
                 c.NOP();
             }
             break;
-        case BlockRelocationType::MoveToScratch0:
+        case BlockRelocationType::MoveToScratch1:
             if (target_ptr) {
-                c.ADRL(Xscratch0, (void*)target_ptr);
+                c.ADRL(Xscratch1, (void*)target_ptr);
             } else {
-                c.NOP();
-                c.NOP();
+                c.ADRL(Xscratch1, return_to_dispatcher);
             }
             break;
         default:
@@ -284,7 +283,7 @@ void AddressSpace::Link(EmittedBlockInfo& block_info) {
 
     for (auto [target_descriptor, list] : block_info.block_relocations) {
         block_references[target_descriptor].emplace(block_info.entry_point);
-        LinkBlockLinks(block_info.entry_point, Get(target_descriptor), list);
+        LinkBlockLinks(block_info.entry_point, Get(target_descriptor), list, prelude_info.return_to_dispatcher);
     }
 }
 
@@ -294,7 +293,7 @@ void AddressSpace::RelinkForDescriptor(IR::LocationDescriptor target_descriptor,
             const EmittedBlockInfo& block_info = block_iter->second;
 
             if (auto relocation_iter = block_info.block_relocations.find(target_descriptor); relocation_iter != block_info.block_relocations.end()) {
-                LinkBlockLinks(block_info.entry_point, target_ptr, relocation_iter->second);
+                LinkBlockLinks(block_info.entry_point, target_ptr, relocation_iter->second, prelude_info.return_to_dispatcher);
             }
 
             mem.invalidate(reinterpret_cast<u32*>(block_info.entry_point), block_info.size);

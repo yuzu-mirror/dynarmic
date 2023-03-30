@@ -398,7 +398,7 @@ void A64AddressSpace::EmitPrelude() {
     prelude_info.add_ticks = EmitCallTrampoline<&A64::UserCallbacks::AddTicks>(code, conf.callbacks);
     prelude_info.get_ticks_remaining = EmitCallTrampoline<&A64::UserCallbacks::GetTicksRemaining>(code, conf.callbacks);
 
-    oaknut::Label return_from_run_code;
+    oaknut::Label return_from_run_code, l_return_to_dispatcher;
 
     prelude_info.run_code = code.ptr<PreludeInfo::RunCodeFuncType>();
     {
@@ -412,6 +412,13 @@ void A64AddressSpace::EmitPrelude() {
         }
         if (conf.fastmem_pointer) {
             code.MOV(Xfastmem, mcl::bit_cast<u64>(conf.fastmem_pointer));
+        }
+
+        if (conf.HasOptimization(OptimizationFlag::ReturnStackBuffer)) {
+            code.LDR(Xscratch0, l_return_to_dispatcher);
+            for (size_t i = 0; i < RSBCount; i++) {
+                code.STR(Xscratch0, SP, offsetof(StackLayout, rsb) + offsetof(RSBEntry, code_ptr) + i * sizeof(RSBEntry));
+            }
         }
 
         if (conf.enable_cycle_counting) {
@@ -443,6 +450,13 @@ void A64AddressSpace::EmitPrelude() {
         }
         if (conf.fastmem_pointer) {
             code.MOV(Xfastmem, mcl::bit_cast<u64>(conf.fastmem_pointer));
+        }
+
+        if (conf.HasOptimization(OptimizationFlag::ReturnStackBuffer)) {
+            code.LDR(Xscratch0, l_return_to_dispatcher);
+            for (size_t i = 0; i < RSBCount; i++) {
+                code.STR(Xscratch0, SP, offsetof(StackLayout, rsb) + offsetof(RSBEntry, code_ptr) + i * sizeof(RSBEntry));
+            }
         }
 
         if (conf.enable_cycle_counting) {
@@ -517,6 +531,10 @@ void A64AddressSpace::EmitPrelude() {
         ABI_PopRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
         code.RET();
     }
+
+    code.align(8);
+    code.l(l_return_to_dispatcher);
+    code.dx(mcl::bit_cast<u64>(prelude_info.return_to_dispatcher));
 
     prelude_info.end_of_prelude = code.ptr<u32*>();
 

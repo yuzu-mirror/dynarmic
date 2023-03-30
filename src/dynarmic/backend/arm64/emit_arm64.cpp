@@ -45,8 +45,24 @@ void EmitIR<IR::Opcode::CallHostFunction>(oaknut::CodeGenerator& code, EmitConte
 }
 
 template<>
-void EmitIR<IR::Opcode::PushRSB>(oaknut::CodeGenerator&, EmitContext&, IR::Inst*) {
-    // TODO
+void EmitIR<IR::Opcode::PushRSB>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    if (!ctx.conf.HasOptimization(OptimizationFlag::ReturnStackBuffer)) {
+        return;
+    }
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(args[0].IsImmediate());
+    const IR::LocationDescriptor target{args[0].GetImmediateU64()};
+
+    code.LDR(Wscratch2, SP, offsetof(StackLayout, rsb_ptr));
+    code.ADD(Wscratch2, Wscratch2, sizeof(RSBEntry));
+    code.AND(Wscratch2, Wscratch2, RSBIndexMask);
+    code.STR(Wscratch2, SP, offsetof(StackLayout, rsb_ptr));
+    code.ADD(Xscratch2, SP, Xscratch2);
+
+    code.MOV(Xscratch0, target.Value());
+    EmitBlockLinkRelocation(code, ctx, target, BlockRelocationType::MoveToScratch1);
+    code.STP(Xscratch0, Xscratch1, Xscratch2, offsetof(StackLayout, rsb));
 }
 
 template<>
@@ -262,8 +278,8 @@ void EmitBlockLinkRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, cons
     case BlockRelocationType::Branch:
         code.NOP();
         break;
-    case BlockRelocationType::MoveToScratch0:
-        code.NOP();
+    case BlockRelocationType::MoveToScratch1:
+        code.BRK(0);
         code.NOP();
         break;
     default:

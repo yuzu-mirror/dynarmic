@@ -70,10 +70,34 @@ void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
     EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 }
 
-void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool) {
-    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool is_single_step) {
+    if (ctx.conf.HasOptimization(OptimizationFlag::ReturnStackBuffer) && !is_single_step) {
+        oaknut::Label fail;
 
-    // TODO: Implement PopRSBHint optimization
+        code.MOV(Wscratch0, A64::LocationDescriptor::fpcr_mask);
+        code.LDR(W0, Xstate, offsetof(A64JitState, fpcr));
+        code.LDR(X1, Xstate, offsetof(A64JitState, pc));
+        code.AND(W0, W0, Wscratch0);
+        code.AND(X1, X1, A64::LocationDescriptor::pc_mask);
+        code.LSL(X0, X0, A64::LocationDescriptor::fpcr_shift);
+        code.ORR(X0, X0, X1);
+
+        code.LDR(Wscratch2, SP, offsetof(StackLayout, rsb_ptr));
+        code.AND(Wscratch2, Wscratch2, RSBIndexMask);
+        code.ADD(X2, SP, Xscratch2);
+        code.SUB(Wscratch2, Wscratch2, sizeof(RSBEntry));
+        code.STR(Wscratch2, SP, offsetof(StackLayout, rsb_ptr));
+
+        code.LDP(Xscratch0, Xscratch1, X2, offsetof(StackLayout, rsb));
+
+        code.CMP(X0, Xscratch0);
+        code.B(NE, fail);
+        code.BR(Xscratch1);
+
+        code.l(fail);
+    }
+
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 }
 
 void EmitA64Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::FastDispatchHint, IR::LocationDescriptor, bool) {

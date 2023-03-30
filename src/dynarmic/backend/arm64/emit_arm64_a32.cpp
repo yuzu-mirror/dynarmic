@@ -93,10 +93,29 @@ void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::Li
     EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 }
 
-void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool) {
-    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
+void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool is_single_step) {
+    if (ctx.conf.HasOptimization(OptimizationFlag::ReturnStackBuffer) && !is_single_step) {
+        oaknut::Label fail;
 
-    // TODO: Implement PopRSBHint optimization
+        code.LDR(Wscratch2, SP, offsetof(StackLayout, rsb_ptr));
+        code.AND(Wscratch2, Wscratch2, RSBIndexMask);
+        code.ADD(X2, SP, Xscratch2);
+        code.SUB(Wscratch2, Wscratch2, sizeof(RSBEntry));
+        code.STR(Wscratch2, SP, offsetof(StackLayout, rsb_ptr));
+
+        code.LDP(Xscratch0, Xscratch1, X2, offsetof(StackLayout, rsb));
+
+        static_assert(offsetof(A32JitState, regs) + 16 * sizeof(u32) == offsetof(A32JitState, upper_location_descriptor));
+        code.LDUR(X0, Xstate, offsetof(A32JitState, regs) + 15 * sizeof(u32));
+
+        code.CMP(X0, Xscratch0);
+        code.B(NE, fail);
+        code.BR(Xscratch1);
+
+        code.l(fail);
+    }
+
+    EmitRelocation(code, ctx, LinkTarget::ReturnToDispatcher);
 }
 
 void EmitA32Terminal(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Term::FastDispatchHint, IR::LocationDescriptor, bool) {

@@ -11,15 +11,27 @@
 
 namespace Dynarmic::Backend::Arm64 {
 
-constexpr size_t SpillCount = 64;
-
 #ifdef _MSC_VER
 #    pragma warning(push)
 #    pragma warning(disable : 4324)  // Structure was padded due to alignment specifier
 #endif
 
+constexpr size_t SpillCount = 64;
+
+struct alignas(16) RSBEntry {
+    u64 target;
+    u64 code_ptr;
+};
+
+constexpr size_t RSBCount = 8;
+constexpr u64 RSBIndexMask = (RSBCount - 1) * sizeof(RSBEntry);
+
 struct alignas(16) StackLayout {
+    std::array<RSBEntry, RSBCount> rsb;
+
     std::array<std::array<u64, 2>, SpillCount> spill;
+
+    u32 rsb_ptr;
 
     s64 cycles_to_run;
 
