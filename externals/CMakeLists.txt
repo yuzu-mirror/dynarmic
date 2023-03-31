@@ -41,9 +41,7 @@ endif()
 # oaknut
 
 if (NOT TARGET merry::oaknut)
-    if ("arm64" IN_LIST ARCHITECTURE)
-        add_subdirectory(oaknut)
-    endif()
+    add_subdirectory(oaknut)
 endif()
 
 # robin-map
