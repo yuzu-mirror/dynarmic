@@ -34,16 +34,18 @@ void EmitSpinLockUnlock(Xbyak::CodeGenerator& code, Xbyak::Reg64 ptr, Xbyak::Reg
 namespace {
 
 struct SpinLockImpl {
-    SpinLockImpl();
+    void Initialize();
 
     Xbyak::CodeGenerator code;
+
+    bool initialized = false;
     void (*lock)(volatile int*);
     void (*unlock)(volatile int*);
 };
 
 SpinLockImpl impl;
 
-SpinLockImpl::SpinLockImpl() {
+void SpinLockImpl::Initialize() {
     const Xbyak::Reg64 ABI_PARAM1 = Backend::X64::HostLocToReg64(Backend::X64::ABI_PARAM1);
 
     code.align();
@@ -55,15 +57,23 @@ SpinLockImpl::SpinLockImpl() {
     unlock = code.getCurr<void (*)(volatile int*)>();
     EmitSpinLockUnlock(code, ABI_PARAM1, code.eax);
     code.ret();
+
+    initialized = true;
 }
 
 }  // namespace
 
 void SpinLock::Lock() {
+    if (!impl.initialized) [[unlikely]] {
+        impl.Initialize();
+    }
     impl.lock(&storage);
 }
 
 void SpinLock::Unlock() {
+    if (!impl.initialized) [[unlikely]] {
+        impl.Initialize();
+    }
     impl.unlock(&storage);
 }
 

@@ -38,8 +38,12 @@ namespace {
 struct SpinLockImpl {
     SpinLockImpl();
 
+    void Initialize();
+
     oaknut::CodeBlock mem;
     oaknut::CodeGenerator code;
+
+    bool initialized = false;
     void (*lock)(volatile int*);
     void (*unlock)(volatile int*);
 };
@@ -48,7 +52,9 @@ SpinLockImpl impl;
 
 SpinLockImpl::SpinLockImpl()
         : mem{4096}
-        , code{mem.ptr()} {
+        , code{mem.ptr()} {}
+
+void SpinLockImpl::Initialize() {
     mem.unprotect();
 
     lock = code.ptr<void (*)(volatile int*)>();
@@ -60,15 +66,23 @@ SpinLockImpl::SpinLockImpl()
     code.RET();
 
     mem.protect();
+
+    initialized = true;
 }
 
 }  // namespace
 
 void SpinLock::Lock() {
+    if (!impl.initialized) [[unlikely]] {
+        impl.Initialize();
+    }
     impl.lock(&storage);
 }
 
 void SpinLock::Unlock() {
+    if (!impl.initialized) [[unlikely]] {
+        impl.Initialize();
+    }
     impl.unlock(&storage);
 }
 
