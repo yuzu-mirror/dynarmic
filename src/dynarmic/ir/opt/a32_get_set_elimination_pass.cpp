@@ -215,7 +215,7 @@ void RegisterPass(IR::Block& block) {
         VectorQuad,
     };
     struct ExtRegInfo {
-        ExtValueType value_type = ExtValueType::Empty;
+        ExtValueType value_type = {};
         IR::Value register_value;
         std::optional<Iterator> last_set_instruction;
     };
