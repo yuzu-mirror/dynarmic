@@ -68,6 +68,7 @@ void SpinLockImpl::Initialize() {
     code.RET();
 
     mem.protect();
+    mem.invalidate_all();
 }
 
 }  // namespace
