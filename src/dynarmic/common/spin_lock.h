@@ -11,7 +11,7 @@ struct SpinLock {
     void Lock();
     void Unlock();
 
-    volatile int storage;
+    volatile int storage = 0;
 };
 
 }  // namespace Dynarmic
