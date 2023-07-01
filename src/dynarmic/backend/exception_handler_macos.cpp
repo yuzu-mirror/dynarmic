@@ -220,11 +220,15 @@ mig_external kern_return_t catch_mach_exception_raise_state(
         return KERN_FAILURE;
     }
 
-    dynarmic_thread_state_t* ts = reinterpret_cast<dynarmic_thread_state_t*>(new_state);
-    std::memcpy(ts, reinterpret_cast<const dynarmic_thread_state_t*>(old_state), sizeof(dynarmic_thread_state_t));
-    *new_stateCnt = THREAD_STATE_COUNT;
+    // The input/output pointers are not necessarily 8-byte aligned.
+    dynarmic_thread_state_t ts;
+    std::memcpy(&ts, old_state, sizeof(ts));
 
-    return mach_handler.HandleRequest(ts);
+    kern_return_t ret = mach_handler.HandleRequest(&ts);
+
+    std::memcpy(new_state, &ts, sizeof(ts));
+    *new_stateCnt = THREAD_STATE_COUNT;
+    return ret;
 }
 
 struct ExceptionHandler::Impl final {
