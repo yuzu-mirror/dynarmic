@@ -24,9 +24,10 @@ Projects using Dynarmic
 
 * [Citra - Nintendo 3DS emulator](https://citra-emu.org)
 * [yuzu - Nintendo Switch emulator](https://yuzu-emu.org)
-* [EKA2L1 - An Experimental Symbian OS emulator](https://github.com/EKA2L1/EKA2L1)
+* [Panda3DS - Red-panda-themed Nintendo 3DS emulator](https://github.com/wheremyfoodat/Panda3DS)
 * [Vita3K - An Experimental PSVita emulator](https://vita3k.org)
 * [touchHLE - A high-level emulator for iPhone OS applications](https://touchhle.org/)
+* [EKA2L1 - An Experimental Symbian OS emulator](https://github.com/EKA2L1/EKA2L1)
 * [unidbg - Android native library emulation, with experimental iOS emulation](https://github.com/zhkl0228/unidbg)
 
 Alternatives to Dynarmic
