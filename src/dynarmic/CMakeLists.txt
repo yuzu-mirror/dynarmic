@@ -455,7 +455,7 @@ target_include_directories(dynarmic PUBLIC
 )
 set_target_properties(dynarmic PROPERTIES
     VERSION ${dynarmic_VERSION}
-    SOVERSION ${dynarmic_VERSION_MAJOR}
+    SOVERSION ${dynarmic_VERSION_MAJOR}.${dynarmic_VERSION_MINOR}
 )
 target_compile_options(dynarmic PRIVATE ${DYNARMIC_CXX_FLAGS})
 target_link_libraries(dynarmic
