@@ -104,6 +104,15 @@ else()
              -Wfatal-errors)
     endif()
 
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        # GCC produces bogus -Warray-bounds warnings from xbyak headers for code paths that are not
+        # actually reachable.  Specifically, it happens in cases where some code casts an Operand&
+        # to Address& after first checking isMEM(), and that code is inlined in a situation where
+        # GCC knows that the variable is actually a Reg64.  isMEM() will never return true for a
+        # Reg64, but GCC doesn't know that.
+        list(APPEND DYNARMIC_CXX_FLAGS -Wno-array-bounds)
+    endif()
+
     if (CMAKE_CXX_COMPILER_ID MATCHES "[Cc]lang")
         # Bracket depth determines maximum size of a fold expression in Clang since 9c9974c3ccb6.
         # And this in turns limits the size of a std::array.
