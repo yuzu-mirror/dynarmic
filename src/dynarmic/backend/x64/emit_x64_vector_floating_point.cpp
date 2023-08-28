@@ -145,18 +145,24 @@ void HandleNaNs(BlockOfCode& code, EmitContext& ctx, bool fpcr_controlled, std::
 
 template<size_t fsize>
 Xbyak::Address GetVectorOf(BlockOfCode& code, u64 value) {
-    if constexpr (fsize == 32) {
+    if constexpr (fsize == 16) {
+        return code.MConst(xword, (value << 48) | (value << 32) | (value << 16) | value, (value << 48) | (value << 32) | (value << 16) | value);
+    } else if constexpr (fsize == 32) {
         return code.MConst(xword, (value << 32) | value, (value << 32) | value);
     } else {
+        static_assert(fsize == 64);
         return code.MConst(xword, value, value);
     }
 }
 
 template<size_t fsize, u64 value>
 Xbyak::Address GetVectorOf(BlockOfCode& code) {
-    if constexpr (fsize == 32) {
+    if constexpr (fsize == 16) {
+        return code.MConst(xword, (value << 48) | (value << 32) | (value << 16) | value, (value << 48) | (value << 32) | (value << 16) | value);
+    } else if constexpr (fsize == 32) {
         return code.MConst(xword, (value << 32) | value, (value << 32) | value);
     } else {
+        static_assert(fsize == 64);
         return code.MConst(xword, value, value);
     }
 }
@@ -171,6 +177,13 @@ template<size_t fsize>
 Xbyak::Address GetNegativeZeroVector(BlockOfCode& code) {
     using FPT = mcl::unsigned_integer_of_size<fsize>;
     return GetVectorOf<fsize, FP::FPInfo<FPT>::Zero(true)>(code);
+}
+
+template<size_t fsize>
+Xbyak::Address GetNonSignMaskVector(BlockOfCode& code) {
+    using FPT = mcl::unsigned_integer_of_size<fsize>;
+    constexpr FPT non_sign_mask = FP::FPInfo<FPT>::exponent_mask | FP::FPInfo<FPT>::mantissa_mask;
+    return GetVectorOf<fsize, non_sign_mask>(code);
 }
 
 template<size_t fsize>
@@ -586,17 +599,9 @@ void EmitFourOpFallback(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Lam
 
 template<size_t fsize>
 void FPVectorAbs(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
-    using FPT = mcl::unsigned_integer_of_size<fsize>;
-    constexpr FPT non_sign_mask = FP::FPInfo<FPT>::sign_mask - FPT(1u);
-    constexpr u64 non_sign_mask64 = mcl::bit::replicate_element<fsize, u64>(non_sign_mask);
-
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.MConst(xword, non_sign_mask64, non_sign_mask64);
-
-    code.andps(a, mask);
-
+    code.andps(a, GetNonSignMaskVector<fsize>(code));
     ctx.reg_alloc.DefineValue(inst, a);
 }
 
