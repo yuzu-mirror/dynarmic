@@ -1795,6 +1795,50 @@ static void EmitRSqrtEstimate(BlockOfCode& code, EmitContext& ctx, IR::Inst* ins
             ctx.reg_alloc.DefineValue(inst, result);
             return;
         }
+
+        if (code.HasHostFeature(HostFeature::AVX)) {
+            auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+            const bool fpcr_controlled = args[1].GetImmediateU1();
+
+            const Xbyak::Xmm operand = ctx.reg_alloc.UseXmm(args[0]);
+            const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+            const Xbyak::Xmm value = ctx.reg_alloc.ScratchXmm();
+
+            SharedLabel bad_values = GenSharedLabel(), end = GenSharedLabel();
+
+            code.movaps(value, operand);
+
+            code.movaps(xmm0, GetVectorOf<fsize, (fsize == 32 ? 0xFFFF8000 : 0xFFFF'F000'0000'0000)>(code));
+            code.pand(value, xmm0);
+            code.por(value, GetVectorOf<fsize, (fsize == 32 ? 0x00008000 : 0x0000'1000'0000'0000)>(code));
+
+            // Detect NaNs, negatives, zeros, denormals and infinities
+            FCODE(vcmpnge_uqp)(result, value, GetVectorOf<fsize, (FPT(1) << FP::FPInfo<FPT>::explicit_mantissa_width)>(code));
+            code.vptest(result, result);
+            code.jnz(*bad_values, code.T_NEAR);
+
+            FCODE(sqrtp)(value, value);
+            code.vmovaps(result, GetVectorOf<fsize, FP::FPValue<FPT, false, 0, 1>()>(code));
+            FCODE(divp)(result, value);
+
+            ICODE(padd)(result, GetVectorOf<fsize, (fsize == 32 ? 0x00004000 : 0x0000'0800'0000'0000)>(code));
+            code.pand(result, xmm0);
+
+            code.L(*end);
+
+            ctx.deferred_emits.emplace_back([=, &code, &ctx] {
+                code.L(*bad_values);
+                code.sub(rsp, 8);
+                ABI_PushCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
+                EmitTwoOpFallbackWithoutRegAlloc(code, ctx, result, operand, fallback_fn, fpcr_controlled);
+                ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
+                code.add(rsp, 8);
+                code.jmp(*end, code.T_NEAR);
+            });
+
+            ctx.reg_alloc.DefineValue(inst, result);
+            return;
+        }
     }
 
     EmitTwoOpFallback(code, ctx, inst, fallback_fn);
