@@ -91,11 +91,11 @@ else()
         -Wextra
         -Wcast-qual
         -pedantic
-        -pedantic-errors
         -Wno-missing-braces)
 
     if (DYNARMIC_WARNINGS_AS_ERRORS)
         list(APPEND DYNARMIC_CXX_FLAGS
+             -pedantic-errors
              -Werror)
     endif()
 
