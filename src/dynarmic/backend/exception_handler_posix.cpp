@@ -19,6 +19,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 #include <mcl/assert.hpp>
@@ -72,7 +73,15 @@ private:
     static void SigAction(int sig, siginfo_t* info, void* raw_context);
 };
 
-SigHandler sig_handler;
+std::mutex handler_lock;
+std::optional<SigHandler> sig_handler;
+
+void RegisterHandler() {
+    std::lock_guard<std::mutex> guard(handler_lock);
+    if (!sig_handler) {
+        sig_handler.emplace();
+    }
+}
 
 SigHandler::SigHandler() {
     const size_t signal_stack_size = std::max<size_t>(SIGSTKSZ, 2 * 1024 * 1024);
@@ -159,10 +168,10 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 #    endif
 
     {
-        std::lock_guard<std::mutex> guard(sig_handler.code_block_infos_mutex);
+        std::lock_guard<std::mutex> guard(sig_handler->code_block_infos_mutex);
 
-        const auto iter = sig_handler.FindCodeBlockInfo(CTX_RIP);
-        if (iter != sig_handler.code_block_infos.end()) {
+        const auto iter = sig_handler->FindCodeBlockInfo(CTX_RIP);
+        if (iter != sig_handler->code_block_infos.end()) {
             FakeCall fc = iter->cb(CTX_RIP);
 
             CTX_RSP -= sizeof(u64);
@@ -220,10 +229,10 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 #    endif
 
     {
-        std::lock_guard<std::mutex> guard(sig_handler.code_block_infos_mutex);
+        std::lock_guard<std::mutex> guard(sig_handler->code_block_infos_mutex);
 
-        const auto iter = sig_handler.FindCodeBlockInfo(CTX_PC);
-        if (iter != sig_handler.code_block_infos.end()) {
+        const auto iter = sig_handler->FindCodeBlockInfo(CTX_PC);
+        if (iter != sig_handler->code_block_infos.end()) {
             FakeCall fc = iter->cb(CTX_PC);
 
             CTX_PC = fc.call_pc;
@@ -240,7 +249,7 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 
 #endif
 
-    struct sigaction* retry_sa = sig == SIGSEGV ? &sig_handler.old_sa_segv : &sig_handler.old_sa_bus;
+    struct sigaction* retry_sa = sig == SIGSEGV ? &sig_handler->old_sa_segv : &sig_handler->old_sa_bus;
     if (retry_sa->sa_flags & SA_SIGINFO) {
         retry_sa->sa_sigaction(sig, info, raw_context);
         return;
@@ -260,18 +269,20 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 struct ExceptionHandler::Impl final {
     Impl(u64 code_begin_, u64 code_end_)
             : code_begin(code_begin_)
-            , code_end(code_end_) {}
+            , code_end(code_end_) {
+        RegisterHandler();
+    }
 
     void SetCallback(std::function<FakeCall(u64)> cb) {
         CodeBlockInfo cbi;
         cbi.code_begin = code_begin;
         cbi.code_end = code_end;
         cbi.cb = cb;
-        sig_handler.AddCodeBlock(cbi);
+        sig_handler->AddCodeBlock(cbi);
     }
 
     ~Impl() {
-        sig_handler.RemoveCodeBlock(code_begin);
+        sig_handler->RemoveCodeBlock(code_begin);
     }
 
 private:
@@ -298,7 +309,7 @@ void ExceptionHandler::Register(oaknut::CodeBlock& mem, std::size_t size) {
 #endif
 
 bool ExceptionHandler::SupportsFastmem() const noexcept {
-    return static_cast<bool>(impl) && sig_handler.SupportsFastmem();
+    return static_cast<bool>(impl) && sig_handler->SupportsFastmem();
 }
 
 void ExceptionHandler::SetFastmemCallback(std::function<FakeCall(u64)> cb) {
