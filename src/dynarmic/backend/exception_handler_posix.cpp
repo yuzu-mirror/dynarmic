@@ -10,7 +10,9 @@
 #    include <sys/ucontext.h>
 #else
 #    include <signal.h>
-#    include <ucontext.h>
+#    ifndef __OpenBSD__
+#        include <ucontext.h>
+#    endif
 #endif
 
 #include <cstring>
@@ -130,7 +132,10 @@ void SigHandler::RemoveCodeBlock(u64 host_pc) {
 void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
     ASSERT(sig == SIGSEGV || sig == SIGBUS);
 
-    auto& mctx = ((ucontext_t*)raw_context)->uc_mcontext;
+    ucontext_t* ucontext = reinterpret_cast<ucontext_t*>(raw_context);
+#ifndef __OpenBSD__
+    auto& mctx = ucontext->uc_mcontext;
+#endif
 
 #if defined(MCL_ARCHITECTURE_X86_64)
 
@@ -143,6 +148,12 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 #    elif defined(__FreeBSD__)
 #        define CTX_RIP (mctx.mc_rip)
 #        define CTX_RSP (mctx.mc_rsp)
+#    elif defined(__NetBSD__)
+#        define CTX_RIP (mctx.__gregs[_REG_RIP])
+#        define CTX_RSP (mctx.__gregs[_REG_RSP])
+#    elif defined(__OpenBSD__)
+#        define CTX_RIP (ucontext->sc_rip)
+#        define CTX_RSP (ucontext->sc_rsp)
 #    else
 #        error "Unknown platform"
 #    endif
@@ -192,6 +203,18 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 #        define CTX_LR (mctx.mc_gpregs.gp_lr)
 #        define CTX_X(i) (mctx.mc_gpregs.gp_x[i])
 #        define CTX_Q(i) (mctx.mc_fpregs.fp_q[i])
+#    elif defined(__NetBSD__)
+#        define CTX_PC (mctx.mc_gpregs.gp_elr)
+#        define CTX_SP (mctx.mc_gpregs.gp_sp)
+#        define CTX_LR (mctx.mc_gpregs.gp_lr)
+#        define CTX_X(i) (mctx.mc_gpregs.gp_x[i])
+#        define CTX_Q(i) (mctx.mc_fpregs.fp_q[i])
+#    elif defined(__OpenBSD__)
+#        define CTX_PC (ucontext->sc_elr)
+#        define CTX_SP (ucontext->sc_sp)
+#        define CTX_LR (ucontext->sc_lr)
+#        define CTX_X(i) (ucontext->sc_x[i])
+#        define CTX_Q(i) (ucontext->sc_q[i])
 #    else
 #        error "Unknown platform"
 #    endif
