@@ -65,6 +65,12 @@ struct UserCallbacks : public TranslateCallbacks {
     // Memory must be interpreted as little endian.
     std::optional<std::uint32_t> MemoryReadCode(VAddr vaddr) override { return MemoryRead32(vaddr); }
 
+    // This function is called before the instruction at pc is read.
+    // IR code can be emitted by the callee prior to instruction handling.
+    // By returning true the callee precludes the translation of the instruction;
+    // in such case the callee is responsible for setting the terminal.
+    bool PreCodeReadHook(bool /*is_thumb*/, VAddr /*pc*/, A32::IREmitter& /*ir*/) override { return true; }
+
     // Thus function is called before the instruction at pc is interpreted.
     // IR code can be emitted by the callee prior to translation of the instruction.
     void PreCodeTranslationHook(bool /*is_thumb*/, VAddr /*pc*/, A32::IREmitter& /*ir*/) override {}

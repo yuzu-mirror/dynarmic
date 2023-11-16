@@ -18,7 +18,13 @@ struct TranslateCallbacks {
     // Memory must be interpreted as little endian.
     virtual std::optional<std::uint32_t> MemoryReadCode(VAddr vaddr) = 0;
 
-    // Thus function is called before the instruction at pc is interpreted.
+    // This function is called before the instruction at pc is read.
+    // IR code can be emitted by the callee prior to instruction handling.
+    // By returning false the callee precludes the translation of the instruction;
+    // in such case the callee is responsible for setting the terminal.
+    virtual bool PreCodeReadHook(bool is_thumb, VAddr pc, A32::IREmitter& ir) = 0;
+
+    // This function is called before the instruction at pc is interpreted.
     // IR code can be emitted by the callee prior to translation of the instruction.
     virtual void PreCodeTranslationHook(bool is_thumb, VAddr pc, A32::IREmitter& ir) = 0;
 

@@ -111,6 +111,11 @@ IR::Block TranslateThumb(LocationDescriptor descriptor, TranslateCallbacks* tcb,
         const u32 arm_pc = visitor.ir.current_location.PC();
         u64 ticks_for_instruction = 1;
 
+        if (!tcb->PreCodeReadHook(true, arm_pc, visitor.ir)) {
+            should_continue = false;
+            break;
+        }
+
         if (const auto maybe_instruction = ReadThumbInstruction(arm_pc, tcb)) {
             const auto [thumb_instruction, inst_size] = *maybe_instruction;
             const bool is_thumb_16 = inst_size == ThumbInstSize::Thumb16;

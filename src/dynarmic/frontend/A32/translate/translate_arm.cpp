@@ -30,6 +30,11 @@ IR::Block TranslateArm(LocationDescriptor descriptor, TranslateCallbacks* tcb, c
         const u32 arm_pc = visitor.ir.current_location.PC();
         u64 ticks_for_instruction = 1;
 
+        if (!tcb->PreCodeReadHook(false, arm_pc, visitor.ir)) {
+            should_continue = false;
+            break;
+        }
+
         if (const auto arm_instruction = tcb->MemoryReadCode(arm_pc)) {
             visitor.current_instruction_size = 4;
 
