@@ -1149,8 +1149,13 @@ void EmitX64::EmitVectorDeinterleaveEvenLower32(EmitContext& ctx, IR::Inst* inst
     const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
 
-    code.unpcklps(lhs, rhs);
-    code.movq(lhs, lhs);
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        // copy bytes 0:3 of rhs to lhs, zero out upper 8 bytes
+        code.insertps(lhs, rhs, 0b00011100);
+    } else {
+        code.unpcklps(lhs, rhs);
+        code.movq(lhs, lhs);
+    }
 
     ctx.reg_alloc.DefineValue(inst, lhs);
 }
@@ -1229,15 +1234,26 @@ void EmitX64::EmitVectorDeinterleaveOddLower16(EmitContext& ctx, IR::Inst* inst)
 
 void EmitX64::EmitVectorDeinterleaveOddLower32(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
-    const Xbyak::Xmm zero = ctx.reg_alloc.ScratchXmm();
 
-    code.xorps(zero, zero);
-    code.unpcklps(lhs, rhs);
-    code.unpckhpd(lhs, zero);
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        const Xbyak::Xmm lhs = ctx.reg_alloc.UseXmm(args[0]);
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
 
-    ctx.reg_alloc.DefineValue(inst, lhs);
+        // copy bytes 4:7 of lhs to bytes 0:3 of rhs, zero out upper 8 bytes
+        code.insertps(rhs, lhs, 0b01001100);
+
+        ctx.reg_alloc.DefineValue(inst, rhs);
+    } else {
+        const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
+        const Xbyak::Xmm zero = ctx.reg_alloc.ScratchXmm();
+
+        code.xorps(zero, zero);
+        code.unpcklps(lhs, rhs);
+        code.unpckhpd(lhs, zero);
+
+        ctx.reg_alloc.DefineValue(inst, lhs);
+    }
 }
 
 void EmitX64::EmitVectorEor(EmitContext& ctx, IR::Inst* inst) {
