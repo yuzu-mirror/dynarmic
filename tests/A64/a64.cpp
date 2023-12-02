@@ -1518,3 +1518,26 @@ TEST_CASE("A64: rand2", "[a64][.]") {
     REQUIRE(jit.GetVector(30) == Vector{0x0000000000000000, 0x8080808080808080});
     REQUIRE(jit.GetVector(31) == Vector{0xb3b2b3b200000000, 0x0000000000000000});
 }
+
+TEST_CASE("A64: UZP{1,2}.S", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x0e811802);  // UZP1 V2.2S, V0.2S, V1.2S
+    env.code_mem.emplace_back(0x0e815803);  // UZP2 V3.2S, V0.2S, V1.2S
+    env.code_mem.emplace_back(0x4e811804);  // UZP1 V4.4S, V0.4S, V1.4S
+    env.code_mem.emplace_back(0x4e815805);  // UZP2 V5.4S, V0.4S, V1.4S
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetVector(0, {0x76543210'0BADC0DE, 0x6789ABCD'34564567});
+    jit.SetVector(1, {0xF3F2F1F0'44332211, 0x43424140'0F1E2D3C});
+
+    env.ticks_left = 5;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(2) == Vector{0x44332211'0BADC0DE, 0});
+    REQUIRE(jit.GetVector(3) == Vector{0xF3F2F1F0'76543210, 0});
+    REQUIRE(jit.GetVector(4) == Vector{0x34564567'0BADC0DE, 0x0F1E2D3C'44332211});
+    REQUIRE(jit.GetVector(5) == Vector{0x6789ABCD'76543210, 0x43424140'F3F2F1F0});
+}
