@@ -1129,17 +1129,25 @@ void EmitX64::EmitVectorDeinterleaveEvenLower8(EmitContext& ctx, IR::Inst* inst)
 void EmitX64::EmitVectorDeinterleaveEvenLower16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
 
-    code.pslld(lhs, 16);
-    code.psrad(lhs, 16);
+    if (code.HasHostFeature(HostFeature::SSSE3)) {
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
 
-    code.pslld(rhs, 16);
-    code.psrad(rhs, 16);
+        code.punpcklwd(lhs, rhs);
+        code.pshufb(lhs, code.MConst(xword, 0x0B0A'0302'0908'0100, 0x8080'8080'8080'8080));
+    } else {
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
 
-    code.packssdw(lhs, rhs);
-    code.pshufd(lhs, lhs, 0b11011000);
-    code.movq(lhs, lhs);
+        code.pslld(lhs, 16);
+        code.psrad(lhs, 16);
+
+        code.pslld(rhs, 16);
+        code.psrad(rhs, 16);
+
+        code.packssdw(lhs, rhs);
+        code.pshufd(lhs, lhs, 0b11011000);
+        code.movq(lhs, lhs);
+    }
 
     ctx.reg_alloc.DefineValue(inst, lhs);
 }
@@ -1221,13 +1229,21 @@ void EmitX64::EmitVectorDeinterleaveOddLower8(EmitContext& ctx, IR::Inst* inst) 
 void EmitX64::EmitVectorDeinterleaveOddLower16(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
 
-    code.psrad(lhs, 16);
-    code.psrad(rhs, 16);
-    code.packssdw(lhs, rhs);
-    code.pshufd(lhs, lhs, 0b11011000);
-    code.movq(lhs, lhs);
+    if (code.HasHostFeature(HostFeature::SSSE3)) {
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
+
+        code.punpcklwd(lhs, rhs);
+        code.pshufb(lhs, code.MConst(xword, 0x0F0E'0706'0D0C'0504, 0x8080'8080'8080'8080));
+    } else {
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
+
+        code.psrad(lhs, 16);
+        code.psrad(rhs, 16);
+        code.packssdw(lhs, rhs);
+        code.pshufd(lhs, lhs, 0b11011000);
+        code.movq(lhs, lhs);
+    }
 
     ctx.reg_alloc.DefineValue(inst, lhs);
 }
