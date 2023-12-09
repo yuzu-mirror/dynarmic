@@ -1079,13 +1079,22 @@ void EmitX64::EmitVectorDeinterleaveEven16(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
 
-    code.pslld(lhs, 16);
-    code.psrad(lhs, 16);
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        const Xbyak::Xmm zero = ctx.reg_alloc.ScratchXmm();
+        code.pxor(zero, zero);
 
-    code.pslld(rhs, 16);
-    code.psrad(rhs, 16);
+        code.pblendw(lhs, zero, 0b10101010);
+        code.pblendw(rhs, zero, 0b10101010);
+        code.packusdw(lhs, rhs);
+    } else {
+        code.pslld(lhs, 16);
+        code.psrad(lhs, 16);
 
-    code.packssdw(lhs, rhs);
+        code.pslld(rhs, 16);
+        code.psrad(rhs, 16);
+
+        code.packssdw(lhs, rhs);
+    }
 
     ctx.reg_alloc.DefineValue(inst, lhs);
 }
