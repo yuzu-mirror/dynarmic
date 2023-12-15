@@ -1519,6 +1519,25 @@ TEST_CASE("A64: rand2", "[a64][.]") {
     REQUIRE(jit.GetVector(31) == Vector{0xb3b2b3b200000000, 0x0000000000000000});
 }
 
+TEST_CASE("A64: UZP{1,2}.2D", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x4ec11802);  // UZP1 V2.2D, V0.2D, V1.2D
+    env.code_mem.emplace_back(0x4ec15803);  // UZP2 V3.2D, V0.2D, V1.2D
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetVector(0, {0xF0F1F2F3F4F5F6F7, 0xE0E1E2E2E4E5E6E7});
+    jit.SetVector(1, {0xA0A1A2A3A4A5A6A7, 0xB0B1B2B3B4B5B6B7});
+
+    env.ticks_left = 3;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(2) == Vector{0xF0F1F2F3F4F5F6F7, 0xA0A1A2A3A4A5A6A7});
+    REQUIRE(jit.GetVector(3) == Vector{0xE0E1E2E2E4E5E6E7, 0xB0B1B2B3B4B5B6B7});
+}
+
 TEST_CASE("A64: UZP{1,2}.S", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
@@ -1530,16 +1549,16 @@ TEST_CASE("A64: UZP{1,2}.S", "[a64]") {
     env.code_mem.emplace_back(0x14000000);  // B .
 
     jit.SetPC(0);
-    jit.SetVector(0, {0x76543210'0BADC0DE, 0x6789ABCD'34564567});
-    jit.SetVector(1, {0xF3F2F1F0'44332211, 0x43424140'0F1E2D3C});
+    jit.SetVector(0, {0xF4F5F6F7'F0F1F2F3, 0xE4E5E6E7'E0E1E2E3});
+    jit.SetVector(1, {0xA4A5A6A7'A0A1A2A3, 0xB4B5B6B7'B0B1B2B3});
 
     env.ticks_left = 5;
     jit.Run();
 
-    REQUIRE(jit.GetVector(2) == Vector{0x44332211'0BADC0DE, 0});
-    REQUIRE(jit.GetVector(3) == Vector{0xF3F2F1F0'76543210, 0});
-    REQUIRE(jit.GetVector(4) == Vector{0x34564567'0BADC0DE, 0x0F1E2D3C'44332211});
-    REQUIRE(jit.GetVector(5) == Vector{0x6789ABCD'76543210, 0x43424140'F3F2F1F0});
+    REQUIRE(jit.GetVector(2) == Vector{0xA0A1A2A3'F0F1F2F3, 0});
+    REQUIRE(jit.GetVector(3) == Vector{0xA4A5A6A7'F4F5F6F7, 0});
+    REQUIRE(jit.GetVector(4) == Vector{0xE0E1E2E3'F0F1F2F3, 0xB0B1B2B3'A0A1A2A3});
+    REQUIRE(jit.GetVector(5) == Vector{0xE4E5E6E7'F4F5F6F7, 0xB4B5B6B7'A4A5A6A7});
 }
 
 TEST_CASE("A64: UZP{1,2}.H", "[a64]") {
@@ -1563,4 +1582,27 @@ TEST_CASE("A64: UZP{1,2}.H", "[a64]") {
     REQUIRE(jit.GetVector(3) == Vector{0xA6A7'A2A3'F6F7'F2F3, 0});
     REQUIRE(jit.GetVector(4) == Vector{0xE4E5'E0E1'F4F5'F0F1, 0xB4B5'B0B1'A4A5'A0A1});
     REQUIRE(jit.GetVector(5) == Vector{0xE6E7'E2E3'F6F7'F2F3, 0xB6B7'B2B3'A6A7'A2A3});
+}
+
+TEST_CASE("A64: UZP{1,2}.B", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x0e011802);  // UZP1 V2.8B, V0.8B, V1.8B
+    env.code_mem.emplace_back(0x0e015803);  // UZP2 V3.8B, V0.8B, V1.8B
+    env.code_mem.emplace_back(0x4e011804);  // UZP1 V4.16B, V0.16B, V1.16B
+    env.code_mem.emplace_back(0x4e015805);  // UZP2 V5.16B, V0.16B, V1.16B
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetVector(0, {0xF7'F6'F5'F4'F3'F2'F1'F0, 0xE7'E6'E5'E4'E3'E2'E1'E0});
+    jit.SetVector(1, {0xA7'A6'A5'A4'A3'A2'A1'A0, 0xB7'B6'B5'B4'B3'B2'B1'B0});
+
+    env.ticks_left = 5;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(2) == Vector{0xA6'A4'A2'A0'F6'F4'F2'F0, 0});
+    REQUIRE(jit.GetVector(3) == Vector{0xA7'A5'A3'A1'F7'F5'F3'F1, 0});
+    REQUIRE(jit.GetVector(4) == Vector{0xE6'E4'E2'E0'F6'F4'F2'F0, 0xB6'B4'B2'B0'A6'A4'A2'A0});
+    REQUIRE(jit.GetVector(5) == Vector{0xE7'E5'E3'E1'F7'F5'F3'F1, 0xB7'B5'B3'B1'A7'A5'A3'A1});
 }
