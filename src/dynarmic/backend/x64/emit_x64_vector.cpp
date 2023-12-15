@@ -1122,15 +1122,23 @@ void EmitX64::EmitVectorDeinterleaveEven64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorDeinterleaveEvenLower8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
-    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
-    code.movdqa(tmp, code.MConst(xword, 0x00FF00FF00FF00FF, 0x00FF00FF00FF00FF));
-    code.pand(lhs, tmp);
-    code.pand(rhs, tmp);
-    code.packuswb(lhs, rhs);
-    code.pshufd(lhs, lhs, 0b11011000);
-    code.movq(lhs, lhs);
+    if (code.HasHostFeature(HostFeature::SSSE3)) {
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
+
+        code.punpcklbw(lhs, rhs);
+        code.pshufb(lhs, code.MConst(xword, 0x0D'09'05'01'0C'08'04'00, 0x8080808080808080));
+    } else {
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
+
+        code.movdqa(tmp, code.MConst(xword, 0x00FF00FF00FF00FF, 0x00FF00FF00FF00FF));
+        code.pand(lhs, tmp);
+        code.pand(rhs, tmp);
+        code.packuswb(lhs, rhs);
+        code.pshufd(lhs, lhs, 0b11011000);
+        code.movq(lhs, lhs);
+    }
 
     ctx.reg_alloc.DefineValue(inst, lhs);
 }
@@ -1224,13 +1232,21 @@ void EmitX64::EmitVectorDeinterleaveOdd64(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorDeinterleaveOddLower8(EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm lhs = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
 
-    code.psraw(lhs, 8);
-    code.psraw(rhs, 8);
-    code.packsswb(lhs, rhs);
-    code.pshufd(lhs, lhs, 0b11011000);
-    code.movq(lhs, lhs);
+    if (code.HasHostFeature(HostFeature::SSSE3)) {
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseXmm(args[1]);
+
+        code.punpcklbw(lhs, rhs);
+        code.pshufb(lhs, code.MConst(xword, 0x0F'0B'07'03'0E'0A'06'02, 0x8080808080808080));
+    } else {
+        const Xbyak::Xmm rhs = ctx.reg_alloc.UseScratchXmm(args[1]);
+
+        code.psraw(lhs, 8);
+        code.psraw(rhs, 8);
+        code.packsswb(lhs, rhs);
+        code.pshufd(lhs, lhs, 0b11011000);
+        code.movq(lhs, lhs);
+    }
 
     ctx.reg_alloc.DefineValue(inst, lhs);
 }
