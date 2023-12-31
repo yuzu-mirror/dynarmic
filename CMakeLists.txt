@@ -130,6 +130,7 @@ message(STATUS "Target architecture: ${ARCHITECTURE}")
 # Forced use of individual bundled libraries for non-REQUIRED library is possible with e.g. cmake -DCMAKE_DISABLE_FIND_PACKAGE_fmt=ON ...
 
 if (DYNARMIC_USE_BUNDLED_EXTERNALS)
+    set(CMAKE_DISABLE_FIND_PACKAGE_biscuit ON)
     set(CMAKE_DISABLE_FIND_PACKAGE_Catch2 ON)
     set(CMAKE_DISABLE_FIND_PACKAGE_fmt ON)
     set(CMAKE_DISABLE_FIND_PACKAGE_mcl ON)
@@ -146,6 +147,10 @@ find_package(tsl-robin-map CONFIG)
 
 if ("arm64" IN_LIST ARCHITECTURE OR DYNARMIC_TESTS)
     find_package(oaknut 2.0.1 CONFIG)
+endif()
+
+if ("riscv" IN_LIST ARCHITECTURE)
+    find_package(biscuit 0.9.1 QUIET)
 endif()
 
 if ("x86_64" IN_LIST ARCHITECTURE)

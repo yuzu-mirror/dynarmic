@@ -400,6 +400,8 @@ if ("arm64" IN_LIST ARCHITECTURE)
 endif()
 
 if ("riscv" IN_LIST ARCHITECTURE)
+    target_link_libraries(dynarmic PRIVATE biscuit::biscuit)
+
     if ("A32" IN_LIST DYNARMIC_FRONTENDS)
         target_sources(dynarmic PRIVATE
             backend/riscv64/a32_address_space.cpp
@@ -408,7 +410,6 @@ if ("riscv" IN_LIST ARCHITECTURE)
             backend/riscv64/a32_interface.cpp
             backend/riscv64/a32_jitstate.cpp
             backend/riscv64/a32_jitstate.h
-            backend/riscv64/dummy_code_block.h
         )
     endif()
 

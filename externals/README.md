@@ -3,6 +3,7 @@ This repository uses subtrees to manage some of its externals.
 ## Initial setup
 
 ```
+git remote add externals-biscuit https://github.com/lioncash/biscuit.git --no-tags
 git remote add externals-catch https://github.com/catchorg/Catch2.git --no-tags
 git remote add externals-fmt https://github.com/fmtlib/fmt.git --no-tags
 git remote add externals-mcl https://github.com/merryhime/mcl.git --no-tags
@@ -18,6 +19,7 @@ git remote add externals-zydis https://github.com/zyantific/zydis.git --no-tags
 Change `<ref>` to refer to the appropriate git reference.
 
 ```
+git fetch externals-biscuit
 git fetch externals-catch
 git fetch externals-fmt
 git fetch externals-mcl
@@ -26,6 +28,7 @@ git fetch externals-robin-map
 git fetch externals-xbyak
 git fetch externals-zycore
 git fetch externals-zydis
+git subtree pull --squash --prefix=externals/biscuit externals-biscuit <ref>
 git subtree pull --squash --prefix=externals/catch externals-catch <ref>
 git subtree pull --squash --prefix=externals/fmt externals-fmt <ref>
 git subtree pull --squash --prefix=externals/mcl externals-mcl <ref>

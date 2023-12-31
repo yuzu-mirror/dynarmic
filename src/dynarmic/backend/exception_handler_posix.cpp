@@ -33,7 +33,7 @@
 
 #    include "dynarmic/backend/arm64/abi.h"
 #elif defined(MCL_ARCHITECTURE_RISCV)
-#    include "dynarmic/backend/riscv64/dummy_code_block.h"
+#    include "dynarmic/backend/riscv64/code_block.h"
 #else
 #    error "Invalid architecture"
 #endif
@@ -313,7 +313,7 @@ void ExceptionHandler::Register(oaknut::CodeBlock& mem, std::size_t size) {
     impl = std::make_unique<Impl>(code_begin, code_end);
 }
 #elif defined(MCL_ARCHITECTURE_RISCV)
-void ExceptionHandler::Register(RV64::DummyCodeBlock& mem, std::size_t size) {
+void ExceptionHandler::Register(RV64::CodeBlock& mem, std::size_t size) {
     const u64 code_begin = mcl::bit_cast<u64>(mem.ptr());
     const u64 code_end = code_begin + size;
     impl = std::make_unique<Impl>(code_begin, code_end);

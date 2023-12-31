@@ -22,7 +22,7 @@ void ExceptionHandler::Register(oaknut::CodeBlock&, std::size_t) {
     // Do nothing
 }
 #elif defined(MCL_ARCHITECTURE_RISCV)
-void ExceptionHandler::Register(RV64::DummyCodeBlock&, std::size_t) {
+void ExceptionHandler::Register(RV64::CodeBlock&, std::size_t) {
     // Do nothing
 }
 #else

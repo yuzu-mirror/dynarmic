@@ -15,6 +15,14 @@ set(BUILD_TESTING OFF)
 # simply add the directory to that file as a subdirectory
 # to have CMake automatically recognize them.
 
+# biscuit
+
+if (NOT TARGET biscuit::biscuit)
+    if ("riscv" IN_LIST ARCHITECTURE)
+        add_subdirectory(biscuit)
+    endif()
+endif()
+
 # catch
 
 if (NOT TARGET Catch2::Catch2WithMain)

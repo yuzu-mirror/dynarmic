@@ -22,7 +22,7 @@ class CodeBlock;
 }  // namespace oaknut
 #elif defined(MCL_ARCHITECTURE_RISCV)
 namespace Dynarmic::Backend::RV64 {
-class DummyCodeBlock;
+class CodeBlock;
 }  // namespace Dynarmic::Backend::RV64
 #else
 #    error "Invalid architecture"
@@ -56,7 +56,7 @@ public:
 #elif defined(MCL_ARCHITECTURE_ARM64)
     void Register(oaknut::CodeBlock& mem, std::size_t mem_size);
 #elif defined(MCL_ARCHITECTURE_RISCV)
-    void Register(RV64::DummyCodeBlock& mem, std::size_t mem_size);
+    void Register(RV64::CodeBlock& mem, std::size_t mem_size);
 #else
 #    error "Invalid architecture"
 #endif
