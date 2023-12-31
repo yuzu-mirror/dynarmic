@@ -23,6 +23,7 @@
 :test-result: PASS #1954 - 7 arg template test case sig compiles - 5, 3, 1, 1, 1, 0, 0
 :test-result: PASS #2152 - ULP checks between differently signed values were wrong - double
 :test-result: PASS #2152 - ULP checks between differently signed values were wrong - float
+:test-result: XFAIL #2615 - Throwing in constructor generator fails test case but does not abort
 :test-result: XFAIL #748 - captures with unexpected exceptions
 :test-result: PASS #809
 :test-result: PASS #833
@@ -127,8 +128,8 @@
 :test-result: FAIL Custom std-exceptions can be custom translated
 :test-result: PASS Default scale is invisible to comparison
 :test-result: PASS Directly creating an EnumInfo
+:test-result: SKIP Empty generators can SKIP in constructor
 :test-result: PASS Empty stream name opens cout stream
-:test-result: PASS Empty tag is not allowed
 :test-result: FAIL EndsWith string matcher
 :test-result: PASS Enums can quickly have stringification enabled using REGISTER_ENUM
 :test-result: PASS Enums in namespaces can quickly have stringification enabled using REGISTER_ENUM
@@ -140,6 +141,7 @@
 :test-result: PASS Exception as a value (e.g. in REQUIRE_THROWS_MATCHES) can be stringified
 :test-result: FAIL Exception matchers that fail
 :test-result: PASS Exception matchers that succeed
+:test-result: PASS Exception message can be matched
 :test-result: PASS Exception messages can be tested for
 :test-result: PASS Exceptions matchers
 :test-result: FAIL Expected exceptions that don't throw or unexpected exceptions fail the test
@@ -147,8 +149,10 @@
 :test-result: FAIL FAIL does not require an argument
 :test-result: FAIL FAIL_CHECK does not abort the test
 :test-result: PASS Factorials are computed
+:test-result: PASS Filter generator throws exception for empty generator
 :test-result: PASS Floating point matchers: double
 :test-result: PASS Floating point matchers: float
+:test-result: PASS GENERATE can combine literals and generators
 :test-result: PASS Generators -- adapters
 :test-result: PASS Generators -- simple
 :test-result: PASS Generators internals
@@ -157,12 +161,16 @@
 :test-result: PASS Hashers with same seed produce same hash
 :test-result: PASS Hashing different test cases produces different result
 :test-result: PASS Hashing test case produces same hash across multiple calls
+:test-result: FAIL INFO and UNSCOPED_INFO can stream multiple arguments
 :test-result: FAIL INFO and WARN do not abort tests
 :test-result: FAIL INFO gets logged on failure
 :test-result: FAIL INFO gets logged on failure, even if captured before successful assertions
 :test-result: FAIL INFO is reset for each loop
+:test-result: XFAIL Incomplete AssertionHandler
 :test-result: XFAIL Inequality checks that should fail
 :test-result: PASS Inequality checks that should succeed
+:test-result: PASS JsonWriter
+:test-result: PASS JsonWriter escapes charaters in strings properly
 :test-result: PASS Lambdas in assertions
 :test-result: PASS Less-than inequalities with different epsilons
 :test-result: PASS ManuallyRegistered
@@ -255,12 +263,15 @@
 :test-result: PASS Testing checked-if
 :test-result: XFAIL Testing checked-if 2
 :test-result: XFAIL Testing checked-if 3
+:test-result: XFAIL Testing checked-if 4
+:test-result: XFAIL Testing checked-if 5
 :test-result: FAIL The NO_FAIL macro reports a failure but does not fail the test
 :test-result: PASS The default listing implementation write to provided stream
 :test-result: FAIL This test 'should' fail but doesn't
 :test-result: FAIL Thrown string literals are translated
 :test-result: PASS Tracker
 :test-result: PASS Trim strings
+:test-result: PASS Type conversions of RangeEquals and similar
 :test-result: FAIL Unexpected exceptions can be translated
 :test-result: PASS Upcasting special member functions
 :test-result: PASS Usage of AllMatch range matcher
@@ -269,6 +280,8 @@
 :test-result: PASS Usage of AnyTrue range matcher
 :test-result: PASS Usage of NoneMatch range matcher
 :test-result: PASS Usage of NoneTrue range matcher
+:test-result: PASS Usage of RangeEquals range matcher
+:test-result: PASS Usage of UnorderedRangeEquals range matcher
 :test-result: PASS Usage of the SizeIs range matcher
 :test-result: PASS Use a custom approx
 :test-result: PASS Variadic macros
@@ -289,6 +302,7 @@
 :test-result: PASS X/level/1/b
 :test-result: PASS XmlEncode
 :test-result: PASS XmlWriter writes boolean attributes as true/false
+:test-result: SKIP a succeeding test can still be skipped
 :test-result: PASS analyse no analysis
 :test-result: PASS array<int, N> -> toString
 :test-result: PASS benchmark function call
@@ -301,10 +315,14 @@
 :test-result: PASS comparisons between const int variables
 :test-result: PASS comparisons between int variables
 :test-result: PASS convertToBits
+:test-result: SKIP dynamic skipping works with generators
 :test-result: PASS empty tags are not allowed
 :test-result: PASS erfc_inv
 :test-result: PASS estimate_clock_resolution
 :test-result: PASS even more nested SECTION tests
+:test-result: XFAIL failed assertions before SKIP cause test case to fail
+:test-result: XFAIL failing for some generator values causes entire test case to fail
+:test-result: XFAIL failing in some unskipped sections causes entire test case to fail
 :test-result: FAIL first tag
 :test-result: FAIL has printf
 :test-result: PASS is_unary_function
@@ -322,6 +340,7 @@
 :test-result: FAIL mix info, unscoped info and warning
 :test-result: FAIL more nested SECTION tests
 :test-result: PASS nested SECTION tests
+:test-result: FAIL nested sections can be skipped dynamically at runtime
 :test-result: PASS non streamable - with conv. op
 :test-result: PASS non-copyable objects
 :test-result: PASS normal_cdf
@@ -343,9 +362,11 @@
 :test-result: PASS run_for_at_least, chronometer
 :test-result: PASS run_for_at_least, int
 :test-result: FAIL second tag
+:test-result: SKIP sections can be skipped dynamically at runtime
 :test-result: FAIL send a single char to INFO
 :test-result: FAIL sends information to INFO
 :test-result: PASS shortened hide tags are split apart
+:test-result: SKIP skipped tests can optionally provide a reason
 :test-result: PASS splitString
 :test-result: FAIL stacks unscoped info in loops
 :test-result: PASS startsWith
@@ -367,6 +388,7 @@
 :test-result: PASS strlen3
 :test-result: PASS tables
 :test-result: PASS tags with dots in later positions are not parsed as hidden
+:test-result: SKIP tests can be skipped dynamically at runtime
 :test-result: FAIL thrown std::strings are translated
 :test-result: PASS toString on const wchar_t const pointer returns the string contents
 :test-result: PASS toString on const wchar_t pointer returns the string contents
@@ -382,6 +404,7 @@
 :test-result: PASS tuple<string,string>
 :test-result: PASS tuple<tuple<int>,tuple<>,float>
 :test-result: PASS uniform samples
+:test-result: PASS uniform_integer_distribution can return the bounds
 :test-result: PASS unique_ptr reimplementation: basic functionality
 :test-result: PASS vec<vec<string,alloc>> -> toString
 :test-result: PASS vector<bool> -> toString

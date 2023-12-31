@@ -77,6 +77,8 @@ endif(MSVC) #Temporary workaround
 # Please keep these ordered alphabetically
 set(TEST_SOURCES
         ${SELF_TEST_DIR}/TestRegistrations.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/Algorithms.tests.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/AssertionHandler.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/Clara.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/CmdLine.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/CmdLineHelpers.tests.cpp
@@ -84,7 +86,9 @@ set(TEST_SOURCES
         ${SELF_TEST_DIR}/IntrospectiveTests/Details.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/FloatingPoint.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/GeneratorsImpl.tests.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/Integer.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/InternalBenchmark.tests.cpp
+        ${SELF_TEST_DIR}/IntrospectiveTests/Json.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/Parse.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/PartTracker.tests.cpp
         ${SELF_TEST_DIR}/IntrospectiveTests/RandomNumberGeneration.tests.cpp
@@ -116,6 +120,7 @@ set(TEST_SOURCES
         ${SELF_TEST_DIR}/UsageTests/Generators.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/Message.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/Misc.tests.cpp
+        ${SELF_TEST_DIR}/UsageTests/Skip.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringByte.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringChrono.tests.cpp
         ${SELF_TEST_DIR}/UsageTests/ToStringGeneral.tests.cpp
@@ -133,6 +138,7 @@ set(TEST_SOURCES
 
 set(TEST_HEADERS
   ${SELF_TEST_DIR}/helpers/parse_test_spec.hpp
+  ${SELF_TEST_DIR}/helpers/range_test_helpers.hpp
   ${SELF_TEST_DIR}/helpers/type_with_lit_0_comparisons.hpp
 )
 
@@ -270,6 +276,10 @@ set_tests_properties(TestSpecs::NoMatchedTestsFail
 )
 add_test(NAME TestSpecs::OverrideFailureWithNoMatchedTests
   COMMAND $<TARGET_FILE:SelfTest> "___nonexistent_test___" --allow-running-no-tests
+)
+
+add_test(NAME TestSpecs::OverrideAllSkipFailure
+  COMMAND $<TARGET_FILE:SelfTest> "tests can be skipped dynamically at runtime" --allow-running-no-tests
 )
 
 add_test(NAME TestSpecs::NonMatchingTestSpecIsRoundTrippable
@@ -615,6 +625,18 @@ if (CATCH_ENABLE_CONFIGURE_TESTS)
     endforeach()
 endif()
 
+if (CATCH_ENABLE_CMAKE_HELPER_TESTS)
+    add_test(NAME "CMakeHelper::DiscoverTests"
+      COMMAND
+        "${PYTHON_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/TestScripts/DiscoverTests/VerifyRegistration.py" "${CATCH_DIR}" "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+    set_tests_properties("CMakeHelper::DiscoverTests"
+      PROPERTIES
+        COST 240
+        LABELS "uses-python"
+    )
+endif()
+
 foreach (reporterName # "Automake" - the simple .trs format does not support any kind of comments/metadata
                       "compact"
                       "console"
@@ -622,7 +644,8 @@ foreach (reporterName # "Automake" - the simple .trs format does not support any
                       "SonarQube"
                       "TAP"
                       # "TeamCity" - does not seem to support test suite-level metadata/comments
-                      "XML")
+                      "XML"
+                      "JSON")
 
     add_test(NAME "Reporters:Filters:${reporterName}"
       COMMAND
@@ -632,6 +655,8 @@ foreach (reporterName # "Automake" - the simple .trs format does not support any
     # Different regex for these two reporters, because the commas end up xml-escaped
     if (reporterName MATCHES "JUnit|XML")
       set(testCaseNameFormat "&quot;CaseInsensitiveLess is case insensitive&quot;")
+    elseif(reporterName MATCHES "JSON")
+      set(testCaseNameFormat "\\\\\"CaseInsensitiveLess is case insensitive\\\\\"")
     else()
       set(testCaseNameFormat "\"CaseInsensitiveLess is case insensitive\"")
     endif()
