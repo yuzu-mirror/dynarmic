@@ -410,6 +410,9 @@ if ("riscv" IN_LIST ARCHITECTURE)
             backend/riscv64/a32_interface.cpp
             backend/riscv64/a32_jitstate.cpp
             backend/riscv64/a32_jitstate.h
+            backend/riscv64/code_block.h
+            backend/riscv64/emit_riscv64.cpp
+            backend/riscv64/emit_riscv64.h
         )
     endif()
 

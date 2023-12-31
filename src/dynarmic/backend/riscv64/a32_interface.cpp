@@ -122,7 +122,7 @@ struct Jit::Impl final {
 
 private:
     void RequestCacheInvalidation() {
-        ASSERT_FALSE("Unimplemented");
+        // ASSERT_FALSE("Unimplemented");
 
         invalidate_entire_cache = false;
         invalid_cache_ranges.clear();

@@ -8,7 +8,6 @@
 #include <cstdint>
 #include <new>
 
-#include <biscuit/assembler.hpp>
 #include <sys/mman.h>
 
 namespace Dynarmic::Backend::RV64 {
@@ -17,7 +16,7 @@ class CodeBlock {
 public:
     explicit CodeBlock(std::size_t size)
             : memsize(size) {
-        mem = (std::uint32_t*)mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE, -1, 0);
+        mem = (std::uint8_t*)mmap(nullptr, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANON | MAP_PRIVATE, -1, 0);
 
         if (mem == nullptr)
             throw std::bad_alloc{};
@@ -30,13 +29,12 @@ public:
         munmap(mem, memsize);
     }
 
-    std::uint32_t* ptr() const {
+    std::uint8_t* ptr() const {
         return mem;
     }
 
 protected:
-    std::uint32_t* mem;
+    std::uint8_t* mem;
     std::size_t memsize = 0;
-    biscuit::Assembler as;
 };
 }  // namespace Dynarmic::Backend::RV64

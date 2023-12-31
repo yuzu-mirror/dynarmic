@@ -60,6 +60,10 @@ if (DYNARMIC_TESTS_USE_UNICORN)
     endif()
 endif()
 
+if ("riscv" IN_LIST ARCHITECTURE)
+    target_link_libraries(dynarmic_tests PRIVATE biscuit::biscuit)
+endif()
+
 if ("x86_64" IN_LIST ARCHITECTURE)
     target_link_libraries(dynarmic_tests PRIVATE xbyak::xbyak)
 
