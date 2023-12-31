@@ -88,8 +88,8 @@ because only one thread passes the `REQUIRE` macro and this is not
     REQUIRE(cnt == 16);
 ```
 
-Because C++11 provides the necessary tools to do this, we are planning
-to remove this limitation in the future.
+We currently do not plan to support thread-safe assertions.
+
 
 ### Process isolation in a test
 Catch does not support running tests in isolated (forked) processes. While this might in the future, the fact that Windows does not support forking and only allows full-on process creation and the desire to keep code as similar as possible across platforms, mean that this is likely to take significant development time, that is not currently available.
@@ -155,7 +155,7 @@ with expansion:
 
 
 ### Clang/G++ -- skipping leaf sections after an exception
-Some versions of `libc++` and `libstdc++` (or their runtimes) have a bug with `std::uncaught_exception()` getting stuck returning `true` after rethrow, even if there are no active exceptions. One such case is this snippet, which skipped the sections "a" and "b", when compiled against `libcxxrt` from master
+Some versions of `libc++` and `libstdc++` (or their runtimes) have a bug with `std::uncaught_exception()` getting stuck returning `true` after rethrow, even if there are no active exceptions. One such case is this snippet, which skipped the sections "a" and "b", when compiled against `libcxxrt` from the master branch
 ```cpp
 #include <catch2/catch_test_macros.hpp>
 
@@ -173,13 +173,3 @@ TEST_CASE("b") {
 
 If you are seeing a problem like this, i.e. weird test paths that trigger only under Clang with `libc++`, or only under very specific version of `libstdc++`, it is very likely you are seeing this. The only known workaround is to use a fixed version of your standard library.
 
-
-### libstdc++, `_GLIBCXX_DEBUG` macro and random ordering of tests
-
-Running a Catch2 binary compiled against libstdc++ with `_GLIBCXX_DEBUG`
-macro defined with `--order rand` will cause a debug check to trigger and
-abort the run due to self-assignment.
-[This is a known bug inside libstdc++](https://stackoverflow.com/questions/22915325/avoiding-self-assignment-in-stdshuffle/23691322)
-
-Workaround: Don't use `--order rand` when compiling against debug-enabled
-libstdc++.

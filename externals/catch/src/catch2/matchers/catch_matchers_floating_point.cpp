@@ -38,26 +38,11 @@ namespace {
         return ulpDist <= maxUlpDiff;
     }
 
-#if defined(CATCH_CONFIG_GLOBAL_NEXTAFTER)
-
-    float nextafter(float x, float y) {
-        return ::nextafterf(x, y);
-    }
-
-    double nextafter(double x, double y) {
-        return ::nextafter(x, y);
-    }
-
-#endif // ^^^ CATCH_CONFIG_GLOBAL_NEXTAFTER ^^^
 
 template <typename FP>
 FP step(FP start, FP direction, uint64_t steps) {
     for (uint64_t i = 0; i < steps; ++i) {
-#if defined(CATCH_CONFIG_GLOBAL_NEXTAFTER)
         start = Catch::nextafter(start, direction);
-#else
-        start = std::nextafter(start, direction);
-#endif
     }
     return start;
 }
@@ -225,5 +210,17 @@ WithinRelMatcher WithinRel(float target) {
 }
 
 
-} // namespace Matchers
+
+bool IsNaNMatcher::match( double const& matchee ) const {
+    return std::isnan( matchee );
+}
+
+std::string IsNaNMatcher::describe() const {
+    using namespace std::string_literals;
+    return "is NaN"s;
+}
+
+IsNaNMatcher IsNaN() { return IsNaNMatcher(); }
+
+    } // namespace Matchers
 } // namespace Catch

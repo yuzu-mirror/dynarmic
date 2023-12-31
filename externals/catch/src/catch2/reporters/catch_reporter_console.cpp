@@ -51,7 +51,6 @@ public:
         stats(_stats),
         result(_stats.assertionResult),
         colour(Colour::None),
-        message(result.getMessage()),
         messages(_stats.infoMessages),
         colourImpl(colourImpl_),
         printInfoMessages(_printInfoMessages) {
@@ -60,10 +59,10 @@ public:
             colour = Colour::Success;
             passOrFail = "PASSED"_sr;
             //if( result.hasMessage() )
-            if (_stats.infoMessages.size() == 1)
-                messageLabel = "with message";
-            if (_stats.infoMessages.size() > 1)
-                messageLabel = "with messages";
+            if (messages.size() == 1)
+                messageLabel = "with message"_sr;
+            if (messages.size() > 1)
+                messageLabel = "with messages"_sr;
             break;
         case ResultWas::ExpressionFailed:
             if (result.isOk()) {
@@ -73,43 +72,57 @@ public:
                 colour = Colour::Error;
                 passOrFail = "FAILED"_sr;
             }
-            if (_stats.infoMessages.size() == 1)
-                messageLabel = "with message";
-            if (_stats.infoMessages.size() > 1)
-                messageLabel = "with messages";
+            if (messages.size() == 1)
+                messageLabel = "with message"_sr;
+            if (messages.size() > 1)
+                messageLabel = "with messages"_sr;
             break;
         case ResultWas::ThrewException:
             colour = Colour::Error;
             passOrFail = "FAILED"_sr;
-            messageLabel = "due to unexpected exception with ";
-            if (_stats.infoMessages.size() == 1)
-                messageLabel += "message";
-            if (_stats.infoMessages.size() > 1)
-                messageLabel += "messages";
+            // todo switch
+            switch (messages.size()) { case 0:
+                messageLabel = "due to unexpected exception with "_sr;
+                break;
+            case 1:
+                messageLabel = "due to unexpected exception with message"_sr;
+                break;
+            default:
+                messageLabel = "due to unexpected exception with messages"_sr;
+                break;
+            }
             break;
         case ResultWas::FatalErrorCondition:
             colour = Colour::Error;
             passOrFail = "FAILED"_sr;
-            messageLabel = "due to a fatal error condition";
+            messageLabel = "due to a fatal error condition"_sr;
             break;
         case ResultWas::DidntThrowException:
             colour = Colour::Error;
             passOrFail = "FAILED"_sr;
-            messageLabel = "because no exception was thrown where one was expected";
+            messageLabel = "because no exception was thrown where one was expected"_sr;
             break;
         case ResultWas::Info:
-            messageLabel = "info";
+            messageLabel = "info"_sr;
             break;
         case ResultWas::Warning:
-            messageLabel = "warning";
+            messageLabel = "warning"_sr;
             break;
         case ResultWas::ExplicitFailure:
             passOrFail = "FAILED"_sr;
             colour = Colour::Error;
-            if (_stats.infoMessages.size() == 1)
-                messageLabel = "explicitly with message";
-            if (_stats.infoMessages.size() > 1)
-                messageLabel = "explicitly with messages";
+            if (messages.size() == 1)
+                messageLabel = "explicitly with message"_sr;
+            if (messages.size() > 1)
+                messageLabel = "explicitly with messages"_sr;
+            break;
+        case ResultWas::ExplicitSkip:
+            colour = Colour::Skip;
+            passOrFail = "SKIPPED"_sr;
+            if (messages.size() == 1)
+                messageLabel = "explicitly with message"_sr;
+            if (messages.size() > 1)
+                messageLabel = "explicitly with messages"_sr;
             break;
             // These cases are here to prevent compiler warnings
         case ResultWas::Unknown:
@@ -173,9 +186,8 @@ private:
     AssertionResult const& result;
     Colour::Code colour;
     StringRef passOrFail;
-    std::string messageLabel;
-    std::string message;
-    std::vector<MessageInfo> messages;
+    StringRef messageLabel;
+    std::vector<MessageInfo> const& messages;
     ColourImpl* colourImpl;
     bool printInfoMessages;
 };
@@ -185,13 +197,16 @@ std::size_t makeRatio( std::uint64_t number, std::uint64_t total ) {
     return (ratio == 0 && number > 0) ? 1 : static_cast<std::size_t>(ratio);
 }
 
-std::size_t& findMax( std::size_t& i, std::size_t& j, std::size_t& k ) {
-    if (i > j && i > k)
+std::size_t&
+findMax( std::size_t& i, std::size_t& j, std::size_t& k, std::size_t& l ) {
+    if (i > j && i > k && i > l)
         return i;
-    else if (j > k)
+    else if (j > k && j > l)
         return j;
-    else
+    else if (k > l)
         return k;
+    else
+        return l;
 }
 
 enum class Justification { Left, Right };
@@ -203,6 +218,7 @@ struct ColumnInfo {
 };
 struct ColumnBreak {};
 struct RowBreak {};
+struct OutputFlush {};
 
 class Duration {
     enum class Unit {
@@ -319,12 +335,12 @@ public:
     }
 
     template<typename T>
-    friend TablePrinter& operator << (TablePrinter& tp, T const& value) {
+    friend TablePrinter& operator<< (TablePrinter& tp, T const& value) {
         tp.m_oss << value;
         return tp;
     }
 
-    friend TablePrinter& operator << (TablePrinter& tp, ColumnBreak) {
+    friend TablePrinter& operator<< (TablePrinter& tp, ColumnBreak) {
         auto colStr = tp.m_oss.str();
         const auto strSize = colStr.size();
         tp.m_oss.str("");
@@ -346,11 +362,16 @@ public:
         return tp;
     }
 
-    friend TablePrinter& operator << (TablePrinter& tp, RowBreak) {
+    friend TablePrinter& operator<< (TablePrinter& tp, RowBreak) {
         if (tp.m_currentColumn > 0) {
             tp.m_os << '\n';
             tp.m_currentColumn = -1;
         }
+        return tp;
+    }
+
+    friend TablePrinter& operator<<(TablePrinter& tp, OutputFlush) {
+        tp.m_os << std::flush;
         return tp;
     }
 };
@@ -374,7 +395,7 @@ ConsoleReporter::ConsoleReporter(ReporterConfig&& config):
                 { "benchmark name", CATCH_CONFIG_CONSOLE_WIDTH - 43, Justification::Left },
                 { "samples      mean       std dev", 14, Justification::Right },
                 { "iterations   low mean   low std dev", 14, Justification::Right },
-                { "estimated    high mean  high std dev", 14, Justification::Right }
+                { "est run time high mean  high std dev", 14, Justification::Right }
             };
         }
     }())) {}
@@ -400,7 +421,8 @@ void ConsoleReporter::assertionEnded(AssertionStats const& _assertionStats) {
     bool includeResults = m_config->includeSuccessfulResults() || !result.isOk();
 
     // Drop out if result was successful but we're not printing them.
-    if (!includeResults && result.getResultType() != ResultWas::Warning)
+    // TODO: Make configurable whether skips should be printed
+    if (!includeResults && result.getResultType() != ResultWas::Warning && result.getResultType() != ResultWas::ExplicitSkip)
         return;
 
     lazyPrint();
@@ -457,8 +479,11 @@ void ConsoleReporter::benchmarkPreparing( StringRef name ) {
 void ConsoleReporter::benchmarkStarting(BenchmarkInfo const& info) {
     (*m_tablePrinter) << info.samples << ColumnBreak()
         << info.iterations << ColumnBreak();
-    if (!m_config->benchmarkNoAnalysis())
-        (*m_tablePrinter) << Duration(info.estimatedDuration) << ColumnBreak();
+    if ( !m_config->benchmarkNoAnalysis() ) {
+        ( *m_tablePrinter )
+            << Duration( info.estimatedDuration ) << ColumnBreak();
+    }
+    ( *m_tablePrinter ) << OutputFlush{};
 }
 void ConsoleReporter::benchmarkEnded(BenchmarkStats<> const& stats) {
     if (m_config->benchmarkNoAnalysis())
@@ -603,10 +628,11 @@ void ConsoleReporter::printTotalsDivider(Totals const& totals) {
         std::size_t failedRatio = makeRatio(totals.testCases.failed, totals.testCases.total());
         std::size_t failedButOkRatio = makeRatio(totals.testCases.failedButOk, totals.testCases.total());
         std::size_t passedRatio = makeRatio(totals.testCases.passed, totals.testCases.total());
-        while (failedRatio + failedButOkRatio + passedRatio < CATCH_CONFIG_CONSOLE_WIDTH - 1)
-            findMax(failedRatio, failedButOkRatio, passedRatio)++;
+        std::size_t skippedRatio = makeRatio(totals.testCases.skipped, totals.testCases.total());
+        while (failedRatio + failedButOkRatio + passedRatio + skippedRatio < CATCH_CONFIG_CONSOLE_WIDTH - 1)
+            findMax(failedRatio, failedButOkRatio, passedRatio, skippedRatio)++;
         while (failedRatio + failedButOkRatio + passedRatio > CATCH_CONFIG_CONSOLE_WIDTH - 1)
-            findMax(failedRatio, failedButOkRatio, passedRatio)--;
+            findMax(failedRatio, failedButOkRatio, passedRatio, skippedRatio)--;
 
         m_stream << m_colour->guardColour( Colour::Error )
                  << std::string( failedRatio, '=' )
@@ -619,6 +645,8 @@ void ConsoleReporter::printTotalsDivider(Totals const& totals) {
             m_stream << m_colour->guardColour( Colour::Success )
                      << std::string( passedRatio, '=' );
         }
+        m_stream << m_colour->guardColour( Colour::Skip )
+                 << std::string( skippedRatio, '=' );
     } else {
         m_stream << m_colour->guardColour( Colour::Warning )
                  << std::string( CATCH_CONFIG_CONSOLE_WIDTH - 1, '=' );

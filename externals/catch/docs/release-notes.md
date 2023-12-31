@@ -2,6 +2,11 @@
 
 # Release notes
 **Contents**<br>
+[3.5.0](#350)<br>
+[3.4.0](#340)<br>
+[3.3.2](#332)<br>
+[3.3.1](#331)<br>
+[3.3.0](#330)<br>
 [3.2.1](#321)<br>
 [3.2.0](#320)<br>
 [3.1.1](#311)<br>
@@ -54,6 +59,130 @@
 
 
 
+## 3.5.0
+
+### Improvements
+* Introduced `CATCH_CONFIG_PREFIX_MESSAGES` to prefix only logging macros (#2544)
+  * This means `INFO`, `UNSCOPED_INFO`, `WARN` and `CAPTURE`.
+* Section hints in static analysis mode are now `const`
+  * This prevents Clang-Tidy from complaining about `misc-const-correctness`.
+* `from_range` generator supports C arrays and ranges that require ADL (#2737)
+* Stringification support for `std::optional` now also includes `std::nullopt` (#2740)
+* The Console reporter flushes output after writing benchmark runtime estimate.
+  * This means that you can immediately see for how long the benchmark is expected to run.
+* Added workaround to enable compilation with ICC 19.1 (#2551, #2766)
+* Compiling Catch2 for XBox should work out of the box (#2772)
+  * Catch2 should automatically disable getenv when compiled for XBox.
+* Compiling Catch2 with exceptions disabled no longer triggers `Wunused-function` (#2726)
+* **`random` Generators for integral types are now reproducible across different platforms**
+  * Unlike `<rando>`, Catch2's generators also support 1 byte integral types (`char`, `bool`, ...)
+* **`random` Generators for `float` and `double` are now reproducible across different platforms**
+  * `long double` varies across different platforms too much to be reproducible
+  * This guarantee applies only to platforms with IEEE 754 floats.
+
+### Fixes
+* UDL declaration inside Catch2 are now strictly conforming to the standard
+  * `operator "" _a` is UB, `operator ""_a` is fine. Seriously.
+* Fixed `CAPTURE` tests failing to compile in C++23 mode (#2744)
+* Fixed missing include in `catch_message.hpp` (#2758)
+* Fixed `CHECK_ELSE` suppressing failure from uncaught exceptions(#2723)
+
+### Miscellaneous
+* The documentation for specifying which tests to run through commandline has been completely rewritten (#2738)
+* Fixed installation when building Catch2 with meson (#2722, #2742)
+* Fixed `catch_discover_tests` when using custom reporter and `PRE_TEST` discovery mode (#2747)
+* `catch_discover_tests` supports multi-config CMake generator in `PRE_TEST` discovery mode (#2739, #2746)
+
+
+## 3.4.0
+
+### Improvements
+* `VectorEquals` supports elements that provide only `==` and not `!=` (#2648)
+* Catch2 supports compiling with IAR compiler (#2651)
+* Various small internal performance improvements
+* Various small internal compilation time improvements
+* XMLReporter now reports location info for INFO and WARN (#1251)
+  * This bumps up the xml format version to 3
+* Documented that `SKIP` in generator constructor can be used to handle empty  generator (#1593)
+* Added experimental static analysis support to `TEST_CASE` and `SECTION` macros (#2681)
+  * The two macros are redefined in a way that helps the SA tools reason about the possible paths through a test case with sections.
+  * The support is controlled by the `CATCH_CONFIG_EXPERIMENTAL_STATIC_ANALYSIS_SUPPORT` option and autodetects clang-tidy and Coverity.
+* `*_THROWS`, `*_THROWS_AS`, etc now suppress warning coming from `__attribute__((warn_unused_result))` on GCC  (#2691)
+  * Unlike plain `[[nodiscard]]`, this warning is not silenced by void cast. WTF GCC?
+
+### Fixes
+* Fixed `assertionStarting` events being sent after the expr is evaluated (#2678)
+* Errors in `TEST_CASE` tags are now reported nicely (#2650)
+
+### Miscellaneous
+* Bunch of improvements to `catch_discover_tests`
+  * Added DISCOVERY_MODE option, so the discovery can happen either post build or pre-run.
+  * Fixed handling of semicolons and backslashes in test names (#2674, #2676)
+* meson build can disable building tests (#2693)
+* meson build properly sets meson version 0.54.1 as the minimal supported version (#2688)
+
+
+## 3.3.2
+
+### Improvements
+* Further reduced allocations
+  * The compact, console, TAP and XML reporters perform less allocations in various cases
+  * Removed 1 allocation per entered `SECTION`/`TEST_CASE`.
+  * Removed 2 allocations per test case exit, if stdout/stderr is captured
+* Improved performance
+  * Section tracking is 10%-25% faster than in v3.3.0
+  * Assertion handling is 5%-10% faster than in v3.3.0
+  * Test case registration is 1%-2% faster than in v3.3.0
+  * Tiny speedup for registering listeners
+  * Tiny speedup for `CAPTURE`, `TEST_CASE_METHOD`, `METHOD_AS_TEST_CASE`, and `TEMPLATE_LIST_TEST_*` macros.
+* `Contains`, `RangeEquals` and `UnorderedRangeEquals` matchers now support ranges with iterator + sentinel pair
+* Added `IsNaN` matcher
+  * Unlike `REQUIRE(isnan(x))`, `REQUIRE_THAT(x, IsNaN())` shows you the value of `x`.
+* Suppressed `declared_but_not_referenced` warning for NVHPC (#2637)
+
+### Fixes
+* Fixed performance regression in section tracking introduced in v3.3.1
+  * Extreme cases would cause the tracking to run about 4x slower than in 3.3.0
+
+
+## 3.3.1
+
+### Improvements
+* Reduced allocations and improved performance
+  * The exact improvements are dependent on your usage of Catch2.
+  * For example running Catch2's SelfTest binary performs 8k less allocations.
+  * The main improvement comes from smarter handling of `SECTION`s, especially sibling `SECTION`s
+
+
+## 3.3.0
+
+### Improvements
+
+* Added `MessageMatches` exception matcher (#2570)
+* Added `RangeEquals` and `UnorderedRangeEquals` generic range matchers (#2377)
+* Added `SKIP` macro for skipping tests from within the test body (#2360)
+  * All built-in reporters have been extended to handle it properly, whether your custom reporter needs changes depends on how it was written
+  * `skipTest` reporter event **is unrelated** to this, and has been deprecated since it has practically no uses
+* Restored support for PPC Macs in the break-into-debugger functionality (#2619)
+* Made our warning suppression compatible with CUDA toolkit pre 11.5 (#2626)
+* Cleaned out some static analysis complaints
+
+
+### Fixes
+
+* Fixed macro redefinition warning when NVCC was reporting as MSVC (#2603)
+* Fixed throws in generator constructor causing the whole binary to abort (#2615)
+  * Now it just fails the test
+* Fixed missing transitive include with libstdc++13 (#2611)
+
+
+### Miscellaneous
+
+* Improved support for dynamic library build with non-MSVC compilers on Windows (#2630)
+* When used as a subproject, Catch2 keeps its generated header in a separate directory from the main project (#2604)
+
+
+
 ## 3.2.1
 
 ### Improvements
@@ -85,7 +214,7 @@
 
 ### Fixes
 * Cleaned out some warnings and static analysis issues
-  * Suppressed `-Wcomma` warning rarely occuring in templated test cases (#2543)
+  * Suppressed `-Wcomma` warning rarely occurring in templated test cases (#2543)
   * Constified implementation details in `INFO` (#2564)
   * Made `MatcherGenericBase` copy constructor const (#2566)
 * Fixed serialization of test filters so the output roundtrips
@@ -288,7 +417,7 @@ v3 releases.
 * Added `STATIC_CHECK` macro, similar to `STATIC_REQUIRE` (#2318)
   * When deferred tu runtime, it behaves like `CHECK`, and not like `REQUIRE`.
 * You can have multiple tests with the same name, as long as other parts of the test identity differ (#1915, #1999, #2175)
-  * Test identity includes test's name, test's tags and and test's class name if applicable.
+  * Test identity includes test's name, test's tags and test's class name if applicable.
 * Added new warning, `UnmatchedTestSpec`, to error on test specs with no matching tests
 * The `-w`, `--warn` warning flags can now be provided multiple times to enable multiple warnings
 * The case-insensitive handling of tags is now more reliable and takes up less memory
@@ -453,7 +582,7 @@ v3 releases.
   * The `SECTION`(s) before the `GENERATE` will not be run multiple times, the following ones will.
 * Added `-D`/`--min-duration` command line flag (#1910)
   * If a test takes longer to finish than the provided value, its name and duration will be printed.
-  * This flag is overriden by setting `-d`/`--duration`.
+  * This flag is overridden by setting `-d`/`--duration`.
 
 ### Fixes
 * `TAPReporter` no longer skips successful assertions (#1983)
@@ -521,7 +650,7 @@ v3 releases.
 ### Fixes
 * Fixed computation of benchmarking column widths in ConsoleReporter (#1885, #1886)
 * Suppressed clang-tidy's `cppcoreguidelines-pro-type-vararg` in assertions (#1901)
-  * It was a false positive trigered by the new warning support workaround
+  * It was a false positive triggered by the new warning support workaround
 * Fixed bug in test specification parser handling of OR'd patterns using escaping (#1905)
 
 ### Miscellaneous
@@ -858,7 +987,7 @@ v3 releases.
 
 ### Contrib
 * `ParseAndAddCatchTests` has learned how to use `DISABLED` CTest property (#1452)
-* `ParseAndAddCatchTests` now works when there is a whitspace before the test name (#1493)
+* `ParseAndAddCatchTests` now works when there is a whitespace before the test name (#1493)
 
 
 ### Miscellaneous
