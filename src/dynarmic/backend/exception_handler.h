@@ -20,6 +20,10 @@ class BlockOfCode;
 namespace oaknut {
 class CodeBlock;
 }  // namespace oaknut
+#elif defined(MCL_ARCHITECTURE_RISCV)
+namespace Dynarmic::Backend::RV64 {
+class DummyCodeBlock;
+}  // namespace Dynarmic::Backend::RV64
 #else
 #    error "Invalid architecture"
 #endif
@@ -35,6 +39,9 @@ struct FakeCall {
 struct FakeCall {
     u64 call_pc;
 };
+#elif defined(MCL_ARCHITECTURE_RISCV)
+struct FakeCall {
+};
 #else
 #    error "Invalid architecture"
 #endif
@@ -48,6 +55,8 @@ public:
     void Register(X64::BlockOfCode& code);
 #elif defined(MCL_ARCHITECTURE_ARM64)
     void Register(oaknut::CodeBlock& mem, std::size_t mem_size);
+#elif defined(MCL_ARCHITECTURE_RISCV)
+    void Register(RV64::DummyCodeBlock& mem, std::size_t mem_size);
 #else
 #    error "Invalid architecture"
 #endif

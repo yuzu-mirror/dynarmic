@@ -32,6 +32,8 @@
 #    include <oaknut/code_block.hpp>
 
 #    include "dynarmic/backend/arm64/abi.h"
+#elif defined(MCL_ARCHITECTURE_RISCV)
+#    include "dynarmic/backend/riscv64/dummy_code_block.h"
 #else
 #    error "Invalid architecture"
 #endif
@@ -141,9 +143,11 @@ void SigHandler::RemoveCodeBlock(u64 host_pc) {
 void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
     ASSERT(sig == SIGSEGV || sig == SIGBUS);
 
+#ifndef MCL_ARCHITECTURE_RISCV
     ucontext_t* ucontext = reinterpret_cast<ucontext_t*>(raw_context);
-#ifndef __OpenBSD__
+#    ifndef __OpenBSD__
     auto& mctx = ucontext->uc_mcontext;
+#    endif
 #endif
 
 #if defined(MCL_ARCHITECTURE_X86_64)
@@ -243,6 +247,10 @@ void SigHandler::SigAction(int sig, siginfo_t* info, void* raw_context) {
 
     fmt::print(stderr, "Unhandled {} at pc {:#018x}\n", sig == SIGSEGV ? "SIGSEGV" : "SIGBUS", CTX_PC);
 
+#elif defined(MCL_ARCHITECTURE_RISCV)
+
+    ASSERT_FALSE("Unimplemented");
+
 #else
 
 #    error "Invalid architecture"
@@ -300,6 +308,12 @@ void ExceptionHandler::Register(X64::BlockOfCode& code) {
 }
 #elif defined(MCL_ARCHITECTURE_ARM64)
 void ExceptionHandler::Register(oaknut::CodeBlock& mem, std::size_t size) {
+    const u64 code_begin = mcl::bit_cast<u64>(mem.ptr());
+    const u64 code_end = code_begin + size;
+    impl = std::make_unique<Impl>(code_begin, code_end);
+}
+#elif defined(MCL_ARCHITECTURE_RISCV)
+void ExceptionHandler::Register(RV64::DummyCodeBlock& mem, std::size_t size) {
     const u64 code_begin = mcl::bit_cast<u64>(mem.ptr());
     const u64 code_end = code_begin + size;
     impl = std::make_unique<Impl>(code_begin, code_end);

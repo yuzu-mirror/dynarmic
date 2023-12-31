@@ -21,6 +21,10 @@ void ExceptionHandler::Register(X64::BlockOfCode&) {
 void ExceptionHandler::Register(oaknut::CodeBlock&, std::size_t) {
     // Do nothing
 }
+#elif defined(MCL_ARCHITECTURE_RISCV)
+void ExceptionHandler::Register(RV64::DummyCodeBlock&, std::size_t) {
+    // Do nothing
+}
 #else
 #    error "Invalid architecture"
 #endif

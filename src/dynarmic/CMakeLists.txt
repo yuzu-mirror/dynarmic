@@ -399,6 +399,24 @@ if ("arm64" IN_LIST ARCHITECTURE)
     endif()
 endif()
 
+if ("riscv" IN_LIST ARCHITECTURE)
+    if ("A32" IN_LIST DYNARMIC_FRONTENDS)
+        target_sources(dynarmic PRIVATE
+            backend/riscv64/a32_address_space.cpp
+            backend/riscv64/a32_address_space.h
+            backend/riscv64/a32_core.h
+            backend/riscv64/a32_interface.cpp
+            backend/riscv64/a32_jitstate.cpp
+            backend/riscv64/a32_jitstate.h
+            backend/riscv64/dummy_code_block.h
+        )
+    endif()
+
+    if ("A64" IN_LIST DYNARMIC_FRONTENDS)
+        message(FATAL_ERROR "TODO: Unimplemented frontend for this host architecture")
+    endif()
+endif()
+
 if (WIN32)
     target_sources(dynarmic PRIVATE backend/exception_handler_windows.cpp)
 elseif (APPLE)

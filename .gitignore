@@ -9,3 +9,4 @@ src/dynarmic/backend/arm64/mig/
 src/dynarmic/backend/x64/mig/
 # System files
 .DS_Store
+.vscode
