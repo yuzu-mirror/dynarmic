@@ -122,7 +122,7 @@ public:
         }
     }
 
-    Xbyak::Address MConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper = 0);
+    Xbyak::Address XmmConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper = 0);
 
     CodePtr GetCodeBegin() const;
     size_t GetTotalCodeSize() const;
