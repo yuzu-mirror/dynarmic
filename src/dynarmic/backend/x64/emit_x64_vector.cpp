@@ -2717,6 +2717,24 @@ static void LowerPairedMin(VectorArray<T>& result, const VectorArray<T>& x, cons
     LowerPairedOperation(result, x, y, [](auto a, auto b) { return std::min(a, b); });
 }
 
+static void EmitVectorPairedMinMaxLower32(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, void (Xbyak::CodeGenerator::*fn)(const Xbyak::Xmm&, const Xbyak::Operand&)) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm y = ctx.reg_alloc.UseXmm(args[1]);
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+
+    // tmp = x[1], y[1], 0, 0
+    code.movaps(tmp, y);
+    code.insertps(tmp, x, 0b01001100);
+    // x   = x[0], y[0], 0, 0
+    code.insertps(x, y, 0b00011100);
+
+    (code.*fn)(x, tmp);
+
+    ctx.reg_alloc.DefineValue(inst, x);
+}
+
 void EmitX64::EmitVectorPairedMaxS8(EmitContext& ctx, IR::Inst* inst) {
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s8>& result, const VectorArray<s8>& a, const VectorArray<s8>& b) {
         PairedMax(result, a, b);
@@ -2900,6 +2918,11 @@ void EmitX64::EmitVectorPairedMaxLowerS16(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorPairedMaxLowerS32(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        EmitVectorPairedMinMaxLower32(code, ctx, inst, &Xbyak::CodeGenerator::pmaxsd);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s32>& result, const VectorArray<s32>& a, const VectorArray<s32>& b) {
         LowerPairedMax(result, a, b);
     });
@@ -2918,6 +2941,11 @@ void EmitX64::EmitVectorPairedMaxLowerU16(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorPairedMaxLowerU32(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        EmitVectorPairedMinMaxLower32(code, ctx, inst, &Xbyak::CodeGenerator::pmaxud);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u32>& result, const VectorArray<u32>& a, const VectorArray<u32>& b) {
         LowerPairedMax(result, a, b);
     });
@@ -2936,6 +2964,11 @@ void EmitX64::EmitVectorPairedMinLowerS16(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorPairedMinLowerS32(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        EmitVectorPairedMinMaxLower32(code, ctx, inst, &Xbyak::CodeGenerator::pminsd);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s32>& result, const VectorArray<s32>& a, const VectorArray<s32>& b) {
         LowerPairedMin(result, a, b);
     });
@@ -2954,6 +2987,11 @@ void EmitX64::EmitVectorPairedMinLowerU16(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorPairedMinLowerU32(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::SSE41)) {
+        EmitVectorPairedMinMaxLower32(code, ctx, inst, &Xbyak::CodeGenerator::pminud);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u32>& result, const VectorArray<u32>& a, const VectorArray<u32>& b) {
         LowerPairedMin(result, a, b);
     });
