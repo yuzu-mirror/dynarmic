@@ -5,6 +5,8 @@
 
 #include "dynarmic/backend/riscv64/a32_address_space.h"
 
+#include <mcl/assert.hpp>
+
 #include "dynarmic/backend/riscv64/emit_riscv64.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
@@ -15,7 +17,7 @@ namespace Dynarmic::Backend::RV64 {
 A32AddressSpace::A32AddressSpace(const A32::UserConfig& conf)
         : conf(conf)
         , cb(conf.code_cache_size)
-        , as(cb.ptr(), conf.code_cache_size) {
+        , as(cb.ptr<u8*>(), conf.code_cache_size) {
     EmitPrelude();
 }
 
@@ -37,15 +39,15 @@ IR::Block A32AddressSpace::GenerateIR(IR::LocationDescriptor descriptor) const {
     return ir_block;
 }
 
-void* A32AddressSpace::Get(IR::LocationDescriptor descriptor) {
+CodePtr A32AddressSpace::Get(IR::LocationDescriptor descriptor) {
     if (const auto iter = block_entries.find(descriptor.Value()); iter != block_entries.end()) {
         return iter->second;
     }
     return nullptr;
 }
 
-void* A32AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
-    if (void* block_entry = Get(descriptor)) {
+CodePtr A32AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
+    if (CodePtr block_entry = Get(descriptor)) {
         return block_entry;
     }
 
@@ -60,43 +62,49 @@ void* A32AddressSpace::GetOrEmit(IR::LocationDescriptor descriptor) {
 void A32AddressSpace::ClearCache() {
     block_entries.clear();
     block_infos.clear();
-    as.RewindBuffer(reinterpret_cast<char*>(prelude_info.end_of_prelude) - reinterpret_cast<char*>(as.GetBufferPointer(0)));
+    SetCursorPtr(prelude_info.end_of_prelude);
 }
 
 void A32AddressSpace::EmitPrelude() {
     using namespace biscuit;
-    prelude_info.run_code = reinterpret_cast<PreludeInfo::RunCodeFuncType>(as.GetCursorPointer());
+    prelude_info.run_code = GetCursorPtr<PreludeInfo::RunCodeFuncType>();
 
     // TODO: Minimize this.
     as.ADDI(sp, sp, -64 * 8);
-    for (std::uint32_t i = 1; i < 32; i += 1) {
+    for (u32 i = 1; i < 32; i += 1) {
         if (GPR{i} == sp || GPR{i} == tp)
             continue;
         as.SD(GPR{i}, i * 8, sp);
     }
-    for (std::uint32_t i = 0; i < 32; i += 1) {
+    for (u32 i = 0; i < 32; i += 1) {
         as.FSD(FPR{i}, 32 + i * 8, sp);
     }
 
     as.JALR(x0, 0, a0);
 
-    prelude_info.return_from_run_code = reinterpret_cast<void*>(as.GetCursorPointer());
-    for (std::uint32_t i = 1; i < 32; i += 1) {
+    prelude_info.return_from_run_code = GetCursorPtr<CodePtr>();
+    for (u32 i = 1; i < 32; i += 1) {
         if (GPR{i} == sp || GPR{i} == tp)
             continue;
         as.LD(GPR{i}, i * 8, sp);
     }
-    for (std::uint32_t i = 0; i < 32; i += 1) {
+    for (u32 i = 0; i < 32; i += 1) {
         as.FLD(FPR{i}, 32 + i * 8, sp);
     }
     as.ADDI(sp, sp, 64 * 8);
     as.JALR(ra);
 
-    prelude_info.end_of_prelude = reinterpret_cast<u32*>(as.GetCursorPointer());
+    prelude_info.end_of_prelude = GetCursorPtr<CodePtr>();
+}
+
+void A32AddressSpace::SetCursorPtr(CodePtr ptr) {
+    ptrdiff_t offset = ptr - GetMemPtr<CodePtr>();
+    ASSERT(offset >= 0);
+    as.RewindBuffer(offset);
 }
 
 size_t A32AddressSpace::GetRemainingSize() {
-    return conf.code_cache_size - (reinterpret_cast<uintptr_t>(as.GetCursorPointer()) - reinterpret_cast<uintptr_t>(as.GetBufferPointer(0)));
+    return conf.code_cache_size - (GetCursorPtr<sptr>() - GetMemPtr<sptr>());
 }
 
 EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
@@ -113,11 +121,11 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
 void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
     using namespace biscuit;
     for (auto [ptr_offset, target] : block_info.relocations) {
-        Assembler a(reinterpret_cast<u8*>(reinterpret_cast<char*>(block_info.entry_point) + ptr_offset), 4);
+        Assembler a(reinterpret_cast<u8*>(block_info.entry_point) + ptr_offset, 4);
 
         switch (target) {
         case LinkTarget::ReturnFromRunCode: {
-            std::ptrdiff_t off = reinterpret_cast<char*>(prelude_info.return_from_run_code) - reinterpret_cast<char*>(a.GetCursorPointer());
+            std::ptrdiff_t off = prelude_info.return_from_run_code - GetCursorPtr<CodePtr>();
             a.JAL(x0, off);
             break;
         }

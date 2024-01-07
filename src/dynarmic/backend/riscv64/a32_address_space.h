@@ -25,9 +25,9 @@ public:
 
     IR::Block GenerateIR(IR::LocationDescriptor) const;
 
-    void* Get(IR::LocationDescriptor descriptor);
+    CodePtr Get(IR::LocationDescriptor descriptor);
 
-    void* GetOrEmit(IR::LocationDescriptor descriptor);
+    CodePtr GetOrEmit(IR::LocationDescriptor descriptor);
 
     void ClearCache();
 
@@ -35,6 +35,32 @@ private:
     friend class A32Core;
 
     void EmitPrelude();
+
+    template<typename T>
+    T GetMemPtr() {
+        static_assert(std::is_pointer_v<T> || std::is_same_v<T, uptr> || std::is_same_v<T, sptr>);
+        return reinterpret_cast<T>(as.GetBufferPointer(0));
+    }
+
+    template<typename T>
+    T GetMemPtr() const {
+        static_assert(std::is_pointer_v<T> || std::is_same_v<T, uptr> || std::is_same_v<T, sptr>);
+        return reinterpret_cast<const T>(as.GetBufferPointer(0));
+    }
+
+    template<typename T>
+    T GetCursorPtr() {
+        static_assert(std::is_pointer_v<T> || std::is_same_v<T, uptr> || std::is_same_v<T, sptr>);
+        return reinterpret_cast<T>(as.GetCursorPointer());
+    }
+
+    template<typename T>
+    T GetCursorPtr() const {
+        static_assert(std::is_pointer_v<T> || std::is_same_v<T, uptr> || std::is_same_v<T, sptr>);
+        return reinterpret_cast<const T>(as.GetCursorPointer());
+    }
+
+    void SetCursorPtr(CodePtr ptr);
 
     size_t GetRemainingSize();
     EmittedBlockInfo Emit(IR::Block ir_block);
@@ -45,15 +71,15 @@ private:
     CodeBlock cb;
     biscuit::Assembler as;
 
-    tsl::robin_map<u64, void*> block_entries;
+    tsl::robin_map<u64, CodePtr> block_entries;
     tsl::robin_map<u64, EmittedBlockInfo> block_infos;
 
     struct PreludeInfo {
-        u32* end_of_prelude;
+        CodePtr end_of_prelude;
 
-        using RunCodeFuncType = HaltReason (*)(void* entry_point, A32JitState* context, volatile u32* halt_reason);
+        using RunCodeFuncType = HaltReason (*)(CodePtr entry_point, A32JitState* context, volatile u32* halt_reason);
         RunCodeFuncType run_code;
-        void* return_from_run_code;
+        CodePtr return_from_run_code;
     } prelude_info;
 };
 

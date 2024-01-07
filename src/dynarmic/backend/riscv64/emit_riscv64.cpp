@@ -16,7 +16,7 @@ EmittedBlockInfo EmitRV64(biscuit::Assembler& as, [[maybe_unused]] IR::Block blo
     using namespace biscuit;
 
     EmittedBlockInfo ebi;
-    ebi.entry_point = reinterpret_cast<void*>(as.GetCursorPointer());
+    ebi.entry_point = reinterpret_cast<CodePtr>(as.GetCursorPointer());
 
     as.ADDIW(a0, zero, 8);
     as.SW(a0, offsetof(A32JitState, regs) + 0 * sizeof(u32), a1);
@@ -25,10 +25,11 @@ EmittedBlockInfo EmitRV64(biscuit::Assembler& as, [[maybe_unused]] IR::Block blo
     as.SW(a0, offsetof(A32JitState, regs) + 1 * sizeof(u32), a1);
     as.SW(a0, offsetof(A32JitState, regs) + 15 * sizeof(u32), a1);
 
-    ebi.relocations[reinterpret_cast<char*>(as.GetCursorPointer()) - reinterpret_cast<char*>(ebi.entry_point)] = LinkTarget::ReturnFromRunCode;
+    ptrdiff_t offset = reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ebi.entry_point;
+    ebi.relocations[offset] = LinkTarget::ReturnFromRunCode;
     as.NOP();
 
-    ebi.size = reinterpret_cast<size_t>(as.GetCursorPointer()) - reinterpret_cast<size_t>(ebi.entry_point);
+    ebi.size = reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ebi.entry_point;
     return ebi;
 }
 

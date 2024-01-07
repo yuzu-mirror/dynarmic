@@ -18,12 +18,14 @@ class Block;
 
 namespace Dynarmic::Backend::RV64 {
 
+using CodePtr = std::byte*;
+
 enum class LinkTarget {
     ReturnFromRunCode,
 };
 
 struct EmittedBlockInfo {
-    void* entry_point;
+    CodePtr entry_point;
     size_t size;
     tsl::robin_map<std::ptrdiff_t, LinkTarget> relocations;
 };

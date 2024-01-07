@@ -314,7 +314,7 @@ void ExceptionHandler::Register(oaknut::CodeBlock& mem, std::size_t size) {
 }
 #elif defined(MCL_ARCHITECTURE_RISCV)
 void ExceptionHandler::Register(RV64::CodeBlock& mem, std::size_t size) {
-    const u64 code_begin = mcl::bit_cast<u64>(mem.ptr());
+    const u64 code_begin = mcl::bit_cast<u64>(mem.ptr<u64>());
     const u64 code_end = code_begin + size;
     impl = std::make_unique<Impl>(code_begin, code_end);
 }

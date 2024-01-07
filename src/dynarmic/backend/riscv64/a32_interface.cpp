@@ -62,7 +62,7 @@ struct Jit::Impl final {
         HaltExecution(HaltReason::CacheInvalidation);
     }
 
-    void InvalidateCacheRange(std::uint32_t start_address, std::size_t length) {
+    void InvalidateCacheRange(u32 start_address, size_t length) {
         std::unique_lock lock{invalidation_mutex};
         invalid_cache_ranges.add(boost::icl::discrete_interval<u32>::closed(start_address, static_cast<u32>(start_address + length - 1)));
         HaltExecution(HaltReason::CacheInvalidation);
@@ -80,35 +80,35 @@ struct Jit::Impl final {
         Atomic::And(&halt_reason, ~static_cast<u32>(hr));
     }
 
-    std::array<std::uint32_t, 16>& Regs() {
+    std::array<u32, 16>& Regs() {
         return current_state.regs;
     }
 
-    const std::array<std::uint32_t, 16>& Regs() const {
+    const std::array<u32, 16>& Regs() const {
         return current_state.regs;
     }
 
-    std::array<std::uint32_t, 64>& ExtRegs() {
+    std::array<u32, 64>& ExtRegs() {
         return current_state.ext_regs;
     }
 
-    const std::array<std::uint32_t, 64>& ExtRegs() const {
+    const std::array<u32, 64>& ExtRegs() const {
         return current_state.ext_regs;
     }
 
-    std::uint32_t Cpsr() const {
+    u32 Cpsr() const {
         return current_state.Cpsr();
     }
 
-    void SetCpsr(std::uint32_t value) {
+    void SetCpsr(u32 value) {
         current_state.SetCpsr(value);
     }
 
-    std::uint32_t Fpscr() const {
+    u32 Fpscr() const {
         return current_state.Fpscr();
     }
 
-    void SetFpscr(std::uint32_t value) {
+    void SetFpscr(u32 value) {
         current_state.SetFpscr(value);
     }
 
@@ -158,7 +158,7 @@ void Jit::ClearCache() {
     impl->ClearCache();
 }
 
-void Jit::InvalidateCacheRange(std::uint32_t start_address, std::size_t length) {
+void Jit::InvalidateCacheRange(u32 start_address, std::size_t length) {
     impl->InvalidateCacheRange(start_address, length);
 }
 
@@ -174,35 +174,35 @@ void Jit::ClearHalt(HaltReason hr) {
     impl->ClearHalt(hr);
 }
 
-std::array<std::uint32_t, 16>& Jit::Regs() {
+std::array<u32, 16>& Jit::Regs() {
     return impl->Regs();
 }
 
-const std::array<std::uint32_t, 16>& Jit::Regs() const {
+const std::array<u32, 16>& Jit::Regs() const {
     return impl->Regs();
 }
 
-std::array<std::uint32_t, 64>& Jit::ExtRegs() {
+std::array<u32, 64>& Jit::ExtRegs() {
     return impl->ExtRegs();
 }
 
-const std::array<std::uint32_t, 64>& Jit::ExtRegs() const {
+const std::array<u32, 64>& Jit::ExtRegs() const {
     return impl->ExtRegs();
 }
 
-std::uint32_t Jit::Cpsr() const {
+u32 Jit::Cpsr() const {
     return impl->Cpsr();
 }
 
-void Jit::SetCpsr(std::uint32_t value) {
+void Jit::SetCpsr(u32 value) {
     impl->SetCpsr(value);
 }
 
-std::uint32_t Jit::Fpscr() const {
+u32 Jit::Fpscr() const {
     return impl->Fpscr();
 }
 
-void Jit::SetFpscr(std::uint32_t value) {
+void Jit::SetFpscr(u32 value) {
     impl->SetFpscr(value);
 }
 
