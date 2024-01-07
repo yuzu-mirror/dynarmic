@@ -26,7 +26,7 @@ EmittedBlockInfo EmitRV64(biscuit::Assembler& as, [[maybe_unused]] IR::Block blo
     as.SW(a0, offsetof(A32JitState, regs) + 15 * sizeof(u32), a1);
 
     ptrdiff_t offset = reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ebi.entry_point;
-    ebi.relocations[offset] = LinkTarget::ReturnFromRunCode;
+    ebi.relocations.emplace_back(Relocation{offset, LinkTarget::ReturnFromRunCode});
     as.NOP();
 
     ebi.size = reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ebi.entry_point;

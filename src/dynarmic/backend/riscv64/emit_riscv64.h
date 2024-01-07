@@ -5,8 +5,9 @@
 
 #pragma once
 
+#include <vector>
+
 #include <mcl/stdint.hpp>
-#include <tsl/robin_map.h>
 
 namespace biscuit {
 class Assembler;
@@ -24,10 +25,15 @@ enum class LinkTarget {
     ReturnFromRunCode,
 };
 
+struct Relocation {
+    std::ptrdiff_t code_offset;
+    LinkTarget target;
+};
+
 struct EmittedBlockInfo {
     CodePtr entry_point;
     size_t size;
-    tsl::robin_map<std::ptrdiff_t, LinkTarget> relocations;
+    std::vector<Relocation> relocations;
 };
 
 EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block);
