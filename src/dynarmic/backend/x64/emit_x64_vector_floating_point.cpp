@@ -145,12 +145,12 @@ void HandleNaNs(BlockOfCode& code, EmitContext& ctx, bool fpcr_controlled, std::
 
 template<size_t fsize>
 Xbyak::Address GetVectorOf(BlockOfCode& code, u64 value) {
-    return code.XmmBConst<fsize>(xword, value);
+    return code.BConst<fsize>(xword, value);
 }
 
 template<size_t fsize, u64 value>
 Xbyak::Address GetVectorOf(BlockOfCode& code) {
-    return code.XmmBConst<fsize>(xword, value);
+    return code.BConst<fsize>(xword, value);
 }
 
 template<size_t fsize>
@@ -213,7 +213,7 @@ void ZeroIfNaN(BlockOfCode& code, Xbyak::Xmm result) {
     if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
         constexpr u32 nan_to_zero = FixupLUT(FpFixup::PosZero,
                                              FpFixup::PosZero);
-        FCODE(vfixupimmp)(result, result, code.XmmBConst<32>(ptr_b, nan_to_zero), u8(0));
+        FCODE(vfixupimmp)(result, result, code.BConst<32>(ptr_b, nan_to_zero), u8(0));
     } else if (code.HasHostFeature(HostFeature::AVX)) {
         FCODE(vcmpordp)(nan_mask, result, result);
         FCODE(vandp)(result, result, nan_mask);
@@ -238,7 +238,7 @@ void DenormalsAreZero(BlockOfCode& code, FP::FPCR fpcr, std::initializer_list<Xb
                 FpFixup::Norm_Src,
                 FpFixup::Norm_Src);
 
-            FCODE(vmovap)(tmp, code.XmmBConst<fsize>(xword, denormal_to_zero));
+            FCODE(vmovap)(tmp, code.BConst<fsize>(xword, denormal_to_zero));
 
             for (const Xbyak::Xmm& xmm : to_daz) {
                 FCODE(vfixupimmp)(xmm, xmm, tmp, u8(0));
@@ -785,9 +785,9 @@ void EmitX64::EmitFPVectorFromUnsignedFixed32(EmitContext& ctx, IR::Inst* inst) 
         if (code.HasHostFeature(HostFeature::AVX512_Ortho)) {
             code.vcvtudq2ps(xmm, xmm);
         } else {
-            const Xbyak::Address mem_4B000000 = code.XmmBConst<32>(xword, 0x4B000000);
-            const Xbyak::Address mem_53000000 = code.XmmBConst<32>(xword, 0x53000000);
-            const Xbyak::Address mem_D3000080 = code.XmmBConst<32>(xword, 0xD3000080);
+            const Xbyak::Address mem_4B000000 = code.BConst<32>(xword, 0x4B000000);
+            const Xbyak::Address mem_53000000 = code.BConst<32>(xword, 0x53000000);
+            const Xbyak::Address mem_D3000080 = code.BConst<32>(xword, 0xD3000080);
 
             const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
@@ -798,7 +798,7 @@ void EmitX64::EmitFPVectorFromUnsignedFixed32(EmitContext& ctx, IR::Inst* inst) 
                 code.vaddps(xmm, xmm, mem_D3000080);
                 code.vaddps(xmm, tmp, xmm);
             } else {
-                const Xbyak::Address mem_0xFFFF = code.XmmBConst<32>(xword, 0x0000FFFF);
+                const Xbyak::Address mem_0xFFFF = code.BConst<32>(xword, 0x0000FFFF);
 
                 code.movdqa(tmp, mem_0xFFFF);
 
@@ -816,7 +816,7 @@ void EmitX64::EmitFPVectorFromUnsignedFixed32(EmitContext& ctx, IR::Inst* inst) 
         }
 
         if (ctx.FPCR(fpcr_controlled).RMode() == FP::RoundingMode::TowardsMinusInfinity) {
-            code.pand(xmm, code.XmmBConst<32>(xword, 0x7FFFFFFF));
+            code.pand(xmm, code.BConst<32>(xword, 0x7FFFFFFF));
         }
     });
 
@@ -835,8 +835,8 @@ void EmitX64::EmitFPVectorFromUnsignedFixed64(EmitContext& ctx, IR::Inst* inst) 
         if (code.HasHostFeature(HostFeature::AVX512_OrthoFloat)) {
             code.vcvtuqq2pd(xmm, xmm);
         } else {
-            const Xbyak::Address unpack = code.XmmConst(xword, 0x4530000043300000, 0);
-            const Xbyak::Address subtrahend = code.XmmConst(xword, 0x4330000000000000, 0x4530000000000000);
+            const Xbyak::Address unpack = code.Const(xword, 0x4530000043300000, 0);
+            const Xbyak::Address subtrahend = code.Const(xword, 0x4330000000000000, 0x4530000000000000);
 
             const Xbyak::Xmm unpack_reg = ctx.reg_alloc.ScratchXmm();
             const Xbyak::Xmm subtrahend_reg = ctx.reg_alloc.ScratchXmm();
@@ -883,7 +883,7 @@ void EmitX64::EmitFPVectorFromUnsignedFixed64(EmitContext& ctx, IR::Inst* inst) 
         }
 
         if (ctx.FPCR(fpcr_controlled).RMode() == FP::RoundingMode::TowardsMinusInfinity) {
-            code.pand(xmm, code.XmmBConst<64>(xword, 0x7FFFFFFFFFFFFFFF));
+            code.pand(xmm, code.BConst<64>(xword, 0x7FFFFFFFFFFFFFFF));
         }
     });
 
@@ -1493,7 +1493,7 @@ void FPVectorNeg(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Address mask = code.XmmBConst<fsize>(xword, sign_mask);
+    const Xbyak::Address mask = code.BConst<fsize>(xword, sign_mask);
 
     code.xorps(a, mask);
 

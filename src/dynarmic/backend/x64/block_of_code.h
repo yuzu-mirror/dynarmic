@@ -123,12 +123,12 @@ public:
         }
     }
 
-    Xbyak::Address XmmConst(const Xbyak::AddressFrame& frame, u64 lower, u64 upper = 0);
+    Xbyak::Address Const(const Xbyak::AddressFrame& frame, u64 lower, u64 upper = 0);
 
     template<size_t esize>
-    Xbyak::Address XmmBConst(const Xbyak::AddressFrame& frame, u64 value) {
-        return XmmConst(frame, mcl::bit::replicate_element<u64>(esize, value),
-                        mcl::bit::replicate_element<u64>(esize, value));
+    Xbyak::Address BConst(const Xbyak::AddressFrame& frame, u64 value) {
+        return Const(frame, mcl::bit::replicate_element<u64>(esize, value),
+                     mcl::bit::replicate_element<u64>(esize, value));
     }
 
     CodePtr GetCodeBegin() const;
