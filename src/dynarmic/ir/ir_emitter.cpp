@@ -2853,15 +2853,15 @@ void IREmitter::Breakpoint() {
 }
 
 void IREmitter::CallHostFunction(void (*fn)(void)) {
-    Inst(Opcode::CallHostFunction, Imm64(mcl::bit_cast<u64>(fn)));
+    Inst(Opcode::CallHostFunction, Imm64(mcl::bit_cast<u64>(fn)), Value{}, Value{}, Value{});
 }
 
 void IREmitter::CallHostFunction(void (*fn)(u64), const U64& arg1) {
-    Inst(Opcode::CallHostFunction, Imm64(mcl::bit_cast<u64>(fn)), arg1);
+    Inst(Opcode::CallHostFunction, Imm64(mcl::bit_cast<u64>(fn)), arg1, Value{}, Value{});
 }
 
 void IREmitter::CallHostFunction(void (*fn)(u64, u64), const U64& arg1, const U64& arg2) {
-    Inst(Opcode::CallHostFunction, Imm64(mcl::bit_cast<u64>(fn)), arg1, arg2);
+    Inst(Opcode::CallHostFunction, Imm64(mcl::bit_cast<u64>(fn)), arg1, arg2, Value{});
 }
 
 void IREmitter::CallHostFunction(void (*fn)(u64, u64, u64), const U64& arg1, const U64& arg2, const U64& arg3) {
