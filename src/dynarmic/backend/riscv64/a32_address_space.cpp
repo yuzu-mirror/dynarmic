@@ -7,6 +7,7 @@
 
 #include <mcl/assert.hpp>
 
+#include "dynarmic/backend/riscv64/abi.h"
 #include "dynarmic/backend/riscv64/emit_riscv64.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
@@ -80,6 +81,8 @@ void A32AddressSpace::EmitPrelude() {
         as.FSD(FPR{i}, 32 + i * 8, sp);
     }
 
+    as.ADDI(Xstate, a1, 0);
+    as.ADDI(Xhalt, a2, 0);
     as.JALR(x0, 0, a0);
 
     prelude_info.return_from_run_code = GetCursorPtr<CodePtr>();
@@ -112,7 +115,7 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
         ClearCache();
     }
 
-    EmittedBlockInfo block_info = EmitRV64(as, std::move(block));
+    EmittedBlockInfo block_info = EmitRV64(as, std::move(block), {});
     Link(block_info);
 
     return block_info;

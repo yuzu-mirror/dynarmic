@@ -15,6 +15,8 @@ class Assembler;
 
 namespace Dynarmic::IR {
 class Block;
+enum class Opcode;
+class Inst;
 }  // namespace Dynarmic::IR
 
 namespace Dynarmic::Backend::RV64 {
@@ -36,6 +38,13 @@ struct EmittedBlockInfo {
     std::vector<Relocation> relocations;
 };
 
-EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block);
+struct EmitConfig {};
+
+struct EmitContext;
+
+template<IR::Opcode op>
+void EmitIR(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst);
+
+EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block, const EmitConfig& emit_conf);
 
 }  // namespace Dynarmic::Backend::RV64
