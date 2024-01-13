@@ -23,9 +23,18 @@ namespace Dynarmic::A32 {
 template<typename Visitor>
 using ArmMatcher = Decoder::Matcher<Visitor, u32>;
 
+template<typename Visitor>
+using ArmDecodeTable = std::array<std::vector<ArmMatcher<Visitor>>, 0x1000>;
+
+namespace detail {
+inline size_t ToFastLookupIndexArm(u32 instruction) {
+    return ((instruction >> 4) & 0x00F) | ((instruction >> 16) & 0xFF0);
+}
+}  // namespace detail
+
 template<typename V>
-std::vector<ArmMatcher<V>> GetArmDecodeTable() {
-    std::vector<ArmMatcher<V>> table = {
+ArmDecodeTable<V> GetArmDecodeTable() {
+    std::vector<ArmMatcher<V>> list = {
 
 #define INST(fn, name, bitstring) DYNARMIC_DECODER_GET_MATCHER(ArmMatcher, fn, name, Decoder::detail::StringToArray<32>(bitstring)),
 #include "./arm.inc"
@@ -34,10 +43,20 @@ std::vector<ArmMatcher<V>> GetArmDecodeTable() {
     };
 
     // If a matcher has more bits in its mask it is more specific, so it should come first.
-    std::stable_sort(table.begin(), table.end(), [](const auto& matcher1, const auto& matcher2) {
+    std::stable_sort(list.begin(), list.end(), [](const auto& matcher1, const auto& matcher2) {
         return mcl::bit::count_ones(matcher1.GetMask()) > mcl::bit::count_ones(matcher2.GetMask());
     });
 
+    ArmDecodeTable<V> table{};
+    for (size_t i = 0; i < table.size(); ++i) {
+        for (auto matcher : list) {
+            const auto expect = detail::ToFastLookupIndexArm(matcher.GetExpected());
+            const auto mask = detail::ToFastLookupIndexArm(matcher.GetMask());
+            if ((i & mask) == expect) {
+                table[i].push_back(matcher);
+            }
+        }
+    }
     return table;
 }
 
@@ -47,8 +66,9 @@ std::optional<std::reference_wrapper<const ArmMatcher<V>>> DecodeArm(u32 instruc
 
     const auto matches_instruction = [instruction](const auto& matcher) { return matcher.Matches(instruction); };
 
-    auto iter = std::find_if(table.begin(), table.end(), matches_instruction);
-    return iter != table.end() ? std::optional<std::reference_wrapper<const ArmMatcher<V>>>(*iter) : std::nullopt;
+    const auto& subtable = table[detail::ToFastLookupIndexArm(instruction)];
+    auto iter = std::find_if(subtable.begin(), subtable.end(), matches_instruction);
+    return iter != subtable.end() ? std::optional<std::reference_wrapper<const ArmMatcher<V>>>(*iter) : std::nullopt;
 }
 
 }  // namespace Dynarmic::A32
