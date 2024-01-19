@@ -22,7 +22,7 @@
 namespace Dynarmic::Backend::RV64 {
 
 // TODO: We should really move this to biscuit.
-static void Mov64(biscuit::Assembler& as, biscuit::GPR rd, u64 imm) {
+void Mov64(biscuit::Assembler& as, biscuit::GPR rd, u64 imm) {
     if (mcl::bit::sign_extend<32>(imm) == imm) {
         as.LI(rd, static_cast<u32>(imm));
         return;
@@ -38,7 +38,7 @@ static void Mov64(biscuit::Assembler& as, biscuit::GPR rd, u64 imm) {
     int shift = 12 + std::countr_zero(hi52);
     hi52 = mcl::bit::sign_extend(shift, hi52 >> (shift - 12));
     Mov64(as, rd, hi52);
-    as.SLLI(rd, rd, shift);
+    as.SLLI64(rd, rd, shift);
     if (lo12 != 0) {
         as.ADDI(rd, rd, lo12);
     }
@@ -50,8 +50,35 @@ void EmitIR(biscuit::Assembler&, EmitContext&, IR::Inst*) {
 }
 
 template<>
+void EmitIR<IR::Opcode::Void>(biscuit::Assembler&, EmitContext&, IR::Inst*) {}
+
+template<>
+void EmitIR<IR::Opcode::A32GetRegister>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst);
+template<>
+void EmitIR<IR::Opcode::A32SetRegister>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst);
+template<>
+void EmitIR<IR::Opcode::A32SetCpsrNZC>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst);
+template<>
+void EmitIR<IR::Opcode::LogicalShiftLeft32>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst);
+
+template<>
 void EmitIR<IR::Opcode::GetCarryFromOp>(biscuit::Assembler&, EmitContext& ctx, IR::Inst* inst) {
     ASSERT(ctx.reg_alloc.IsValueLive(inst));
+}
+
+template<>
+void EmitIR<IR::Opcode::GetNZFromOp>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Xvalue = ctx.reg_alloc.ReadX(args[0]);
+    auto Xnz = ctx.reg_alloc.WriteX(inst);
+    RegAlloc::Realize(Xvalue, Xnz);
+
+    as.SEQZ(Xnz, Xvalue);
+    as.SLLI(Xnz, Xnz, 30);
+    as.SLT(Xscratch0, Xvalue, biscuit::zero);
+    as.SLLI(Xscratch0, Xscratch0, 31);
+    as.OR(Xnz, Xnz, Xscratch0);
 }
 
 EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block, const EmitConfig& emit_conf) {

@@ -64,35 +64,40 @@ private:
 template<typename T>
 struct RAReg {
 public:
-    static constexpr bool is_fpr = std::is_base_of_v<biscuit::FPR, T>;
+    static constexpr HostLoc::Kind kind = std::is_base_of_v<biscuit::FPR, T>
+                                            ? HostLoc::Kind::Fpr
+                                            : HostLoc::Kind::Gpr;
 
     operator T() const { return *reg; }
 
     T operator*() const { return *reg; }
 
+    const T* operator->() const { return &*reg; }
+
     ~RAReg();
 
 private:
     friend class RegAlloc;
-    explicit RAReg(RegAlloc& reg_alloc, bool write, const IR::Inst* value)
-            : reg_alloc{reg_alloc}, write{write}, value{value} {}
+    explicit RAReg(RegAlloc& reg_alloc, bool write, const IR::Value& value);
 
     void Realize();
 
     RegAlloc& reg_alloc;
     bool write;
-    const IR::Inst* value;
+    const IR::Value value;
     std::optional<T> reg;
 };
 
 struct HostLocInfo final {
     std::vector<const IR::Inst*> values;
-    bool locked = false;
+    size_t locked = 0;
     bool realized = false;
     size_t accumulated_uses = 0;
     size_t expected_uses = 0;
 
     bool Contains(const IR::Inst*) const;
+    void SetupScratchLocation();
+    bool IsCompletelyEmpty() const;
 };
 
 class RegAlloc {
@@ -105,11 +110,11 @@ public:
     ArgumentInfo GetArgumentInfo(IR::Inst* inst);
     bool IsValueLive(IR::Inst* inst) const;
 
-    auto ReadX(Argument& arg) { return RAReg<biscuit::GPR>{*this, false, PreReadImpl(arg.value)}; }
-    auto ReadD(Argument& arg) { return RAReg<biscuit::FPR>{*this, false, PreReadImpl(arg.value)}; }
+    auto ReadX(Argument& arg) { return RAReg<biscuit::GPR>{*this, false, arg.value}; }
+    auto ReadD(Argument& arg) { return RAReg<biscuit::FPR>{*this, false, arg.value}; }
 
-    auto WriteX(IR::Inst* inst) { return RAReg<biscuit::GPR>{*this, true, inst}; }
-    auto WriteD(IR::Inst* inst) { return RAReg<biscuit::FPR>{*this, true, inst}; }
+    auto WriteX(IR::Inst* inst) { return RAReg<biscuit::GPR>{*this, true, IR::Value{inst}}; }
+    auto WriteD(IR::Inst* inst) { return RAReg<biscuit::FPR>{*this, true, IR::Value{inst}}; }
 
     void SpillAll();
 
@@ -123,14 +128,11 @@ private:
     template<typename>
     friend struct RAReg;
 
-    const IR::Inst* PreReadImpl(const IR::Value& value) {
-        ValueInfo(value.GetInst()).locked = true;
-        return value.GetInst();
-    }
-
-    template<bool is_fpr>
-    u32 RealizeReadImpl(const IR::Inst* value);
-    template<bool is_fpr>
+    template<HostLoc::Kind kind>
+    u32 GenerateImmediate(const IR::Value& value);
+    template<HostLoc::Kind kind>
+    u32 RealizeReadImpl(const IR::Value& value);
+    template<HostLoc::Kind kind>
     u32 RealizeWriteImpl(const IR::Inst* value);
     void Unlock(HostLoc host_loc);
 
@@ -155,15 +157,34 @@ private:
 };
 
 template<typename T>
+RAReg<T>::RAReg(RegAlloc& reg_alloc, bool write, const IR::Value& value)
+        : reg_alloc{reg_alloc}, write{write}, value{value} {
+    if (!write && !value.IsImmediate()) {
+        reg_alloc.ValueInfo(value.GetInst()).locked++;
+    }
+}
+
+template<typename T>
 RAReg<T>::~RAReg() {
-    if (reg) {
-        reg_alloc.Unlock(HostLoc{is_fpr ? HostLoc::Kind::Fpr : HostLoc::Kind::Gpr, reg->Index()});
+    if (value.IsImmediate()) {
+        if (reg) {
+            // Immediate in scratch register
+            HostLocInfo& info = reg_alloc.ValueInfo(HostLoc{kind, reg->Index()});
+            info.locked--;
+            info.realized = false;
+        }
+    } else {
+        HostLocInfo& info = reg_alloc.ValueInfo(value.GetInst());
+        info.locked--;
+        if (reg) {
+            info.realized = false;
+        }
     }
 }
 
 template<typename T>
 void RAReg<T>::Realize() {
-    reg = T{write ? reg_alloc.RealizeWriteImpl<is_fpr>(value) : reg_alloc.RealizeReadImpl<is_fpr>(value)};
+    reg = T{write ? reg_alloc.RealizeWriteImpl<kind>(value.GetInst()) : reg_alloc.RealizeReadImpl<kind>(value)};
 }
 
 }  // namespace Dynarmic::Backend::RV64

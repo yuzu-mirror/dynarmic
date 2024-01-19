@@ -405,6 +405,7 @@ if ("riscv" IN_LIST ARCHITECTURE)
     target_sources(dynarmic PRIVATE
         backend/riscv64/abi.h
         backend/riscv64/emit_context.h
+        backend/riscv64/emit_riscv64_data_processing.cpp
         backend/riscv64/emit_riscv64.cpp
         backend/riscv64/emit_riscv64.h
         backend/riscv64/reg_alloc.cpp
@@ -421,6 +422,7 @@ if ("riscv" IN_LIST ARCHITECTURE)
             backend/riscv64/a32_jitstate.cpp
             backend/riscv64/a32_jitstate.h
             backend/riscv64/code_block.h
+            backend/riscv64/emit_riscv64_a32.cpp
         )
     endif()
 

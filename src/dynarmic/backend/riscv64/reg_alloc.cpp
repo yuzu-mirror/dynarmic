@@ -9,9 +9,15 @@
 #include <array>
 
 #include <mcl/assert.hpp>
+#include <mcl/mp/metavalue/lift_value.hpp>
 #include <mcl/stdint.hpp>
 
+#include "dynarmic/common/always_false.h"
+
 namespace Dynarmic::Backend::RV64 {
+
+// TODO: We should really move this to biscuit.
+void Mov64(biscuit::Assembler& as, biscuit::GPR rd, u64 imm);
 
 constexpr size_t spill_offset = offsetof(StackLayout, spill);
 constexpr size_t spill_slot_size = sizeof(decltype(StackLayout::spill)::value_type);
@@ -73,6 +79,15 @@ bool HostLocInfo::Contains(const IR::Inst* value) const {
     return std::find(values.begin(), values.end(), value) != values.end();
 }
 
+void HostLocInfo::SetupScratchLocation() {
+    ASSERT(IsCompletelyEmpty());
+    realized = true;
+}
+
+bool HostLocInfo::IsCompletelyEmpty() const {
+    return values.empty() && !locked && !realized && !accumulated_uses && !expected_uses;
+}
+
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
     ArgumentInfo ret = {Argument{*this}, Argument{*this}, Argument{*this}, Argument{*this}};
     for (size_t i = 0; i < inst->NumArgs(); i++) {
@@ -90,11 +105,35 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
-template<bool is_fpr>
-u32 RegAlloc::RealizeReadImpl(const IR::Inst* value) {
-    constexpr HostLoc::Kind required_kind = is_fpr ? HostLoc::Kind::Fpr : HostLoc::Kind::Gpr;
+template<HostLoc::Kind kind>
+u32 RegAlloc::GenerateImmediate(const IR::Value& value) {
+    // TODO
+    // ASSERT(value.GetType() != IR::Type::U1);
 
-    const auto current_location = ValueLocation(value);
+    if constexpr (kind == HostLoc::Kind::Gpr) {
+        const u32 new_location_index = AllocateRegister(gprs, gpr_order);
+        SpillGpr(new_location_index);
+        gprs[new_location_index].SetupScratchLocation();
+
+        Mov64(as, biscuit::GPR{new_location_index}, value.GetImmediateAsU64());
+
+        return new_location_index;
+    } else if constexpr (kind == HostLoc::Kind::Fpr) {
+        ASSERT_FALSE("Unimplemented");
+    } else {
+        static_assert(Common::always_false_v<mcl::mp::lift_value<kind>>);
+    }
+
+    return 0;
+}
+
+template<HostLoc::Kind required_kind>
+u32 RegAlloc::RealizeReadImpl(const IR::Value& value) {
+    if (value.IsImmediate()) {
+        return GenerateImmediate<required_kind>(value);
+    }
+
+    const auto current_location = ValueLocation(value.GetInst());
     ASSERT(current_location);
 
     if (current_location->kind == required_kind) {
@@ -105,7 +144,7 @@ u32 RegAlloc::RealizeReadImpl(const IR::Inst* value) {
     ASSERT(!ValueInfo(*current_location).realized);
     ASSERT(!ValueInfo(*current_location).locked);
 
-    if constexpr (is_fpr) {
+    if constexpr (required_kind == HostLoc::Kind::Fpr) {
         const u32 new_location_index = AllocateRegister(fprs, fpr_order);
         SpillFpr(new_location_index);
 
@@ -124,7 +163,7 @@ u32 RegAlloc::RealizeReadImpl(const IR::Inst* value) {
         fprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
         fprs[new_location_index].realized = true;
         return new_location_index;
-    } else {
+    } else if constexpr (required_kind == HostLoc::Kind::Gpr) {
         const u32 new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
 
@@ -144,10 +183,12 @@ u32 RegAlloc::RealizeReadImpl(const IR::Inst* value) {
         gprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
         gprs[new_location_index].realized = true;
         return new_location_index;
+    } else {
+        static_assert(Common::always_false_v<mcl::mp::lift_value<required_kind>>);
     }
 }
 
-template<bool is_fpr>
+template<HostLoc::Kind required_kind>
 u32 RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
     ASSERT(!ValueLocation(value));
 
@@ -159,23 +200,25 @@ u32 RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
         info.expected_uses += value->UseCount();
     };
 
-    if constexpr (is_fpr) {
+    if constexpr (required_kind == HostLoc::Kind::Fpr) {
         const u32 new_location_index = AllocateRegister(fprs, fpr_order);
         SpillFpr(new_location_index);
         setup_location(fprs[new_location_index]);
         return new_location_index;
-    } else {
+    } else if constexpr (required_kind == HostLoc::Kind::Gpr) {
         const u32 new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
         setup_location(gprs[new_location_index]);
         return new_location_index;
+    } else {
+        static_assert(Common::always_false_v<mcl::mp::lift_value<required_kind>>);
     }
 }
 
-template u32 RegAlloc::RealizeReadImpl<true>(const IR::Inst* value);
-template u32 RegAlloc::RealizeReadImpl<false>(const IR::Inst* value);
-template u32 RegAlloc::RealizeWriteImpl<true>(const IR::Inst* value);
-template u32 RegAlloc::RealizeWriteImpl<false>(const IR::Inst* value);
+template u32 RegAlloc::RealizeReadImpl<HostLoc::Kind::Gpr>(const IR::Value& value);
+template u32 RegAlloc::RealizeReadImpl<HostLoc::Kind::Fpr>(const IR::Value& value);
+template u32 RegAlloc::RealizeWriteImpl<HostLoc::Kind::Gpr>(const IR::Inst* value);
+template u32 RegAlloc::RealizeWriteImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
 
 void RegAlloc::Unlock(HostLoc host_loc) {
     HostLocInfo& info = ValueInfo(host_loc);
