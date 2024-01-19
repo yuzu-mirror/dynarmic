@@ -40,6 +40,7 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(biscuit::Assembler& as, EmitContext&
 
 template<>
 void EmitIR<IR::Opcode::GetCarryFromOp>(biscuit::Assembler&, EmitContext& ctx, IR::Inst* inst) {
+    [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     ASSERT(ctx.reg_alloc.IsValueLive(inst));
 }
 
@@ -93,6 +94,9 @@ EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block, const EmitCon
             break;
         }
     }
+
+    reg_alloc.AssertNoMoreUses();
+
     // TODO: Add Cycles
 
     // TODO: Emit Terminal

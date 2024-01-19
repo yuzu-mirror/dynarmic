@@ -102,6 +102,13 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
+void RegAlloc::AssertNoMoreUses() const {
+    const auto is_empty = [](const auto& i) { return i.values.empty() && !i.locked && !i.realized && !i.accumulated_uses && !i.expected_uses; };
+    ASSERT(std::all_of(gprs.begin(), gprs.end(), is_empty));
+    ASSERT(std::all_of(fprs.begin(), fprs.end(), is_empty));
+    ASSERT(std::all_of(spills.begin(), spills.end(), is_empty));
+}
+
 template<HostLoc::Kind kind>
 u32 RegAlloc::GenerateImmediate(const IR::Value& value) {
     // TODO
@@ -141,26 +148,7 @@ u32 RegAlloc::RealizeReadImpl(const IR::Value& value) {
     ASSERT(!ValueInfo(*current_location).realized);
     ASSERT(!ValueInfo(*current_location).locked);
 
-    if constexpr (required_kind == HostLoc::Kind::Fpr) {
-        const u32 new_location_index = AllocateRegister(fprs, fpr_order);
-        SpillFpr(new_location_index);
-
-        switch (current_location->kind) {
-        case HostLoc::Kind::Gpr:
-            as.FMV_D_X(biscuit::FPR{new_location_index}, biscuit::GPR(current_location->index));
-            break;
-        case HostLoc::Kind::Fpr:
-            ASSERT_FALSE("Logic error");
-            break;
-        case HostLoc::Kind::Spill:
-            as.FLD(biscuit::FPR{new_location_index}, spill_offset + new_location_index * spill_slot_size, biscuit::sp);
-            break;
-        }
-
-        fprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
-        fprs[new_location_index].realized = true;
-        return new_location_index;
-    } else if constexpr (required_kind == HostLoc::Kind::Gpr) {
+    if constexpr (required_kind == HostLoc::Kind::Gpr) {
         const u32 new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
 
@@ -180,6 +168,25 @@ u32 RegAlloc::RealizeReadImpl(const IR::Value& value) {
         gprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
         gprs[new_location_index].realized = true;
         return new_location_index;
+    } else if constexpr (required_kind == HostLoc::Kind::Fpr) {
+        const u32 new_location_index = AllocateRegister(fprs, fpr_order);
+        SpillFpr(new_location_index);
+
+        switch (current_location->kind) {
+        case HostLoc::Kind::Gpr:
+            as.FMV_D_X(biscuit::FPR{new_location_index}, biscuit::GPR(current_location->index));
+            break;
+        case HostLoc::Kind::Fpr:
+            ASSERT_FALSE("Logic error");
+            break;
+        case HostLoc::Kind::Spill:
+            as.FLD(biscuit::FPR{new_location_index}, spill_offset + new_location_index * spill_slot_size, biscuit::sp);
+            break;
+        }
+
+        fprs[new_location_index] = std::exchange(ValueInfo(*current_location), {});
+        fprs[new_location_index].realized = true;
+        return new_location_index;
     } else {
         static_assert(Common::always_false_v<mcl::mp::lift_value<required_kind>>);
     }
@@ -194,18 +201,18 @@ u32 RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
         info.values.emplace_back(value);
         info.locked = true;
         info.realized = true;
-        info.expected_uses += value->UseCount();
+        info.expected_uses = value->UseCount();
     };
 
-    if constexpr (required_kind == HostLoc::Kind::Fpr) {
-        const u32 new_location_index = AllocateRegister(fprs, fpr_order);
-        SpillFpr(new_location_index);
-        setup_location(fprs[new_location_index]);
-        return new_location_index;
-    } else if constexpr (required_kind == HostLoc::Kind::Gpr) {
+    if constexpr (required_kind == HostLoc::Kind::Gpr) {
         const u32 new_location_index = AllocateRegister(gprs, gpr_order);
         SpillGpr(new_location_index);
         setup_location(gprs[new_location_index]);
+        return new_location_index;
+    } else if constexpr (required_kind == HostLoc::Kind::Fpr) {
+        const u32 new_location_index = AllocateRegister(fprs, fpr_order);
+        SpillFpr(new_location_index);
+        setup_location(fprs[new_location_index]);
         return new_location_index;
     } else {
         static_assert(Common::always_false_v<mcl::mp::lift_value<required_kind>>);
@@ -305,13 +312,13 @@ HostLocInfo& RegAlloc::ValueInfo(const IR::Inst* value) {
         return info.Contains(value);
     };
 
-    if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value)) {
+    if (const auto iter = std::find_if(gprs.begin(), gprs.end(), contains_value); iter != gprs.end()) {
         return *iter;
     }
-    if (const auto iter = std::find_if(fprs.begin(), fprs.end(), contains_value)) {
+    if (const auto iter = std::find_if(fprs.begin(), fprs.end(), contains_value); iter != gprs.end()) {
         return *iter;
     }
-    if (const auto iter = std::find_if(spills.begin(), spills.end(), contains_value)) {
+    if (const auto iter = std::find_if(spills.begin(), spills.end(), contains_value); iter != gprs.end()) {
         return *iter;
     }
     ASSERT_FALSE("RegAlloc::ValueInfo: Value not found");

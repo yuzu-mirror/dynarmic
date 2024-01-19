@@ -124,6 +124,8 @@ public:
         (rs.Realize(), ...);
     }
 
+    void AssertNoMoreUses() const;
+
 private:
     template<typename>
     friend struct RAReg;
