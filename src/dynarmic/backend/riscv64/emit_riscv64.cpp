@@ -21,29 +21,6 @@
 
 namespace Dynarmic::Backend::RV64 {
 
-// TODO: We should really move this to biscuit.
-void Mov64(biscuit::Assembler& as, biscuit::GPR rd, u64 imm) {
-    if (mcl::bit::sign_extend<32>(imm) == imm) {
-        as.LI(rd, static_cast<u32>(imm));
-        return;
-    }
-
-    // For 64-bit imm, a sequence of up to 8 instructions (i.e. LUI+ADDIW+SLLI+ADDI+SLLI+ADDI+SLLI+ADDI) is emitted.
-    // In the following, imm is processed from LSB to MSB while instruction emission is performed from MSB to LSB by calling Mov64 recursively.
-    // In each recursion, the lowest 12 bits are removed from imm and the optimal shift amount is calculated.
-    // Then, the remaining part of imm is processed recursively and as.LI() get called as soon as it fits into 32 bits.
-    s32 lo12 = static_cast<s32>(mcl::bit::sign_extend<12>(imm));
-    /* Add 0x800 to cancel out the signed extension of ADDI. */
-    u64 hi52 = (imm + 0x800) >> 12;
-    int shift = 12 + std::countr_zero(hi52);
-    hi52 = mcl::bit::sign_extend(shift, hi52 >> (shift - 12));
-    Mov64(as, rd, hi52);
-    as.SLLI64(rd, rd, shift);
-    if (lo12 != 0) {
-        as.ADDI(rd, rd, lo12);
-    }
-}
-
 template<IR::Opcode op>
 void EmitIR(biscuit::Assembler&, EmitContext&, IR::Inst*) {
     ASSERT_FALSE("Unimplemented opcode {}", op);
@@ -122,7 +99,7 @@ EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block, const EmitCon
     const auto term = block.GetTerminal();
     const IR::Term::LinkBlock* link_block_term = boost::get<IR::Term::LinkBlock>(&term);
     ASSERT(link_block_term);
-    Mov64(as, Xscratch0, link_block_term->next.Value());
+    as.LI(Xscratch0, link_block_term->next.Value());
     as.SD(Xscratch0, offsetof(A32JitState, regs) + sizeof(u32) * 15, Xstate);
 
     ptrdiff_t offset = reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ebi.entry_point;

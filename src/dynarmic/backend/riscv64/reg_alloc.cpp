@@ -16,9 +16,6 @@
 
 namespace Dynarmic::Backend::RV64 {
 
-// TODO: We should really move this to biscuit.
-void Mov64(biscuit::Assembler& as, biscuit::GPR rd, u64 imm);
-
 constexpr size_t spill_offset = offsetof(StackLayout, spill);
 constexpr size_t spill_slot_size = sizeof(decltype(StackLayout::spill)::value_type);
 
@@ -115,7 +112,7 @@ u32 RegAlloc::GenerateImmediate(const IR::Value& value) {
         SpillGpr(new_location_index);
         gprs[new_location_index].SetupScratchLocation();
 
-        Mov64(as, biscuit::GPR{new_location_index}, value.GetImmediateAsU64());
+        as.LI(biscuit::GPR{new_location_index}, value.GetImmediateAsU64());
 
         return new_location_index;
     } else if constexpr (kind == HostLoc::Kind::Fpr) {
