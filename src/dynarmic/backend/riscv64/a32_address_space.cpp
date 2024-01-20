@@ -9,6 +9,7 @@
 
 #include "dynarmic/backend/riscv64/abi.h"
 #include "dynarmic/backend/riscv64/emit_riscv64.h"
+#include "dynarmic/backend/riscv64/stack_layout.h"
 #include "dynarmic/frontend/A32/a32_location_descriptor.h"
 #include "dynarmic/frontend/A32/translate/a32_translate.h"
 #include "dynarmic/ir/opt/passes.h"
@@ -71,14 +72,14 @@ void A32AddressSpace::EmitPrelude() {
     prelude_info.run_code = GetCursorPtr<PreludeInfo::RunCodeFuncType>();
 
     // TODO: Minimize this.
-    as.ADDI(sp, sp, -64 * 8);
+    as.ADDI(sp, sp, -(64 * 8 + static_cast<int32_t>(sizeof(StackLayout))));
     for (u32 i = 1; i < 32; i += 1) {
         if (GPR{i} == sp || GPR{i} == tp)
             continue;
-        as.SD(GPR{i}, i * 8, sp);
+        as.SD(GPR{i}, i * 8 + static_cast<int32_t>(sizeof(StackLayout)), sp);
     }
     for (u32 i = 0; i < 32; i += 1) {
-        as.FSD(FPR{i}, (32 + i) * 8, sp);
+        as.FSD(FPR{i}, (32 + i) * 8 + static_cast<int32_t>(sizeof(StackLayout)), sp);
     }
 
     as.ADDI(Xstate, a1, 0);
@@ -89,12 +90,12 @@ void A32AddressSpace::EmitPrelude() {
     for (u32 i = 1; i < 32; i += 1) {
         if (GPR{i} == sp || GPR{i} == tp)
             continue;
-        as.LD(GPR{i}, i * 8, sp);
+        as.LD(GPR{i}, i * 8 + static_cast<int32_t>(sizeof(StackLayout)), sp);
     }
     for (u32 i = 0; i < 32; i += 1) {
-        as.FLD(FPR{i}, (32 + i) * 8, sp);
+        as.FLD(FPR{i}, (32 + i) * 8 + static_cast<int32_t>(sizeof(StackLayout)), sp);
     }
-    as.ADDI(sp, sp, 64 * 8);
+    as.ADDI(sp, sp, (64 * 8 + static_cast<int32_t>(sizeof(StackLayout))));
     as.JALR(ra);
 
     prelude_info.end_of_prelude = GetCursorPtr<CodePtr>();
