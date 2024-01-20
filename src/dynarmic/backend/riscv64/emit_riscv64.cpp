@@ -95,6 +95,7 @@ EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block, const EmitCon
         }
     }
 
+    reg_alloc.UpdateAllUses();
     reg_alloc.AssertNoMoreUses();
 
     // TODO: Add Cycles

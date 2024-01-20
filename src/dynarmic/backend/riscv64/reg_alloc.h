@@ -92,12 +92,14 @@ struct HostLocInfo final {
     std::vector<const IR::Inst*> values;
     size_t locked = 0;
     bool realized = false;
+    size_t uses_this_inst = 0;
     size_t accumulated_uses = 0;
     size_t expected_uses = 0;
 
     bool Contains(const IR::Inst*) const;
     void SetupScratchLocation();
     bool IsCompletelyEmpty() const;
+    void UpdateUses();
 };
 
 class RegAlloc {
@@ -124,6 +126,7 @@ public:
         (rs.Realize(), ...);
     }
 
+    void UpdateAllUses();
     void AssertNoMoreUses() const;
 
 private:
@@ -136,7 +139,6 @@ private:
     u32 RealizeReadImpl(const IR::Value& value);
     template<HostLoc::Kind kind>
     u32 RealizeWriteImpl(const IR::Inst* value);
-    void Unlock(HostLoc host_loc);
 
     u32 AllocateRegister(const std::array<HostLocInfo, 32>& regs, const std::vector<u32>& order) const;
     void SpillGpr(u32 index);
@@ -168,19 +170,11 @@ RAReg<T>::RAReg(RegAlloc& reg_alloc, bool write, const IR::Value& value)
 
 template<typename T>
 RAReg<T>::~RAReg() {
-    if (value.IsImmediate()) {
-        if (reg) {
-            // Immediate in scratch register
-            HostLocInfo& info = reg_alloc.ValueInfo(HostLoc{kind, reg->Index()});
-            info.locked--;
-            info.realized = false;
-        }
-    } else {
-        HostLocInfo& info = reg_alloc.ValueInfo(value.GetInst());
-        info.locked--;
-        if (reg) {
-            info.realized = false;
-        }
+    if (!value.IsImmediate()) {
+        reg_alloc.ValueInfo(value.GetInst()).locked--;
+    }
+    if (reg) {
+        reg_alloc.ValueInfo(HostLoc{kind, reg->Index()}).realized = false;
     }
 }
 

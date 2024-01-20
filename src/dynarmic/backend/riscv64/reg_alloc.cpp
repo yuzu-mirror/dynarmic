@@ -82,7 +82,18 @@ void HostLocInfo::SetupScratchLocation() {
 }
 
 bool HostLocInfo::IsCompletelyEmpty() const {
-    return values.empty() && !locked && !realized && !accumulated_uses && !expected_uses;
+    return values.empty() && !locked && !realized && !accumulated_uses && !expected_uses && !uses_this_inst;
+}
+
+void HostLocInfo::UpdateUses() {
+    accumulated_uses += uses_this_inst;
+    uses_this_inst = 0;
+
+    if (accumulated_uses == expected_uses) {
+        values.clear();
+        accumulated_uses = 0;
+        expected_uses = 0;
+    }
 }
 
 RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
@@ -92,7 +103,7 @@ RegAlloc::ArgumentInfo RegAlloc::GetArgumentInfo(IR::Inst* inst) {
         ret[i].value = arg;
         if (!arg.IsImmediate() && !IsValuelessType(arg.GetType())) {
             ASSERT_MSG(ValueLocation(arg.GetInst()), "argument must already been defined");
-            ValueInfo(arg.GetInst()).accumulated_uses++;
+            ValueInfo(arg.GetInst()).uses_this_inst++;
         }
     }
     return ret;
@@ -102,8 +113,20 @@ bool RegAlloc::IsValueLive(IR::Inst* inst) const {
     return !!ValueLocation(inst);
 }
 
+void RegAlloc::UpdateAllUses() {
+    for (auto& gpr : gprs) {
+        gpr.UpdateUses();
+    }
+    for (auto& fpr : fprs) {
+        fpr.UpdateUses();
+    }
+    for (auto& spill : spills) {
+        spill.UpdateUses();
+    }
+}
+
 void RegAlloc::AssertNoMoreUses() const {
-    const auto is_empty = [](const auto& i) { return i.values.empty() && !i.locked && !i.realized && !i.accumulated_uses && !i.expected_uses; };
+    const auto is_empty = [](const auto& i) { return i.IsCompletelyEmpty(); };
     ASSERT(std::all_of(gprs.begin(), gprs.end(), is_empty));
     ASSERT(std::all_of(fprs.begin(), fprs.end(), is_empty));
     ASSERT(std::all_of(spills.begin(), spills.end(), is_empty));
@@ -223,20 +246,6 @@ template u32 RegAlloc::RealizeReadImpl<HostLoc::Kind::Gpr>(const IR::Value& valu
 template u32 RegAlloc::RealizeReadImpl<HostLoc::Kind::Fpr>(const IR::Value& value);
 template u32 RegAlloc::RealizeWriteImpl<HostLoc::Kind::Gpr>(const IR::Inst* value);
 template u32 RegAlloc::RealizeWriteImpl<HostLoc::Kind::Fpr>(const IR::Inst* value);
-
-void RegAlloc::Unlock(HostLoc host_loc) {
-    HostLocInfo& info = ValueInfo(host_loc);
-    if (!info.realized) {
-        return;
-    }
-
-    if (info.accumulated_uses == info.expected_uses) {
-        info = {};
-    } else {
-        info.realized = false;
-        info.locked = false;
-    }
-}
 
 u32 RegAlloc::AllocateRegister(const std::array<HostLocInfo, 32>& regs, const std::vector<u32>& order) const {
     const auto empty = std::find_if(order.begin(), order.end(), [&](u32 i) { return regs[i].values.empty() && !regs[i].locked; });
