@@ -3744,35 +3744,51 @@ static void EmitVectorSignedAbsoluteDifference(size_t esize, EmitContext& ctx, I
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm y = ctx.reg_alloc.UseXmm(args[1]);
-    const Xbyak::Xmm mask = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Xmm tmp1 = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
-    code.movdqa(mask, x);
-    code.movdqa(tmp1, y);
+    // only signed 16-bit min/max are available below SSE4.1
+    if (code.HasHostFeature(HostFeature::SSE41) || esize == 16) {
+        code.movdqa(tmp, x);
 
-    switch (esize) {
-    case 8:
-        code.pcmpgtb(mask, y);
-        code.psubb(tmp1, x);
-        code.psubb(x, y);
-        break;
-    case 16:
-        code.pcmpgtw(mask, y);
-        code.psubw(tmp1, x);
-        code.psubw(x, y);
-        break;
-    case 32:
-        code.pcmpgtd(mask, y);
-        code.psubd(tmp1, x);
-        code.psubd(x, y);
-        break;
+        switch (esize) {
+        case 8:
+            code.pminsb(tmp, y);
+            code.pmaxsb(x, y);
+            code.psubb(x, tmp);
+            break;
+        case 16:
+            code.pminsw(tmp, y);
+            code.pmaxsw(x, y);
+            code.psubw(x, tmp);
+            break;
+        case 32:
+            code.pminsd(tmp, y);
+            code.pmaxsd(x, y);
+            code.psubd(x, tmp);
+            break;
+        default:
+            UNREACHABLE();
+        }
+    } else {
+        code.movdqa(tmp, y);
+
+        switch (esize) {
+        case 8:
+            code.pcmpgtb(tmp, x);
+            code.psubb(x, y);
+            code.pxor(x, tmp);
+            code.psubb(x, tmp);
+            break;
+        case 32:
+            code.pcmpgtd(tmp, x);
+            code.psubd(x, y);
+            code.pxor(x, tmp);
+            code.psubd(x, tmp);
+            break;
+        default:
+            UNREACHABLE();
+        }
     }
-
-    code.movdqa(tmp2, mask);
-    code.pand(x, mask);
-    code.pandn(tmp2, tmp1);
-    code.por(x, tmp2);
 
     ctx.reg_alloc.DefineValue(inst, x);
 }
