@@ -1519,6 +1519,64 @@ TEST_CASE("A64: rand2", "[a64][.]") {
     REQUIRE(jit.GetVector(31) == Vector{0xb3b2b3b200000000, 0x0000000000000000});
 }
 
+TEST_CASE("A64: SABD", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x4e247460);  // SABD V0.16B, V3.16B, V4.16B
+    env.code_mem.emplace_back(0x4e6674a1);  // SABD V1.8H, V5.8H, V6.8H
+    env.code_mem.emplace_back(0x4ea874e2);  // SABD V2.4S, V7.4S, V8.4S
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    constexpr std::array<Vector, 9> vectors = {
+        // expected output vectors (int8, int16, int32)
+        Vector{0xa8'4a'cd'0f'7b'2b'78'49, 0x00'ff'88'01'29'34'10'1d},
+        Vector{0x1b8c'83cc'4640'37e5, 0x1696'ab90'3d96'2155},
+        Vector{0x1c656335'733d91c4, 0x1a488da4'b025dc65},
+        // int8 input vectors  [3-4]
+        Vector{0x81'60'7e'60'c4'd6'20'34, 0x12'7f'f7'00'3f'db'0b'a0},
+        Vector{0x29'16'b1'6f'3f'ab'a8'7d, 0x12'80'7f'ff'16'0f'fb'83},
+        // int16 input vectors [5-6]
+        Vector{0x8bbd'c450'2dd9'7179, 0xf171'966c'33f2'423b},
+        Vector{0xa749'481c'e799'3994, 0xdadb'41fc'f65c'20e6},
+        // int32 input vectors [7-8]
+        Vector{0x57816e27'df8b9293, 0xe1808186'495e497a},
+        Vector{0x73e6d15c'52c92457, 0xfbc90f2a'99386d15},
+    };
+
+    jit.SetPC(0);
+    jit.SetVector(3, vectors[3]);
+    jit.SetVector(4, vectors[4]);
+    jit.SetVector(5, vectors[5]);
+    jit.SetVector(6, vectors[6]);
+    jit.SetVector(7, vectors[7]);
+    jit.SetVector(8, vectors[8]);
+
+    env.ticks_left = 4;
+    jit.Run();
+
+    CHECK(jit.GetVector(0) == vectors[0]);
+    CHECK(jit.GetVector(1) == vectors[1]);
+    CHECK(jit.GetVector(2) == vectors[2]);
+
+    // ensure the correct results are not being produced randomly
+    jit.SetPC(0);
+    jit.SetVectors(std::array<Vector, 32>{});
+    jit.SetVector(3, vectors[4]);
+    jit.SetVector(4, vectors[3]);
+    jit.SetVector(5, vectors[6]);
+    jit.SetVector(6, vectors[5]);
+    jit.SetVector(7, vectors[8]);
+    jit.SetVector(8, vectors[7]);
+
+    env.ticks_left = 4;
+    jit.Run();
+
+    CHECK(jit.GetVector(0) == vectors[0]);
+    CHECK(jit.GetVector(1) == vectors[1]);
+    CHECK(jit.GetVector(2) == vectors[2]);
+}
+
 TEST_CASE("A64: UZP{1,2}.2D", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
