@@ -17,6 +17,194 @@
 
 namespace Dynarmic::Backend::RV64 {
 
+void EmitA32Cond(biscuit::Assembler& as, EmitContext&, IR::Cond cond, biscuit::Label* label) {
+    as.LWU(Xscratch0, offsetof(A32JitState, cpsr_nzcv), Xstate);
+    as.SRLIW(Xscratch0, Xscratch0, 28);
+
+    switch (cond) {
+    case IR::Cond::EQ:
+        // Z == 1
+        as.ANDI(Xscratch0, Xscratch0, 0b0100);
+        as.BNEZ(Xscratch0, label);
+        break;
+    case IR::Cond::NE:
+        // Z = 0
+        as.ANDI(Xscratch0, Xscratch0, 0b0100);
+        as.BEQZ(Xscratch0, label);
+        break;
+    case IR::Cond::CS:
+        // C == 1
+        as.ANDI(Xscratch0, Xscratch0, 0b0010);
+        as.BNEZ(Xscratch0, label);
+        break;
+    case IR::Cond::CC:
+        // C == 0
+        as.ANDI(Xscratch0, Xscratch0, 0b0010);
+        as.BEQZ(Xscratch0, label);
+        break;
+    case IR::Cond::MI:
+        // N == 1
+        as.ANDI(Xscratch0, Xscratch0, 0b1000);
+        as.BNEZ(Xscratch0, label);
+        break;
+    case IR::Cond::PL:
+        // N == 0
+        as.ANDI(Xscratch0, Xscratch0, 0b1000);
+        as.BEQZ(Xscratch0, label);
+        break;
+    case IR::Cond::VS:
+        // V == 1
+        as.ANDI(Xscratch0, Xscratch0, 0b0001);
+        as.BNEZ(Xscratch0, label);
+        break;
+    case IR::Cond::VC:
+        // V == 0
+        as.ANDI(Xscratch0, Xscratch0, 0b0001);
+        as.BEQZ(Xscratch0, label);
+        break;
+    case IR::Cond::HI:
+        // Z == 0 && C == 1
+        as.ANDI(Xscratch0, Xscratch0, 0b0110);
+        as.ADDI(Xscratch1, biscuit::zero, 0b0010);
+        as.BEQ(Xscratch0, Xscratch1, label);
+        break;
+    case IR::Cond::LS:
+        // Z == 1 || C == 0
+        as.ANDI(Xscratch0, Xscratch0, 0b0110);
+        as.ADDI(Xscratch1, biscuit::zero, 0b0010);
+        as.BNE(Xscratch0, Xscratch1, label);
+        break;
+    case IR::Cond::GE:
+        // N == V
+        as.ANDI(Xscratch0, Xscratch0, 0b1001);
+        as.ADDI(Xscratch1, biscuit::zero, 0b1001);
+        as.BEQ(Xscratch0, Xscratch1, label);
+        as.BEQZ(Xscratch0, label);
+        break;
+    case IR::Cond::LT:
+        // N != V
+        as.ANDI(Xscratch0, Xscratch0, 0b1001);
+        as.ADDI(Xscratch1, biscuit::zero, 0b1000);
+        as.BEQ(Xscratch0, Xscratch1, label);
+        as.ADDI(Xscratch1, biscuit::zero, 0b0001);
+        as.BEQ(Xscratch0, Xscratch1, label);
+        break;
+    case IR::Cond::GT:
+        // Z == 0 && N == V
+        as.ANDI(Xscratch0, Xscratch0, 0b1101);
+        as.ADDI(Xscratch1, biscuit::zero, 0b1001);
+        as.BEQ(Xscratch0, Xscratch1, label);
+        as.BEQZ(Xscratch0, label);
+        break;
+    case IR::Cond::LE:
+        // Z == 1 || N != V
+        as.ANDI(Xscratch0, Xscratch0, 0b1101);
+        as.LI(Xscratch1, 0b11000100110010);
+        as.SRLW(Xscratch0, Xscratch1, Xscratch0);
+        as.ANDI(Xscratch0, Xscratch0, 1);
+        as.BNEZ(Xscratch0, label);
+        break;
+    default:
+        ASSERT_MSG(false, "Unknown cond {}", static_cast<size_t>(cond));
+        break;
+    }
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::Terminal terminal, IR::LocationDescriptor initial_location, bool is_single_step);
+
+void EmitA32Terminal(biscuit::Assembler&, EmitContext&, IR::Term::Interpret, IR::LocationDescriptor, bool) {
+    ASSERT_FALSE("Interpret should never be emitted.");
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::ReturnToDispatch, IR::LocationDescriptor, bool) {
+    EmitRelocation(as, ctx, LinkTarget::ReturnFromRunCode);
+}
+
+void EmitSetUpperLocationDescriptor(biscuit::Assembler& as, EmitContext& ctx, IR::LocationDescriptor new_location, IR::LocationDescriptor old_location) {
+    auto get_upper = [](const IR::LocationDescriptor& desc) -> u32 {
+        return static_cast<u32>(A32::LocationDescriptor{desc}.SetSingleStepping(false).UniqueHash() >> 32);
+    };
+
+    const u32 old_upper = get_upper(old_location);
+    const u32 new_upper = [&] {
+        const u32 mask = ~u32(ctx.emit_conf.always_little_endian ? 0x2 : 0);
+        return get_upper(new_location) & mask;
+    }();
+
+    if (old_upper != new_upper) {
+        as.LI(Xscratch0, new_upper);
+        as.SW(Xscratch0, offsetof(A32JitState, upper_location_descriptor), Xstate);
+    }
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::LinkBlock terminal, IR::LocationDescriptor initial_location, bool) {
+    EmitSetUpperLocationDescriptor(as, ctx, terminal.next, initial_location);
+
+    as.LI(Xscratch0, terminal.next.Value());
+    as.SW(Xscratch0, offsetof(A32JitState, regs) + sizeof(u32) * 15, Xstate);
+    EmitRelocation(as, ctx, LinkTarget::ReturnFromRunCode);
+
+    // TODO: Implement LinkBlock optimization
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::LinkBlockFast terminal, IR::LocationDescriptor initial_location, bool) {
+    EmitSetUpperLocationDescriptor(as, ctx, terminal.next, initial_location);
+
+    as.LI(Xscratch0, terminal.next.Value());
+    as.SW(Xscratch0, offsetof(A32JitState, regs) + sizeof(u32) * 15, Xstate);
+    EmitRelocation(as, ctx, LinkTarget::ReturnFromRunCode);
+
+    // TODO: Implement LinkBlockFast optimization
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::PopRSBHint, IR::LocationDescriptor, bool) {
+    EmitRelocation(as, ctx, LinkTarget::ReturnFromRunCode);
+
+    // TODO: Implement PopRSBHint optimization
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::FastDispatchHint, IR::LocationDescriptor, bool) {
+    EmitRelocation(as, ctx, LinkTarget::ReturnFromRunCode);
+
+    // TODO: Implement FastDispatchHint optimization
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::If terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    biscuit::Label pass;
+    EmitA32Cond(as, ctx, terminal.if_, &pass);
+    EmitA32Terminal(as, ctx, terminal.else_, initial_location, is_single_step);
+    as.Bind(&pass);
+    EmitA32Terminal(as, ctx, terminal.then_, initial_location, is_single_step);
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::CheckBit terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    biscuit::Label fail;
+    as.LBU(Xscratch0, offsetof(StackLayout, check_bit), Xstate);
+    as.BEQZ(Xscratch0, &fail);
+    EmitA32Terminal(as, ctx, terminal.then_, initial_location, is_single_step);
+    as.Bind(&fail);
+    EmitA32Terminal(as, ctx, terminal.else_, initial_location, is_single_step);
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::CheckHalt terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    biscuit::Label fail;
+    as.LWU(Xscratch0, 0, Xhalt);
+    as.FENCE(biscuit::FenceOrder::RW, biscuit::FenceOrder::RW);
+    as.BNEZ(Xscratch0, &fail);
+    EmitA32Terminal(as, ctx, terminal.else_, initial_location, is_single_step);
+    as.Bind(&fail);
+    EmitRelocation(as, ctx, LinkTarget::ReturnFromRunCode);
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx, IR::Term::Terminal terminal, IR::LocationDescriptor initial_location, bool is_single_step) {
+    boost::apply_visitor([&](const auto& t) { EmitA32Terminal(as, ctx, t, initial_location, is_single_step); }, terminal);
+}
+
+void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx) {
+    const A32::LocationDescriptor location{ctx.block.Location()};
+    EmitA32Terminal(as, ctx, ctx.block.GetTerminal(), location.SetSingleStepping(false), location.SingleStepping());
+}
+
 template<>
 void EmitIR<IR::Opcode::A32GetRegister>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
     const A32::Reg reg = inst->GetArg(0).GetA32RegRef();

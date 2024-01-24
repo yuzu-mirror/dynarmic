@@ -54,7 +54,7 @@ void EmitIR<IR::Opcode::GetNZFromOp>(biscuit::Assembler& as, EmitContext& ctx, I
 
     as.SEQZ(Xnz, Xvalue);
     as.SLLI(Xnz, Xnz, 30);
-    as.SLT(Xscratch0, Xvalue, biscuit::zero);
+    as.SLTZ(Xscratch0, Xvalue);
     as.SLLI(Xscratch0, Xscratch0, 31);
     as.OR(Xnz, Xnz, Xscratch0);
 }
@@ -98,21 +98,27 @@ EmittedBlockInfo EmitRV64(biscuit::Assembler& as, IR::Block block, const EmitCon
     reg_alloc.UpdateAllUses();
     reg_alloc.AssertNoMoreUses();
 
-    // TODO: Add Cycles
+    if (emit_conf.enable_cycle_counting) {
+        const size_t cycles_to_add = block.CycleCount();
+        as.LD(Xscratch0, offsetof(StackLayout, cycles_remaining), sp);
+        if (mcl::bit::sign_extend<12>(-cycles_to_add) == -cycles_to_add) {
+            as.ADDI(Xscratch0, Xscratch0, -cycles_to_add);
+        } else {
+            as.LI(Xscratch1, cycles_to_add);
+            as.SUB(Xscratch0, Xscratch0, Xscratch1);
+        }
+        as.SD(Xscratch0, offsetof(StackLayout, cycles_remaining), sp);
+    }
 
-    // TODO: Emit Terminal
-    const auto term = block.GetTerminal();
-    const IR::Term::LinkBlock* link_block_term = boost::get<IR::Term::LinkBlock>(&term);
-    ASSERT(link_block_term);
-    as.LI(Xscratch0, link_block_term->next.Value());
-    as.SD(Xscratch0, offsetof(A32JitState, regs) + sizeof(u32) * 15, Xstate);
-
-    ptrdiff_t offset = reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ebi.entry_point;
-    ebi.relocations.emplace_back(Relocation{offset, LinkTarget::ReturnFromRunCode});
-    as.NOP();
+    EmitA32Terminal(as, ctx);
 
     ebi.size = reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ebi.entry_point;
     return ebi;
+}
+
+void EmitRelocation(biscuit::Assembler& as, EmitContext& ctx, LinkTarget link_target) {
+    ctx.ebi.relocations.emplace_back(Relocation{reinterpret_cast<CodePtr>(as.GetCursorPointer()) - ctx.ebi.entry_point, link_target});
+    as.NOP();
 }
 
 }  // namespace Dynarmic::Backend::RV64

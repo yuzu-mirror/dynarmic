@@ -82,9 +82,9 @@ void A32AddressSpace::EmitPrelude() {
         as.FSD(FPR{i}, (32 + i) * 8 + static_cast<int32_t>(sizeof(StackLayout)), sp);
     }
 
-    as.ADDI(Xstate, a1, 0);
-    as.ADDI(Xhalt, a2, 0);
-    as.JALR(x0, 0, a0);
+    as.MV(Xstate, a1);
+    as.MV(Xhalt, a2);
+    as.JR(a0);
 
     prelude_info.return_from_run_code = GetCursorPtr<CodePtr>();
     for (u32 i = 1; i < 32; i += 1) {
@@ -116,7 +116,10 @@ EmittedBlockInfo A32AddressSpace::Emit(IR::Block block) {
         ClearCache();
     }
 
-    EmittedBlockInfo block_info = EmitRV64(as, std::move(block), {});
+    EmittedBlockInfo block_info = EmitRV64(as, std::move(block), {
+                                                                     .enable_cycle_counting = conf.enable_cycle_counting,
+                                                                     .always_little_endian = conf.always_little_endian,
+                                                                 });
     Link(block_info);
 
     return block_info;
@@ -130,7 +133,7 @@ void A32AddressSpace::Link(EmittedBlockInfo& block_info) {
         switch (target) {
         case LinkTarget::ReturnFromRunCode: {
             std::ptrdiff_t off = prelude_info.return_from_run_code - reinterpret_cast<CodePtr>(a.GetCursorPointer());
-            a.JAL(x0, off);
+            a.J(off);
             break;
         }
         default:
