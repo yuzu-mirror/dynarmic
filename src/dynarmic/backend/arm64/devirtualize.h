@@ -47,7 +47,7 @@ DevirtualizedCall DevirtualizeDefault(mcl::class_type<decltype(mfp)>* this_) {
 
 template<auto mfp>
 DevirtualizedCall Devirtualize(mcl::class_type<decltype(mfp)>* this_) {
-#if defined(_WIN32)
+#if defined(_WIN32) && defined(_MSC_VER)
     return DevirtualizeWindows<mfp>(this_);
 #else
     return DevirtualizeDefault<mfp>(this_);
