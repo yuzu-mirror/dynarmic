@@ -1800,3 +1800,77 @@ TEST_CASE("A64: {S,U}MINP.H, {S,U}MAXP.H", "[a64]") {
     CHECK(jit.GetVector(8) == vectors[8]);
     CHECK(jit.GetVector(9) == vectors[9]);
 }
+
+TEST_CASE("A64: {S,U}MINP.B, {S,U}MAXP.B", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x0e21ac02);  // SMINP V2.8B, V0.8B, V1.8B
+    env.code_mem.emplace_back(0x2e21ac03);  // UMINP V3.8B, V0.8B, V1.8B
+    env.code_mem.emplace_back(0x4e21ac04);  // SMINP V4.16B, V0.16B, V1.16B
+    env.code_mem.emplace_back(0x6e21ac05);  // UMINP V5.16B, V0.16B, V1.16B
+    env.code_mem.emplace_back(0x0e21a406);  // SMAXP V6.8B, V0.8B, V1.8B
+    env.code_mem.emplace_back(0x2e21a407);  // UMAXP V7.8B, V0.8B, V1.8B
+    env.code_mem.emplace_back(0x4e21a408);  // SMAXP V8.16B, V0.16B, V1.16B
+    env.code_mem.emplace_back(0x6e21a409);  // UMAXP V9.16B, V0.16B, V1.16B
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    constexpr std::array<Vector, 12> vectors = {
+        // initial input vectors [0-1]
+        Vector{0x02'03'7F'7E'80'7F'FF'FE, 0x40'41'70'71'F0'F1'A0'A1},
+        Vector{0xFF'00'81'18'99'9A'12'34, 0xC3'C2'B1'B0'82'7E'81'7F},
+        // expected output vectors [2-9]
+        Vector{0xFF'81'99'12'02'7E'80'FE, 0},
+        Vector{0x00'18'99'12'02'7E'7F'FE, 0},
+        Vector{0x40'70'F0'A0'02'7E'80'FE, 0xC2'B0'82'81'FF'81'99'12},
+        Vector{0x40'70'F0'A0'02'7E'7F'FE, 0xC2'B0'7E'7F'00'18'99'12},
+        Vector{0x00'18'9A'34'03'7F'7F'FF, 0},
+        Vector{0xFF'81'9A'34'03'7F'80'FF, 0},
+        Vector{0x41'71'F1'A1'03'7F'7F'FF, 0xC3'B1'7E'7F'00'18'9A'34},
+        Vector{0x41'71'F1'A1'03'7F'80'FF, 0xC3'B1'82'81'FF'81'9A'34},
+        // input vectors with elements swapped pairwise [10-11]
+        Vector{0x03'02'7E'7F'7F'80'FE'FF, 0x41'40'71'70'F1'F0'A1'A0},
+        Vector{0x00'FF'18'81'9A'99'34'12, 0xC2'C3'B0'B1'7E'82'7F'81},
+    };
+
+    jit.SetPC(0);
+    jit.SetVector(0, vectors[0]);
+    jit.SetVector(1, vectors[1]);
+
+    env.ticks_left = 9;
+    jit.Run();
+
+    CHECK(jit.GetVector(2) == vectors[2]);
+    CHECK(jit.GetVector(3) == vectors[3]);
+
+    CHECK(jit.GetVector(4) == vectors[4]);
+    CHECK(jit.GetVector(5) == vectors[5]);
+
+    CHECK(jit.GetVector(6) == vectors[6]);
+    CHECK(jit.GetVector(7) == vectors[7]);
+
+    CHECK(jit.GetVector(8) == vectors[8]);
+    CHECK(jit.GetVector(9) == vectors[9]);
+
+    // run the same tests again but with the input vectors swapped pairwise,
+    // to ensure we aren't randomly producing the correct values
+    jit.SetPC(0);
+    jit.SetVectors(std::array<Vector, 32>{});
+    jit.SetVector(0, vectors[10]);
+    jit.SetVector(1, vectors[11]);
+
+    env.ticks_left = 9;
+    jit.Run();
+
+    CHECK(jit.GetVector(2) == vectors[2]);
+    CHECK(jit.GetVector(3) == vectors[3]);
+
+    CHECK(jit.GetVector(4) == vectors[4]);
+    CHECK(jit.GetVector(5) == vectors[5]);
+
+    CHECK(jit.GetVector(6) == vectors[6]);
+    CHECK(jit.GetVector(7) == vectors[7]);
+
+    CHECK(jit.GetVector(8) == vectors[8]);
+    CHECK(jit.GetVector(9) == vectors[9]);
+}
