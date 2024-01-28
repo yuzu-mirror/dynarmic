@@ -47,7 +47,7 @@ static std::function<void(BlockOfCode&)> GenRCP(const A32::UserConfig& conf) {
             code.mov(code.r14, mcl::bit_cast<u64>(conf.page_table));
         }
         if (conf.fastmem_pointer) {
-            code.mov(code.r13, mcl::bit_cast<u64>(conf.fastmem_pointer));
+            code.mov(code.r13, *conf.fastmem_pointer);
         }
     };
 }

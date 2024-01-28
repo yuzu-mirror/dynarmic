@@ -182,7 +182,7 @@ struct UserConfig {
     // This should point to the beginning of a 4GB address space which is in arranged just like
     // what you wish for emulated memory to be. If the host page faults on an address, the JIT
     // will fallback to calling the MemoryRead*/MemoryWrite* callbacks.
-    void* fastmem_pointer = nullptr;
+    std::optional<uintptr_t> fastmem_pointer = std::nullopt;
     /// Determines if instructions that pagefault should cause recompilation of that block
     /// with fastmem disabled.
     /// Recompiled code will use the page_table if this is available, otherwise memory

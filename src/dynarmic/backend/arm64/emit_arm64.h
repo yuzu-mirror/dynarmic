@@ -132,7 +132,7 @@ struct EmitConfig {
     bool only_detect_misalignment_via_page_table_on_page_boundary;
 
     // Fastmem
-    u64 fastmem_pointer;
+    std::optional<u64> fastmem_pointer;
     bool recompile_on_fastmem_failure;
     size_t fastmem_address_space_bits;
     bool silently_mirror_fastmem;

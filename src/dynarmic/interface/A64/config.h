@@ -241,7 +241,7 @@ struct UserConfig {
     /// address space which is in arranged just like what you wish for emulated memory to
     /// be. If the host page faults on an address, the JIT will fallback to calling the
     /// MemoryRead*/MemoryWrite* callbacks.
-    void* fastmem_pointer = nullptr;
+    std::optional<uintptr_t> fastmem_pointer = std::nullopt;
     /// Determines if instructions that pagefault should cause recompilation of that block
     /// with fastmem disabled.
     /// Recompiled code will use the page_table if this is available, otherwise memory
@@ -249,13 +249,13 @@ struct UserConfig {
     bool recompile_on_fastmem_failure = true;
     /// Declares how many valid address bits are there in virtual addresses.
     /// Determines the size of fastmem arena. Valid values are between 12 and 64 inclusive.
-    /// This is only used if fastmem_pointer is not nullptr.
+    /// This is only used if fastmem_pointer is set.
     size_t fastmem_address_space_bits = 36;
     /// Determines what happens if the guest accesses an entry that is off the end of the
     /// fastmem arena. If true, Dynarmic will silently mirror fastmem's address space. If
     /// false, accessing memory outside of fastmem bounds will result in a call to the
     /// relevant memory callback.
-    /// This is only used if fastmem_pointer is not nullptr.
+    /// This is only used if fastmem_pointer is set.
     bool silently_mirror_fastmem = true;
 
     /// Determines if we should use the above fastmem_pointer for exclusive reads and

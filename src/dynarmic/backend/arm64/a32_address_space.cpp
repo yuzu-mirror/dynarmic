@@ -233,7 +233,7 @@ void A32AddressSpace::EmitPrelude() {
             code.MOV(Xpagetable, mcl::bit_cast<u64>(conf.page_table));
         }
         if (conf.fastmem_pointer) {
-            code.MOV(Xfastmem, mcl::bit_cast<u64>(conf.fastmem_pointer));
+            code.MOV(Xfastmem, *conf.fastmem_pointer);
         }
 
         if (conf.HasOptimization(OptimizationFlag::ReturnStackBuffer)) {
@@ -272,7 +272,7 @@ void A32AddressSpace::EmitPrelude() {
             code.MOV(Xpagetable, mcl::bit_cast<u64>(conf.page_table));
         }
         if (conf.fastmem_pointer) {
-            code.MOV(Xfastmem, mcl::bit_cast<u64>(conf.fastmem_pointer));
+            code.MOV(Xfastmem, *conf.fastmem_pointer);
         }
 
         if (conf.HasOptimization(OptimizationFlag::ReturnStackBuffer)) {
@@ -388,7 +388,7 @@ EmitConfig A32AddressSpace::GetEmitConfig() {
         .detect_misaligned_access_via_page_table = conf.detect_misaligned_access_via_page_table,
         .only_detect_misalignment_via_page_table_on_page_boundary = conf.only_detect_misalignment_via_page_table_on_page_boundary,
 
-        .fastmem_pointer = mcl::bit_cast<u64>(conf.fastmem_pointer),
+        .fastmem_pointer = conf.fastmem_pointer,
         .recompile_on_fastmem_failure = conf.recompile_on_fastmem_failure,
         .fastmem_address_space_bits = 32,
         .silently_mirror_fastmem = true,
