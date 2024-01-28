@@ -17,84 +17,69 @@
 #include "oaknut/impl/list.hpp"
 #include "oaknut/impl/multi_typed_name.hpp"
 #include "oaknut/impl/offset.hpp"
+#include "oaknut/impl/overloaded.hpp"
 #include "oaknut/impl/reg.hpp"
 #include "oaknut/impl/string_literal.hpp"
 #include "oaknut/oaknut_exception.hpp"
 
 namespace oaknut {
 
-namespace detail {
-
-template<StringLiteral bs, StringLiteral barg>
-constexpr std::uint32_t get_bits()
-{
-    std::uint32_t result = 0;
-    for (std::size_t i = 0; i < 32; i++) {
-        for (std::size_t a = 0; a < barg.strlen; a++) {
-            if (bs.value[i] == barg.value[a]) {
-                result |= 1 << (31 - i);
-            }
-        }
-    }
-    return result;
-}
-
-template<class... Ts>
-struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-
-template<class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
-
-}  // namespace detail
-
 struct Label {
 public:
     Label() = default;
+
+    bool is_bound() const
+    {
+        return m_offset.has_value();
+    }
+
+    std::ptrdiff_t offset() const
+    {
+        return m_offset.value();
+    }
 
 private:
     template<typename Policy>
     friend class BasicCodeGenerator;
 
-    explicit Label(std::uintptr_t addr)
-        : m_addr(addr)
+    explicit Label(std::ptrdiff_t offset)
+        : m_offset(offset)
     {}
 
-    using EmitFunctionType = std::uint32_t (*)(std::uintptr_t wb_addr, std::uintptr_t resolved_addr);
+    using EmitFunctionType = std::uint32_t (*)(std::ptrdiff_t wb_offset, std::ptrdiff_t resolved_offset);
 
     struct Writeback {
-        std::uintptr_t m_wb_addr;
+        std::ptrdiff_t m_wb_offset;
         std::uint32_t m_mask;
         EmitFunctionType m_fn;
     };
 
-    std::optional<std::uintptr_t> m_addr;
+    std::optional<std::ptrdiff_t> m_offset;
     std::vector<Writeback> m_wbs;
 };
 
 template<typename Policy>
 class BasicCodeGenerator : public Policy {
 public:
-    BasicCodeGenerator(typename Policy::constructor_argument_type arg)
-        : Policy(arg)
+    BasicCodeGenerator(typename Policy::constructor_argument_type arg, std::uint32_t* xmem)
+        : Policy(arg, xmem)
     {}
 
-    Label l()
+    Label l() const
     {
-        return Label{Policy::current_address()};
+        return Label{Policy::offset()};
     }
 
-    void l(Label& label)
+    void l(Label& label) const
     {
-        if (label.m_addr)
+        if (label.is_bound())
             throw OaknutException{ExceptionType::LabelRedefinition};
 
-        const auto target_addr = Policy::current_address();
-        label.m_addr = target_addr;
+        const auto target_offset = Policy::offset();
+        label.m_offset = target_offset;
         for (auto& wb : label.m_wbs) {
-            const std::uint32_t value = wb.m_fn(wb.m_wb_addr, target_addr);
-            Policy::set_at_address(wb.m_wb_addr, value, wb.m_mask);
+            const std::uint32_t value = wb.m_fn(wb.m_wb_offset, target_offset);
+            Policy::set_at_offset(wb.m_wb_offset, value, wb.m_mask);
         }
         label.m_wbs.clear();
     }
@@ -123,8 +108,8 @@ public:
             return;
         if (MovImm16::is_valid(imm))
             return MOVZ(wd, imm);
-        if (MovImm16::is_valid(~imm))
-            return MOVN(wd, ~imm);
+        if (MovImm16::is_valid(static_cast<std::uint32_t>(~imm)))
+            return MOVN(wd, static_cast<std::uint32_t>(~imm));
         if (detail::encode_bit_imm(imm))
             return ORR(wd, WzrReg{}, imm);
 
@@ -173,10 +158,10 @@ public:
     // Convenience function for moving pointers to registers
     void MOVP2R(XReg xd, const void* addr)
     {
-        int64_t diff = reinterpret_cast<uint64_t>(addr) - Policy::current_address();
+        const int64_t diff = reinterpret_cast<std::uint64_t>(addr) - Policy::template xptr<std::uintptr_t>();
         if (diff >= -0xF'FFFF && diff <= 0xF'FFFF) {
             ADR(xd, addr);
-        } else if (diff >= -int64_t{0xFFFF'FFFF} && diff <= int64_t{0xFFFF'FFFF}) {
+        } else if (PageOffset<21, 12>::valid(Policy::template xptr<std::uintptr_t>(), reinterpret_cast<std::uintptr_t>(addr))) {
             ADRL(xd, addr);
         } else {
             MOV(xd, reinterpret_cast<uint64_t>(addr));
@@ -188,7 +173,7 @@ public:
         if (alignment < 4 || (alignment & (alignment - 1)) != 0)
             throw OaknutException{ExceptionType::InvalidAlignment};
 
-        while (Policy::template ptr<std::uintptr_t>() & (alignment - 1)) {
+        while (Policy::offset() & (alignment - 1)) {
             NOP();
         }
     }
@@ -210,85 +195,55 @@ private:
     template<StringLiteral bs, StringLiteral... bargs, typename... Ts>
     void emit(Ts... args)
     {
-        std::uint32_t encoding = detail::get_bits<bs, "1">();
-        encoding |= (0 | ... | encode<detail::get_bits<bs, bargs>()>(std::forward<Ts>(args)));
+        constexpr std::uint32_t base = detail::find<bs, "1">();
+        std::uint32_t encoding = (base | ... | encode<detail::find<bs, bargs>()>(std::forward<Ts>(args)));
         Policy::append(encoding);
-    }
-
-    template<std::uint32_t splat, std::size_t size, std::size_t align>
-    std::uint32_t encode(AddrOffset<size, align> v)
-    {
-        static_assert(std::popcount(splat) == size - align);
-
-        const auto encode_fn = [](std::uintptr_t current_addr, std::uintptr_t target) {
-            const std::ptrdiff_t diff = target - current_addr;
-            return pdep<splat>(AddrOffset<size, align>::encode(diff));
-        };
-
-        return std::visit(detail::overloaded{
-                              [&](std::uint32_t encoding) {
-                                  return pdep<splat>(encoding);
-                              },
-                              [&](Label* label) {
-                                  if (label->m_addr) {
-                                      return encode_fn(Policy::current_address(), *label->m_addr);
-                                  }
-
-                                  label->m_wbs.emplace_back(Label::Writeback{Policy::current_address(), ~splat, static_cast<Label::EmitFunctionType>(encode_fn)});
-                                  return 0u;
-                              },
-                              [&](void* p) {
-                                  return encode_fn(Policy::current_address(), reinterpret_cast<std::uintptr_t>(p));
-                              },
-                          },
-                          v.m_payload);
-    }
-
-    template<std::uint32_t splat, std::size_t size, std::size_t shift_amount>
-    std::uint32_t encode(PageOffset<size, shift_amount> v)
-    {
-        static_assert(std::popcount(splat) == size);
-
-        const auto encode_fn = [](std::uintptr_t current_addr, std::uintptr_t target) {
-            return pdep<splat>(PageOffset<size, shift_amount>::encode(current_addr, target));
-        };
-
-        return std::visit(detail::overloaded{
-                              [&](Label* label) {
-                                  if (label->m_addr) {
-                                      return encode_fn(Policy::current_address(), *label->m_addr);
-                                  }
-
-                                  label->m_wbs.emplace_back(Label::Writeback{Policy::current_address(), ~splat, static_cast<Label::EmitFunctionType>(encode_fn)});
-                                  return 0u;
-                              },
-                              [&](const void* p) {
-                                  return encode_fn(Policy::current_address(), reinterpret_cast<std::uintptr_t>(p));
-                              },
-                          },
-                          v.m_payload);
     }
 };
 
 struct PointerCodeGeneratorPolicy {
 public:
+    std::ptrdiff_t offset() const
+    {
+        return (m_ptr - m_wmem) * sizeof(std::uint32_t);
+    }
+
+    void set_offset(std::ptrdiff_t offset)
+    {
+        if ((offset % sizeof(std::uint32_t)) != 0)
+            throw OaknutException{ExceptionType::InvalidAlignment};
+        m_ptr = m_wmem + offset / sizeof(std::uint32_t);
+    }
+
     template<typename T>
-    T ptr()
+    T wptr() const
     {
         static_assert(std::is_pointer_v<T> || std::is_same_v<T, std::uintptr_t> || std::is_same_v<T, std::intptr_t>);
         return reinterpret_cast<T>(m_ptr);
     }
 
-    void set_ptr(std::uint32_t* ptr_)
+    template<typename T>
+    T xptr() const
     {
-        m_ptr = ptr_;
+        static_assert(std::is_pointer_v<T> || std::is_same_v<T, std::uintptr_t> || std::is_same_v<T, std::intptr_t>);
+        return reinterpret_cast<T>(m_xmem + (m_ptr - m_wmem));
+    }
+
+    void set_wptr(std::uint32_t* p)
+    {
+        m_ptr = p;
+    }
+
+    void set_xptr(std::uint32_t* p)
+    {
+        m_ptr = m_wmem + (p - m_xmem);
     }
 
 protected:
     using constructor_argument_type = std::uint32_t*;
 
-    PointerCodeGeneratorPolicy(std::uint32_t* ptr_)
-        : m_ptr(ptr_)
+    PointerCodeGeneratorPolicy(std::uint32_t* wmem, std::uint32_t* xmem)
+        : m_ptr(wmem), m_wmem(wmem), m_xmem(xmem)
     {}
 
     void append(std::uint32_t instruction)
@@ -296,22 +251,57 @@ protected:
         *m_ptr++ = instruction;
     }
 
-    std::uintptr_t current_address()
+    void set_at_offset(std::ptrdiff_t offset, std::uint32_t value, std::uint32_t mask) const
     {
-        return reinterpret_cast<std::uintptr_t>(m_ptr);
-    }
-
-    void set_at_address(std::uintptr_t addr, std::uint32_t value, std::uint32_t mask)
-    {
-        std::uint32_t* p = reinterpret_cast<std::uint32_t*>(addr);
+        std::uint32_t* p = m_wmem + offset / sizeof(std::uint32_t);
         *p = (*p & mask) | value;
     }
 
 private:
     std::uint32_t* m_ptr;
+    std::uint32_t* const m_wmem;
+    std::uint32_t* const m_xmem;
+};
+
+struct VectorCodeGeneratorPolicy {
+public:
+    std::ptrdiff_t offset() const
+    {
+        return m_vec.size() * sizeof(std::uint32_t);
+    }
+
+    template<typename T>
+    T xptr() const
+    {
+        static_assert(std::is_pointer_v<T> || std::is_same_v<T, std::uintptr_t> || std::is_same_v<T, std::intptr_t>);
+        return reinterpret_cast<T>(m_xmem + m_vec.size());
+    }
+
+protected:
+    using constructor_argument_type = std::vector<std::uint32_t>&;
+
+    VectorCodeGeneratorPolicy(std::vector<std::uint32_t>& vec, std::uint32_t* xmem)
+        : m_vec(vec), m_xmem(xmem)
+    {}
+
+    void append(std::uint32_t instruction)
+    {
+        m_vec.push_back(instruction);
+    }
+
+    void set_at_offset(std::ptrdiff_t offset, std::uint32_t value, std::uint32_t mask) const
+    {
+        std::uint32_t& p = m_vec[offset / sizeof(std::uint32_t)];
+        p = (p & mask) | value;
+    }
+
+private:
+    std::vector<std::uint32_t>& m_vec;
+    std::uint32_t* const m_xmem;
 };
 
 using CodeGenerator = BasicCodeGenerator<PointerCodeGeneratorPolicy>;
+using VectorCodeGenerator = BasicCodeGenerator<VectorCodeGeneratorPolicy>;
 
 namespace util {
 
