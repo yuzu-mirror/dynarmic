@@ -133,10 +133,10 @@ INST(v8_VRINTM,             "VRINTM",                   "111100111D11zz10dddd011
 INST(v8_VRINTP,             "VRINTP",                   "111100111D11zz10dddd01111QM0mmmm") // v8
 INST(asimd_VCVT_half,       "VCVT (half-precision)",    "111100111D11zz10dddd011o00M0mmmm") // ASIMD
 INST(arm_UDF,               "UNALLOCATED",              "111100111-11--10----011-01-0----") // ASIMD
-INST(arm_UDF,               "UNALLOCATED (VCVTA)",      "111100111-11--11----0000---0----")
-INST(arm_UDF,               "UNALLOCATED (VCVTN)",      "111100111-11--11----0001---0----")
-INST(arm_UDF,               "UNALLOCATED (VCVTP)",      "111100111-11--11----0010---0----")
-INST(arm_UDF,               "UNALLOCATED (VCVTM)",      "111100111-11--11----0011---0----")
+INST(v8_VCVTA,              "VCVTA",                    "111100111D11zz11dddd0000oQM0mmmm") // v8
+INST(v8_VCVTN,              "VCVTN",                    "111100111D11zz11dddd0001oQM0mmmm") // v8
+INST(v8_VCVTP,              "VCVTP",                    "111100111D11zz11dddd0010oQM0mmmm") // v8
+INST(v8_VCVTM,              "VCVTM",                    "111100111D11zz11dddd0011oQM0mmmm") // v8
 INST(asimd_VRECPE,          "VRECPE",                   "111100111D11zz11dddd010F0QM0mmmm") // ASIMD
 INST(asimd_VRSQRTE,         "VRSQRTE",                  "111100111D11zz11dddd010F1QM0mmmm") // ASIMD
 INST(asimd_VCVT_integer,    "VCVT (integer)",           "111100111D11zz11dddd011oUQM0mmmm") // ASIMD

@@ -957,6 +957,10 @@ struct TranslatorVisitor final {
     bool v8_VRINTM(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool v8_VRINTP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VCVT_half(bool D, size_t sz, size_t Vd, bool op, bool M, size_t Vm);
+    bool v8_VCVTA(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm);
+    bool v8_VCVTN(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm);
+    bool v8_VCVTP(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm);
+    bool v8_VCVTM(bool D, size_t sz, size_t Vd, bool op, bool Q, bool M, size_t Vm);
     bool asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VRSQRTE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VCVT_integer(bool D, size_t sz, size_t Vd, bool op, bool U, bool Q, bool M, size_t Vm);
