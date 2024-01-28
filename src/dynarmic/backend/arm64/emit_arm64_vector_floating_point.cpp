@@ -613,7 +613,7 @@ void EmitIR<IR::Opcode::FPVectorRoundInt32>(oaknut::CodeGenerator& code, EmitCon
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&] {
         if (exact) {
-            ASSERT(ctx.FPCR().RMode() == rounding_mode);
+            ASSERT(ctx.FPCR(fpcr_controlled).RMode() == rounding_mode);
             code.FRINTX(Qresult->S4(), Qoperand->S4());
         } else {
             switch (rounding_mode) {
@@ -653,7 +653,7 @@ void EmitIR<IR::Opcode::FPVectorRoundInt64>(oaknut::CodeGenerator& code, EmitCon
 
     MaybeStandardFPSCRValue(code, ctx, fpcr_controlled, [&] {
         if (exact) {
-            ASSERT(ctx.FPCR().RMode() == rounding_mode);
+            ASSERT(ctx.FPCR(fpcr_controlled).RMode() == rounding_mode);
             code.FRINTX(Qresult->D2(), Qoperand->D2());
         } else {
             switch (rounding_mode) {
