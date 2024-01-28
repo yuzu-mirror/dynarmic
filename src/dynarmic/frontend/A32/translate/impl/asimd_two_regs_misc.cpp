@@ -102,6 +102,27 @@ bool PairedAddOperation(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool
     return true;
 }
 
+bool RoundFloatToInteger(TranslatorVisitor& v, bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm, bool exact, FP::RoundingMode rounding_mode) {
+    if (Q && (mcl::bit::get_bit<0>(Vd) || mcl::bit::get_bit<0>(Vm))) {
+        return v.UndefinedInstruction();
+    }
+
+    if (sz != 0b10) {
+        return v.UndefinedInstruction();  // TODO: FP16
+    }
+
+    const size_t esize = 8 << sz;
+
+    const auto d = ToVector(Q, Vd, D);
+    const auto m = ToVector(Q, Vm, M);
+
+    const auto reg_m = v.ir.GetVector(m);
+    const auto result = v.ir.FPVectorRoundInt(esize, reg_m, rounding_mode, exact, false);
+
+    v.ir.SetVector(d, result);
+    return true;
+}
+
 }  // Anonymous namespace
 
 bool TranslatorVisitor::asimd_VREV(bool D, size_t sz, size_t Vd, size_t op, bool Q, bool M, size_t Vm) {
@@ -588,6 +609,25 @@ bool TranslatorVisitor::asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M, si
 
     ir.SetVector(d, result);
     return true;
+}
+
+bool TranslatorVisitor::asimd_VRINTN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::ToNearest_TieEven);
+}
+bool TranslatorVisitor::asimd_VRINTX(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, true, FP::RoundingMode::ToNearest_TieEven);
+}
+bool TranslatorVisitor::asimd_VRINTA(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::ToNearest_TieAwayFromZero);
+}
+bool TranslatorVisitor::asimd_VRINTZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::TowardsZero);
+}
+bool TranslatorVisitor::asimd_VRINTM(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::TowardsMinusInfinity);
+}
+bool TranslatorVisitor::asimd_VRINTP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+    return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::TowardsPlusInfinity);
 }
 
 bool TranslatorVisitor::asimd_VCVT_half(bool D, size_t sz, size_t Vd, bool half_to_single, bool M, size_t Vm) {
