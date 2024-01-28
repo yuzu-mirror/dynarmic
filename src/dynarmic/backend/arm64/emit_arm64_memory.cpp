@@ -287,12 +287,12 @@ CodePtr EmitMemoryLdr(oaknut::CodeGenerator& code, int value_idx, oaknut::XReg X
     const auto add_ext = extend32 ? oaknut::AddSubExt::UXTW : oaknut::AddSubExt::LSL;
     const auto Roffset = extend32 ? oaknut::RReg{Xoffset.toW()} : oaknut::RReg{Xoffset};
 
-    CodePtr fastmem_location = code.ptr<CodePtr>();
+    CodePtr fastmem_location = code.xptr<CodePtr>();
 
     if (ordered) {
         code.ADD(Xscratch0, Xbase, Roffset, add_ext);
 
-        fastmem_location = code.ptr<CodePtr>();
+        fastmem_location = code.xptr<CodePtr>();
 
         switch (bitsize) {
         case 8:
@@ -315,7 +315,7 @@ CodePtr EmitMemoryLdr(oaknut::CodeGenerator& code, int value_idx, oaknut::XReg X
             ASSERT_FALSE("Invalid bitsize");
         }
     } else {
-        fastmem_location = code.ptr<CodePtr>();
+        fastmem_location = code.xptr<CodePtr>();
 
         switch (bitsize) {
         case 8:
@@ -352,7 +352,7 @@ CodePtr EmitMemoryStr(oaknut::CodeGenerator& code, int value_idx, oaknut::XReg X
     if (ordered) {
         code.ADD(Xscratch0, Xbase, Roffset, add_ext);
 
-        fastmem_location = code.ptr<CodePtr>();
+        fastmem_location = code.xptr<CodePtr>();
 
         switch (bitsize) {
         case 8:
@@ -376,7 +376,7 @@ CodePtr EmitMemoryStr(oaknut::CodeGenerator& code, int value_idx, oaknut::XReg X
             ASSERT_FALSE("Invalid bitsize");
         }
     } else {
-        fastmem_location = code.ptr<CodePtr>();
+        fastmem_location = code.xptr<CodePtr>();
 
         switch (bitsize) {
         case 8:
@@ -548,7 +548,7 @@ void FastmemEmitReadMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::In
             FastmemPatchInfo{
                 .marker = marker,
                 .fc = FakeCall{
-                    .call_pc = mcl::bit_cast<u64>(code.ptr<void*>()),
+                    .call_pc = mcl::bit_cast<u64>(code.xptr<void*>()),
                 },
                 .recompile = ctx.conf.recompile_on_fastmem_failure,
             });
@@ -598,7 +598,7 @@ void FastmemEmitWriteMemory(oaknut::CodeGenerator& code, EmitContext& ctx, IR::I
             FastmemPatchInfo{
                 .marker = marker,
                 .fc = FakeCall{
-                    .call_pc = mcl::bit_cast<u64>(code.ptr<void*>()),
+                    .call_pc = mcl::bit_cast<u64>(code.xptr<void*>()),
                 },
                 .recompile = ctx.conf.recompile_on_fastmem_failure,
             });

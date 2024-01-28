@@ -28,7 +28,7 @@ static void* EmitCallTrampoline(oaknut::CodeGenerator& code, T* this_) {
 
     oaknut::Label l_addr, l_this;
 
-    void* target = code.ptr<void*>();
+    void* target = code.xptr<void*>();
     code.LDR(X0, l_this);
     code.LDR(Xscratch0, l_addr);
     code.BR(Xscratch0);
@@ -52,7 +52,7 @@ static void* EmitWrappedReadCallTrampoline(oaknut::CodeGenerator& code, T* this_
 
     constexpr u64 save_regs = ABI_CALLER_SAVE & ~ToRegList(Xscratch0);
 
-    void* target = code.ptr<void*>();
+    void* target = code.xptr<void*>();
     ABI_PushRegisters(code, save_regs, 0);
     code.LDR(X0, l_this);
     code.MOV(X1, Xscratch0);
@@ -83,7 +83,7 @@ static void* EmitExclusiveReadCallTrampoline(oaknut::CodeGenerator& code, const 
         });
     };
 
-    void* target = code.ptr<void*>();
+    void* target = code.xptr<void*>();
     code.LDR(X0, l_this);
     code.LDR(Xscratch0, l_addr);
     code.BR(Xscratch0);
@@ -107,7 +107,7 @@ static void* EmitWrappedWriteCallTrampoline(oaknut::CodeGenerator& code, T* this
 
     constexpr u64 save_regs = ABI_CALLER_SAVE;
 
-    void* target = code.ptr<void*>();
+    void* target = code.xptr<void*>();
     ABI_PushRegisters(code, save_regs, 0);
     code.LDR(X0, l_this);
     code.MOV(X1, Xscratch0);
@@ -141,7 +141,7 @@ static void* EmitExclusiveWriteCallTrampoline(oaknut::CodeGenerator& code, const
                  : 1;
     };
 
-    void* target = code.ptr<void*>();
+    void* target = code.xptr<void*>();
     code.LDR(X0, l_this);
     code.LDR(Xscratch0, l_addr);
     code.BR(Xscratch0);
@@ -188,7 +188,7 @@ void A32AddressSpace::InvalidateCacheRanges(const boost::icl::interval_set<u32>&
 void A32AddressSpace::EmitPrelude() {
     using namespace oaknut::util;
 
-    mem.unprotect();
+    UnprotectCodeMemory();
 
     prelude_info.read_memory_8 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead8>(code, conf.callbacks);
     prelude_info.read_memory_16 = EmitCallTrampoline<&A32::UserCallbacks::MemoryRead16>(code, conf.callbacks);
@@ -222,7 +222,7 @@ void A32AddressSpace::EmitPrelude() {
 
     oaknut::Label return_from_run_code, l_return_to_dispatcher;
 
-    prelude_info.run_code = code.ptr<PreludeInfo::RunCodeFuncType>();
+    prelude_info.run_code = code.xptr<PreludeInfo::RunCodeFuncType>();
     {
         ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
 
@@ -261,7 +261,7 @@ void A32AddressSpace::EmitPrelude() {
         code.BR(X19);
     }
 
-    prelude_info.step_code = code.ptr<PreludeInfo::RunCodeFuncType>();
+    prelude_info.step_code = code.xptr<PreludeInfo::RunCodeFuncType>();
     {
         ABI_PushRegisters(code, ABI_CALLEE_SAVE | (1 << 30), sizeof(StackLayout));
 
@@ -304,7 +304,7 @@ void A32AddressSpace::EmitPrelude() {
         code.BR(X19);
     }
 
-    prelude_info.return_to_dispatcher = code.ptr<void*>();
+    prelude_info.return_to_dispatcher = code.xptr<void*>();
     {
         oaknut::Label l_this, l_addr;
 
@@ -333,7 +333,7 @@ void A32AddressSpace::EmitPrelude() {
         code.dx(mcl::bit_cast<u64>(Common::FptrCast(fn)));
     }
 
-    prelude_info.return_from_run_code = code.ptr<void*>();
+    prelude_info.return_from_run_code = code.xptr<void*>();
     {
         code.l(return_from_run_code);
 
@@ -360,10 +360,10 @@ void A32AddressSpace::EmitPrelude() {
     code.l(l_return_to_dispatcher);
     code.dx(mcl::bit_cast<u64>(prelude_info.return_to_dispatcher));
 
-    prelude_info.end_of_prelude = code.ptr<u32*>();
+    prelude_info.end_of_prelude = code.offset();
 
     mem.invalidate_all();
-    mem.protect();
+    ProtectCodeMemory();
 }
 
 EmitConfig A32AddressSpace::GetEmitConfig() {

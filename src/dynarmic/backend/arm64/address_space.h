@@ -47,9 +47,22 @@ protected:
     virtual EmitConfig GetEmitConfig() = 0;
     virtual void RegisterNewBasicBlock(const IR::Block& block, const EmittedBlockInfo& block_info) = 0;
 
+    void ProtectCodeMemory() {
+#if defined(DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT) || defined(__APPLE__) || defined(__OpenBSD__)
+        mem.protect();
+#endif
+    }
+
+    void UnprotectCodeMemory() {
+#if defined(DYNARMIC_ENABLE_NO_EXECUTE_SUPPORT) || defined(__APPLE__) || defined(__OpenBSD__)
+        mem.unprotect();
+#endif
+    }
+
     size_t GetRemainingSize();
     EmittedBlockInfo Emit(IR::Block ir_block);
     void Link(EmittedBlockInfo& block);
+    void LinkBlockLinks(const CodePtr entry_point, const CodePtr target_ptr, const std::vector<BlockRelocation>& block_relocations_list);
     void RelinkForDescriptor(IR::LocationDescriptor target_descriptor, CodePtr target_ptr);
 
     FakeCall FastmemCallback(u64 host_pc);
@@ -69,7 +82,7 @@ protected:
     FastmemManager fastmem_manager;
 
     struct PreludeInfo {
-        u32* end_of_prelude;
+        std::ptrdiff_t end_of_prelude;
 
         using RunCodeFuncType = HaltReason (*)(CodePtr entry_point, void* jit_state, volatile u32* halt_reason);
         RunCodeFuncType run_code;

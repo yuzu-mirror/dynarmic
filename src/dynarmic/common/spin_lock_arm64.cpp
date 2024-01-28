@@ -54,16 +54,16 @@ SpinLockImpl impl;
 
 SpinLockImpl::SpinLockImpl()
         : mem{4096}
-        , code{mem.ptr()} {}
+        , code{mem.ptr(), mem.ptr()} {}
 
 void SpinLockImpl::Initialize() {
     mem.unprotect();
 
-    lock = code.ptr<void (*)(volatile int*)>();
+    lock = code.xptr<void (*)(volatile int*)>();
     EmitSpinLockLock(code, X0);
     code.RET();
 
-    unlock = code.ptr<void (*)(volatile int*)>();
+    unlock = code.xptr<void (*)(volatile int*)>();
     EmitSpinLockUnlock(code, X0);
     code.RET();
 

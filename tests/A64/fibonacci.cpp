@@ -103,7 +103,7 @@ TEST_CASE("A64: fibonacci", "[a64]") {
     env.cpu = &cpu;
 
     std::vector<u32> instructions(1024);
-    oaknut::CodeGenerator code{instructions.data()};
+    oaknut::CodeGenerator code{instructions.data(), nullptr};
 
     using namespace oaknut::util;
 

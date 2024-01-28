@@ -202,7 +202,7 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     RegAlloc reg_alloc{code, fpsr_manager, GPR_ORDER, FPR_ORDER};
     EmitContext ctx{block, reg_alloc, conf, ebi, fpsr_manager, fastmem_manager, {}};
 
-    ebi.entry_point = code.ptr<CodePtr>();
+    ebi.entry_point = code.xptr<CodePtr>();
 
     if (ctx.block.GetCondition() == IR::Cond::AL) {
         ASSERT(!ctx.block.HasConditionFailedLocation());
@@ -263,17 +263,17 @@ EmittedBlockInfo EmitArm64(oaknut::CodeGenerator& code, IR::Block block, const E
     }
     code.BRK(0);
 
-    ebi.size = code.ptr<CodePtr>() - ebi.entry_point;
+    ebi.size = code.xptr<CodePtr>() - ebi.entry_point;
     return ebi;
 }
 
 void EmitRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, LinkTarget link_target) {
-    ctx.ebi.relocations.emplace_back(Relocation{code.ptr<CodePtr>() - ctx.ebi.entry_point, link_target});
+    ctx.ebi.relocations.emplace_back(Relocation{code.xptr<CodePtr>() - ctx.ebi.entry_point, link_target});
     code.NOP();
 }
 
 void EmitBlockLinkRelocation(oaknut::CodeGenerator& code, EmitContext& ctx, const IR::LocationDescriptor& descriptor, BlockRelocationType type) {
-    ctx.ebi.block_relocations[descriptor].emplace_back(BlockRelocation{code.ptr<CodePtr>() - ctx.ebi.entry_point, type});
+    ctx.ebi.block_relocations[descriptor].emplace_back(BlockRelocation{code.xptr<CodePtr>() - ctx.ebi.entry_point, type});
     switch (type) {
     case BlockRelocationType::Branch:
         code.NOP();
