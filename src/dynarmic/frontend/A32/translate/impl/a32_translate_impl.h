@@ -950,12 +950,12 @@ struct TranslatorVisitor final {
     bool asimd_VQMOVUN(bool D, size_t sz, size_t Vd, bool M, size_t Vm);
     bool asimd_VQMOVN(bool D, size_t sz, size_t Vd, bool op, bool M, size_t Vm);
     bool asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M, size_t Vm);
-    bool asimd_VRINTN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
-    bool asimd_VRINTX(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
-    bool asimd_VRINTA(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
-    bool asimd_VRINTZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
-    bool asimd_VRINTM(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
-    bool asimd_VRINTP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool v8_VRINTN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool v8_VRINTX(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool v8_VRINTA(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool v8_VRINTZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool v8_VRINTM(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
+    bool v8_VRINTP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm);
     bool asimd_VCVT_half(bool D, size_t sz, size_t Vd, bool op, bool M, size_t Vm);
     bool asimd_VRECPE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);
     bool asimd_VRSQRTE(bool D, size_t sz, size_t Vd, bool F, bool Q, bool M, size_t Vm);

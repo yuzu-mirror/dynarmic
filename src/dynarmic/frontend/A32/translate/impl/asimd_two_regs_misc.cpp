@@ -611,22 +611,22 @@ bool TranslatorVisitor::asimd_VSHLL_max(bool D, size_t sz, size_t Vd, bool M, si
     return true;
 }
 
-bool TranslatorVisitor::asimd_VRINTN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_VRINTN(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::ToNearest_TieEven);
 }
-bool TranslatorVisitor::asimd_VRINTX(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_VRINTX(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, true, FP::RoundingMode::ToNearest_TieEven);
 }
-bool TranslatorVisitor::asimd_VRINTA(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_VRINTA(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::ToNearest_TieAwayFromZero);
 }
-bool TranslatorVisitor::asimd_VRINTZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_VRINTZ(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::TowardsZero);
 }
-bool TranslatorVisitor::asimd_VRINTM(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_VRINTM(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::TowardsMinusInfinity);
 }
-bool TranslatorVisitor::asimd_VRINTP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
+bool TranslatorVisitor::v8_VRINTP(bool D, size_t sz, size_t Vd, bool Q, bool M, size_t Vm) {
     return RoundFloatToInteger(*this, D, sz, Vd, Q, M, Vm, false, FP::RoundingMode::TowardsPlusInfinity);
 }
 
