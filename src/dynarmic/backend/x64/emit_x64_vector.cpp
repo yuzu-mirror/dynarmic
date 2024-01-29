@@ -4876,57 +4876,79 @@ void EmitX64::EmitVectorTableLookup64(EmitContext& ctx, IR::Inst* inst) {
     const bool is_defaults_zero = inst->GetArg(0).IsZero();
 
     if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW | HostFeature::AVX512VBMI)) {
-        const Xbyak::Xmm indicies = ctx.reg_alloc.UseScratchXmm(args[2]);
-        Xbyak::Xmm defaults = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm indicies = table_size <= 2 ? ctx.reg_alloc.UseXmm(args[2]) : ctx.reg_alloc.UseScratchXmm(args[2]);
 
-        const u8 index_count = u8(table_size * 8);
-        const u64 index_count64 = mcl::bit::replicate_element<u8, u64>(index_count);
+        const u64 index_count = mcl::bit::replicate_element<u8, u64>(static_cast<u8>(table_size * 8));
 
-        Xbyak::Opmask valid_indices = k1;
-        code.vpcmpb(valid_indices, indicies, code.Const(xword, index_count64, 0), CmpInt::LessThan);
-
-        if (is_defaults_zero) {
-            defaults = defaults | valid_indices | T_z;
-        } else {
-            defaults = defaults | valid_indices;
-        }
+        code.vpcmpub(k1, indicies, code.Const(xword, index_count, 0), CmpInt::LessThan);
 
         switch (table_size) {
         case 1: {
-            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
-            code.vpermb(defaults, indicies, xmm_table0);
+            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseXmm(table[0]);
+            if (is_defaults_zero) {
+                const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+                code.vpermb(result | k1 | T_z, indicies, xmm_table0);
+                ctx.reg_alloc.DefineValue(inst, result);
+            } else {
+                const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+                code.vpermb(result | k1, indicies, xmm_table0);
+                ctx.reg_alloc.DefineValue(inst, result);
+            }
             break;
         }
         case 2: {
-            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+            const Xbyak::Xmm xmm_table0_lower = ctx.reg_alloc.UseXmm(table[0]);
             const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
-            code.vpunpcklqdq(xmm_table0, xmm_table0, xmm_table0_upper);
-            code.vpermb(defaults, indicies, xmm_table0);
+            code.vpunpcklqdq(xmm0, xmm_table0_lower, xmm_table0_upper);
+            if (is_defaults_zero) {
+                const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+                code.vpermb(result | k1 | T_z, indicies, xmm0);
+                ctx.reg_alloc.DefineValue(inst, result);
+            } else {
+                const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+                code.vpermb(result | k1, indicies, xmm0);
+                ctx.reg_alloc.DefineValue(inst, result);
+            }
             break;
         }
         case 3: {
-            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+            const Xbyak::Xmm xmm_table0_lower = ctx.reg_alloc.UseXmm(table[0]);
             const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
             const Xbyak::Xmm xmm_table1 = ctx.reg_alloc.UseXmm(table[2]);
-            code.vpunpcklqdq(xmm_table0, xmm_table0, xmm_table0_upper);
-            code.vpermi2b(indicies, xmm_table0, xmm_table1);
-            code.vmovdqu8(defaults, indicies);
+            code.vpunpcklqdq(xmm0, xmm_table0_lower, xmm_table0_upper);
+            if (is_defaults_zero) {
+                code.vpermi2b(indicies | k1 | T_z, xmm0, xmm_table1);
+                ctx.reg_alloc.DefineValue(inst, indicies);
+            } else {
+                const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+                code.vpermi2b(indicies, xmm0, xmm_table1);
+                code.vmovdqu8(result | k1, indicies);
+                ctx.reg_alloc.DefineValue(inst, result);
+            }
             break;
         }
         case 4: {
-            const Xbyak::Xmm xmm_table0 = ctx.reg_alloc.UseScratchXmm(table[0]);
+            const Xbyak::Xmm xmm_table0_lower = ctx.reg_alloc.UseXmm(table[0]);
             const Xbyak::Xmm xmm_table0_upper = ctx.reg_alloc.UseXmm(table[1]);
             const Xbyak::Xmm xmm_table1 = ctx.reg_alloc.UseScratchXmm(table[2]);
             const Xbyak::Xmm xmm_table1_upper = ctx.reg_alloc.UseXmm(table[3]);
-            code.vpunpcklqdq(xmm_table0, xmm_table0, xmm_table0_upper);
+            code.vpunpcklqdq(xmm0, xmm_table0_lower, xmm_table0_upper);
             code.vpunpcklqdq(xmm_table1, xmm_table1, xmm_table1_upper);
-            code.vpermi2b(indicies, xmm_table0, xmm_table1);
-            code.vmovdqu8(defaults, indicies);
+            if (is_defaults_zero) {
+                code.vpermi2b(indicies | k1 | T_z, xmm0, xmm_table1);
+                ctx.reg_alloc.DefineValue(inst, indicies);
+            } else {
+                const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+                code.vpermi2b(indicies, xmm0, xmm_table1);
+                code.vmovdqu8(result | k1, indicies);
+                ctx.reg_alloc.DefineValue(inst, result);
+            }
             break;
         }
+        default:
+            UNREACHABLE();
+            break;
         }
-
-        ctx.reg_alloc.DefineValue(inst, defaults);
         return;
     }
 
