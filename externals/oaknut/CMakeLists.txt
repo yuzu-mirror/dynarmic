@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(oaknut LANGUAGES CXX VERSION 2.0.1)
+project(oaknut LANGUAGES CXX VERSION 2.0.2)
 
 # Determine if we're built as a subproject (using add_subdirectory)
 # or if this is the master project.
@@ -50,12 +50,16 @@ add_library(merry::oaknut ALIAS oaknut)
 target_sources(oaknut INTERFACE "$<BUILD_INTERFACE:${header_files}>")
 target_include_directories(oaknut INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_LIBDIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 target_compile_features(oaknut INTERFACE cxx_std_20)
 
 # Tests
 if (MASTER_PROJECT)
+    include(CTest)
+endif()
+
+if (BUILD_TESTING)
     option(OAKNUT_USE_BUNDLED_CATCH "Use the embedded Catch2 submodule" OFF)
     if (OAKNUT_USE_BUNDLED_CATCH)
         add_subdirectory(externals/catch)
@@ -101,6 +105,8 @@ if (MASTER_PROJECT)
     else()
         target_compile_options(oaknut-tests PRIVATE -Wall -Wextra -Wcast-qual -pedantic -pedantic-errors -Wfatal-errors -Wno-missing-braces)
     endif()
+
+    add_test(oaknut-tests oaknut-tests --durations yes)
 endif()
 
 # Install
