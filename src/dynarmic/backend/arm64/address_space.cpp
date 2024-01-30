@@ -105,9 +105,9 @@ EmittedBlockInfo AddressSpace::Emit(IR::Block block) {
 
     EmittedBlockInfo block_info = EmitArm64(code, std::move(block), GetEmitConfig(), fastmem_manager);
 
-    ASSERT(block_entries.emplace(block.Location(), block_info.entry_point).second);
-    ASSERT(reverse_block_entries.emplace(block_info.entry_point, block.Location()).second);
-    ASSERT(block_infos.emplace(block_info.entry_point, block_info).second);
+    ASSERT(block_entries.insert({block.Location(), block_info.entry_point}).second);
+    ASSERT(reverse_block_entries.insert({block_info.entry_point, block.Location()}).second);
+    ASSERT(block_infos.insert({block_info.entry_point, block_info}).second);
 
     Link(block_info);
     RelinkForDescriptor(block.Location(), block_info.entry_point);
@@ -255,7 +255,7 @@ void AddressSpace::Link(EmittedBlockInfo& block_info) {
     }
 
     for (auto [target_descriptor, list] : block_info.block_relocations) {
-        block_references[target_descriptor].emplace(block_info.entry_point);
+        block_references[target_descriptor].insert(block_info.entry_point);
         LinkBlockLinks(block_info.entry_point, Get(target_descriptor), list);
     }
 }

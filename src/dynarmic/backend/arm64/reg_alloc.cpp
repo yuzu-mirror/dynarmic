@@ -97,7 +97,7 @@ void HostLocInfo::SetupScratchLocation() {
 void HostLocInfo::SetupLocation(const IR::Inst* value) {
     ASSERT(IsCompletelyEmpty());
     values.clear();
-    values.emplace_back(value);
+    values.push_back(value);
     realized = true;
     uses_this_inst = 0;
     accumulated_uses = 0;
@@ -189,7 +189,7 @@ void RegAlloc::PrepareForCall(std::optional<Argument::copyable_reference> arg0, 
 }
 
 void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
-    defined_insts.emplace(inst);
+    defined_insts.insert(inst);
 
     ASSERT(!ValueLocation(inst));
 
@@ -199,17 +199,17 @@ void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
     }
 
     auto& info = ValueInfo(arg.value.GetInst());
-    info.values.emplace_back(inst);
+    info.values.push_back(inst);
     info.expected_uses += inst->UseCount();
 }
 
 void RegAlloc::DefineAsRegister(IR::Inst* inst, oaknut::Reg reg) {
-    defined_insts.emplace(inst);
+    defined_insts.insert(inst);
 
     ASSERT(!ValueLocation(inst));
     auto& info = reg.is_vector() ? fprs[reg.index()] : gprs[reg.index()];
     ASSERT(info.IsCompletelyEmpty());
-    info.values.emplace_back(inst);
+    info.values.push_back(inst);
     info.expected_uses += inst->UseCount();
 }
 
@@ -373,7 +373,7 @@ int RegAlloc::RealizeReadImpl(const IR::Value& value) {
 
 template<HostLoc::Kind kind>
 int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
-    defined_insts.emplace(value);
+    defined_insts.insert(value);
 
     ASSERT(!ValueLocation(value));
 
@@ -398,7 +398,7 @@ int RegAlloc::RealizeWriteImpl(const IR::Inst* value) {
 
 template<HostLoc::Kind kind>
 int RegAlloc::RealizeReadWriteImpl(const IR::Value& read_value, const IR::Inst* write_value) {
-    defined_insts.emplace(write_value);
+    defined_insts.insert(write_value);
 
     // TODO: Move elimination
 
@@ -462,7 +462,7 @@ void RegAlloc::SpillFpr(int index) {
 }
 
 void RegAlloc::ReadWriteFlags(Argument& read, IR::Inst* write) {
-    defined_insts.emplace(write);
+    defined_insts.insert(write);
 
     const auto current_location = ValueLocation(read.value.GetInst());
     ASSERT(current_location);

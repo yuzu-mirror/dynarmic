@@ -29,7 +29,7 @@ Xbyak::Address ConstantPool::GetConstant(const Xbyak::AddressFrame& frame, u64 l
         ASSERT(insertion_point < pool.size());
         ConstantT& target_constant = pool[insertion_point];
         target_constant = constant;
-        iter = constant_info.emplace(constant, &target_constant).first;
+        iter = constant_info.insert({constant, &target_constant}).first;
         ++insertion_point;
     }
     return frame[code.rip + iter->second];

@@ -44,7 +44,7 @@ FakeCall AxxEmitX64::FastmemCallback(u64 rip_) {
 
     if (iter->second.recompile) {
         const auto marker = iter->second.marker;
-        do_not_fastmem.emplace(marker);
+        do_not_fastmem.insert(marker);
         InvalidateBasicBlocks({std::get<0>(marker)});
     }
 

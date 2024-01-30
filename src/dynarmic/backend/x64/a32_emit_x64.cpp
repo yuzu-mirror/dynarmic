@@ -1166,7 +1166,7 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
     if (conf.enable_cycle_counting) {
         code.cmp(qword[rsp + ABI_SHADOW_SPACE + offsetof(StackLayout, cycles_remaining)], 0);
 
-        patch_information[terminal.next].jg.emplace_back(code.getCurr());
+        patch_information[terminal.next].jg.push_back(code.getCurr());
         if (const auto next_bb = GetBasicBlock(terminal.next)) {
             EmitPatchJg(terminal.next, next_bb->entrypoint);
         } else {
@@ -1175,7 +1175,7 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlock terminal, IR::LocationDesc
     } else {
         code.cmp(dword[r15 + offsetof(A32JitState, halt_reason)], 0);
 
-        patch_information[terminal.next].jz.emplace_back(code.getCurr());
+        patch_information[terminal.next].jz.push_back(code.getCurr());
         if (const auto next_bb = GetBasicBlock(terminal.next)) {
             EmitPatchJz(terminal.next, next_bb->entrypoint);
         } else {
@@ -1197,7 +1197,7 @@ void A32EmitX64::EmitTerminalImpl(IR::Term::LinkBlockFast terminal, IR::Location
         return;
     }
 
-    patch_information[terminal.next].jmp.emplace_back(code.getCurr());
+    patch_information[terminal.next].jmp.push_back(code.getCurr());
     if (const auto next_bb = GetBasicBlock(terminal.next)) {
         EmitPatchJmp(terminal.next, next_bb->entrypoint);
     } else {

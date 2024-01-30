@@ -45,7 +45,7 @@ public:
     }
 
     void MarkDoNotFastmem(DoNotFastmemMarker marker) {
-        do_not_fastmem.emplace(marker);
+        do_not_fastmem.insert(marker);
     }
 
 private:
