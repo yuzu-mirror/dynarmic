@@ -558,6 +558,7 @@ class Test {
 			"wbinvd",
 			"wrmsr",
 			"xlatb",
+			"xend",
 
 			"popf",
 			"pushf",
@@ -1050,6 +1051,10 @@ class Test {
 			"nle",
 			"g",
 		};
+#if defined(__GNUC__) && !defined(__clang__)
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wformat-truncation" // wrong detection
+#endif
 		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
 			char buf[32];
 			snprintf(buf, sizeof(buf), "cmov%s", tbl[i]);
@@ -1059,6 +1064,9 @@ class Test {
 			snprintf(buf, sizeof(buf), "set%s", tbl[i]);
 			put(buf, REG8|REG8_3|MEM);
 		}
+#if defined(__GNUC__) && !defined(__clang__)
+	#pragma GCC diagnostic pop
+#endif
 	}
 	void putReg1() const
 	{
@@ -1326,6 +1334,7 @@ class Test {
 #ifdef XBYAK64
 		put("cmpxchg16b", MEM);
 		put("fxrstor64", MEM);
+		put("xbegin", "0x12345678");
 #endif
 		{
 			const char tbl[][8] = {
@@ -1348,6 +1357,7 @@ class Test {
 		put("xchg", EAX|REG32, EAX|REG32|MEM);
 		put("xchg", MEM, EAX|REG32);
 		put("xchg", REG64, REG64|MEM);
+		put("xabort", IMM8);
 	}
 	void putShift() const
 	{
@@ -1493,18 +1503,6 @@ class Test {
 				put(p, XMM, XMM|MEM, IMM);
 			}
 		}
-		{
-			const char tbl[][16] = {
-				"pclmullqlqdq",
-				"pclmulhqlqdq",
-//				"pclmullqhdq", // QQQ : not supported by nasm/yasm
-//				"pclmulhqhdq",
-			};
-			for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
-				const char *p = tbl[i];
-				put(p, XMM, XMM|MEM);
-			}
-		}
 		put("extractps", REG32e|MEM, XMM, IMM);
 		put("pextrw", REG32e|MEM, XMM, IMM); // pextrw for REG32 is for MMX2
 		put("pextrb", REG32e|MEM, XMM, IMM);
@@ -1521,6 +1519,23 @@ class Test {
 		put("pinsrq", XMM, REG64|MEM, IMM);
 #endif
 
+	}
+	void putVpclmulqdq()
+	{
+		const char tbl[][16] = {
+			"vpclmullqlqdq",
+			"vpclmulhqlqdq",
+			"vpclmullqhqdq",
+			"vpclmulhqhqdq",
+		};
+		for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
+			const char *p = tbl[i] + 1; // remove the top 'v'
+			put(p, XMM, XMM|MEM);
+			p = tbl[i]; // use the top 'v'
+			put(p, XMM, XMM, XMM|MEM);
+			put(p, YMM, YMM, YMM|MEM);
+			put(p, ZMM, ZMM, ZMM|MEM);
+		}
 	}
 	void putSHA() const
 	{
@@ -2569,6 +2584,7 @@ public:
 		putPushPop8_16();
 #else
 		putSIMPLE();
+		putVpclmulqdq();
 		putReg1();
 		putBt();
 		putRorM();

@@ -15,7 +15,7 @@ if (NOT @BUILD_SHARED_LIBS@)
     endif()
 
     if ("x86_64" IN_LIST ARCHITECTURE)
-        find_dependency(xbyak 6)
+        find_dependency(xbyak 7)
         find_dependency(Zydis 4)
     endif()
 

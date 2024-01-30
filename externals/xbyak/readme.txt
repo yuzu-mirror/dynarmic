@@ -1,5 +1,5 @@
 
-    C++用x86(IA-32), x64(AMD64, x86-64) JITアセンブラ Xbyak 6.68
+    C++用x86(IA-32), x64(AMD64, x86-64) JITアセンブラ Xbyak 7.05
 
 -----------------------------------------------------------------------------
 ◎概要
@@ -45,6 +45,8 @@ Linuxではmake installで/usr/local/include/xbyakにコピーされます。
 
 -----------------------------------------------------------------------------
 ◎新機能
+
+APX/AVX10対応
 
 例外なしモード追加
 XBYAK_NO_EXCEPTIONを定義してコンパイルするとgcc/clangで-fno-exceptionsオプションでコンパイルできます。
@@ -402,6 +404,19 @@ sample/{echo,hello}.bfは http://www.kmonos.net/alang/etc/brainfuck.php から
 -----------------------------------------------------------------------------
 ◎履歴
 
+2024/01/03 ver 7.05 APX対応RAO-INT
+2023/12/28 ver 7.04 2バイトオペコードのrex2対応
+2023/12/26 ver 7.03 dfvのデフォルト値を0に設定
+2023/12/20 ver 7.02 SHA*のAPX対応
+2023/12/19 ver 7.01 AESKLE, WIDE_KL, KEYLOCKER, KEYLOCKER_WIDE対応 APX10/APX判定対応
+2023/12/01 ver 7.00 APX対応
+2023/08/07 ver 6.73 sha512/sm3/sm4/avx-vnni-int16追加
+2023/08/02 ver 6.72 xabort, xbegin, xend追加
+2023/07/27 ver 6.71 Allocatorでhuge pageを考慮する。
+2023/07/05 ver 6.70 vpclmulqdqのailas追加
+2023/06/27 ver 6.69.2 `TypeT operator|`にconstexpr追加(thanks to Wunkolo)
+2023/03/23 ver 6.69.1 xsave判定追加(thanks to Wunkolo)
+2023/02/20 ver 6.69 util::CpuがAMD対応 UINTR命令対応
 2022/12/07 ver 6.68 prefetchit{0,1}サポート
 2022/11/30 ver 6.67 CMPccXADDサポート
 2022/11/25 ver 6.66 RAO-INTサポート

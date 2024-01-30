@@ -149,7 +149,7 @@ if ("arm64" IN_LIST ARCHITECTURE OR DYNARMIC_TESTS)
 endif()
 
 if ("x86_64" IN_LIST ARCHITECTURE)
-    find_package(xbyak 6 CONFIG)
+    find_package(xbyak 7 CONFIG)
     find_package(Zydis 4 CONFIG)
 endif()
 

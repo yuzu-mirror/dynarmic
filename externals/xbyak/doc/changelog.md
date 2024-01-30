@@ -1,5 +1,18 @@
 # History
 
+* 2024/Jan/03 ver 7.05 support RAO-INT for APX
+* 2023/Dec/28 ver 7.04 rex2 supports two-byte opecode
+* 2023/Dec/26 ver 7.03 set the default value of dfv to 0
+* 2023/Dec/20 ver 7.02 SHA* support APX
+* 2023/Dec/19 ver 7.01 support AESKLE, WIDE_KL, KEYLOCKER, KEYLOCKER_WIDE, detection of APX10/APX
+* 2023/Dec/01 ver 7.00 support APX
+* 2023/Aug/07 ver 6.73 add sha512/sm3/sm4/avx-vnni-int16
+* 2023/Aug/02 ver 6.72 add xbegin/xabort/xend
+* 2023/Jul/27 ver 6.71 Allocator supports huge page
+* 2023/Jul/05 ver 6.70 add alias of vclmulqdq, correct alias of pclmulqdq
+* 2023/Jun/27 ver 6.69.2 add constexpr to `TypeT operator|` (thanks to Wunkolo)
+* 2023/Mar/23 ver 6.69.1 add detection of xsave (thanks to Wunkolo)
+* 2023/Feb/20 ver 6.69 util::Cpu supports AMD CPUs. support UINTR
 * 2022/Dec/07 ver 6.68 support prefetchit{0,1}
 * 2022/Nov/30 ver 6.67 support CMPccXADD
 * 2022/Nov/25 ver 6.66 support RAO-INT
