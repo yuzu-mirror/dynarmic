@@ -96,8 +96,16 @@ void FoldAdd(IR::Inst& inst, bool is_32_bit) {
         const IR::Inst* lhs_inst = lhs.GetInstRecursive();
         if (lhs_inst->GetOpcode() == inst.GetOpcode() && lhs_inst->GetArg(1).IsImmediate() && lhs_inst->GetArg(2).IsImmediate()) {
             const u64 combined = rhs.GetImmediateAsU64() + lhs_inst->GetArg(1).GetImmediateAsU64() + lhs_inst->GetArg(2).GetU1();
+            if (combined == 0) {
+                inst.ReplaceUsesWith(lhs_inst->GetArg(0));
+                return;
+            }
             inst.SetArg(0, lhs_inst->GetArg(0));
             inst.SetArg(1, Value(is_32_bit, combined));
+            return;
+        }
+        if (rhs.IsZero() && carry.IsZero()) {
+            inst.ReplaceUsesWith(lhs);
             return;
         }
     }
