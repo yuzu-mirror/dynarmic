@@ -1,5 +1,5 @@
 TARGET = make_nm normalize_prefix bad_address misc cvt_test cvt_test32 noexception misc32 detect_x32
-XBYAK_INC=../xbyak/xbyak.h
+XBYAK_INC=../xbyak/xbyak.h ../xbyak/xbyak_mnemonic.h
 UNAME_S=$(shell uname -s)
 ifeq ($(shell ./detect_x32),x32)
 X32?=1
@@ -13,45 +13,50 @@ ifeq ($(UNAME_S),Darwin)
   # 32-bit binary is not supported
   ONLY_64BIT=1
 endif
+ifeq ($(findstring MINGW64,$(UNAME_S)),MINGW64)
+  ONLY_64BIT=1
+endif
 ifeq ($(ONLY_64BIT),0)
   TARGET += jmp address
 endif
 
 ifeq ($(BIT),64)
-	TARGET += jmp64 address64
+	TARGET += jmp64 address64 apx
 endif
 
 all: $(TARGET)
 
 CFLAGS_WARN=-Wall -Wextra -Wformat=2 -Wcast-qual -Wwrite-strings -Wfloat-equal -Wpointer-arith
 
-CFLAGS=-O2 -Wall -I../ -I./ $(CFLAGS_WARN) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) #-std=c++0x
+CFLAGS=-O2 -Wall -I.. -I. $(CFLAGS_WARN) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) #-std=c++0x
 make_nm:
 	$(CXX) $(CFLAGS) make_nm.cpp -o $@
-normalize_prefix: normalize_prefix.cpp ../xbyak/xbyak.h
+normalize_prefix: normalize_prefix.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) normalize_prefix.cpp -o $@
-test_mmx: test_mmx.cpp ../xbyak/xbyak.h
+test_mmx: test_mmx.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) test_mmx.cpp -o $@ -lpthread
-jmp: jmp.cpp ../xbyak/xbyak.h
+jmp: jmp.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) jmp.cpp -o $@ -m32
-jmp64: jmp.cpp ../xbyak/xbyak.h
+jmp64: jmp.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) jmp.cpp -o $@ -m64
-address: address.cpp ../xbyak/xbyak.h
+address: address.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) address.cpp -o $@ -m32
-address64: address.cpp ../xbyak/xbyak.h
+address64: address.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) address.cpp -o $@ -m64
-bad_address: bad_address.cpp ../xbyak/xbyak.h
+bad_address: bad_address.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) bad_address.cpp -o $@
-misc: misc.cpp ../xbyak/xbyak.h
+misc: misc.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) misc.cpp -o $@
-misc32: misc.cpp ../xbyak/xbyak.h
+misc32: misc.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) misc.cpp -o $@ -DXBYAK32
-cvt_test: cvt_test.cpp ../xbyak/xbyak.h
+cvt_test: cvt_test.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) $< -o $@
-cvt_test32: cvt_test.cpp ../xbyak/xbyak.h
+cvt_test32: cvt_test.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) $< -o $@ -DXBYAK32
-noexception: noexception.cpp ../xbyak/xbyak.h
+noexception: noexception.cpp $(XBYAK_INC)
 	$(CXX) $(CFLAGS) $< -o $@ -fno-exceptions
+apx: apx.cpp $(XBYAK_INC)
+	$(CXX) $(CFLAGS) apx.cpp -o $@
 
 test_nm: normalize_prefix $(TARGET)
 	$(MAKE) -C ../gen
@@ -75,6 +80,7 @@ ifneq ($(X32),1)
 	CXX=$(CXX) ./test_nm.sh Y64
 endif
 	./jmp64
+	./apx
 endif
 
 test_avx: normalize_prefix
@@ -112,3 +118,4 @@ lib_run: lib_test.cpp lib_run.cpp lib.h
 	$(CXX) $(CFLAGS) lib_run.cpp lib_test.cpp -o lib_run
 make_nm: make_nm.cpp $(XBYAK_INC)
 
+.PHONY: test

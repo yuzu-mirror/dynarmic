@@ -31,12 +31,14 @@ void putCPUinfo(bool onlyCpuidFeature)
 		{ Cpu::tSSSE3, "ssse3" },
 		{ Cpu::tSSE41, "sse41" },
 		{ Cpu::tSSE42, "sse42" },
+		{ Cpu::tSSE4a, "sse4a" },
 		{ Cpu::tPOPCNT, "popcnt" },
 		{ Cpu::t3DN, "3dn" },
 		{ Cpu::tE3DN, "e3dn" },
 		{ Cpu::tAESNI, "aesni" },
 		{ Cpu::tRDTSCP, "rdtscp" },
-		{ Cpu::tOSXSAVE, "osxsave(xgetvb)" },
+		{ Cpu::tXSAVE, "xsave(xgetvb)" },
+		{ Cpu::tOSXSAVE, "osxsave" },
 		{ Cpu::tPCLMULQDQ, "pclmulqdq" },
 		{ Cpu::tAVX, "avx" },
 		{ Cpu::tFMA, "fma" },
@@ -86,8 +88,11 @@ void putCPUinfo(bool onlyCpuidFeature)
 		{ Cpu::tWAITPKG, "waitpkg" },
 		{ Cpu::tCLFLUSHOPT, "clflushopt" },
 		{ Cpu::tCLDEMOTE, "cldemote" },
+		{ Cpu::tCLWB, "clwb" },
 		{ Cpu::tMOVDIRI, "movdiri" },
 		{ Cpu::tMOVDIR64B, "movdir64b" },
+		{ Cpu::tUINTR, "uintr" },
+		{ Cpu::tSERIALIZE, "serialize" },
 		{ Cpu::tCLZERO, "clzero" },
 		{ Cpu::tAMX_FP16, "amx_fp16" },
 		{ Cpu::tAVX_VNNI_INT8, "avx_vnni_int8" },
@@ -96,12 +101,25 @@ void putCPUinfo(bool onlyCpuidFeature)
 		{ Cpu::tRAO_INT, "rao-int" },
 		{ Cpu::tCMPCCXADD, "cmpccxadd" },
 		{ Cpu::tPREFETCHITI, "prefetchiti" },
+		{ Cpu::tSHA512, "sha512" },
+		{ Cpu::tSM3, "sm3" },
+		{ Cpu::tSM4, "sm4" },
+		{ Cpu::tAVX_VNNI_INT16, "avx_vnni_int16" },
+		{ Cpu::tAPX_F, "apx_f" },
+		{ Cpu::tAVX10, "avx10" },
+		{ Cpu::tAESKLE, "aeskle" },
+		{ Cpu::tWIDE_KL, "wide_kl" },
+		{ Cpu::tKEYLOCKER, "keylocker" },
+		{ Cpu::tKEYLOCKER_WIDE, "keylocker_wide" },
 	};
 	for (size_t i = 0; i < NUM_OF_ARRAY(tbl); i++) {
 		if (cpu.has(tbl[i].type)) printf(" %s", tbl[i].str);
 	}
 	printf("\n");
 	if (onlyCpuidFeature) return;
+	if (cpu.has(Cpu::tAVX10)) {
+		printf("AVX10 version %d\n", cpu.getAVX10version());
+	}
 	if (cpu.has(Cpu::tPOPCNT)) {
 		const int n = 0x12345678; // bitcount = 13
 		const int ok = 13;
@@ -127,7 +145,6 @@ void putCPUinfo(bool onlyCpuidFeature)
 		Core i7-3930K        6           2D
 	*/
 	cpu.putFamily();
-	if (!cpu.has(Cpu::tINTEL)) return;
 	for (unsigned int i = 0; i < cpu.getDataCacheLevels(); i++) {
 		printf("cache level=%u data cache size=%u cores sharing data cache=%u\n", i, cpu.getDataCacheSize(i), cpu.getCoresSharingDataCache(i));
 	}
