@@ -1014,7 +1014,7 @@ static void EmitSub(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, int bit
     const bool is_cmp = inst->UseCount() == size_t(!!carry_inst + !!overflow_inst + !!nzcv_inst) && carry_in.IsImmediate() && carry_in.GetImmediateU1();
 
     // Consider using LEA.
-    if (!carry_inst && !overflow_inst && !nzcv_inst && carry_in.IsImmediate() && carry_in.GetImmediateU1() && args[1].IsImmediate() && args[1].FitsInImmediateS32()) {
+    if (!carry_inst && !overflow_inst && !nzcv_inst && carry_in.IsImmediate() && carry_in.GetImmediateU1() && args[1].IsImmediate() && args[1].FitsInImmediateS32() && args[1].GetImmediateS32() != 0xffff'ffff'8000'0000) {
         const Xbyak::Reg op1 = ctx.reg_alloc.UseGpr(args[0]).changeBit(bitsize);
         const Xbyak::Reg result = ctx.reg_alloc.ScratchGpr().changeBit(bitsize);
 
