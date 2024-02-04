@@ -946,6 +946,27 @@ static void EmitVectorCountLeadingZeros(VectorArray<T>& result, const VectorArra
 }
 
 void EmitX64::EmitVectorCountLeadingZeros8(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::GFNI)) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+        const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+        // Reverse bits:
+        code.gf2p8affineqb(data, code.BConst<64>(xword, 0x8040201008040201), 0);
+
+        // Perform a tzcnt:
+        // Isolate lowest set bit
+        code.pcmpeqb(result, result);
+        code.paddb(result, data);
+        code.pandn(result, data);
+        // Convert lowest set bit into an index
+        code.gf2p8affineqb(result, code.BConst<64>(xword, 0xaaccf0ff'00000000), 8);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     if (code.HasHostFeature(HostFeature::SSSE3)) {
         auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
