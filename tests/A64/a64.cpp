@@ -58,6 +58,28 @@ TEST_CASE("A64: ADD{V,P}", "[a64]") {
     REQUIRE(jit.GetVector(6) == Vector{0x0000000004040404, 0x0000000000000000});
 }
 
+TEST_CASE("A64: CLZ", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    env.code_mem.emplace_back(0x6E204803);  // CLZ v3.16b, v0.16b
+    env.code_mem.emplace_back(0x6E604824);  // CLZ v4.8h, v1.8h
+    env.code_mem.emplace_back(0x6EA04845);  // CLZ v5.4s, v2.4s
+    env.code_mem.emplace_back(0x14000000);  // B .
+
+    jit.SetPC(0);
+    jit.SetVector(0, {0xeff0fafbfcfdfeff, 0xff7f3f1f0f070301});
+    jit.SetVector(1, {0xfffcfffdfffeffff, 0x000F000700030001});
+    jit.SetVector(2, {0xfffffffdfffffffe, 0x0000000300000001});
+
+    env.ticks_left = 4;
+    jit.Run();
+
+    REQUIRE(jit.GetVector(3) == Vector{0x0, 0x0001020304050607});
+    REQUIRE(jit.GetVector(4) == Vector{0x0, 0x000c000d000e000f});
+    REQUIRE(jit.GetVector(5) == Vector{0x0, 0x0000001e0000001f});
+}
+
 TEST_CASE("A64: UADDL{V,P}", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
