@@ -1824,6 +1824,47 @@ void EmitX64::EmitVectorLogicalShiftRight64(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorLogicalVShift8(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW | HostFeature::GFNI)) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm left_shift = ctx.reg_alloc.UseScratchXmm(args[1]);
+        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+
+        const Xbyak::Opmask negative_mask = k1;
+        code.pxor(tmp, tmp);
+        code.vpcmpb(negative_mask, left_shift, tmp, CmpInt::LessThan);
+
+        // Reverse bits of negative-shifts
+        code.vmovaps(xmm0, code.BConst<64>(xword, 0x8040201008040201));
+        code.vgf2p8affineqb(result | negative_mask, result, xmm0, 0);
+
+        // Turn all negative shifts into left-shifts
+        code.pabsb(left_shift, left_shift);
+
+        const Xbyak::Opmask valid_index = k2;
+        code.vptestnmb(valid_index, left_shift, code.BConst<8>(xword, 0xF8));
+
+        // gf2p8mulb's "x8 + x4 + x3 + x + 1"-polynomial-reduction only applies
+        // when the multiplication overflows. Masking away any bits that would have
+        // overflowed turns the polynomial-multiplication into regular modulo-multiplication
+        code.movdqa(tmp, code.Const(xword, 0x01'03'07'0f'1f'3f'7f'ff, 0));
+        code.vpshufb(tmp | valid_index | T_z, tmp, left_shift);
+        code.pand(result, tmp);
+
+        // n << 0 == n * 1 | n << 1 == n * 2 | n << 2 == n * 4 | etc
+        code.pxor(tmp, tmp);
+        code.movsd(tmp, xmm0);
+        code.pshufb(tmp, left_shift);
+
+        code.gf2p8mulb(result, tmp);
+
+        // Un-reverse bits of negative-shifts
+        code.vgf2p8affineqb(result | negative_mask, result, xmm0, 0);
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u8>& result, const VectorArray<u8>& a, const VectorArray<u8>& b) {
         std::transform(a.begin(), a.end(), b.begin(), result.begin(), VShift<u8>);
     });
