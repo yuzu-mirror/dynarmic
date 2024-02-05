@@ -293,10 +293,10 @@ TEST_CASE("A64: USHL", "[a64]") {
     env.code_mem.emplace_back(0x14000000);  // B .
 
     jit.SetPC(0);
-    jit.SetVector(0, {0x100F0E0D0C0B0A09, 0x0807050403020100});
-    jit.SetVector(1, {0x0008000700060005, 0x0004000300020001});
-    jit.SetVector(2, {0x0000000400000003, 0x0000000200000001});
-    jit.SetVector(3, {0x0000000000000002, 0x0000000000000001});
+    jit.SetVector(0, {0x10FE0E0D0C0B0A09, 0x0807050403020100});
+    jit.SetVector(1, {0xFFFE000700060005, 0x0004000300020001});
+    jit.SetVector(2, {0xFFFFFFFE00000003, 0x0000000200000001});
+    jit.SetVector(3, {0xFFFFFFFFFFFFFFFE, 0x0000000000000001});
 
     jit.SetVector(4, {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF});
     jit.SetVector(5, {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF});
@@ -306,10 +306,10 @@ TEST_CASE("A64: USHL", "[a64]") {
     env.ticks_left = 4;
     jit.Run();
 
-    REQUIRE(jit.GetVector(4) == Vector{0x0000000000000000, 0x0080e0f0f8fcfeff});
-    REQUIRE(jit.GetVector(5) == Vector{0xff00ff80ffc0ffe0, 0xfff0fff8fffcfffe});
-    REQUIRE(jit.GetVector(6) == Vector{0xfffffff0fffffff8, 0xfffffffcfffffffe});
-    REQUIRE(jit.GetVector(7) == Vector{0xfffffffffffffffc, 0xfffffffffffffffe});
+    REQUIRE(jit.GetVector(4) == Vector{0x003f000000000000, 0x0080e0f0f8fcfeff});
+    REQUIRE(jit.GetVector(5) == Vector{0x3fffff80ffc0ffe0, 0xfff0fff8fffcfffe});
+    REQUIRE(jit.GetVector(6) == Vector{0x3ffffffffffffff8, 0xfffffffcfffffffe});
+    REQUIRE(jit.GetVector(7) == Vector{0x3fffffffffffffff, 0xfffffffffffffffe});
 }
 
 TEST_CASE("A64: XTN", "[a64]") {
