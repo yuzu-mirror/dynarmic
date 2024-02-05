@@ -4,12 +4,14 @@
  */
 
 #include <catch2/catch_test_macros.hpp>
+#include <oaknut/oaknut.hpp>
 
 #include "./testenv.h"
 #include "dynarmic/common/fp/fpsr.h"
 #include "dynarmic/interface/exclusive_monitor.h"
 
 using namespace Dynarmic;
+using namespace oaknut::util;
 
 TEST_CASE("A64: ADD", "[a64]") {
     A64TestEnv env;
@@ -62,17 +64,17 @@ TEST_CASE("A64: CLZ", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x6E204803);  // CLZ v3.16b, v0.16b
-    env.code_mem.emplace_back(0x6E604824);  // CLZ v4.8h, v1.8h
-    env.code_mem.emplace_back(0x6EA04845);  // CLZ v5.4s, v2.4s
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.CLZ(V3.B16(), V0.B16());
+    code.CLZ(V4.H8(), V1.H8());
+    code.CLZ(V5.S4(), V2.S4());
 
     jit.SetPC(0);
     jit.SetVector(0, {0xeff0fafbfcfdfeff, 0xff7f3f1f0f070301});
     jit.SetVector(1, {0xfffcfffdfffeffff, 0x000F000700030001});
     jit.SetVector(2, {0xfffffffdfffffffe, 0x0000000300000001});
 
-    env.ticks_left = 4;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     REQUIRE(jit.GetVector(3) == Vector{0x0, 0x0001020304050607});
