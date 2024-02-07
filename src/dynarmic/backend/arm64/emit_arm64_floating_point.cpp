@@ -329,6 +329,24 @@ void EmitIR<IR::Opcode::FPMulAdd64>(oaknut::CodeGenerator& code, EmitContext& ct
 }
 
 template<>
+void EmitIR<IR::Opcode::FPMulSub16>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    (void)code;
+    (void)ctx;
+    (void)inst;
+    ASSERT_FALSE("Unimplemented");
+}
+
+template<>
+void EmitIR<IR::Opcode::FPMulSub32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitFourOp<32>(code, ctx, inst, [&](auto& Sresult, auto& Sa, auto& S1, auto& S2) { code.FMSUB(Sresult, S1, S2, Sa); });
+}
+
+template<>
+void EmitIR<IR::Opcode::FPMulSub64>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
+    EmitFourOp<64>(code, ctx, inst, [&](auto& Dresult, auto& Da, auto& D1, auto& D2) { code.FMSUB(Dresult, D1, D2, Da); });
+}
+
+template<>
 void EmitIR<IR::Opcode::FPMulX32>(oaknut::CodeGenerator& code, EmitContext& ctx, IR::Inst* inst) {
     EmitThreeOp<32>(code, ctx, inst, [&](auto& Sresult, auto& Sa, auto& Sb) { code.FMULX(Sresult, Sa, Sb); });
 }

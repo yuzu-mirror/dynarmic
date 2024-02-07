@@ -624,9 +624,10 @@ void EmitX64::EmitFPMul64(EmitContext& ctx, IR::Inst* inst) {
     FPThreeOp<64>(code, ctx, inst, &Xbyak::CodeGenerator::mulsd);
 }
 
-template<size_t fsize>
+template<size_t fsize, bool negate_product>
 static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     using FPT = mcl::unsigned_integer_of_size<fsize>;
+    const auto fallback_fn = negate_product ? &FP::FPMulSub<FPT> : &FP::FPMulAdd<FPT>;
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
@@ -639,7 +640,11 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseXmm(args[1]);
             const Xbyak::Xmm operand3 = ctx.reg_alloc.UseXmm(args[2]);
 
-            FCODE(vfmadd231s)(result, operand2, operand3);
+            if constexpr (negate_product) {
+                FCODE(vfnmadd231s)(result, operand2, operand3);
+            } else {
+                FCODE(vfmadd231s)(result, operand2, operand3);
+            }
             if (ctx.FPCR().DN()) {
                 ForceToDefaultNaN<fsize>(code, result);
             }
@@ -657,7 +662,11 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
             code.movaps(result, operand1);
-            FCODE(vfmadd231s)(result, operand2, operand3);
+            if constexpr (negate_product) {
+                FCODE(vfnmadd231s)(result, operand2, operand3);
+            } else {
+                FCODE(vfmadd231s)(result, operand2, operand3);
+            }
 
             if (needs_rounding_correction && needs_nan_correction) {
                 code.vandps(xmm0, result, code.Const(xword, fsize == 32 ? f32_non_sign_mask : f64_non_sign_mask));
@@ -703,11 +712,11 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                     code.sub(rsp, 16 + ABI_SHADOW_SPACE);
                     code.lea(rax, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
                     code.mov(qword[rsp + ABI_SHADOW_SPACE], rax);
-                    code.CallFunction(&FP::FPMulAdd<FPT>);
+                    code.CallFunction(fallback_fn);
                     code.add(rsp, 16 + ABI_SHADOW_SPACE);
 #else
                     code.lea(code.ABI_PARAM5, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
-                    code.CallFunction(&FP::FPMulAdd<FPT>);
+                    code.CallFunction(fallback_fn);
 #endif
                     code.movq(result, code.ABI_RETURN);
                     ABI_PopCallerSaveRegistersAndAdjustStackExcept(code, HostLocXmmIdx(result.getIdx()));
@@ -758,6 +767,9 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                     code.ptest(operand2, xmm0);
                     code.jnz(op2_done);
                     code.vorps(result, operand2, xmm0);
+                    if constexpr (negate_product) {
+                        code.xorps(result, code.Const(xword, FP::FPInfo<FPT>::sign_mask));
+                    }
                     code.jmp(*end);
                     code.L(op2_done);
 
@@ -768,6 +780,16 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
                     code.vorps(result, operand3, xmm0);
                     code.jmp(*end);
                     code.L(op3_done);
+
+                    // at this point, all SNaNs have been handled
+                    // if op1 was not a QNaN and op2 is, negate the result
+                    if constexpr (negate_product) {
+                        FCODE(ucomis)(operand1, operand1);
+                        code.jp(*end);
+                        FCODE(ucomis)(operand2, operand2);
+                        code.jnp(*end);
+                        code.xorps(result, code.Const(xword, FP::FPInfo<FPT>::sign_mask));
+                    }
 
                     code.jmp(*end);
                 }
@@ -782,6 +804,9 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
             const Xbyak::Xmm operand2 = ctx.reg_alloc.UseScratchXmm(args[1]);
             const Xbyak::Xmm operand3 = ctx.reg_alloc.UseXmm(args[2]);
 
+            if constexpr (negate_product) {
+                code.xorps(operand2, code.Const(xword, FP::FPInfo<FPT>::sign_mask));
+            }
             FCODE(muls)(operand2, operand3);
             FCODE(adds)(operand1, operand2);
 
@@ -796,24 +821,36 @@ static void EmitFPMulAdd(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.AllocStackSpace(16 + ABI_SHADOW_SPACE);
     code.lea(rax, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
     code.mov(qword[rsp + ABI_SHADOW_SPACE], rax);
-    code.CallFunction(&FP::FPMulAdd<FPT>);
+    code.CallFunction(fallback_fn);
     ctx.reg_alloc.ReleaseStackSpace(16 + ABI_SHADOW_SPACE);
 #else
     code.lea(code.ABI_PARAM5, code.ptr[code.r15 + code.GetJitStateInfo().offsetof_fpsr_exc]);
-    code.CallFunction(&FP::FPMulAdd<FPT>);
+    code.CallFunction(fallback_fn);
 #endif
 }
 
 void EmitX64::EmitFPMulAdd16(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPMulAdd<16>(code, ctx, inst);
+    EmitFPMulAdd<16, false>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPMulAdd32(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPMulAdd<32>(code, ctx, inst);
+    EmitFPMulAdd<32, false>(code, ctx, inst);
 }
 
 void EmitX64::EmitFPMulAdd64(EmitContext& ctx, IR::Inst* inst) {
-    EmitFPMulAdd<64>(code, ctx, inst);
+    EmitFPMulAdd<64, false>(code, ctx, inst);
+}
+
+void EmitX64::EmitFPMulSub16(EmitContext& ctx, IR::Inst* inst) {
+    EmitFPMulAdd<16, true>(code, ctx, inst);
+}
+
+void EmitX64::EmitFPMulSub32(EmitContext& ctx, IR::Inst* inst) {
+    EmitFPMulAdd<32, true>(code, ctx, inst);
+}
+
+void EmitX64::EmitFPMulSub64(EmitContext& ctx, IR::Inst* inst) {
+    EmitFPMulAdd<64, true>(code, ctx, inst);
 }
 
 template<size_t fsize>

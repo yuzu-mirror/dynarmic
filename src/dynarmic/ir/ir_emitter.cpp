@@ -2190,6 +2190,21 @@ U16U32U64 IREmitter::FPMulAdd(const U16U32U64& a, const U16U32U64& b, const U16U
     }
 }
 
+U16U32U64 IREmitter::FPMulSub(const U16U32U64& a, const U16U32U64& b, const U16U32U64& c) {
+    ASSERT(a.GetType() == b.GetType());
+
+    switch (a.GetType()) {
+    case Type::U16:
+        return Inst<U16>(Opcode::FPMulSub16, a, b, c);
+    case Type::U32:
+        return Inst<U32>(Opcode::FPMulSub32, a, b, c);
+    case Type::U64:
+        return Inst<U64>(Opcode::FPMulSub64, a, b, c);
+    default:
+        UNREACHABLE();
+    }
+}
+
 U32U64 IREmitter::FPMulX(const U32U64& a, const U32U64& b) {
     ASSERT(a.GetType() == b.GetType());
 

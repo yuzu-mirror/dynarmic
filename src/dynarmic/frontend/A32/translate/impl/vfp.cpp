@@ -293,7 +293,7 @@ bool TranslatorVisitor::vfp_VFNMA(Cond cond, bool D, size_t Vn, size_t Vd, bool 
         const auto reg_n = ir.GetExtendedRegister(n);
         const auto reg_m = ir.GetExtendedRegister(m);
         const auto reg_d = ir.GetExtendedRegister(d);
-        const auto result = ir.FPMulAdd(ir.FPNeg(reg_d), ir.FPNeg(reg_n), reg_m);
+        const auto result = ir.FPMulSub(ir.FPNeg(reg_d), reg_n, reg_m);
         ir.SetExtendedRegister(d, result);
     });
 }
@@ -333,7 +333,7 @@ bool TranslatorVisitor::vfp_VFMS(Cond cond, bool D, size_t Vn, size_t Vd, bool s
         const auto reg_n = ir.GetExtendedRegister(n);
         const auto reg_m = ir.GetExtendedRegister(m);
         const auto reg_d = ir.GetExtendedRegister(d);
-        const auto result = ir.FPMulAdd(reg_d, ir.FPNeg(reg_n), reg_m);
+        const auto result = ir.FPMulSub(reg_d, reg_n, reg_m);
         ir.SetExtendedRegister(d, result);
     });
 }

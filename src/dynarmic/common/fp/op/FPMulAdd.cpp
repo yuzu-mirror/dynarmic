@@ -78,4 +78,13 @@ template u16 FPMulAdd<u16>(u16 addend, u16 op1, u16 op2, FPCR fpcr, FPSR& fpsr);
 template u32 FPMulAdd<u32>(u32 addend, u32 op1, u32 op2, FPCR fpcr, FPSR& fpsr);
 template u64 FPMulAdd<u64>(u64 addend, u64 op1, u64 op2, FPCR fpcr, FPSR& fpsr);
 
+template<typename FPT>
+FPT FPMulSub(FPT minuend, FPT op1, FPT op2, FPCR fpcr, FPSR& fpsr) {
+    return FPMulAdd<FPT>(minuend, (op1 ^ FPInfo<FPT>::sign_mask), op2, fpcr, fpsr);
+}
+
+template u16 FPMulSub<u16>(u16 minuend, u16 op1, u16 op2, FPCR fpcr, FPSR& fpsr);
+template u32 FPMulSub<u32>(u32 minuend, u32 op1, u32 op2, FPCR fpcr, FPSR& fpsr);
+template u64 FPMulSub<u64>(u64 minuend, u64 op1, u64 op2, FPCR fpcr, FPSR& fpsr);
+
 }  // namespace Dynarmic::FP

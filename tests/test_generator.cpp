@@ -103,6 +103,7 @@ bool ShouldTestInst(IR::Block& block) {
         // Half-precision
         case IR::Opcode::FPAbs16:
         case IR::Opcode::FPMulAdd16:
+        case IR::Opcode::FPMulSub16:
         case IR::Opcode::FPNeg16:
         case IR::Opcode::FPRecipEstimate16:
         case IR::Opcode::FPRecipExponent16:
