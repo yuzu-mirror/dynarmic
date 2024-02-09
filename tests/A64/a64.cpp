@@ -1547,10 +1547,10 @@ TEST_CASE("A64: SABD", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x4e247460);  // SABD V0.16B, V3.16B, V4.16B
-    env.code_mem.emplace_back(0x4e6674a1);  // SABD V1.8H, V5.8H, V6.8H
-    env.code_mem.emplace_back(0x4ea874e2);  // SABD V2.4S, V7.4S, V8.4S
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SABD(V0.B16(), V3.B16(), V4.B16());
+    code.SABD(V1.H8(), V5.H8(), V6.H8());
+    code.SABD(V2.S4(), V7.S4(), V8.S4());
 
     constexpr std::array<Vector, 9> vectors = {
         // expected output vectors (int8, int16, int32)
@@ -1576,7 +1576,7 @@ TEST_CASE("A64: SABD", "[a64]") {
     jit.SetVector(7, vectors[7]);
     jit.SetVector(8, vectors[8]);
 
-    env.ticks_left = 4;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     CHECK(jit.GetVector(0) == vectors[0]);
@@ -1605,36 +1605,36 @@ TEST_CASE("A64: UZP{1,2}.2D", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x4ec11802);  // UZP1 V2.2D, V0.2D, V1.2D
-    env.code_mem.emplace_back(0x4ec15803);  // UZP2 V3.2D, V0.2D, V1.2D
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.UZP1(V2.D2(), V0.D2(), V1.D2());
+    code.UZP2(V3.D2(), V0.D2(), V1.D2());
 
     jit.SetPC(0);
-    jit.SetVector(0, {0xF0F1F2F3F4F5F6F7, 0xE0E1E2E2E4E5E6E7});
+    jit.SetVector(0, {0xF0F1F2F3F4F5F6F7, 0xE0E1E2E3E4E5E6E7});
     jit.SetVector(1, {0xA0A1A2A3A4A5A6A7, 0xB0B1B2B3B4B5B6B7});
 
-    env.ticks_left = 3;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     REQUIRE(jit.GetVector(2) == Vector{0xF0F1F2F3F4F5F6F7, 0xA0A1A2A3A4A5A6A7});
-    REQUIRE(jit.GetVector(3) == Vector{0xE0E1E2E2E4E5E6E7, 0xB0B1B2B3B4B5B6B7});
+    REQUIRE(jit.GetVector(3) == Vector{0xE0E1E2E3E4E5E6E7, 0xB0B1B2B3B4B5B6B7});
 }
 
 TEST_CASE("A64: UZP{1,2}.S", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x0e811802);  // UZP1 V2.2S, V0.2S, V1.2S
-    env.code_mem.emplace_back(0x0e815803);  // UZP2 V3.2S, V0.2S, V1.2S
-    env.code_mem.emplace_back(0x4e811804);  // UZP1 V4.4S, V0.4S, V1.4S
-    env.code_mem.emplace_back(0x4e815805);  // UZP2 V5.4S, V0.4S, V1.4S
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.UZP1(V2.S2(), V0.S2(), V1.S2());
+    code.UZP2(V3.S2(), V0.S2(), V1.S2());
+    code.UZP1(V4.S4(), V0.S4(), V1.S4());
+    code.UZP2(V5.S4(), V0.S4(), V1.S4());
 
     jit.SetPC(0);
     jit.SetVector(0, {0xF4F5F6F7'F0F1F2F3, 0xE4E5E6E7'E0E1E2E3});
     jit.SetVector(1, {0xA4A5A6A7'A0A1A2A3, 0xB4B5B6B7'B0B1B2B3});
 
-    env.ticks_left = 5;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     REQUIRE(jit.GetVector(2) == Vector{0xA0A1A2A3'F0F1F2F3, 0});
@@ -1647,17 +1647,17 @@ TEST_CASE("A64: UZP{1,2}.H", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x0e411802);  // UZP1 V2.4H, V0.4H, V1.4H
-    env.code_mem.emplace_back(0x0e415803);  // UZP2 V3.4H, V0.4H, V1.4H
-    env.code_mem.emplace_back(0x4e411804);  // UZP1 V4.8H, V0.8H, V1.8H
-    env.code_mem.emplace_back(0x4e415805);  // UZP2 V5.8H, V0.8H, V1.8H
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.UZP1(V2.H4(), V0.H4(), V1.H4());
+    code.UZP2(V3.H4(), V0.H4(), V1.H4());
+    code.UZP1(V4.H8(), V0.H8(), V1.H8());
+    code.UZP2(V5.H8(), V0.H8(), V1.H8());
 
     jit.SetPC(0);
     jit.SetVector(0, {0xF6F7'F4F5'F2F3'F0F1, 0xE6E7'E4E5'E2E3'E0E1});
     jit.SetVector(1, {0xA6A7'A4A5'A2A3'A0A1, 0xB6B7'B4B5'B2B3'B0B1});
 
-    env.ticks_left = 5;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     REQUIRE(jit.GetVector(2) == Vector{0xA4A5'A0A1'F4F5'F0F1, 0});
@@ -1670,17 +1670,17 @@ TEST_CASE("A64: UZP{1,2}.B", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x0e011802);  // UZP1 V2.8B, V0.8B, V1.8B
-    env.code_mem.emplace_back(0x0e015803);  // UZP2 V3.8B, V0.8B, V1.8B
-    env.code_mem.emplace_back(0x4e011804);  // UZP1 V4.16B, V0.16B, V1.16B
-    env.code_mem.emplace_back(0x4e015805);  // UZP2 V5.16B, V0.16B, V1.16B
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.UZP1(V2.B8(), V0.B8(), V1.B8());
+    code.UZP2(V3.B8(), V0.B8(), V1.B8());
+    code.UZP1(V4.B16(), V0.B16(), V1.B16());
+    code.UZP2(V5.B16(), V0.B16(), V1.B16());
 
     jit.SetPC(0);
     jit.SetVector(0, {0xF7'F6'F5'F4'F3'F2'F1'F0, 0xE7'E6'E5'E4'E3'E2'E1'E0});
     jit.SetVector(1, {0xA7'A6'A5'A4'A3'A2'A1'A0, 0xB7'B6'B5'B4'B3'B2'B1'B0});
 
-    env.ticks_left = 5;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     REQUIRE(jit.GetVector(2) == Vector{0xA6'A4'A2'A0'F6'F4'F2'F0, 0});
@@ -1693,15 +1693,15 @@ TEST_CASE("A64: {S,U}MINP.S, {S,U}MAXP.S", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x0ea1ac02);  // SMINP V2.2S, V0.2S, V1.2S
-    env.code_mem.emplace_back(0x2ea1ac03);  // UMINP V3.2S, V0.2S, V1.2S
-    env.code_mem.emplace_back(0x4ea1ac04);  // SMINP V4.4S, V0.4S, V1.4S
-    env.code_mem.emplace_back(0x6ea1ac05);  // UMINP V5.4S, V0.4S, V1.4S
-    env.code_mem.emplace_back(0x0ea1a406);  // SMAXP V6.2S, V0.2S, V1.2S
-    env.code_mem.emplace_back(0x2ea1a407);  // UMAXP V7.2S, V0.2S, V1.2S
-    env.code_mem.emplace_back(0x4ea1a408);  // SMAXP V8.4S, V0.4S, V1.4S
-    env.code_mem.emplace_back(0x6ea1a409);  // UMAXP V9.4S, V0.4S, V1.4S
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SMINP(V2.S2(), V0.S2(), V1.S2());
+    code.UMINP(V3.S2(), V0.S2(), V1.S2());
+    code.SMINP(V4.S4(), V0.S4(), V1.S4());
+    code.UMINP(V5.S4(), V0.S4(), V1.S4());
+    code.SMAXP(V6.S2(), V0.S2(), V1.S2());
+    code.UMAXP(V7.S2(), V0.S2(), V1.S2());
+    code.SMAXP(V8.S4(), V0.S4(), V1.S4());
+    code.UMAXP(V9.S4(), V0.S4(), V1.S4());
 
     constexpr std::array<Vector, 12> vectors = {
         // initial input vectors [0-1]
@@ -1725,7 +1725,7 @@ TEST_CASE("A64: {S,U}MINP.S, {S,U}MAXP.S", "[a64]") {
     jit.SetVector(0, vectors[0]);
     jit.SetVector(1, vectors[1]);
 
-    env.ticks_left = 9;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     CHECK(jit.GetVector(2) == vectors[2]);
@@ -1744,7 +1744,7 @@ TEST_CASE("A64: {S,U}MINP.S, {S,U}MAXP.S", "[a64]") {
     jit.SetVector(0, vectors[10]);
     jit.SetVector(1, vectors[11]);
 
-    env.ticks_left = 9;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     CHECK(jit.GetVector(2) == vectors[2]);
@@ -1761,15 +1761,15 @@ TEST_CASE("A64: {S,U}MINP.H, {S,U}MAXP.H", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x0e61ac02);  // SMINP V2.4H, V0.4H, V1.4H
-    env.code_mem.emplace_back(0x2e61ac03);  // UMINP V3.4H, V0.4H, V1.4H
-    env.code_mem.emplace_back(0x4e61ac04);  // SMINP V4.8H, V0.8H, V1.8H
-    env.code_mem.emplace_back(0x6e61ac05);  // UMINP V5.8H, V0.8H, V1.8H
-    env.code_mem.emplace_back(0x0e61a406);  // SMAXP V6.4H, V0.4H, V1.4H
-    env.code_mem.emplace_back(0x2e61a407);  // UMAXP V7.4H, V0.4H, V1.4H
-    env.code_mem.emplace_back(0x4e61a408);  // SMAXP V8.8H, V0.8H, V1.8H
-    env.code_mem.emplace_back(0x6e61a409);  // UMAXP V9.8H, V0.8H, V1.8H
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SMINP(V2.H4(), V0.H4(), V1.H4());
+    code.UMINP(V3.H4(), V0.H4(), V1.H4());
+    code.SMINP(V4.H8(), V0.H8(), V1.H8());
+    code.UMINP(V5.H8(), V0.H8(), V1.H8());
+    code.SMAXP(V6.H4(), V0.H4(), V1.H4());
+    code.UMAXP(V7.H4(), V0.H4(), V1.H4());
+    code.SMAXP(V8.H8(), V0.H8(), V1.H8());
+    code.UMAXP(V9.H8(), V0.H8(), V1.H8());
 
     constexpr std::array<Vector, 12> vectors = {
         // initial input vectors [0-1]
@@ -1793,7 +1793,7 @@ TEST_CASE("A64: {S,U}MINP.H, {S,U}MAXP.H", "[a64]") {
     jit.SetVector(0, vectors[0]);
     jit.SetVector(1, vectors[1]);
 
-    env.ticks_left = 9;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     CHECK(jit.GetVector(2) == vectors[2]);
@@ -1812,7 +1812,7 @@ TEST_CASE("A64: {S,U}MINP.H, {S,U}MAXP.H", "[a64]") {
     jit.SetVector(0, vectors[10]);
     jit.SetVector(1, vectors[11]);
 
-    env.ticks_left = 9;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     CHECK(jit.GetVector(2) == vectors[2]);
@@ -1829,15 +1829,15 @@ TEST_CASE("A64: {S,U}MINP.B, {S,U}MAXP.B", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x0e21ac02);  // SMINP V2.8B, V0.8B, V1.8B
-    env.code_mem.emplace_back(0x2e21ac03);  // UMINP V3.8B, V0.8B, V1.8B
-    env.code_mem.emplace_back(0x4e21ac04);  // SMINP V4.16B, V0.16B, V1.16B
-    env.code_mem.emplace_back(0x6e21ac05);  // UMINP V5.16B, V0.16B, V1.16B
-    env.code_mem.emplace_back(0x0e21a406);  // SMAXP V6.8B, V0.8B, V1.8B
-    env.code_mem.emplace_back(0x2e21a407);  // UMAXP V7.8B, V0.8B, V1.8B
-    env.code_mem.emplace_back(0x4e21a408);  // SMAXP V8.16B, V0.16B, V1.16B
-    env.code_mem.emplace_back(0x6e21a409);  // UMAXP V9.16B, V0.16B, V1.16B
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SMINP(V2.B8(), V0.B8(), V1.B8());
+    code.UMINP(V3.B8(), V0.B8(), V1.B8());
+    code.SMINP(V4.B16(), V0.B16(), V1.B16());
+    code.UMINP(V5.B16(), V0.B16(), V1.B16());
+    code.SMAXP(V6.B8(), V0.B8(), V1.B8());
+    code.UMAXP(V7.B8(), V0.B8(), V1.B8());
+    code.SMAXP(V8.B16(), V0.B16(), V1.B16());
+    code.UMAXP(V9.B16(), V0.B16(), V1.B16());
 
     constexpr std::array<Vector, 12> vectors = {
         // initial input vectors [0-1]
@@ -1861,7 +1861,7 @@ TEST_CASE("A64: {S,U}MINP.B, {S,U}MAXP.B", "[a64]") {
     jit.SetVector(0, vectors[0]);
     jit.SetVector(1, vectors[1]);
 
-    env.ticks_left = 9;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     CHECK(jit.GetVector(2) == vectors[2]);
@@ -1883,7 +1883,7 @@ TEST_CASE("A64: {S,U}MINP.B, {S,U}MAXP.B", "[a64]") {
     jit.SetVector(0, vectors[10]);
     jit.SetVector(1, vectors[11]);
 
-    env.ticks_left = 9;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
     CHECK(jit.GetVector(2) == vectors[2]);
