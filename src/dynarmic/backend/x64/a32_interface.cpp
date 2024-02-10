@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 
 #include <boost/icl/interval_set.hpp>
 #include <fmt/format.h>
@@ -66,18 +67,17 @@ struct Jit::Impl {
             , conf(std::move(conf))
             , jit_interface(jit) {}
 
-    A32JitState jit_state;
-    BlockOfCode block_of_code;
-    A32EmitX64 emitter;
-    Optimization::PolyfillOptions polyfill_options;
+    ~Impl() = default;
 
-    const A32::UserConfig conf;
+    HaltReason Run() {
+        ASSERT(!jit_interface->is_executing);
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&jit_state.halt_reason)));
 
-    // Requests made during execution to invalidate the cache are queued up here.
-    boost::icl::interval_set<u32> invalid_cache_ranges;
-    bool invalidate_entire_cache = false;
+        jit_interface->is_executing = true;
+        SCOPE_EXIT {
+            jit_interface->is_executing = false;
+        };
 
-    HaltReason Execute() {
         const CodePtr current_codeptr = [this] {
             // RSB optimization
             const u32 new_rsb_ptr = (jit_state.rsb_ptr - 1) & A32JitState::RSBPtrMask;
@@ -89,11 +89,44 @@ struct Jit::Impl {
             return GetCurrentBlock();
         }();
 
-        return block_of_code.RunCode(&jit_state, current_codeptr);
+        const HaltReason hr = block_of_code.RunCode(&jit_state, current_codeptr);
+
+        PerformRequestedCacheInvalidation(hr);
+
+        return hr;
     }
 
     HaltReason Step() {
-        return block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+        ASSERT(!jit_interface->is_executing);
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&jit_state.halt_reason)));
+
+        jit_interface->is_executing = true;
+        SCOPE_EXIT {
+            jit_interface->is_executing = false;
+        };
+
+        const HaltReason hr = block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
+
+        PerformRequestedCacheInvalidation(hr);
+
+        return hr;
+    }
+
+    void ClearCache() {
+        std::unique_lock lock{invalidation_mutex};
+        invalidate_entire_cache = true;
+        HaltExecution(HaltReason::CacheInvalidation);
+    }
+
+    void InvalidateCacheRange(std::uint32_t start_address, std::size_t length) {
+        std::unique_lock lock{invalidation_mutex};
+        invalid_cache_ranges.add(boost::icl::discrete_interval<u32>::closed(start_address, static_cast<u32>(start_address + length - 1)));
+        HaltExecution(HaltReason::CacheInvalidation);
+    }
+
+    void Reset() {
+        ASSERT(!jit_interface->is_executing);
+        jit_state = {};
     }
 
     void HaltExecution(HaltReason hr) {
@@ -108,38 +141,49 @@ struct Jit::Impl {
         jit_state.exclusive_state = 0;
     }
 
-    void PerformCacheInvalidation() {
-        if (invalidate_entire_cache) {
-            jit_state.ResetRSB();
-            block_of_code.ClearCache();
-            emitter.ClearCache();
-
-            invalid_cache_ranges.clear();
-            invalidate_entire_cache = false;
-            return;
-        }
-
-        if (invalid_cache_ranges.empty()) {
-            return;
-        }
-
-        jit_state.ResetRSB();
-        emitter.InvalidateCacheRanges(invalid_cache_ranges);
-        invalid_cache_ranges.clear();
+    std::array<u32, 16>& Regs() {
+        return jit_state.Reg;
     }
 
-    void RequestCacheInvalidation() {
-        if (jit_interface->is_executing) {
-            HaltExecution(HaltReason::CacheInvalidation);
-            return;
-        }
+    const std::array<u32, 16>& Regs() const {
+        return jit_state.Reg;
+    }
 
-        PerformCacheInvalidation();
+    std::array<u32, 64>& ExtRegs() {
+        return jit_state.ExtReg;
+    }
+
+    const std::array<u32, 64>& ExtRegs() const {
+        return jit_state.ExtReg;
+    }
+
+    u32 Cpsr() const {
+        return jit_state.Cpsr();
+    }
+
+    void SetCpsr(u32 value) {
+        return jit_state.SetCpsr(value);
+    }
+
+    u32 Fpscr() const {
+        return jit_state.Fpscr();
+    }
+
+    void SetFpscr(u32 value) {
+        return jit_state.SetFpscr(value);
+    }
+
+    void DumpDisassembly() const {
+        const size_t size = reinterpret_cast<const char*>(block_of_code.getCurr()) - reinterpret_cast<const char*>(block_of_code.GetCodeBegin());
+        Common::DumpDisassembledX64(block_of_code.GetCodeBegin(), size);
+    }
+
+    std::vector<std::string> Disassemble() const {
+        const size_t size = reinterpret_cast<const char*>(block_of_code.getCurr()) - reinterpret_cast<const char*>(block_of_code.GetCodeBegin());
+        return Common::DisassembleX64(block_of_code.GetCodeBegin(), size);
     }
 
 private:
-    Jit* jit_interface;
-
     static CodePtr GetCurrentBlockThunk(void* this_voidptr) {
         Jit::Impl& this_ = *static_cast<Jit::Impl*>(this_voidptr);
         return this_.GetCurrentBlock();
@@ -165,7 +209,7 @@ private:
         constexpr size_t MINIMUM_REMAINING_CODESIZE = 1 * 1024 * 1024;
         if (block_of_code.SpaceRemaining() < MINIMUM_REMAINING_CODESIZE) {
             invalidate_entire_cache = true;
-            PerformCacheInvalidation();
+            PerformRequestedCacheInvalidation(HaltReason::CacheInvalidation);
         }
         block_of_code.EnsureMemoryCommitted(MINIMUM_REMAINING_CODESIZE);
 
@@ -185,6 +229,42 @@ private:
         Optimization::VerificationPass(ir_block);
         return emitter.Emit(ir_block);
     }
+
+    void PerformRequestedCacheInvalidation(HaltReason hr) {
+        if (Has(hr, HaltReason::CacheInvalidation)) {
+            std::unique_lock lock{invalidation_mutex};
+
+            ClearHalt(HaltReason::CacheInvalidation);
+
+            if (!invalidate_entire_cache && invalid_cache_ranges.empty()) {
+                return;
+            }
+
+            jit_state.ResetRSB();
+            if (invalidate_entire_cache) {
+                block_of_code.ClearCache();
+                emitter.ClearCache();
+            } else {
+                emitter.InvalidateCacheRanges(invalid_cache_ranges);
+            }
+            invalid_cache_ranges.clear();
+            invalidate_entire_cache = false;
+        }
+    }
+
+    A32JitState jit_state;
+    BlockOfCode block_of_code;
+    A32EmitX64 emitter;
+    Optimization::PolyfillOptions polyfill_options;
+
+    const A32::UserConfig conf;
+
+    Jit* jit_interface;
+
+    // Requests made during execution to invalidate the cache are queued up here.
+    bool invalidate_entire_cache = false;
+    boost::icl::interval_set<u32> invalid_cache_ranges;
+    std::mutex invalidation_mutex;
 };
 
 Jit::Jit(UserConfig conf)
@@ -193,46 +273,23 @@ Jit::Jit(UserConfig conf)
 Jit::~Jit() = default;
 
 HaltReason Jit::Run() {
-    ASSERT(!is_executing);
-    is_executing = true;
-    SCOPE_EXIT {
-        this->is_executing = false;
-    };
-
-    const HaltReason hr = impl->Execute();
-
-    impl->PerformCacheInvalidation();
-
-    return hr;
+    return impl->Run();
 }
 
 HaltReason Jit::Step() {
-    ASSERT(!is_executing);
-    is_executing = true;
-    SCOPE_EXIT {
-        this->is_executing = false;
-    };
-
-    const HaltReason hr = impl->Step();
-
-    impl->PerformCacheInvalidation();
-
-    return hr;
+    return impl->Step();
 }
 
 void Jit::ClearCache() {
-    impl->invalidate_entire_cache = true;
-    impl->RequestCacheInvalidation();
+    impl->ClearCache();
 }
 
 void Jit::InvalidateCacheRange(std::uint32_t start_address, std::size_t length) {
-    impl->invalid_cache_ranges.add(boost::icl::discrete_interval<u32>::closed(start_address, static_cast<u32>(start_address + length - 1)));
-    impl->RequestCacheInvalidation();
+    impl->InvalidateCacheRange(start_address, length);
 }
 
 void Jit::Reset() {
-    ASSERT(!is_executing);
-    impl->jit_state = {};
+    impl->Reset();
 }
 
 void Jit::HaltExecution(HaltReason hr) {
@@ -243,48 +300,44 @@ void Jit::ClearHalt(HaltReason hr) {
     impl->ClearHalt(hr);
 }
 
+std::array<std::uint32_t, 16>& Jit::Regs() {
+    return impl->Regs();
+}
+
+const std::array<std::uint32_t, 16>& Jit::Regs() const {
+    return impl->Regs();
+}
+
+std::array<std::uint32_t, 64>& Jit::ExtRegs() {
+    return impl->ExtRegs();
+}
+
+const std::array<std::uint32_t, 64>& Jit::ExtRegs() const {
+    return impl->ExtRegs();
+}
+
+std::uint32_t Jit::Cpsr() const {
+    return impl->Cpsr();
+}
+
+void Jit::SetCpsr(std::uint32_t value) {
+    impl->SetCpsr(value);
+}
+
+std::uint32_t Jit::Fpscr() const {
+    return impl->Fpscr();
+}
+
+void Jit::SetFpscr(std::uint32_t value) {
+    impl->SetFpscr(value);
+}
+
 void Jit::ClearExclusiveState() {
     impl->ClearExclusiveState();
 }
 
-std::array<u32, 16>& Jit::Regs() {
-    return impl->jit_state.Reg;
-}
-const std::array<u32, 16>& Jit::Regs() const {
-    return impl->jit_state.Reg;
-}
-
-std::array<u32, 64>& Jit::ExtRegs() {
-    return impl->jit_state.ExtReg;
-}
-
-const std::array<u32, 64>& Jit::ExtRegs() const {
-    return impl->jit_state.ExtReg;
-}
-
-u32 Jit::Cpsr() const {
-    return impl->jit_state.Cpsr();
-}
-
-void Jit::SetCpsr(u32 value) {
-    return impl->jit_state.SetCpsr(value);
-}
-
-u32 Jit::Fpscr() const {
-    return impl->jit_state.Fpscr();
-}
-
-void Jit::SetFpscr(u32 value) {
-    return impl->jit_state.SetFpscr(value);
-}
-
 void Jit::DumpDisassembly() const {
-    const size_t size = reinterpret_cast<const char*>(impl->block_of_code.getCurr()) - reinterpret_cast<const char*>(impl->block_of_code.GetCodeBegin());
-    Common::DumpDisassembledX64(impl->block_of_code.GetCodeBegin(), size);
+    impl->DumpDisassembly();
 }
 
-std::vector<std::string> Jit::Disassemble() const {
-    const size_t size = reinterpret_cast<const char*>(impl->block_of_code.getCurr()) - reinterpret_cast<const char*>(impl->block_of_code.GetCodeBegin());
-    return Common::DisassembleX64(impl->block_of_code.GetCodeBegin(), size);
-}
 }  // namespace Dynarmic::A32

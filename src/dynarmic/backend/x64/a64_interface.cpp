@@ -69,7 +69,7 @@ public:
 
     HaltReason Run() {
         ASSERT(!is_executing);
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&jit_state.halt_reason)));
 
         is_executing = true;
         SCOPE_EXIT {
@@ -91,14 +91,14 @@ public:
 
         const HaltReason hr = block_of_code.RunCode(&jit_state, current_code_ptr);
 
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(hr);
 
         return hr;
     }
 
     HaltReason Step() {
         ASSERT(!is_executing);
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(static_cast<HaltReason>(Atomic::Load(&jit_state.halt_reason)));
 
         is_executing = true;
         SCOPE_EXIT {
@@ -107,7 +107,7 @@ public:
 
         const HaltReason hr = block_of_code.StepCode(&jit_state, GetCurrentSingleStep());
 
-        PerformRequestedCacheInvalidation();
+        PerformRequestedCacheInvalidation(hr);
 
         return hr;
     }
@@ -115,9 +115,7 @@ public:
     void ClearCache() {
         std::unique_lock lock{invalidation_mutex};
         invalidate_entire_cache = true;
-        if (is_executing) {
-            HaltExecution(HaltReason::CacheInvalidation);
-        }
+        HaltExecution(HaltReason::CacheInvalidation);
     }
 
     void InvalidateCacheRange(u64 start_address, size_t length) {
@@ -125,9 +123,7 @@ public:
         const auto end_address = static_cast<u64>(start_address + length - 1);
         const auto range = boost::icl::discrete_interval<u64>::closed(start_address, end_address);
         invalid_cache_ranges.add(range);
-        if (is_executing) {
-            HaltExecution(HaltReason::CacheInvalidation);
-        }
+        HaltExecution(HaltReason::CacheInvalidation);
     }
 
     void Reset() {
@@ -268,7 +264,7 @@ private:
         if (block_of_code.SpaceRemaining() < MINIMUM_REMAINING_CODESIZE) {
             // Immediately evacuate cache
             invalidate_entire_cache = true;
-            PerformRequestedCacheInvalidation();
+            PerformRequestedCacheInvalidation(HaltReason::CacheInvalidation);
         }
         block_of_code.EnsureMemoryCommitted(MINIMUM_REMAINING_CODESIZE);
 
@@ -294,30 +290,26 @@ private:
         return emitter.Emit(ir_block).entrypoint;
     }
 
-    void RequestCacheInvalidation() {
-        if (is_executing) {
-            HaltExecution(HaltReason::CacheInvalidation);
-            return;
-        }
+    void PerformRequestedCacheInvalidation(HaltReason hr) {
+        if (Has(hr, HaltReason::CacheInvalidation)) {
+            std::unique_lock lock{invalidation_mutex};
 
-        PerformRequestedCacheInvalidation();
-    }
+            ClearHalt(HaltReason::CacheInvalidation);
 
-    void PerformRequestedCacheInvalidation() {
-        std::unique_lock lock{invalidation_mutex};
-        if (!invalidate_entire_cache && invalid_cache_ranges.empty()) {
-            return;
-        }
+            if (!invalidate_entire_cache && invalid_cache_ranges.empty()) {
+                return;
+            }
 
-        jit_state.ResetRSB();
-        if (invalidate_entire_cache) {
-            block_of_code.ClearCache();
-            emitter.ClearCache();
-        } else {
-            emitter.InvalidateCacheRanges(invalid_cache_ranges);
+            jit_state.ResetRSB();
+            if (invalidate_entire_cache) {
+                block_of_code.ClearCache();
+                emitter.ClearCache();
+            } else {
+                emitter.InvalidateCacheRanges(invalid_cache_ranges);
+            }
+            invalid_cache_ranges.clear();
+            invalidate_entire_cache = false;
         }
-        invalid_cache_ranges.clear();
-        invalidate_entire_cache = false;
     }
 
     bool is_executing = false;
