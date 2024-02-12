@@ -4064,71 +4064,75 @@ static void EmitVectorSignedSaturatedAbs(size_t esize, BlockOfCode& code, EmitCo
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     const Xbyak::Xmm data = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm data_test = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Xmm sign = ctx.reg_alloc.ScratchXmm();
-    const Xbyak::Address mask = [esize, &code] {
-        switch (esize) {
-        case 8:
-            return code.Const(xword, 0x8080808080808080, 0x8080808080808080);
-        case 16:
-            return code.Const(xword, 0x8000800080008000, 0x8000800080008000);
-        case 32:
-            return code.Const(xword, 0x8000000080000000, 0x8000000080000000);
-        case 64:
-            return code.Const(xword, 0x8000000000000000, 0x8000000000000000);
-        default:
-            UNREACHABLE();
-        }
-    }();
+    const Xbyak::Reg32 bit = ctx.reg_alloc.ScratchGpr().cvt32();
 
-    const auto vector_equality = [esize, &code](const Xbyak::Xmm& x, const Xbyak::Xmm& y) {
-        switch (esize) {
-        case 8:
-            code.pcmpeqb(x, y);
-            break;
-        case 16:
-            code.pcmpeqw(x, y);
-            break;
-        case 32:
-            code.pcmpeqd(x, y);
-            break;
-        case 64:
-            code.pcmpeqq(x, y);
-            break;
-        }
-    };
+    // SSE absolute value functions return an unsigned result
+    // this means abs(SIGNED_MIN) returns its value unchanged, leaving the most significant bit set
+    // so doing a movemask operation on the result of abs(data) before processing saturation is enough to determine
+    // if the QC bit needs to be set
 
-    // Keep a copy of the initial data for determining whether or not
-    // to set the Q flag
-    code.movdqa(data_test, data);
-
+    // to perform the actual saturation, either do a minimum operation with a vector of SIGNED_MAX,
+    // or shift in sign bits to create a mask of (msb == 1 ? -1 : 0), then add to the result vector
     switch (esize) {
-    case 8:
+    case 8: {
         VectorAbs8(code, ctx, data);
-        break;
-    case 16:
-        VectorAbs16(code, ctx, data);
-        break;
-    case 32:
-        VectorAbs32(code, ctx, data);
-        break;
-    case 64:
-        VectorAbs64(code, ctx, data);
+        code.pmovmskb(bit, data);
+
+        code.pminub(data, code.BConst<8>(xword, 0x7F));
         break;
     }
+    case 16: {
+        VectorAbs16(code, ctx, data);
+        code.pmovmskb(bit, data);
+        code.and_(bit, 0xAAAA);  // toggle mask bits that aren't the msb of an int16 to 0
 
-    code.movdqa(sign, mask);
-    vector_equality(sign, data);
-    code.pxor(data, sign);
+        if (code.HasHostFeature(HostFeature::SSE41)) {
+            code.pminuw(data, code.BConst<16>(xword, 0x7FFF));
+        } else {
+            const Xbyak::Xmm tmp = xmm0;
+            code.movdqa(tmp, data);
+            code.psraw(data, 15);
+            code.paddw(data, tmp);
+        }
+        break;
+    }
+    case 32: {
+        VectorAbs32(code, ctx, data);
+        code.movmskps(bit, data);
 
-    // Check if the initial data contained any elements with the value 0x80.
-    // If any exist, then the Q flag needs to be set.
-    const Xbyak::Reg32 bit = ctx.reg_alloc.ScratchGpr().cvt32();
-    code.movdqa(sign, mask);
-    vector_equality(data_test, sign);
-    code.pmovmskb(bit, data_test);
+        if (code.HasHostFeature(HostFeature::SSE41)) {
+            code.pminud(data, code.BConst<32>(xword, 0x7FFFFFFF));
+        } else {
+            const Xbyak::Xmm tmp = xmm0;
+            code.movdqa(tmp, data);
+            code.psrad(data, 31);
+            code.paddd(data, tmp);
+        }
+        break;
+    }
+    case 64: {
+        VectorAbs64(code, ctx, data);
+        code.movmskpd(bit, data);
+
+        const Xbyak::Xmm tmp = xmm0;
+        if (code.HasHostFeature(HostFeature::SSE42)) {
+            // create a -1 mask if msb is set
+            code.pxor(tmp, tmp);
+            code.pcmpgtq(tmp, data);
+        } else {
+            // replace the lower part of each 64-bit value with the upper 32 bits,
+            // then shift in sign bits from there
+            code.pshufd(tmp, data, 0b11110101);
+            code.psrad(tmp, 31);
+        }
+        code.paddq(data, tmp);
+        break;
+    }
+    default:
+        UNREACHABLE();
+    }
+
     code.or_(code.dword[code.r15 + code.GetJitStateInfo().offsetof_fpsr_qc], bit);
-
     ctx.reg_alloc.DefineValue(inst, data);
 }
 
@@ -4145,25 +4149,7 @@ void EmitX64::EmitVectorSignedSaturatedAbs32(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorSignedSaturatedAbs64(EmitContext& ctx, IR::Inst* inst) {
-    if (code.HasHostFeature(HostFeature::SSE41)) {
-        EmitVectorSignedSaturatedAbs(64, code, ctx, inst);
-        return;
-    }
-
-    EmitOneArgumentFallbackWithSaturation(code, ctx, inst, [](VectorArray<s64>& result, const VectorArray<s64>& data) {
-        bool qc_flag = false;
-
-        for (size_t i = 0; i < result.size(); i++) {
-            if (static_cast<u64>(data[i]) == 0x8000000000000000) {
-                result[i] = 0x7FFFFFFFFFFFFFFF;
-                qc_flag = true;
-            } else {
-                result[i] = std::abs(data[i]);
-            }
-        }
-
-        return qc_flag;
-    });
+    EmitVectorSignedSaturatedAbs(64, code, ctx, inst);
 }
 
 template<size_t bit_width>
