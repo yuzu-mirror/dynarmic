@@ -1898,3 +1898,76 @@ TEST_CASE("A64: {S,U}MINP.B, {S,U}MAXP.B", "[a64]") {
     CHECK(jit.GetVector(8) == vectors[8]);
     CHECK(jit.GetVector(9) == vectors[9]);
 }
+
+TEST_CASE("A64: SQABS", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    // should set QC flag
+    code.SQABS(V0.B16(), V0.B16());
+    code.MRS(X0, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
+
+    code.SQABS(V1.H8(), V1.H8());
+    code.MRS(X1, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
+
+    code.SQABS(V2.S4(), V2.S4());
+    code.MRS(X2, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
+
+    code.SQABS(V3.D2(), V3.D2());
+    code.MRS(X3, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
+
+    // should not set QC flag
+    code.SQABS(V10.B16(), V10.B16());
+    code.MRS(X10, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
+
+    code.SQABS(V11.H8(), V11.H8());
+    code.MRS(X11, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
+
+    code.SQABS(V12.S4(), V12.S4());
+    code.MRS(X12, oaknut::SystemReg::FPSR);
+    code.MSR(oaknut::SystemReg::FPSR, XZR);
+
+    code.SQABS(V13.D2(), V13.D2());
+    code.MRS(X13, oaknut::SystemReg::FPSR);
+
+    jit.SetPC(0);
+    jit.SetFpsr(0);
+    // contains one value that will be saturated
+    jit.SetVector(0, Vector{0x2B'7F'EC'D6'77'CE'80'10, 0x9D'EA'82'45'81'CD'42'FC});
+    jit.SetVector(1, Vector{0x3D74'9114'8000'B0BE, 0x3F0F'E281'CE50'0616});
+    jit.SetVector(2, Vector{0x218630B5'BEC18D71, 0x9042167E'80000000});
+    jit.SetVector(3, Vector{0x89C1B48FBC43F53B, 0x8000000000000000});
+    // contains no values that will be saturated
+    jit.SetVector(10, Vector{0x2B'7F'EC'D6'77'CE'00'10, 0x9D'EA'82'45'81'CD'42'FC});
+    jit.SetVector(11, Vector{0x3D74'9114'0000'B0BE, 0x3F0F'E281'CE50'0616});
+    jit.SetVector(12, Vector{0x218630B5'BEC18D71, 0x9042167E'00000000});
+    jit.SetVector(13, Vector{0x89C1B48FBC43F53B, 0x5FDD5D671D399E2});
+
+    env.ticks_left = env.code_mem.size();
+    jit.Run();
+
+    CHECK(jit.GetVector(0) == Vector{0x2B'7F'14'2A'77'32'7F'10, 0x63'16'7E'45'7F'33'42'04});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(0)}.QC() == 1);
+    CHECK(jit.GetVector(1) == Vector{0x3D74'6EEC'7FFF'4F42, 0x3F0F'1D7F'31B0'0616});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(1)}.QC() == 1);
+    CHECK(jit.GetVector(2) == Vector{0x218630B5'413E728F, 0x6FBDE982'7FFFFFFF});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(2)}.QC() == 1);
+    CHECK(jit.GetVector(3) == Vector{0x763E4B7043BC0AC5, 0x7FFFFFFFFFFFFFFF});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(3)}.QC() == 1);
+
+    CHECK(jit.GetVector(10) == Vector{0x2B'7F'14'2A'77'32'00'10, 0x63'16'7E'45'7F'33'42'04});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(10)}.QC() == 0);
+    CHECK(jit.GetVector(11) == Vector{0x3D74'6EEC'0000'4F42, 0x3F0F'1D7F'31B0'0616});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(11)}.QC() == 0);
+    CHECK(jit.GetVector(12) == Vector{0x218630B5'413E728F, 0x6FBDE982'00000000});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(12)}.QC() == 0);
+    CHECK(jit.GetVector(13) == Vector{0x763E4B7043BC0AC5, 0x5FDD5D671D399E2});
+    CHECK(FP::FPSR{(uint32_t)jit.GetRegister(13)}.QC() == 0);
+}
