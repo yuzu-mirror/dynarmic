@@ -149,7 +149,7 @@ struct Jit::Impl final {
     }
 
     void DumpDisassembly() const {
-        ASSERT_FALSE("Unimplemented");
+        current_address_space.DumpDisassembly();
     }
 
     std::vector<std::string> Disassemble() const {

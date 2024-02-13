@@ -3,6 +3,10 @@
  * SPDX-License-Identifier: 0BSD
  */
 
+#include <cstdio>
+
+#include <mcl/bit_cast.hpp>
+
 #include "dynarmic/backend/arm64/a64_address_space.h"
 #include "dynarmic/backend/arm64/a64_jitstate.h"
 #include "dynarmic/backend/arm64/abi.h"
@@ -11,6 +15,7 @@
 #include "dynarmic/backend/arm64/stack_layout.h"
 #include "dynarmic/common/cast_util.h"
 #include "dynarmic/common/fp/fpcr.h"
+#include "dynarmic/common/llvm_disassemble.h"
 #include "dynarmic/interface/exclusive_monitor.h"
 
 namespace Dynarmic::Backend::Arm64 {
@@ -90,6 +95,12 @@ void AddressSpace::ClearCache() {
     block_infos.clear();
     block_references.clear();
     code.set_offset(prelude_info.end_of_prelude);
+}
+
+void AddressSpace::DumpDisassembly() const {
+    for (u32* ptr = mem.ptr(); ptr < code.xptr<u32*>(); ptr++) {
+        std::printf("%s", Common::DisassembleAArch64(*ptr, mcl::bit_cast<u64>(ptr)).c_str());
+    }
 }
 
 size_t AddressSpace::GetRemainingSize() {
