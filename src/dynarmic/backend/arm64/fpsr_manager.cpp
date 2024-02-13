@@ -37,4 +37,13 @@ void FpsrManager::Load() {
     fpsr_loaded = true;
 }
 
+void FpsrManager::GetFpsr(oaknut::WReg dest) {
+    code.LDR(dest, Xstate, state_fpsr_offset);
+
+    if (fpsr_loaded) {
+        code.MRS(Xscratch1, oaknut::SystemReg::FPSR);
+        code.ORR(dest, dest, Wscratch1);
+    }
+}
+
 }  // namespace Dynarmic::Backend::Arm64

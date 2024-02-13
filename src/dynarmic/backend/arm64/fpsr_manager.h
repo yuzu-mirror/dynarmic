@@ -9,6 +9,7 @@
 
 namespace oaknut {
 struct CodeGenerator;
+struct WReg;
 }  // namespace oaknut
 
 namespace Dynarmic::Backend::Arm64 {
@@ -20,6 +21,8 @@ public:
     void Spill();
     void Load();
     void Overwrite() { fpsr_loaded = false; }
+
+    void GetFpsr(oaknut::WReg);
 
 private:
     oaknut::CodeGenerator& code;
