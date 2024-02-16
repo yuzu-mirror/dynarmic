@@ -1954,6 +1954,92 @@ void EmitX64::EmitVectorLogicalVShift64(EmitContext& ctx, IR::Inst* inst) {
     });
 }
 
+namespace {
+
+enum class MinMaxOperation {
+    Min,
+    Max,
+};
+
+// Compute the minimum/maximum of two vectors of signed 8-bit integers, using only SSE2 instructons.
+// The result of the operation is placed in operand a, while b is unmodified.
+template<MinMaxOperation op>
+void FallbackMinMaxS8(BlockOfCode& code, EmitContext& ctx, const Xbyak::Xmm& a, const Xbyak::Xmm& b) {
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+
+    if constexpr (op == MinMaxOperation::Min) {
+        code.movdqa(c, b);
+        code.pcmpgtb(c, a);
+    } else {
+        code.movdqa(c, a);
+        code.pcmpgtb(c, b);
+    }
+
+    code.pand(a, c);
+    code.pandn(c, b);
+    code.por(a, c);
+}
+
+// Compute the minimum/maximum of two vectors of unsigned 16-bit integers, using only SSE2 instructons.
+// The result of the operation is placed in operand a, while b is unmodified.
+template<MinMaxOperation op>
+void FallbackMinMaxU16(BlockOfCode& code, EmitContext& ctx, const Xbyak::Xmm& a, const Xbyak::Xmm& b) {
+    if constexpr (op == MinMaxOperation::Min) {
+        const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+        code.movdqa(c, a);
+        code.psubusw(c, b);
+        code.psubw(a, c);
+    } else {
+        code.psubusw(a, b);
+        code.paddw(a, b);
+    }
+}
+
+// Compute the minimum/maximum of two vectors of signed 32-bit integers, using only SSE2 instructons.
+// The result of the operation is placed in operand a, while b is unmodified.
+template<MinMaxOperation op>
+void FallbackMinMaxS32(BlockOfCode& code, EmitContext& ctx, const Xbyak::Xmm& a, const Xbyak::Xmm& b) {
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+
+    if constexpr (op == MinMaxOperation::Min) {
+        code.movdqa(c, b);
+        code.pcmpgtd(c, a);
+    } else {
+        code.movdqa(c, a);
+        code.pcmpgtd(c, b);
+    }
+
+    code.pand(a, c);
+    code.pandn(c, b);
+    code.por(a, c);
+}
+
+// Compute the minimum/maximum of two vectors of unsigned 32-bit integers, using only SSE2 instructons.
+// The result of the operation is placed in operand a, while b is unmodified.
+template<MinMaxOperation op>
+void FallbackMinMaxU32(BlockOfCode& code, EmitContext& ctx, const Xbyak::Xmm& a, const Xbyak::Xmm& b) {
+    const Xbyak::Xmm c = ctx.reg_alloc.ScratchXmm();
+    code.movdqa(c, code.BConst<32>(xword, 0x80000000));
+
+    // bias a and b by XORing their sign bits, then use the signed comparison function
+    const Xbyak::Xmm d = ctx.reg_alloc.ScratchXmm();
+    if constexpr (op == MinMaxOperation::Min) {
+        code.movdqa(d, a);
+        code.pxor(d, c);
+        code.pxor(c, b);
+    } else {
+        code.movdqa(d, b);
+        code.pxor(d, c);
+        code.pxor(c, a);
+    }
+    code.pcmpgtd(c, d);
+
+    code.pand(a, c);
+    code.pandn(c, b);
+    code.por(a, c);
+}
+}  // anonymous namespace
+
 void EmitX64::EmitVectorMaxS8(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::SSE41)) {
         EmitVectorOperation(code, ctx, inst, &Xbyak::CodeGenerator::pmaxsb);
@@ -1962,17 +2048,11 @@ void EmitX64::EmitVectorMaxS8(EmitContext& ctx, IR::Inst* inst) {
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_b, b);
+    FallbackMinMaxS8<MinMaxOperation::Max>(code, ctx, a, b);
 
-    code.pcmpgtb(tmp_b, a);
-    code.pand(b, tmp_b);
-    code.pandn(tmp_b, a);
-    code.por(tmp_b, b);
-
-    ctx.reg_alloc.DefineValue(inst, tmp_b);
+    ctx.reg_alloc.DefineValue(inst, a);
 }
 
 void EmitX64::EmitVectorMaxS16(EmitContext& ctx, IR::Inst* inst) {
@@ -1987,17 +2067,11 @@ void EmitX64::EmitVectorMaxS32(EmitContext& ctx, IR::Inst* inst) {
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_b, b);
+    FallbackMinMaxS32<MinMaxOperation::Max>(code, ctx, a, b);
 
-    code.pcmpgtd(tmp_b, a);
-    code.pand(b, tmp_b);
-    code.pandn(tmp_b, a);
-    code.por(tmp_b, b);
-
-    ctx.reg_alloc.DefineValue(inst, tmp_b);
+    ctx.reg_alloc.DefineValue(inst, a);
 }
 
 void EmitX64::EmitVectorMaxS64(EmitContext& ctx, IR::Inst* inst) {
@@ -2038,8 +2112,7 @@ void EmitX64::EmitVectorMaxU16(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    code.psubusw(a, b);
-    code.paddw(a, b);
+    FallbackMinMaxU16<MinMaxOperation::Max>(code, ctx, a, b);
 
     ctx.reg_alloc.DefineValue(inst, a);
 }
@@ -2054,19 +2127,7 @@ void EmitX64::EmitVectorMaxU32(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp, code.Const(xword, 0x8000000080000000, 0x8000000080000000));
-
-    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_b, b);
-
-    code.pxor(tmp_b, tmp);
-    code.pxor(tmp, a);
-
-    code.pcmpgtd(tmp, tmp_b);
-    code.pand(a, tmp);
-    code.pandn(tmp, b);
-    code.por(a, tmp);
+    FallbackMinMaxU32<MinMaxOperation::Max>(code, ctx, a, b);
 
     ctx.reg_alloc.DefineValue(inst, a);
 }
@@ -2109,13 +2170,7 @@ void EmitX64::EmitVectorMinS8(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_b, b);
-
-    code.pcmpgtb(tmp_b, a);
-    code.pand(a, tmp_b);
-    code.pandn(tmp_b, b);
-    code.por(a, tmp_b);
+    FallbackMinMaxS8<MinMaxOperation::Min>(code, ctx, a, b);
 
     ctx.reg_alloc.DefineValue(inst, a);
 }
@@ -2134,13 +2189,7 @@ void EmitX64::EmitVectorMinS32(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_b, b);
-
-    code.pcmpgtd(tmp_b, a);
-    code.pand(a, tmp_b);
-    code.pandn(tmp_b, b);
-    code.por(a, tmp_b);
+    FallbackMinMaxS32<MinMaxOperation::Min>(code, ctx, a, b);
 
     ctx.reg_alloc.DefineValue(inst, a);
 }
@@ -2180,16 +2229,12 @@ void EmitX64::EmitVectorMinU16(EmitContext& ctx, IR::Inst* inst) {
     }
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-    const Xbyak::Xmm a = ctx.reg_alloc.UseXmm(args[0]);
-    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_b, b);
+    FallbackMinMaxU16<MinMaxOperation::Min>(code, ctx, a, b);
 
-    code.psubusw(tmp_b, a);
-    code.psubw(b, tmp_b);
-
-    ctx.reg_alloc.DefineValue(inst, b);
+    ctx.reg_alloc.DefineValue(inst, a);
 }
 
 void EmitX64::EmitVectorMinU32(EmitContext& ctx, IR::Inst* inst) {
@@ -2202,21 +2247,7 @@ void EmitX64::EmitVectorMinU32(EmitContext& ctx, IR::Inst* inst) {
     const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
 
-    const Xbyak::Xmm sint_max_plus_one = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(sint_max_plus_one, code.Const(xword, 0x8000000080000000, 0x8000000080000000));
-
-    const Xbyak::Xmm tmp_a = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_a, a);
-    code.psubd(tmp_a, sint_max_plus_one);
-
-    const Xbyak::Xmm tmp_b = ctx.reg_alloc.ScratchXmm();
-    code.movdqa(tmp_b, b);
-    code.psubd(tmp_b, sint_max_plus_one);
-
-    code.pcmpgtd(tmp_b, tmp_a);
-    code.pand(a, tmp_b);
-    code.pandn(tmp_b, b);
-    code.por(a, tmp_b);
+    FallbackMinMaxU32<MinMaxOperation::Min>(code, ctx, a, b);
 
     ctx.reg_alloc.DefineValue(inst, a);
 }
@@ -2780,22 +2811,6 @@ static void LowerPairedMin(VectorArray<T>& result, const VectorArray<T>& x, cons
 }
 
 template<typename Function>
-static void EmitVectorPairedMinMaxLower8(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-    const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
-    const Xbyak::Xmm y = ctx.reg_alloc.UseScratchXmm(args[1]);
-
-    code.punpcklqdq(x, y);
-    code.pshufb(x, code.Const(xword, 0x0E'0C'0A'08'06'04'02'00, 0x0F'0D'0B'09'07'05'03'01));
-    code.movhlps(y, x);
-    code.movq(x, x);
-    (code.*fn)(x, y);
-
-    ctx.reg_alloc.DefineValue(inst, x);
-}
-
-template<typename Function>
 static void EmitVectorPairedMinMax8(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
@@ -2812,7 +2827,33 @@ static void EmitVectorPairedMinMax8(BlockOfCode& code, EmitContext& ctx, IR::Ins
 
     code.shufps(x, y, 0b11'10'11'10);
 
-    (code.*fn)(x, tmp);
+    if constexpr (std::is_member_function_pointer_v<Function>) {
+        (code.*fn)(x, tmp);
+    } else {
+        fn(x, tmp);
+    }
+
+    ctx.reg_alloc.DefineValue(inst, x);
+}
+
+template<typename Function>
+static void EmitVectorPairedMinMaxLower8(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm y = ctx.reg_alloc.UseScratchXmm(args[1]);
+
+    code.punpcklqdq(x, y);
+    code.pshufb(x, code.Const(xword, 0x0E'0C'0A'08'06'04'02'00, 0x0F'0D'0B'09'07'05'03'01));
+    code.movhlps(y, x);
+    code.movq(x, x);
+
+    if constexpr (std::is_member_function_pointer_v<Function>) {
+        (code.*fn)(x, y);
+    } else {
+        fn(x, y);
+    }
+
     ctx.reg_alloc.DefineValue(inst, x);
 }
 
@@ -2839,7 +2880,11 @@ static void EmitVectorPairedMinMax16(BlockOfCode& code, EmitContext& ctx, IR::In
     // x   = x[1, 3], x[5, 7], y[1, 3], y[5, 7]
     code.shufps(x, y, 0b11'01'11'01);
 
-    (code.*fn)(x, tmp);
+    if constexpr (std::is_member_function_pointer_v<Function>) {
+        (code.*fn)(x, tmp);
+    } else {
+        fn(x, tmp);
+    }
 
     ctx.reg_alloc.DefineValue(inst, x);
 }
@@ -2891,6 +2936,11 @@ void EmitX64::EmitVectorPairedMaxS8(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::SSE41)) {
         EmitVectorPairedMinMax8(code, ctx, inst, &Xbyak::CodeGenerator::pmaxsb);
         return;
+    } else if (code.HasHostFeature(HostFeature::SSSE3)) {
+        EmitVectorPairedMinMax8(code, ctx, inst, [&](const auto& lhs, const auto& rhs) {
+            FallbackMinMaxS8<MinMaxOperation::Max>(code, ctx, lhs, rhs);
+        });
+        return;
     }
 
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s8>& result, const VectorArray<s8>& a, const VectorArray<s8>& b) {
@@ -2915,19 +2965,11 @@ void EmitX64::EmitVectorPairedMaxS32(EmitContext& ctx, IR::Inst* inst) {
 
     if (code.HasHostFeature(HostFeature::SSE41)) {
         code.pmaxsd(x, tmp);
-
-        ctx.reg_alloc.DefineValue(inst, x);
     } else {
-        const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
-
-        code.movdqa(tmp2, tmp);
-        code.pcmpgtd(tmp2, x);
-        code.pand(tmp, tmp2);
-        code.pandn(tmp2, x);
-        code.por(tmp2, tmp);
-
-        ctx.reg_alloc.DefineValue(inst, tmp2);
+        FallbackMinMaxS32<MinMaxOperation::Max>(code, ctx, x, tmp);
     }
+
+    ctx.reg_alloc.DefineValue(inst, x);
 }
 
 void EmitX64::EmitVectorPairedMaxU8(EmitContext& ctx, IR::Inst* inst) {
@@ -2944,12 +2986,11 @@ void EmitX64::EmitVectorPairedMaxU8(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorPairedMaxU16(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::SSE41)) {
         EmitVectorPairedMinMax16(code, ctx, inst, &Xbyak::CodeGenerator::pmaxuw);
-        return;
+    } else {
+        EmitVectorPairedMinMax16(code, ctx, inst, [&](const auto& lhs, const auto& rhs) {
+            FallbackMinMaxU16<MinMaxOperation::Max>(code, ctx, lhs, rhs);
+        });
     }
-
-    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u16>& result, const VectorArray<u16>& a, const VectorArray<u16>& b) {
-        PairedMax(result, a, b);
-    });
 }
 
 void EmitX64::EmitVectorPairedMaxU32(EmitContext& ctx, IR::Inst* inst) {
@@ -2957,37 +2998,29 @@ void EmitX64::EmitVectorPairedMaxU32(EmitContext& ctx, IR::Inst* inst) {
 
     const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm y = ctx.reg_alloc.UseXmm(args[1]);
-    const Xbyak::Xmm tmp1 = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
-    code.movdqa(tmp1, x);
-    code.shufps(tmp1, y, 0b10001000);
+    code.movdqa(tmp, x);
+    code.shufps(tmp, y, 0b10001000);
     code.shufps(x, y, 0b11011101);
 
     if (code.HasHostFeature(HostFeature::SSE41)) {
-        code.pmaxud(x, tmp1);
-
-        ctx.reg_alloc.DefineValue(inst, x);
+        code.pmaxud(x, tmp);
     } else {
-        const Xbyak::Xmm tmp3 = ctx.reg_alloc.ScratchXmm();
-        code.movdqa(tmp3, code.Const(xword, 0x8000000080000000, 0x8000000080000000));
-
-        const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
-        code.movdqa(tmp2, x);
-
-        code.pxor(tmp2, tmp3);
-        code.pxor(tmp3, tmp1);
-        code.pcmpgtd(tmp3, tmp2);
-        code.pand(tmp1, tmp3);
-        code.pandn(tmp3, x);
-        code.por(tmp1, tmp3);
-
-        ctx.reg_alloc.DefineValue(inst, tmp1);
+        FallbackMinMaxU32<MinMaxOperation::Max>(code, ctx, x, tmp);
     }
+
+    ctx.reg_alloc.DefineValue(inst, x);
 }
 
 void EmitX64::EmitVectorPairedMinS8(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::SSE41)) {
         EmitVectorPairedMinMax8(code, ctx, inst, &Xbyak::CodeGenerator::pminsb);
+        return;
+    } else if (code.HasHostFeature(HostFeature::SSSE3)) {
+        EmitVectorPairedMinMax8(code, ctx, inst, [&](const auto& lhs, const auto& rhs) {
+            FallbackMinMaxS8<MinMaxOperation::Min>(code, ctx, lhs, rhs);
+        });
         return;
     }
 
@@ -3013,19 +3046,11 @@ void EmitX64::EmitVectorPairedMinS32(EmitContext& ctx, IR::Inst* inst) {
 
     if (code.HasHostFeature(HostFeature::SSE41)) {
         code.pminsd(x, tmp);
-
-        ctx.reg_alloc.DefineValue(inst, x);
     } else {
-        const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
-
-        code.movaps(tmp2, x);
-        code.pcmpgtd(tmp2, tmp);
-        code.pand(tmp, tmp2);
-        code.pandn(tmp2, x);
-        code.por(tmp2, tmp);
-
-        ctx.reg_alloc.DefineValue(inst, tmp2);
+        FallbackMinMaxS32<MinMaxOperation::Min>(code, ctx, x, tmp);
     }
+
+    ctx.reg_alloc.DefineValue(inst, x);
 }
 
 void EmitX64::EmitVectorPairedMinU8(EmitContext& ctx, IR::Inst* inst) {
@@ -3042,12 +3067,11 @@ void EmitX64::EmitVectorPairedMinU8(EmitContext& ctx, IR::Inst* inst) {
 void EmitX64::EmitVectorPairedMinU16(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::SSE41)) {
         EmitVectorPairedMinMax16(code, ctx, inst, &Xbyak::CodeGenerator::pminuw);
-        return;
+    } else {
+        EmitVectorPairedMinMax16(code, ctx, inst, [&](const auto& lhs, const auto& rhs) {
+            FallbackMinMaxU16<MinMaxOperation::Min>(code, ctx, lhs, rhs);
+        });
     }
-
-    EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u16>& result, const VectorArray<u16>& a, const VectorArray<u16>& b) {
-        PairedMin(result, a, b);
-    });
 }
 
 void EmitX64::EmitVectorPairedMinU32(EmitContext& ctx, IR::Inst* inst) {
@@ -3055,37 +3079,29 @@ void EmitX64::EmitVectorPairedMinU32(EmitContext& ctx, IR::Inst* inst) {
 
     const Xbyak::Xmm x = ctx.reg_alloc.UseScratchXmm(args[0]);
     const Xbyak::Xmm y = ctx.reg_alloc.UseXmm(args[1]);
-    const Xbyak::Xmm tmp1 = ctx.reg_alloc.ScratchXmm();
+    const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
 
-    code.movdqa(tmp1, x);
-    code.shufps(tmp1, y, 0b10001000);
+    code.movdqa(tmp, x);
+    code.shufps(tmp, y, 0b10001000);
     code.shufps(x, y, 0b11011101);
 
     if (code.HasHostFeature(HostFeature::SSE41)) {
-        code.pminud(x, tmp1);
-
-        ctx.reg_alloc.DefineValue(inst, x);
+        code.pminud(x, tmp);
     } else {
-        const Xbyak::Xmm tmp3 = ctx.reg_alloc.ScratchXmm();
-        code.movdqa(tmp3, code.Const(xword, 0x8000000080000000, 0x8000000080000000));
-
-        const Xbyak::Xmm tmp2 = ctx.reg_alloc.ScratchXmm();
-        code.movdqa(tmp2, tmp1);
-
-        code.pxor(tmp2, tmp3);
-        code.pxor(tmp3, x);
-        code.pcmpgtd(tmp3, tmp2);
-        code.pand(tmp1, tmp3);
-        code.pandn(tmp3, x);
-        code.por(tmp1, tmp3);
-
-        ctx.reg_alloc.DefineValue(inst, tmp1);
+        FallbackMinMaxU32<MinMaxOperation::Min>(code, ctx, x, tmp);
     }
+
+    ctx.reg_alloc.DefineValue(inst, x);
 }
 
 void EmitX64::EmitVectorPairedMaxLowerS8(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::SSE41)) {
         EmitVectorPairedMinMaxLower8(code, ctx, inst, &Xbyak::CodeGenerator::pmaxsb);
+        return;
+    } else if (code.HasHostFeature(HostFeature::SSSE3)) {
+        EmitVectorPairedMinMaxLower8(code, ctx, inst, [&](const auto& lhs, const auto& rhs) {
+            FallbackMinMaxS8<MinMaxOperation::Max>(code, ctx, lhs, rhs);
+        });
         return;
     }
 
@@ -3117,7 +3133,7 @@ void EmitX64::EmitVectorPairedMaxLowerS32(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorPairedMaxLowerU8(EmitContext& ctx, IR::Inst* inst) {
-    if (code.HasHostFeature(HostFeature::SSE41)) {
+    if (code.HasHostFeature(HostFeature::SSSE3)) {
         EmitVectorPairedMinMaxLower8(code, ctx, inst, &Xbyak::CodeGenerator::pmaxub);
         return;
     }
@@ -3153,6 +3169,11 @@ void EmitX64::EmitVectorPairedMinLowerS8(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::SSE41)) {
         EmitVectorPairedMinMaxLower8(code, ctx, inst, &Xbyak::CodeGenerator::pminsb);
         return;
+    } else if (code.HasHostFeature(HostFeature::SSSE3)) {
+        EmitVectorPairedMinMaxLower8(code, ctx, inst, [&](const auto& lhs, const auto& rhs) {
+            FallbackMinMaxS8<MinMaxOperation::Min>(code, ctx, lhs, rhs);
+        });
+        return;
     }
 
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s8>& result, const VectorArray<s8>& a, const VectorArray<s8>& b) {
@@ -3183,7 +3204,7 @@ void EmitX64::EmitVectorPairedMinLowerS32(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorPairedMinLowerU8(EmitContext& ctx, IR::Inst* inst) {
-    if (code.HasHostFeature(HostFeature::SSE41)) {
+    if (code.HasHostFeature(HostFeature::SSSE3)) {
         EmitVectorPairedMinMaxLower8(code, ctx, inst, &Xbyak::CodeGenerator::pminub);
         return;
     }
