@@ -1689,6 +1689,138 @@ TEST_CASE("A64: UZP{1,2}.B", "[a64]") {
     REQUIRE(jit.GetVector(5) == Vector{0xE7'E5'E3'E1'F7'F5'F3'F1, 0xB7'B5'B3'B1'A7'A5'A3'A1});
 }
 
+TEST_CASE("A64: {S,U}MIN.S, {S,U}MAX.S", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SMIN(V2.S4(), V0.S4(), V1.S4());
+    code.UMIN(V3.S4(), V0.S4(), V1.S4());
+    code.SMAX(V4.S4(), V0.S4(), V1.S4());
+    code.UMAX(V5.S4(), V0.S4(), V1.S4());
+
+    code.SMIN(V12.S4(), V1.S4(), V0.S4());
+    code.UMIN(V13.S4(), V1.S4(), V0.S4());
+    code.SMAX(V14.S4(), V1.S4(), V0.S4());
+    code.UMAX(V15.S4(), V1.S4(), V0.S4());
+
+    constexpr std::array<Vector, 6> vectors = {
+        // initial input vectors [0-1]
+        Vector{0x7FFFFFFF'00000002, 0x76543209'01234567},
+        Vector{0x80000000'00000003, 0x76543210'F1234567},
+        // expected output vectors [2-5]
+        Vector{0x80000000'00000002, 0x76543209'F1234567},
+        Vector{0x7FFFFFFF'00000002, 0x76543209'01234567},
+        Vector{0x7FFFFFFF'00000003, 0x76543210'01234567},
+        Vector{0x80000000'00000003, 0x76543210'F1234567},
+    };
+
+    jit.SetPC(0);
+    jit.SetVector(0, vectors[0]);
+    jit.SetVector(1, vectors[1]);
+
+    env.ticks_left = env.code_mem.size();
+    jit.Run();
+
+    CHECK(jit.GetVector(2) == vectors[2]);
+    CHECK(jit.GetVector(3) == vectors[3]);
+    CHECK(jit.GetVector(4) == vectors[4]);
+    CHECK(jit.GetVector(5) == vectors[5]);
+
+    CHECK(jit.GetVector(12) == vectors[2]);
+    CHECK(jit.GetVector(13) == vectors[3]);
+    CHECK(jit.GetVector(14) == vectors[4]);
+    CHECK(jit.GetVector(15) == vectors[5]);
+}
+
+TEST_CASE("A64: {S,U}MIN.H, {S,U}MAX.H", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SMIN(V2.H8(), V0.H8(), V1.H8());
+    code.UMIN(V3.H8(), V0.H8(), V1.H8());
+    code.SMAX(V4.H8(), V0.H8(), V1.H8());
+    code.UMAX(V5.H8(), V0.H8(), V1.H8());
+
+    code.SMIN(V12.H8(), V1.H8(), V0.H8());
+    code.UMIN(V13.H8(), V1.H8(), V0.H8());
+    code.SMAX(V14.H8(), V1.H8(), V0.H8());
+    code.UMAX(V15.H8(), V1.H8(), V0.H8());
+
+    constexpr std::array<Vector, 6> vectors = {
+        // initial input vectors [0-1]
+        Vector{0x0123'0000'0002'7FFE, 0x8764'0123'7FFF'FFFE},
+        Vector{0xF123'FFFF'0003'7FFF, 0x8765'0124'8000'FFFF},
+        // expected output vectors [2-5]
+        Vector{0xF123'FFFF'0002'7FFE, 0x8764'0123'8000'FFFE},
+        Vector{0x0123'0000'0002'7FFE, 0x8764'0123'7FFF'FFFE},
+        Vector{0x0123'0000'0003'7FFF, 0x8765'0124'7FFF'FFFF},
+        Vector{0xF123'FFFF'0003'7FFF, 0x8765'0124'8000'FFFF},
+    };
+
+    jit.SetPC(0);
+    jit.SetVector(0, vectors[0]);
+    jit.SetVector(1, vectors[1]);
+
+    env.ticks_left = env.code_mem.size();
+    jit.Run();
+
+    CHECK(jit.GetVector(2) == vectors[2]);
+    CHECK(jit.GetVector(3) == vectors[3]);
+    CHECK(jit.GetVector(4) == vectors[4]);
+    CHECK(jit.GetVector(5) == vectors[5]);
+
+    CHECK(jit.GetVector(12) == vectors[2]);
+    CHECK(jit.GetVector(13) == vectors[3]);
+    CHECK(jit.GetVector(14) == vectors[4]);
+    CHECK(jit.GetVector(15) == vectors[5]);
+}
+
+TEST_CASE("A64: {S,U}MIN.B, {S,U}MAX.B", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SMIN(V2.B16(), V0.B16(), V1.B16());
+    code.UMIN(V3.B16(), V0.B16(), V1.B16());
+    code.SMAX(V4.B16(), V0.B16(), V1.B16());
+    code.UMAX(V5.B16(), V0.B16(), V1.B16());
+
+    code.SMIN(V12.B16(), V1.B16(), V0.B16());
+    code.UMIN(V13.B16(), V1.B16(), V0.B16());
+    code.SMAX(V14.B16(), V1.B16(), V0.B16());
+    code.UMAX(V15.B16(), V1.B16(), V0.B16());
+
+    constexpr std::array<Vector, 6> vectors = {
+        // initial input vectors [0-1]
+        Vector{0x40'70'F0'A0'02'7E'7F'FE, 0xC2'B0'7E'7F'00'18'9A'12},
+        Vector{0x41'71'F1'A1'03'7F'80'FF, 0xC3'B1'82'81'FF'81'99'34},
+        // expected output vectors [2-5]
+        Vector{0x40'70'F0'A0'02'7E'80'FE, 0xC2'B0'82'81'FF'81'99'12},
+        Vector{0x40'70'F0'A0'02'7E'7F'FE, 0xC2'B0'7E'7F'00'18'99'12},
+        Vector{0x41'71'F1'A1'03'7F'7F'FF, 0xC3'B1'7E'7F'00'18'9A'34},
+        Vector{0x41'71'F1'A1'03'7F'80'FF, 0xC3'B1'82'81'FF'81'9A'34},
+    };
+
+    jit.SetPC(0);
+    jit.SetVector(0, vectors[0]);
+    jit.SetVector(1, vectors[1]);
+
+    env.ticks_left = env.code_mem.size();
+    jit.Run();
+
+    CHECK(jit.GetVector(2) == vectors[2]);
+    CHECK(jit.GetVector(3) == vectors[3]);
+    CHECK(jit.GetVector(4) == vectors[4]);
+    CHECK(jit.GetVector(5) == vectors[5]);
+
+    CHECK(jit.GetVector(12) == vectors[2]);
+    CHECK(jit.GetVector(13) == vectors[3]);
+    CHECK(jit.GetVector(14) == vectors[4]);
+    CHECK(jit.GetVector(15) == vectors[5]);
+}
+
 TEST_CASE("A64: {S,U}MINP.S, {S,U}MAXP.S", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
