@@ -51,6 +51,12 @@ void EmitIR<IR::Opcode::GetCarryFromOp>(biscuit::Assembler&, EmitContext& ctx, I
 }
 
 template<>
+void EmitIR<IR::Opcode::GetNZCVFromOp>(biscuit::Assembler&, EmitContext& ctx, IR::Inst* inst) {
+    [[maybe_unused]] auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ASSERT(ctx.reg_alloc.IsValueLive(inst));
+}
+
+template<>
 void EmitIR<IR::Opcode::GetNZFromOp>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
