@@ -54,4 +54,87 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(biscuit::Assembler& as, EmitContext&
     }
 }
 
+template<size_t bitsize>
+static void AddImmWithFlags(biscuit::Assembler& as, biscuit::GPR rd, biscuit::GPR rs, u64 imm, biscuit::GPR flags) {
+    static_assert(bitsize == 32 || bitsize == 64);
+    if constexpr (bitsize == 32) {
+        imm = static_cast<u32>(imm);
+    }
+    if (mcl::bit::sign_extend<12>(imm) == imm) {
+        as.ADDIW(rd, rs, imm);
+    } else {
+        as.LI(Xscratch0, imm);
+        as.ADDW(rd, rs, Xscratch0);
+    }
+
+    // N
+    as.SEQZ(flags, rd);
+    as.SLLI(flags, flags, 30);
+
+    // Z
+    as.SLTZ(Xscratch1, rd);
+    as.SLLI(Xscratch1, Xscratch1, 31);
+    as.OR(flags, flags, Xscratch1);
+
+    // C
+    if (mcl::bit::sign_extend<12>(imm) == imm) {
+        as.ADDI(Xscratch1, rs, imm);
+    } else {
+        as.ADD(Xscratch1, rs, Xscratch0);
+    }
+    as.SRLI(Xscratch1, Xscratch1, 3);
+    as.LUI(Xscratch0, 0x20000);
+    as.AND(Xscratch1, Xscratch1, Xscratch0);
+    as.OR(flags, flags, Xscratch1);
+
+    // V
+    as.LI(Xscratch0, imm);
+    as.ADD(Xscratch1, rs, Xscratch0);
+    as.XOR(Xscratch0, Xscratch0, rs);
+    as.NOT(Xscratch0, Xscratch0);
+    as.XOR(Xscratch1, Xscratch1, rs);
+    as.AND(Xscratch1, Xscratch0, Xscratch1);
+    as.SRLIW(Xscratch1, Xscratch1, 31);
+    as.SLLI(Xscratch1, Xscratch1, 28);
+    as.OR(flags, flags, Xscratch1);
+}
+
+template<size_t bitsize>
+static void EmitSub(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xa = ctx.reg_alloc.ReadX(args[0]);
+
+    if (nzcv_inst) {
+        if (args[1].IsImmediate()) {
+            const u64 imm = args[1].GetImmediateU64();
+
+            if (args[2].IsImmediate()) {
+                auto Xflags = ctx.reg_alloc.WriteX(nzcv_inst);
+                RegAlloc::Realize(Xresult, Xflags, Xa);
+
+                if (args[2].GetImmediateU1()) {
+                    AddImmWithFlags<bitsize>(as, *Xresult, *Xa, ~imm, *Xflags);
+                } else {
+                    AddImmWithFlags<bitsize>(as, *Xresult, *Xa, -imm, *Xflags);
+                }
+            } else {
+                ASSERT_FALSE("Unimplemented");
+            }
+        } else {
+            ASSERT_FALSE("Unimplemented");
+        }
+    } else {
+        ASSERT_FALSE("Unimplemented");
+    }
+}
+
+template<>
+void EmitIR<IR::Opcode::Sub32>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    EmitSub<32>(as, ctx, inst);
+}
+
 }  // namespace Dynarmic::Backend::RV64
