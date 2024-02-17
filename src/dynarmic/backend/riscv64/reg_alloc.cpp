@@ -125,6 +125,19 @@ void RegAlloc::UpdateAllUses() {
     }
 }
 
+void RegAlloc::DefineAsExisting(IR::Inst* inst, Argument& arg) {
+    ASSERT(!ValueLocation(inst));
+
+    if (arg.value.IsImmediate()) {
+        inst->ReplaceUsesWith(arg.value);
+        return;
+    }
+
+    auto& info = ValueInfo(arg.value.GetInst());
+    info.values.emplace_back(inst);
+    info.expected_uses += inst->UseCount();
+}
+
 void RegAlloc::AssertNoMoreUses() const {
     const auto is_empty = [](const auto& i) { return i.IsCompletelyEmpty(); };
     ASSERT(std::all_of(gprs.begin(), gprs.end(), is_empty));

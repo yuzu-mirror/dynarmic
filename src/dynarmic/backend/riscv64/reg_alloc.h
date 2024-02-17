@@ -118,6 +118,8 @@ public:
     auto WriteX(IR::Inst* inst) { return RAReg<biscuit::GPR>{*this, true, IR::Value{inst}}; }
     auto WriteD(IR::Inst* inst) { return RAReg<biscuit::FPR>{*this, true, IR::Value{inst}}; }
 
+    void DefineAsExisting(IR::Inst* inst, Argument& arg);
+
     void SpillAll();
 
     template<typename... Ts>

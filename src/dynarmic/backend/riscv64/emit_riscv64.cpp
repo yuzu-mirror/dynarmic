@@ -23,11 +23,17 @@ namespace Dynarmic::Backend::RV64 {
 
 template<IR::Opcode op>
 void EmitIR(biscuit::Assembler&, EmitContext&, IR::Inst*) {
-    ASSERT_FALSE("Unimplemented opcode {}", op);
+    ASSERT_FALSE("Unimplemented opcode {} ", op);
 }
 
 template<>
 void EmitIR<IR::Opcode::Void>(biscuit::Assembler&, EmitContext&, IR::Inst*) {}
+
+template<>
+void EmitIR<IR::Opcode::Identity>(biscuit::Assembler&, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    ctx.reg_alloc.DefineAsExisting(inst, args[0]);
+}
 
 template<>
 void EmitIR<IR::Opcode::A32GetRegister>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst);
