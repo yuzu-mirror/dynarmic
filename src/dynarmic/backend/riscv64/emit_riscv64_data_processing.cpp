@@ -18,6 +18,71 @@
 namespace Dynarmic::Backend::RV64 {
 
 template<>
+void EmitIR<IR::Opcode::Pack2x32To1x64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Pack2x64To1x128>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LeastSignificantWord>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LeastSignificantHalf>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LeastSignificantByte>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MostSignificantWord>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MostSignificantBit>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::IsZero32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::IsZero64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::TestBit>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ConditionalSelect32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ConditionalSelect64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ConditionalSelectNZCV>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
 void EmitIR<IR::Opcode::LogicalShiftLeft32>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
     const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
 
@@ -52,6 +117,86 @@ void EmitIR<IR::Opcode::LogicalShiftLeft32>(biscuit::Assembler& as, EmitContext&
         as.ANDI(Xcarry_out, Xresult, 1);
         as.MV(Xresult, biscuit::zero);
     }
+}
+
+template<>
+void EmitIR<IR::Opcode::LogicalShiftLeft64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LogicalShiftRight32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LogicalShiftRight64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ArithmeticShiftRight32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ArithmeticShiftRight64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::RotateRight32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::RotateRight64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::RotateRightExtended>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LogicalShiftLeftMasked32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LogicalShiftLeftMasked64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LogicalShiftRightMasked32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::LogicalShiftRightMasked64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ArithmeticShiftRightMasked32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ArithmeticShiftRightMasked64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::RotateRightMasked32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::RotateRightMasked64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
 }
 
 template<size_t bitsize>
@@ -122,19 +267,264 @@ static void EmitSub(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
                     AddImmWithFlags<bitsize>(as, *Xresult, *Xa, -imm, *Xflags);
                 }
             } else {
-                ASSERT_FALSE("Unimplemented");
+                UNIMPLEMENTED();
             }
         } else {
-            ASSERT_FALSE("Unimplemented");
+            UNIMPLEMENTED();
         }
     } else {
-        ASSERT_FALSE("Unimplemented");
+        UNIMPLEMENTED();
     }
+}
+
+template<>
+void EmitIR<IR::Opcode::Add32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Add64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
 }
 
 template<>
 void EmitIR<IR::Opcode::Sub32>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
     EmitSub<32>(as, ctx, inst);
+}
+
+template<>
+void EmitIR<IR::Opcode::Sub64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Mul32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Mul64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignedMultiplyHigh64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::UnsignedMultiplyHigh64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::UnsignedDiv32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::UnsignedDiv64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignedDiv32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignedDiv64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::And32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::And64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::AndNot32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::AndNot64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Eor32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Eor64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Or32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Or64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Not32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::Not64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignExtendByteToWord>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignExtendHalfToWord>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignExtendByteToLong>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignExtendHalfToLong>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::SignExtendWordToLong>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ZeroExtendByteToWord>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ZeroExtendHalfToWord>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ZeroExtendByteToLong>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ZeroExtendHalfToLong>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ZeroExtendWordToLong>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ZeroExtendLongToQuad>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ByteReverseWord>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ByteReverseHalf>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ByteReverseDual>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::CountLeadingZeros32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::CountLeadingZeros64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ExtractRegister32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ExtractRegister64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ReplicateBit32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::ReplicateBit64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MaxSigned32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MaxSigned64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MaxUnsigned32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MaxUnsigned64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MinSigned32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MinSigned64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MinUnsigned32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::MinUnsigned64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
 }
 
 }  // namespace Dynarmic::Backend::RV64

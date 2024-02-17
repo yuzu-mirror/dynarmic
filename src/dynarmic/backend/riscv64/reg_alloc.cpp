@@ -159,7 +159,7 @@ u32 RegAlloc::GenerateImmediate(const IR::Value& value) {
 
         return new_location_index;
     } else if constexpr (kind == HostLoc::Kind::Fpr) {
-        ASSERT_FALSE("Unimplemented");
+        UNIMPLEMENTED();
     } else {
         static_assert(Common::always_false_v<mcl::mp::lift_value<kind>>);
     }

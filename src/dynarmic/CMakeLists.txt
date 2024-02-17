@@ -404,8 +404,22 @@ if ("riscv" IN_LIST ARCHITECTURE)
 
     target_sources(dynarmic PRIVATE
         backend/riscv64/abi.h
+        backend/riscv64/a32_jitstate.cpp
+        backend/riscv64/a32_jitstate.h
         backend/riscv64/emit_context.h
+        backend/riscv64/emit_riscv64_a32.cpp
+        backend/riscv64/emit_riscv64_a32_coprocessor.cpp
+        backend/riscv64/emit_riscv64_a32_memory.cpp
+        backend/riscv64/emit_riscv64_a64.cpp
+        backend/riscv64/emit_riscv64_a64_memory.cpp
+        backend/riscv64/emit_riscv64_cryptography.cpp
         backend/riscv64/emit_riscv64_data_processing.cpp
+        backend/riscv64/emit_riscv64_floating_point.cpp
+        backend/riscv64/emit_riscv64_packed.cpp
+        backend/riscv64/emit_riscv64_saturation.cpp
+        backend/riscv64/emit_riscv64_vector_floating_point.cpp
+        backend/riscv64/emit_riscv64_vector_saturation.cpp
+        backend/riscv64/emit_riscv64_vector.cpp
         backend/riscv64/emit_riscv64.cpp
         backend/riscv64/emit_riscv64.h
         backend/riscv64/reg_alloc.cpp
@@ -419,10 +433,7 @@ if ("riscv" IN_LIST ARCHITECTURE)
             backend/riscv64/a32_address_space.h
             backend/riscv64/a32_core.h
             backend/riscv64/a32_interface.cpp
-            backend/riscv64/a32_jitstate.cpp
-            backend/riscv64/a32_jitstate.h
             backend/riscv64/code_block.h
-            backend/riscv64/emit_riscv64_a32.cpp
         )
     endif()
 

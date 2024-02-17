@@ -49,7 +49,7 @@ struct Jit::Impl final {
             jit_interface->is_executing = false;
         };
 
-        ASSERT_FALSE("Unimplemented");
+        UNIMPLEMENTED();
 
         RequestCacheInvalidation();
 
@@ -117,7 +117,7 @@ struct Jit::Impl final {
     }
 
     void DumpDisassembly() const {
-        ASSERT_FALSE("Unimplemented");
+        UNIMPLEMENTED();
     }
 
 private:

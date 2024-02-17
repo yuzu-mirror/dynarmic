@@ -206,6 +206,11 @@ void EmitA32Terminal(biscuit::Assembler& as, EmitContext& ctx) {
 }
 
 template<>
+void EmitIR<IR::Opcode::A32SetCheckBit>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
 void EmitIR<IR::Opcode::A32GetRegister>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
     const A32::Reg reg = inst->GetArg(0).GetA32RegRef();
 
@@ -213,6 +218,21 @@ void EmitIR<IR::Opcode::A32GetRegister>(biscuit::Assembler& as, EmitContext& ctx
     RegAlloc::Realize(Xresult);
 
     as.LWU(Xresult, offsetof(A32JitState, regs) + sizeof(u32) * static_cast<size_t>(reg), Xstate);
+}
+
+template<>
+void EmitIR<IR::Opcode::A32GetExtendedRegister32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32GetExtendedRegister64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32GetVector>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
 }
 
 template<>
@@ -227,6 +247,56 @@ void EmitIR<IR::Opcode::A32SetRegister>(biscuit::Assembler& as, EmitContext& ctx
     // TODO: Detect if Gpr vs Fpr is more appropriate
 
     as.SW(Xvalue, offsetof(A32JitState, regs) + sizeof(u32) * static_cast<size_t>(reg), Xstate);
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetExtendedRegister32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetExtendedRegister64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetVector>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32GetCpsr>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetCpsr>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetCpsrNZCV>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Xnzcv = ctx.reg_alloc.ReadX(args[0]);
+    RegAlloc::Realize(Xnzcv);
+
+    as.SW(Xnzcv, offsetof(A32JitState, cpsr_nzcv), Xstate);
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetCpsrNZCVRaw>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetCpsrNZCVQ>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetCpsrNZ>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
 }
 
 template<>
@@ -249,13 +319,83 @@ void EmitIR<IR::Opcode::A32SetCpsrNZC>(biscuit::Assembler& as, EmitContext& ctx,
 }
 
 template<>
-void EmitIR<IR::Opcode::A32SetCpsrNZCV>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
-    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+void EmitIR<IR::Opcode::A32GetCFlag>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
 
-    auto Xnzcv = ctx.reg_alloc.ReadX(args[0]);
-    RegAlloc::Realize(Xnzcv);
+template<>
+void EmitIR<IR::Opcode::A32OrQFlag>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
 
-    as.SW(Xnzcv, offsetof(A32JitState, cpsr_nzcv), Xstate);
+template<>
+void EmitIR<IR::Opcode::A32GetGEFlags>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetGEFlags>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetGEFlagsCompressed>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32BXWritePC>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32UpdateUpperLocationDescriptor>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32CallSupervisor>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32ExceptionRaised>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32DataSynchronizationBarrier>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32DataMemoryBarrier>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32InstructionSynchronizationBarrier>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32GetFpscr>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetFpscr>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32GetFpscrNZCV>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::A32SetFpscrNZCV>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
 }
 
 }  // namespace Dynarmic::Backend::RV64
