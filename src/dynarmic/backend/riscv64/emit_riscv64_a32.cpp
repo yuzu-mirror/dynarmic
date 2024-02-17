@@ -248,4 +248,14 @@ void EmitIR<IR::Opcode::A32SetCpsrNZC>(biscuit::Assembler& as, EmitContext& ctx,
     as.SW(Xscratch0, offsetof(A32JitState, cpsr_nzcv), Xstate);
 }
 
+template<>
+void EmitIR<IR::Opcode::A32SetCpsrNZCV>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Xnzcv = ctx.reg_alloc.ReadX(args[0]);
+    RegAlloc::Realize(Xnzcv);
+
+    as.SW(Xnzcv, offsetof(A32JitState, cpsr_nzcv), Xstate);
+}
+
 }  // namespace Dynarmic::Backend::RV64
