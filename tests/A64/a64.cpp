@@ -312,6 +312,37 @@ TEST_CASE("A64: USHL", "[a64]") {
     REQUIRE(jit.GetVector(7) == Vector{0x3fffffffffffffff, 0xfffffffffffffffe});
 }
 
+TEST_CASE("A64: URSHL", "[a64]") {
+    A64TestEnv env;
+    A64::Jit jit{A64::UserConfig{&env}};
+
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.URSHL(V0.S4(), V1.S4(), V2.S4());
+    code.URSHL(V3.S4(), V4.S4(), V5.S4());
+
+    code.URSHL(V6.D2(), V7.D2(), V8.D2());
+    code.URSHL(V9.D2(), V10.D2(), V11.D2());
+
+    jit.SetVector(1, Vector{0xffffffff'18ba6a6a, 0x7fffffff'943b954f});
+    jit.SetVector(2, Vector{0xffffffe0'80000013, 0x00aabbe1'abcdef21});
+    jit.SetVector(4, Vector{0x0000000b'0000000f, 0xffffffff'ffffffff});
+    jit.SetVector(5, Vector{0x000000fd'fedcbafd, 0x000000ff'00000001});
+
+    jit.SetVector(7, Vector{0x824817df73adca9f, 0x35e511704656e7a4});
+    jit.SetVector(8, Vector{0x000000000000002a, 0xffffffffffffffc9});
+    jit.SetVector(10, Vector{0xffffffffffffffff, 0x96dc5c140705cd04});
+    jit.SetVector(11, Vector{0xffffffffffffffc1, 0x00555555555555f5});
+
+    env.ticks_left = env.code_mem.size();
+    jit.Run();
+
+    CHECK(jit.GetVector(0) == Vector{0x00000001'53500000, 0x00000001'00000000});
+    CHECK(jit.GetVector(3) == Vector{0x00000001'00000002, 0x80000000'fffffffe});
+
+    CHECK(jit.GetVector(6) == Vector{0xb72a7c0000000000, 0x0000000000006c});
+    CHECK(jit.GetVector(9) == Vector{0x0000000000000002, 0x12db8b8280e0ba});
+}
+
 TEST_CASE("A64: XTN", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
