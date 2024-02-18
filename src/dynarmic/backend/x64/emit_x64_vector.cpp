@@ -30,6 +30,15 @@ namespace Dynarmic::Backend::X64 {
 
 using namespace Xbyak::util;
 
+#define ICODE(NAME)                  \
+    [&code](auto... args) {          \
+        if constexpr (esize == 32) { \
+            code.NAME##d(args...);   \
+        } else {                     \
+            code.NAME##q(args...);   \
+        }                            \
+    }
+
 template<typename Function>
 static void EmitVectorOperation(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst, Function fn) {
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -3782,6 +3791,59 @@ static void RoundingShiftLeft(VectorArray<T>& out, const VectorArray<T>& lhs, co
     }
 }
 
+template<size_t esize>
+static void EmitUnsignedRoundingShiftLeft(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    static_assert(esize == 32 || esize == 64);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm a = ctx.reg_alloc.UseXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseXmm(args[1]);
+
+    // positive values of b are left shifts, while negative values are (positive) rounding right shifts
+    // only the lowest byte of each element is read as the shift amount
+    // conveniently, the behavior of bit shifts greater than element width is the same in NEON and SSE/AVX - filled with zeros
+    const Xbyak::Xmm shift_amount = ctx.reg_alloc.ScratchXmm();
+    code.vpabsb(shift_amount, b);
+    code.vpand(shift_amount, shift_amount, code.BConst<esize>(xword, 0xFF));
+
+    // if b is positive, do a normal left shift
+    const Xbyak::Xmm left_shift = ctx.reg_alloc.ScratchXmm();
+    ICODE(vpsllv)(left_shift, a, shift_amount);
+
+    // if b is negative, compute the rounding right shift
+    // ARM documentation describes it as:
+    // res = (a + (1 << (b - 1))) >> b
+    // however, this may result in overflow if implemented directly as described
+    // as such, it is more convenient and correct to implement the operation as:
+    // tmp = (a >> (b - 1)) & 1
+    // res = (a >> b) + tmp
+    // to add the value of the last bit to be shifted off to the result of the right shift
+    const Xbyak::Xmm right_shift = ctx.reg_alloc.ScratchXmm();
+    code.vmovdqa(xmm0, code.BConst<esize>(xword, 1));
+
+    // find value of last bit to be shifted off
+    ICODE(vpsub)(right_shift, shift_amount, xmm0);
+    ICODE(vpsrlv)(right_shift, a, right_shift);
+    code.vpand(right_shift, right_shift, xmm0);
+    // compute standard right shift
+    ICODE(vpsrlv)(xmm0, a, shift_amount);
+    // combine results
+    ICODE(vpadd)(right_shift, xmm0, right_shift);
+
+    // blend based on the sign bit of the lowest byte of each element of b
+    // using the sse forms of pblendv over avx because they have considerably better latency & throughput on intel processors
+    // note that this uses xmm0 as an implicit argument
+    ICODE(vpsll)(xmm0, b, u8(esize - 8));
+    if constexpr (esize == 32) {
+        code.blendvps(left_shift, right_shift);
+    } else {
+        code.blendvpd(left_shift, right_shift);
+    }
+
+    ctx.reg_alloc.DefineValue(inst, left_shift);
+    return;
+}
+
 void EmitX64::EmitVectorRoundingShiftLeftS8(EmitContext& ctx, IR::Inst* inst) {
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s8>& result, const VectorArray<s8>& lhs, const VectorArray<s8>& rhs) {
         RoundingShiftLeft(result, lhs, rhs);
@@ -3819,12 +3881,22 @@ void EmitX64::EmitVectorRoundingShiftLeftU16(EmitContext& ctx, IR::Inst* inst) {
 }
 
 void EmitX64::EmitVectorRoundingShiftLeftU32(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::AVX2)) {
+        EmitUnsignedRoundingShiftLeft<32>(code, ctx, inst);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u32>& result, const VectorArray<u32>& lhs, const VectorArray<s32>& rhs) {
         RoundingShiftLeft(result, lhs, rhs);
     });
 }
 
 void EmitX64::EmitVectorRoundingShiftLeftU64(EmitContext& ctx, IR::Inst* inst) {
+    if (code.HasHostFeature(HostFeature::AVX2)) {
+        EmitUnsignedRoundingShiftLeft<64>(code, ctx, inst);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<u64>& result, const VectorArray<u64>& lhs, const VectorArray<s64>& rhs) {
         RoundingShiftLeft(result, lhs, rhs);
     });
