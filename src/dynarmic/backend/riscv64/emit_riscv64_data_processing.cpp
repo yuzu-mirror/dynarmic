@@ -125,8 +125,27 @@ void EmitIR<IR::Opcode::LogicalShiftLeft64>(biscuit::Assembler&, EmitContext&, I
 }
 
 template<>
-void EmitIR<IR::Opcode::LogicalShiftRight32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
-    UNIMPLEMENTED();
+void EmitIR<IR::Opcode::LogicalShiftRight32>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    const auto carry_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetCarryFromOp);
+
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+    auto& operand_arg = args[0];
+    auto& shift_arg = args[1];
+
+    // TODO: Add full implementation
+    ASSERT(carry_inst == nullptr);
+    ASSERT(shift_arg.IsImmediate());
+
+    const u8 shift = shift_arg.GetImmediateU8();
+    auto Xresult = ctx.reg_alloc.WriteX(inst);
+    auto Xoperand = ctx.reg_alloc.ReadX(operand_arg);
+    RegAlloc::Realize(Xresult, Xoperand);
+
+    if (shift <= 31) {
+        as.SRLIW(Xresult, Xoperand, shift);
+    } else {
+        as.MV(Xresult, biscuit::zero);
+    }
 }
 
 template<>
