@@ -93,8 +93,15 @@ void EmitIR<IR::Opcode::GetLowerFromOp>(biscuit::Assembler&, EmitContext&, IR::I
 }
 
 template<>
-void EmitIR<IR::Opcode::GetCFlagFromNZCV>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
-    UNIMPLEMENTED();
+void EmitIR<IR::Opcode::GetCFlagFromNZCV>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    auto Xc = ctx.reg_alloc.WriteX(inst);
+    auto Xnzcv = ctx.reg_alloc.ReadX(args[0]);
+    RegAlloc::Realize(Xc, Xnzcv);
+
+    as.LUI(Xscratch0, 0x20000);
+    as.AND(Xc, Xnzcv, Xscratch0);
 }
 
 template<>
