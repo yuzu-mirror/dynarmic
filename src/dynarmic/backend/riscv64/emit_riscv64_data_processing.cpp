@@ -225,54 +225,59 @@ static void AddImmWithFlags(biscuit::Assembler& as, biscuit::GPR rd, biscuit::GP
         imm = static_cast<u32>(imm);
     }
     if (mcl::bit::sign_extend<12>(imm) == imm) {
-        as.ADDIW(rd, rs, imm);
+        bitsize == 32 ? as.ADDIW(rd, rs, imm) : as.ADDI(rd, rs, imm);
     } else {
         as.LI(Xscratch0, imm);
-        as.ADDW(rd, rs, Xscratch0);
+        bitsize == 32 ? as.ADDW(rd, rs, Xscratch0) : as.ADD(rd, rs, Xscratch0);
     }
 
     // N
     as.SEQZ(flags, rd);
     as.SLLI(flags, flags, 30);
-
     // Z
     as.SLTZ(Xscratch1, rd);
     as.SLLI(Xscratch1, Xscratch1, 31);
     as.OR(flags, flags, Xscratch1);
 
-    // C
-    if (mcl::bit::sign_extend<12>(imm) == imm) {
-        as.ADDI(Xscratch1, rs, imm);
-    } else {
+    if constexpr (bitsize == 32) {
+        // C
+        if (mcl::bit::sign_extend<12>(imm) == imm) {
+            as.ADDI(Xscratch1, rs, imm);
+        } else {
+            as.ADD(Xscratch1, rs, Xscratch0);
+        }
+        as.SRLI(Xscratch1, Xscratch1, 3);
+        as.LUI(Xscratch0, 0x20000);
+        as.AND(Xscratch1, Xscratch1, Xscratch0);
+        as.OR(flags, flags, Xscratch1);
+        // V
+        as.LI(Xscratch0, imm);
         as.ADD(Xscratch1, rs, Xscratch0);
+        as.XOR(Xscratch0, Xscratch0, rs);
+        as.NOT(Xscratch0, Xscratch0);
+        as.XOR(Xscratch1, Xscratch1, rs);
+        as.AND(Xscratch1, Xscratch0, Xscratch1);
+        as.SRLIW(Xscratch1, Xscratch1, 31);
+        as.SLLI(Xscratch1, Xscratch1, 28);
+        as.OR(flags, flags, Xscratch1);
+    } else {
+        UNIMPLEMENTED();
     }
-    as.SRLI(Xscratch1, Xscratch1, 3);
-    as.LUI(Xscratch0, 0x20000);
-    as.AND(Xscratch1, Xscratch1, Xscratch0);
-    as.OR(flags, flags, Xscratch1);
-
-    // V
-    as.LI(Xscratch0, imm);
-    as.ADD(Xscratch1, rs, Xscratch0);
-    as.XOR(Xscratch0, Xscratch0, rs);
-    as.NOT(Xscratch0, Xscratch0);
-    as.XOR(Xscratch1, Xscratch1, rs);
-    as.AND(Xscratch1, Xscratch0, Xscratch1);
-    as.SRLIW(Xscratch1, Xscratch1, 31);
-    as.SLLI(Xscratch1, Xscratch1, 28);
-    as.OR(flags, flags, Xscratch1);
 }
 
-template<size_t bitsize>
-static void EmitSub(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+template<size_t bitsize, bool sub>
+static void EmitAddSub(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
     const auto nzcv_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetNZCVFromOp);
+    const auto overflow_inst = inst->GetAssociatedPseudoOperation(IR::Opcode::GetOverflowFromOp);
 
     auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
     auto Xresult = ctx.reg_alloc.WriteX(inst);
     auto Xa = ctx.reg_alloc.ReadX(args[0]);
 
-    if (nzcv_inst) {
+    if (overflow_inst) {
+        UNIMPLEMENTED();
+    } else if (nzcv_inst) {
         if (args[1].IsImmediate()) {
             const u64 imm = args[1].GetImmediateU64();
 
@@ -281,9 +286,9 @@ static void EmitSub(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
                 RegAlloc::Realize(Xresult, Xflags, Xa);
 
                 if (args[2].GetImmediateU1()) {
-                    AddImmWithFlags<bitsize>(as, *Xresult, *Xa, ~imm, *Xflags);
+                    AddImmWithFlags<bitsize>(as, *Xresult, *Xa, sub ? ~imm : imm + 1, *Xflags);
                 } else {
-                    AddImmWithFlags<bitsize>(as, *Xresult, *Xa, -imm, *Xflags);
+                    AddImmWithFlags<bitsize>(as, *Xresult, *Xa, sub ? -imm : imm, *Xflags);
                 }
             } else {
                 UNIMPLEMENTED();
@@ -292,13 +297,31 @@ static void EmitSub(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
             UNIMPLEMENTED();
         }
     } else {
-        UNIMPLEMENTED();
+        if (args[1].IsImmediate()) {
+            const u64 imm = args[1].GetImmediateU64();
+
+            if (args[2].IsImmediate()) {
+                UNIMPLEMENTED();
+            } else {
+                auto Xnzcv = ctx.reg_alloc.ReadX(args[2]);
+                RegAlloc::Realize(Xresult, Xa, Xnzcv);
+
+                as.LUI(Xscratch0, 0x20000);
+                as.AND(Xscratch0, Xnzcv, Xscratch0);
+                as.SRLI(Xscratch0, Xscratch0, 29);
+                as.LI(Xscratch1, imm);
+                as.ADD(Xscratch0, Xscratch0, Xscratch1);
+                as.ADDW(Xresult, Xa, Xscratch0);
+            }
+        } else {
+            UNIMPLEMENTED();
+        }
     }
 }
 
 template<>
-void EmitIR<IR::Opcode::Add32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
-    UNIMPLEMENTED();
+void EmitIR<IR::Opcode::Add32>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
+    EmitAddSub<32, false>(as, ctx, inst);
 }
 
 template<>
@@ -308,7 +331,7 @@ void EmitIR<IR::Opcode::Add64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
 
 template<>
 void EmitIR<IR::Opcode::Sub32>(biscuit::Assembler& as, EmitContext& ctx, IR::Inst* inst) {
-    EmitSub<32>(as, ctx, inst);
+    EmitAddSub<32, true>(as, ctx, inst);
 }
 
 template<>

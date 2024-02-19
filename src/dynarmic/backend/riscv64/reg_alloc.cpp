@@ -197,7 +197,7 @@ u32 RegAlloc::RealizeReadImpl(const IR::Value& value) {
             // ASSERT size fits
             break;
         case HostLoc::Kind::Spill:
-            as.LD(biscuit::GPR{new_location_index}, spill_offset + new_location_index * spill_slot_size, biscuit::sp);
+            as.LD(biscuit::GPR{new_location_index}, spill_offset + current_location->index * spill_slot_size, biscuit::sp);
             break;
         }
 
@@ -216,7 +216,7 @@ u32 RegAlloc::RealizeReadImpl(const IR::Value& value) {
             ASSERT_FALSE("Logic error");
             break;
         case HostLoc::Kind::Spill:
-            as.FLD(biscuit::FPR{new_location_index}, spill_offset + new_location_index * spill_slot_size, biscuit::sp);
+            as.FLD(biscuit::FPR{new_location_index}, spill_offset + current_location->index * spill_slot_size, biscuit::sp);
             break;
         }
 
