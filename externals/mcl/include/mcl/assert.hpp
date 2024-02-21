@@ -24,6 +24,7 @@ template<typename... Ts>
 }  // namespace mcl::detail
 
 #define UNREACHABLE() ASSERT_FALSE("Unreachable code!")
+#define UNIMPLEMENTED() ASSERT_FALSE("Unimplemented at {}:{} ", __FILE__, __LINE__);
 
 #define ASSERT(expr)                                                     \
     [&] {                                                                \
