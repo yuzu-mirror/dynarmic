@@ -692,6 +692,40 @@ void EmitX64::EmitVectorArithmeticVShift64(EmitContext& ctx, IR::Inst* inst) {
         return;
     }
 
+    if (code.HasHostFeature(HostFeature::AVX2)) {
+        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+        const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm negative_mask = ctx.reg_alloc.ScratchXmm();
+
+        // negative_mask = a < 0 ? 1s : 0s
+        code.vpxor(xmm0, xmm0, xmm0);
+        code.vpcmpgtq(negative_mask, xmm0, a);
+
+        // store sign bit of lowest byte of each element of b to select left/right shift later
+        code.vpsllq(xmm0, b, 56);
+
+        // sse/avx shifts are only positive, with dedicated left/right forms - shift by lowest byte of abs(b)
+        code.vpabsb(b, b);
+        code.vpand(b, b, code.BConst<64>(xword, 0xFF));
+
+        // calculate shifts
+        code.vpsllvq(result, a, b);
+
+        // implement variable arithmetic shift in terms of logical shift
+        // if a is negative, invert it, shift in leading 0s, then invert it again - noop if positive
+        code.vpxor(a, a, negative_mask);
+        code.vpsrlvq(a, a, b);
+        code.vpxor(a, a, negative_mask);
+
+        code.blendvpd(result, a);  // implicit argument: xmm0 (sign of lowest byte of b)
+
+        ctx.reg_alloc.DefineValue(inst, result);
+        return;
+    }
+
     EmitTwoArgumentFallback(code, ctx, inst, [](VectorArray<s64>& result, const VectorArray<s64>& a, const VectorArray<s64>& b) {
         std::transform(a.begin(), a.end(), b.begin(), result.begin(), VShift<s64>);
     });
