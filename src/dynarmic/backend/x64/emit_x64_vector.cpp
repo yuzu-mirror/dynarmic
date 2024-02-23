@@ -638,23 +638,22 @@ void EmitX64::EmitVectorArithmeticVShift32(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::AVX2)) {
         auto args = ctx.reg_alloc.GetArgumentInfo(inst);
 
-        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-        const Xbyak::Xmm left_shift = ctx.reg_alloc.UseScratchXmm(args[1]);
-        const Xbyak::Xmm right_shift = ctx.reg_alloc.ScratchXmm();
-        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
+        const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+        const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+        const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
 
-        code.vmovdqa(tmp, code.Const(xword, 0x000000FF000000FF, 0x000000FF000000FF));
-        code.vpxor(right_shift, right_shift, right_shift);
-        code.vpsubd(right_shift, right_shift, left_shift);
+        // store sign bit of lowest byte of each element of b to select left/right shift later
+        code.vpslld(xmm0, b, 24);
 
-        code.vpslld(xmm0, left_shift, 24);
+        // sse/avx shifts are only positive, with dedicated left/right forms - shift by lowest byte of abs(b)
+        code.vpabsb(b, b);
+        code.vpand(b, b, code.BConst<32>(xword, 0xFF));
 
-        code.vpand(right_shift, right_shift, tmp);
-        code.vpand(left_shift, left_shift, tmp);
+        // calculate shifts
+        code.vpsllvd(result, a, b);
+        code.vpsravd(a, a, b);
 
-        code.vpsravd(tmp, result, right_shift);
-        code.vpsllvd(result, result, left_shift);
-        code.blendvps(result, tmp);
+        code.blendvps(result, a);  // implicit argument: xmm0 (sign of lowest byte of b)
 
         ctx.reg_alloc.DefineValue(inst, result);
         return;
@@ -1832,6 +1831,37 @@ void EmitX64::EmitVectorLogicalShiftRight64(EmitContext& ctx, IR::Inst* inst) {
     ctx.reg_alloc.DefineValue(inst, result);
 }
 
+template<size_t esize>
+static void EmitVectorLogicalVShiftAVX2(BlockOfCode& code, EmitContext& ctx, IR::Inst* inst) {
+    static_assert(esize == 32 || esize == 64);
+    auto args = ctx.reg_alloc.GetArgumentInfo(inst);
+
+    const Xbyak::Xmm a = ctx.reg_alloc.UseScratchXmm(args[0]);
+    const Xbyak::Xmm b = ctx.reg_alloc.UseScratchXmm(args[1]);
+    const Xbyak::Xmm result = ctx.reg_alloc.ScratchXmm();
+
+    // store sign bit of lowest byte of each element of b to select left/right shift later
+    ICODE(vpsll)(xmm0, b, u8(esize - 8));
+
+    // sse/avx shifts are only positive, with dedicated left/right forms - shift by lowest byte of abs(b)
+    code.vpabsb(b, b);
+    code.vpand(b, b, code.BConst<esize>(xword, 0xFF));
+
+    // calculate shifts
+    ICODE(vpsllv)(result, a, b);
+    ICODE(vpsrlv)(a, a, b);
+
+    // implicit argument: xmm0 (sign of lowest byte of b)
+    if constexpr (esize == 32) {
+        code.blendvps(result, a);
+    } else {
+        code.blendvpd(result, a);
+    }
+
+    ctx.reg_alloc.DefineValue(inst, result);
+    return;
+}
+
 void EmitX64::EmitVectorLogicalVShift8(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::AVX512_Ortho | HostFeature::AVX512BW | HostFeature::GFNI)) {
         auto args = ctx.reg_alloc.GetArgumentInfo(inst);
@@ -1909,24 +1939,7 @@ void EmitX64::EmitVectorLogicalVShift16(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorLogicalVShift32(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::AVX2)) {
-        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-        const Xbyak::Xmm left_shift = ctx.reg_alloc.UseScratchXmm(args[1]);
-        const Xbyak::Xmm right_shift = ctx.reg_alloc.ScratchXmm();
-        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
-
-        code.vmovdqa(tmp, code.Const(xword, 0x000000FF000000FF, 0x000000FF000000FF));
-        code.vpxor(right_shift, right_shift, right_shift);
-        code.vpsubd(right_shift, right_shift, left_shift);
-        code.vpand(left_shift, left_shift, tmp);
-        code.vpand(right_shift, right_shift, tmp);
-
-        code.vpsllvd(tmp, result, left_shift);
-        code.vpsrlvd(result, result, right_shift);
-        code.vpor(result, result, tmp);
-
-        ctx.reg_alloc.DefineValue(inst, result);
+        EmitVectorLogicalVShiftAVX2<32>(code, ctx, inst);
         return;
     }
 
@@ -1937,24 +1950,7 @@ void EmitX64::EmitVectorLogicalVShift32(EmitContext& ctx, IR::Inst* inst) {
 
 void EmitX64::EmitVectorLogicalVShift64(EmitContext& ctx, IR::Inst* inst) {
     if (code.HasHostFeature(HostFeature::AVX2)) {
-        auto args = ctx.reg_alloc.GetArgumentInfo(inst);
-
-        const Xbyak::Xmm result = ctx.reg_alloc.UseScratchXmm(args[0]);
-        const Xbyak::Xmm left_shift = ctx.reg_alloc.UseScratchXmm(args[1]);
-        const Xbyak::Xmm right_shift = ctx.reg_alloc.ScratchXmm();
-        const Xbyak::Xmm tmp = ctx.reg_alloc.ScratchXmm();
-
-        code.vmovdqa(tmp, code.Const(xword, 0x00000000000000FF, 0x00000000000000FF));
-        code.vpxor(right_shift, right_shift, right_shift);
-        code.vpsubq(right_shift, right_shift, left_shift);
-        code.vpand(left_shift, left_shift, tmp);
-        code.vpand(right_shift, right_shift, tmp);
-
-        code.vpsllvq(tmp, result, left_shift);
-        code.vpsrlvq(result, result, right_shift);
-        code.vpor(result, result, tmp);
-
-        ctx.reg_alloc.DefineValue(inst, result);
+        EmitVectorLogicalVShiftAVX2<64>(code, ctx, inst);
         return;
     }
 
