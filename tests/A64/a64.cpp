@@ -256,60 +256,80 @@ TEST_CASE("A64: SSHL", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x4e204484);  // SSHL v4.16b, v4.16b, v0.16b
-    env.code_mem.emplace_back(0x4e6144a5);  // SSHL  v5.8h,  v5.8h,  v1.8h
-    env.code_mem.emplace_back(0x4ea244c6);  // SSHL  v6.4s,  v6.4s,  v2.4s
-    env.code_mem.emplace_back(0x4ee344e7);  // SSHL  v7.2d,  v7.2d,  v3.2d
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.SSHL(V4.B16(), V4.B16(), V0.B16());
+    code.SSHL(V5.H8(), V5.H8(), V1.H8());
+    code.SSHL(V6.S4(), V6.S4(), V2.S4());
+    code.SSHL(V7.D2(), V7.D2(), V3.D2());
+    code.SSHL(V17.D2(), V17.D2(), V13.D2());
 
     jit.SetPC(0);
     jit.SetVector(0, {0xEFF0FAFBFCFDFEFF, 0x0807050403020100});
-    jit.SetVector(1, {0xFFFCFFFDFFFEFFFF, 0x0004000300020001});
-    jit.SetVector(2, {0xFFFFFFFDFFFFFFFE, 0x0000000200000001});
+    jit.SetVector(1, {0x00FCFFFDFFFEFFFF, 0xFF04000300020001});
+    jit.SetVector(2, {0x000000FDFFFFFFFE, 0xFFFFFF0200000001});
     jit.SetVector(3, {0xFFFFFFFFFFFFFFFF, 0x0000000000000001});
+    jit.SetVector(13, {0x00000000000000FF, 0xFFFFFFFFFFFFFF01});
 
     jit.SetVector(4, {0x8080808080808080, 0xFFFFFFFFFFFFFFFF});
     jit.SetVector(5, {0x8000800080008000, 0xFFFFFFFFFFFFFFFF});
     jit.SetVector(6, {0x8000000080000000, 0xFFFFFFFFFFFFFFFF});
     jit.SetVector(7, {0x8000000000000000, 0xFFFFFFFFFFFFFFFF});
+    jit.SetVector(17, {0x8000000000000000, 0xFFFFFFFFFFFFFFFF});
 
-    env.ticks_left = 4;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
-    REQUIRE(jit.GetVector(4) == Vector{0xfffffefcf8f0e0c0, 0x0080e0f0f8fcfeff});
-    REQUIRE(jit.GetVector(5) == Vector{0xf800f000e000c000, 0xfff0fff8fffcfffe});
-    REQUIRE(jit.GetVector(6) == Vector{0xf0000000e0000000, 0xfffffffcfffffffe});
-    REQUIRE(jit.GetVector(7) == Vector{0xc000000000000000, 0xfffffffffffffffe});
+    CHECK(jit.GetVector(4) == Vector{0xfffffefcf8f0e0c0, 0x0080e0f0f8fcfeff});
+    CHECK(jit.GetVector(5) == Vector{0xf800f000e000c000, 0xfff0fff8fffcfffe});
+    CHECK(jit.GetVector(6) == Vector{0xf0000000e0000000, 0xfffffffcfffffffe});
+    CHECK(jit.GetVector(7) == Vector{0xc000000000000000, 0xfffffffffffffffe});
+    CHECK(jit.GetVector(17) == Vector{0xc000000000000000, 0xfffffffffffffffe});
 }
 
 TEST_CASE("A64: USHL", "[a64]") {
     A64TestEnv env;
     A64::Jit jit{A64::UserConfig{&env}};
 
-    env.code_mem.emplace_back(0x6e204484);  // USHL v4.16b, v4.16b, v0.16b
-    env.code_mem.emplace_back(0x6e6144a5);  // USHL  v5.8h,  v5.8h,  v1.8h
-    env.code_mem.emplace_back(0x6ea244c6);  // USHL  v6.4s,  v6.4s,  v2.4s
-    env.code_mem.emplace_back(0x6ee344e7);  // USHL  v7.2d,  v7.2d,  v3.2d
-    env.code_mem.emplace_back(0x14000000);  // B .
+    oaknut::VectorCodeGenerator code{env.code_mem, nullptr};
+    code.USHL(V4.B16(), V4.B16(), V0.B16());
+    code.USHL(V14.B8(), V14.B8(), V10.B8());
+    code.USHL(V5.H8(), V5.H8(), V1.H8());
+    code.USHL(V15.H4(), V15.H4(), V11.H4());
+    code.USHL(V6.S4(), V6.S4(), V2.S4());
+    code.USHL(V16.S2(), V16.S2(), V12.S2());
+    code.USHL(V7.D2(), V7.D2(), V3.D2());
+    code.USHL(V17.D2(), V17.D2(), V13.D2());
 
     jit.SetPC(0);
     jit.SetVector(0, {0x10FE0E0D0C0B0A09, 0x0807050403020100});
+    jit.SetVector(10, {0xF6F7F8F9FAFBFCFD});
     jit.SetVector(1, {0xFFFE000700060005, 0x0004000300020001});
+    jit.SetVector(11, {0x00F1FF0F00F08010});
     jit.SetVector(2, {0xFFFFFFFE00000003, 0x0000000200000001});
+    jit.SetVector(12, {0x000000E18000001F});
     jit.SetVector(3, {0xFFFFFFFFFFFFFFFE, 0x0000000000000001});
+    jit.SetVector(13, {0x00000000000000C1, 0xFF0000000000003F});
 
     jit.SetVector(4, {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF});
+    jit.SetVector(14, {0x8080808080808080});
     jit.SetVector(5, {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF});
+    jit.SetVector(15, {0x80000001FFFFFFFF});
     jit.SetVector(6, {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF});
+    jit.SetVector(16, {0x8000000000000001});
     jit.SetVector(7, {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF});
+    jit.SetVector(17, {0x8000000000000000, 0x0000000000000001});
 
-    env.ticks_left = 4;
+    env.ticks_left = env.code_mem.size();
     jit.Run();
 
-    REQUIRE(jit.GetVector(4) == Vector{0x003f000000000000, 0x0080e0f0f8fcfeff});
-    REQUIRE(jit.GetVector(5) == Vector{0x3fffff80ffc0ffe0, 0xfff0fff8fffcfffe});
-    REQUIRE(jit.GetVector(6) == Vector{0x3ffffffffffffff8, 0xfffffffcfffffffe});
-    REQUIRE(jit.GetVector(7) == Vector{0x3fffffffffffffff, 0xfffffffffffffffe});
+    CHECK(jit.GetVector(4) == Vector{0x003f000000000000, 0x0080e0f0f8fcfeff});
+    CHECK(jit.GetVector(14) == Vector{0x0000000102040810});
+    CHECK(jit.GetVector(5) == Vector{0x3fffff80ffc0ffe0, 0xfff0fff8fffcfffe});
+    CHECK(jit.GetVector(15) == Vector{0x0001800000000000});
+    CHECK(jit.GetVector(6) == Vector{0x3ffffffffffffff8, 0xfffffffcfffffffe});
+    CHECK(jit.GetVector(16) == Vector{0x0000000180000000});
+    CHECK(jit.GetVector(7) == Vector{0x3fffffffffffffff, 0xfffffffffffffffe});
+    CHECK(jit.GetVector(17) == Vector{0x0000000000000001, 0x8000000000000000});
 }
 
 TEST_CASE("A64: URSHL", "[a64]") {
