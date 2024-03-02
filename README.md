@@ -5,65 +5,48 @@ Dynarmic
 
 A dynamic recompiler for ARM.
 
+Highlight features:
+
+- Fast dynamic binary translation via Just-in-Time compilation
+- Clean API
+- Implemented in modern C++20
+- Hooks exposed for easy code instrumentation
+- Code injection support for very fine-grained instrumentation
+- Support for unusual address space setups (bring-your-own memory system)
+- Native support for most popular operating systems (Windows, macOS, Linux, FreeBSD, OpenBSD, NetBSD, Android)
+
+*Please note that an adversarial guest program [can determine if it is being run under dynarmic](#disadvantages-of-dynarmic). Preventing this is not a goal of this project.*
+
 ### Supported guest architectures
 
-* ARMv6K
-* ARMv7A
-* 32-bit ARMv8
-* 64-bit ARMv8
+* v3
+* v4
+* v4T
+* v5TE
+* v6K
+* v6T2
+* v7A
+* 32-bit v8
+* 64-bit v8
+
+You can specify the specific guest version using [ArchVersion](src/dynarmic/interface/A32/arch_version.h).
+
+There are no plans to support v1 or v2.
 
 ### Supported host architectures
 
 * x86-64
-* 64-bit ARMv8 (AArch64)
+* AArch64
 
-There are no plans to support x86-32.
+There are no plans to support any 32-bit architecture.
 
-Projects using Dynarmic
------------------------
+Important API Changes in v6.x Series
+------------------------------------
 
-* [Citra - Nintendo 3DS emulator](https://citra-emu.org)
-* [yuzu - Nintendo Switch emulator](https://yuzu-emu.org)
-* [Panda3DS - Red-panda-themed Nintendo 3DS emulator](https://github.com/wheremyfoodat/Panda3DS)
-* [Vita3K - An Experimental PSVita emulator](https://vita3k.org)
-* [touchHLE - A high-level emulator for iPhone OS applications](https://touchhle.org/)
-* [EKA2L1 - An Experimental Symbian OS emulator](https://github.com/EKA2L1/EKA2L1)
-* [unidbg - Android native library emulation, with experimental iOS emulation](https://github.com/zhkl0228/unidbg)
+* **v6.7.0**
+  * To support use cases where one wants to have the guest to have the same address space as the host, `nullptr` is now a valid value for `fastmem_pointer`.
+    **This change is not backwards-compatible.** If you were previously using `nullptr` to represent an invalid fastmem arena, you will now have to use `std::nullopt`.
 
-Alternatives to Dynarmic
-------------------------
-
-If you are looking at a recompiler which you can use with minimal effort to run ARM executables on non-native platforms, we would strongly recommend looking at qemu-user-static ([description of qemu-user-static](https://wiki.debian.org/QemuUserEmulation), [using qemu-user-static in combination with Docker to provide a complete emulated environment](https://github.com/multiarch/qemu-user-static)). Having a complete plug-and-play solution is out-of-scope of this project.
-
-Here are some projects with the same goals as dynarmic:
-
-* [ChocolArm64 from Ryujinx](https://github.com/Ryujinx/Ryujinx/tree/master/ChocolArm64) - ARMv8 recompiler on top of RyuJIT
-* [Unicorn](https://www.unicorn-engine.org/) - Recompiling multi-architecture CPU emulator, based on QEMU
-* [SkyEye](http://skyeye.sourceforge.net) - Cached interpreter for ARM
-
-More general alternatives:
-
-* [tARMac](https://davidsharp.com/tarmac/) - Tarmac's use of armlets was initial inspiration for us to use an intermediate representation
-* [QEMU](https://www.qemu.org/) - Recompiling multi-architecture system emulator
-* [VisUAL](https://salmanarif.bitbucket.io/visual/index.html) - Visual ARM UAL emulator intended for education
-* A wide variety of other recompilers, interpreters and emulators can be found embedded in other projects, here are some we would recommend looking at:
-  * [firebird's recompiler](https://github.com/nspire-emus/firebird) - Takes more of a call-threaded approach to recompilation
-  * [higan's arm7tdmi emulator](https://github.com/higan-emu/higan/tree/master/higan/component/processor/arm7tdmi) - Very clean code-style
-  * [arm-js by ozaki-r](https://github.com/ozaki-r/arm-js) - Emulates ARMv7A and some peripherals of Versatile Express, in the browser
-
-Disadvantages of Dynarmic
--------------------------
-
-In the pursuit of speed, some behavior not commonly depended upon is elided. Therefore this emulator does not match spec.
-
-Known examples:
-
-* Only user-mode is emulated, there is no emulation of any other privilege levels.
-* FPSR state is approximate.
-* Misaligned loads/stores are not appropriately trapped in certain cases.
-* Exclusive monitor behavior may not match any known physical processor.
-
-As with most other hobby ARM emulation projects, no formal verification has been done. Use this code base at your own risk.
 
 Documentation
 -------------
@@ -191,6 +174,40 @@ int main(int argc, char** argv) {
     return 0;
 }
 ```
+
+Alternatives to Dynarmic
+------------------------
+
+Here are some projects with the same goals as dynarmic:
+
+* [Unicorn](https://www.unicorn-engine.org/) - Recompiling multi-architecture CPU emulator, based on QEMU
+* [SkyEye](http://skyeye.sourceforge.net) - Cached interpreter for ARM
+
+More general alternatives:
+
+* [tARMac](https://davidsharp.com/tarmac/) - Tarmac's use of armlets was initial inspiration for us to use an intermediate representation
+* [QEMU](https://www.qemu.org/) - Recompiling multi-architecture system emulator
+* [VisUAL](https://salmanarif.bitbucket.io/visual/index.html) - Visual ARM UAL emulator intended for education
+* A wide variety of other recompilers, interpreters and emulators can be found embedded in other projects, here are some we would recommend looking at:
+  * [firebird's recompiler](https://github.com/nspire-emus/firebird) - Takes more of a call-threaded approach to recompilation
+  * [higan's arm7tdmi emulator](https://github.com/higan-emu/higan/tree/master/higan/component/processor/arm7tdmi) - Very clean code-style
+  * [arm-js by ozaki-r](https://github.com/ozaki-r/arm-js) - Emulates ARMv7A and some peripherals of Versatile Express, in the browser
+
+Disadvantages of Dynarmic
+-------------------------
+
+In the pursuit of speed, some behavior not commonly depended upon is elided. Therefore this emulator does not match spec.
+Please note that this would mean that a guest application can easily determine if it is being run under instrumentation.
+
+Known examples:
+
+* Only user-mode is emulated, there is no emulation of any other privilege levels.
+* FPSR state is approximate.
+* Misaligned loads/stores are not appropriately trapped in certain cases.
+* Exclusive monitor behavior may not match any known physical processor.
+
+No formal verification has been done, and no security assessment has been made.
+Use this code base at your own risk.
 
 Legal
 -----
