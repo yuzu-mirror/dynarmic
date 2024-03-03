@@ -128,6 +128,21 @@ void EmitIR<IR::Opcode::FPMulAdd64>(biscuit::Assembler&, EmitContext&, IR::Inst*
 }
 
 template<>
+void EmitIR<IR::Opcode::FPMulSub16>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::FPMulSub32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
+void EmitIR<IR::Opcode::FPMulSub64>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
+    UNIMPLEMENTED();
+}
+
+template<>
 void EmitIR<IR::Opcode::FPMulX32>(biscuit::Assembler&, EmitContext&, IR::Inst*) {
     UNIMPLEMENTED();
 }
