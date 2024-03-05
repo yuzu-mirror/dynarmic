@@ -134,7 +134,7 @@ jobs:
       - name: Checkout ext-boost repo
         uses: actions/checkout@v2
         with:
-          repository: MerryMage/ext-boost
+          repository: yuzu-mirror/ext-boost
           path: externals/ext-boost
 
       - name: Setup msvc-arm64 environment
